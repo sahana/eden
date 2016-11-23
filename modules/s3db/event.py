@@ -1818,6 +1818,7 @@ class S3EventHRModel(S3Model):
                                        status_opts.get(opt, current.messages.UNKNOWN_OPT),
                                 requires = IS_IN_SET(status_opts),
                                 ),
+                          s3_comments(),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2221,6 +2222,7 @@ class S3EventOrganisationModel(S3Model):
                                 requires = IS_IN_SET(status_opts),
                                 ),
                           # @ToDo: Role?
+                          s3_comments(),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(

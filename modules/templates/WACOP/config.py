@@ -576,13 +576,16 @@ class incident_Profile(S3CRUD):
                     output["lon_max"] = ""
                     output["lon_min"] = ""
 
-                # Resources dataTable
-                tablename = "event_team"
+                messages = current.messages
+                permit = current.auth.s3_has_permission
+                updateable = permit("update", itable, record_id=incident_id, c="event", f="incident")
 
-                resource = s3db.resource(tablename)
-                resource.add_filter(FS("incident_id") == incident_id)
-
-                list_id = "custom-list-%s" % tablename
+                settings = current.deployment_settings
+                # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
+                #settings.ui.datatables_dom = "<'data-info row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns search'f><'large-2 columns right'>r><'dataTable_table't><'row'p>"
+                # Uncomment for dataTables to use a different paging style:
+                settings.ui.datatables_pagingType = "bootstrap"
+                dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
 
                 get_vars = request.get_vars.get
                 start = get_vars("start", None)
@@ -601,23 +604,11 @@ class incident_Profile(S3CRUD):
                     # Use defaults
                     start = None
 
-                dtargs = attr.get("dtargs", {})
-
                 # How many records per page?
                 if s3.dataTable_pageLength:
                     display_length = s3.dataTable_pageLength
                 else:
                     display_length = 10
-                #dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
-                #                           [10, 25, 50, s3_str(T("All"))]
-                #                           ]
-
-                list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
-                               "group_id",
-                               "status_id",
-                               ]
-
-                orderby = "pr_group.name"
 
                 # Server-side pagination?
                 if not s3.no_sspag:
@@ -629,86 +620,174 @@ class incident_Profile(S3CRUD):
                 else:
                     dt_pagination = "false"
 
-                settings = current.deployment_settings
-                # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
-                #settings.ui.datatables_dom = "<'data-info row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns search'f><'large-2 columns right'>r><'dataTable_table't><'row'p>"
-                # Move the search box into the design
-                settings.ui.datatables_initComplete = '''$('.dataTables_filter').prependTo($('.dt-search'));$('.dataTables_filter input').attr('placeholder', 'Enter search term…').prependTo($('.dataTables_filter'));$('.dataTables_filter label, .dataTables_length, #custom-list-event_team_info').hide()'''
-                # Uncomment for dataTables to use a different paging style:
-                #settings.ui.datatables_pagingType = "bootstrap"
-    
-                # Get the data table
-                dt, totalrows, ids = resource.datatable(fields=list_fields,
-                                                        start=start,
-                                                        limit=limit,
-                                                        orderby=orderby)
-                displayrows = totalrows
-
-                if dt.empty:
-                    empty_str = self.crud_string(tablename,
-                                                 "msg_list_empty")
-                else:
-                    empty_str = self.crud_string(tablename,
-                                                 "msg_no_match")
-                empty = DIV(empty_str, _class="empty")
-
-                # @ToDo: Permissions
-                messages = current.messages
-                dtargs["dt_row_actions"] = [{"label": messages.READ,
-                                             "url": URL(c="event", f="team",
-                                                        args="[id].popup"),
-                                             "icon": "fa fa-eye",
-                                             "_class": "s3_modal", #action-btn
-                                             },
-                                            # @ToDo: AJAX delete
-                                            {"label": messages.DELETE,
-                                             "url": URL(c="event", f="team",
-                                                        args=["[id]", "delete"]),
-                                             "icon": "fa fa-trash",
-                                             #"_class": "action-btn",
-                                             },
-                                            ]
-                dtargs["dt_action_col"] = 2
-
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_pageLength"] = display_length
-                # @todo: fix base URL (make configurable?) to fix export options
                 s3.no_formats = True
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
-                                              representation="aadata")
 
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=list_id,
-                                    **dtargs)
+                def _datatable(tablename, list_fields, orderby):
 
-                if dt.data:
-                    empty.update(_style="display:none")
+                    c, f = tablename.split("_", 1)
+
+                    resource = s3db.resource(tablename)
+                    resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
+
+                    list_id = "custom-list-%s" % tablename
+
+                    # Update the datatables init
+                    dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','Enter search term…').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));$('.custom-list-%(tablename)s_length').hide();''' % \
+                        dict(tablename = tablename))
+
+                    # Move the search boxes into the design
+                    settings.ui.datatables_initComplete = "".join(dt_init)
+
+                    # Get the data table
+                    dt, totalrows, ids = resource.datatable(fields=list_fields,
+                                                            start=start,
+                                                            limit=limit,
+                                                            orderby=orderby)
+                    displayrows = totalrows
+
+                    if dt.empty:
+                        empty_str = self.crud_string(tablename,
+                                                     "msg_list_empty")
+                    else:
+                        empty_str = self.crud_string(tablename,
+                                                     "msg_no_match")
+                    empty = DIV(empty_str, _class="empty")
+
+                    dtargs = attr.get("dtargs", {})
+
+                    # @ToDo: Permissions
+                    dtargs["dt_row_actions"] = [{"label": messages.READ,
+                                                 "url": URL(c="event", f="incident",
+                                                            args=[incident_id, f, "[id].popup"]),
+                                                 "icon": "fa fa-eye",
+                                                 "_class": "s3_modal",
+                                                 },
+                                                # @ToDo: AJAX delete
+                                                {"label": messages.DELETE,
+                                                 "url": URL(c="event", f="incident",
+                                                            args=[incident_id, f, "[id]", "delete"]),
+                                                 "icon": "fa fa-trash",
+                                                 },
+                                                ]
+                    dtargs["dt_action_col"] = len(list_fields)
+                    dtargs["dt_pagination"] = dt_pagination
+                    dtargs["dt_pageLength"] = display_length
+                    dtargs["dt_base_url"] = r.url(method="", vars={})
+                    dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
+                                                  representation="aadata")
+
+                    datatable = dt.html(totalrows,
+                                        displayrows,
+                                        id=list_id,
+                                        **dtargs)
+
+                    if dt.data:
+                        empty.update(_style="display:none")
+                    else:
+                        datatable.update(_style="display:none")
+                    contents = DIV(datatable, empty, _class="dt-contents")
+
+                    # Link for create-popup
+                    if updateable and permit("create", tablename):
+                        output["create_%s_popup" % tablename] = \
+                            A(TAG[""](I(_class="fa fa-plus"),
+                                      T("Add"),
+                                      ),
+                              _href = URL(c="event", f="incident",
+                                          args=[incident_id, f, "create.popup"],
+                                          vars={"refresh": list_id},
+                                          ),
+                              _class = "button tiny postfix s3_modal", 
+                              )
+                    else:
+                        output["create_%s_popup" % tablename] = ""
+
+                    # Render the widget
+                    output["%s_datatable" % tablename] = DIV(contents,
+                                                             _class="card-holder",
+                                                             )
+
+                # Resources dataTable
+                tablename = "event_team"
+                list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
+                               "group_id",
+                               "status_id",
+                               ]
+                orderby = "pr_group.name"
+                _datatable(tablename, list_fields, orderby)
+
+                # Tasks dataTable
+                tablename = "project_task"
+                list_fields = ["status",
+                               (T("Description"), "name"),
+                               (T("Created"), "created_on"),
+                               (T("Due"), "date_due"),
+                               ]
+                orderby = "project_task.date_due"
+                _datatable(tablename, list_fields, orderby)
+
+                # Staff dataTable
+                tablename = "event_human_resource"
+                list_fields = [(T("Name"), "human_resource_id"),
+                               (T("Title"), "human_resource_id$job_title_id"),
+                               "human_resource_id$organisation_id",
+                                (T("Email"), "human_resource_id$person_id$email.value"),
+                                (T("Phone"), "human_resource_id$person_id$phone.value"),
+                               "status",
+                               (T("Notes"), "comments"),
+                               ]
+                orderby = "event_human_resource.human_resource_id"
+                _datatable(tablename, list_fields, orderby)
+
+                # Organisations dataTable
+                tablename = "event_organisation"
+                list_fields = [(T("Name"), "organisation_id"),
+                               "status",
+                               "comments",
+                               ]
+                orderby = "event_organisation.organisation_id"
+                _datatable(tablename, list_fields, orderby)
+
+                # Updates DataList
+                tablename = "cms_post"
+                c, f = tablename.split("_", 1)
+                resource = s3db.resource(tablename)
+                resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
+                list_fields = ["series_id",
+                               "date",
+                               "body",
+                               "created_by",
+                               "tag_post.tag_id",
+                               ]
+                datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                           start=None,
+                                                           limit=5,
+                                                           list_id="updates_datalist",
+                                                           orderby="date desc",
+                                                           layout=cms_post_list_layout)
+                if numrows == 0:
+                    # Empty table or just no match?
+                    table = resource.table
+                    if "deleted" in table:
+                        available_records = db(table.deleted != True)
+                    else:
+                        available_records = db(table._id > 0)
+                    if available_records.select(table._id,
+                                                limitby=(0, 1)).first():
+                        msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                     "msg_no_match"),
+                                  _class="empty")
+                    else:
+                        msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                     "msg_list_empty"),
+                                  _class="empty")
+                    data = msg
                 else:
-                    datatable.update(_style="display:none")
-                contents = DIV(datatable, empty, _class="dt-contents")
-
-                # Link for create-popup
-                permit = current.auth.s3_has_permission
-                if permit("create", "event_team") and \
-                   permit("update", itable, record_id=incident_id, c="event", f="incident"):
-                    output["create_popup"] = A(TAG[""](I(_class="fa fa-plus"),
-                                                       T("Add"),
-                                                       ),
-                                               _href = URL(c="event", f="incident",
-                                                           args=[incident_id, "team", "create.popup"],
-                                                           vars={"refresh": list_id},
-                                                           ),
-                                               _class = "button tiny postfix s3_modal", 
-                                               )
-                else:
-                    output["create_popup"] = ""
+                    # Render the list
+                    data = datalist.html()
 
                 # Render the widget
-                output["resources"] = DIV(contents,
-                                          _class="card-holder",
-                                          )
+                output["updates_datalist"] = data
 
                 import os
                 response.view = os.path.join(request.folder,
@@ -719,34 +798,60 @@ class incident_Profile(S3CRUD):
                 return output
 
             elif representation == "aadata":
+                # DataTables updates
     
-                # Resources dataTable
-                # @ToDo: Complete
+                get_vars = self.request.get_vars
+                tablename = get_vars.get("update")
+                c, f = tablename.split("_", 1)
+
+                if tablename == "event_team":
+                    list_fields = ["group_id",
+                                   "status_id",
+                                   ]
+                    orderby = "pr_group.name"
+
+                elif tablename == "project_task":
+                    list_fields = ["status",
+                                   "name",
+                                   "created_on",
+                                   "date_due",
+                                   ]
+                    orderby = "project_task.date_due"
     
+                elif tablename == "event_human_resource":
+                    list_fields = ["human_resource_id",
+                                   "human_resource_id$job_title_id",
+                                   "human_resource_id$organisation_id",
+                                   "human_resource_id$person_id$email.value",
+                                   "human_resource_id$person_id$phone.value",
+                                   "status",
+                                   "comments",
+                                   ]
+                    orderby = "event_human_resource.human_resource_id"
+
+                elif tablename == "event_organisation":
+                    list_fields = ["organisation_id",
+                                   "status",
+                                   "comments",
+                                   ]
+                    orderby = "event_organisation.organisation_id"
+
+                else:
+                    raise HTTP(405, current.ERROR.BAD_METHOD)
+
                 from s3 import FS
     
                 response = current.response
                 s3 = response.s3
-
-                tablename = "event_team"
-
+                
                 resource = current.s3db.resource(tablename)
-                resource.add_filter(FS("incident_id") == incident_id)
+                resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
     
                 list_id = "custom-list-%s" % tablename
 
-                get_vars = self.request.get_vars
-    
-                list_fields = ["id",
-                               "group_id",
-                               "status_id",
-                               ]
-    
                 # Parse datatable filter/sort query
-                searchq, orderby, left = resource.datatable_filter(list_fields,
-                                                                   get_vars)
-    
-                orderby = "pr_group.name"
+                searchq, orderby_not, left = resource.datatable_filter(list_fields,
+                                                                       get_vars)
     
                 # DataTable filtering
                 if searchq is not None:
@@ -774,16 +879,11 @@ class incident_Profile(S3CRUD):
                 # Echo
                 draw = int(get_vars.get("draw") or 0)
     
-                dtargs = attr.get("dtargs", {})
-
                 # How many records per page?
                 if s3.dataTable_pageLength:
                     display_length = s3.dataTable_pageLength
                 else:
                     display_length = 10
-                #dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
-                #                           [10, 25, 50, s3_str(T("All"))]
-                #                           ]
 
                 # Server-side pagination?
                 if not s3.no_sspag:
@@ -795,12 +895,13 @@ class incident_Profile(S3CRUD):
                 else:
                     dt_pagination = "false"
 
-                dtargs["dt_action_col"] = 2
+                dtargs = attr.get("dtargs", {})
+                dtargs["dt_action_col"] = len(list_fields)
                 dtargs["dt_pagination"] = dt_pagination
                 dtargs["dt_pageLength"] = display_length
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
-                                              representation="aadata")
+                #dtargs["dt_base_url"] = r.url(method="", vars={})
+                #dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
+                #                              representation="aadata")
 
                 # Representation
                 if dt is not None:
@@ -819,6 +920,188 @@ class incident_Profile(S3CRUD):
                 response.headers["Content-Type"] = "application/json"
                 return data
 
+            elif representation == "dl":
+                # DataList updates
+                # @ToDo
+                pass
+
         raise HTTP(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+def cms_post_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        dataList item renderer for Updates on the Incident Profile page.
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    from gluon.html import A, DIV, LI, P, SPAN, TAG, URL
+    from s3 import ICON
+
+    record_id = record["cms_post.id"]
+    item_class = "thumbnail"
+
+    db = current.db
+    s3db = current.s3db
+    settings = current.deployment_settings
+    NONE = current.messages["NONE"]
+
+    raw = record._row
+    body = record["cms_post.body"]
+    series_id = raw["cms_post.series_id"]
+
+    # Allow records to be truncated
+    # (not yet working for HTML)
+    body = DIV(body,
+               _class="s3-truncate",
+               )
+
+    date = record["cms_post.date"]
+    date = SPAN(date,
+                _class="date-title",
+                )
+
+    author_id = raw["cms_post.created_by"]
+    person = record["cms_post.created_by"]
+
+    # @ToDo: Bulk lookup
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_id = row.id
+    else:
+        person_id = None
+
+    if person:
+        if person_id:
+            # @ToDo: deployment_setting for controller to use?
+            person_url = URL(c="pr", f="person", args=[person_id])
+        else:
+            person_url = "#"
+        person = A(person,
+                   _href=person_url,
+                   )
+
+    if person:
+        card_person = DIV(person,
+                          _class="card-person",
+                          )
+    else:
+        card_person = DIV(_class="card-person",
+                          )
+
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    updateable = permit("update", table, record_id=record_id)
+
+    if settings.get_cms_show_tags():
+        tags = raw["cms_tag.name"]
+        if tags or updateable:
+            tag_list = UL(_class="s3-tags",
+                          )
+            tag_list["_data-post_id"] = record_id
+        else:
+            tag_list = ""
+        if tags:
+            if not isinstance(tags, list):
+                tags = [tags]#.split(", ")
+            for tag in tags:
+                tag_item = LI(tag)
+                tag_list.append(tag_item)
+        tags = tag_list
+    else:
+        tags = ""
+
+    T = current.T
+    if series_id:
+        series = record["cms_post.series_id"]
+        translate = settings.get_L10n_translate_cms_series()
+        if translate:
+            series_title = T(series)
+        else:
+            series_title = series
+    else:
+        series_title = series = ""
+
+    request = current.request
+
+    # Tool box
+    if updateable:
+        if request.function == "newsfeed":
+            fn = "newsfeed"
+        else:
+            fn = "post"
+        edit_btn = A(ICON("edit"),
+                     _href=URL(c="cms", f=fn,
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id}
+                               ),
+                     _class="s3_modal",
+                     _title=T("Edit %(type)s") % dict(type=series_title),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(ICON("delete"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    user = current.auth.user
+    if user and settings.get_cms_bookmarks():
+        ltable = s3db.cms_post_user
+        query = (ltable.post_id == record_id) & \
+                (ltable.user_id == user.id)
+        exists = db(query).select(ltable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            bookmark_btn = A(ICON("bookmark"),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "remove_bookmark"]),
+                                 list_id,
+                                 record_id),
+                             _title=T("Remove Bookmark"),
+                             )
+        else:
+            bookmark_btn = A(ICON("bookmark-empty"),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "add_bookmark"]),
+                                 list_id,
+                                 record_id),
+                             _title=T("Add Bookmark"),
+                             )
+    else:
+        bookmark_btn = ""
+
+    item = LI(TAG["HEADER"](P(SPAN(series_title,
+                                   _class="label info",
+                                   ),
+                              TAG["TIME"](),
+                              " by %s" % person,
+                              _class="left update-meta-text",
+                              ),
+                            _class="clearfix",
+                            ),
+              P(body),
+              TAG["FOOTER"](_class="clearfix",
+                            ),
+              _class="panel",
+              _id=item_id,
+              )
+
+    return item
 
 # END =========================================================================
