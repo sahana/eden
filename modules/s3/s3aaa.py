@@ -3858,10 +3858,12 @@ $.filterOptionsS3({
                 role = int(role)
             else:
                 gtable = self.settings.table_group
-                query = (gtable.deleted != True) & \
-                        (gtable.uuid == role)
+                query = (gtable.uuid == role) & \
+                        (gtable.deleted != True)
                 row = current.db(query).select(gtable.id,
-                                               limitby=(0, 1)).first()
+                                               cache = (current.cache.ram, 600),
+                                               limitby = (0, 1),
+                                               ).first()
                 if row:
                     role = row.id
                 else:

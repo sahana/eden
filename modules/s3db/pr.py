@@ -3389,7 +3389,6 @@ class S3PersonImageModel(S3Model):
         # Resource configuration
         self.configure(tablename,
                        list_fields = ["id",
-                                      "title",
                                       "profile",
                                       "type",
                                       "image",

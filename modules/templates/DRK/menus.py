@@ -88,6 +88,7 @@ class S3MainMenu(default.S3MainMenu):
                        args = "surplus_meals",
                        t = "dvr_case_event",
                        p = "create",
+                       restrict = ("ADMINISTRATION", "ADMIN_HEAD", "INFO_POINT"),
                        ),
                     ),
             ]
