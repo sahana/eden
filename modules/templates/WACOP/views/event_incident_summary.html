@@ -13,7 +13,7 @@
   </div>
  </div>
 {{pass}}
- <div class="row panel">
+ <div class="row panel" id='summary-common'>
   <div class="large-4 columns">
    <div id='filter-form' class='form-container'>
     {{try:}}{{=filter_form}}{{except:}}{{pass}}
@@ -21,7 +21,7 @@
   </div>
   <div class="large-8 columns">
    <h3 class="show-for-sr">View the incidents on the map:</h3>
-   <iframe class="large-12" width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://www.openstreetmap.org/export/embed.html?bbox=-127.342529296875%2C43.810747313446996%2C-115.477294921875%2C50.28231945008158&amp;layer=mapnik"></iframe>
+   {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
    <div id="timeline-embed" style="width:100%; height:100px;"></div>
   </div>
  </div>

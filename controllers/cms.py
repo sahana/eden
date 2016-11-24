@@ -578,7 +578,7 @@ def newsfeed():
                            "series_id",
                            ]
             cappend = crud_fields.append
-            if settings.get_cms_show_tags():
+            if settings.get_cms_show_titles():
                 cappend("title")
             crud_fields.extend(("body",
                                 "location_id",
