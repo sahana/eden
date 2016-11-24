@@ -49,11 +49,16 @@ fieldset {
 }
 
 /* Incident Profile page */
-#panel1 table.s3-groupedopts-widget {
+#incident-profile table.s3-groupedopts-widget {
     border: 0;
 }
-#panel1 .dl-header {
+#incident-profile .dl-header {
    display: none;
+}
+
+#content .incident-profile h3 {
+    font-size: 1.6875rem;
+    padding-bottom: 0;
 }
 
 /* Incident Summary page */
@@ -73,6 +78,9 @@ fieldset {
     background-color: #dce4ef;
     border-color: #8ba6ca;
     margin-top: 1.5rem;
+}
+#incident-summary table.s3-groupedopts-widget {
+    border: 0;
 }
 
 /* Logo */
@@ -142,33 +150,6 @@ fieldset {
 #content > .callout .button.button-info {
   background-color: #4773aa;
   margin: 0.5em auto 0 0;
-}
-
-.incident-profile input[type="text"],
-.incident-profile input[type="password"],
-.incident-profile input[type="date"],
-.incident-profile input[type="datetime"],
-.incident-profile input[type="datetime-local"],
-.incident-profile input[type="month"],
-.incident-profile input[type="week"],
-.incident-profile input[type="email"],
-.incident-profile input[type="number"],
-.incident-profile input[type="search"],
-.incident-profile input[type="tel"],
-.incident-profile input[type="time"],
-.incident-profile input[type="url"],
-.incident-profile textarea,
-.incident-profile select {
-  height: 2.3125rem;
-  padding: 0.5rem;
-  margin: 0 0 1rem;
-  display: block;
-  font-weight: normal;
-}
-
-#content .incident-profile h3 {
-    font-size: 1.6875rem;
-    padding-bottom: 0;
 }
 
 /**

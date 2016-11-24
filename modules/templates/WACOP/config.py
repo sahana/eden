@@ -301,11 +301,12 @@ def config(settings):
                                        _placeholder = T("Enter search term…"),
                                        ),
                           S3OptionsFilter("organisation_id",
-                                          label = T("Lead Organization"),
+                                          label = "",
+                                          noneSelectedText = "Lead Organization",
                                           widget = "multiselect",
                                           ),
                           S3OptionsFilter("closed",
-                                          #label = T("Status"),
+                                          formstyle = filter_formstyle,
                                           options = {"*": T("All"),
                                                      False: T("Open"),
                                                      True: T("Closed"),
@@ -314,7 +315,9 @@ def config(settings):
                                           multiple = False,
                                           ),
                           S3OptionsFilter("incident_type_id",
+                                          formstyle = filter_formstyle,
                                           label = T("Incident Type"),
+                                          noneSelectedText = "All",
                                           widget = "multiselect",
                                           ),
                           ]
@@ -890,7 +893,6 @@ class incident_Profile(S3CRUD):
                                                ),
                                   S3OptionsFilter("bookmark.user_id",
                                                   label = "",
-                                                  # Can't just use "" as this is then omitted from rendering
                                                   options = {"*": T("All"),
                                                              auth.user.id: T("My Bookmarks"),
                                                              },
@@ -898,17 +900,17 @@ class incident_Profile(S3CRUD):
                                                   multiple = False,
                                                   ),
                                   S3OptionsFilter("series_id",
-                                                  #label = "", Once we change to always showing multiselect with the label insie it
-                                                  label = T("Type"),
+                                                  label = "",
+                                                  noneSelectedText = "Type",
                                                   widget = "multiselect",
                                                   ),
                                   S3OptionsFilter("created_by$organisation_id",
-                                                  #label = "", Once we change to always showing multiselect with the label insie it
-                                                  label = T("Source"),
+                                                  label = "",
+                                                  noneSelectedText = "Source",
                                                   ),
                                   S3OptionsFilter("tag_post.tag_id",
-                                                  #label = "", Once we change to always showing multiselect with the label insie it
-                                                  label = T("Tag"),
+                                                  label = "",
+                                                  noneSelectedText = "Tag",
                                                   ),
                                   date_filter,
                                   ]
@@ -1367,6 +1369,33 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
                        _id=row_id,
                        )
         return controls
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def filter_formstyle(form, fields, *args, **kwargs):
+    """
+        Custom formstyle for filters on the Incident Summary page
+    """
+
+    from gluon.html import DIV, FIELDSET, LEGEND
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        controls = FIELDSET(LEGEND(label),
+                            widget,
+                            )
+        return DIV(controls, _id=row_id)
 
     if args:
         row_id = form

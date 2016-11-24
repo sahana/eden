@@ -1468,7 +1468,7 @@ class S3OptionsFilter(S3FilterWidget):
         """
 
         attr = self._attr(resource)
-        opts = self.opts
+        opts_get = self.opts.get
         name = attr["_name"]
 
         # Get the options
@@ -1482,7 +1482,7 @@ class S3OptionsFilter(S3FilterWidget):
         # search for records containing all the options or any
         # of the options:
         if len(options) > 1 and ftype[:4] == "list":
-            operator = opts.get("operator", None)
+            operator = opts_get("operator", None)
             if operator:
                 self.operator = operator
                 any_all = ""
@@ -1522,26 +1522,27 @@ class S3OptionsFilter(S3FilterWidget):
             any_all = ""
 
         # Initialize widget
-        #widget_type = opts["widget"]
+        #widget_type = opts_get("widget")
         # Use groupedopts widget if we specify cols, otherwise assume multiselect
-        cols = opts.get("cols", None)
+        cols = opts_get("cols", None)
         if cols:
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(options = options,
-                                       multiple = opts.get("multiple", True),
+                                       multiple = opts_get("multiple", True),
                                        cols = cols,
-                                       size = opts["size"] or 12,
-                                       help_field = opts["help_field"],
-                                       sort = opts.get("sort", True),
-                                       orientation = opts.get("orientation"),
+                                       size = opts_get("size", 12),
+                                       help_field = opts_get("help_field"),
+                                       sort = opts_get("sort", True),
+                                       orientation = opts_get("orientation"),
                                        )
         else:
             # Default widget_type = "multiselect"
             widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
-                                    header = opts.get("header", False),
-                                    selectedList = opts.get("selectedList", 3),
-                                    multiple = opts.get("multiple", True),
+            w = S3MultiSelectWidget(filter = opts_get("filter", "auto"),
+                                    header = opts_get("header", False),
+                                    selectedList = opts_get("selectedList", 3),
+                                    noneSelectedText = opts_get("noneSelectedText", "Select"),
+                                    multiple = opts_get("multiple", True),
                                     )
 
 
