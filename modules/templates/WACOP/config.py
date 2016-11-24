@@ -269,6 +269,25 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
+        settings.ui.summary = ({"name": "table",
+                                "label": "Table",
+                                "widgets": [{"method": "datatable"}]
+                                },
+                               # @ToDo: Fix Report Tab
+                               #POST /event/incident/report.json giving Unsupported Method
+                               {"name": "charts",
+                                "label": "Report",
+                                "widgets": [{"method": "report",
+                                             "ajax_init": True}]
+                                },
+                               {"common": True,
+                                "name": "map",
+                                "label": "Map",
+                                "widgets": [{"method": "map",
+                                             "ajax_init": True}],
+                                },
+                               )
+
         # Load normal model to be able to override configuration
         table = s3db.event_incident
 
@@ -334,6 +353,22 @@ def config(settings):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            if r.method == "summary":
+                # @ToDo: Configure Timeline
+                # Last 5 days (@ToDo: Configurable Start/End & deduce appropriate unit)
+                # Qty of Newly-opened Incidents per Unit
+                pass
+
+            return True
+        #s3.prep = custom_prep
 
         # Custom postp
         standard_postp = s3.postp
@@ -526,21 +561,32 @@ class incident_Profile(S3CRUD):
                 from gluon import SQLFORM
                 form = SQLFORM(ptable)
                 #onvalidation = 
-                if form.accepts(r.post_vars,
+                post_vars = r.post_vars
+                if form.accepts(post_vars,
                                 current.session,
                                 #onvalidation=onvalidation
                                 ):
                     # Insert new record
-                    accept_id = ptable.insert(**data)
+                    post_id = ptable.insert(body = post_vars.get("body"),
+                                            series_id = post_vars.get("series_id"),
+                                            )
+                    record = dict(id=post_id)
+                    s3db.update_super(ptable, record)
                     # @ToDo: onaccept / record ownership / audit if-required
-                    # @ToDo:
-                    #s3db.update_super()
+                    # Link to Incident
+                    s3db.event_post.insert(incident_id = incident_id,
+                                           post_id = post_id,
+                                           )
+                    # @ToDo: Process Tags
 
                     #response.confirmation = message
 
                     if form.errors:
                         # Revert any records created within widgets/validators
                         current.db.rollback()
+                    else:
+                        # Commit changes & continue to load the page
+                        current.db.commit()
 
             representation = r.representation
             if representation == "html":
@@ -915,16 +961,22 @@ class incident_Profile(S3CRUD):
                                   date_filter,
                                   ]
 
-                filter_form = S3FilterForm(filter_widgets)
+                filter_form = S3FilterForm(filter_widgets,
+                                           submit=True,
+                                           ajax=True,
+                                           url=URL(args=[incident_id, "custom.dl"],
+                                                   vars={}),
+                                           ajaxurl=URL(c="cms", f="post",
+                                                       args=["filter.options"], vars={}),
+                                           )
                 output["filter_form"] = filter_form.html(resource, get_vars,
                                                          target="updates_datalist",
                                                          alias=None)
-                # @ToDo: Move to static or apply styles in theme
-                s3.jquery_ready.append('''$('.filter-clear, .show-filter-manager').addClass('button tiny secondary')''')
+                # @ToDo: Fix Filter Manager (posting to /eden/event/incident/filter.json)
 
                 #  Create Form
                 if updateable and permit("create", tablename):
-                    #from gluon import SQLFORM
+                    from gluon import SQLFORM
                     from gluon.html import FORM, LABEL, TEXTAREA, SELECT, OPTION, INPUT, HR
 
                     stable = db.cms_series
@@ -943,10 +995,16 @@ class incident_Profile(S3CRUD):
                                              _value=s.id,
                                              ))
 
-                    #form = SQLFORM(table)
+                    #form = SQLFORM(ptable)
                     #hidden_fields = form.hidden_fields()
                     #custom = form.custom
                     #widgets = custom.widget
+                    from gluon.utils import web2py_uuid
+                    formname = "cms_post/create"
+                    formkey = web2py_uuid()
+                    keyname = "_formkey[%s]" % formname
+                    session = current.session
+                    session[keyname] = list(session.get(keyname, []))[-9:] + [formkey]
                     form = FORM(LABEL("Write new Update Post:",
                                       _for="body",
                                       ),
@@ -974,6 +1032,16 @@ class incident_Profile(S3CRUD):
                                     _class="row",
                                     ),
                                 #hidden_fields, # Only needed for updates
+                                DIV(INPUT(_name="_formname",
+                                          _value=formname,
+                                          _type="hidden",
+                                          ),
+                                    INPUT(_name="_formkey",
+                                          _value=formkey,
+                                          _type="hidden",
+                                          ),
+                                    _style="display:none;",
+                                    ),
                                 _class="form",
                                 action="#",
                                 enctype="multipart/form-data",
@@ -1138,7 +1206,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    from gluon.html import A, DIV, I, LI, P, SPAN, TAG, UL, URL
+    from gluon.html import A, DIV, I, LI, P, SPAN, TAG, UL, URL, XML
     from s3 import ICON
 
     record_id = record["cms_post.id"]
@@ -1322,7 +1390,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                    _class="label info",
                                    ),
                               TAG["TIME"](date),
-                              " by %s" % person,
+                              " by ",
+                              person,
                               _class="left update-meta-text",
                               ),
                             toolbar,
@@ -1332,7 +1401,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
               TAG["FOOTER"](SPAN("Tags:",
                                  _class="left",
                                  ),
+                            # @ToDO: Make tags work
                             tag_list,
+                            # @ToDO: Make comments work
                             P(A("0 Comments",
                                 _href="#update-1-comments",
                                 ),

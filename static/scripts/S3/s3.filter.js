@@ -1832,7 +1832,7 @@ S3.search = {};
             $('.show-filter-manager').hide();
         });
 
-        // Filter-form submission
+        // Manual form submission
         $('.filter-submit').click(function() {
             filterSubmit($(this).closest('.filter-form'));
         });
