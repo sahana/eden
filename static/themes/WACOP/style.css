@@ -308,7 +308,21 @@ textarea {
 
 /* Incident profile/summary pages should use std Foundation values */
 /* line 136, ../scss/custom/_forms.scss */
-#incident-summary input[type="text"],
+#incident-profile input[type="text"],
+#incident-profile input[type="password"],
+#incident-profile input[type="date"],
+#incident-profile input[type="datetime"],
+#incident-profile input[type="datetime-local"],
+#incident-profile input[type="month"],
+#incident-profile input[type="week"],
+#incident-profile input[type="email"],
+#incident-profile input[type="number"],
+#incident-profile input[type="search"],
+#incident-profile input[type="tel"],
+#incident-profile input[type="time"],
+#incident-profile input[type="url"],
+#incident-profile textarea,
+#incident-profile select, #incident-summary input[type="text"],
 #incident-summary input[type="password"],
 #incident-summary input[type="date"],
 #incident-summary input[type="datetime"],
@@ -322,76 +336,82 @@ textarea {
 #incident-summary input[type="time"],
 #incident-summary input[type="url"],
 #incident-summary textarea,
-#incident-summary select, #panel1 input[type="text"],
-#panel1 input[type="password"],
-#panel1 input[type="date"],
-#panel1 input[type="datetime"],
-#panel1 input[type="datetime-local"],
-#panel1 input[type="month"],
-#panel1 input[type="week"],
-#panel1 input[type="email"],
-#panel1 input[type="number"],
-#panel1 input[type="search"],
-#panel1 input[type="tel"],
-#panel1 input[type="time"],
-#panel1 input[type="url"],
-#panel1 textarea,
-#panel1 select {
+#incident-summary select {
   height: 2.3125rem;
-  padding: 0;
+  padding: 0.5rem;
   margin: 0 0 1rem;
 }
 
+/* line 157, ../scss/custom/_forms.scss */
+.incident-profile input[type="text"],
+.incident-profile input[type="password"],
+.incident-profile input[type="date"],
+.incident-profile input[type="datetime"],
+.incident-profile input[type="datetime-local"],
+.incident-profile input[type="month"],
+.incident-profile input[type="week"],
+.incident-profile input[type="email"],
+.incident-profile input[type="number"],
+.incident-profile input[type="search"],
+.incident-profile input[type="tel"],
+.incident-profile input[type="time"],
+.incident-profile input[type="url"],
+.incident-profile textarea,
+.incident-profile select {
+  display: block;
+  font-weight: normal;
+}
+
 /* Form and Item containers */
-/* line 158, ../scss/custom/_forms.scss */
+/* line 178, ../scss/custom/_forms.scss */
 #last_update {
   float: none;
 }
 
-/* line 161, ../scss/custom/_forms.scss */
+/* line 181, ../scss/custom/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 163, ../scss/custom/_forms.scss */
+/* line 183, ../scss/custom/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 169, ../scss/custom/_forms.scss */
+/* line 189, ../scss/custom/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 171, ../scss/custom/_forms.scss */
+/* line 191, ../scss/custom/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 176, ../scss/custom/_forms.scss */
+/* line 196, ../scss/custom/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 180, ../scss/custom/_forms.scss */
+/* line 200, ../scss/custom/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 185, ../scss/custom/_forms.scss */
+/* line 205, ../scss/custom/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 189, ../scss/custom/_forms.scss */
+/* line 209, ../scss/custom/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 195, ../scss/custom/_forms.scss */
+/* line 215, ../scss/custom/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -399,22 +419,22 @@ textarea {
 }
 
 /* Filter forms */
-/* line 204, ../scss/custom/_forms.scss */
+/* line 224, ../scss/custom/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
 }
-/* line 208, ../scss/custom/_forms.scss */
+/* line 228, ../scss/custom/_forms.scss */
 .filter-form table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 211, ../scss/custom/_forms.scss */
+/* line 231, ../scss/custom/_forms.scss */
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
-/* line 217, ../scss/custom/_forms.scss */
+/* line 237, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -422,13 +442,13 @@ textarea {
 }
 
 /* Help Popup */
-/* line 224, ../scss/custom/_forms.scss */
+/* line 244, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 228, ../scss/custom/_forms.scss */
+/* line 248, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -437,7 +457,7 @@ textarea {
   padding: 0;
   width: 60px;
 }
-/* line 236, ../scss/custom/_forms.scss */
+/* line 256, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;

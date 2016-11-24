@@ -132,7 +132,7 @@ textarea {
     max-width: 100%;
 }
 /* Incident profile/summary pages should use std Foundation values */
-#incident-summary, #panel1 {
+#incident-profile, #incident-summary {
     input[type="text"],
     input[type="password"],
     input[type="date"],
@@ -149,9 +149,29 @@ textarea {
     textarea,
     select {
       height: 2.3125rem;
-      padding: 0;
+      padding: 0.5rem;
       margin: 0 0 1rem;
     }
+}
+.incident-profile {
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    input[type="datetime"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="week"],
+    input[type="email"],
+    input[type="number"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="time"],
+    input[type="url"],
+    textarea,
+    select {
+        display: block;
+        font-weight: normal;
+   }
 }
 
 /* Form and Item containers */
