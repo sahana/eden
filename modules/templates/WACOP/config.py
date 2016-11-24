@@ -919,7 +919,9 @@ class incident_Profile(S3CRUD):
                     data = msg
                 else:
                     # Render the list
-                    data = datalist.html()
+                    data = datalist.html(pagesize = 5,
+                                         ajaxurl = URL(args = [incident_id, "custom.dl"]),
+                                         )
 
                 # Render the widget
                 output["updates_datalist"] = data
@@ -976,7 +978,8 @@ class incident_Profile(S3CRUD):
 
                 #  Create Form
                 if updateable and permit("create", tablename):
-                    from gluon import SQLFORM
+                    # @ToDo: AJAX Form Submission
+                    #from gluon import SQLFORM
                     from gluon.html import FORM, LABEL, TEXTAREA, SELECT, OPTION, INPUT, HR
 
                     stable = db.cms_series
@@ -1189,8 +1192,43 @@ class incident_Profile(S3CRUD):
 
             elif representation == "dl":
                 # DataList updates
-                # @ToDo
-                pass
+
+                from gluon import URL
+                from s3 import FS, S3URLQuery
+    
+                response = current.response
+                s3 = response.s3
+
+                tablename = "cms_post"
+                c, f = tablename.split("_", 1)
+                resource = s3db.resource(tablename)
+                resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
+                queries = S3URLQuery.parse(resource, r.get_vars)
+                for alias in queries:
+                    for q in queries[alias]:
+                        resource.add_filter(q)
+
+                list_fields = ["series_id",
+                               "date",
+                               "body",
+                               "created_by",
+                               "tag_post.tag_id",
+                               ]
+                datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                           start=None,
+                                                           limit=5,
+                                                           list_id="updates_datalist",
+                                                           orderby="date desc",
+                                                           layout=cms_post_list_layout)
+            
+                # Render the list
+                data = datalist.html(pagesize = 5,
+                                     ajaxurl = URL(args = [incident_id, "custom.dl"]),
+                                     )
+
+                response.view = "plain.html"
+                output = {"item": data}
+                return output
 
         raise HTTP(405, current.ERROR.BAD_METHOD)
 
@@ -1206,7 +1244,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    from gluon.html import A, DIV, I, LI, P, SPAN, TAG, UL, URL, XML
+    from gluon.html import A, DIV, I, LI, P, SPAN, TAG, UL, URL
     from s3 import ICON
 
     record_id = record["cms_post.id"]
