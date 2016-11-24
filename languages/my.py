@@ -341,7 +341,7 @@
 'Clear RAM': 'RAM ကို ဖ်က္သည္။',
 'Clear all Layers': 'အလႊာအားလံုး ရွင္းလင္းသည္',
 'Clear all': 'အားလံုးကို ရွင္းလင္းပါ',
-'Clear filter': 'စစ္ထုတ္သည့္ကိရိယာကိုဖ်က္သည္',
+'Clear Filter': 'စစ္ထုတ္သည့္ကိရိယာကိုဖ်က္သည္',
 'Clear': 'ရွင္းပစ္သည္',
 'Click anywhere on the map for full functionality': 'လုပ္ငန္းအျပည့္လုပ္ေဆာင္ရန္ ေျမပံုေပၚရွိတစ္ေနရာရာကိုႏွိပ္ပါ။',
 'Click on the slider to choose a value': 'တန္ဖုိးမ်ားေရြးခ်ယ္ရန္ေဘးတုိက္ေျပးခလုပ္ကိုႏွိပ္ပါ။',

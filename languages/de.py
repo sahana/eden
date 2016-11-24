@@ -764,7 +764,7 @@
 'Civil Emergency': 'Ziviler Notfall',
 'Cladding, glazing': 'Verkleidung, Verglasung',
 'Clear': 'Löschen',
-'Clear filter': 'Filter zurücksetzen',
+'Clear Filter': 'Filter zurücksetzen',
 'Click on the link %(url)s to reset your password': 'Klicken sie auf den Link %(url)s um ihr Kennwort zurückzusetzen',
 'Click on the link %(url)s to verify your email': 'Klicken sie auf den Link %(url)s zum Überprüfen ihrer EMail Adresse',
 'Click where you want to open Streetview': 'Auswahl um Streetview zu öffnen',

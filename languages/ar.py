@@ -296,7 +296,7 @@
 'Church': 'كنيسة',
 'City': 'مدينة',
 'Cleaner': 'المنظف',
-'Clear filter': 'مسح الاعداد',
+'Clear Filter': 'مسح الاعداد',
 'click for more details': 'اضغط هنا للمزيد من التفاصيل',
 'Click on the link %(url)s to reset your password': 'انقر على الرابط %(url)s to reset your password',
 'Click on the link %(url)s to verify your email': 'انقر على الرابط %(url)s للتحقق من بريدك الالكتروني',

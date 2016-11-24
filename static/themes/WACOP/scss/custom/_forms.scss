@@ -131,6 +131,29 @@ textarea {
     resize: both;
     max-width: 100%;
 }
+/* Incident profile/summary pages should use std Foundation values */
+#incident-summary, #panel1 {
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    input[type="datetime"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="week"],
+    input[type="email"],
+    input[type="number"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="time"],
+    input[type="url"],
+    textarea,
+    select {
+      height: 2.3125rem;
+      padding: 0;
+      margin: 0 0 1rem;
+    }
+}
+
 /* Form and Item containers */
 #last_update {
     float: none;

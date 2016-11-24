@@ -48,14 +48,32 @@ fieldset {
   padding: 0.5625em;
 }
 
-/**
-* Top Bar
-*/
-/*
-.top-bar,
-.top-bar-section li:not(.has-form) a:not(.button) {
-  background-color: #112e51;
-}*/
+/* Incident Profile page */
+#panel1 table.s3-groupedopts-widget {
+    border: 0;
+}
+#panel1 .dl-header {
+   display: none;
+}
+
+/* Incident Summary page */
+#incident-summary h2 {
+    color: #112e51;
+    font-family: "Merriweather",serif;
+    font-size: 2.3125rem;
+    font-family: "Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    margin-top: 0.2rem;
+    text-rendering: optimizelegibility;
+}
+#incident-summary .callout {
+    background-color: #dce4ef;
+    border-color: #8ba6ca;
+    margin-top: 1.5rem;
+}
 
 /* Logo */
 .name h1 {

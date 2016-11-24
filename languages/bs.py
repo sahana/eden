@@ -1352,7 +1352,7 @@
 'Clear all Layers': 'Očisti sve slojeve',
 'Clear CACHE?': 'Obrisati predmemoriju?',
 'Clear DISK': 'Obriši na disku',
-'Clear filter': 'Očisti filter',
+'Clear Filter': 'Očisti filter',
 'Clear RAM': 'Obriši u memoriji',
 'Clear Selection': 'Obriši izbor',
 'Cleft chin': 'Rupica na bradi',

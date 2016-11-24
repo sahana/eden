@@ -131,17 +131,31 @@
   <li class='tab-title'><a href='#panel2'>Directories</a></li>
   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
  </ul>
- <div class="tabs-content panel">
-  <div class="content active" id="panel1">
+ <div class='tabs-content panel'>
+  <div class='content active' id='panel1'>
+   <div class='row'>
+    <div class='large-3 columns'>
+     {{=filter_form}}
+    </div>
+    <div class='large-9 columns'>
+     {{if create_post_form:}}
+        {{=create_post_form}}
+        <hr>
+      {{pass}}
+     <ul class='no-bullet'>
+      {{=updates_datalist}}
+     </ul>
+    </div>
+   </div>
   </div>
-  <section class="staff content" id="panel2">
-   <div class="row">
-    <ul class="large-3 columns tabs vertical" data-tab>
-     <li class="tab-title active"><a href="#staff">Staff</a></li>
-     <li class="tab-title"><a href="#organisations">Organizations</a></li>
+  <section class='staff content' id='panel2'>
+   <div class='row'>
+    <ul class='large-3 columns tabs vertical' data-tab>
+     <li class='tab-title active'><a href='#staff'>Staff</a></li>
+     <li class='tab-title'><a href='#organisations'>Organizations</a></li>
     </ul>
-    <div class="tabs-content large-9 columns">
-     <div class="row collapse prefix-radius content active" id="staff">
+    <div class='tabs-content large-9 columns'>
+     <div class='row collapse prefix-radius content active' id='staff'>
       <div class='large-2 columns'>
        <label for='event_human_resource-search' class='prefix'>Search</label>
       </div>
@@ -184,4 +198,5 @@
   </section>
  </div>
 </div>
+{{include "dataLists.html"}}
 {{include "dataTables.html"}}

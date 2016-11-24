@@ -2268,7 +2268,7 @@ class S3FilterForm(object):
         if clear:
             _class = "filter-clear"
             if clear is True:
-                label = T("Clear filter")
+                label = T("Clear Filter")
             elif isinstance(clear, (list, tuple)):
                 label = clear[0]
                 _class = "%s %s" % (clear[1], _class)
@@ -2311,9 +2311,11 @@ class S3FilterForm(object):
         advanced = False
         for f in self.widgets:
             widget = f(resource, get_vars, alias=alias)
-            label = f.opts["label"]
-            comment = f.opts["comment"]
-            hidden = f.opts["hidden"]
+            widget_opts = f.opts
+            label = widget_opts["label"]
+            comment = widget_opts["comment"]
+            hidden = widget_opts["hidden"]
+            widget_formstyle = widget_opts.get("formstyle", formstyle)
             if hidden:
                 advanced = True
             widget_id = f.attr["_id"]
@@ -2329,7 +2331,7 @@ class S3FilterForm(object):
                 label = ""
             if not comment:
                 comment = ""
-            formrow = formstyle(row_id, label, widget, comment, hidden=hidden)
+            formrow = widget_formstyle(row_id, label, widget, comment, hidden=hidden)
             if hidden:
                 if isinstance(formrow, DIV):
                     formrow.add_class("advanced")

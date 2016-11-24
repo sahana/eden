@@ -1238,7 +1238,7 @@
 'Clear Color Selection': 'Borrar Selección de color',
 'Clear Selection': 'Limpia la selección',
 'Clear all Layers': 'Desactive todas las capas',
-'Clear filter': 'Limpia filtro',
+'Clear Filter': 'Limpia filtro',
 'Clear': 'Limpia',
 'Cleft chin': 'Mentón hendido',
 'Click anywhere on the map for full functionality': 'Haga clic en cualquier parte del mapa para funcionalidad completa',

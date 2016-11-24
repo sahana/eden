@@ -851,7 +851,7 @@
 'clear': 'Chiaro',
 'Clear All': 'Cancella tutto',
 'Clear all Layers': 'Cancella tutti gli strati',
-'Clear filter': 'Cancella i filtri',
+'Clear Filter': 'Cancella i filtri',
 'click for more details': 'Fare clic per maggiori dettagli',
 'click here': 'Cliccare qui',
 'Click on the link %(url)s to reset your password': 'Fare clic sul collegamento %(url)s per azzerare la password',

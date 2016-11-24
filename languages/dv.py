@@ -4,7 +4,7 @@
 'Any': 'ބައެއް',
 'Area Description': 'ތަނުގެ މަޢުލޫމާތު',
 'Category': 'ކެޓެގަރީ',
-'Clear filter': 'ފިލްޓަރ ރިސެޓް',
+'Clear Filter': 'ފިލްޓަރ ރިސެޓް',
 'Codes': 'ކޯޑު',
 'Create': 'ކްރިއޭޓް',
 'Create Alert': 'އެލަރޓް ކްރިއޭޓް',

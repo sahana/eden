@@ -356,13 +356,14 @@ class S3SQLDefaultForm(S3SQLForm):
         self.record_id = record_id
 
         if not readonly:
+            _get = options.get
 
             # Pre-populate create-form?
             if record_id is None:
-                data = options.get("data", None)
-                from_table = options.get("from_table", None)
-                from_record = options.get("from_record", None)
-                map_fields = options.get("map_fields", None)
+                data = _get("data", None)
+                from_table = _get("from_table", None)
+                from_record = _get("from_record", None)
+                map_fields = _get("map_fields", None)
                 record = self.prepopulate(from_table=from_table,
                                           from_record=from_record,
                                           map_fields=map_fields,
@@ -428,7 +429,6 @@ class S3SQLDefaultForm(S3SQLForm):
         # Process the form
         logged = False
         if not readonly:
-            _get = options.get
             link = _get("link")
             hierarchy = _get("hierarchy")
             onvalidation = _get("onvalidation")

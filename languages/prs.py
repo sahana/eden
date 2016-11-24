@@ -515,7 +515,7 @@
 'Clean-Up Campaign': 'کمپاین را پاک نمایید',
 'Cleaner': 'پاک کننده',
 'Clear All': 'همه را پاک نمایید',
-'Clear filter': 'فیلتر را پاک نمایید',
+'Clear Filter': 'فیلتر را پاک نمایید',
 'Clear selection': 'انتخاب را پاک نمایید',
 'Clear': 'پاک',
 'Click anywhere on the map for full functionality': 'یک دکمه را بالای نقشه برای کارکرد کامل فشار دهید',

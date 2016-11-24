@@ -459,7 +459,7 @@
 'Clear': 'پاک',
 'clear': 'پاک',
 'Clear All': 'همه را پاک نمایید',
-'Clear filter': 'فیلتر را پاک نمایید',
+'Clear Filter': 'فیلتر را پاک نمایید',
 'Clear selection': 'انتخاب را پاک نمایید',
 'Click anywhere on the map for full functionality': 'یک دکمه را بالای نقشه برای کارکرد کامل فشار دهید',
 'click here': 'اینجا را کلیک نمایید',

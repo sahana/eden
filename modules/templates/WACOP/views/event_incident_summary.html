@@ -1,0 +1,41 @@
+{{extend "layout.html"}}
+<div id='incident-summary'>
+ <div class="row">
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+{{for event in events:}}
+ <div role="complementary" class="row panel callout">
+  <div class="row">
+   <div class="large-9 small-12 columns">
+    <p>{{=event.name}} <span class="label success">Active</span></p>
+   </div>
+   <p class="large-3 small-12 columns text-right"><a href="{{=URL(c="event", f="event", args=[event.id, "profile"])}}" class="button button-info tiny">Go to Event Page</a></p>
+  </div>
+ </div>
+{{pass}}
+ <div class="row panel">
+  <div class="large-4 columns">
+   <div id='filter-form' class='form-container'>
+    {{try:}}{{=filter_form}}{{except:}}{{pass}}
+   </div>
+  </div>
+  <div class="large-8 columns">
+   <h3 class="show-for-sr">View the incidents on the map:</h3>
+   <iframe class="large-12" width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://www.openstreetmap.org/export/embed.html?bbox=-127.342529296875%2C43.810747313446996%2C-115.477294921875%2C50.28231945008158&amp;layer=mapnik"></iframe>
+   <div id="timeline-embed" style="width:100%; height:100px;"></div>
+  </div>
+ </div>
+<hr>
+<div id='summary-tabs'>
+ <div id='summary-tab-headers'>
+  {{try:}}{{=tabs}}{{except:}}{{pass}}
+ </div>
+ <div id='summary-sections'>
+  {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
+ </div>
+</div>
+</div>
+{{include "dataTables.html"}}
+{{include "dataLists.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/echarts.min.js" % appname)}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/incident_summary.js" % appname)}}

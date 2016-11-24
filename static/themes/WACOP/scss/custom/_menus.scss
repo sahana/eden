@@ -32,6 +32,18 @@
     }
 }
 
+// Top Bar styles intended for screen sizes above the breakpoint.
+@media #{$topbar-media-query} {
+    .top-bar {
+        select {
+            position: static;
+            top: 0;
+            padding-bottom: 0;
+            padding-right: 0.6rem;
+            padding-top: 0;
+        }
+    }
+}
 
 /* Side Menu */
 .sidebar {

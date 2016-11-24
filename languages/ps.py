@@ -516,7 +516,7 @@
 'Clean-Up Campaign': 'د کمپین (campaign) پاکول',
 'Cleaner': 'پاکوونکی',
 'Clear All': 'ټول پاک کړه',
-'Clear filter': 'فیلتر پاک کړه',
+'Clear Filter': 'فیلتر پاک کړه',
 'Clear selection': 'انخاب پاک کړه',
 'Clear': 'پاک ',
 'Click anywhere on the map for full functionality': 'په هر ځای د نقشه کی کلیک وکړه د مکمل عملکرد لپاره',
