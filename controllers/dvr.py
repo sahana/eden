@@ -385,12 +385,12 @@ def group_membership():
                               )
 
 # -----------------------------------------------------------------------------
-def case_activity_type():
-    """ Case Activity Types: RESTful CRUD Controller """
+def activity_type():
+    """ Activity Types: RESTful CRUD Controller """
 
     if settings.get_dvr_activity_types_hierarchical():
 
-        tablename = "dvr_case_activity_type"
+        tablename = "dvr_activity_type"
 
         from s3 import S3Represent
         represent = S3Represent(lookup = tablename,
@@ -405,6 +405,12 @@ def case_activity_type():
                                                represent,
                                                orderby="%s.name" % tablename,
                                                ))
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def activity():
+    """ Activities: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

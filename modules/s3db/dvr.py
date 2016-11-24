@@ -1263,11 +1263,12 @@ class DVRNotesModel(S3Model):
 class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
-    names = ("dvr_case_activity_type",
-             "dvr_case_activity",
-             "dvr_case_service_contact",
+    names = ("dvr_activity_type",
              "dvr_activity_type_represent",
+             "dvr_activity",
+             "dvr_case_activity",
              "dvr_case_activity_id",
+             "dvr_case_service_contact",
              )
 
     def model(self):
@@ -1288,9 +1289,9 @@ class DVRCaseActivityModel(S3Model):
         hierarchical_activity_types = settings.get_dvr_activity_types_hierarchical()
 
         # ---------------------------------------------------------------------
-        # Case Activity Type
+        # Activity Type
         #
-        tablename = "dvr_case_activity_type"
+        tablename = "dvr_activity_type"
         define_table(tablename,
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
@@ -1302,7 +1303,7 @@ class DVRCaseActivityModel(S3Model):
                                 writable = service_type,
                                 ),
                      # This form of hierarchy may not work on all Databases:
-                     Field("parent", "reference dvr_case_activity_type",
+                     Field("parent", "reference dvr_activity_type",
                            label = T("Subtype of"),
                            ondelete = "RESTRICT",
                            readable = hierarchical_activity_types,
@@ -1360,7 +1361,63 @@ class DVRCaseActivityModel(S3Model):
                                            )
 
         # ---------------------------------------------------------------------
-        # Case Activity
+        # Activity (not case-specific)
+        #
+        site_represent = self.org_SiteRepresent(show_link=False)
+        permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
+
+        # Simplified periodicity options
+        # @todo: make boolean and use free text interval description?
+        period_opts = {"R": T("regular"),
+                       "O": T("occasional"),
+                       }
+
+        tablename = "dvr_activity"
+        define_table(tablename,
+                     activity_type_id(readable = activity_types,
+                                      writable = activity_types,
+                                      ),
+                     Field("name",
+                           label = T("Title"),
+                           ),
+                     s3_date("start_date",
+                             label = T("Start Date"),
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
+                     Field("period", length=4,
+                           represent = S3Represent(options=period_opts),
+                           requires = IS_EMPTY_OR(IS_IN_SET(period_opts)),
+                           ),
+                     self.super_link("site_id", "org_site",
+                            filterby = "site_id",
+                            filter_opts = permitted_facilities,
+                            label = T("Place"),
+                            readable = True,
+                            writable = True,
+                            represent = site_represent,
+                            updateable = True,
+                            ),
+                     # Field("room"), @todo: link to room (org_site)
+                     # @todo: have alternative lookup field (hrm)
+                     Field("facilitator",
+                           label = T("Facilitator"),
+                           ),
+                     #Field("modality"), @todo: event or outreach?
+                     #self.gis_location_id(), @todo: outreach area (if outreach)
+                     #Field("gender"), @todo: targeted gender group(s)
+                     #Field("age_group"), @todo: targeted age group(s)
+                     #Field("group_type"), @todo: other target group type
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings @todo
+
+        # Reusable Field @todo
+
+        # ---------------------------------------------------------------------
+        # Case Activity (case-specific)
         #
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
 
@@ -1632,7 +1689,7 @@ class DVRCaseActivityModel(S3Model):
 
             db = current.db
             s3db = current.s3db
-            table = s3db.dvr_case_activity_type
+            table = s3db.dvr_activity_type
 
             # Load record
             row = db(table.id == record_id).select(table.service_id,

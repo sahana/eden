@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         DVR Case Activity Type - CSV Import Stylesheet
+         DVR Activity Type - CSV Import Stylesheet
 
          CSV column..................Format..........Content
 
@@ -132,7 +132,7 @@
         <xsl:param name="ParentPath"/>
         <xsl:param name="Row"/>
 
-        <resource name="dvr_case_activity_type">
+        <resource name="dvr_activity_type">
             <!-- Use path with prefix to generate the tuid -->
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('TYPE:', $Path)"/>
@@ -140,7 +140,7 @@
 
             <!-- Add link to parent (if there is one) -->
             <xsl:if test="$ParentPath!=''">
-                <reference field="parent" resource="dvr_case_activity_type">
+                <reference field="parent" resource="dvr_activity_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('TYPE:', $ParentPath)"/>
                     </xsl:attribute>

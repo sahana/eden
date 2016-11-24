@@ -207,7 +207,7 @@ def config(settings):
             # Filter activity types
             field = table.activity_type_id
             field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_case_activity_type.id",
+            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
                                        field.represent,
                                        filterby = "service_id",
                                        filter_opts = service_id,
@@ -287,7 +287,7 @@ def config(settings):
             # Filter activity types
             field = table.activity_type_id
             field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_case_activity_type.id",
+            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
                                        field.represent,
                                        filterby = "service_id",
                                        filter_opts = service_ids,
@@ -332,7 +332,7 @@ def config(settings):
             # Filter activity types
             field = table.activity_type_id
             field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_case_activity_type.id",
+            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
                                        field.represent,
                                        filterby = "service_id",
                                        filter_opts = service_id,
