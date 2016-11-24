@@ -68,7 +68,7 @@
 {{else:}}
 <body>
  <div class='row main-title'>
-    <div class='medium-4 columns'>
+    <div class='large-4 medium-6 columns'>
      <a href='{{=URL(c="default", f="index")}}'>
       {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
       <div class="org-logo">{{=org_menu[1]}}</div>
@@ -78,10 +78,10 @@
       </div>
      </a>
     </div>
-    <div class='medium-2 medium-push-6 columns'>
+    <div class='large-push-6 large-2 medium-6 columns'>
       {{=current.menu.lang}}
     </div>
-    <div class='medium-6 columns medium-pull-2 personal-menu-area'>
+    <div class='large-pull-2 large-6 medium-12 columns personal-menu-area'>
       <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
       {{=current.menu.personal}}
     </div>
