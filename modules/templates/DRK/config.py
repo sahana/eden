@@ -7,7 +7,7 @@ from collections import OrderedDict
 from gluon import current, SPAN
 from gluon.storage import Storage
 
-from s3 import S3Method
+from s3 import S3DateTime, S3Method, s3_str, s3_unicode
 
 # Limit after which a checked-out resident is reported overdue (days)
 ABSENCE_LIMIT = 5
@@ -1423,9 +1423,6 @@ def config(settings):
             if QUARTIERMANAGER:
                 # Add Action Button to assign Housing Unit to the Resident
                 from gluon import URL
-                #from s3 import S3CRUD, s3_str
-                from s3 import s3_str
-                #S3CRUD.action_buttons(r)
                 s3.actions = [dict(label=s3_str(T("Assign Shelter")),
                                     _class="action-btn",
                                     url=URL(c="cr",
@@ -2194,94 +2191,7 @@ def config(settings):
         resource.configure(**{hook: callback})
 
     settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
-
     # -------------------------------------------------------------------------
-    def case_event_date_day(row):
-        """
-            Field method to reduce case event date/time to just date,
-            used in pivot table reports to group case events by day
-        """
-
-        if hasattr(row, "dvr_case_event"):
-            row = row.dvr_case_event
-        try:
-            date = row.date
-        except AttributeError:
-            date = None
-        if date:
-            # Get local hour
-            from dateutil import tz
-            date = date.replace(tzinfo=tz.gettz("UTC"))
-            date = date.astimezone(tz.gettz("Europe/Berlin"))
-            hour = date.time().hour
-
-            # Convert to date
-            date = date.date()
-            if hour <= 7:
-                # Map early hours to previous day
-                return date - datetime.timedelta(days=1)
-        else:
-            date = None
-        return date
-
-    def case_event_date_day_represent(value):
-        """
-            Representation method for case_event_date_day, needed in order
-            to sort pivot axis values by raw date, but show them in locale
-            format (default DD.MM.YYYY, doesn't sort properly).
-        """
-
-        from s3 import S3DateTime
-        return S3DateTime.date_represent(value, utc=True)
-
-    def case_event_time_of_day(row):
-        """
-            Field method to group events by time of day
-        """
-
-        if hasattr(row, "dvr_case_event"):
-            event = row.dvr_case_event
-        else:
-            event = row
-        if hasattr(row, "dvr_case_event_type"):
-            event_type = row.dvr_case_event_type
-        else:
-            event_type = None
-
-        try:
-            date = event.date
-        except AttributeError:
-            date = None
-
-        person_id = 0
-        event_code = None
-        if event_type:
-            try:
-                person_id = event.person_id
-                event_code = event_type.code
-            except AttributeError:
-                pass
-
-        if date:
-            if event_code == "FOOD" and person_id is None:
-                from s3 import s3_str
-                tod = s3_str(current.T("Surplus Meals"))
-            else:
-                from dateutil import tz
-                date = date.replace(tzinfo=tz.gettz("UTC"))
-                date = date.astimezone(tz.gettz("Europe/Berlin"))
-                hour = date.time().hour
-
-                if 7 <= hour < 11:
-                    tod = "07:00 - 11:00"
-                elif 11 <= hour < 15:
-                    tod = "11:00 - 15:00"
-                else:
-                    tod = "15:00 - 07:00"
-        else:
-            tod = "-"
-        return tod
-
     def case_event_report_default_filters(event_code=None):
         """
             Set default filters for case event report
@@ -2307,7 +2217,7 @@ def config(settings):
         # Minimum date: one week
         WEEK_AGO = datetime.datetime.now() - \
                     datetime.timedelta(days=7)
-        min_date = WEEK_AGO.replace(hour=8, minute=0, second=0)
+        min_date = WEEK_AGO.replace(hour=7, minute=0, second=0)
 
         s3_set_default_filter("~.date",
                               {"ge": min_date,
@@ -2336,16 +2246,18 @@ def config(settings):
                 event_code = r.get_vars.get("code")
                 case_event_report_default_filters(event_code)
 
+                dates = DRKCaseEventDateAxes()
+
                 # Field method for day-date of events
                 from s3 import s3_fieldmethod
                 table.date_day = s3_fieldmethod(
                                     "date_day",
-                                    case_event_date_day,
-                                    represent = case_event_date_day_represent,
+                                    dates.case_event_date_day,
+                                    represent = dates.case_event_date_day_represent,
                                     )
                 table.date_tod = s3_fieldmethod(
                                     "date_tod",
-                                    case_event_time_of_day,
+                                    dates.case_event_time_of_day,
                                     )
 
                 # Pivot axis options
@@ -2371,7 +2283,7 @@ def config(settings):
                 resource.configure(report_options = report_options,
                                    extra_fields = ["date",
                                                    "person_id",
-                                                   "type_id$code",
+                                                   "type_id",
                                                    ],
                                    )
             return result
@@ -3118,6 +3030,110 @@ class DRKCreateSiteActivityReport(S3Method):
         formvars.date = date
 
 # =============================================================================
+class DRKCaseEventDateAxes(object):
+    """
+        Helper class for virtual date axes in case event statistics
+    """
+
+    def __init__(self):
+        """
+            Constructor; perform all slow lookups outside of the field methods
+        """
+
+        from dateutil import tz
+
+        # Get timezone descriptions
+        self.UTC = tz.tzutc()
+        self.LOCAL = tz.gettz("Europe/Berlin")
+
+        # Lookup FOOD event type_id
+        table = current.s3db.dvr_case_event_type
+        query = (table.code == "FOOD") & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id, limitby=(0, 1)).first()
+        self.FOOD = row.id if row else None
+
+        self.SURPLUS_MEALS = s3_str(current.T("Surplus Meals"))
+
+    # -------------------------------------------------------------------------
+    def case_event_date_day(self, row):
+        """
+            Field method to reduce case event date/time to just date,
+            used in pivot table reports to group case events by day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+
+        if date:
+            # Get local hour
+            date = date.replace(tzinfo=self.UTC).astimezone(self.LOCAL)
+            hour = date.time().hour
+
+            # Convert to date
+            date = date.date()
+            if hour <= 7:
+                # Map early hours to previous day
+                return date - datetime.timedelta(days=1)
+        else:
+            date = None
+        return date
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_event_date_day_represent(value):
+        """
+            Representation method for case_event_date_day, needed in order
+            to sort pivot axis values by raw date, but show them in locale
+            format (default DD.MM.YYYY, doesn't sort properly).
+        """
+
+        return S3DateTime.date_represent(value, utc=True)
+
+    # -------------------------------------------------------------------------
+    def case_event_time_of_day(self, row):
+        """
+            Field method to group events by time of day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+
+        if date:
+            try:
+                person_id = row.person_id
+                type_id = row.type_id
+            except AttributeError:
+                person_id = 0
+                type_id = None
+
+            if type_id == self.FOOD and person_id is None:
+                tod = self.SURPLUS_MEALS
+            else:
+                date = date.replace(tzinfo=self.UTC).astimezone(self.LOCAL)
+                hour = date.time().hour
+
+                if 7 <= hour < 11:
+                    tod = "07:00 - 11:00"
+                elif 11 <= hour < 15:
+                    tod = "11:00 - 15:00"
+                else:
+                    tod = "15:00 - 07:00"
+        else:
+            tod = "-"
+        return tod
+
+# =============================================================================
 class DRKSiteActivityReport(object):
     """
         Helper class to produce site activity reports ("Residents Report")
@@ -3224,7 +3240,6 @@ class DRKSiteActivityReport(object):
 
         # Represent paid_on as date
         atable = s3db.dvr_allowance
-        from s3 import S3DateTime
         atable.paid_on.represent = lambda dt: \
                                    S3DateTime.date_represent(dt,
                                                              utc=True,
@@ -3346,7 +3361,6 @@ class DRKSiteActivityReport(object):
 
         # Post-process rows
         rows = []
-        from s3 import s3_str
         for row in data.rows:
 
             flags = "dvr_case_flag_case.flag_id"
@@ -3486,7 +3500,6 @@ class DRKSiteActivityReport(object):
         if sheet is not None and data is not None:
 
             T = current.T
-            from s3 import S3DateTime, s3_unicode
             output = (("Date", S3DateTime.date_represent(self.date, utc=True)),
                       ("Previous Total", data["old_total"]),
                       ("Admissions", data["ins"]),
