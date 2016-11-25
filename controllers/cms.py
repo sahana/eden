@@ -134,7 +134,7 @@ def post():
                     field.readable = field.writable = False
 
                 page = get_vars.get("page", None)
-                url = get_vars.get("url") # custom redirect?
+                url = get_vars.get("url") # custom redirect
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False

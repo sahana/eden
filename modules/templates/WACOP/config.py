@@ -227,6 +227,27 @@ def config(settings):
     settings.cms.show_tags = True
 
     # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.cms_post
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        crud_form = S3SQLCustomForm((T("Text"), "body"),
+                                    # @ToDo: Tags widget
+                                    S3SQLInlineComponent("tag_post",
+                                                         fields = [("", "tag_id")],
+                                                         label = T("Tags"),
+                                                         ),
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -------------------------------------------------------------------------
     # Event/Incident Management
     #
     settings.event.incident_teams_tab = "Units"
@@ -267,32 +288,14 @@ def config(settings):
     def customise_event_incident_controller(**attr):
 
         s3db = current.s3db
-        s3 = current.response.s3
-
-        settings.ui.summary = ({"name": "table",
-                                "label": "Table",
-                                "widgets": [{"method": "datatable"}]
-                                },
-                               # @ToDo: Fix Report Tab
-                               #POST /event/incident/report.json giving Unsupported Method
-                               {"name": "charts",
-                                "label": "Report",
-                                "widgets": [{"method": "report",
-                                             "ajax_init": True}]
-                                },
-                               {"common": True,
-                                "name": "map",
-                                "label": "Map",
-                                "widgets": [{"method": "map",
-                                             "ajax_init": True}],
-                                },
-                               )
+        response = current.response
+        s3 = response.s3
 
         # Load normal model to be able to override configuration
         table = s3db.event_incident
 
         def status_represent(value):
-            " Represent the closed field as a Status Open/Closed instead of True/False "
+            " Represent the closed field as Status Open/Closed instead of True/False "
 
             if value is True:
                 return T("Closed")
@@ -303,56 +306,14 @@ def config(settings):
 
         table.closed.label = T("Status")
         table.closed.represent = status_represent
+        table.event_id.readable = table.event_id.writable = True
 
         # Custom Profile
         s3db.set_method("event", "incident",
                         method = "custom",
                         action = incident_Profile)
 
-        s3.crud_strings["event_incident"].title_list =  T("Browse Incidents")
-
-        from s3 import S3OptionsFilter, S3TextFilter
-        filter_widgets = [S3TextFilter(["name",
-                                        "comments",
-                                        ],
-                                       formstyle = text_filter_formstyle,
-                                       label = T("Search"),
-                                       _placeholder = T("Enter search term…"),
-                                       ),
-                          S3OptionsFilter("organisation_id",
-                                          label = "",
-                                          noneSelectedText = "Lead Organization",
-                                          widget = "multiselect",
-                                          ),
-                          S3OptionsFilter("closed",
-                                          formstyle = filter_formstyle,
-                                          options = {"*": T("All"),
-                                                     False: T("Open"),
-                                                     True: T("Closed"),
-                                                     },
-                                          cols = 1,
-                                          multiple = False,
-                                          ),
-                          S3OptionsFilter("incident_type_id",
-                                          formstyle = filter_formstyle,
-                                          label = T("Incident Type"),
-                                          noneSelectedText = "All",
-                                          widget = "multiselect",
-                                          ),
-                          ]
-
-        list_fields = ["closed",
-                       "name",
-                       (T("Type"), "incident_type_id"),
-                       "location_id",
-                       (T("Start"), "date"),
-                       (T("End"), "end_date"),
-                       ]
-
-        s3db.configure("event_incident",
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       )
+        #s3.crud_strings["event_incident"].title_list =  T("Browse Incidents")
 
         # Custom prep
         standard_prep = s3.prep
@@ -362,13 +323,100 @@ def config(settings):
                 result = standard_prep(r)
 
             if r.method == "summary":
+                # Map (only) in common area
+                settings.ui.summary = ({"name": "table",
+                                        "label": "Table",
+                                        "widgets": [{"method": "datatable"}]
+                                        },
+                                       {"name": "charts",
+                                        "label": "Report",
+                                        "widgets": [{"method": "report",
+                                                     "ajax_init": True}]
+                                        },
+                                       {"common": True,
+                                        "name": "map",
+                                        "label": "Map",
+                                        "widgets": [{"method": "map",
+                                                     "ajax_init": True}],
+                                        },
+                                       )
+
+                from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+                # @ToDo: This should use date/end_date not just date
+                date_filter = S3DateFilter("date",
+                                           #formstyle = filter_formstyle,
+                                           label = "",
+                                           #hide_time = True,
+                                           )
+                date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
+
+                filter_widgets = [S3TextFilter(["name",
+                                                "comments",
+                                                ],
+                                               formstyle = text_filter_formstyle,
+                                               label = T("Search"),
+                                               _placeholder = T("Enter search term…"),
+                                               ),
+                                  S3OptionsFilter("organisation_id",
+                                                  label = "",
+                                                  noneSelectedText = "Lead Organization",
+                                                  widget = "multiselect",
+                                                  ),
+                                  S3OptionsFilter("closed",
+                                                  formstyle = filter_formstyle,
+                                                  options = {"*": T("All"),
+                                                             False: T("Open"),
+                                                             True: T("Closed"),
+                                                             },
+                                                  cols = 1,
+                                                  multiple = False,
+                                                  ),
+                                  S3OptionsFilter("incident_type_id",
+                                                  formstyle = filter_formstyle,
+                                                  label = T("Incident Type"),
+                                                  noneSelectedText = "All",
+                                                  widget = "multiselect",
+                                                  ),
+                                  date_filter,
+                                  ]
+
+                list_fields = ["closed",
+                               "name",
+                               (T("Type"), "incident_type_id"),
+                               "location_id",
+                               (T("Start"), "date"),
+                               (T("End"), "end_date"),
+                               ]
+
+                s3db.configure("event_incident",
+                               filter_widgets = filter_widgets,
+                               list_fields = list_fields,
+                               )
+
                 # @ToDo: Configure Timeline
                 # Last 5 days (@ToDo: Configurable Start/End & deduce appropriate unit)
                 # Qty of Newly-opened Incidents per Unit
                 pass
 
+            elif r.method == "assign":
+                current.menu.main = ""
+
+            elif r.representation == "popup":
+                # Popup just used to link to Event
+
+                #s3.crud_strings["event_incident"].title_update =  T("Add to Event")
+
+                from s3 import S3SQLCustomForm
+
+                crud_form = S3SQLCustomForm("event_id",
+                                            )
+
+                s3db.configure("event_incident",
+                               crud_form = crud_form,
+                               )
+
             return True
-        #s3.prep = custom_prep
+        s3.prep = custom_prep
 
         # Custom postp
         standard_postp = s3.postp
@@ -378,31 +426,54 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if r.interactive and isinstance(output, dict):
-                # Open the Custom profile page instead of the normal one
-                from gluon import URL
-                from s3 import S3CRUD
-                custom_url = URL(args = ["[id]", "custom"])
-                S3CRUD.action_buttons(r,
-                                      read_url=custom_url,
-                                      update_url=custom_url)
-                # Additional styles
-                s3.external_stylesheets += ["https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css",
-                                            "https://fonts.googleapis.com/css?family=Merriweather:400,700|Source+Sans+Pro:400,700",
-                                            ]
+                if r.method == "assign":
+                    # No Top Menu
+                    current.menu.main = ""
+                    # Custom View to waste less space inside popup
+                    import os
+                    response.view = os.path.join(r.folder,
+                                                 "modules", "templates",
+                                                 "WACOP", "views",
+                                                 "assign.html")
+                else:
+                    # Summary or Profile pages
+                    # Additional styles
+                    s3.external_stylesheets += ["https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css",
+                                                "https://fonts.googleapis.com/css?family=Merriweather:400,700|Source+Sans+Pro:400,700",
+                                                ]
+
+                    if r.method == "summary":
+                        # Open the Custom profile page instead of the normal one
+                        from gluon import URL
+                        from s3 import S3CRUD
+                        custom_url = URL(args = ["[id]", "custom"])
+                        S3CRUD.action_buttons(r,
+                                              read_url=custom_url,
+                                              update_url=custom_url)
+
+                    # System-wide Alert
+                    if current.auth.s3_has_role("ADMIN"):
+                        # Admin user can edit system_wide alert
+                        output["ADMIN"] = True
+                    else:
+                        output["ADMIN"] = False
+
+                    ptable = s3db.cms_post
+                    system_wide = current.db(ptable.name == "SYSTEM_WIDE").select(ptable.body,
+                                                                                  limitby=(0, 1)
+                                                                                  ).first()
+                    if system_wide:
+                        output["system_wide"] = system_wide.body
+                    else:
+                        output["system_wide"] = False
 
             return output
         s3.postp = custom_postp
 
         # Custom rheader tabs
-        attr = dict(attr)
-        attr["rheader"] = wacop_event_rheader
-
-        # Display events in the header
-        etable = s3db.event_event
-        query = (etable.closed == False) & \
-                (etable.deleted == False)
-        events = current.db(query).select(etable.id, etable.name)
-        attr["events"] = events
+        #attr = dict(attr)
+        #attr["rheader"] = wacop_event_rheader
+        attr["rheader"] = None
 
         # No sidebar menu
         current.menu.options = None
@@ -606,7 +677,7 @@ class incident_Profile(S3CRUD):
                 record = r.record
 
                 from gluon import A, DIV, I, TAG, URL
-                from s3 import FS, S3DateTime, S3FilterForm, S3DateFilter, S3OptionsFilter, S3TextFilter
+                from s3 import FS, ICON, S3DateTime, S3FilterForm, S3DateFilter, S3OptionsFilter, S3TextFilter
 
                 date_represent = lambda dt: S3DateTime.date_represent(dt,
                                                                       format = "%b %d %Y %H:%M",
@@ -614,51 +685,52 @@ class incident_Profile(S3CRUD):
                                                                       #calendar = calendar,
                                                                       )
 
-                output = {}
+                output = {"incident_id": incident_id,
+                          }
 
                 # Is this Incident part of an Event?
-                event_id = record.event_id
-                output["event_id"] = event_id
-                if event_id:
-                    # Read Event details
-                    etable = s3db.event_event
-                    event = db(etable.id == event_id).select(etable.name,
-                                                             etable.start_date,
-                                                             etable.end_date,
-                                                             limitby = (0, 1),
-                                                             ).first()
-                    output["event_name"] = event.name
-                    output["event_start_date"] = date_represent(event.start_date)
-                    end_date = event.end_date
-                    if end_date:
-                        output["event_active"] = False
-                        output["event_end_date"] = date_represent(end_date)
-                    else:
-                        output["event_active"] = True
-                        output["event_end_date"] = "n/a"
+                #event_id = record.event_id
+                #output["event_id"] = event_id
+                #if event_id:
+                #    # Read Event details
+                #    etable = s3db.event_event
+                #    event = db(etable.id == event_id).select(etable.name,
+                #                                             etable.start_date,
+                #                                             etable.end_date,
+                #                                             limitby = (0, 1),
+                #                                             ).first()
+                #    output["event_name"] = event.name
+                #    output["event_start_date"] = date_represent(event.start_date)
+                #    end_date = event.end_date
+                #    if end_date:
+                #        output["event_active"] = False
+                #        output["event_end_date"] = date_represent(end_date)
+                #    else:
+                #        output["event_active"] = True
+                #        output["event_end_date"] = "n/a"
 
-                    eltable = s3db.event_event_location
-                    query = (eltable.event_id == event_id) & \
-                            (eltable.deleted == False)
-                    event_location = db(query).select(eltable.location_id,
-                                                      limitby = (0, 1),
-                                                      ).first()
-                    if event_location:
-                        output["event_location"] = eltable.location_id.represent(event_location.location_id)
-                    else:
-                        output["event_location"] = ""
+                #    eltable = s3db.event_event_location
+                #    query = (eltable.event_id == event_id) & \
+                #            (eltable.deleted == False)
+                #    event_location = db(query).select(eltable.location_id,
+                #                                      limitby = (0, 1),
+                #                                      ).first()
+                #    if event_location:
+                #        output["event_location"] = eltable.location_id.represent(event_location.location_id)
+                #    else:
+                #        output["event_location"] = ""
 
-                    query = (itable.event_id == event_id) & \
-                            (itable.deleted == False)
-                    output["incidents"] = db(query).count()
+                #    query = (itable.event_id == event_id) & \
+                #            (itable.deleted == False)
+                #    output["incidents"] = db(query).count()
 
-                    query = (ertable.event_id == event_id) & \
-                            (ertable.deleted == False)
-                    output["event_resources"] = db(query).count()
+                #    query = (ertable.event_id == event_id) & \
+                #            (ertable.deleted == False)
+                #    output["event_resources"] = db(query).count()
 
-                    query = (eptable.event_id == event_id) & \
-                            (eptable.deleted == False)
-                    output["event_posts"] = db(query).count()
+                #    query = (eptable.event_id == event_id) & \
+                #            (eptable.deleted == False)
+                #    output["event_posts"] = db(query).count()
 
                 # Incident Details
                 output["name"] = record.name
@@ -714,6 +786,7 @@ class incident_Profile(S3CRUD):
                 messages = current.messages
                 permit = auth.s3_has_permission
                 updateable = permit("update", itable, record_id=incident_id, c="event", f="incident")
+                output["updateable"] = updateable
 
                 settings = current.deployment_settings
                 # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
@@ -824,15 +897,31 @@ class incident_Profile(S3CRUD):
 
                     # Link for create-popup
                     if updateable and permit("create", tablename):
+                        if tablename == "event_human_resource":
+                            label = T("Assign Staff")
+                            url = URL(c="event", f="incident",
+                                      args=[incident_id, "assign"],
+                                      vars={"refresh": list_id},
+                                      )
+                        else:
+                            url = URL(c="event", f="incident",
+                                      args=[incident_id, f, "create.popup"],
+                                      vars={"refresh": list_id},
+                                      )
+                            if tablename == "event_organisation":
+                                label = T("Add Organization")
+                            elif tablename == "project_task":
+                                label = T("Create Task")
+                            else:
+                                # event_team
+                                label = T("Add")
                         output["create_%s_popup" % tablename] = \
-                            A(TAG[""](I(_class="fa fa-plus"),
-                                      T("Add"),
+                            A(TAG[""](ICON("plus"),
+                                      label,
                                       ),
-                              _href = URL(c="event", f="incident",
-                                          args=[incident_id, f, "create.popup"],
-                                          vars={"refresh": list_id},
-                                          ),
+                              _href = url,
                               _class = "button tiny postfix s3_modal", 
+                              _title = label,
                               )
                     else:
                         output["create_%s_popup" % tablename] = ""
@@ -927,6 +1016,7 @@ class incident_Profile(S3CRUD):
                 output["updates_datalist"] = data
 
                 # Filter Form
+                # @ToDo: This should use date/end_date not just date
                 date_filter = S3DateFilter("date",
                                            label = "",
                                            #hide_time = True,
@@ -1378,7 +1468,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                       ),
                     _class="item",
                     ),
-                 LI(A(ICON("flag"), # @ToDo: Use flag-lat if not flagged & flag if already flagged (like for bookmarks)
+                 LI(A(ICON("flag"), # @ToDo: Use flag-alt if not flagged & flag if already flagged (like for bookmarks)
                       SPAN("flag this",
                            _class = "show-for-sr",
                            ),

@@ -1,19 +1,13 @@
 {{extend "layout.html"}}
-{{if event_id:}}
+{{if ADMIN or system_wide:}}
 <div role='complementary' class='row panel callout'>
- <p class='callout-intro'>Note: This incident is part of an event.</p>
- <div class='incident-updates row'>
-  <p class='zero-hour large-3 small-6 columns'>Zero hour: <i class='fa fa-calendar'></i> {{=event_start_date}}</p>
-  <p class='large-3 small-6 columns'>Closed at: {{=event_end_date}}</p>
-  <p class='large-6 small-12 columns text-right'>{{=event_location}}</p>
- </div>
- <hr>
  <div class='row'>
   <div class='large-9 small-12 columns'>
-   <h3>{{=event_name}} {{if event_active:}}<span class='label success'>Active</span>{{else:}}<span class='label alert'>Inactive</span>{{pass}}</h3>
-   <p class='callout-description inline'>This event has <strong><a href='#'>{{=incidents}} incidents</a></strong>, <strong><a href='#'>{{=event_resources}} resources</a></strong>, <strong><a href='#'>{{=event_posts}} posts</a></strong>.</p>
+   <p>{{if system_wide:}}{{=system_wide}}{{pass}}</p>
   </div>
-  <p class='large-3 small-12 columns text-right'><a href='{{=URL(c="event", f="event", args=[event_id, "profile"])}}' class='button button-info tiny'>Go to Event Page</a></p>
+  {{if ADMIN:}}
+  <p class='large-3 small-12 columns text-right'><a href='{{=URL(c="cms", f="post", args="update", vars={"page": "SYSTEM_WIDE"})}}' class='button button-info tiny'>Edit System-wide Alert</a></p>
+  {{pass}}
  </div>
 </div>
 {{pass}}
@@ -27,13 +21,15 @@
      </p>
      <ul class='inline-list right'>
       <li class='item'><a href='#' class='button secondary tiny'><span class='fa fa-share-alt'></span> Share</a></li>
-      <li class='item'><a href='#'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
-      <li class='item'><a href='#'><i class='fa fa-bookmark'><span class='show-for-sr'>bookmark</span></i></a></li>
-      <li class='item'><a href='#'><i class='fa fa-comment'><span class='show-for-sr'>comment</span></i></a></li>
-      <li class='item'><a href='#'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
+      <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
+      <li class='item'><a href='#' title='bookmark'><i class='fa fa-bookmark'><span class='show-for-sr'>bookmark</span></i></a></li>
+      <li class='item'><a href='#' title='comment'><i class='fa fa-comment'><span class='show-for-sr'>comment</span></i></a></li>
+      {{if updateable:}}
+      <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
       <li aria-hidden='true'>|</li>
-      <li class='item'><a href='#'><i class='fa fa-edit'><span class='show-for-sr'>edit</span></i></a></li>
-      <li class='item'><a href='#'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
+      <li class='item'><a href='#' title='edit'><i class='fa fa-edit'><span class='show-for-sr'>edit</span></i></a></li>
+      <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
+      {{pass}}
      </ul>
     </div>
     <div id='modal-incident-status' class='reveal-modal' data-reveal aria-labelledby='modalIncidentStatus' aria-hidden='true' role='dialog'>
@@ -59,8 +55,8 @@
        <span class='show-for-sr'>Severity: </span><span class='label alert'>bad</span>
        <span class='label alert'>No Exercise</span>
        <ul class='label-controls'>
-        <li class='item'><a href='#'><i class='fa fa-plus'><span class='show-for-sr'>add tag</span></i></a></li>
-        <li class='item'><a href='#'><i class='fa fa-edit'><span class='show-for-sr'>edit tags</span></i></a></li>
+        <li class='item'><a href='#' title='add tag'><i class='fa fa-plus'><span class='show-for-sr'>add tag</span></i></a></li>
+        <li class='item'><a href='#' title='edit tags'><i class='fa fa-edit'><span class='show-for-sr'>edit tags</span></i></a></li>
        </ul>
       </p>
      </div>
