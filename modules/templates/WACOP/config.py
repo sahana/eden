@@ -624,8 +624,11 @@ class incident_Profile(S3CRUD):
            r.name == "incident" and \
            not r.component:
 
+            T = current.T
+            db = current.db
             s3db = current.s3db
             ptable = s3db.cms_post
+            response = current.response
 
             if r.http == "POST":
                 # Process the Updates form
@@ -637,9 +640,10 @@ class incident_Profile(S3CRUD):
                                 current.session,
                                 #onvalidation=onvalidation
                                 ):
-                    # Insert new record
-                    post_id = ptable.insert(body = post_vars.get("body"),
-                                            series_id = post_vars.get("series_id"),
+                    pget = post_vars.get
+                    # Create Post
+                    post_id = ptable.insert(body = pget("body"),
+                                            series_id = pget("series_id"),
                                             )
                     record = dict(id=post_id)
                     s3db.update_super(ptable, record)
@@ -648,9 +652,32 @@ class incident_Profile(S3CRUD):
                     s3db.event_post.insert(incident_id = incident_id,
                                            post_id = post_id,
                                            )
-                    # @ToDo: Process Tags
+                    # Process Tags
+                    tags = pget("tags")
+                    if tags:
+                        ttable = s3db.cms_tag
+                        tags = tags.split(",")
+                        len_tags = len(tags)
+                        if len(tags) == 1:
+                            query = (ttable.name == tags[0])
+                        else:
+                            query = (ttable.name.belongs(tags))
+                        existing_tags = db(query).select(ttable.id,
+                                                         ttable.name,
+                                                         limitby=(0, len_tags)
+                                                         )
+                        existing_tags = {tag.name: tag.id for tag in existing_tags}
+                        ltable = s3db.cms_tag_post
+                        for tag in tags:
+                            if tag in existing_tags:
+                                tag_id = existing_tags[tag]
+                            else:
+                                tag_id = ttable.insert(name=tag)
+                            ltable.insert(post_id = post_id,
+                                          tag_id = tag_id,
+                                          )
 
-                    #response.confirmation = message
+                    response.confirmation = T("Update posted")
 
                     if form.errors:
                         # Revert any records created within widgets/validators
@@ -662,10 +689,7 @@ class incident_Profile(S3CRUD):
             representation = r.representation
             if representation == "html":
 
-                T = current.T
-                db = current.db
                 auth = current.auth
-                response = current.response
                 s3 = response.s3
 
                 gtable = s3db.gis_location
@@ -676,7 +700,7 @@ class incident_Profile(S3CRUD):
 
                 record = r.record
 
-                from gluon import A, DIV, I, TAG, URL
+                from gluon import A, DIV, I, TAG, UL, URL
                 from s3 import FS, ICON, S3DateTime, S3FilterForm, S3DateFilter, S3OptionsFilter, S3TextFilter
 
                 date_represent = lambda dt: S3DateTime.date_represent(dt,
@@ -982,7 +1006,7 @@ class incident_Profile(S3CRUD):
                                "date",
                                "body",
                                "created_by",
-                               "tag_post.tag_id",
+                               "tag.name",
                                ]
                 datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                            start=None,
@@ -1066,7 +1090,7 @@ class incident_Profile(S3CRUD):
                                                          alias=None)
                 # @ToDo: Fix Filter Manager (posting to /eden/event/incident/filter.json)
 
-                #  Create Form
+                #  Create Form for Updates
                 if updateable and permit("create", tablename):
                     # @ToDo: AJAX Form Submission
                     #from gluon import SQLFORM
@@ -1109,11 +1133,14 @@ class incident_Profile(S3CRUD):
                                 DIV(DIV(select,
                                         _class="large-4 columns",
                                         ),
-                                    DIV(INPUT(_type="text",
-                                              _name="tag",
+                                    DIV(INPUT(_id="cms_post_create_tags_input",
+                                              _class="hide",
+                                              _name="tags",
+                                              _type="text",
                                               _value="",
-                                              _placeholder="Add tags here…",
                                               ),
+                                        UL(_id="cms_post_create_tags_ul",
+                                           ),
                                         _class="large-3 columns",
                                         ),
                                     DIV(INPUT(_type="submit",
@@ -1147,6 +1174,32 @@ class incident_Profile(S3CRUD):
                     output["create_post_form"] = form_div
                 else:
                     output["create_post_form"] = ""
+
+                # Tags for Updates
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/tag-it.js" % current.request.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/tag-it.min.js" % current.request.application)
+                if permit("update", s3db.cms_tag_post):
+                    readonly = '''afterTagAdded:function(event,ui){
+ if(ui.duringInitialization){return}
+ var post_id=$(this).attr('data-post_id')
+ var url=S3.Ap.concat('/cms/post/',post_id,'/add_tag/',ui.tagLabel)
+ $.getS3(url)
+},afterTagRemoved:function(event,ui){
+ var post_id=$(this).attr('data-post_id')
+ var url=S3.Ap.concat('/cms/post/',post_id,'/remove_tag/',ui.tagLabel)
+ $.getS3(url)
+},'''
+                else:
+                    readonly = '''readOnly:true'''
+                script = \
+'''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
+S3.tagit()
+S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
+                                      args="search_ac.json"),
+                                  readonly)
+                s3.jquery_ready.append(script)
 
                 import os
                 response.view = os.path.join(r.folder,
@@ -1302,7 +1355,7 @@ class incident_Profile(S3CRUD):
                                "date",
                                "body",
                                "created_by",
-                               "tag_post.tag_id",
+                               "tag.name",
                                ]
                 datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                            start=None,
@@ -1529,7 +1582,6 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
               TAG["FOOTER"](SPAN("Tags:",
                                  _class="left",
                                  ),
-                            # @ToDO: Make tags work
                             tag_list,
                             # @ToDO: Make comments work
                             P(A("0 Comments",

@@ -1,7 +1,7 @@
 /*
 * jQuery UI Tag-it!
 *
-* @version v2.0 (06/2011)
+* @version v2.0 (06/2011) + patches for modern jQuery
 *
 * Copyright 2011, Levy Carneiro Jr.
 * Released under the MIT license.
