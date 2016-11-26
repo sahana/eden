@@ -62,6 +62,7 @@ class S3ContentModel(S3Model):
              "cms_post_id",
              "cms_post_module",
              "cms_tag",
+             "cms_tag_id",
              "cms_tag_post",
              "cms_comment",
              )
@@ -535,7 +536,7 @@ class S3ContentModel(S3Model):
                                         IS_ONE_OF(db, "cms_comment.id")),
                            readable = False,
                            ),
-                     post_id(empty=False),
+                     post_id(empty = False),
                      Field("body", "text", notnull=True,
                            label = T("Comment"),
                            requires = IS_NOT_EMPTY(),
@@ -555,6 +556,7 @@ class S3ContentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(cms_post_id = post_id,
+                    cms_tag_id = tag_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -568,6 +570,7 @@ class S3ContentModel(S3Model):
                                 writable = False)
 
         return dict(cms_post_id = lambda **attr: dummy("post_id"),
+                    cms_tag_id = lambda **attr: dummy("tag_id"),
                     )
 
     # -------------------------------------------------------------------------
@@ -947,7 +950,7 @@ class S3ContentUserModel(S3Model):
         #
         tablename = "cms_post_user"
         self.define_table(tablename,
-                          self.cms_post_id(empty=False),
+                          self.cms_post_id(empty = False),
                           Field("user_id", current.auth.settings.table_user),
                           *s3_meta_fields())
 

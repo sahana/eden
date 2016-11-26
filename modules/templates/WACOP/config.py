@@ -631,60 +631,79 @@ class incident_Profile(S3CRUD):
             response = current.response
 
             if r.http == "POST":
-                # Process the Updates form
-                from gluon import SQLFORM
-                form = SQLFORM(ptable)
-                #onvalidation = 
-                post_vars = r.post_vars
-                if form.accepts(post_vars,
-                                current.session,
-                                #onvalidation=onvalidation
-                                ):
-                    pget = post_vars.get
-                    # Create Post
-                    post_id = ptable.insert(body = pget("body"),
-                                            series_id = pget("series_id"),
-                                            )
-                    record = dict(id=post_id)
-                    s3db.update_super(ptable, record)
-                    # @ToDo: onaccept / record ownership / audit if-required
-                    # Link to Incident
-                    s3db.event_post.insert(incident_id = incident_id,
-                                           post_id = post_id,
-                                           )
-                    # Process Tags
-                    tags = pget("tags")
-                    if tags:
-                        ttable = s3db.cms_tag
-                        tags = tags.split(",")
-                        len_tags = len(tags)
-                        if len(tags) == 1:
-                            query = (ttable.name == tags[0])
-                        else:
-                            query = (ttable.name.belongs(tags))
-                        existing_tags = db(query).select(ttable.id,
-                                                         ttable.name,
-                                                         limitby=(0, len_tags)
-                                                         )
-                        existing_tags = {tag.name: tag.id for tag in existing_tags}
-                        ltable = s3db.cms_tag_post
-                        for tag in tags:
-                            if tag in existing_tags:
-                                tag_id = existing_tags[tag]
-                            else:
-                                tag_id = ttable.insert(name=tag)
-                            ltable.insert(post_id = post_id,
-                                          tag_id = tag_id,
-                                          )
+                delete = r.get_vars.get("delete")
+                if delete:
+                    resource = s3db.resource("cms_post", id=delete)
 
-                    response.confirmation = T("Update posted")
+                    # Delete the records and return a JSON message
+                    numrows = resource.delete(format=r.representation)
 
-                    if form.errors:
-                        # Revert any records created within widgets/validators
-                        current.db.rollback()
+                    if numrows > 1:
+                        message = "%s %s" % (numrows, T("records deleted"))
+                    elif numrows == 1:
+                        message = self.crud_string("cms_post",
+                                                   "msg_record_deleted")
                     else:
-                        # Commit changes & continue to load the page
-                        current.db.commit()
+                        r.error(404, resource.error, next=r.url(method=""))
+
+                    response.headers["Content-Type"] = "application/json"
+                    data = current.xml.json_message(message=message)
+                    return data
+                else:
+                    # Process the Updates form
+                    from gluon import SQLFORM
+                    form = SQLFORM(ptable)
+                    #onvalidation = 
+                    post_vars = r.post_vars
+                    if form.accepts(post_vars,
+                                    current.session,
+                                    #onvalidation=onvalidation
+                                    ):
+                        pget = post_vars.get
+                        # Create Post
+                        post_id = ptable.insert(body = pget("body"),
+                                                series_id = pget("series_id"),
+                                                )
+                        record = dict(id=post_id)
+                        s3db.update_super(ptable, record)
+                        # @ToDo: onaccept / record ownership / audit if-required
+                        # Link to Incident
+                        s3db.event_post.insert(incident_id = incident_id,
+                                               post_id = post_id,
+                                               )
+                        # Process Tags
+                        tags = pget("tags")
+                        if tags:
+                            ttable = s3db.cms_tag
+                            tags = tags.split(",")
+                            len_tags = len(tags)
+                            if len(tags) == 1:
+                                query = (ttable.name == tags[0])
+                            else:
+                                query = (ttable.name.belongs(tags))
+                            existing_tags = db(query).select(ttable.id,
+                                                             ttable.name,
+                                                             limitby=(0, len_tags)
+                                                             )
+                            existing_tags = {tag.name: tag.id for tag in existing_tags}
+                            ltable = s3db.cms_tag_post
+                            for tag in tags:
+                                if tag in existing_tags:
+                                    tag_id = existing_tags[tag]
+                                else:
+                                    tag_id = ttable.insert(name=tag)
+                                ltable.insert(post_id = post_id,
+                                              tag_id = tag_id,
+                                              )
+    
+                        response.confirmation = T("Update posted")
+    
+                        if form.errors:
+                            # Revert any records created within widgets/validators
+                            current.db.rollback()
+                        else:
+                            # Commit changes & continue to load the page
+                            current.db.commit()
 
             representation = r.representation
             if representation == "html":
