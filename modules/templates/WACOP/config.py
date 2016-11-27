@@ -386,6 +386,7 @@ def config(settings):
                                "location_id",
                                (T("Start"), "date"),
                                (T("End"), "end_date"),
+                               "event_id",
                                ]
 
                 s3db.configure("event_incident",
@@ -633,9 +634,8 @@ class incident_Profile(S3CRUD):
             if r.http == "POST":
                 delete = r.get_vars.get("delete")
                 if delete:
+                    # Delete the Update
                     resource = s3db.resource("cms_post", id=delete)
-
-                    # Delete the records and return a JSON message
                     numrows = resource.delete(format=r.representation)
 
                     if numrows > 1:
@@ -650,7 +650,7 @@ class incident_Profile(S3CRUD):
                     data = current.xml.json_message(message=message)
                     return data
                 else:
-                    # Process the Updates form
+                    # Process the Updates create form
                     from gluon import SQLFORM
                     form = SQLFORM(ptable)
                     #onvalidation = 
@@ -716,11 +716,13 @@ class incident_Profile(S3CRUD):
                 #rtable = s3db.pr_group
                 ertable = s3db.event_team
                 eptable = s3db.event_post
+                ttable = s3db.cms_tag
+                ittable = s3db.event_tag
 
                 record = r.record
 
-                from gluon import A, DIV, I, TAG, UL, URL
-                from s3 import FS, ICON, S3DateTime, S3FilterForm, S3DateFilter, S3OptionsFilter, S3TextFilter
+                from gluon import A, DIV, I, LI, SPAN, TAG, UL, URL
+                from s3 import s3_str, FS, ICON, S3DateTime, S3FilterForm, S3DateFilter, S3OptionsFilter, S3TextFilter
 
                 date_represent = lambda dt: S3DateTime.date_represent(dt,
                                                                       format = "%b %d %Y %H:%M",
@@ -790,6 +792,11 @@ class incident_Profile(S3CRUD):
                     output["active"] = True
                     output["end_date"] = ""
                 
+                incident_type = record.incident_type_id
+                if incident_type:
+                    output["incident_type"] = itable.incident_type_id.represent(incident_type)
+                else:
+                    output["incident_type"] = None
                 output["description"] = record.comments
 
                 location = db(gtable.id == record.location_id).select(gtable.L1,
@@ -830,6 +837,52 @@ class incident_Profile(S3CRUD):
                 permit = auth.s3_has_permission
                 updateable = permit("update", itable, record_id=incident_id, c="event", f="incident")
                 output["updateable"] = updateable
+
+                # Tags for Incident
+                tag_list = UL(_class="left inline-list",
+                              _id="incident-tags",
+                              )
+                query = (ittable.incident_id == incident_id) & \
+                        (ittable.deleted == False) & \
+                        (ittable.tag_id == ttable.id)
+                tags = db(query).select(ttable.name)
+                tags = [t.name for t in tags]
+                for tag in tags:
+                    tag_list.append(LI(A(tag,
+                                         _href="#",
+                                         ),
+                                       ))
+                output["incident_tags"] = tag_list
+                if updateable:
+                    script = '''incident_tags(%s)''' % incident_id
+                else:
+                    script = '''incident_tags(false)'''
+                s3.jquery_ready.append(script)
+
+                user = auth.user
+                if user:
+                    user_id = user.id
+                    ltable = s3db.event_bookmark
+                    query = (ltable.incident_id == incident_id) & \
+                            (ltable.user_id == user_id)
+                    exists = db(query).select(ltable.id,
+                                              limitby=(0, 1)
+                                              ).first()
+                    if exists:
+                        bookmark_btn = A(ICON("bookmark"),
+                                         _title=T("Remove Bookmark"),
+                                         _id="incident-bookmark",
+                                         )
+                    else:
+                        bookmark_btn = A(ICON("bookmark-empty"),
+                                         _title=T("Add Bookmark"),
+                                         _id="incident-bookmark",
+                                         )
+                    script = '''incident_bookmarks(%s)''' % incident_id
+                    s3.jquery_ready.append(script)
+                else:
+                    bookmark_btn = ""
+                output["bookmark_btn"] = bookmark_btn
 
                 settings = current.deployment_settings
                 # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
@@ -1072,14 +1125,6 @@ class incident_Profile(S3CRUD):
                                                label = T("Search"),
                                                _placeholder = T("Enter search term…"),
                                                ),
-                                  S3OptionsFilter("bookmark.user_id",
-                                                  label = "",
-                                                  options = {"*": T("All"),
-                                                             auth.user.id: T("My Bookmarks"),
-                                                             },
-                                                  cols = 2,
-                                                  multiple = False,
-                                                  ),
                                   S3OptionsFilter("series_id",
                                                   label = "",
                                                   noneSelectedText = "Type",
@@ -1095,6 +1140,16 @@ class incident_Profile(S3CRUD):
                                                   ),
                                   date_filter,
                                   ]
+
+                if user:
+                    filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
+                                                             label = "",
+                                                             options = {"*": T("All"),
+                                                                        user_id: T("My Bookmarks"),
+                                                                        },
+                                                             cols = 2,
+                                                             multiple = False,
+                                                             ))
 
                 filter_form = S3FilterForm(filter_widgets,
                                            submit=True,
@@ -1496,7 +1551,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         delete_btn = ""
 
     user = current.auth.user
-    if user and settings.get_cms_bookmarks():
+    if user: #and settings.get_cms_bookmarks():
         ltable = s3db.cms_post_user
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)

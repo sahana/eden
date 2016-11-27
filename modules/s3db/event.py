@@ -1122,7 +1122,7 @@ class S3IncidentModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        ltable = s3db.cms_post_user
+        ltable = s3db.event_bookmark
         query = (ltable.incident_id == incident_id) & \
                 (ltable.user_id == user_id)
         exists = db(query).select(ltable.id,

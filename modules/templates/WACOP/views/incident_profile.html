@@ -22,7 +22,7 @@
      <ul class='inline-list right'>
       <li class='item'><a href='#' class='button secondary tiny'><span class='fa fa-share-alt'></span> Share</a></li>
       <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
-      <li class='item'><a href='#' title='bookmark'><i class='fa fa-bookmark'><span class='show-for-sr'>bookmark</span></i></a></li>
+      <li class='item'>{{=bookmark_btn}}</li>
       <li class='item'><a href='#' title='comment'><i class='fa fa-comment'><span class='show-for-sr'>comment</span></i></a></li>
       {{if updateable:}}
       <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
@@ -51,14 +51,9 @@
       <h4>{{=name}}</h4>
       <p>Last updated on {{=modified_on}}</p>
       <p class='incident-labels'>
-       <span class='label info'>Crime / Terrorism</span>
-       <span class='show-for-sr'>Severity: </span><span class='label alert'>bad</span>
-       <span class='label alert'>No Exercise</span>
-       <ul class='label-controls'>
-        <li class='item'><a href='#' title='add tag'><i class='fa fa-plus'><span class='show-for-sr'>add tag</span></i></a></li>
-        <li class='item'><a href='#' title='edit tags'><i class='fa fa-edit'><span class='show-for-sr'>edit tags</span></i></a></li>
-       </ul>
+       {{if incident_type:}}<span class='label info'>{{=incident_type}}</span>{{pass}}
       </p>
+      {{=incident_tags}}
      </div>
      <!--
      <figure class='large-2 columns organization-logo'>
