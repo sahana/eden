@@ -8759,6 +8759,7 @@ class ICON(I):
             "done": "fa-check",
             "down": "fa-caret-down",
             "edit": "fa-edit",
+            "event": "fa-bolt",
             "exclamation": "fa-exclamation",
             "facebook": "fa-facebook",
             "facility": "fa-home",

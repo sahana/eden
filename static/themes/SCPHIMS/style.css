@@ -2,3 +2,14 @@
 .S3menulogo {
   background: url(img/logo.png) left top no-repeat;
 }
+/* Cards on homepage */
+.date-title,
+.location-title,
+.type-title {
+    margin-left: 10px;
+}
+#events_datalist-header,
+#activities_datalist-header {
+    display: none;
+}
+

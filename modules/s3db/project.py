@@ -69,6 +69,7 @@ __all__ = ("S3ProjectModel",
            "project_rfa_opts",
            "project_project_filters",
            "project_project_list_layout",
+           "project_activity_list_layout",
            "project_task_list_layout",
            "project_TaskRepresent",
            )
@@ -1287,6 +1288,7 @@ class S3ProjectActivityModel(S3Model):
                                             ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  list_layout = project_activity_list_layout,
                   #onaccept = self.project_activity_onaccept,
                   realm_entity = self.project_activity_realm_entity,
                   report_options = report_options,
@@ -10450,12 +10452,12 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
         @param record: the record as dict
     """
 
-    record_id = record["project_project.id"]
+    raw = record._row
+    record_id = raw["project_project.id"]
     item_class = "thumbnail"
 
-    raw = record._row
     author = record["project_project.modified_by"]
-    date = record["project_project.modified_on"]
+    #date = record["project_project.modified_on"]
 
     name = record["project_project.name"]
     description = record["project_project.description"]
@@ -10497,14 +10499,16 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
                                args=[record_id, "update.popup"]
                                ),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.project_project.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings.project_project.label_delete_button,
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""
@@ -10548,6 +10552,120 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     return item
 
 # =============================================================================
+def project_activity_list_layout(list_id, item_id, resource, rfields, record,
+                                 icon="activity"):
+    """
+        Default dataList item renderer for Incidents on Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    raw = record._row
+    record_id = raw["project_activity.id"]
+    item_class = "thumbnail"
+
+    author = record["project_activity.modified_by"]
+    #date = record["project_activity.modified_on"]
+
+    name = record["project_activity.name"]
+    description = record["project_activity.comments"]
+    start_date = record["project_activity.date"]
+
+    location = record["project_activity.location_id"]
+    location_id = raw["project_activity.location_id"]
+
+    comments = raw["project_activity.comments"]
+
+    organisation_id = raw["project_activity_organisation.organisation_id"]
+    if organisation_id:
+        organisation = record["project_activity_organisation.organisation_id"]
+        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+        org_logo = raw["org_organisation.logo"]
+        if org_logo:
+            org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
+                             _class="media-object",
+                             ),
+                         _href=org_url,
+                         _class="pull-left",
+                         )
+        else:
+            # @ToDo: use a dummy logo image
+            org_logo = A(IMG(_class="media-object"),
+                         _href=org_url,
+                         _class="pull-left",
+                         )
+        organisation = A(organisation,
+                         _href=org_url,
+                         _class="card-organisation",
+                         )
+    else:
+        organisation = ""
+
+    # Edit Bar
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
+    permit = current.auth.s3_has_permission
+    table = current.db.project_activity
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(ICON("edit"),
+                     _href=URL(c="project", f="activity",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id},
+                               ),
+                     _class="s3_modal",
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(ICON("delete"),
+                       _class="dl-item-delete",
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(ICON(icon),
+                   SPAN(location, _class="location-title"),
+                   SPAN(start_date, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(A(name,
+                          _href=URL(c="project", f="activity",
+                                    args=[record_id, "profile"])),
+                        _class="card-title"),
+                   DIV(DIV((description or ""),
+                           DIV(author or "",
+                               " - ",
+                               organisation,
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
 def project_task_list_layout(list_id, item_id, resource, rfields, record,
                              icon="tasks"):
     """
@@ -10560,10 +10678,10 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
         @param record: the record as dict
     """
 
-    record_id = record["project_task.id"]
+    raw = record._row
+    record_id = raw["project_task.id"]
     item_class = "thumbnail"
 
-    raw = record._row
     author = record["project_task.modified_by"]
     date = record["project_task.modified_on"]
 
@@ -10644,14 +10762,16 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                                      "record": record_id},
                                ),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.project_task.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings.project_task.label_delete_button,
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""

@@ -53,6 +53,7 @@ __all__ = ("S3EventModel",
            "S3EventTaskModel",
            "S3EventShelterModel",
            "event_notification_dispatcher",
+           "event_event_list_layout",
            "event_incident_list_layout",
            "event_rheader",
            )
@@ -416,6 +417,7 @@ class S3EventModel(S3Model):
                   extra_fields = ["start_date"],
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  list_layout = event_event_list_layout,
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
                   report_options = report_options,
@@ -2890,10 +2892,10 @@ def event_notification_dispatcher(r, **attr):
         raise HTTP(501, current.messages.BADMETHOD)
 
 # =============================================================================
-def event_incident_list_layout(list_id, item_id, resource, rfields, record,
-                               icon="incident"):
+def event_event_list_layout(list_id, item_id, resource, rfields, record,
+                            icon="event"):
     """
-        Default dataList item renderer for Projects on Profile pages
+        Default dataList item renderer for Incidents on Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -2902,12 +2904,101 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
         @param record: the record as dict
     """
 
-    record_id = record["event_incident.id"]
+    record_id = record["event_event.id"]
     item_class = "thumbnail"
 
     raw = record._row
+    author = record["event_event.modified_by"]
+    #date = record["event_event.modified_on"]
+
+    name = record["event_event.name"]
+    event_type = record["event_event.event_type_id"] or ""
+    description = record["event_event.comments"]
+    start_date = record["event_event.start_date"]
+
+    location = record["event_event.location_id"] or ""
+    #location_id = raw["event_event.location_id"]
+
+    comments = raw["event_event.comments"]
+
+    # Edit Bar
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
+    permit = current.auth.s3_has_permission
+    table = current.db.event_event
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(ICON("edit"),
+                     _href=URL(c="event", f="event",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id},
+                               ),
+                     _class="s3_modal",
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(ICON("delete"),
+                       _class="dl-item-delete",
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(ICON(icon),
+                   SPAN(event_type, _class="type-title"),
+                   SPAN(location, _class="location-title"),
+                   SPAN(start_date, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(A(name,
+                          _href=URL(c="event", f="event",
+                                    args=[record_id, "profile"])),
+                        _class="card-title"),
+                   DIV(DIV((description or ""),
+                           DIV(author or "",
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
+def event_incident_list_layout(list_id, item_id, resource, rfields, record,
+                               icon="incident"):
+    """
+        Default dataList item renderer for Incidents on Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    raw = record._row
+    record_id = raw["event_incident.id"]
+    item_class = "thumbnail"
+
     author = record["event_incident.modified_by"]
-    date = record["event_incident.modified_on"]
+    #date = record["event_incident.modified_on"]
 
     name = record["event_incident.name"]
     description = record["event_incident.comments"]
@@ -2948,14 +3039,16 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
                                      "record": record_id},
                                ),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.event_incident.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings.event_incident.label_delete_button,
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""
@@ -3009,10 +3102,10 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    record_id = record["event_resource.id"]
+    raw = record._row
+    record_id = raw["event_resource.id"]
     item_class = "thumbnail"
 
-    raw = record._row
     author = record["event_resource.modified_by"]
     date = record["event_resource.date"]
     quantity = record["event_resource.value"]
@@ -3058,13 +3151,16 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
                                args=[record_id, "update.popup"],
                                vars=vars),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.event_resource.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""
