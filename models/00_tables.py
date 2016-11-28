@@ -61,6 +61,7 @@ import s3db.tour
 import s3db.tr
 import s3db.translate
 import s3db.transport
+import s3db.uav
 import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
