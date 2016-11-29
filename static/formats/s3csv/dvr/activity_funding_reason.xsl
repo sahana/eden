@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         DVR Case Funding Reasons - CSV Import Stylesheet
+         DVR Activity Funding Reasons - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
@@ -22,7 +22,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="dvr_case_funding_reason">
+        <resource name="dvr_activity_funding_reason">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>

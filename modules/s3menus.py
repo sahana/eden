@@ -424,7 +424,10 @@ class S3OptionsMenu(object):
 
         try:
             self.menu = getattr(self, name)()
-        except:
+        except AttributeError:
+            if hasattr(self, name):
+                # Error inside the menu function, don't obscure it
+                raise
             self.menu = None
 
     # -------------------------------------------------------------------------

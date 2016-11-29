@@ -39,6 +39,7 @@ __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRNotesModel",
            "DVRSiteActivityModel",
+           "dvr_ActivityRepresent",
            "dvr_AssignMethod",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
@@ -1412,9 +1413,33 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # CRUD Strings @todo
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity"),
+            title_display = T("Activity Details"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
 
-        # Reusable Field @todo
+        # Reusable Field
+        represent = dvr_ActivityRepresent(show_link=False)
+        activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
+                                      label = T("Activity"),
+                                      ondelete = "CASCADE",
+                                      represent = represent,
+                                      requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              sort = True,
+                                                              )),
+                                      sortby = "activity_type_id",
+                                      )
 
         # ---------------------------------------------------------------------
         # Case Activity (case-specific)
@@ -1464,6 +1489,9 @@ class DVRCaseActivityModel(S3Model):
                      activity_type_id(readable = activity_types,
                                       writable = activity_types,
                                       ),
+                     activity_id(readable=False,
+                                 writable=False,
+                                 ),
                      Field("referral_details", "text",
                            label = T("Support provided"),
                            represent = s3_text_represent,
@@ -1496,7 +1524,7 @@ class DVRCaseActivityModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            dvr_activity_funding = {"joinby": "activity_id",
+                            dvr_activity_funding = {"joinby": "case_activity_id",
                                                     "multiple": False,
                                                     },
                             )
@@ -1605,12 +1633,13 @@ class DVRCaseActivityModel(S3Model):
             )
 
         # Reusable field
-        activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
-                                      ondelete = "CASCADE",
-                                      requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "%s.id" % tablename,
-                                                              )),
-                                      )
+        case_activity_id = S3ReusableField("case_activity_id",
+                                           "reference %s" % tablename,
+                                           ondelete = "CASCADE",
+                                           requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          )),
+                                           )
 
         # ---------------------------------------------------------------------
         # Case Service Contacts (other than case activities)
@@ -1651,7 +1680,7 @@ class DVRCaseActivityModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"dvr_activity_type_represent": activity_type_represent,
-                "dvr_case_activity_id": activity_id,
+                "dvr_case_activity_id": case_activity_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -3259,8 +3288,8 @@ class DVRActivityFundingModel(S3Model):
                                                           )),
                                     sortby = "name",
                                     comment = S3PopupLink(c="dvr",
-                                                          f="case_funding_reason",
-                                                          tooltip=T("Create a new case funding reason"),
+                                                          f="activity_funding_reason",
+                                                          tooltip=T("Create a new activity funding reason"),
                                                           ),
                                     )
 
@@ -3569,6 +3598,100 @@ def dvr_due_followups():
     resource = current.s3db.resource("dvr_case_activity", filter=query)
 
     return resource.count()
+
+# =============================================================================
+class dvr_ActivityRepresent(S3Represent):
+    """ Representation of activity IDs """
+
+    def __init__(self, show_link=False):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+        """
+
+        super(dvr_ActivityRepresent, self).__init__(lookup = "dvr_activity",
+                                                    show_link = show_link,
+                                                    )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = current.s3db.dvr_activity
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(table.id,
+                                        table.name,
+                                        table.start_date,
+                                        table.end_date,
+                                        table.activity_type_id,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+
+        types = set()
+        for row in rows:
+            activity_type_id = row.activity_type_id
+            if activity_type_id:
+                types.add(activity_type_id)
+
+        if types:
+            represent = table.activity_type_id.represent
+            represent.bulk(list(types))
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if row.name:
+            title = row.name
+        else:
+            table = current.s3db.dvr_activity
+            title = table.activity_type_id.represent(row.activity_type_id)
+
+        data = {"title": title,
+                "start": "..",
+                "end": "..",
+                }
+
+        date_represent = S3DateTime.date_represent
+        if row.start_date:
+            data["start"] = date_represent(row.start_date)
+        if row.end_date:
+            data["end"] = date_represent(row.end_date)
+
+        return "%(title)s (%(start)s - %(end)s)" % data
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (dvr_activity.id)
+            @param v: the representation of the key
+            @param row: the row with this key (unused here)
+        """
+
+        url = URL(c="dvr", f="activity", args=[k])
+
+        return A(v, _href = url)
 
 # =============================================================================
 class DVRManageAppointments(S3Method):

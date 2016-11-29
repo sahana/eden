@@ -297,20 +297,26 @@ def config(settings):
                                              filter = (FS("service_id").belongs(service_ids)),
                                              )
 
-            # @todo: filter options of activity when service selected
+            # @todo: filter options of activity type when service selected
             #        (hierarchicalOpts widget currently not supported
             #        by filterOptionsS3)
+
+            # Filter activities @todo
+            field = table.activity_id
+            field.readable = field.writable = True
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "service_id",
                                         "activity_type_id",
+                                        "activity_id",
                                         "comments",
                                         )
             # Custom list fields
             list_fields = ["person_id",
                            "service_id",
                            "activity_type_id",
+                           "activity_id",
                            ]
 
 
@@ -356,15 +362,21 @@ def config(settings):
                                              filter = (FS("service_id") == service_id),
                                              )
 
+            # Filter activities @todo
+            field = table.activity_id
+            field.readable = field.writable = True
+
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         #"service_id",
                                         "need_id",
                                         "activity_type_id",
+                                        "activity_id",
                                         "comments",
                                         )
             list_fields = ["need_id",
                            "activity_type_id",
+                           "activity_id",
                            ]
 
         else:

@@ -715,14 +715,14 @@ def case_event():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def case_funding_reason():
-    """ Case Funding Reasons: RESTful CRUD Controller """
+def activity_funding_reason():
+    """ Activity Funding Reasons: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def case_funding():
-    """ Case Funding Proposals: RESTful CRUD Controller """
+def activity_funding():
+    """ Activity Funding Proposals: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
