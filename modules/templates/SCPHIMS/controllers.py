@@ -27,7 +27,7 @@ class index(S3CustomController):
         list_fields = ["name",
                        "event_type_id",
                        "start_date",
-                       "location.location_id",
+                       "event_location.location_id",
                        "comments",
                        ]
         orderby = "start_date"

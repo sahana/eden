@@ -217,6 +217,12 @@ class S3EventModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      event_type_id(),
+                     #Field("intensity",
+                     #      label = T("Intensity"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Intensity"),
+                     #                                      T("e.g. Category for a Typhoon or Magnitude for an Earthquake"))),
+                     #      ),
                      self.org_organisation_id(
                         comment = DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Organization"),
