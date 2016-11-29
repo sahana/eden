@@ -2002,14 +2002,31 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         // Ensure that phone fields appear with + at beginning not end in RTL
         if (S3.rtl) {
             $('.phone-widget').each(function() {
-                if (this.value && (this.value.charAt(0) != '\u200E')) {
-                    this.value = '\u200E' + this.value;
+                // When form initially renders, ensure the LTR mark is placed at the beginning so that it looks correct
+                // http://www.fileformat.info/info/unicode/char/200e/index.htm
+                var value = this.value;
+                if (value && (value.charAt(0) != '\u200E')) {
+                    this.value = '\u200E' + value;
                 };
             });
             $('.phone-widget').focusout(function() {
-                if (this.value.charAt(0) != '\u200E') {
-                    this.value = '\u200E' + this.value;
-                };
+                var value = this.value;
+                if (value) {
+                    // When new data is entered then:
+                    // 1. Ensure the LTR mark is placed at the beginning so that it looks correct
+                    // 2. Ensure that if there is a trailing + then it is moved to the beginning
+                    if (value.charAt(0) != '\u200E') {
+                        if (value.charAt(value.length - 1) == '+') {
+                            this.value = '\u200E' + '+' + value.substr(0, value.length - 2);
+                        } else {
+                            this.value = '\u200E' + value;
+                        }
+                    } else {
+                         if (value.charAt(value.length - 1) == '+') {
+                            this.value = '\u200E' + '+' + value.substr(1, value.length - 2);
+                        }
+                    }
+                }
             });
         };
 
