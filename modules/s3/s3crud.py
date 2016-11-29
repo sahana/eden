@@ -407,7 +407,14 @@ class S3CRUD(S3Method):
                 elif r.http == "POST" and "save_close" in r.post_vars:
                     create_next = _config("create_next_close")
                 elif session.s3.rapid_data_entry and not r.component:
+                    if "w" in r.get_vars:
+                        # Don't redirect to form tab from summary page
+                        w = r.get_vars.pop("w")
+                    else:
+                        w = None
                     create_next = r.url()
+                    if w:
+                        r.get_vars["w"] = w
                 else:
                     create_next = _config("create_next")
 
