@@ -2922,7 +2922,7 @@ def event_event_list_layout(list_id, item_id, resource, rfields, record,
     description = record["event_event.comments"]
     start_date = record["event_event.start_date"]
 
-    location = record["event_event.location_id"] or ""
+    location = record["event_event_location.location_id"] or ""
     #location_id = raw["event_event.location_id"]
 
     comments = raw["event_event.comments"]
