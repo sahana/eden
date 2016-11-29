@@ -189,9 +189,12 @@ def config(settings):
         MENTAL_HEALTH = "Mental Health"
 
         component_name = r.component_name
-        if r.component_name == "case_activity":
+        if r.component_name == "case_activity" or r.function == "due_followups":
             # "Individual Support" tab
-            table = r.component.table
+            if r.function == "due_followups":
+                table = r.table
+            else:
+                table = r.component.table
 
             # Get service type
             stable = s3db.org_service
@@ -406,6 +409,64 @@ def config(settings):
                        )
 
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_activity_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.function == "due_followups":
+
+                # Show person_id as link to case
+                table = r.resource.table
+                table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+
+                # Custom list fields
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id",
+                               (T("Sector for DS/IS"), "need_id"),
+                               "activity_type_id",
+                               "followup_date",
+                               ]
+
+                # Custom filter widgets
+                from s3 import S3TextFilter, S3DateFilter
+                filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                                "person_id$first_name",
+                                                "person_id$last_name",
+                                                "need_id$name",
+                                                "activity_type_id$name",
+                                                ],
+                                                label = T("Search"),
+                                                ),
+                                  S3DateFilter("followup_date",
+                                               cols = 2,
+                                               hidden = True,
+                                               ),
+                                  ]
+
+                r.resource.configure(filter_widgets = filter_widgets,
+                                     list_fields = list_fields,
+                                     )
+
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_case_activity_controller = customise_dvr_case_activity_controller
 
     # -------------------------------------------------------------------------
     def customise_dvr_activity_funding_reason_resource(r, tablename):

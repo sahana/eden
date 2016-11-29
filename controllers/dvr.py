@@ -464,7 +464,6 @@ def due_followups():
                        "need_details",
                        "emergency",
                        "referral_details",
-                       "followup",
                        "followup_date",
                        "completed",
                        ]
