@@ -147,9 +147,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
                         M("All Cases", vars = {}),
-                        ),
-                    M("Case Activities", f="case_activity")(
-                       #M("Create", m="create"),
                         M(follow_up_label, f="due_followups"),
                         ),
                     M("Activities", f="activity")(

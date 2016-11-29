@@ -289,8 +289,13 @@
                 }
             }
 
-            var selected = inst.get_checked();
-            this._updateButtonText(selected);
+            // Initial update of button text (wait for ready-event)
+            var self = this;
+            tree.on('ready.jstree', function() {
+                var selected = inst.get_checked();
+                self._updateButtonText(selected);
+            });
+
             this._bindEvents();
         },
 
