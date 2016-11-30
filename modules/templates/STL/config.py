@@ -158,12 +158,12 @@ def config(settings):
             table = r.table
             crud_strings = s3.crud_strings[r.tablename]
 
-            from s3 import IS_ONE_OF, S3HierarchyWidget, FS
+            from s3 import IS_ONE_OF, S3HierarchyWidget, FS, S3SQLCustomForm
 
             service_type = r.get_vars.get("service_type")
             if service_type == "MH":
 
-                crud_strings["title_list"] = T("Mental Health Support Activities")
+                crud_strings["title_list"] = T("MH Group/Family Sessions")
 
                 # Get service type ID
                 stable = s3db.org_service
@@ -190,10 +190,22 @@ def config(settings):
                                                  )
 
                 # Custom list fields
-                # @todo
+                list_fields = ["name",
+                               "activity_type_id",
+                               "site_id",
+                               ]
 
                 # Custom form
-                # @todo
+                crud_form = S3SQLCustomForm("name",
+                                            "activity_type_id",
+                                            "site_id",
+                                            "comments",
+                                            )
+
+                s3db.configure("dvr_activity",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
 
             elif service_type == "PSS":
 
@@ -225,10 +237,26 @@ def config(settings):
                                                  )
 
                 # Custom list fields
-                # @todo
+                list_fields = ["activity_type_id",
+                               "start_date",
+                               "end_date",
+                               "period",
+                               "facilitator",
+                               ]
 
                 # Custom form
-                # @todo
+                crud_form = S3SQLCustomForm("activity_type_id",
+                                            "start_date",
+                                            "end_date",
+                                            "period",
+                                            "facilitator",
+                                            "comments",
+                                            )
+
+                s3db.configure("dvr_activity",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
 
             return result
         s3.prep = custom_prep
