@@ -2699,12 +2699,19 @@ def config(settings):
                 if not result:
                     return False
 
+            table = s3db.hrm_human_resource
+
             # Organisation needs to be an NS/Branch
             ns_only("hrm_human_resource",
                     required = True,
                     branches = True,
                     limit_filter_opts = True,
                     )
+            xls = r.representation == "xls"
+            if xls:
+                # Restore xls represent
+                table.organisation_id.represent = s3db.org_OrganisationRepresent(acronym = False,
+                                                                                 parent = False)
 
             resource = r.resource
             get_config = resource.get_config
@@ -2723,8 +2730,6 @@ def config(settings):
                         append_widget(widget)
 
                 resource.configure(filter_widgets = filters)
-
-            table = s3db.hrm_human_resource
 
             if arcs:
                 # No Sector filter
@@ -2968,14 +2973,18 @@ def config(settings):
                                                       ),
                                       ]
 
-                    list_fields = ["person_id",
-                                   "organisation_id",
-                                   "details.active",
-                                   #(T("Trainings"), "vol_training.course_id"),
-                                   (T("Trainings"), "training.course_id"),
-                                   (T("Start Date"), "start_date"),
-                                   (T("Phone"), "phone.value"),
-                                   ]
+                    if not xls:
+                        list_fields = ["person_id",
+                                       "organisation_id",
+                                       "details.active",
+                                       #(T("Trainings"), "vol_training.course_id"),
+                                       (T("Trainings"), "training.course_id"),
+                                       (T("Start Date"), "start_date"),
+                                       (T("Phone"), "phone.value"),
+                                       ]
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
 
                     report_fields = ["organisation_id",
                                      "person_id",
@@ -2991,7 +3000,6 @@ def config(settings):
                     s3db.configure(tablename,
                                    crud_form = crud_form,
                                    filter_widgets = filter_widgets,
-                                   list_fields = list_fields,
                                    report_options = Storage(
                                         rows = report_fields,
                                         cols = report_fields,
@@ -3007,38 +3015,50 @@ def config(settings):
                                    )
 
                 elif root_org == CRMADA:
-                    # Add Activity Type & Tweak Order
-                    list_fields = ["person_id",
-                                   "organisation_id",
-                                   "job_title_id",
-                                   (settings.get_ui_label_mobile_phone(), "phone.value"),
-                                   (T("Trainings"), "training.course_id"),
-                                   (T("Activity Types"), "person_id$activity_hours.activity_hours_activity_type.activity_type_id"),
-                                   (T("Activities"), "person_id$activity_hours.activity_id"),
-                                   (T("Certificates"), "person_id$certification.certificate_id"),
-                                   (T("Email"), "email.value"),
-                                   "location_id",
-                                   "details.active",
-                                   ]
+                    if xls:
+                        list_fields = get_config("list_fields")
+                        list_fields += [(T("Activity Types"), "person_id$activity_hours.activity_hours_activity_type.activity_type_id"),
+                                        (T("Activities"), "person_id$activity_hours.activity_id"),
+                                        ]
+                    else:
+                        # Add Activity Type & Tweak Order
+                        list_fields = ["person_id",
+                                       "organisation_id",
+                                       "job_title_id",
+                                       (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                       (T("Trainings"), "training.course_id"),
+                                       (T("Activity Types"), "person_id$activity_hours.activity_hours_activity_type.activity_type_id"),
+                                       (T("Activities"), "person_id$activity_hours.activity_id"),
+                                       (T("Certificates"), "person_id$certification.certificate_id"),
+                                       (T("Email"), "email.value"),
+                                       "location_id",
+                                       "details.active",
+                                       ]
 
-                    s3db.configure(tablename,
-                                   list_fields = list_fields,
-                                   )
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
 
                 elif root_org == IRCS:
-                    list_fields = ["person_id",
-                                   "details.active",
-                                   "code",
-                                   "start_date",
-                                   "programme_hours.contract",
-                                   "programme_hours.date",
-                                   "programme_hours.programme_id",
-                                   (T("Training"), "training.course_id"),
-                                   ]
+                    if xls:
+                        list_fields = s3db.get_config(tablename, "list_fields")
+                        list_fields += ["programme_hours.contract",
+                                        "programme_hours.date",
+                                        ]
+                    else:
+                        list_fields = ["person_id",
+                                       "details.active",
+                                       "code",
+                                       "start_date",
+                                       "programme_hours.contract",
+                                       "programme_hours.date",
+                                       "programme_hours.programme_id",
+                                       (T("Training"), "training.course_id"),
+                                       ]
 
-                    s3db.configure(tablename,
-                                   list_fields = list_fields,
-                                   )
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
 
                 elif root_org == NRCS:
                     pos = 6
@@ -3070,18 +3090,24 @@ def config(settings):
 
             elif controller == "hrm":
                 if root_org == IRCS:
-                    list_fields = ["person_id",
-                                   "code",
-                                   "start_date",
-                                   "contract.name",
-                                   "contract.date",
-                                   "job_title_id",
-                                   "department_id",
-                                   ]
+                    if xls:
+                        list_fields = get_config("list_fields")
+                        list_fields += ["contract.name",
+                                        "contract.date",
+                                        ]
+                    else:
+                        list_fields = ["person_id",
+                                       "code",
+                                       "start_date",
+                                       "contract.name",
+                                       "contract.date",
+                                       "job_title_id",
+                                       "department_id",
+                                       ]
 
-                    s3db.configure(tablename,
-                                   list_fields = list_fields,
-                                   )
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
 
             elif controller == "deploy":
                 # Custom settings for RDRT

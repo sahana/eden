@@ -55,6 +55,7 @@ __all__ = ("S3HRModel",
            "hrm_person_controller",
            "hrm_training_controller",
            "hrm_training_event_controller",
+           "hrm_xls_list_fields",
            "hrm_CV",
            "hrm_Record",
            "hrm_configure_pr_group_membership",
@@ -7045,47 +7046,7 @@ def hrm_human_resource_controller(extra_filter=None):
                              vars=vars))
 
         elif r.representation == "xls" and not r.component:
-            # Export format should match Import format as far as possible
-            # @ToDo: Handle XLS wrappers with e.g. localised field names
-            # @ToDo: Vary for Staff / Volunteers
-            # @ToDo: DRY with routines in controllers/hrm & controllers/vol
-            r.table.organisation_id.represent = \
-                s3db.org_OrganisationRepresent(acronym=False, parent=False)
-            r.table.site_id.represent = s3db.org_SiteRepresent(show_type=False)
-            # @ToDo: Get NONE as "" working
-            current.messages["NONE"] = ""
-            list_fields = [("Type", "type"),
-                           ("First Name", "person_id$first_name"),
-                           ("Middle Name", "person_id$middle_name"),
-                           ("Last Name", "person_id$last_name"),
-                           ("Job Title", "job_title_id"),
-                           # @ToDo: Organisation or Branch (using custom Represent options)
-                           #("Organisation", "organisation_id$parent"),
-                           #("Branch", "organisation_id"),
-                           ("Organisation", "organisation_id"),
-                           ("Department", "department_id"),
-                           ("Office", "site_id"),
-                           ("Facility Type", "site_id$instance_type"),
-                           ("Staff ID", "code"),
-                           ("Email", "email.value"),
-                           ("Mobile Phone", "phone.value"),
-                           ("Sex", "person_id$gender"),
-                           ("DOB", "person_id$date_of_birth"),
-                           ("Start Date", "start_date"),
-                           ("End Date", "end_date"), # Not reimported
-                           ("Status", "status"),
-                           ("Essential", "essential"), # Not reimported
-                           ]
-            if settings.get_hrm_use_trainings():
-                list_fields.append(("Trainings", "person_id$training.course_id"))
-            if settings.get_hrm_use_certificates():
-                # @ToDo: Make Importable
-                list_fields.append(("Certificates", "person_id$certification.certificate_id"))
-            if settings.get_hrm_vol_experience() in ("programme", "both"):
-                # @ToDo: Make Importable
-                list_fields.append(("Programs", "person_id$hours.programme_id"))
-            list_fields.append(("Comments", "comments"))
-            r.resource.configure(list_fields = list_fields)
+            hrm_xls_list_fields(r)
 
         return True
     s3.prep = prep
@@ -7643,6 +7604,103 @@ def hrm_training_event_controller():
                                      rheader = hrm_rheader,
                                      )
     return output
+
+# =============================================================================
+def hrm_xls_list_fields(r, staff=True, vol=True):
+    """
+        Configure Human Resource list_fields for XLS Export
+        - match the XLS Import
+         - no l10n if column labels
+         - simple represents
+    """
+
+    s3db = current.s3db
+    settings = current.deployment_settings
+    table = r.table
+    table.organisation_id.represent = s3db.org_OrganisationRepresent(acronym=False,
+                                                                     parent=False)
+    table.site_id.represent = s3db.org_SiteRepresent(show_type=False)
+
+    current.messages["NONE"] = ""
+    ptable = s3db.pr_person
+    ptable.middle_name.represent = lambda v: v or ""
+    ptable.last_name.represent = lambda v: v or ""
+    list_fields = [("First Name", "person_id$first_name"),
+                   ("Middle Name", "person_id$middle_name"),
+                   ("Last Name", "person_id$last_name"),
+                   ]
+    if staff and vol:
+        list_fields.insert(1, ("Type", "type"))
+    if settings.get_hrm_use_code():
+        list_fields.append(("Staff ID", "code"))
+    list_fields.append(("Sex", "person_id$gender"))
+    #if settings.get_hrm_multiple_orgs():
+    if settings.get_org_branches():
+        # @ToDo: Smart Handling for emptying the Root if org == root
+        # @ToDo: Smart Handling for when we have Sub-Branches
+        list_fields += [(settings.get_hrm_root_organisation_label(), "organisation_id$root_organisation"), # Not imported
+                        ("Organisation", "organisation_id"),
+                        ]
+    else:
+        list_fields.append(("Organisation", "organisation_id"))
+    if (staff and settings.get_hrm_use_job_titles()) or \
+       (vol and settings.get_hrm_vol_roles()):
+        table.job_title_id.represent = S3Represent("hrm_job_title", translate=True) # Need to reinitialise to get the new value for NONE
+        list_fields.append(("Job Title", "job_title_id"))
+    if (staff and settings.get_hrm_staff_departments()) or \
+       (vol and settings.get_hrm_vol_departments()):
+        table.department_id.represent = S3Represent("hrm_department") # Need to reinitialise to get the new value for NONE
+        list_fields.append(("Department", "department_id"))
+    if staff or ("site_id" in settings.get_hrm_location_vol()):
+        list_fields += [("Office", "site_id"),
+                        ("Facility Type", "site_id$instance_type"),
+                        ]
+
+    list_fields += [("Email", "email.value"),
+                    ("Mobile Phone", "phone.value"),
+                    ("DOB", "person_id$date_of_birth"),
+                    ("Start Date", "start_date"),
+                    ("End Date", "end_date"), # Not reimported
+                    ("Status", "status"),
+                    ("Essential", "essential"), # Not reimported
+                    ]
+
+    gtable = s3db.gis_location
+    levels = current.gis.get_relevant_hierarchy_levels()
+    for level in levels:
+        gtable[level].represent = lambda v: v or ""
+        if level == "L0":
+            list_fields.append(("Home Country", "home_address.location_id$%s" % level))
+        else:
+            list_fields.append(("Home %s" % level, "home_address.location_id$%s" % level))
+    gtable.addr_street.represent = lambda v: v or ""
+    list_fields.append(("Home Address", "home_address.location_id$addr_street"))
+    if settings.get_gis_postcode_selector():
+        gtable.addr_postcode.represent = lambda v: v or ""
+        list_fields.append(("Home Postcode", "home_address.location_id$addr_postcode"))
+
+    if settings.get_hrm_use_trainings():
+        s3db.hrm_training.course_id.represent = S3Represent("hrm_course", translate=True) # Need to reinitialise to get the new value for NONE
+        list_fields.append(("Trainings", "person_id$training.course_id"))
+    if settings.get_hrm_use_certificates():
+        # @ToDo: Make Importable
+        s3db.hrm_certification.certificate_id.represent = S3Represent("hrm_certificate") # Need to reinitialise to get the new value for NONE
+        list_fields.append(("Certificates", "person_id$certification.certificate_id"))
+
+    if vol:
+        if settings.get_hrm_vol_active():
+            list_fields.append(("Active", "details.active"))
+        if settings.get_hrm_vol_experience() in ("programme", "both"):
+            # @ToDo: Make Importable
+            s3db.hrm_programme_hours.programme_id.represent = S3Represent("hrm_programme") # Need to reinitialise to get the new value for NONE
+            list_fields.append(("Programs", "person_id$hours.programme_id"))
+        if settings.get_hrm_use_awards():
+            list_fields.append(("Awards", "person_id$award.award_id"))
+    list_fields.append(("Comments", "comments"))
+
+    r.resource.configure(list_fields = list_fields)
+
+    return list_fields
 
 # =============================================================================
 class hrm_CV(S3Method):
