@@ -73,7 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_unicode #, S3ModuleDebug
+from s3utils import s3_include_ext, s3_str, s3_unicode #, S3ModuleDebug
 
 #DEBUG = False
 #if DEBUG:
@@ -7368,9 +7368,13 @@ def addFeatureResources(feature_resources):
     layers_feature_resource = []
     append = layers_feature_resource.append
     for layer in feature_resources:
-        name = str(layer["name"])
+        name = s3_str(layer["name"])
         _layer = dict(name=name)
-        _id = str(layer["id"])
+        _id = layer.get("id")
+        if _id:
+            _id = str(_id)
+        else:
+            _id = name
         _id = re.sub("\W", "_", _id)
         _layer["id"] = _id
 

@@ -1,4 +1,4 @@
-// Tags for Updates Create form
+// Tags for Incident
 var incident_tags = function(incident_id) {
     if (incident_id) {
         // Read-Write
@@ -25,6 +25,7 @@ var incident_tags = function(incident_id) {
     }
 };
 
+// Bookmarks for Incident
 var incident_bookmarks = function(incident_id) {
     $('#incident-bookmark').click(function() {
         if ($('#incident-bookmark i').hasClass('fa-bookmark')) {

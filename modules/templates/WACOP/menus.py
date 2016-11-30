@@ -40,10 +40,18 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        person_id = current.auth.s3_logged_in_person()
+        if person_id:
+            dashboard = MM("Dashboard", c="pr", f="person",
+                           args=[person_id, "dashboard"])
+        else:
+            dashboard = None
+
         return [#homepage(),
                 #MM("Feed", c="cms", f="newsfeed", m="datalist",
                 #   icon = "news",
                 #   ),
+                dashboard,
                 MM("Map", c="gis", f="index"),
                 #MM("Dashboard", c="event", f="event", m="summary"),
                 MM("Incidents", c="event", f="incident", m="summary"),
