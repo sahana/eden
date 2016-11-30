@@ -412,7 +412,7 @@ def activity_type():
 def activity():
     """ Activities: RESTful CRUD Controller """
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader=s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
 def case_activity():

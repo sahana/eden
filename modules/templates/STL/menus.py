@@ -149,8 +149,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("All Cases", vars = {}),
                         M(follow_up_label, f="due_followups"),
                         ),
-                    M("Activities", f="activity")(
-                        M("Create", m="create"),
+                    M("Activities", link=False)(
+                        M("Psychosocial Support", f="activity",
+                          vars={"service_type": "PSS"},
+                          ),
+                        M("Mental Health Support", f="activity",
+                          vars={"service_type": "MH"},
+                          ),
                         ),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
