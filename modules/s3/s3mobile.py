@@ -397,6 +397,8 @@ class S3MobileCRUD(S3Method):
                 msg = sys.exc_info()[1]
                 r.error(400, msg)
 
+        xml = current.xml
+
         resource = r.resource
         tablename = resource.tablename
 
@@ -404,7 +406,6 @@ class S3MobileCRUD(S3Method):
         if records:
 
             # Create import tree
-            xml = current.xml
             TAG = xml.TAG
             ATTRIBUTE = xml.ATTRIBUTE
             IGNORE_FIELDS = xml.IGNORE_FIELDS
@@ -434,15 +435,59 @@ class S3MobileCRUD(S3Method):
             tree = etree.ElementTree(root)
 
             # Try importing the tree
-            # @todo: error handling, report created/updated
+            # @todo: error handling
             try:
-                output = resource.import_xml(tree)
+                resource.import_xml(tree)
             except IOError:
                 r.unauthorised()
+            else:
+                import_result = self.import_result(resource)
+
+            output = xml.json_message(**import_result)
         else:
             output = xml.json_message(True, 200, "No records to import")
 
         current.response.headers = {"Content-Type": "application/json"}
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_result(resource):
+        """
+            Extract import results from the resource to report back
+            to the mobile client
+
+            @param resource: the S3Resource that has been imported to
+
+            @returns: a dict with import result details
+        """
+
+        info = {}
+
+        if "uuid" not in resource.fields:
+            return info
+
+        db = current.db
+
+        created_ids = resource.import_created
+        updated_ids = resource.import_updated
+
+        uuid = resource.table.uuid
+
+        if created_ids:
+            query = (resource._id.belongs(created_ids))
+            rows = db(query).select(uuid,
+                                    limitby = (0, len(created_ids)),
+                                    )
+            info["created"] = [row.uuid for row in rows]
+
+        if updated_ids:
+            query = (resource._id.belongs(updated_ids))
+            rows = db(query).select(uuid,
+                                    limitby = (0, len(updated_ids)),
+                                    )
+            info["updated"] = [row.uuid for row in rows]
+
+        return info
 
 # END =========================================================================
