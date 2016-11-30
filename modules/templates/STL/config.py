@@ -221,6 +221,12 @@ def config(settings):
 
                 # Filter activities
                 query = (FS("activity_type_id$service_id").belongs(service_ids))
+                if r.representation == "json":
+                    today = r.utcnow.date()
+                    start_date = FS("start_date")
+                    end_date = FS("end_date")
+                    query &= ((start_date == None) | (start_date <= today)) & \
+                             ((end_date == None) | (end_date >= today))
                 r.resource.add_filter(query)
 
                 # Filter activity types selector
@@ -268,6 +274,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
+        from gluon import IS_EMPTY_OR
         from s3 import FS, \
                        IS_ONE_OF, \
                        S3HierarchyWidget, \
@@ -276,6 +283,8 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
+
+        s3 = current.response.s3
 
         T = current.T
 
@@ -426,9 +435,30 @@ def config(settings):
             #        (hierarchicalOpts widget currently not supported
             #        by filterOptionsS3)
 
-            # Filter activities @todo
+            # Filter activities
             field = table.activity_id
             field.readable = field.writable = True
+            today = r.utcnow.date()
+            atable = s3db.dvr_activity
+            ttable = s3db.dvr_activity_type
+            left = ttable.on(ttable.id == atable.activity_type_id)
+            query = (ttable.service_id.belongs(service_ids)) & \
+                    ((atable.start_date == None) | (atable.start_date <= today)) & \
+                    ((atable.end_date == None) | (atable.end_date >= today))
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
+                                                   field.represent,
+                                                   left = left,
+                                                   ))
+
+            if r.interactive:
+                script = '''$.filterOptionsS3({
+'trigger':'activity_type_id',
+'target':'activity_id',
+'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.activity_type_id='),
+'fncRepresent': function(r){return r.activity_type_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+')'},
+'optional': true
+})'''
+                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
@@ -487,9 +517,27 @@ def config(settings):
                                              filter = (FS("service_id") == service_id),
                                              )
 
-            # Filter activities @todo
+            # Filter activities
             field = table.activity_id
             field.readable = field.writable = True
+            atable = s3db.dvr_activity
+            ttable = s3db.dvr_activity_type
+            left = ttable.on(ttable.id == atable.activity_type_id)
+            query = (ttable.service_id == service_id)
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
+                                                   field.represent,
+                                                   left = left,
+                                                   ))
+
+            if r.interactive:
+                script = '''$.filterOptionsS3({
+'trigger':'activity_type_id',
+'target':'activity_id',
+'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=MH&~.activity_type_id='),
+'fncRepresent': function(r){return r.name||r.activity_type_id},
+'optional': true
+})'''
+                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
