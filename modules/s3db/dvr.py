@@ -1413,6 +1413,11 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Components
+        self.add_components(tablename,
+                            dvr_case_activity = "activity_id",
+                            )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Activity"),
@@ -6266,6 +6271,17 @@ def dvr_rheader(r, tabs=[]):
 
             rheader_fields = [["reference"],
                               ["status_id"],
+                              ]
+
+        elif tablename == "dvr_activity":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Cases"), "case_activity"),
+                        ]
+
+            rheader_fields = [["name"],
+                              ["activity_type_id"],
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,

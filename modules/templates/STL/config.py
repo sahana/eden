@@ -121,6 +121,10 @@ def config(settings):
     settings.dvr.needs_use_service_type = True
     settings.dvr.needs_hierarchical = True
 
+    # Service type names
+    INDIVIDUAL_SUPPORT = "Individual Support"
+    MENTAL_HEALTH = "Mental Health"
+
     # -------------------------------------------------------------------------
     def customise_dvr_home():
         """ Redirect dvr/index to dvr/person?closed=0 """
@@ -133,47 +137,144 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
-    def customise_dvr_economy_resource(r, tablename):
+    def customise_dvr_activity_controller(**attr):
 
-        table = current.s3db.dvr_economy
-        field = table.monthly_costs
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
 
-        field.label = current.T("Monthly Rent Expense")
+        T = current.T
 
-    settings.customise_dvr_economy_resource = customise_dvr_economy_resource
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
 
-    # -------------------------------------------------------------------------
-    def customise_dvr_household_resource(r, tablename):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+            table = r.table
+            crud_strings = s3.crud_strings[r.tablename]
 
-        crud_form = S3SQLCustomForm("hoh_relationship",
-                                    "hoh_name",
-                                    "hoh_date_of_birth",
-                                    "hoh_gender",
-                                    S3SQLInlineComponent("beneficiary_data",
-                                                         fields = [(T("Age Group"), "beneficiary_type_id"),
-                                                                   "female",
-                                                                   "male",
-                                                                   "other",
-                                                                   "in_school",
-                                                                   "employed",
-                                                                   ],
-                                                         label = T("Household Members"),
-                                                         explicit_add = T("Add Household Members"),
-                                                         ),
-                                    "comments",
-                                    )
+            from s3 import IS_ONE_OF, S3HierarchyWidget, FS, S3SQLCustomForm
 
-        current.s3db.configure("dvr_household",
+            service_type = r.get_vars.get("service_type")
+            if service_type == "MH":
+
+                crud_strings["title_list"] = T("MH Group/Family Sessions")
+
+                # Get service type ID
+                stable = s3db.org_service
+                query = (stable.name == MENTAL_HEALTH) & \
+                        (stable.deleted != True)
+                service = db(query).select(stable.id, limitby=(0, 1)).first()
+                service_id = service.id if service else None
+
+                # Filter activities
+                query = (FS("activity_type_id$service_id") == service_id)
+                r.resource.add_filter(query)
+
+                # Filter activity types selector
+                field = table.activity_type_id
+                field.comment = None
+                field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                                           field.represent,
+                                           filterby = "service_id",
+                                           filter_opts = service_id,
+                                           )
+                field.widget = S3HierarchyWidget(multiple = False,
+                                                 leafonly = False,
+                                                 filter = (FS("service_id") == service_id),
+                                                 )
+
+                # Custom list fields
+                list_fields = ["name",
+                               "activity_type_id",
+                               "site_id",
+                               ]
+
+                # Custom form
+                crud_form = S3SQLCustomForm("name",
+                                            "activity_type_id",
+                                            "site_id",
+                                            "comments",
+                                            )
+
+                s3db.configure("dvr_activity",
                                crud_form = crud_form,
+                               list_fields = list_fields,
                                )
 
-    settings.customise_dvr_household_resource = customise_dvr_household_resource
+            elif service_type == "PSS":
+
+                crud_strings["title_list"] = T("Psychosocial Support Activities")
+
+                # Filter activity_type_id by service type
+                stable = s3db.org_service
+                query = (stable.name != INDIVIDUAL_SUPPORT) & \
+                        (stable.name != MENTAL_HEALTH) & \
+                        (stable.deleted != True)
+                rows = db(query).select(stable.id)
+                service_ids = [row.id for row in rows]
+
+                # Filter activities
+                query = (FS("activity_type_id$service_id").belongs(service_ids))
+                if r.representation == "json":
+                    today = r.utcnow.date()
+                    start_date = FS("start_date")
+                    end_date = FS("end_date")
+                    query &= ((start_date == None) | (start_date <= today)) & \
+                             ((end_date == None) | (end_date >= today))
+                r.resource.add_filter(query)
+
+                # Filter activity types selector
+                field = table.activity_type_id
+                field.comment = None
+                field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                                           field.represent,
+                                           filterby = "service_id",
+                                           filter_opts = service_ids,
+                                           )
+                field.widget = S3HierarchyWidget(multiple = False,
+                                                 leafonly = False,
+                                                 filter = (FS("service_id").belongs(service_ids)),
+                                                 )
+
+                # Custom list fields
+                list_fields = ["activity_type_id",
+                               "start_date",
+                               "end_date",
+                               "period",
+                               "facilitator",
+                               ]
+
+                # Custom form
+                crud_form = S3SQLCustomForm("activity_type_id",
+                                            "start_date",
+                                            "end_date",
+                                            "period",
+                                            "facilitator",
+                                            "comments",
+                                            )
+
+                s3db.configure("dvr_activity",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_activity_controller = customise_dvr_activity_controller
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
+        from gluon import IS_EMPTY_OR
         from s3 import FS, \
                        IS_ONE_OF, \
                        S3HierarchyWidget, \
@@ -183,14 +284,43 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
+        s3 = current.response.s3
+
         T = current.T
 
-        INDIVIDUAL_SUPPORT = "Individual Support"
-        MENTAL_HEALTH = "Mental Health"
-
         component_name = r.component_name
-        if r.component_name == "case_activity" or r.function == "due_followups":
-            # "Individual Support" tab
+
+        if r.tablename == "dvr_activity":
+            # "Cases" tab (activity perspective)
+
+            # Show person_id as link
+            catable = s3db.dvr_case_activity
+            field = catable.person_id
+            field.represent = s3db.pr_PersonRepresent(show_link=True)
+
+            # Custom list fields
+            list_fields = ["person_id$pe_label",
+                           "person_id",
+                           "need_id",
+                           "followup",
+                           "followup_date",
+                           ]
+
+            crud_form = S3SQLCustomForm("person_id",
+                                        "need_id",
+                                        "need_details",
+                                        "followup",
+                                        "followup_date",
+                                        "comments",
+                                        )
+
+            s3db.configure("dvr_case_activity",
+                           insertable = False,
+                           )
+
+        elif r.component_name == "case_activity" or r.function == "due_followups":
+            # "Individual Support" tab or "Due Follow-ups"
+
             if r.function == "due_followups":
                 table = r.table
             else:
@@ -263,7 +393,8 @@ def config(settings):
                                         "activity_funding.proposal",
                                         "comments",
                                         )
-            list_fields = ["need_id",
+            list_fields = ["person_id",
+                           "need_id",
                            "activity_type_id",
                            "followup",
                            "followup_date",
@@ -304,9 +435,30 @@ def config(settings):
             #        (hierarchicalOpts widget currently not supported
             #        by filterOptionsS3)
 
-            # Filter activities @todo
+            # Filter activities
             field = table.activity_id
             field.readable = field.writable = True
+            today = r.utcnow.date()
+            atable = s3db.dvr_activity
+            ttable = s3db.dvr_activity_type
+            left = ttable.on(ttable.id == atable.activity_type_id)
+            query = (ttable.service_id.belongs(service_ids)) & \
+                    ((atable.start_date == None) | (atable.start_date <= today)) & \
+                    ((atable.end_date == None) | (atable.end_date >= today))
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
+                                                   field.represent,
+                                                   left = left,
+                                                   ))
+
+            if r.interactive:
+                script = '''$.filterOptionsS3({
+'trigger':'activity_type_id',
+'target':'activity_id',
+'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.activity_type_id='),
+'fncRepresent': function(r){return r.activity_type_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+')'},
+'optional': true
+})'''
+                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
@@ -365,9 +517,27 @@ def config(settings):
                                              filter = (FS("service_id") == service_id),
                                              )
 
-            # Filter activities @todo
+            # Filter activities
             field = table.activity_id
             field.readable = field.writable = True
+            atable = s3db.dvr_activity
+            ttable = s3db.dvr_activity_type
+            left = ttable.on(ttable.id == atable.activity_type_id)
+            query = (ttable.service_id == service_id)
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
+                                                   field.represent,
+                                                   left = left,
+                                                   ))
+
+            if r.interactive:
+                script = '''$.filterOptionsS3({
+'trigger':'activity_type_id',
+'target':'activity_id',
+'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=MH&~.activity_type_id='),
+'fncRepresent': function(r){return r.name||r.activity_type_id},
+'optional': true
+})'''
+                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
@@ -377,7 +547,10 @@ def config(settings):
                                         "activity_id",
                                         "comments",
                                         )
-            list_fields = ["need_id",
+
+            # Custom list fields
+            list_fields = ["person_id",
+                           "need_id",
                            "activity_type_id",
                            "activity_id",
                            ]
@@ -511,6 +684,45 @@ def config(settings):
         field.label = T("Proposed Assistance for SNF")
 
     settings.customise_dvr_activity_funding_resource = customise_dvr_activity_funding_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_economy_resource(r, tablename):
+
+        table = current.s3db.dvr_economy
+        field = table.monthly_costs
+
+        field.label = current.T("Monthly Rent Expense")
+
+    settings.customise_dvr_economy_resource = customise_dvr_economy_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_household_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("hoh_relationship",
+                                    "hoh_name",
+                                    "hoh_date_of_birth",
+                                    "hoh_gender",
+                                    S3SQLInlineComponent("beneficiary_data",
+                                                         fields = [(T("Age Group"), "beneficiary_type_id"),
+                                                                   "female",
+                                                                   "male",
+                                                                   "other",
+                                                                   "in_school",
+                                                                   "employed",
+                                                                   ],
+                                                         label = T("Household Members"),
+                                                         explicit_add = T("Add Household Members"),
+                                                         ),
+                                    "comments",
+                                    )
+
+        current.s3db.configure("dvr_household",
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_dvr_household_resource = customise_dvr_household_resource
 
     # =========================================================================
     # Person Registry
