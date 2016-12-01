@@ -374,6 +374,7 @@ class custom_WACOP(S3CRUD):
                                                    layout=cms_post_list_layout)
         if numrows == 0:
             # Empty table or just no match?
+            ptable = s3db.cms_post
             if "deleted" in ptable:
                 available_records = db(ptable.deleted != True)
             else:
