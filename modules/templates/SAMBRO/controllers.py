@@ -1596,10 +1596,14 @@ class alert_hub_cop(S3CustomController):
             s3_debug("Cannot find Layer for Map")
             layer_id = None
 
+        last_month = request.utcnow + timedelta(-30)
+
+        map_filter = "~.external=True&~.status=Actual&info.expires>=%s" % last_month
+
         feature_resources = [{"name"      : T("Alerts"),
                               "id"        : "search_results",
                               "layer_id"  : layer_id,
-                              "filter"    : "~.external=True",
+                              "filter"    : map_filter,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
                               }]
@@ -1623,10 +1627,11 @@ class alert_hub_cop(S3CustomController):
             # Only show Public Alerts
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts from the past 30 days
-        last_month = request.utcnow + timedelta(-30)
         resource.add_filter(FS("info.expires") >= last_month)
         # Show External Alerts
         resource.add_filter(FS("external") == True)
+        # Show only Actual alert
+        resource.add_filter(FS("status") == "Actual")
         # Change representation
         resource.table.status.represent = None
         list_id = "cap_alert_datalist"
@@ -1672,9 +1677,6 @@ class alert_hub_cop(S3CustomController):
                           #                 ),
                           S3OptionsFilter("info.event_type_id",
                                           #label=T("Event Type"),
-                                          ),
-                          S3OptionsFilter("scope",
-                                          #label=T("Scope"),
                                           ),
                           S3DateFilter("info.expires",
                                        label = "",

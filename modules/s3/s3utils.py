@@ -519,9 +519,9 @@ def s3_truncate(text, length=48, nice=True):
     text = s3_unicode(text)
     if len(text) > length:
         if nice:
-            return "%s..." % text[:length].rsplit(" ", 1)[0][:45]
+            return "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
         else:
-            return "%s..." % text[:45]
+            return "%s..." % text[:length-3]
     else:
         return text
 

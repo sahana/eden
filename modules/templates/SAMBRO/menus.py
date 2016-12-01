@@ -224,6 +224,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Incomplete Alerts", c="cap", f="alert", m="review",
                               vars={"status": "incomplete"}
                               ),
+                            M("Archived Alerts/ Alert History", c="cap",
+                              f="alert_history", restrict=["ADMIN"]
+                              ),
                         ),
                         M("Templates", f="template")(
                             M("Create", m="create",
