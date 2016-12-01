@@ -3140,8 +3140,9 @@ class S3ImportJob():
                             # Load only the UUID now, parse will load any
                             # required data later
                             row = db(query).select(ctable[UID],
-                                                   limitby = (0, 1)).first()
-                            original = row[UID]
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                original = row[UID]
                         else:
                             # Not nice, but a rare edge-case
                             original = db(query).select(ctable.ALL,
