@@ -3139,7 +3139,7 @@ class S3ImportJob():
                         if UID in ctable.fields:
                             # Load only the UUID now, parse will load any
                             # required data later
-                            row = db(query).select(UID,
+                            row = db(query).select(ctable[UID],
                                                    limitby = (0, 1)).first()
                             original = row[UID]
                         else:
