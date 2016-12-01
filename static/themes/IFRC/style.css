@@ -489,6 +489,7 @@ button.alert-send-btn:enabled {
   margin-top: 12px;
   padding-bottom: 0 !important;
 }
+.pr-emergency-contacts .pr-contact-subtitle,
 .pr-contacts .pr-contact-subtitle {
     font-size: small;
     font-style: italic;

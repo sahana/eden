@@ -1623,9 +1623,10 @@ def vol_person_controller():
         # Plug-in role matrix for Admins/OrgAdmins
         S3PersonRoleManager.set_method(r, entity="pr_person")
 
+        method = r.method
         if r.representation == "s3json":
             current.xml.show_ids = True
-        elif r.interactive and r.method != "import":
+        elif r.interactive and method != "import":
             if s3.rtl:
                 # Ensure that + appears at the beginning of the number
                 f = s3db.pr_phone_contact.value
@@ -1713,7 +1714,7 @@ def vol_person_controller():
                                                    filter_opts=filter_opts,
                                                    )
 
-            if r.method == "record" or r.component_name == "human_resource":
+            if method == "record" or r.component_name == "human_resource":
                 table = s3db.hrm_human_resource
                 table.code.writable = table.code.readable = False
                 table.department_id.writable = table.department_id.readable = False
@@ -1736,11 +1737,21 @@ def vol_person_controller():
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
+            elif method == "cv" or r.component_name == "training":
+                list_fields = ["course_id",
+                               "grade",
+                               ]
+                if settings.get_hrm_course_pass_marks:
+                    list_fields.append("grade_details")
+                list_fields.append("date")
+                s3db.configure("hrm_training",
+                               list_fields = list_fields,
+                               )
 
             resource = r.resource
             if mode is not None:
                 r.resource.build_query(id=current.auth.s3_logged_in_person())
-            elif r.method not in ("deduplicate", "search_ac"):
+            elif method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:

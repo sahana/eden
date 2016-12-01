@@ -553,7 +553,7 @@ class S3LocationModel(S3Model):
                     # id doesn't exist for create forms and parent is a quicker check anyway when available
                     child = parent or current.request.vars.get("id", None)
                     editable = gis_hierarchy_editable(level, child)
-                if not editable:
+                if not editable and not s3.synchronise_uuids: # Allow Editing of UUIDs during Sync
                     response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
                     form.errors["level"] = T("This level is not open for editing.")
                     return
@@ -5385,7 +5385,12 @@ class gis_LocationRepresent(S3Represent):
                 htable = s3db.gis_hierarchy
                 L0_name = row.L0
                 if L0_name:
-                    path = row.path.split("/")
+                    if row.path:
+                        path = row.path
+                    else:
+                        # Not yet been built, so do it now
+                        path = current.gis.update_location_tree(row)
+                    path = path.split("/")
                     L0_id = path[0]
                     level_name = current.gis.get_location_hierarchy(level,
                                                                     L0_id)
