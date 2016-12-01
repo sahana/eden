@@ -5385,7 +5385,12 @@ class gis_LocationRepresent(S3Represent):
                 htable = s3db.gis_hierarchy
                 L0_name = row.L0
                 if L0_name:
-                    path = row.path.split("/")
+                    if row.path:
+                        path = row.path
+                    else:
+                        # Not yet been built, so do it now
+                        path = current.gis.update_location_tree(row)
+                    path = path.split("/")
                     L0_id = path[0]
                     level_name = current.gis.get_location_hierarchy(level,
                                                                     L0_id)
