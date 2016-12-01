@@ -3092,6 +3092,7 @@ class S3ImportJob():
                                                       )
             add_item = self.add_item
             xml = current.xml
+            UID = xml.UID
             for celement in xml.components(element, names=cnames.keys()):
 
                 # Get the component tablename
