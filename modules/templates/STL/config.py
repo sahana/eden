@@ -266,6 +266,9 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
+        # Make sure action buttons retain the service_type
+        s3.crud.keep_vars = ("service_type",)
+
         return attr
 
     settings.customise_dvr_activity_controller = customise_dvr_activity_controller
@@ -276,6 +279,7 @@ def config(settings):
         from s3 import FS, \
                        IS_ONE_OF, \
                        S3HierarchyWidget, \
+                       S3Represent, \
                        S3SQLCustomForm, \
                        s3_comments_widget
 
@@ -288,6 +292,20 @@ def config(settings):
 
         component_name = r.component_name
 
+        def expose_project_id(table):
+
+            field = table.project_id
+            field.readable = field.writable = True
+            represent = S3Represent(lookup = "project_project",
+                                    fields = ["code"],
+                                    )
+            field.represent = represent
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_project.id",
+                                                represent,
+                                                ))
+            field.comment = None
+            field.label = T("Project Code")
+
         if r.tablename == "dvr_activity":
             # "Cases" tab (activity perspective)
 
@@ -296,10 +314,13 @@ def config(settings):
             field = catable.person_id
             field.represent = s3db.pr_PersonRepresent(show_link=True)
 
+            expose_project_id(catable)
+
             # Custom list fields
             list_fields = ["person_id$pe_label",
                            "person_id",
                            "need_id",
+                           "project_id",
                            "followup",
                            "followup_date",
                            ]
@@ -307,6 +328,7 @@ def config(settings):
             crud_form = S3SQLCustomForm("person_id",
                                         "need_id",
                                         "need_details",
+                                        "project_id",
                                         "followup",
                                         "followup_date",
                                         "comments",
@@ -323,6 +345,8 @@ def config(settings):
                 table = r.table
             else:
                 table = r.component.table
+
+            expose_project_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -380,6 +404,7 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
+                                        "project_id",
                                         #"service_id",
                                         "need_id",
                                         "need_details",
@@ -392,6 +417,7 @@ def config(settings):
                                         "comments",
                                         )
             list_fields = ["person_id",
+                           "project_id",
                            "need_id",
                            "activity_type_id",
                            "followup",
@@ -401,6 +427,8 @@ def config(settings):
         elif r.component_name == "pss_activity":
             # "PSS" tab
             table = r.component.table
+
+            expose_project_id(table)
 
             # Service type subset
             stable = s3db.org_service
@@ -460,6 +488,7 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
+                                        "project_id",
                                         "service_id",
                                         "activity_type_id",
                                         "activity_id",
@@ -467,6 +496,7 @@ def config(settings):
                                         )
             # Custom list fields
             list_fields = ["person_id",
+                           "project_id",
                            "service_id",
                            "activity_type_id",
                            "activity_id",
@@ -476,6 +506,8 @@ def config(settings):
         elif r.component_name == "mh_activity":
             # "Mental Health" tab
             table = r.component.table
+
+            expose_project_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -539,8 +571,9 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
-                                        #"service_id",
                                         "need_id",
+                                        "project_id",
+                                        #"service_id",
                                         "activity_type_id",
                                         "activity_id",
                                         "comments",
@@ -549,13 +582,17 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id",
                            "need_id",
+                           "project_id",
                            "activity_type_id",
                            "activity_id",
                            ]
 
         else:
             # Activity list
+            expose_project_id(s3db.dvr_case_activity)
+
             crud_form = S3SQLCustomForm("person_id",
+                                        "project_id",
                                         "service_id",
                                         "activity_type_id",
                                         "need_id",
@@ -568,6 +605,7 @@ def config(settings):
                                         )
             # Custom list fields
             list_fields = ["person_id",
+                           "project_id",
                            "service_id",
                            "activity_type_id",
                            "followup",
@@ -864,11 +902,10 @@ def config(settings):
 
             if controller == "dvr" and not r.component:
 
+                from s3 import IS_ONE_OF, S3HierarchyWidget
+
                 table = r.table
-
                 ctable = s3db.dvr_case
-
-                from s3 import IS_ONE_OF, S3HierarchyWidget, S3Represent
 
                 # Remove empty option from case status selector
                 field = ctable.status_id
@@ -876,20 +913,6 @@ def config(settings):
                 if isinstance(requires, IS_EMPTY_OR):
                     field.requires = requires = requires.other
                     requires.zero = None
-
-                # Expose project_id
-                field = ctable.project_id
-                field.readable = field.writable = True
-                represent = S3Represent(lookup = "project_project",
-                                        fields = ["code"],
-                                        )
-                field.represent = represent
-                field.requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(current.db, "project_project.id",
-                                              represent,
-                                              ))
-                field.comment = None
-                field.label = T("Project Code")
 
                 # Hierarchical Organisation Selector
                 field = ctable.organisation_id
@@ -962,7 +985,6 @@ def config(settings):
                                 "dvr_case.date",
                                 "dvr_case.organisation_id",
                                 "dvr_case.human_resource_id",
-                                "dvr_case.project_id",
                                 "first_name",
                                 #"middle_name",
                                 "last_name",
@@ -1516,7 +1538,6 @@ def stl_dvr_rheader(r, tabs=[]):
                                         "dvr_case.archived",
                                         "dvr_case.organisation_id",
                                         "dvr_case.disclosure_consent",
-                                        "dvr_case.project_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -1531,7 +1552,6 @@ def stl_dvr_rheader(r, tabs=[]):
                 archived = case["_row"]["dvr_case.archived"]
                 family_id = lambda row: case["pr_family_id_person_tag.value"]
                 organisation_id = lambda row: case["dvr_case.organisation_id"]
-                project_id = lambda row: case["dvr_case.project_id"]
                 name = lambda row: s3_fullname(row)
 
                 raw = case._row
@@ -1553,7 +1573,6 @@ def stl_dvr_rheader(r, tabs=[]):
                                    (T("Organisation"), organisation_id),
                                    ],
                                   [(T("Name"), name),
-                                   (T("Project Code"), project_id),
                                    ],
                                   ["date_of_birth",
                                    ],

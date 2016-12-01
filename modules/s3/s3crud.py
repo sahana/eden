@@ -2501,8 +2501,9 @@ class S3CRUD(S3Method):
             s3.actions.append(link)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def action_buttons(r,
+    @classmethod
+    def action_buttons(cls,
+                       r,
                        deletable=True,
                        editable=True,
                        copyable=False,
@@ -2547,9 +2548,7 @@ class S3CRUD(S3Method):
             table = r.table
             args = ["[id]"]
 
-        get_vars = Storage()
-        if "viewing" in r.get_vars:
-            get_vars["viewing"] = r.get_vars["viewing"]
+        get_vars = cls._linkto_vars(r)
 
         # If this request is in iframe-format, action URLs should be in
         # iframe-format as well
@@ -2997,6 +2996,7 @@ class S3CRUD(S3Method):
                 except TypeError:
                     url = linkto % record_id
             else:
+                get_vars = self._linkto_vars(r)
                 if r.component:
                     if r.link and not r.actuate_link():
                         # We're rendering a link table here, but must
@@ -3021,22 +3021,16 @@ class S3CRUD(S3Method):
                         args = [r.id, r.component_name, record_id]
                     if update:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["update"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["update"],
+                                      vars = get_vars
                                       ))
                     else:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["read"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["read"],
+                                      vars = get_vars
                                       ))
                 else:
                     args = [record_id]
-                    # Don't forward get_vars, except "viewing"
-                    get_vars = Storage()
-                    if "viewing" in r.get_vars:
-                        get_vars.viewing = r.get_vars["viewing"]
                     if update:
                         url = str(URL(r=r, c=c, f=f,
                                       args = args + ["update"],
@@ -3052,6 +3046,32 @@ class S3CRUD(S3Method):
             return url
 
         return list_linkto
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _linkto_vars(r):
+        """
+            Retain certain GET vars of the request in action links
+
+            @param r: the S3Request
+
+            @return: Storage with GET vars
+        """
+
+        get_vars = r.get_vars
+        linkto_vars = Storage()
+
+        # Retain "viewing"
+        if not r.component and "viewing" in get_vars:
+            linkto_vars.viewing = get_vars["viewing"]
+
+        keep_vars = current.response.s3.crud.keep_vars
+        if keep_vars:
+            for key in keep_vars:
+                if key in get_vars:
+                    linkto_vars[key] = get_vars[key]
+
+        return linkto_vars
 
     # -------------------------------------------------------------------------
     @staticmethod
