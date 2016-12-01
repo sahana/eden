@@ -119,6 +119,7 @@ class S3Notifications(object):
                                                   stable.notify_on,
                                                   stable.method,
                                                   stable.email_format,
+                                                  stable.attachment,
                                                   rtable.id,
                                                   rtable.resource,
                                                   rtable.url,
@@ -195,6 +196,7 @@ class S3Notifications(object):
                            "notify_on": s.notify_on,
                            "method": s.method,
                            "email_format": s.email_format,
+                           "attachment": s.attachment,
                            "resource": r.resource,
                            "last_check_time": last_check_time,
                            "filter_query": query_nice,
@@ -356,6 +358,14 @@ class S3Notifications(object):
                                                     r="%(resource)s")
         subject = subject % meta_data
 
+        # Attachment
+        attachment = subscription.get("attachment", False)
+        document_ids = None
+        if attachment:
+            attachment_fnc = settings.get_msg_notify_attachment()
+            if attachment_fnc:
+                document_ids = attachment_fnc(resource, data, meta_data)
+
         # Helper function to find templates from a priority list
         join = lambda *f: os.path.join(current.request.folder, *f)
         def get_template(path, filenames):
@@ -427,7 +437,8 @@ class S3Notifications(object):
                             subject=s3_truncate(subject, 78),
                             message=message,
                             contact_method=method,
-                            system_generated=True)
+                            system_generated=True,
+                            document_ids=document_ids)
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))

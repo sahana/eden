@@ -4397,6 +4397,11 @@ class S3SubscriptionModel(S3Model):
                                             IS_IN_SET(email_format_opts,
                                                       zero=None)),
                                 ),
+                          Field("attachment", "boolean",
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 

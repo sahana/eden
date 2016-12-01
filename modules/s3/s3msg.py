@@ -370,7 +370,7 @@ class S3Msg(object):
                       subject = "",
                       message = "",
                       contact_method = "EMAIL",
-                      documents_id = None,
+                      document_ids = None,
                       from_address = None,
                       system_generated = False):
         """
@@ -402,11 +402,11 @@ class S3Msg(object):
             record = dict(id=_id)
             s3db.update_super(table, record)
             message_id = record["message_id"]
-            if documents_id:
+            if document_ids:
                 ainsert = s3db.msg_attachment.insert
-                if not isinstance(documents_id, list):
-                    documents_id = [documents_id]
-                for document_id in documents_id:
+                if not isinstance(document_ids, list):
+                    document_ids = [document_ids]
+                for document_id in document_ids:
                     ainsert(message_id=message_id,
                             document_id=document_id,
                             )
