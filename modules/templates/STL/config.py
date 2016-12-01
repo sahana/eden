@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, H3, SPAN, URL
+from gluon import current, DIV, H3, IS_EMPTY_OR, IS_IN_SET, SPAN, URL
 from gluon.storage import Storage
 
 def config(settings):
@@ -129,7 +129,6 @@ def config(settings):
     def customise_dvr_home():
         """ Redirect dvr/index to dvr/person?closed=0 """
 
-        from gluon import URL
         from s3 import s3_redirect_default
 
         s3_redirect_default(URL(f="person", vars={"closed": "0"}))
@@ -274,7 +273,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
-        from gluon import IS_EMPTY_OR
         from s3 import FS, \
                        IS_ONE_OF, \
                        S3HierarchyWidget, \
@@ -742,7 +740,6 @@ def config(settings):
         field.label = current.T("Number or Address")
 
         field = table.contact_method
-        from gluon import IS_IN_SET
         all_opts = current.msg.CONTACT_OPTS
         subset = ("SMS",
                   "EMAIL",
@@ -872,7 +869,13 @@ def config(settings):
                 ctable = s3db.dvr_case
 
                 from s3 import IS_ONE_OF, S3HierarchyWidget, S3Represent
-                from gluon import DIV, IS_EMPTY_OR
+
+                # Remove empty option from case status selector
+                field = ctable.status_id
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires = requires.other
+                    requires.zero = None
 
                 # Expose project_id
                 field = ctable.project_id
