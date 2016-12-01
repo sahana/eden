@@ -7103,7 +7103,6 @@ def hrm_person_controller(**attr):
     db = current.db
     s3db = current.s3db
     auth = current.auth
-    request = current.request
     response = current.response
     session = current.session
     settings = current.deployment_settings
