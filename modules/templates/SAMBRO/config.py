@@ -10,7 +10,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3 import FS, s3_str
+from s3 import FS, s3_str, s3_truncate
 
 def config(settings):
     """
@@ -303,6 +303,29 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
+        s3 = current.response.s3
+
+        crud_strings_branch = Storage(
+            label_create = T("Add Branch"),
+            title_display = T("Branch Details"),
+            title_list = T("Branches"),
+            title_update = T("Edit Branch"),
+            title_upload = T("Import Branches"),
+            label_list_button = T("List Branches"),
+            label_delete_button = T("Delete Branch"),
+            msg_record_created = T("Branch added"),
+            msg_record_modified = T("Branch updated"),
+            msg_record_deleted = T("Branch deleted"),
+            msg_list_empty = T("No Branches currently registered"))
+
+        if r.component_name == "branch":
+            # Make sure branch uses same form as organisation because we need CAP OID
+            r.component.actuate = "replace"
+            s3.crud_strings[tablename] = crud_strings_branch
+
+        if r.method == "hierarchy":
+            s3.crud_strings[tablename] = crud_strings_branch
+
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm("name",
                                     "acronym",
@@ -558,12 +581,6 @@ def config(settings):
                 itable.severity.represent = None
                 itable.urgency.represent = None
                 itable.certainty.represent = None
-
-            # Limit import feed to alert editor and approver only
-            args = r.args
-            if args and args[0] == "import_feed" and not \
-                (auth.s3_has_role("ALERT EDITOR") or auth.s3_has_role("ALERT APPROVER")):
-                auth.permission.fail()
 
             return result
         s3.prep = custom_prep
@@ -1149,11 +1166,8 @@ def config(settings):
                                                       system=system),
                                   event_type,
                                   msg_type)
-        if len(subject) > 78: # RFC 2822
-            subject = "%s %s" % (current.deployment_settings.get_system_name_short(),
-                                 T("Alert Notification"))
-
-        return s3_str(subject)
+        # RFC 2822
+        return s3_str(s3_truncate(subject, length=78))
 
     # -------------------------------------------------------------------------
     def get_sms_content(row, ack_id=None, system=True):

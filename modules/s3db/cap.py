@@ -4067,6 +4067,11 @@ class CAPImportFeed(S3Method):
             @param attr: controller options for this request
         """
 
+        # Requires permission to create the alert
+        authorised = current.auth.s3_has_permission("create", "cap_alert")
+        if not authorised:
+            r.unauthorised()
+
         if r.representation == "html":
 
             T = current.T
