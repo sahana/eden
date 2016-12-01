@@ -3092,6 +3092,7 @@ class S3ImportJob():
                                                       )
             add_item = self.add_item
             xml = current.xml
+            UID = xml.UID
             for celement in xml.components(element, names=cnames.keys()):
 
                 # Get the component tablename
@@ -3138,9 +3139,10 @@ class S3ImportJob():
                         if UID in ctable.fields:
                             # Load only the UUID now, parse will load any
                             # required data later
-                            row = db(query).select(UID,
-                                                   limitby = (0, 1)).first()
-                            original = row[UID]
+                            row = db(query).select(ctable[UID],
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                original = row[UID]
                         else:
                             # Not nice, but a rare edge-case
                             original = db(query).select(ctable.ALL,
