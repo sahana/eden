@@ -1400,7 +1400,7 @@ class DVRCaseActivityModel(S3Model):
                             represent = site_represent,
                             updateable = True,
                             ),
-                     # Field("room"), @todo: link to room (org_site)
+                     self.org_room_id(),
                      # @todo: have alternative lookup field (hrm)
                      Field("facilitator",
                            label = T("Facilitator"),
