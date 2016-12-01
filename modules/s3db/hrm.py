@@ -7381,6 +7381,16 @@ def hrm_person_controller(**attr):
                                   s3db.org_site_represent,
                                   filterby="organisation_id",
                                   filter_opts=(session.s3.hrm.org,)))
+            elif method == "cv" or r.component_name == "training":
+                list_fields = ["course_id",
+                               "grade",
+                               ]
+                if settings.get_hrm_course_pass_marks:
+                    list_fields.append("grade_details")
+                list_fields.append("date")
+                s3db.configure("hrm_training",
+                               list_fields = list_fields,
+                               )
 
             resource = r.resource
             if mode is not None:
