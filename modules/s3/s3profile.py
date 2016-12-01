@@ -1166,7 +1166,7 @@ class S3Profile(S3CRUD):
             if label_create:
                 label_create = current.T(label_create)
             else:
-                label_create = self.crud_string(tablename, "label_create")
+                label_create = S3CRUD.crud_string(tablename, "label_create")
 
             # Popup URL
             component = widget_get("create_component", None)
