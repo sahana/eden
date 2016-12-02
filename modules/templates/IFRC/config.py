@@ -3400,7 +3400,7 @@ def config(settings):
                                                   ),
                                   ]
                 s3db.configure("hrm_job_title",
-                               flter_widgets = filter_widgets,
+                               filter_widgets = filter_widgets,
                                )
 
             return result
