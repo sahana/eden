@@ -835,6 +835,59 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
+    def event_overdue(code, interval):
+        """
+            Get cases (person_ids) for which a certain event is overdue
+
+            @param code: the event code
+            @param interval: the interval in days
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ttable = s3db.dvr_case_event_type
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
+        etable = s3db.dvr_case_event
+
+        # Get event type ID
+        query = (ttable.code == code) & \
+                (ttable.deleted != True)
+        row = db(query).select(ttable.id, limitby=(0, 1)).first()
+        if row:
+            type_id = row.id
+        else:
+            # No such event
+            return set()
+
+        # Determine deadline
+        now = current.request.utcnow
+        then = now - datetime.timedelta(days=interval)
+
+        # Check only open cases
+        join = stable.on((stable.id == ctable.status_id) & \
+                         (stable.is_closed == False))
+
+        # Join only events after the deadline
+        left = etable.on((etable.person_id == ctable.person_id) & \
+                         (etable.type_id == type_id) & \
+                         (etable.date != None) & \
+                         (etable.date >= then) & \
+                         (etable.deleted != True))
+
+        # ...and then select the rows which don't have any
+        query = (ctable.archived == False) & \
+                (ctable.deleted == False)
+        rows = db(query).select(ctable.person_id,
+                                left = left,
+                                join = join,
+                                groupby = ctable.person_id,
+                                having = (etable.date.max() == None),
+                                )
+        return set(row.person_id for row in rows)
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
@@ -863,7 +916,9 @@ def config(settings):
             else:
                 result = True
 
-            archived = r.get_vars.get("archived")
+            get_vars = r.get_vars
+
+            archived = get_vars.get("archived")
             if archived in ("1", "true", "yes"):
                 crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
@@ -1026,11 +1081,12 @@ def config(settings):
                 FAMILY_TRANSFERABLE = T("Family Transferable")
 
                 if not r.record:
-                    overdue = r.get_vars.get("overdue")
-                    if overdue:
-                        # Filter case list for overdue check-in
-                        from s3 import FS
 
+                    from s3 import FS
+
+                    overdue = get_vars.get("overdue")
+                    if overdue == "check-in":
+                        # Filter case list for overdue check-in
                         reg_status = FS("shelter_registration.registration_status")
                         checkout_date = FS("shelter_registration.check_out_date")
 
@@ -1052,7 +1108,14 @@ def config(settings):
                         resource.add_filter(query)
                         check_overdue = True
 
-                    show_family_transferable = r.get_vars.get("show_family_transferable")
+                    elif overdue:
+                        # Filter for cases for which no such event was
+                        # registered for at least 3 days:
+                        record_ids = event_overdue(overdue.upper(), 3)
+                        query = FS("id").belongs(record_ids)
+                        resource.add_filter(query)
+
+                    show_family_transferable = get_vars.get("show_family_transferable")
                     if show_family_transferable == "1":
                         show_family_transferable = True
 
