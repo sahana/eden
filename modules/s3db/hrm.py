@@ -7412,8 +7412,19 @@ def hrm_person_controller(**attr):
                     r.component_id = hr_id
                 configure("hrm_human_resource", insertable = False)
 
-        elif r.component_name == "group_membership" and r.representation == "aadata":
-            hrm_configure_pr_group_membership()
+        elif r.representation == "aadata":
+            if r.component_name == "group_membership":
+                hrm_configure_pr_group_membership()
+            elif method == "cv" or r.component_name == "training":
+                list_fields = ["course_id",
+                               "grade",
+                               ]
+                if settings.get_hrm_course_pass_marks:
+                    list_fields.append("grade_details")
+                list_fields.append("date")
+                s3db.configure("hrm_training",
+                               list_fields = list_fields,
+                               )
 
         return True
     s3.prep = prep
