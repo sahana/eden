@@ -1005,7 +1005,12 @@ S3.openPopup = function(url, center) {
                 queries.push(query);
                 selectable = true;
             }
-            var href = this.protocol + '//' + this.host + this.pathname + '?' + queries.join('&') + this.hash,
+            if (queries.length) {
+                search = '?' + queries.join('&');
+            } else {
+                search = '';
+            }
+            var href = this.protocol + '//' + this.host + this.pathname + search + this.hash,
                 $this = $(this).attr('href', href);
             if (selectable) {
                 $this.parent().show();
