@@ -3391,7 +3391,7 @@ def config(settings):
                     msg_list_empty=T("No Sectors currently registered"))
 
             else:
-                from s3 import S3OptionsWidget, S3TextWidget
+                from s3 import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 ],
                                                label=T("Search")
