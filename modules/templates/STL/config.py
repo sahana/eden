@@ -308,6 +308,14 @@ def config(settings):
             field.comment = None
             field.label = T("Project Code")
 
+        def expose_human_resource_id(table):
+
+            field = table.human_resource_id
+            field.label = T("Person Responsible")
+            field.widget = None
+            field.comment = None
+            field.readable = field.writable = True
+
         if r.tablename == "dvr_activity":
             # "Cases" tab (activity perspective)
 
@@ -349,6 +357,7 @@ def config(settings):
                 table = r.component.table
 
             expose_project_id(table)
+            expose_human_resource_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -406,11 +415,12 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
+                                        "activity_type_id",
+                                        "human_resource_id",
                                         "project_id",
                                         #"service_id",
                                         "need_id",
                                         "need_details",
-                                        "activity_type_id",
                                         "followup",
                                         "followup_date",
                                         "activity_funding.funding_required",
@@ -419,9 +429,10 @@ def config(settings):
                                         "comments",
                                         )
             list_fields = ["person_id",
+                           "activity_type_id",
+                           "human_resource_id",
                            "project_id",
                            "need_id",
-                           "activity_type_id",
                            "followup",
                            "followup_date",
                            ]
@@ -510,6 +521,7 @@ def config(settings):
             table = r.component.table
 
             expose_project_id(table)
+            expose_human_resource_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -574,9 +586,9 @@ def config(settings):
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "need_id",
-                                        "project_id",
-                                        #"service_id",
                                         "activity_type_id",
+                                        "human_resource_id",
+                                        "project_id",
                                         "activity_id",
                                         "comments",
                                         )
@@ -584,8 +596,9 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id",
                            "need_id",
-                           "project_id",
                            "activity_type_id",
+                           "human_resource_id",
+                           "project_id",
                            "activity_id",
                            ]
 
