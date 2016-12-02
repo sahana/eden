@@ -3335,11 +3335,11 @@ def config(settings):
 
         s3db = current.s3db
         s3 = current.response.s3
+        table = s3db.hrm_job_title
         controller = current.request.controller
         if controller == "deploy":
             deploy = True
             # Filter to just deployables
-            table = s3db.hrm_job_title
             s3.filter = (table.type == 4)
         else:
             deploy = False
@@ -3390,7 +3390,7 @@ def config(settings):
                     msg_record_deleted=T("Sector deleted"),
                     msg_list_empty=T("No Sectors currently registered"))
 
-            else:
+            elif current.auth.s3_has_role("ADMIN"):
                 from s3 import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 ],
@@ -3402,6 +3402,16 @@ def config(settings):
                 s3db.configure("hrm_job_title",
                                filter_widgets = filter_widgets,
                                )
+
+            if r.representation == "xls":
+                # Export format should match Import format
+                current.messages["NONE"] = ""
+                table.organisation_id.represent = \
+                    s3db.org_OrganisationRepresent(acronym=False,
+                                                   parent=False)
+                table.organisation_id.label = "Organisation"
+                table.comments.label = "Comments"
+                table.comments.represent = lambda v: v or ""
 
             return result
         s3.prep = custom_prep
