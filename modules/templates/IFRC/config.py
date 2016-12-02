@@ -3333,12 +3333,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_job_title_controller(**attr):
 
+        s3db = current.s3db
         s3 = current.response.s3
         controller = current.request.controller
         if controller == "deploy":
             deploy = True
             # Filter to just deployables
-            s3db = current.s3db
             table = s3db.hrm_job_title
             s3.filter = (table.type == 4)
         else:
@@ -3389,6 +3389,19 @@ def config(settings):
                     msg_record_modified=T("Sector updated"),
                     msg_record_deleted=T("Sector deleted"),
                     msg_list_empty=T("No Sectors currently registered"))
+
+            else:
+                from s3 import S3OptionsWidget, S3TextWidget
+                filter_widgets = [S3TextFilter(["name",
+                                                ],
+                                               label=T("Search")
+                                               ),
+                                  S3OptionsFilter("organisation_id",
+                                                  ),
+                                  ]
+                s3db.configure("hrm_job_title",
+                               flter_widgets = filter_widgets,
+                               )
 
             return result
         s3.prep = custom_prep
