@@ -171,6 +171,17 @@ def job_title():
     def prep(r):
         if mode is not None:
             auth.permission.fail()
+        elif r.representation == "xls":
+            # Export format should match Import format
+            current.messages["NONE"] = ""
+            table = s3db.hrm_job_title
+            table.organisation_id.represent = \
+                s3db.org_OrganisationRepresent(acronym=False,
+                                               parent=False)
+            table.organisation_id.label = None
+            table.type.label = None
+            table.comments.label = None
+            table.comments.represent = lambda v: v or ""
         return True
     s3.prep = prep
 

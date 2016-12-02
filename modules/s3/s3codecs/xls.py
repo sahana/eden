@@ -110,7 +110,8 @@ class S3XLS(S3Codec):
         for rfield in rfields:
             if rfield.show:
                 lfields.append(rfield.colname)
-                heading[rfield.colname] = rfield.label
+                heading[rfield.colname] = rfield.label or \
+                            rfield.field.name.capitalize().replace("_", " ")
                 if rfield.ftype == "virtual":
                     types.append("string")
                 else:
