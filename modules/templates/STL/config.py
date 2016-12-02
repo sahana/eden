@@ -192,12 +192,14 @@ def config(settings):
                 list_fields = ["name",
                                "activity_type_id",
                                "site_id",
+                               "room_id",
                                ]
 
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
                                             "activity_type_id",
                                             "site_id",
+                                            "room_id",
                                             "comments",
                                             )
 
@@ -306,6 +308,14 @@ def config(settings):
             field.comment = None
             field.label = T("Project Code")
 
+        def expose_human_resource_id(table):
+
+            field = table.human_resource_id
+            field.label = T("Person Responsible")
+            field.widget = None
+            field.comment = None
+            field.readable = field.writable = True
+
         if r.tablename == "dvr_activity":
             # "Cases" tab (activity perspective)
 
@@ -347,6 +357,7 @@ def config(settings):
                 table = r.component.table
 
             expose_project_id(table)
+            expose_human_resource_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -404,11 +415,12 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
+                                        "activity_type_id",
+                                        "human_resource_id",
                                         "project_id",
                                         #"service_id",
                                         "need_id",
                                         "need_details",
-                                        "activity_type_id",
                                         "followup",
                                         "followup_date",
                                         "activity_funding.funding_required",
@@ -417,9 +429,10 @@ def config(settings):
                                         "comments",
                                         )
             list_fields = ["person_id",
+                           "activity_type_id",
+                           "human_resource_id",
                            "project_id",
                            "need_id",
-                           "activity_type_id",
                            "followup",
                            "followup_date",
                            ]
@@ -508,6 +521,7 @@ def config(settings):
             table = r.component.table
 
             expose_project_id(table)
+            expose_human_resource_id(table)
 
             # Get service type
             stable = s3db.org_service
@@ -572,9 +586,9 @@ def config(settings):
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "need_id",
-                                        "project_id",
-                                        #"service_id",
                                         "activity_type_id",
+                                        "human_resource_id",
+                                        "project_id",
                                         "activity_id",
                                         "comments",
                                         )
@@ -582,8 +596,9 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id",
                            "need_id",
-                           "project_id",
                            "activity_type_id",
+                           "human_resource_id",
+                           "project_id",
                            "activity_id",
                            ]
 
@@ -1202,6 +1217,7 @@ def config(settings):
     # Organisation Registry
     #
     settings.org.branches = True
+    settings.org.services_hierarchical = False
 
     # Uncomment this to make tree view the default for "Branches" tab
     #settings.org.branches_tree_view = True
@@ -1227,6 +1243,23 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_controller(**attr):
+
+        s3db = current.s3db
+
+        s3db.add_components("org_facility",
+                            org_room = "site_id",
+                            )
+
+        # Custom rheader
+        attr = dict(attr)
+        attr["rheader"] = stl_org_rheader
+
+        return attr
+
+    settings.customise_org_facility_controller = customise_org_facility_controller
 
     # =========================================================================
     # Project Module
@@ -1310,11 +1343,6 @@ def config(settings):
         return attr
 
     settings.customise_project_project_controller = customise_project_project_controller
-
-    # =========================================================================
-    # Organisation Registry
-    #
-    settings.org.services_hierarchical = False
 
     # =========================================================================
     # Modules
@@ -1623,6 +1651,60 @@ def stl_project_rheader(r, tabs=[]):
                                    ],
                                   [(T("Organisation"), "organisation_id"),
                                    ],
+                                  ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+
+    return rheader
+
+# =============================================================================
+def stl_org_rheader(r, tabs=[]):
+    """ ORG custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, \
+                   S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "org_facility":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Rooms"), "room"),
+                        ]
+
+                def facility_type_lookup(record):
+                    db = current.db
+                    ltable = db.org_site_facility_type
+                    ttable = db.org_facility_type
+                    query = (ltable.site_id == record.site_id) & \
+                            (ltable.facility_type_id == ttable.id)
+                    rows = db(query).select(ttable.name)
+                    if rows:
+                        return ", ".join([row.name for row in rows])
+                    else:
+                        return current.messages["NONE"]
+
+                rheader_fields = [["name", "organisation_id", "email"],
+                                  [(T("Facility Type"), facility_type_lookup),
+                                   "location_id", "phone1"],
                                   ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,

@@ -1400,7 +1400,7 @@ class DVRCaseActivityModel(S3Model):
                             represent = site_represent,
                             updateable = True,
                             ),
-                     # Field("room"), @todo: link to room (org_site)
+                     self.org_room_id(),
                      # @todo: have alternative lookup field (hrm)
                      Field("facilitator",
                            label = T("Facilitator"),
@@ -1486,6 +1486,10 @@ class DVRCaseActivityModel(S3Model):
                                               readable = False,
                                               writable = False,
                                               ),
+                     self.hrm_human_resource_id(label = T("Assigned to"),
+                                                readable = False,
+                                                writable = False,
+                                                ),
                      self.project_project_id(ondelete = "SET NULL",
                                              readable = False,
                                              writable = False,

@@ -978,28 +978,41 @@ S3.openPopup = function(url, center) {
     };
 
     /**
-     * Update the AddResourceLink for the lookup resource with the lookup value
+     * Update the AddResourceLink for the target with lookup key and
+     * value, so that the popup can pre-populate them; or hide the
+     * AddResourceLink if no trigger value has been selected
      *
-     * @todo: rename resource => resourceName or lookupResource
-     * @todo: docstring
+     * @param {string} resourceName - the target resource name
+     * @param {string} key - the lookup key
+     * @param {string} value - the selected trigger value
      */
-    var updateAddResourceLink = function(resource, key, value) {
+    var updateAddResourceLink = function(resourceName, key, value) {
 
-        var addResourceLink = $('#' + resource + '_add');
-        if (addResourceLink.length) {
-            var href = addResourceLink.attr('href');
-            if (href.indexOf(key) == -1) {
-                // Add to URL
-                // @todo: make safe for URLs without query part
-                href += '&' + key + '=' + value;
-            } else {
-                // Update URL
-                // @todo: make safe for URLs with multiple query expressions
-                var re = new RegExp(key + '=.*', 'g');
-                href = href.replace(re, key + '=' + value);
+        $('a#' + resourceName + '_add').each(function() {
+            var search = this.search,
+                queries = [],
+                selectable = false;
+            if (search) {
+                var items = search.substring(1).split('&');
+                items.forEach(function(item) {
+                    if (decodeURIComponent(item.split('=')[0]) != key) {
+                        queries.push(item);
+                    }
+                });
             }
-            addResourceLink.attr('href', href).show();
-        }
+            if (value !== undefined && value !== null) {
+                var query = encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                queries.push(query);
+                selectable = true;
+            }
+            var href = this.protocol + '//' + this.host + this.pathname + '?' + queries.join('&') + this.hash,
+                $this = $(this).attr('href', href);
+            if (selectable) {
+                $this.parent().show();
+            } else {
+                $this.parent().hide();
+            }
+        });
     };
 
     /**
@@ -1251,17 +1264,18 @@ S3.openPopup = function(url, center) {
         }
 
         // Disable the target field if no value selected in trigger field
+        var lookupResource = settings.lookupResource;
         if (value === '' || value === null || value === undefined) {
             target.val('').prop('disabled', true);
             if (target.multiselect('instance')) {
                 target.multiselect('refresh')
                       .multiselect('disable');
             }
+            updateAddResourceLink(lookupResource, lookupKey);
             return;
         }
 
         // Construct the URL for the Ajax request
-        var lookupResource = settings.lookupResource;
         var url;
         if (settings.lookupURL) {
             url = settings.lookupURL;

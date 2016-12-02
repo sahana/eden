@@ -193,28 +193,25 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c=("org", "project"))(
                     M("Organizations", f="organisation")(
                         M("Create", m="create"),
-                        M("Import", m="import")
+                        #M("Import", m="import")
                     ),
                     #M("Offices", f="office")(
                     #    M("Create", m="create"),
                     #    M("Map", m="map"),
                     #    M("Import", m="import")
                     #),
-                    #M("Facilities", f="facility")(
-                    #    M("Create", m="create"),
-                    #    M("Import", m="import"),
-                    #),
+                    M("Facilities", f="facility")(
+                       M("Create", m="create"),
+                       #M("Import", m="import"),
+                    ),
                     M("Administration", c=("org", "project"), link=False,
                       restrict = [ADMIN])(
                         M("Organization Types", f="organisation_type"),
                         M("Service Types", f="service"),
+                        M("Facility Types", f="facility_type"),
                         M("Projects", c="project", f="project"),
                     ),
                     #M("Office Types", f="office_type",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Facility Types", f="facility_type",
                     #  restrict=[ADMIN])(
                     #    M("Create", m="create"),
                     #),
