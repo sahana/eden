@@ -125,6 +125,13 @@ def config(settings):
     #settings.mail.login = "username:password"
 
     # =========================================================================
+    # Mobile
+    #
+
+    settings.mobile.forms = [("Beneficiaries", "dvr_case", {})
+                             ]
+
+    # =========================================================================
     # Data Collection
     #
 
