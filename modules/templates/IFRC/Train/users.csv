@@ -55,7 +55,7 @@ Cambodia,Volunteer Data Entry,kh_dataentry@example.com,eden,vol_data_entry,Cambo
 Cambodia,Volunteer Editor,kh_editor@example.com,eden,vol_editor,Cambodian Red Cross Society,,,km
 Cambodia,Volunteer Super Editor,kh_super@example.com,eden,vol_super,Cambodian Red Cross Society,,,km
 Fiji,Volunteer Super Editor,fj_super@example.com,eden,"vol_super",Fiji Red Cross Society,,,
-Fiji,Volunteer Editor,fj_editor@example.com,eden,"vol_editor,SYNC",Ba Branch,,,
+Fiji,Volunteer Editor,fj_editor@example.com,eden,"vol_editor,SYNC/org_organisation.name=Fiji Red Cross Society",Ba Branch,,,
 Indonesia,Volunteer Data Entry,id_dataentry@example.com,eden,vol_data_entry,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Editor,id_editor@example.com,eden,vol_editor,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Super Editor,id_super@example.com,eden,vol_super,Indonesian Red Cross Society (Palang Merah Indonesia),,,
