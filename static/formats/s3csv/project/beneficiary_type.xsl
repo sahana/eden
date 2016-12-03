@@ -53,12 +53,14 @@
     <xsl:template name="Total">
         <xsl:variable name="total" select="col[@field='Total']"/>
 
-        <resource name="project_beneficiary_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('project_beneficiary_type/',$total)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$total"/></data>
-        </resource>
+        <xsl:if test="$total!=''">
+            <resource name="project_beneficiary_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('project_beneficiary_type/',$total)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$total"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
     <!-- ****************************************************************** -->

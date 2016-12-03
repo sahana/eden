@@ -2747,7 +2747,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             auth = current.auth
 
             # Process each item
-            has_permission = current.auth.s3_has_permission
+            has_permission = auth.s3_has_permission
             audit = current.audit
             onaccept = s3db.onaccept
 

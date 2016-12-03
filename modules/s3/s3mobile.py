@@ -308,34 +308,30 @@ class S3MobileCRUD(S3Method):
         output = {}
 
         if method == "mdata":
-
             if representation == "json":
                 if http == "GET":
                     # Data download
-                    # @todo: implement this
-                    r.error(501, current.ERROR.NOT_IMPLEMENTED)
+                    output = self.mdata_export(r, **attr)
 
                 elif http == "POST":
                     # Data upload
-                    output = self.mobile_data(r, **attr)
+                    output = self.mdata_import(r, **attr)
+
                 else:
                     r.error(405, current.ERROR.BAD_METHOD)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
 
         elif method == "mform":
-
             if representation == "json":
-
                 if http == "GET":
                     # Form download
                     output = self.mobile_form(r, **attr)
+
                 else:
                     r.error(405, current.ERROR.BAD_METHOD)
-
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
-
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
@@ -367,7 +363,37 @@ class S3MobileCRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def mobile_data(self, r, **attr):
+    def mdata_export(self, r, **attr):
+        """
+            Provide data for mobile app
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+
+            @returns: a JSON string
+        """
+
+        resource = r.resource
+        records = []
+        rappend = records.append
+        list_fields = resource.get_config("list_fields")
+        data = resource.select(list_fields, raw_data=True, as_rows=True)
+        for record in data:
+            row = []
+            row_append = row.append
+            raw = record._row
+            for field in raw:
+                row_append((field, raw[field]))
+            rappend(row)
+
+        output = {resource.tablename: records,
+                  }
+        output = json.dumps(output, separators=SEPARATORS)
+        current.response.headers = {"Content-Type": "application/json"}
+        return output
+
+    # -------------------------------------------------------------------------
+    def mdata_import(self, r, **attr):
         """
             Process data submission from mobile app
 
@@ -411,25 +437,33 @@ class S3MobileCRUD(S3Method):
             IGNORE_FIELDS = xml.IGNORE_FIELDS
             FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
 
-            root = etree.Element(xml.TAG.root)
+            RESOURCE = TAG.resource
+            DATA = TAG.data
+            NAME = ATTRIBUTE.name
+            FIELD = ATTRIBUTE.field
+
+            rfields = resource.fields
+
+            root = etree.Element(TAG.root)
+            SubElement = etree.SubElement
 
             for record in records:
 
-                row = etree.SubElement(root, TAG.resource)
-                row.set(ATTRIBUTE.name, tablename)
+                row = SubElement(root, RESOURCE)
+                row.set(NAME, tablename)
 
                 for fieldname, value in record.items():
                     if value is None:
                         continue
-                    if fieldname not in resource.fields:
+                    elif fieldname not in rfields:
                         continue
                     elif fieldname in IGNORE_FIELDS:
                         continue
                     elif fieldname in FIELDS_TO_ATTRIBUTES:
                         row.set(fieldname, value)
                     else:
-                        col = etree.SubElement(row, TAG.data)
-                        col.set(ATTRIBUTE.field, fieldname)
+                        col = SubElement(row, DATA)
+                        col.set(FIELD, fieldname)
                         col.text = s3_unicode(value)
 
             tree = etree.ElementTree(root)
@@ -472,18 +506,18 @@ class S3MobileCRUD(S3Method):
         created_ids = resource.import_created
         updated_ids = resource.import_updated
 
-        uuid = resource.table.uuid
+        uuid_field = resource.table.uuid
 
         if created_ids:
             query = (resource._id.belongs(created_ids))
-            rows = db(query).select(uuid,
+            rows = db(query).select(uuid_field,
                                     limitby = (0, len(created_ids)),
                                     )
             info["created"] = [row.uuid for row in rows]
 
         if updated_ids:
             query = (resource._id.belongs(updated_ids))
-            rows = db(query).select(uuid,
+            rows = db(query).select(uuid_field,
                                     limitby = (0, len(updated_ids)),
                                     )
             info["updated"] = [row.uuid for row in rows]

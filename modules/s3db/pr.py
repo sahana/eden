@@ -3097,16 +3097,21 @@ class S3AddressModel(S3Model):
         """
 
         form_vars = form.vars
-        location_id = form_vars.location_id
+        location_id = form_vars.get("location_id")
         if not location_id:
             return
 
+        try:
+            record_id = form_vars["id"]
+        except:
+            # Nothing we can do
+            return
         db = current.db
         s3db = current.s3db
         atable = db.pr_address
-        pe_id = db(atable.id == form_vars.id).select(atable.pe_id,
-                                                     limitby=(0, 1)
-                                                     ).first().pe_id
+        pe_id = db(atable.id == record_id).select(atable.pe_id,
+                                                  limitby=(0, 1)
+                                                  ).first().pe_id
         requestvars = current.request.form_vars
         settings = current.deployment_settings
         person = None
@@ -3127,7 +3132,7 @@ class S3AddressModel(S3Model):
                 # Hasn't yet been set so use this
                 S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
 
-        if person and str(form_vars.type) == "1": # Home Address
+        if person and str(form_vars.get("type")) == "1": # Home Address
             if settings.has_module("hrm"):
                 # Also check for relevant HRM record(s)
                 staff_settings = settings.get_hrm_location_staff()
