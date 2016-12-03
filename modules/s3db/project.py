@@ -1760,7 +1760,7 @@ class S3ProjectActivityCaseModel(S3Model):
                           self.dvr_case_id(empty = False,
                                            ondelete = "CASCADE",
                                            ),
-                          # @ToDo: Option to hide this in form & set automatically when scan uploaded
+                          # @ToDo: This needs to be set per Line Item (default to all On, but allow manual deselection)
                           Field("received", "boolean",
                                 default = False,
                                 label = T("Received?"),

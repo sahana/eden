@@ -34,6 +34,7 @@ __all__ = ("S3MobileFormList",
            "S3MobileCRUD",
            )
 
+import datetime
 import json
 import sys
 
@@ -44,6 +45,7 @@ except ImportError:
     raise
 
 from gluon import *
+from s3datetime import s3_encode_iso_datetime
 from s3error import S3PermissionError
 from s3forms import S3SQLDefaultForm, S3SQLField
 from s3rest import S3Method
@@ -373,21 +375,48 @@ class S3MobileCRUD(S3Method):
             @returns: a JSON string
         """
 
+        UID = current.xml.UID
         resource = r.resource
-        records = []
-        rappend = records.append
-        list_fields = resource.get_config("list_fields")
-        data = resource.select(list_fields, raw_data=True, as_rows=True)
-        for record in data:
-            row = []
-            row_append = row.append
-            raw = record._row
-            for field in raw:
-                row_append((field, raw[field]))
-            rappend(row)
+        resource_tablename = resource.tablename
+        output = {resource_tablename: []}
+        list_fields = resource.get_config("mobile_list_fields")
+        if not list_fields:
+            list_fields = resource.get_config("list_fields")
+        if not list_fields:
+            list_fields = [field.name for field in resource.readable_fields()]
+            if UID not in list_fields:
+                list_fields.append(UID)
+        else:
+            tablenames = []
+            for field in list_fields:
+                if "." in field:
+                    tablename, fieldname = field.split(".", 1)
+                    if tablename not in tablenames:
+                        tablenames.append(tablename)
 
-        output = {resource.tablename: records,
-                  }
+            for tablename in tablenames:
+                output[tablename] = []
+                uuid_field = "%s.%s" % (tablename, UID) 
+                if uuid_field not in list_fields:
+                    list_fields.append(uuid_field)
+            if UID not in list_fields:
+                list_fields.append(UID)
+        data = resource.select(list_fields, as_rows=True)
+        for record in data:
+            for tablename in record:
+                _record = record[tablename]
+                row =[]
+                rappend = row.append
+                for field in _record:
+                    if (tablename == resource_tablename and field in list_fields) or \
+                       ("%s.%s" % (tablename, field) in list_fields):
+                        value = _record[field]
+                        if isinstance(value, datetime.date) or \
+                           isinstance(value, datetime.datetime):
+                            value = s3_encode_iso_datetime(value).decode("utf-8")
+                        rappend((field, value))
+                output[tablename].append(row)
+
         output = json.dumps(output, separators=SEPARATORS)
         current.response.headers = {"Content-Type": "application/json"}
         return output
