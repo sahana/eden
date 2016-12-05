@@ -12,7 +12,7 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Refugee Case Management")
+    settings.base.system_name = T("Beneficiary Data Management")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
@@ -124,6 +124,9 @@ def config(settings):
     # Service type names
     INDIVIDUAL_SUPPORT = "Individual Support"
     MENTAL_HEALTH = "Mental Health"
+
+    # Set DVR Default Label
+    settings.dvr.label = "Beneficiary"
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -900,7 +903,7 @@ def config(settings):
 
         # Custom prep
         standard_prep = s3.prep
-        def custom_prep(r):
+        def custom_prep(r):            
 
             # Call standard prep
             if callable(standard_prep):
@@ -993,7 +996,7 @@ def config(settings):
                                    S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3TextFilter
-
+                        
                     # Custom CRUD form
                     crud_form = S3SQLCustomForm(
                                 (T("Case Status"), "dvr_case.status_id"),
@@ -1556,8 +1559,8 @@ def stl_dvr_rheader(r, tabs=[]):
                         (T("Contact"), "contacts"),
                         (T("Household"), "household"),
                         (T("Economy"), "economy"),
-                        (T("Individual Support"), "case_activity"),
-                        (T("PSS"), "pss_activity"),
+                        (T("Individual Case Management"), "case_activity"),
+                        (T("Group Activities"), "pss_activity"),
                         (T("Mental Health"), "mh_activity"),
                         ]
 

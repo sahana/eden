@@ -39,7 +39,7 @@ class S3MainMenu(default.S3MainMenu):
         #sysname = current.deployment_settings.get_system_name_short()
         return [
             #homepage(),
-            MM("Cases", c=("dvr", "pr")),
+            MM("Beneficiaries", c=("dvr", "pr")),
             #homepage("gis"),
             MM("Organizations", c=("org", "project")),
             #homepage("hrm"),
@@ -143,10 +143,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c=("dvr", "pr"))(
-                    M("Current Cases", c=("dvr", "pr"), f="person",
+                    M("Current Beneficiaries", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
-                        M("All Cases", vars = {}),
+                        M("All Beneficiaries", vars = {}),
                         M(follow_up_label, f="due_followups"),
                         ),
                     M("Activities", link=False)(
@@ -158,7 +158,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         ),
                     M("Archive", link=False)(
-                        M("Closed Cases", f="person",
+                        M("Former Beneficiaries", f="person",
                           vars={"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
