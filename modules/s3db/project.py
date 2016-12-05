@@ -1750,7 +1750,7 @@ class S3ProjectActivityCaseModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activities <> Cases Link Table
         #
-        # @ToDo" When Activity is linked to a Project, ensure these stay in sync
+        # @ToDo: When Activity is linked to a Project, ensure these stay in sync
         #
         tablename = "project_case_activity"
         self.define_table(tablename,

@@ -1375,6 +1375,11 @@ class DVRCaseActivityModel(S3Model):
 
         tablename = "dvr_activity"
         define_table(tablename,
+                     service_id(label = T("Service Type"),
+                                ondelete = "SET NULL",
+                                readable = service_type,
+                                writable = service_type,
+                                ),
                      activity_type_id(readable = activity_types,
                                       writable = activity_types,
                                       ),
