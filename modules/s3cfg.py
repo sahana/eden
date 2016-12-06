@@ -2889,18 +2889,6 @@ class S3Config(Storage):
         """
         return self.dvr.get("activity_use_service_type", False)
 
-    def get_dvr_activity_types(self):
-        """
-            Use activity types in case activities
-        """
-        return self.dvr.get("activity_types", False)
-
-    def get_dvr_activity_types_hierarchical(self):
-        """
-            Case activity types are hierarchical
-        """
-        return self.dvr.get("activity_types_hierarchical", False)
-
     def get_dvr_needs_use_service_type(self):
         """
             Use service type in needs
