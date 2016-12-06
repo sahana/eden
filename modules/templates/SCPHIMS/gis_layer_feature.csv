@@ -6,5 +6,6 @@ Contacts,All Active Contacts,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (
 Clinics,All Active Rural Health Units,hms,hospital,hospital,Medical Facility,{name} (T('Clinic')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
 Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,False,0,0
 Offices,All Active Offices,org,office,office,Building,{name} (T('Office')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
+Responses,For home page,event,event_location,,,{location_id}: {event_id},"location_id,event_id",,,,,,,,False,False,0,0
 Schools,All Active Schools,edu,school,office,Building,{name} (T('School')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
 Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,{name} (T('Warehouse')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,

@@ -217,7 +217,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def doc(self):
         """ DOC / Documents Module """
 
-        if current.auth.s3_is_logged_in():
+        if current.auth.s3_logged_in():
             return super(S3OptionsMenu, self).doc()
         else:
             return None

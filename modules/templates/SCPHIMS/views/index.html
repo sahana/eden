@@ -1,13 +1,20 @@
 {{extend "layout.html"}}
-<h2>{{=settings.get_system_name()}}</h2>
 <div class='row'>
 <div class='medium-6 columns'>
-<h3 align='center'>Active Responses</h3>
-{{=events}}
+{{=XML(map)}}
 </div>
 <div class='medium-6 columns'>
-<h3 align='center'>Pending Activities</h3>
-{{=activities}}
+<div>
+<a class="twitter-timeline" data-height='400' href="https://twitter.com/SaveChildrenPH">Tweets by ‎@SaveChildrenPH</a>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<div>
+<h3 align='center'>Active SCP Humanitarian Programs</h3>
+{{=active_responses}}
+</div>
+<div>
+{{=cms}}
 </div>
 </div>
-{{include "dataLists.html"}}
+</div>
+{{include "dataTables.html"}}
