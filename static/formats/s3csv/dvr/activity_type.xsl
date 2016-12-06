@@ -56,7 +56,6 @@
         <xsl:param name="Subset"/>
 
         <xsl:variable name="Name" select="col[@field=$Level]"/>
-        <test><xsl:value-of select="$Name"/></test>
 
         <xsl:if test="$Name!=''">
 

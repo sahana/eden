@@ -1,107 +1,150 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0"?>
 <xsl:stylesheet
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Services - CSV Import Stylesheet
+         Service Types - CSV Import Stylesheet
 
-         Column headers defined in this stylesheet:
+         CSV column..................Format..........Content
 
-         Service.................org_service.name or org_service.parent
-         SubService..............org_service.name or org_service.parent
-         SubSubService...........org_service.name or org_service.parent
-         Comments................org_service.comments
+         Service.....................string..........Service Name
+         SubService..................string..........Sub Service Name
+         SubSubService... (indefinite depth)
+
+         Comments....................string..........Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:variable name="ServicePrefix" select="'Service:'"/>
-
-    <!-- Indexes for faster processing -->
-    <xsl:key name="service" match="row" use="concat(col[@field='Service'], '/',
-                                                    col[@field='SubService'], '/',
-                                                    col[@field='SubSubService'])"/>
-
     <!-- ****************************************************************** -->
-
     <xsl:template match="/">
         <s3xml>
             <!-- Services -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('service',
-                                                                   concat(col[@field='Service'], '/',
-                                                                          col[@field='SubService'], '/',
-                                                                          col[@field='SubSubService']))[1])]">
-                <xsl:call-template name="OrganisationService">
-                    <xsl:with-param name="Service">
-                         <xsl:value-of select="col[@field='Service']"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="SubService">
-                         <xsl:value-of select="col[@field='SubService']"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="SubSubService">
-                         <xsl:value-of select="col[@field='SubSubService']"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="Comments">
-                         <xsl:value-of select="col[@field='Comments']"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Done
-            <xsl:apply-templates select="table/row"/> -->
+            <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="OrganisationService">
-        <xsl:param name="Service"/>
-        <xsl:param name="SubService"/>
-        <xsl:param name="SubSubService"/>
-        <xsl:param name="Comments"/>
+    <xsl:template match="row">
+        <xsl:call-template name="ServiceHierarchy">
+            <xsl:with-param name="Level">Service</xsl:with-param>
+            <xsl:with-param name="Subset" select="//row"/>
+        </xsl:call-template>
+    </xsl:template>
 
-        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
+    <!-- ****************************************************************** -->
+    <!-- Process the type hierarchy -->
+
+    <xsl:template name="ServiceHierarchy">
+        <xsl:param name="Parent"/>
+        <xsl:param name="ParentPath"/>
+        <xsl:param name="Level"/>
+        <xsl:param name="Subset"/>
+
+        <xsl:variable name="Name" select="col[@field=$Level]"/>
+
+        <xsl:if test="$Name!=''">
+
+            <xsl:variable name="SubSubset" select="$Subset[col[@field=$Level]/text()=$Name]"/>
+
+            <!-- Construct the path (for tuid-generation) -->
+            <xsl:variable name="Path">
+                <xsl:choose>
+                    <xsl:when test="$ParentPath!=''">
+                        <xsl:value-of select="concat($ParentPath, '/', $Name)"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$Name"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <!-- Generate the column name of the next level from the current level -->
+            <xsl:variable name="NextLevel">
+                <xsl:choose>
+                    <xsl:when test="$Level='Service'">SubService</xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="concat('Sub', $Level)"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:choose>
+                <xsl:when test="col[@field=$NextLevel] and col[@field=$NextLevel]/text()!=''">
+
+                    <xsl:if test="generate-id($SubSubset[1])=generate-id(.)">
+                        <!-- If the parent does not exist in the source,
+                             then create it now from the bare name -->
+                        <xsl:variable name="ParentRow" select="$SubSubset[not(col[@field=$NextLevel]) or
+                                                                          not(col[@field=$NextLevel]/text()!='')]"/>
+                        <xsl:if test="count($ParentRow)=0">
+                            <xsl:call-template name="Service">
+                                <xsl:with-param name="Name" select="$Name"/>
+                                <xsl:with-param name="Path" select="$Path"/>
+                                <xsl:with-param name="ParentPath" select="$ParentPath"/>
+                            </xsl:call-template>
+                        </xsl:if>
+                    </xsl:if>
+
+                    <!-- Descend one more level down -->
+                    <xsl:call-template name="ServiceHierarchy">
+                        <xsl:with-param name="Parent" select="$Name"/>
+                        <xsl:with-param name="ParentPath" select="$Path"/>
+                        <xsl:with-param name="Level" select="$NextLevel"/>
+                        <xsl:with-param name="Subset" select="$SubSubset"/>
+                    </xsl:call-template>
+
+                </xsl:when>
+                <xsl:otherwise>
+
+                    <!-- Generate the type from this row -->
+                    <xsl:call-template name="Service">
+                        <xsl:with-param name="Name" select="$Name"/>
+                        <xsl:with-param name="Path" select="$Path"/>
+                        <xsl:with-param name="ParentPath" select="$ParentPath"/>
+                        <xsl:with-param name="Row" select="."/>
+                    </xsl:call-template>
+
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Service">
+        <xsl:param name="Name"/>
+        <xsl:param name="Path"/>
+        <xsl:param name="ParentPath"/>
+        <xsl:param name="Row"/>
+
         <resource name="org_service">
+            <!-- Use path with prefix to generate the tuid -->
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($ServicePrefix, $Service)"/>
+                <xsl:value-of select="concat('SERVICE:', $Path)"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Service"/></data>
-            <xsl:if test="$Comments!='' and $SubService=''">
-                <data field="comments"><xsl:value-of select="$Comments"/></data>
+
+            <!-- Add link to parent (if there is one) -->
+            <xsl:if test="$ParentPath!=''">
+                <reference field="parent" resource="org_service">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('SERVICE:', $ParentPath)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <!-- Name -->
+            <data field="name"><xsl:value-of select="$Name"/></data>
+
+            <!-- Comments -->
+            <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
+            <xsl:if test="$Comments!=''">
+                <data field="comments">
+                    <xsl:value-of select="$Comments"/>
+                </data>
             </xsl:if>
         </resource>
-        <xsl:if test="$SubService!=''">
-            <resource name="org_service">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubService"/></data>
-                <xsl:if test="$Comments!='' and $SubSubService=''">
-                    <data field="comments"><xsl:value-of select="$Comments"/></data>
-                </xsl:if>
-                <reference field="parent" resource="org_service">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($ServicePrefix, $Service)"/>
-                    </xsl:attribute>
-                </reference>
-            </resource>
-        </xsl:if>
-        <xsl:if test="$SubSubService!=''">
-            <resource name="org_service">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService, '/', $SubSubService)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubSubService"/></data>
-                <xsl:if test="$Comments!=''">
-                    <data field="comments"><xsl:value-of select="$Comments"/></data>
-                </xsl:if>
-                <reference field="parent" resource="org_service">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
-                    </xsl:attribute>
-                </reference>
-            </resource>
-        </xsl:if>
-
     </xsl:template>
+
+    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

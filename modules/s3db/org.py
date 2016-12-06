@@ -2485,13 +2485,11 @@ class S3OrganisationServiceModel(S3Model):
                            writable = False,
                            ),
                      Field("name", length=128, notnull=True,
-                           # Comment this if we need to support the same
-                           # service at different locations in hierarchy
-                           unique = True,
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("parent", "reference org_service", # This form of hierarchy may not work on all Databases
+                     # This form of hierarchy may not work on all Databases:
+                     Field("parent", "reference org_service",
                            label = T("SubType of"),
                            ondelete = "RESTRICT",
                            readable = hierarchical_service_types,
@@ -2551,9 +2549,6 @@ class S3OrganisationServiceModel(S3Model):
                                      )
 
         configure(tablename,
-                  # Currently deduplicated by unique names, switch to
-                  # S3Duplicate if we need to support the same service
-                  # at different locations in hierarchy:
                   deduplicate = S3Duplicate(primary = ("name",),
                                             secondary = ("parent",),
                                             ),
@@ -2864,54 +2859,42 @@ def org_service_root_service(service_id):
     try:
         parent = record.parent
         current_root = record.root_service
-    except:
+    except AttributeError:
         current.log.error("Cannot find record with service_id: %s" % service_id)
         raise
 
     if parent:
         # Lookup the parent record recursively
         if parent == service_id:
-            # Error! Recursion will fail
-            # Currently happening when the SubService has the same name as the Service
-            current.log.error("Service_id %s is showing with parent %s" % (service_id, parent))
-            #db.commit()
-            raise
+            # Error caused by non-unique tuids in import XSLT (fixed now,
+            # but catching it anyway for the sake of a proper error message)
+            raise KeyError("Service #%s showing with parent #%s" % (service_id, parent))
+
         new_root = org_service_root_service(parent)
     else:
         # We are the root
         new_root = service_id
 
-    if current_root == new_root:
-        # All good already
-        pass
-    else:
-        # Fix it
-        record.update_record(root_service = new_root)
+    if current_root != new_root:
 
-        # Update our descendants
-        children = db(table.parent == service_id).select(table.id,
-                                                         table.root_service,
-                                                         )
-        children = [c.id for c in children if c.root_service != new_root]
-        if children:
-            descendants = org_service_descendants(children)
-            db(table.id.belongs(descendants)).update(root_service = new_root)
+        # Update this record and all its descendants
+        def descendants(ids):
+
+            rows = db(table.parent.belongs(ids)).select(table.id)
+            children = set(row.id for row in rows)
+
+            if children:
+                children |= descendants(children)
+                return ids | children
+            else:
+                return ids
+
+        # If this node doesn't have the correct root, the children
+        # won't have either, so update them all
+        nodes = descendants(set([service_id]))
+        db(table.id.belongs(nodes)).update(root_service=new_root)
 
     return new_root
-
-# =============================================================================
-def org_service_descendants(ids):
-    """ Return the IDs of all Descendants of a set of service_ids """
-
-    db = current.db
-    table = db.org_service
-    children = db(table.parent.belongs(ids)).select(table.id)
-    children = [c.id for c in children]
-    if children:
-        descendants = org_service_descendants(children)
-        return ids + descendants
-    else:
-        return ids + children
 
 # =============================================================================
 class S3OrganisationSummaryModel(S3Model):
