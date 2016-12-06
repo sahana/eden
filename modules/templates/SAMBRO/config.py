@@ -10,7 +10,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3 import FS, s3_str, s3_truncate
+from s3 import FS, s3_str, s3_truncate, s3_utc
 
 def config(settings):
     """
@@ -222,7 +222,6 @@ def config(settings):
                     restrict_e = [str(row.id) for row in rows if not row.enabled]
                     restrict_d = [str(row.id) for row in rows if row.enabled]
 
-                    from s3 import s3_str
                     s3.actions = [dict(label=s3_str(T("Open")),
                                        _class="action-btn edit",
                                        url=URL(args=["[id]", "update"],
@@ -518,7 +517,7 @@ def config(settings):
                         send_by_pe_id(row.pe_id,
                                       subject,
                                       email_content,
-                                      documents_id=cap_document_id)
+                                      document_ids=cap_document_id)
                         try:
                             send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
                         except ValueError:
@@ -533,7 +532,7 @@ def config(settings):
                         send_by_pe_id(row.pe_id,
                                       subject,
                                       email_content,
-                                      documents_id=cap_document_id)
+                                      document_ids=cap_document_id)
                         try:
                             send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
                         except ValueError:
@@ -742,7 +741,6 @@ def config(settings):
             @param format: the contents format ("text" or "html")
         """
 
-        from s3 import s3_utc
         notify_on = meta_data["notify_on"]
         last_check_time = meta_data["last_check_time"]
         rows = data["rows"]
@@ -810,7 +808,6 @@ def config(settings):
         if len(rows) == 1:
             # Since if there are more than one row, the single email has content
             # for all rows
-            from s3 import s3_utc
             last_check_time = meta_data["last_check_time"]
             db = current.db
             atable = current.s3db.cap_alert
@@ -823,6 +820,27 @@ def config(settings):
         return subject
 
     settings.msg.notify_subject = custom_msg_notify_subject
+
+    # -----------------------------------------------------------------------------
+    def custom_msg_notify_attachment(resource, data, meta_data):
+        """
+            Custom Method to get the document_ids to be sent as attachment
+            @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
+            @param meta_data: the meta data for the notification
+        """
+
+        rows = data["rows"]
+        document_ids = []
+        dappend = document_ids.append
+        for row in rows:
+            alert_id = row["cap_alert.id"]
+            document_id = _get_or_create_attachment(alert_id)
+            dappend(document_id)
+
+        return document_ids
+
+    settings.msg.notify_attachment = custom_msg_notify_attachment
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -966,6 +984,8 @@ def config(settings):
             etable = s3db.event_event_type
             ptable = s3db.cap_warning_priority
             filter_options = {}
+            from s3 import IS_ISO639_2_LANGUAGE_CODE
+            languages_dict = dict(IS_ISO639_2_LANGUAGE_CODE.language_codes())
             for row in rows:
                 event_type = None
                 priorities_id = []
@@ -990,19 +1010,19 @@ def config(settings):
                             rows_ = db(ptable.id.belongs(priorities_id)).select(ptable.name)
                             priorities = [row_.name for row_ in rows_]
                         elif prefix == "info.language__belongs":
-                            languages = [s3_str(value) for value in values]
+                            languages = [s3_str(languages_dict[value]) for value in values]
                     if event_type is not None:
                         display_text = "<b>%s:</b> %s" % (T("Event Type"), event_type)
                     else:
-                        display_text = "<b>%s</b>" % (T("Event Type: None"))
+                        display_text = "<b>%s:</b> %s" % (T("Event Type"), T("No filter"))
                     if len(priorities_id) > 0:
-                        display_text = "%s<br/><b>%s</b>: %s" % (display_text, T("Priorities"), priorities)
+                        display_text = "%s<br/><b>%s</b>: %s" % (display_text, T("Priorities"), ", ".join(priorities))
                     else:
-                        display_text = "%s<br/><b>%s</b>" % (display_text, T("Priorities: None"))
+                        display_text = "%s<br/><b>%s:</b> %s" % (display_text, T("Priorities"), T("No filter"))
                     if len(languages) > 0:
-                        display_text = "%s<br/><b>%s</b>:%s" % (display_text, T("Languages"), languages)
+                        display_text = "%s<br/><b>%s:</b> %s" % (display_text, T("Languages"), ", ".join(languages))
                     else:
-                        display_text = "%s<br/><b>%s</b>" % (display_text, T("Languages: None"))
+                        display_text = "%s<br/><b>%s:</b> %s" % (display_text, T("Languages"), T("No filter"))
                     filter_options[row["pr_subscription.filter_id"]] = display_text
                 else:
                     filter_options[row["pr_subscription.filter_id"]] = T("No filters")

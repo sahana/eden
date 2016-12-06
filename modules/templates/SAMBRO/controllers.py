@@ -370,7 +370,7 @@ class subscriptions(S3CustomController):
         from s3.s3widgets import S3GroupedOptionsWidget, S3MultiSelectWidget
         from s3layouts import S3PopupLink
         # Uses Default Eden formstyle
-        from s3theme import formstyle_foundation as formstyle
+        from s3theme import formstyle_foundation_2col as formstyle
 
         # L10n
         T = current.T
@@ -393,6 +393,7 @@ class subscriptions(S3CustomController):
             NOTIFY_BY = T("Notify By"),
             #MORE = T("More Options"),
             #LESS = T("Less Options"),
+            ATTACHMENT = T("Receive XML Attachment in EMAIL?"),
         )
         messages = Storage(
             ERROR = T("Error: could not update notification settings"),
@@ -468,22 +469,6 @@ class subscriptions(S3CustomController):
         rows = []
 
         selector = S3GroupedOptionsWidget(cols=1)
-        # Deactivated trigger selector
-        #rows.append(("trigger_selector__row",
-        #             "%s:" % labels.NOTIFY_ON,
-        #             selector(stable.notify_on,
-        #                      subscription["notify_on"],
-        #                      _id="trigger_selector"),
-        #             ""))
-
-        #switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
-        # Deactivated: frequency selector
-        #rows.append(("frequency_selector__row",
-        #             "%s:" % labels.FREQUENCY,
-        #             switch(stable.frequency,
-        #                    subscription["frequency"],
-        #                    _id="frequency_selector"),
-        #             ""))
 
         methods = [("EMAIL", T("Email")),
                    ("SMS", T("SMS")),
@@ -503,6 +488,20 @@ class subscriptions(S3CustomController):
         if not (request.get_vars["option"] == "manage_recipient" and \
            has_role("ADMIN")):
             # managing own subscriptions
+            attachment_filter = S3GroupedOptionsWidget(cols=2, multiple=False)
+            attachment_options = [(False, T("No")),
+                                  (True, T("Yes")),
+                                  ]
+
+            rows.append(("attachment_filter__row",
+                         "%s:" % labels.ATTACHMENT,
+                         attachment_filter(Storage(name="attachment-filter",
+                                                   requires=IS_IN_SET(attachment_options)
+                                                   ),
+                                           subscription["attachment"],
+                                           _id="attachment_selector"),
+                         ""))
+
             properties = subscription["comments"]
             if properties:
                 properties = json.loads(properties)
@@ -640,6 +639,10 @@ $('#method_selector').change(function(){
             group_ids = formvars["group-filter"]
             # Recipient IDs
             user_ids = formvars["person-filter"]
+            # Attachment
+            attachment = False
+            if formvars["attachment-filter"] == "True":
+                attachment = True
 
             from collections import Counter
 
@@ -837,6 +840,7 @@ $('#method_selector').change(function(){
                                         pe_id,
                                         filter_id=row.pr_subscription.filter_id,
                                         subscription_id=subscription_id,
+                                        attachment=attachment,
                                         )
                     else:
                         # Remove
@@ -865,15 +869,19 @@ $('#method_selector').change(function(){
                                         pe_id,
                                         filter_id=row.pr_subscription.filter_id,
                                         subscription_id=row.pr_subscription.id,
+                                        attachment=attachment,
                                         )
                             break
                     else:
                         # Create
                         success_subscription = update_subscription(subscription,
-                                                                   pe_id)
+                                                                   pe_id,
+                                                                   attachment=attachment)
                 else:
                     # Create
-                    success_subscription = update_subscription(subscription, pe_id)
+                    success_subscription = update_subscription(subscription,
+                                                               pe_id,
+                                                               attachment=attachment)
 
                 # Process Sync FTP Subscription
                 if "FTP" in subscription["method"] and formvars.repository_id:
@@ -929,6 +937,7 @@ $('#method_selector').change(function(){
                                    #stable.frequency,
                                    stable.method,
                                    stable.comments,
+                                   stable.attachment,
                                    ftable.id,
                                    ftable.query,
                                    left=left,
@@ -988,6 +997,7 @@ $('#method_selector').change(function(){
                            "frequency": "immediately",#s.frequency
                            "method": s.method,
                            "comments": s.comments,
+                           "attachment": s.attachment,
                            })
 
         else:
@@ -1000,6 +1010,7 @@ $('#method_selector').change(function(){
                            "frequency": "immediately",#stable.frequency.default,
                            "method": stable.method.default,
                            "comments": None,
+                           "attachment": False,
                            })
         return output
 
@@ -1094,6 +1105,7 @@ $('#method_selector').change(function(){
                              pe_id,
                              filter_id=None,
                              subscription_id=None,
+                             attachment=False,
                              ):
         """ Update subscription settings """
 
@@ -1133,7 +1145,8 @@ $('#method_selector').change(function(){
                                     filter_id=filter_id,
                                     notify_on=subscription["notify_on"],
                                     frequency=frequency,
-                                    method=subscription["method"])
+                                    method=subscription["method"],
+                                    attachment=attachment)
             subscription_id = success
         else:
             success = db(stable.id == subscription_id).update(
@@ -1141,7 +1154,8 @@ $('#method_selector').change(function(){
                             filter_id=filter_id,
                             notify_on=subscription["notify_on"],
                             frequency=frequency,
-                            method=subscription["method"])
+                            method=subscription["method"],
+                            attachment=attachment)
         if not success:
             return None
 
@@ -1598,7 +1612,7 @@ class alert_hub_cop(S3CustomController):
 
         last_month = request.utcnow + timedelta(-30)
 
-        map_filter = "~.external=True&~.status=Actual&info.expires>=%s" % last_month
+        map_filter = "~.external=True&~.status=Actual&~.info.expires__gt=%s" % last_month
 
         feature_resources = [{"name"      : T("Alerts"),
                               "id"        : "search_results",
@@ -1663,7 +1677,9 @@ class alert_hub_cop(S3CustomController):
 
         ajax_url = URL(c="cap", f=fn, args="datalist.dl",
                        vars={"list_id": list_id,
-                             "~.external": True})
+                             "info.expires__gt": last_month,
+                             "~.external": True,
+                             "~.status": "Actual"})
         #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 0,
