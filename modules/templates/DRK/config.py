@@ -878,6 +878,7 @@ def config(settings):
 
         # ...and then select the rows which don't have any
         query = (ctable.archived == False) & \
+                (ctable.date < then.date()) & \
                 (ctable.deleted == False)
         rows = db(query).select(ctable.person_id,
                                 left = left,
