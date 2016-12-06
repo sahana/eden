@@ -55,7 +55,7 @@ def config(settings):
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
+    settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
@@ -113,9 +113,10 @@ def config(settings):
     # Case activities use service types
     settings.dvr.activity_use_service_type = True
 
+    # Use case activity types
+    #settings.dvr.activity_types = True
     # Use hierarchical case activity types
-    settings.dvr.activity_types = True
-    settings.dvr.activity_types_hierarchical = True
+    #settings.dvr.activity_types_hierarchical = True
 
     # Needs differentiated by service type, and hierarchical
     settings.dvr.needs_use_service_type = True
@@ -166,38 +167,59 @@ def config(settings):
 
                 # Get service type ID
                 stable = s3db.org_service
-                query = (stable.name == MENTAL_HEALTH) & \
+                query = (stable.parent == None) & \
+                        (stable.name == MENTAL_HEALTH) & \
                         (stable.deleted != True)
                 service = db(query).select(stable.id, limitby=(0, 1)).first()
-                service_id = service.id if service else None
+                root_service_id = service.id if service else None
+
+                query = (stable.root_service == root_service_id) & \
+                        (stable.deleted != True)
+                services = db(query).select(stable.id)
+                service_ids = [s.id for s in services]
 
                 # Filter activities
-                query = (FS("activity_type_id$service_id") == service_id)
+                query = (FS("activity_type_id$service_id").belongs(service_ids))
                 r.resource.add_filter(query)
 
-                # Filter activity types selector
-                field = table.activity_type_id
-                field.comment = None
-                field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                # Filter service selector
+                field = table.service_id
+                field.requires = IS_ONE_OF(db, "org_service.id",
                                            field.represent,
-                                           filterby = "service_id",
-                                           filter_opts = service_id,
+                                           filterby = "id",
+                                           filter_opts = service_ids,
+                                           sort=True,
                                            )
                 field.widget = S3HierarchyWidget(multiple = False,
                                                  leafonly = False,
-                                                 filter = (FS("service_id") == service_id),
+                                                 filter = (FS("id").belongs(service_ids)),
                                                  )
+
+                # Filter activity types selector
+                #field = table.activity_type_id
+                #field.comment = None
+                #field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                #                           field.represent,
+                #                           filterby = "service_id",
+                #                           filter_opts = service_id,
+                #                           )
+                #field.widget = S3HierarchyWidget(multiple = False,
+                #                                 leafonly = False,
+                #                                 filter = (FS("service_id") == service_id),
+                #                                 )
 
                 # Custom list fields
                 list_fields = ["name",
-                               "activity_type_id",
+                               #"activity_type_id",
+                               "service_id",
                                "site_id",
                                "room_id",
                                ]
 
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
-                                            "activity_type_id",
+                                            #"activity_type_id",
+                                            "service_id",
                                             "site_id",
                                             "room_id",
                                             "comments",
@@ -214,11 +236,17 @@ def config(settings):
 
                 # Filter activity_type_id by service type
                 stable = s3db.org_service
-                query = (stable.name != INDIVIDUAL_SUPPORT) & \
+                query = (stable.parent == None) & \
+                        (stable.name != INDIVIDUAL_SUPPORT) & \
                         (stable.name != MENTAL_HEALTH) & \
                         (stable.deleted != True)
                 rows = db(query).select(stable.id)
-                service_ids = [row.id for row in rows]
+                root_service_ids = [row.id for row in rows]
+
+                query = (stable.root_service.belongs(root_service_ids)) & \
+                        (stable.deleted != True)
+                services = db(query).select(stable.id)
+                service_ids = [s.id for s in services]
 
                 # Filter activities
                 query = (FS("activity_type_id$service_id").belongs(service_ids))
@@ -229,22 +257,37 @@ def config(settings):
                     query &= ((start_date == None) | (start_date <= today)) & \
                              ((end_date == None) | (end_date >= today))
                 r.resource.add_filter(query)
+                r.resource.add_filter(query)
 
-                # Filter activity types selector
-                field = table.activity_type_id
-                field.comment = None
-                field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                # Filter service selector
+                field = table.service_id
+                field.requires = IS_ONE_OF(db, "org_service.id",
                                            field.represent,
-                                           filterby = "service_id",
+                                           filterby = "id",
                                            filter_opts = service_ids,
+                                           sort=True,
                                            )
                 field.widget = S3HierarchyWidget(multiple = False,
                                                  leafonly = False,
-                                                 filter = (FS("service_id").belongs(service_ids)),
+                                                 filter = (FS("id").belongs(service_ids)),
                                                  )
 
+                # Filter activity types selector
+                #field = table.activity_type_id
+                #field.comment = None
+                #field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+                #                           field.represent,
+                #                           filterby = "service_id",
+                #                           filter_opts = service_ids,
+                #                           )
+                #field.widget = S3HierarchyWidget(multiple = False,
+                #                                 leafonly = False,
+                #                                 filter = (FS("service_id").belongs(service_ids)),
+                #                                 )
+
                 # Custom list fields
-                list_fields = ["activity_type_id",
+                list_fields = ["service_id",
+                               #"activity_type_id",
                                "start_date",
                                "end_date",
                                "period",
@@ -252,7 +295,8 @@ def config(settings):
                                ]
 
                 # Custom form
-                crud_form = S3SQLCustomForm("activity_type_id",
+                crud_form = S3SQLCustomForm("service_id",
+                                            #"activity_type_id",
                                             "start_date",
                                             "end_date",
                                             "period",
@@ -361,27 +405,39 @@ def config(settings):
 
             # Get service type
             stable = s3db.org_service
-            query = (stable.name == INDIVIDUAL_SUPPORT) & \
+            query = (stable.parent == None) & \
+                    (stable.name == INDIVIDUAL_SUPPORT) & \
                     (stable.deleted != True)
             service = db(query).select(stable.id, limitby=(0, 1)).first()
-            service_id = service.id if service else None
+            root_service_id = service.id if service else None
+
+            query = (stable.root_service == root_service_id) & \
+                    (stable.deleted != True)
+            services = db(query).select(stable.id)
+            service_ids = [s.id for s in services]
 
             field = table.service_id
-            field.default = service_id
-            field.readable = field.writable = False
+            #field.default = service_id
+            #field.readable = field.writable = False
+            field.requires = IS_ONE_OF(db, "org_service.id",
+                                       field.represent,
+                                       filterby = "id",
+                                       filter_opts = service_ids,
+                                       sort=True,
+                                       )
 
             # Filter activity types
-            field = table.activity_type_id
-            field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
-                                       field.represent,
-                                       filterby = "service_id",
-                                       filter_opts = service_id,
-                                       )
-            field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
-                                             filter = (FS("service_id") == service_id),
-                                             )
+            #field = table.activity_type_id
+            #field.comment = None
+            #field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+            #                           field.represent,
+            #                           filterby = "service_id",
+            #                           filter_opts = service_id,
+            #                           )
+            #field.widget = S3HierarchyWidget(multiple = False,
+            #                                 leafonly = False,
+            #                                 filter = (FS("service_id") == service_id),
+            #                                 )
 
             # Filter need types
             field = table.need_id
@@ -390,11 +446,11 @@ def config(settings):
             field.requires = IS_ONE_OF(db, "dvr_need.id",
                                        field.represent,
                                        filterby = "service_id",
-                                       filter_opts = service_id,
+                                       filter_opts = service_ids,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
                                              leafonly = False,
-                                             filter = (FS("service_id") == service_id),
+                                             filter = (FS("service_id").belongs(service_ids)),
                                              )
 
             # Customise Need Details
@@ -415,10 +471,10 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
-                                        "activity_type_id",
+                                        #"activity_type_id",
+                                        "service_id",
                                         "human_resource_id",
                                         "project_id",
-                                        #"service_id",
                                         "need_id",
                                         "need_details",
                                         "followup",
@@ -429,7 +485,8 @@ def config(settings):
                                         "comments",
                                         )
             list_fields = ["person_id",
-                           "activity_type_id",
+                           "service_id",
+                           #"activity_type_id",
                            "human_resource_id",
                            "project_id",
                            "need_id",
@@ -445,30 +502,38 @@ def config(settings):
 
             # Service type subset
             stable = s3db.org_service
-            query = (stable.name != INDIVIDUAL_SUPPORT) & \
+            query = (stable.parent == None) & \
+                    (stable.name != INDIVIDUAL_SUPPORT) & \
                     (stable.name != MENTAL_HEALTH) & \
                     (stable.deleted != True)
             rows = db(query).select(stable.id)
-            service_ids = [row.id for row in rows]
+            root_service_ids = [row.id for row in rows]
+
+            query = (stable.root_service.belongs(root_service_ids)) & \
+                    (stable.deleted != True)
+            services = db(query).select(stable.id)
+            service_ids = [s.id for s in services]
 
             field = table.service_id
-            field.requires = IS_ONE_OF(db(query), "org_service.id",
+            field.requires = IS_ONE_OF(db, "org_service.id",
                                        field.represent,
+                                       filterby = "id",
+                                       filter_opts = service_ids,
                                        sort=True,
                                        )
 
             # Filter activity types
-            field = table.activity_type_id
-            field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
-                                       field.represent,
-                                       filterby = "service_id",
-                                       filter_opts = service_ids,
-                                       )
-            field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
-                                             filter = (FS("service_id").belongs(service_ids)),
-                                             )
+            #field = table.activity_type_id
+            #field.comment = None
+            #field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+            #                           field.represent,
+            #                           filterby = "service_id",
+            #                           filter_opts = service_ids,
+            #                           )
+            #field.widget = S3HierarchyWidget(multiple = False,
+            #                                 leafonly = False,
+            #                                 filter = (FS("service_id").belongs(service_ids)),
+            #                                 )
 
             # @todo: filter options of activity type when service selected
             #        (hierarchicalOpts widget currently not supported
@@ -489,21 +554,21 @@ def config(settings):
                                                    left = left,
                                                    ))
 
-            if r.interactive:
-                script = '''$.filterOptionsS3({
-'trigger':'activity_type_id',
-'target':'activity_id',
-'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.activity_type_id='),
-'fncRepresent': function(r){return r.activity_type_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+')'},
-'optional': true
-})'''
-                s3.jquery_ready.append(script)
+#            if r.interactive:
+#                script = '''$.filterOptionsS3({
+#'trigger':'activity_type_id',
+#'target':'activity_id',
+#'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.activity_type_id='),
+#'fncRepresent': function(r){return r.activity_type_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+')'},
+#'optional': true
+#})'''
+#                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
                                         "service_id",
-                                        "activity_type_id",
+                                        #"activity_type_id",
                                         "activity_id",
                                         "comments",
                                         )
@@ -511,7 +576,7 @@ def config(settings):
             list_fields = ["person_id",
                            "project_id",
                            "service_id",
-                           "activity_type_id",
+                           #"activity_type_id",
                            "activity_id",
                            ]
 
@@ -525,27 +590,39 @@ def config(settings):
 
             # Get service type
             stable = s3db.org_service
-            query = (stable.name == MENTAL_HEALTH) & \
+            query = (stable.parent == None) & \
+                    (stable.name == MENTAL_HEALTH) & \
                     (stable.deleted != True)
             service = db(query).select(stable.id, limitby=(0, 1)).first()
-            service_id = service.id if service else None
+            root_service_id = service.id if service else None
+
+            query = (stable.root_service == root_service_id) & \
+                    (stable.deleted != True)
+            services = db(query).select(stable.id)
+            service_ids = [s.id for s in services]
 
             field = table.service_id
-            field.default = service_id
-            field.readable = field.writable = False
+            #field.default = service_id
+            #field.readable = field.writable = False
+            field.requires = IS_ONE_OF(db, "org_service.id",
+                                       field.represent,
+                                       filterby = "id",
+                                       filter_opts = service_ids,
+                                       sort=True,
+                                       )
 
             # Filter activity types
-            field = table.activity_type_id
-            field.comment = None
-            field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
-                                       field.represent,
-                                       filterby = "service_id",
-                                       filter_opts = service_id,
-                                       )
-            field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
-                                             filter = (FS("service_id") == service_id),
-                                             )
+            #field = table.activity_type_id
+            #field.comment = None
+            #field.requires = IS_ONE_OF(db, "dvr_activity_type.id",
+            #                           field.represent,
+            #                           filterby = "service_id",
+            #                           filter_opts = service_id,
+            #                           )
+            #field.widget = S3HierarchyWidget(multiple = False,
+            #                                 leafonly = False,
+            #                                 filter = (FS("service_id") == service_id),
+            #                                 )
 
             # Filter need types
             field = table.need_id
@@ -554,11 +631,11 @@ def config(settings):
             field.requires = IS_ONE_OF(db, "dvr_need.id",
                                        field.represent,
                                        filterby = "service_id",
-                                       filter_opts = service_id,
+                                       filter_opts = service_ids,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
                                              leafonly = False,
-                                             filter = (FS("service_id") == service_id),
+                                             filter = (FS("service_id").belongs(service_ids)),
                                              )
 
             # Filter activities
@@ -567,26 +644,27 @@ def config(settings):
             atable = s3db.dvr_activity
             ttable = s3db.dvr_activity_type
             left = ttable.on(ttable.id == atable.activity_type_id)
-            query = (ttable.service_id == service_id)
+            query = (ttable.service_id.belongs(service_ids))
             field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
                                                    field.represent,
                                                    left = left,
                                                    ))
 
-            if r.interactive:
-                script = '''$.filterOptionsS3({
-'trigger':'activity_type_id',
-'target':'activity_id',
-'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=MH&~.activity_type_id='),
-'fncRepresent': function(r){return r.name||r.activity_type_id},
-'optional': true
-})'''
-                s3.jquery_ready.append(script)
+#            if r.interactive:
+#                script = '''$.filterOptionsS3({
+#'trigger':'activity_type_id',
+#'target':'activity_id',
+#'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=MH&~.activity_type_id='),
+#'fncRepresent': function(r){return r.name||r.activity_type_id},
+#'optional': true
+#})'''
+#                s3.jquery_ready.append(script)
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "need_id",
-                                        "activity_type_id",
+                                        "service_id",
+                                        #"activity_type_id",
                                         "human_resource_id",
                                         "project_id",
                                         "activity_id",
@@ -596,7 +674,8 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id",
                            "need_id",
-                           "activity_type_id",
+                           "service_id",
+                           #"activity_type_id",
                            "human_resource_id",
                            "project_id",
                            "activity_id",
@@ -609,7 +688,7 @@ def config(settings):
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
                                         "service_id",
-                                        "activity_type_id",
+                                        #"activity_type_id",
                                         "need_id",
                                         "followup",
                                         "followup_date",
@@ -622,7 +701,7 @@ def config(settings):
             list_fields = ["person_id",
                            "project_id",
                            "service_id",
-                           "activity_type_id",
+                           #"activity_type_id",
                            "followup",
                            "followup_date",
                            ]
@@ -660,7 +739,8 @@ def config(settings):
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id",
                                (T("Sector for DS/IS"), "need_id"),
-                               "activity_type_id",
+                               #"activity_type_id",
+                               "service_id",
                                "followup_date",
                                ]
 
@@ -853,26 +933,41 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        db = current.db
         s3db = current.s3db
         s3 = current.response.s3
 
-        # Get service type IDs
+        # Get service IDs
         stable = s3db.org_service
         query = (stable.deleted != True)
-        rows = current.db(query).select(stable.id,
-                                        stable.name,
-                                        cache = s3db.cache,
-                                        )
+        rows = db(query).select(stable.id,
+                                stable.name,
+                                stable.root_service,
+                                cache = s3db.cache,
+                                )
         mh_service_id = None
         is_service_id = None
-        pss_service_ids = set()
         for row in rows:
-            if row.name == "Mental Health":
+            name = row.name
+            if name == "Mental Health":
                 mh_service_id = row.id
-            elif row.name == "Individual Support":
+            elif name == "Individual Support":
                 is_service_id = row.id
+
+        mh_service_ids = []
+        mappend = mh_service_ids.append
+        is_service_ids = []
+        mappend = is_service_ids.append
+        pss_service_ids = []
+        pappend = pss_service_ids.append
+        for row in rows:
+            root_service = row.root_service
+            if root_service == mh_service_id:
+                mappend(row.id)
+            elif root_service == mh_service_id:
+                iappend(row.id)
             else:
-                pss_service_ids.add(row.id)
+                pappend(row.id)
 
         # Custom activity components (differentiated by service type)
         s3db.add_components("pr_person",
@@ -880,19 +975,19 @@ def config(settings):
                                 {"name": "case_activity",
                                     "joinby": "person_id",
                                     "filterby": {
-                                        "service_id": is_service_id,
+                                        "service_id": is_service_ids,
                                         },
                                 },
                                 {"name": "mh_activity",
                                     "joinby": "person_id",
                                     "filterby": {
-                                        "service_id": mh_service_id,
+                                        "service_id": mh_service_ids,
                                         },
                                 },
                                 {"name": "pss_activity",
                                     "joinby": "person_id",
                                     "filterby": {
-                                        "service_id": list(pss_service_ids),
+                                        "service_id": pss_service_ids,
                                         },
                                 },
                                ),
@@ -1050,11 +1145,11 @@ def config(settings):
                     resource.configure(crud_form = crud_form,
                                        )
                     # Hide Postcode in addresses (not used)
-                    atable = s3db.pr_address
-                    location_id = atable.location_id
-                    location_id.widget = S3LocationSelector(show_address=True,
-                                                            show_postcode = False,
-                                                            )
+                    #atable = s3db.pr_address
+                    #location_id = atable.location_id
+                    #location_id.widget = S3LocationSelector(show_address=True,
+                    #                                        show_postcode = False,
+                    #                                        )
 
                     # Extend text filter with Family ID and case comments
                     filter_widgets = resource.get_config("filter_widgets")
@@ -1217,7 +1312,7 @@ def config(settings):
     # Organisation Registry
     #
     settings.org.branches = True
-    settings.org.services_hierarchical = False
+    settings.org.services_hierarchical = True
 
     # Uncomment this to make tree view the default for "Branches" tab
     #settings.org.branches_tree_view = True

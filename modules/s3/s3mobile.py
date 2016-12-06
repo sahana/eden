@@ -328,7 +328,7 @@ class S3MobileCRUD(S3Method):
             if representation == "json":
                 if http == "GET":
                     # Form download
-                    output = self.mobile_form(r, **attr)
+                    output = self.mform(r, **attr)
 
                 else:
                     r.error(405, current.ERROR.BAD_METHOD)
@@ -337,31 +337,6 @@ class S3MobileCRUD(S3Method):
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
-        return output
-
-    # -------------------------------------------------------------------------
-    def mobile_form(self, r, **attr):
-        """
-            Get the schema definition (as JSON)
-
-            @param r: the S3Request instance
-            @param attr: controller attributes
-
-            @returns: a JSON string
-        """
-
-        resource = r.resource
-
-        form = S3MobileForm(resource)
-
-        schema = form.schema()
-        schema["_controller"] = r.controller
-        schema["_function"] = r.function
-
-        name = resource.tablename
-        output = json.dumps({name: schema})
-
-        current.response.headers = {"Content-Type": "application/json"}
         return output
 
     # -------------------------------------------------------------------------
@@ -405,7 +380,7 @@ class S3MobileCRUD(S3Method):
         for record in data:
             for tablename in record:
                 _record = record[tablename]
-                row =[]
+                row = []
                 rappend = row.append
                 for field in _record:
                     if (tablename == resource_tablename and field in list_fields) or \
@@ -509,6 +484,31 @@ class S3MobileCRUD(S3Method):
             output = xml.json_message(**import_result)
         else:
             output = xml.json_message(True, 200, "No records to import")
+
+        current.response.headers = {"Content-Type": "application/json"}
+        return output
+
+    # -------------------------------------------------------------------------
+    def mform(self, r, **attr):
+        """
+            Get the schema definition (as JSON)
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+
+            @returns: a JSON string
+        """
+
+        resource = r.resource
+
+        form = S3MobileForm(resource)
+
+        schema = form.schema()
+        schema["_controller"] = r.controller
+        schema["_function"] = r.function
+
+        name = resource.tablename
+        output = json.dumps({name: schema})
 
         current.response.headers = {"Content-Type": "application/json"}
         return output
