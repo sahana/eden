@@ -3,7 +3,7 @@
 from gluon import *
 from s3 import FS, S3CRUD, S3CustomController
 
-#SAVE = "Save the Children"
+SAVE = "Save the Children"
 THEME = "SCPHIMS"
 
 # =============================================================================
@@ -15,10 +15,15 @@ class index(S3CustomController):
         T = current.T
         db = current.db
         s3db = current.s3db
+        auth = current.auth
         s3 = current.response.s3
         #crud_strings = s3.crud_strings
 
-        output = {}
+        # Internal & External Users see different pages
+        internal = auth.s3_logged_in()
+
+        output = {"internal": internal,
+                  }
 
         # Map
         ltable = s3db.gis_layer_feature
@@ -45,7 +50,10 @@ class index(S3CustomController):
         output["map"] = current.gis.show_map(feature_resources = feature_resources,
                                              )
 
-        # DataTable of Open Events
+        # DataTables
+        s3.no_formats = True
+
+        # Open Events
         tablename = "event_event"
         resource = s3db.resource(tablename)
         resource.add_filter(FS("~.closed") == False)
@@ -53,11 +61,104 @@ class index(S3CustomController):
         list_fields = ["name",
                        "event_location.location_id",
                        ]
+        # @ToDo: Add Category once we have the requirements clear for it
+        #if internal
+        #    list_fields.append("category")
+
         start = None
         limit = 5
         orderby = "event_event.start_date"
 
         # Get the data table
+        self._datatable(output,
+                        resource,
+                        list_fields,
+                        start,
+                        limit,
+                        orderby,
+                        )
+
+        if internal:
+            # Pending Activities
+            tablename = "project_activity"
+            resource = s3db.resource(tablename)
+            resource.add_filter(FS("~.date") > current.request.utcnow)
+            resource.add_filter(FS("organisation.name") == SAVE)
+
+            list_fields = [#"date",
+                           (T("Response"), "event.event_id"),
+                           "name",
+                           "location_id",
+                           "status_id",
+                           ]
+            start = None
+            limit = 5
+            orderby = "project_activity.date"
+
+            # Get the data table
+            self._datatable(output,
+                            resource,
+                            list_fields,
+                            start,
+                            limit,
+                            orderby,
+                            )
+
+       # Allow editing of page content from browser using CMS module
+        system_roles = auth.get_system_roles()
+        ADMIN = system_roles.ADMIN in current.session.s3.roles
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        module = "default"
+        resource = "index"
+        query = (ltable.module == module) & \
+                ((ltable.resource == None) | \
+                 (ltable.resource == resource)) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = db(query).select(table.body,
+                                table.id,
+                                limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item = DIV(XML(item.body),
+                           BR(),
+                           A(T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[item.id, "update"]),
+                             _class="action-btn"))
+            else:
+                item = DIV(XML(item.body))
+        elif ADMIN:
+            if s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item = A(T("Edit"),
+                     _href=URL(c="cms", f="post", args="create",
+                               vars={"module": module,
+                                     "resource": resource
+                                     }),
+                     _class="%s cms-edit" % _class)
+        else:
+            item = ""
+        output["cms"] = item
+
+        self._view(THEME, "index.html")
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _datatable(output,
+                   resource,
+                   list_fields,
+                   start,
+                   limit,
+                   orderby,
+                   ):
+
+        tablename = resource.tablename
+
         dt, totalrows, ids = resource.datatable(fields=list_fields,
                                                 start=start,
                                                 limit=limit,
@@ -92,12 +193,13 @@ class index(S3CustomController):
                                     # "icon": "fa fa-trash",
                                     # },
                                     ]
+        dtargs["dt_searching"] = False
+        #dtargs["dt_pagination"] = "false"
         #dtargs["dt_action_col"] = len(list_fields)
         #dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
         #                              representation="aadata")
 
         list_id = "custom-list-%s" % tablename
-        s3.no_formats = True
 
         datatable = dt.html(totalrows,
                             displayrows,
@@ -111,51 +213,8 @@ class index(S3CustomController):
         contents = DIV(datatable, empty, _class="dt-contents")
 
         # Render the widget
-        output["active_responses"] = DIV(contents,
-                                         _class="card-holder",
-                                         )
-
-       # Allow editing of page content from browser using CMS module
-        system_roles = current.auth.get_system_roles()
-        ADMIN = system_roles.ADMIN in current.session.s3.roles
-        table = s3db.cms_post
-        ltable = s3db.cms_post_module
-        module = "default"
-        resource = "index"
-        query = (ltable.module == module) & \
-                ((ltable.resource == None) | \
-                 (ltable.resource == resource)) & \
-                (ltable.post_id == table.id) & \
-                (table.deleted != True)
-        item = db(query).select(table.body,
-                                table.id,
-                                limitby=(0, 1)).first()
-        if item:
-            if ADMIN:
-                item = DIV(XML(item.body),
-                           BR(),
-                           A(current.T("Edit"),
-                             _href=URL(c="cms", f="post",
-                                       args=[item.id, "update"]),
-                             _class="action-btn"))
-            else:
-                item = DIV(XML(item.body))
-        elif ADMIN:
-            if s3.crud.formstyle == "bootstrap":
-                _class = "btn"
-            else:
-                _class = "action-btn"
-            item = A(current.T("Edit"),
-                     _href=URL(c="cms", f="post", args="create",
-                               vars={"module": module,
-                                     "resource": resource
-                                     }),
-                     _class="%s cms-edit" % _class)
-        else:
-            item = ""
-        output["cms"] = item
-
-        self._view(THEME, "index.html")
-        return output
+        output["%s_datatable" % tablename] = DIV(contents,
+                                                 _class="card-holder",
+                                                 )
 
 # END =========================================================================

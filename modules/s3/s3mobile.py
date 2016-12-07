@@ -354,6 +354,7 @@ class S3MobileCRUD(S3Method):
         resource = r.resource
         resource_tablename = resource.tablename
         output = {resource_tablename: []}
+        tablenames = {resource_tablename: None}
         list_fields = resource.get_config("mobile_list_fields")
         if not list_fields:
             list_fields = resource.get_config("list_fields")
@@ -362,16 +363,26 @@ class S3MobileCRUD(S3Method):
             if UID not in list_fields:
                 list_fields.append(UID)
         else:
-            tablenames = []
+            components = []
             for field in list_fields:
                 if "." in field:
-                    tablename, fieldname = field.split(".", 1)
-                    if tablename not in tablenames:
-                        tablenames.append(tablename)
+                    component, fieldname = field.split(".", 1)
+                    
+                    if "$" in fieldname:
+                        # @ToDo! Handle address.location_id$...
+                        pass
+                    
+                    if component not in components:
+                        components.append(component)
 
-            for tablename in tablenames:
+            rcomponents = resource.components
+            for component in components:
+                if component not in rcomponents:
+                    continue
+                tablename = rcomponents[component].table._tablename # This way to get aliases 
+                tablenames[tablename] = component
                 output[tablename] = []
-                uuid_field = "%s.%s" % (tablename, UID) 
+                uuid_field = "%s.%s" % (component, UID) 
                 if uuid_field not in list_fields:
                     list_fields.append(uuid_field)
             if UID not in list_fields:
@@ -384,7 +395,7 @@ class S3MobileCRUD(S3Method):
                 rappend = row.append
                 for field in _record:
                     if (tablename == resource_tablename and field in list_fields) or \
-                       ("%s.%s" % (tablename, field) in list_fields):
+                       ("%s.%s" % (tablenames[tablename], field) in list_fields):
                         value = _record[field]
                         if isinstance(value, datetime.date) or \
                            isinstance(value, datetime.datetime):

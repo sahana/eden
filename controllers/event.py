@@ -89,6 +89,14 @@ def event():
     return s3_rest_controller(rheader = s3db.event_rheader)
 
 # -----------------------------------------------------------------------------
+def event_location():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def event_type():
     """
         RESTful CRUD controller

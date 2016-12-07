@@ -37,6 +37,7 @@
 'Competency Rating Catalog': 'Competency Rating Catalogue',
 'Configure resources to synchronize, update methods and policies': 'Configure resources to synchronise, update methods and policies',
 'Configure/Monitor Synchronization': 'Configure/Monitor Synchronisation',
+'Counselor': 'Counsellor',
 'Course Catalog': 'Course Catalogue',
 'Create Catalog': 'Create Catalogue',
 'Create Catalog Item': 'Create Catalogue Item',

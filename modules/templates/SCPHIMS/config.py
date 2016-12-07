@@ -125,6 +125,12 @@ def config(settings):
     #settings.mail.login = "username:password"
 
     # =========================================================================
+    # CMS
+    #
+
+    settings.cms.richtext = True
+
+    # =========================================================================
     # Mobile
     #
 
@@ -468,67 +474,103 @@ def config(settings):
         else:
             s3db.dvr_case.organisation_id.default = SCI
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
-        crud_form = S3SQLCustomForm(
-                        # @ToDo: Scan this in from barcode on preprinted card
-                        "dvr_case.reference",
-                        "dvr_case.date",
-                        "first_name",
-                        "middle_name",
-                        "last_name",
-                        "date_of_birth",
-                        "gender",
-                        "person_details.disabled",
-                        S3SQLInlineComponent(
-                                "phone",
-                                fields = [("", "value"),
-                                          ],
-                                #filterby = {"field": "contact_method",
-                                #            "options": "SMS",
-                                #            },
-                                label = T("Mobile Phone"),
-                                multiple = False,
-                                #name = "phone",
-                                ),
-                        S3SQLInlineComponent(
-                                "email",
-                                fields = [("", "value"),
-                                          ],
-                                #filterby = {"field": "contact_method",
-                                #            "options": "EMAIL",
-                                #            },
-                                label = T("Email"),
-                                multiple = False,
-                                #name = "email",
-                                ),
-                        S3SQLInlineComponent(
-                                "address",
-                                label = T("Current Address"),
-                                fields = [("", "location_id"),
-                                          ],
-                                filterby = {"field": "type",
-                                            "options": "1",
-                                            },
-                                link = False,
-                                multiple = False,
-                                ),
-                        "dvr_case.comments",
-                        )
+        mobile_list_fields = ["project_case_activity.activity_id",
+                              "dvr_case.reference",
+                              "dvr_case.date",
+                              "first_name",
+                              "middle_name",
+                              "last_name",
+                              "date_of_birth",
+                              "gender",
+                              "person_details.disabled",
+                              "phone.value",
+                              "email.value",
+                              "address.location_id$L1",
+                              "address.location_id$L2",
+                              "address.location_id$L3",
+                              "address.location_id$L4",
+                              "address.location_id$addr_street",
+                              "dvr_case.comments",
+                              ]
 
         s3db.configure("pr_person",
-                       crud_form = crud_form,
+                       mobile_list_fields = mobile_list_fields,
                        )
+
+        from s3 import S3SQLInlineComponent
+        crud_fields = [# @ToDo: Scan this in from barcode on preprinted card
+                       "dvr_case.reference",
+                       "dvr_case.date",
+                       "first_name",
+                       "middle_name",
+                       "last_name",
+                       "date_of_birth",
+                       "gender",
+                       "person_details.disabled",
+                       S3SQLInlineComponent(
+                            "phone",
+                            fields = [("", "value"),
+                                      ],
+                            #filterby = {"field": "contact_method",
+                            #            "options": "SMS",
+                            #            },
+                            label = T("Mobile Phone"),
+                            multiple = False,
+                            #name = "phone",
+                            ),
+                       S3SQLInlineComponent(
+                            "email",
+                            fields = [("", "value"),
+                                      ],
+                            #filterby = {"field": "contact_method",
+                            #            "options": "EMAIL",
+                            #            },
+                            label = T("Email"),
+                            multiple = False,
+                            #name = "email",
+                            ),
+                       S3SQLInlineComponent(
+                            "address",
+                            label = T("Current Address"),
+                            fields = [("", "location_id"),
+                                      ],
+                            filterby = {"field": "type",
+                                        "options": "1",
+                                        },
+                            link = False,
+                            multiple = False,
+                            ),
+                       "dvr_case.comments",
+                       ]
+
+        return crud_fields
 
     def customise_pr_person_resource(r, tablename):
 
         if r.function == "distribution":
             # Beneficiaries
-            customise_beneficiary_form()
-            current.s3db.pr_address.location_id.default = r.record.location_id
+            from s3 import S3SQLCustomForm
+            s3db = current.s3db
+            crud_fields = customise_beneficiary_form()
+            s3db.configure("pr_person",
+                           crud_form = S3SQLCustomForm(*crud_fields),
+                           )
+
+            s3db.pr_address.location_id.default = r.record.location_id
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     def customise_pr_person_controller(**attr):
+
+        s3db = current.s3db
+        s3db.add_components("pr_person",
+                            project_case_activity = {"name": "project_case_activity", # Avoid conflict with dvr_case_activity
+                                                     "link": "dvr_case",
+                                                     "joinby": "person_id",
+                                                     "key": "id",
+                                                     "fkey": "case_id",
+                                                     },
+                            )
 
         s3 = current.response.s3
         standard_prep = s3.prep
@@ -540,7 +582,23 @@ def config(settings):
 
             if r.controller == "dvr":
                 # Beneficiaries
-                customise_beneficiary_form()
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                crud_fields = customise_beneficiary_form()
+                crud_fields.insert(0,
+                                   # @ToDo: Create isn't refreshing the dropdown
+                                   S3SQLInlineComponent(
+                                    "project_case_activity",
+                                    fields = [("", "activity_id"),
+                                              ],
+                                    label = T("Activity"),
+                                    link = False,
+                                    multiple = False,
+                                    )
+                                   )
+                s3db.configure("pr_person",
+                               crud_form = S3SQLCustomForm(*crud_fields),
+                               )
+
             return True
         s3.prep = custom_prep
 

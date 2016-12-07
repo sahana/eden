@@ -2895,13 +2895,28 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 # Need to lookup the pe_id manually (bad that we need this
                                 # special case, must be a better way but this works for now)
                                 ptable = s3db.pr_person
-                                person = db(ptable.id == master[pkey]).select(ptable.pe_id,
-                                                                              limitby=(0, 1)
-                                                                              ).first()
+                                query = (ptable.id == master[pkey])
+                                person = db(query).select(ptable.pe_id,
+                                                          limitby=(0, 1)
+                                                          ).first()
                                 if person:
                                     values["pe_id"] = person.pe_id
                                 else:
                                     s3_debug("S3Forms", "Cannot find person with ID: %s" % master[pkey])
+                            elif resource.tablename == "pr_person" and \
+                                 fkey == "case_id" and pkey == "id":
+                                # Using dvr_case as a link between pr_person & e.g. project_activity
+                                # @ToDo: Work out generalisation & move to option if-possible
+                                ltable = component.link.table
+                                query = (ltable.person_id == master[pkey])
+                                link_record = db(query).select(ltable.id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+                                if link_record:
+                                    values[fkey] = link_record[pkey]
+                                else:
+                                    s3_debug("S3Forms", "Cannot find case for person ID: %s" % master[pkey])
+                                
                             else:
                                 values[fkey] = master[pkey]
 
