@@ -3005,6 +3005,7 @@ class DRKCreateSiteActivityReport(S3Method):
 
         # Form fields
         table = s3db.dvr_site_activity
+        table.date.default = r.utcnow.date()
         formfields = [table.site_id,
                       table.date,
                       ]
@@ -3268,6 +3269,7 @@ class DRKSiteActivityReport(object):
                   "GU": None,
                   "Transfer": None,
                   "X-Ray": None,
+                  "Querverlegung": None,
                   }
         COMPLETED = 4
         attable = s3db.dvr_case_appointment_type
@@ -3390,6 +3392,7 @@ class DRKSiteActivityReport(object):
                        (T("Admitted on"), "dvr_case.date"),
                        "dvr_case.origin_site_id",
                        date_completed("Transfer"),
+                       date_completed("Querverlegung"),
                        #"dvr_case.closed_on",
                        "dvr_case.status_id",
                        "dvr_case.destination_site_id",
