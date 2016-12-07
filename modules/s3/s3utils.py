@@ -1845,6 +1845,9 @@ class S3CustomController(object):
     """
         Base class for custom controllers (template/controllers.py),
         implements common helper functions
+
+        @ToDo: Add Helper Function for dataTables
+        @ToDo: Add Helper Function for dataLists
     """
 
     @classmethod

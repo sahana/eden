@@ -2285,6 +2285,20 @@ class S3Config(Storage):
         """
         return self.msg.get("notify_renderer")
 
+    def get_msg_notify_attachment(self):
+        """
+            Custom function that returns the list of document_ids to be sent
+            as attachment in email
+            
+            The function may be of the form:
+            custom_msg_notify_attachment(resource, data, meta_data), where
+            resource is the S3Resource, data: the data returned from 
+            S3Resource.select and meta_data: the meta data for the notification
+            (see s3notify for the metadata)
+        """
+
+        return self.msg.get("notify_attachment")
+
     # -------------------------------------------------------------------------
     # SMS
     #

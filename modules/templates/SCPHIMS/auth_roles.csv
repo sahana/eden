@@ -20,6 +20,8 @@ ANONYMOUS,Anonymous,,,,gis_layer_wfs,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_wms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
 ANONYMOUS,Anonymous,,doc,sitrep,,,READ,,,,,Public access to External SitReps
+ANONYMOUS,Anonymous,,event,event,,,READ,,,,,Public access to Responses from Homepage
+ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,Public access to Responses on Homepage
 ANONYMOUS,Anonymous,,project,activity,,,READ,,,,,Public access to 4W information
 ANONYMOUS,Anonymous,,,,project_activity,,READ,,,,,
 ANONYMOUS,Anonymous,,edu,school,,,READ,,,,,Public access to Schools information
@@ -58,6 +60,7 @@ HUM_MANAGER,Humanitarian Manager,,dc,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_collection,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_target,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,event,,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,org,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,project,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,activity,,,ALL,,,,,
