@@ -37,8 +37,12 @@ def person():
         beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
         if beneficiary:
             CASES = T("Beneficiaries")
+            CURRENT = T("Current Beneficiaries")
+            CLOSED = T("Former Beneficiaries")
         else:
             CASES = T("Cases")
+            CURRENT = T("Current Cases")
+            CLOSED = T("Closed Cases")
 
         # Filters to split case list
         if not r.record:
@@ -60,11 +64,11 @@ def person():
             closed = get_vars.get("closed")
             get_status_opts = s3db.dvr_case_status_filter_opts
             if closed == "1":
-                CASES = T("Closed Cases")
+                CASES = CLOSED
                 query &= FS("dvr_case.status_id$is_closed") == True
                 status_opts = lambda: get_status_opts(closed=True)
             elif closed == "0":
-                CASES = T("Current Cases")
+                CASES = CURRENT
                 query &= (FS("dvr_case.status_id$is_closed") == False) | \
                          (FS("dvr_case.status_id$is_closed") == None)
                 status_opts = lambda: get_status_opts(closed=False)

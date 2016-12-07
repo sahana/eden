@@ -188,9 +188,14 @@ def config(settings):
                                                  filter = (FS("root_service") == root_service_id),
                                                  )
 
+                # Adapt label for "facilitator"
+                field = table.facilitator
+                field.label = T("Counselor")
+
                 # Custom list fields
                 list_fields = ["name",
                                "service_id",
+                               "facilitator",
                                "site_id",
                                "room_id",
                                ]
@@ -198,6 +203,7 @@ def config(settings):
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
                                             "service_id",
+                                            "facilitator",
                                             "site_id",
                                             "room_id",
                                             "comments",
@@ -918,7 +924,7 @@ def config(settings):
 
         # Custom prep
         standard_prep = s3.prep
-        def custom_prep(r):            
+        def custom_prep(r):
 
             # Call standard prep
             if callable(standard_prep):
@@ -1011,7 +1017,7 @@ def config(settings):
                                    S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3TextFilter
-                        
+
                     # Custom CRUD form
                     crud_form = S3SQLCustomForm(
                                 (T("Case Status"), "dvr_case.status_id"),
