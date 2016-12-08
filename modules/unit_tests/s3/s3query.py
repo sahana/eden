@@ -67,8 +67,8 @@ class FieldSelectorResolutionTests(unittest.TestCase):
 
         # Drop test tables
         s3db = current.s3db
-        s3db.test_master.drop()
         s3db.test_link.drop()
+        s3db.test_master.drop()
 
         current.db.commit()
 

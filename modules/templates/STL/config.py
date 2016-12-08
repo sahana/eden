@@ -358,16 +358,6 @@ def config(settings):
         elif r.component_name == "case_activity" or r.function == "due_followups":
             # "Individual Support" tab or "Due Follow-ups"
 
-            if r.function == "due_followups":
-                table = r.table
-                component = r.resource
-            else:
-                table = r.component.table
-                component = r.component
-
-            expose_project_id(table)
-            expose_human_resource_id(table)
-
             # Get service root type
             stable = s3db.org_service
             query = (stable.parent == None) & \
@@ -376,9 +366,17 @@ def config(settings):
             service = db(query).select(stable.id, limitby=(0, 1)).first()
             root_service_id = service.id if service else None
 
-            # Filter component for service root types
-            query = (FS("service_id$root_service") == root_service_id)
-            component.add_filter(query)
+            if r.function == "due_followups":
+                table = r.table
+                # Filter activities by root service
+                query = (FS("service_id$root_service") == root_service_id)
+                r.resource.add_filter(query)
+            else:
+                table = r.component.table
+                component = r.component
+
+            expose_project_id(table)
+            expose_human_resource_id(table)
 
             # Adjust validator and widget for service_id
             field = table.service_id
@@ -465,10 +463,6 @@ def config(settings):
             rows = db(query).select(stable.id)
             root_service_ids = [row.id for row in rows]
 
-            # Filter component for service root types
-            query = (FS("service_id$root_service").belongs(root_service_ids))
-            r.component.add_filter(query)
-
             # Filter service types
             field = table.service_id
             field.requires = IS_ONE_OF(db, "org_service.id",
@@ -507,6 +501,10 @@ def config(settings):
 })'''
                s3.jquery_ready.append(script)
 
+            # No follow-ups for PSS
+            table.followup.default = False
+            table.followup_date.default = None
+
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
@@ -536,10 +534,6 @@ def config(settings):
                     (stable.deleted != True)
             service = db(query).select(stable.id, limitby=(0, 1)).first()
             root_service_id = service.id if service else None
-
-            # Filter component for service root type
-            query = (FS("service_id$root_service") == root_service_id)
-            r.component.add_filter(query)
 
             # Filter service types
             field = table.service_id
@@ -593,6 +587,10 @@ def config(settings):
 'optional': true
 })'''
                 s3.jquery_ready.append(script)
+
+            # No follow-ups for MH
+            table.followup.default = False
+            table.followup_date.default = None
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
@@ -871,32 +869,36 @@ def config(settings):
         query = (stable.deleted != True)
         rows = db(query).select(stable.id,
                                 stable.name,
+                                stable.parent,
                                 stable.root_service,
                                 cache = s3db.cache,
+                                orderby = stable.root_service,
                                 )
-        mh_service_id = None
-        is_service_id = None
-        for row in rows:
-            name = row.name
-            if name == "Mental Health":
-                mh_service_id = row.id
-            elif name == "Individual Support":
-                is_service_id = row.id
 
+        # Group service IDs by root service
         mh_service_ids = []
-        mappend = mh_service_ids.append
         is_service_ids = []
-        mappend = is_service_ids.append
         pss_service_ids = []
-        pappend = pss_service_ids.append
+        service_ids = pss_service_ids
+        group = set()
+        root_service = None
         for row in rows:
-            root_service = row.root_service
-            if root_service == mh_service_id:
-                mappend(row.id)
-            elif root_service == mh_service_id:
-                iappend(row.id)
-            else:
-                pappend(row.id)
+            if row.parent is None:
+                name = row.name
+                if name == INDIVIDUAL_SUPPORT:
+                    service_ids = is_service_ids
+                elif name == MENTAL_HEALTH:
+                    service_ids = mh_service_ids
+                else:
+                    # Everything else is PSS
+                    service_ids = pss_service_ids
+            if row.root_service != root_service:
+                if group:
+                    service_ids.extend(group)
+                group = set()
+                root_service = row.root_service
+            group.add(row.id)
+        service_ids.extend(group)
 
         # Custom activity components (differentiated by service type)
         s3db.add_components("pr_person",
