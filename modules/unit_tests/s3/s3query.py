@@ -30,6 +30,121 @@ class FieldSelectorResolutionTests(unittest.TestCase):
     """ Test field selector resolution """
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        # Create a master and a link table for self-reference
+        s3db.define_table("test_master",
+                          Field("name"),
+                          )
+        s3db.define_table("test_link",
+                          Field("parent", "reference test_master"),
+                          Field("child", "reference test_master"),
+                          )
+        current.db.commit()
+
+        # Add both self-references as components (=ambiguous link)
+        s3db.add_components("test_master",
+                            test_master = ({"name": "parent",
+                                            "link": "test_link",
+                                            "joinby": "child",
+                                            "key": "parent",
+                                            },
+                                            {"name": "child",
+                                             "link": "test_link",
+                                             "joinby": "parent",
+                                             "key": "child",
+                                             },
+                                            )
+                            )
+
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Drop test tables
+        s3db = current.s3db
+        s3db.test_master.drop()
+        s3db.test_link.drop()
+
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
+    def testLinkTableRegistration(self):
+        """ Verify alias registration of link tables """
+
+        s3db = current.s3db
+        resource = s3db.resource("test_master")
+
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+
+        links = resource.links
+
+        # Ambigious "link" entry retained for backwards-compatiblity
+        assertIn("link", links)
+
+        # Verify that the parent link is joined using "child" field
+        assertIn("parent__link", links)
+        parent_link = links["parent__link"]
+        assertEqual(parent_link.fkey, "child")
+
+        # Verify that the child link is joined using "parent" field
+        assertIn("child__link", links)
+        child_link = links["child__link"]
+        assertEqual(child_link.fkey, "parent")
+
+    # -------------------------------------------------------------------------
+    def testLinkTableSelectorResolution(self):
+        """ Verify correct resolution of link table selectors """
+
+        s3db = current.s3db
+        resource = s3db.resource("test_master")
+
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+
+        # Verify resolution of parent link selector
+        rfield = resource.resolve_selector("parent__link.parent")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "parent")
+
+        # Verify joins of parent link
+        joins = rfield.left.get("test_link")
+        assertNotEqual(joins, None)
+        actual = [str(j) for j in joins]
+        expected = ("test_link ON (test_master.id = test_link.child)",
+                    "test_master AS test_parent_master ON (test_link.parent = test_parent_master.id)",
+                    )
+        for expression in expected:
+            assertIn(expression, actual)
+
+        # Verify resolution of child link selector
+        rfield = resource.resolve_selector("child__link.child")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "child")
+
+        # Verify joins of child link
+        joins = rfield.left.get("test_link")
+        assertNotEqual(joins, None)
+        actual = [str(j) for j in joins]
+        expected = ("test_link ON (test_master.id = test_link.parent)",
+                    "test_master AS test_child_master ON (test_link.child = test_child_master.id)",
+                    )
+        for expression in expected:
+            assertIn(expression, actual)
+
+        # Link table name in selectors can still be resolved
+        # (although join would be unreliable in this case)
+        rfield = resource.resolve_selector("link.parent")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "parent")
+
+    # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorsWithoutComponents(self):
         """ Field selector resolution without components"""

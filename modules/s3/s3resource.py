@@ -154,19 +154,27 @@ class S3Resource(object):
 
         # Names ---------------------------------------------------------------
 
-        self.table = None
-        self._alias = None
+        table = None
+        table_alias = None
 
         if prefix is None:
             if not isinstance(tablename, basestring):
                 if isinstance(tablename, Table):
-                    self.table = tablename
-                    self._alias = self.table._tablename
-                    tablename = self._alias
+                    table = tablename
+                    table_alias = table._tablename
+                    tablename = table_alias
+
+                    #self.table = tablename
+                    #self._alias = self.table._tablename
+                    #tablename = self._alias
                 elif isinstance(tablename, S3Resource):
-                    self.table = tablename.table
-                    self._alias = self.table._tablename
+                    table = tablename.table
+                    table_alias = table._tablename
                     tablename = tablename.tablename
+
+                    #self.table = tablename.table
+                    #self._alias = self.table._tablename
+                    #tablename = tablename.tablename
                 else:
                     error = "%s is not a valid type for a tablename" % tablename
                     raise SyntaxError(error)
@@ -178,39 +186,35 @@ class S3Resource(object):
             name = tablename
             tablename = "%s_%s" % (prefix, name)
 
-        self.prefix = prefix
-        """ Module prefix of the tablename """
-        self.name = name
-        """ Tablename without module prefix """
         self.tablename = tablename
-        """ Tablename """
-        self.alias = alias or name
-        """
-            Alias of the resource, defaults to tablename
-            without module prefix
-        """
+
+        # Module prefix and resource name
+        self.prefix = prefix
+        self.name = name
+
+        # Resource alias defaults to tablename without module prefix
+        if not alias:
+            alias = name
+        self.alias = alias
 
         # Table ---------------------------------------------------------------
 
-        if self.table is None:
-            self.table = s3db[tablename]
-        table = self.table
+        if table is None:
+            table = s3db[tablename]
 
         # Set default approver
         auth.permission.set_default_approver(table)
 
-        if not self._alias:
-            self._alias = tablename
-            """ Table alias (the tablename used in joins/queries) """
-
         if parent is not None:
             if parent.tablename == self.tablename:
-                alias = "%s_%s_%s" % (prefix, self.alias, name)
+                # Component table same as parent table => must use table alias
+                table_alias = "%s_%s_%s" % (prefix, alias, name)
                 pkey = table._id.name
-                table = table = table.with_alias(alias)
+                table = table.with_alias(table_alias)
                 table._id = table[pkey]
-                self._alias = alias
+
         self.table = table
+        self._alias = table_alias or tablename
 
         self.fields = table.fields
         self._id = table._id
@@ -273,8 +277,8 @@ class S3Resource(object):
             # This is the master resource - attach components
             attach = self._attach
             hooks = s3db.get_components(table, names=components)
-            for alias in hooks:
-                attach(alias, hooks[alias])
+            for component_alias in hooks:
+                attach(component_alias, hooks[component_alias])
 
             # Build query
             self.build_query(id = id,
@@ -289,8 +293,10 @@ class S3Resource(object):
 
         # Component - attach link table
         elif linktable is not None:
-            # This is link-table component - attach the link table
+            # This is a link-table component - attach the link table
+            link_alias = "%s__link" % self.alias
             self.link = S3Resource(linktable,
+                                   alias = link_alias,
                                    parent = self.parent,
                                    linked = self,
                                    include_deleted = self.include_deleted,
@@ -343,7 +349,7 @@ class S3Resource(object):
             table_alias = None
             table = hook.table
 
-        # Create as resource
+        # Instantiate component resource
         component = S3Resource(table,
                                parent = self,
                                alias = alias,
@@ -357,23 +363,27 @@ class S3Resource(object):
             component.tablename = hook.tablename
             component._alias = table_alias
 
-        # Update component properties
+        # Copy hook properties to the component resource
         component.pkey = hook.pkey
         component.fkey = hook.fkey
+
         component.linktable = hook.linktable
         component.lkey = hook.lkey
         component.rkey = hook.rkey
         component.actuate = hook.actuate
         component.autodelete = hook.autodelete
         component.autocomplete = hook.autocomplete
-        component.alias = alias
+
+        #component.alias = alias
         component.multiple = hook.multiple
         component.defaults = hook.defaults
 
+        # Component filter
         if not filterby:
             # Can use filterby=False to enforce table aliasing yet
-            # suppress component filtering (useful e.g. with two
-            # foreign key links from the same table)
+            # suppress component filtering, useful e.g. if the same
+            # table is declared as component more than once for the
+            # same master table (using different foreign keys)
             component.filter = None
 
         else:
@@ -420,19 +430,23 @@ class S3Resource(object):
 
             component.filter = query
 
-        # Copy properties to the link
-        if component.link is not None:
-            link = component.link
+        # Copy component properties to the link resource
+        link = component.link
+        if link is not None:
+
             link.pkey = component.pkey
             link.fkey = component.lkey
+
+            link.multiple = component.multiple
+
             link.actuate = component.actuate
             link.autodelete = component.autodelete
-            link.multiple = component.multiple
-            # @todo: possible ambiguity if the same link is used
-            #        in multiple components (e.g. filtered or 3-way),
-            #        need a better aliasing mechanism here
-            self.links[link.name] = link
 
+            # Register the link table
+            links = self.links
+            links[link.name] = links[link.alias] = link
+
+        # Register the component
         self.components[alias] = component
 
     # -------------------------------------------------------------------------
