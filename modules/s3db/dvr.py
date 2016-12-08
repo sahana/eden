@@ -6170,9 +6170,15 @@ def dvr_rheader(r, tabs=[]):
 
         elif tablename == "dvr_activity":
 
+            label = current.deployment_settings.get_dvr_label()
+            if label == "Beneficiary":
+                CASES = T("Beneficiaries")
+            else:
+                CASES = T("Cases")
+
             if not tabs:
                 tabs = [(T("Basic Details"), None),
-                        (T("Cases"), "case_activity"),
+                        (CASES, "case_activity"),
                         ]
 
             rheader_fields = [["name"],
