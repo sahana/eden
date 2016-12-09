@@ -177,7 +177,7 @@ class S3FireStationModel(S3Model):
                                          IS_NOT_IN_DB(db, "fire_station.code"),
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "fire_station"
         define_table(tablename,
@@ -187,7 +187,9 @@ class S3FireStationModel(S3Model):
                      Field("name", notnull=True,
                            length=64,           # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("code", length=10,   # Mayon compatibility
                            label = T("Code"),

@@ -162,7 +162,9 @@ class SyncDataModel(S3Model):
                                          _title="%s|%s" % (
                                                 T("Repository Name"),
                                                 T("Name of the repository (for you own reference)"))),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("apitype",
                            default = "eden",

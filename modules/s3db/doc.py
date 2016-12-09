@@ -143,7 +143,7 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            label = T("Name")
                            ),
                      Field("url",
@@ -277,7 +277,7 @@ class S3DocumentLibrary(S3Model):
                      Field("name", length=128,
                            label = T("Name"),
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            ),
                      Field("url",
                            label = T("URL"),

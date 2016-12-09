@@ -48,6 +48,7 @@ from gluon import *
 from s3datetime import s3_encode_iso_datetime
 from s3error import S3PermissionError
 from s3forms import S3SQLDefaultForm, S3SQLField
+from s3query import S3ResourceField
 from s3rest import S3Method
 from s3utils import s3_str, s3_unicode
 from s3validators import JSONERRORS, SEPARATORS
@@ -354,57 +355,76 @@ class S3MobileCRUD(S3Method):
         resource = r.resource
         resource_tablename = resource.tablename
         output = {resource_tablename: []}
+        # Lookup for FKs
         tablenames = {resource_tablename: None}
+
+        # Default to the 'mobile_list_fields' setting
         list_fields = resource.get_config("mobile_list_fields")
         if not list_fields:
+            # Fallback to the 'list_fields' setting
             list_fields = resource.get_config("list_fields")
         if not list_fields:
+            # Fallback to all readable fields
             list_fields = [field.name for field in resource.readable_fields()]
-            if UID not in list_fields:
-                list_fields.append(UID)
-            rfields = ["%s.%s" % (resource_tablename, f) for f in list_fields] 
         else:
+            # Ensure that we have all UID fields included
+            # @ToDo: Ensure we have FKs between all linked records
             components = resource.components
-            rfields = [] 
-            for field in list_fields:
-                if "." in field:
-                    component, fieldname = field.split(".", 1)
+            for selector in list_fields:
+                rfield = S3ResourceField(resource, selector)
+                tablename = rfield.tname
+                if tablename not in tablenames:
+                    tablenames[tablename] = component
+                    output[tablename] = []
+                    #uuid_field = "%s.%s" % (tablename, UID) 
+                    #if uuid_field not in list_fields:
+                    #    list_fields.append(uuid_field)
+
+                if "." in fieldname:
+                    # Lookup component tablename
+                    component, fieldname = fieldname.split(".", 1)
                     
                     if component not in components:
                         continue
                     tablename = components[component].table._tablename # This way to get aliases
                     if tablename not in tablenames: 
-                        tablenames[tablename] = component
-                        output[tablename] = []
+                        #tablenames[tablename] = None
+                        #output[tablename] = []
                         uuid_field = "%s.%s" % (component, UID) 
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
                     if "$" in fieldname:
-                        # @ToDo! Handle address.location_id$...
                         # Lookup linked tablename
-                        fk, field = field.split("$", 1)
+                        fk, fieldname = fieldname.split("$", 1)
                         table = s3db.table(tablename)
                         tablename = table[fk].type.split("references ", 1)[1]
-                        rfields.append("%s.%s" % (tablename, field))
                         if tablename not in tablenames: 
-                            tablenames[tablename] = component
-                            output[tablename] = []
-                            uuid_field = "%s.%s" % (component, UID) 
+                            #tablenames[tablename] = None
+                            #output[tablename] = []
+                            uuid_field = "%s.%s$%s" % (component, fk, UID) 
                             if uuid_field not in list_fields:
                                 list_fields.append(uuid_field)
-                    else:
-                        rfields.append("%s.%s" % (tablename, field))
+
                 elif "$" in fieldname:
-                    # @ToDo! Handle location_id$...
-                    raise NotImplementedError
-                else:
-                    rfields.append("%s.%s" % (resource_tablename, field))
-            if UID not in list_fields:
-                list_fields.append(UID)
-                rfields.append("%s.%s" % (resource_tablename, UID))
+                    # Lookup linked tablename
+                    fk, fieldname = fieldname.split("$", 1)
+                    table = s3db.table(resource_tablename)
+                    tablename = table[fk].type.split("references ", 1)[1]
+                    if tablename not in tablenames: 
+                        #tablenames[tablename] = None
+                        #output[tablename] = []
+                        uuid_field = "%s$%s" % (fk, UID) 
+                        if uuid_field not in list_fields:
+                            list_fields.append(uuid_field)
+
+        if UID not in list_fields:
+            list_fields.append(UID)
+
         #data = resource.select(list_fields, as_rows=True)
         data = resource.select(list_fields, raw_data=True)
-        # @ToDo: Ensure we have FKs between all linked records (ID replaced with UUID)
+
+        # Convert to S3Mobile format
+        # @ToDo: replace FKs with UUID
         for record in data.rows:
             row = {tablename: [] for tablename in tablenames}
             for field in record:

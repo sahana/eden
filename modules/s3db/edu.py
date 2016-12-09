@@ -78,7 +78,9 @@ class S3SchoolModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ]
                            ),
                      #organisation_id(default = root_org if org_dependent_types else None,
                      #                readable = is_admin if org_dependent_types else False,
@@ -145,7 +147,7 @@ class S3SchoolModel(S3Model):
                                          IS_NOT_IN_DB(db, "edu_school.code"),
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "edu_school"
         define_table(tablename,
@@ -155,7 +157,9 @@ class S3SchoolModel(S3Model):
                      Field("name", notnull=True,
                            length=64,           # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),

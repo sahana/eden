@@ -129,8 +129,9 @@ class S3DeploymentModel(S3Model):
                                           ),
                      # @ToDo: Link to event_type via event_id link table instead of duplicating
                      self.event_type_id(),
-                     Field("code", length = 24,
+                     Field("code", length=24,
                            represent = lambda v: s3_unicode(v) if v else NONE,
+                           requires = IS_LENGTH(24),
                            ),
                      Field("status", "integer",
                            default = 2,
@@ -853,7 +854,7 @@ class S3DeploymentAlertModel(S3Model):
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject"),
                            # Not used by SMS
-                           #requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(78),
                            ),
                      Field("body", "text",
                            label = T("Message"),

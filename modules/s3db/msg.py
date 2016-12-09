@@ -605,7 +605,9 @@ class S3EmailModel(S3ChannelModel):
                      Field("username"),
                      Field("password", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            widget = S3PasswordWidget(),
                            ),
                      # Set true to delete messages from the remote
@@ -643,7 +645,7 @@ class S3EmailModel(S3ChannelModel):
                      s3_datetime(default = "now"),
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject"),
-                           requires = IS_EMPTY_OR(IS_LENGTH(78)),
+                           requires = IS_LENGTH(78),
                            ),
                      Field("body", "text",
                            label = T("Message"),
@@ -737,7 +739,9 @@ class S3FacebookModel(S3ChannelModel):
                            ),
                      Field("app_secret", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            widget = S3PasswordWidget(),
                            ),
                      # Optional
@@ -862,7 +866,9 @@ class S3MCommonsModel(S3ChannelModel):
                            represent = s3_yes_no_represent,
                            ),
                      Field("campaign_id", length=128, unique=True,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("url",
                            default = \
@@ -1624,10 +1630,10 @@ class S3SMSOutboundModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("address", length=64,
-                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("subject", length=64,
-                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("enabled", "boolean",
                            default = True,
@@ -1812,11 +1818,15 @@ class S3TwilioModel(S3ChannelModel):
                                "https://api.twilio.com/2010-04-01/Accounts"
                            ),
                      Field("account_sid", length=64,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("auth_token", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            widget = S3PasswordWidget(),
                            ),
                      *s3_meta_fields())
@@ -1951,6 +1961,7 @@ class S3TwitterModel(S3Model):
                                  ),
                      Field("body", length=140,
                            label = T("Message"),
+                           requires = IS_LENGTH(140),
                            ),
                      Field("from_address", #notnull=True,
                            label = T("From"),
@@ -2399,7 +2410,7 @@ class S3BaseStationModel(S3Model):
                                          IS_NOT_IN_DB(db, "msg_basestation.code")
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "msg_basestation"
         self.define_table(tablename,
@@ -2407,7 +2418,9 @@ class S3BaseStationModel(S3Model):
                           Field("name", notnull=True,
                                 length=64, # Mayon Compatibility
                                 label = T("Name"),
-                                requires = IS_LENGTH(64),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("code", length=10, # Mayon compatibility
                                 label = T("Code"),

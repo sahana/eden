@@ -134,7 +134,9 @@ class S3OrganisationModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("parent", "reference org_organisation_type", # This form of hierarchy may not work on all Databases
                            label = T("SubType of"),
@@ -237,7 +239,9 @@ class S3OrganisationModel(S3Model):
             define_table(tablename,
                          Field("name", length=128,
                                label = T("Name"),
-                               requires = IS_LENGTH(64),
+                               requires = [IS_NOT_EMPTY(),
+                                           IS_LENGTH(64),
+                                           ],
                                ),
                          Field("parent", "reference org_region", # This form of hierarchy may not work on all Databases
                                # Label hard-coded for IFRC currently
@@ -348,12 +352,15 @@ class S3OrganisationModel(S3Model):
                      Field("name", notnull=True,
                            length=128, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      # http://hxl.humanitarianresponse.info/#abbreviation
                      Field("acronym", length=16,
                            label = T("Acronym"),
                            represent = lambda val: val or "",
+                           requires = IS_LENGTH(16),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Acronym"),
                                                            T("Acronym of the organization's name, eg. IFRC.")))
@@ -1547,7 +1554,9 @@ class S3OrganisationGroupModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      Field("name", notnull=True, unique=True, length=128,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("mission",
                            label = T("Mission"),
@@ -1661,7 +1670,9 @@ class S3OrganisationGroupModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, unique=True, length=128,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields()
@@ -1779,7 +1790,9 @@ class S3OrganisationGroupPersonModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, unique=True, length=128,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields()
@@ -2182,7 +2195,9 @@ class S3OrganisationSectorModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                     else NONE,
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("abrv", length=64, #notnull=True,
                            label = T("Abbreviation"),
@@ -2492,7 +2507,9 @@ class S3OrganisationServiceModel(S3Model):
                            ),
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      # This form of hierarchy may not work on all Databases:
                      Field("parent", "reference org_service",
@@ -3131,7 +3148,9 @@ class S3SiteModel(S3Model):
                                 length = 64, # Mayon compatibility
                                 #unique=True,
                                 label = T("Name"),
-                                requires = IS_LENGTH(64),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           self.gis_location_id(),
                           self.org_organisation_id(),
@@ -3931,7 +3950,7 @@ class S3FacilityModel(S3Model):
                                          IS_NOT_IN_DB(db, "org_facility.code"),
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "org_facility"
         define_table(tablename,
@@ -3942,7 +3961,9 @@ class S3FacilityModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("code", length=10, # Mayon compatibility
                            #notnull=True,
@@ -4484,7 +4505,9 @@ class S3RoomModel(S3Model):
                           self.org_site_id, # site_id
                           Field("name", length=128, notnull=True,
                                 label = T("Name"),
-                                requires = IS_LENGTH(128),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(128),
+                                            ],
                                 ),
                           *s3_meta_fields())
 
@@ -4580,7 +4603,9 @@ class S3OfficeModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -4648,7 +4673,7 @@ class S3OfficeModel(S3Model):
                                          IS_NOT_IN_DB(db, "org_office.code"),
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "org_office"
         define_table(tablename,
@@ -4658,7 +4683,9 @@ class S3OfficeModel(S3Model):
                      Field("name", notnull=True,
                            length=64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),

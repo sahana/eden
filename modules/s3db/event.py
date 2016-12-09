@@ -111,7 +111,9 @@ class S3EventModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
                            label = T("SubType of"),
@@ -214,7 +216,9 @@ class S3EventModel(S3Model):
                      Field("name",      # Name could be a code
                            length = 64,   # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      event_type_id(),
                      #Field("intensity",
@@ -663,7 +667,9 @@ class S3IncidentModel(S3Model):
                           Field("name", notnull=True, # Name could be a code
                                 length = 64,
                                 label = T("Name"),
-                                requires = IS_LENGTH(64),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("exercise", "boolean",
                                 label = T("Exercise?"),
@@ -1547,7 +1553,9 @@ class S3IncidentTypeModel(S3Model):
         self.define_table(tablename,
                           Field("name", notnull=True, length=64,
                                 label = T("Name"),
-                                requires = IS_LENGTH(64),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("parent", "reference event_incident_type", # This form of hierarchy may not work on all Databases
                                 label = T("SubType of"),
@@ -1725,7 +1733,7 @@ class S3EventAlertModel(S3Model):
                      Field("subject", length=78,    # RFC 2822
                            comment = T("The subject of the alert (optional)"),
                            label = T("Subject"),
-                           requires = IS_EMPTY_OR(IS_LENGTH(78)),
+                           requires = IS_LENGTH(78),
                            ),
                      Field("body", "text",
                            label = T("Message"),
@@ -2144,7 +2152,9 @@ class S3EventTeamModel(S3Model):
                      Field("name",
                            length = 64,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields())

@@ -134,7 +134,7 @@ class S3LocationModel(S3Model):
                   label = T("Name"),
                   # Placenames don't have to be unique.
                   # Waypoints don't need to have a name at all.
-                  requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                  requires = IS_LENGTH(128),
                   ),
             Field("level", length=2,
                   label = T("Level"),
@@ -231,6 +231,7 @@ class S3LocationModel(S3Model):
             Field("addr_postcode", length=128,
                   label = settings.get_ui_label_postcode(),
                   represent = lambda v: v or NONE,
+                  requires = IS_LENGTH(128),
                   ),
             s3_date("start_date",
                     label = T("Start Date"),
@@ -1643,7 +1644,9 @@ class S3GISConfigModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ]
                            ),
                      # If-needed, then Symbology should be here
                      #symbology_id(),
@@ -1737,7 +1740,9 @@ class S3GISConfigModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("epsg", "integer", notnull=True,
                            label = "EPSG",
@@ -1749,7 +1754,9 @@ class S3GISConfigModel(S3Model):
                                          _title="%s|%s" % (T("Maximum Extent"),
                                                            T("The Maximum valid bounds, in projected coordinates"))),
                            # @ToDo: Add a specialised validator
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("proj4js",
                            label = proj4js,
@@ -2574,6 +2581,7 @@ class S3LayerEntityModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Folder"),
                                                            T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher. A sub-folder can be created by separating names with a '/'"))),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("base", "boolean",
                            default = False,
@@ -3103,7 +3111,9 @@ class S3MapModel(S3Model):
         tablename = "gis_feature_query"
         define_table(tablename,
                      Field("name", length=128, notnull=True,
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("lat", "double",
                            requires = IS_LAT(),
@@ -3858,6 +3868,7 @@ class S3MapModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Map"),
                                                            T("Optional selection of a MapServer map."))),
+                           requires = IS_LENGTH(32),
                            ),
                      Field("layers",
                            label = T("Layers"),
@@ -3886,6 +3897,7 @@ class S3MapModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Style"),
                                                            T("Optional selection of an alternate style."))),
+                           requires = IS_LENGTH(32),
                            ),
                      Field("bgcolor", length=32,
                            label = T("Background Color"),
@@ -4008,7 +4020,9 @@ class S3MapModel(S3Model):
         tablename = "gis_cache2"
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
-                           requires = IS_LENGTH(128),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("file", "upload",
                            autodelete = True,
@@ -4900,7 +4914,9 @@ def name_field():
     return S3ReusableField("name", length=64, notnull=True,
                            #unique=True,
                            label = current.T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            )
 
 # =============================================================================

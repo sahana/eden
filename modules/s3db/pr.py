@@ -275,8 +275,11 @@ class S3PersonEntity(S3Model):
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
                                       label = T("ID Tag Number"),
-                                      requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db,
-                                                             "pr_pentity.pe_label")),
+                                      requires = IS_EMPTY_OR(
+                                                    [IS_LENGTH(128),
+                                                     IS_NOT_ONE_OF(db,
+                                                        "pr_pentity.pe_label"),
+                                                     ]),
                                       )
 
         # Custom Method for S3AutocompleteWidget
@@ -763,9 +766,11 @@ class S3PersonModel(S3Model):
                                     )
 
         if settings.get_L10n_mandatory_lastname():
-            last_name_validate = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
+            last_name_validate = [IS_NOT_EMPTY(error_message = T("Please enter a last name")),
+                                  IS_LENGTH(64),
+                                  ]
         else:
-            last_name_validate = None
+            last_name_validate = IS_LENGTH(64)
 
         # Add an opt-in clause to receive emails depending on the
         # deployment settings
@@ -805,7 +810,9 @@ class S3PersonModel(S3Model):
                   label = T("First Name"),
                   # NB Not possible to have an IS_NAME() validator here
                   # http://eden.sahanafoundation.org/ticket/834
-                  requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
+                  requires = [IS_NOT_EMPTY(error_message = T("Please enter a first name")),
+                              IS_LENGTH(64),
+                              ],
                   comment =  DIV(_class="tooltip",
                                  _title="%s|%s" % (T("First Name"),
                                                    T("The first or only name of the person (mandatory)."))),
@@ -813,6 +820,7 @@ class S3PersonModel(S3Model):
             Field("middle_name", length=64, # Mayon Compatibility
                   label = T("Middle Name"),
                   represent = lambda v: v or NONE,
+                  requires = IS_LENGTH(64),
                   ),
             Field("last_name", length=64, # Mayon Compatibility
                   label = T("Last Name"),
@@ -822,6 +830,7 @@ class S3PersonModel(S3Model):
             # @ToDo: Move to person_details & hide by default
             Field("initials", length=8,
                   label = T("Initials"),
+                  requires = IS_LENGTH(8),
                   ),
             # @ToDo: Move to person_details & hide by default
             Field("preferred_name", length=64, # Mayon Compatibility
@@ -829,6 +838,7 @@ class S3PersonModel(S3Model):
                   comment = DIV(_class="tooltip",
                                 _title="%s|%s" % (T("Preferred Name"),
                                                   T("The name to be used when calling for or directly addressing the person (optional)."))),
+                  requires = IS_LENGTH(64),
                   ),
             # @ToDo: Move to person_details & hide by default
             Field("local_name",
@@ -2137,12 +2147,12 @@ class S3GroupModel(S3Model):
                      Field("code", length=16,
                            label = T("Code"),
                            # Make mandatory in template if-required
-                           requires = IS_EMPTY_OR(IS_LENGTH(16)),
+                           requires = IS_LENGTH(16),
                            ),
                      Field("name", length=64,
                            label = T("Name"),
                            # Make mandatory in template if-required
-                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
+                           requires = IS_LENGTH(64),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2340,7 +2350,9 @@ class S3GroupModel(S3Model):
         define_table(tablename,
                      Field("name", length=64,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("group_type", "integer",
                            default = 4,
@@ -3845,7 +3857,9 @@ class S3PersonEducationModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True,
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -4146,6 +4160,7 @@ class S3PersonDetailsModel(S3Model):
                           Field("occupation", length=128, # Mayon Compatibility
                                 label = T("Profession"),
                                 represent = lambda v: v or NONE,
+                                requires = IS_LENGTH(128),
                                 ),
                           Field("company",
                                 label = T("Company"),
@@ -5061,6 +5076,7 @@ class S3PersonDescription(S3Model):
                      Field("ethnicity", length=64, # Mayon Compatibility
                            label = T("Ethnicity"),
                            #requires = IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
+                           requires = IS_LENGTH(64),
                            ),
                      # Height and weight
                      Field("height", "integer",

@@ -207,7 +207,7 @@ class S3WarehouseModel(S3Model):
                                          IS_NOT_IN_DB(db, "inv_warehouse.code"),
                                          ])
         else:
-            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+            code_requires = IS_LENGTH(10)
 
         tablename = "inv_warehouse"
         define_table(tablename,
@@ -217,7 +217,9 @@ class S3WarehouseModel(S3Model):
                      Field("name", notnull=True,
                            length=64,           # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_LENGTH(64),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
@@ -455,9 +457,10 @@ class S3InventoryModel(S3Model):
                                 requires = IS_FLOAT_IN_RANGE(0, None),
                                 writable = False,
                                 ),
-                          Field("bin", "string", length=16,
+                          Field("bin", length=16,
                                 label = T("Bin"),
                                 represent = lambda v: v or NONE,
+                                requires = IS_LENGTH(16),
                                 ),
                           # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
@@ -487,9 +490,10 @@ class S3InventoryModel(S3Model):
                           s3_currency(readable = track_pack_values,
                                       writable = track_pack_values,
                                       ),
-                          Field("item_source_no", "string", length=16,
+                          Field("item_source_no", length=16,
                                 label = self.inv_itn_label,
                                 represent = lambda v: v or NONE,
+                                requires = IS_LENGTH(16),
                                 ),
                           # Organisation that owns this item
                           organisation_id("owner_org_id",
@@ -1671,11 +1675,13 @@ class S3InventoryTrackingModel(S3Model):
                      Field("bin", length=16,
                            label = T("Bin"),
                            represent = s3_string_represent,
-                           writable = False,
+                           requires = IS_LENGTH(16),
+                                writable = False,
                            ),
-                     Field("item_source_no", "string", length=16,
+                     Field("item_source_no", length=16,
                            label = self.inv_itn_label,
                            represent = s3_string_represent,
+                           requires = IS_LENGTH(16),
                            ),
                      inv_item_id(ondelete = "RESTRICT",
                                  readable = False,
@@ -1759,6 +1765,7 @@ $.filterOptionsS3({
                      Field("bin", length=16,
                            label = T("Bin"),
                            represent = s3_string_represent,
+                           requires = IS_LENGTH(16),
                            ),
                      inv_item_id(name="recv_inv_item_id",
                                  label = T("Receiving Inventory"),
@@ -1771,6 +1778,7 @@ $.filterOptionsS3({
                      Field("recv_bin", length=16,
                            label = T("Add to Bin"),
                            represent = s3_string_represent,
+                           requires = IS_LENGTH(16),
                            readable = False,
                            writable = False,
                            # Nice idea but not working properly
@@ -1780,9 +1788,10 @@ $.filterOptionsS3({
                                                 (T("Bin"),
                                                  T("The Bin in which the Item is being stored (optional)."))),
                            ),
-                     Field("item_source_no", "string", length=16,
+                     Field("item_source_no", length=16,
                            label = self.inv_itn_label,
                            represent = s3_string_represent,
+                           requires = IS_LENGTH(16),
                            ),
                      # Organisation which originally supplied/donated item(s)
                      organisation_id("supply_org_id",
@@ -4474,9 +4483,11 @@ class S3InventoryAdjustModel(S3Model):
                            requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            ),
                      s3_date("expiry_date",
-                             label = T("Expiry Date")),
-                     Field("bin", "string", length=16,
+                             label = T("Expiry Date"),
+                             ),
+                     Field("bin", length=16,
                            label = T("Bin"),
+                           requires = IS_LENGTH(16),
                            # @ToDo:
                            #widget = S3InvBinWidget("inv_adj_item")
                            ),

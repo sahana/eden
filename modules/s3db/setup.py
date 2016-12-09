@@ -118,6 +118,7 @@ class S3DeployModel(S3Model):
                            label = T("Private Key"),
                            length = current.MAX_FILENAME_LENGTH,
                            required = True,
+                           requires = IS_LENGTH(current.MAX_FILENAME_LENGTH),
                            ),
                      Field("webserver_type", "integer",
                            label = T("Web Server"),

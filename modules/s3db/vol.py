@@ -693,6 +693,7 @@ class S3VolunteerAwardModel(S3Model):
                            label = T("Attachment"),
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.vol_award_file_represent,
+                           requires = IS_LENGTH(current.MAX_FILENAME_LENGTH),
                            # Enable in templates as-required
                            readable = False,
                            writable = False,
@@ -761,8 +762,12 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         define_table(tablename,
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -803,8 +808,12 @@ class S3VolunteerClusterModel(S3Model):
         tablename = "vol_cluster"
         define_table(tablename,
                      vol_cluster_type_id(),
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -845,8 +854,12 @@ class S3VolunteerClusterModel(S3Model):
         #
         tablename = "vol_cluster_position"
         define_table(tablename,
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(

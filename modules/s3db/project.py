@@ -168,10 +168,13 @@ class S3ProjectModel(S3Model):
                            # no filter) in order to allow both automatic indexing (faster)
                            # and key-based de-duplication (i.e. before field validation)
                            requires = [IS_NOT_EMPTY(error_message=T("Please fill this!")),
-                                       IS_NOT_ONE_OF(db, "project_project.name")]
+                                       IS_LENGTH(255),
+                                       IS_NOT_ONE_OF(db, "project_project.name")
+                                       ],
                            ),
                      Field("code", length=128,
                            label = T("Short Title / ID"),
+                           requires = IS_LENGTH(128),
                            readable = use_codes,
                            writable = use_codes,
                            ),
@@ -1616,7 +1619,9 @@ class S3ProjectActivityTypeModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1776,7 +1781,8 @@ class S3ProjectActivityCaseModel(S3Model):
                                 represent = self.doc_image_represent,
                                 requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
                                                                  error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
-                                            IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
+                                            IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                                            ],
                                 uploadfolder = os.path.join(
                                                 current.request.folder, "uploads"),
                                 ),
@@ -2028,8 +2034,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
-                           requires = IS_NOT_IN_DB(db,
-                                                   "project_beneficiary_type.name"),
+                           requires = [IS_LENGTH(128),
+                                       IS_NOT_IN_DB(db,
+                                                    "project_beneficiary_type.name"),
+                                       ],
                            ),
                      s3_comments("description",
                                  label = T("Description"),
@@ -2442,8 +2450,9 @@ class S3ProjectCampaignModel(S3Model):
                      #self.project_project_id(),
                      Field("name", length=128, #unique=True,
                            label = T("Name"),
-                           #requires = IS_NOT_IN_DB(db,
-                           #                        "project_campaign.name")
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ]
                            ),
                      s3_comments("description",
                                  label = T("Description"),
@@ -2493,8 +2502,7 @@ class S3ProjectCampaignModel(S3Model):
         define_table(tablename,
                      campaign_id(),
                      Field("name", length=128, #unique=True,
-                           #requires = IS_NOT_IN_DB(db,
-                           #                        "project_campaign.name")
+                           requires = IS_LENGTH(128),
                            ),
                      s3_comments("message",
                                  label = T("Message")),
@@ -2553,8 +2561,10 @@ class S3ProjectCampaignModel(S3Model):
                      super_link("parameter_id", "stats_parameter"),
                      Field("name", length=128, unique=True,
                            label = T("Name"),
-                           requires = IS_NOT_IN_DB(db,
-                                                   "project_campaign_keyword.name"),
+                           requires = [IS_LENGTH(128),
+                                       IS_NOT_IN_DB(db,
+                                                    "project_campaign_keyword.name"),
+                                       ],
                            ),
                      s3_comments("description",
                                  label = T("Description"),
@@ -2709,6 +2719,10 @@ class S3ProjectFrameworkModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
                      Field("name", length=255, unique=True,
                            label = T("Name"),
+                           requires = [IS_LENGTH(255),
+                                       IS_NOT_IN_DB(db,
+                                                    "project_framework.name"),
+                                       ],
                            ),
                       s3_comments("description",
                                   label = T("Description"),
@@ -3054,8 +3068,10 @@ class S3ProjectIndicatorModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
-                           requires = IS_NOT_IN_DB(db,
-                                                   "project_indicator.name"),
+                           requires = [IS_LENGTH(128),
+                                       IS_NOT_IN_DB(db,
+                                                    "project_indicator.name"),
+                                       ],
                            ),
                      s3_comments("description",
                                  label = T("Description"),
@@ -7187,7 +7203,9 @@ class S3ProjectStatusModel(S3Model):
         self.define_table(tablename,
                           Field("name", length=128, notnull=True, unique=True,
                                 label = T("Name"),
-                                requires = IS_NOT_EMPTY(),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(128),
+                                            ],
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -7265,7 +7283,9 @@ class S3ProjectThemeModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      s3_comments(
                         represent = lambda v: T(v) if v is not None \
@@ -7974,7 +7994,9 @@ class S3ProjectTaskModel(S3Model):
                            ),
                      Field("name", length=100, notnull=True,
                            label = T("Short Description"),
-                           requires = IS_LENGTH(maxsize=100, minsize=1),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(100),
+                                       ]
                            ),
                      Field("description", "text",
                            label = T("Detailed Description/URL"),
@@ -8510,6 +8532,7 @@ class S3ProjectTaskModel(S3Model):
                      Field("role", length=128, notnull=True, unique=True,
                            label = T("Role"),
                            requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
                                        IS_NOT_ONE_OF(db,
                                                      "project_role.role",
                                                      ),
