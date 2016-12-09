@@ -2136,13 +2136,13 @@ class S3GroupModel(S3Model):
         define_table(tablename,
                      Field("code", length=16,
                            label = T("Code"),
-                           # Set in template if-required
-                           #requires = IS_NOT_EMPTY(),
+                           # Make mandatory in template if-required
+                           requires = IS_EMPTY_OR(IS_LENGTH(16)),
                            ),
                      Field("name", length=64,
                            label = T("Name"),
-                           # Set in template if-required
-                           #requires = IS_NOT_EMPTY(),
+                           # Make mandatory in template if-required
+                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2340,7 +2340,7 @@ class S3GroupModel(S3Model):
         define_table(tablename,
                      Field("name", length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("group_type", "integer",
                            default = 4,
@@ -3845,7 +3845,7 @@ class S3PersonEducationModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately

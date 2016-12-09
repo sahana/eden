@@ -1305,6 +1305,7 @@ class S3RSSModel(S3ChannelModel):
                      super_link("channel_id", "msg_channel"),
                      Field("name", length=255, unique=True,
                            label = T("Name"),
+                           requires = IS_LENGTH(255),
                            ),
                      Field("description",
                            label = T("Description"),
@@ -1623,9 +1624,11 @@ class S3SMSOutboundModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("address", length=64,
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
                            ),
-                     Field("subject", length=64),
+                     Field("subject", length=64,
+                           requires = IS_EMPTY_OR(IS_LENGTH(64)),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            ),
@@ -2392,9 +2395,11 @@ class S3BaseStationModel(S3Model):
 
         if current.deployment_settings.get_msg_basestation_code_unique():
             db = current.db
-            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "msg_basestation.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "msg_basestation.code")
+                                         ])
         else:
-            code_unique = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "msg_basestation"
         self.define_table(tablename,
@@ -2402,11 +2407,11 @@ class S3BaseStationModel(S3Model):
                           Field("name", notnull=True,
                                 length=64, # Mayon Compatibility
                                 label = T("Name"),
-                                requires = IS_NOT_EMPTY(),
+                                requires = IS_LENGTH(64),
                                 ),
                           Field("code", length=10, # Mayon compatibility
                                 label = T("Code"),
-                                requires = code_unique,
+                                requires = code_requires,
                                 ),
                           self.org_organisation_id(
                                  label = T("Operator"),

@@ -694,6 +694,7 @@ class S3DocSitRepModel(S3Model):
                           self.super_link("doc_id", "doc_entity"),
                           Field("name", length=128,
                                label = T("Name"),
+                               requires = IS_LENGTH(128),
                                ),
                           Field("description", "text",
                                 label = T("Description"),

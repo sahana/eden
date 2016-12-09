@@ -149,7 +149,7 @@ class S3HRModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -2030,7 +2030,7 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, unique=True, length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2083,7 +2083,7 @@ class S3HRSkillModel(S3Model):
                      Field("name", notnull=True, unique=True,
                            length=64,    # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2176,7 +2176,7 @@ class S3HRSkillModel(S3Model):
                      Field("name",
                            length=64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("priority", "integer",
                            default = 1,
@@ -2291,6 +2291,7 @@ class S3HRSkillModel(S3Model):
         #             Field("name", notnull=True, unique=True,
         #                   length=32,    # Mayon compatibility
         #                   label = T("Name"),
+        #                   requires = IS_LENGTH(32),
         #                   ),
         #             job_title_id(),
         #             skill_id(),
@@ -2352,12 +2353,13 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("code", length=64,
                            label = T("Code"),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(128),
                            ),
                      # Optionally restrict to Staff/Volunteers/Members
                      Field("type", "integer",
@@ -2905,7 +2907,7 @@ class S3HRSkillModel(S3Model):
                      Field("name", notnull=True,
                            length=128,   # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(128),
                            ),
                      organisation_id(default = root_org if filter_certs else None,
                                      label = label,
@@ -4257,7 +4259,7 @@ class S3HRProgrammeModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("name_long",
                            label = T("Long Name"),

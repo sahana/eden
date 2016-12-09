@@ -1185,7 +1185,7 @@ class DVRNotesModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, unique=True,
                            label = T("Name"),
-                           requires = [IS_NOT_EMPTY(),
+                           requires = [IS_LENGTH(128),
                                        IS_NOT_ONE_OF(db,
                                                      "dvr_note_type.name",
                                                      ),
@@ -1669,7 +1669,7 @@ class DVRCaseAppointmentModel(S3Model):
         tablename = "dvr_case_appointment_type"
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
-                           requires = [IS_NOT_EMPTY(),
+                           requires = [IS_LENGTH(64),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),

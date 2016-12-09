@@ -148,7 +148,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      # Code is part of the SE
                      Field("code",
@@ -162,11 +162,15 @@ class S3TransportModel(S3Model):
                      # Other codes can be added as tags if-required, but these 2 are so common that they are worth putting directly in the table
                      Field("icao", length=4,
                            label = T("ICAO"),
-                           requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_airport.icao")),
+                           requires = IS_EMPTY_OR(
+                                        IS_NOT_IN_DB(db, "transport_airport.icao")
+                                        ),
                            ),
                      Field("iata", length=3,
                            label = T("IATA"),
-                           requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_airport.iata")),
+                           requires = IS_EMPTY_OR(
+                                        IS_NOT_IN_DB(db, "transport_airport.iata")
+                                        ),
                            ),
                      # @ToDo: Expose Elevation & Lat/Lon to Widget
                      location_id(),
@@ -347,7 +351,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("code",
                            label = T("Code"),
@@ -416,7 +420,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("code",
                            label = T("Code"),
@@ -594,7 +598,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      location_id(
                         widget = S3LocationSelector(levels = [],
@@ -718,7 +722,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      border_crossing_id(),
                      organisation_id(),

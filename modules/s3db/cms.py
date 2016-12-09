@@ -87,7 +87,7 @@ class S3ContentModel(S3Model):
         define_table(tablename,
                      Field("name", length=255, notnull=True, unique=True,
                            label = T("Name"),
-                           requires = [IS_NOT_EMPTY(),
+                           requires = [IS_LENGTH(255),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),

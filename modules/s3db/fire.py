@@ -187,7 +187,7 @@ class S3FireStationModel(S3Model):
                      Field("name", notnull=True,
                            length=64,           # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("code", length=10,   # Mayon compatibility
                            label = T("Code"),
