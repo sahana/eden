@@ -853,22 +853,27 @@ class S3Model(object):
         if not table:
             return None
 
-        def get_alias(hooks, alias):
-            for alias in hooks:
-                hook = hooks[alias]
-                if hook.linktable:
-                    prefix, name = hook.linktable.split("_", 1)
-                    if name == link:
-                        return alias
+        def get_alias(hooks, link):
+
+            if link[-6:] == "__link":
+                alias = link.rsplit("__link", 1)[0]
+                hook = hooks.get(alias)
+                if hook:
+                    return alias
+            else:
+                for alias in hooks:
+                    hook = hooks[alias]
+                    if hook.linktable:
+                        prefix, name = hook.linktable.split("_", 1)
+                        if name == link:
+                            return alias
             return None
 
-        hooks = components.get(tablename, None)
+        hooks = components.get(tablename)
         if hooks:
             alias = get_alias(hooks, link)
             if alias:
                 return alias
-        else:
-            hooks = []
 
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
@@ -878,7 +883,7 @@ class S3Model(object):
                 table = cls.table(s)
                 if table is None:
                     continue
-                hooks = components.get(table._tablename, [])
+                hooks = components.get(table._tablename)
                 if hooks:
                     alias = get_alias(hooks, link)
                     if alias:
