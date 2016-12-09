@@ -599,6 +599,9 @@ class DVRCaseModel(S3Model):
                            label = T("Officially Registered"),
                            represent = s3_yes_no_represent,
                            ),
+                     s3_date("arrival_date",
+                             label = T("Arrival Date"),
+                             ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

@@ -1030,6 +1030,7 @@ def config(settings):
                                 #"middle_name",
                                 "last_name",
                                 "person_details.nationality",
+                                "case_details.arrival_date",
                                 "date_of_birth",
                                 "gender",
                                 "person_details.marital_status",
