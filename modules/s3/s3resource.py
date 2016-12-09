@@ -973,7 +973,12 @@ class S3Resource(object):
                         data["deleted_rb"] = replaced_by[idstr]
 
                     # Update the row, finally
-                    db(table._id == record_id).update(**data)
+                    if table._tablename == tablename:
+                        dbset = db(table._id == record_id)
+                    else:
+                        # Must use un-aliased table for .update
+                        dbset = db(db[tablename]._id == record_id)
+                    dbset.update(**data)
                     numrows += 1
 
                     # Clear session
