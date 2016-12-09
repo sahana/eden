@@ -1680,7 +1680,7 @@ class S3OptionsMenu(object):
         """ PROJECT / Project Tracking & Management """
 
         settings = current.deployment_settings
-        #activities = lambda i: settings.get_project_activities()
+        activities = lambda i: settings.get_project_activities()
         activity_types = lambda i: settings.get_project_activity_types()
         community = settings.get_project_community()
         if community:
@@ -1748,6 +1748,10 @@ class S3OptionsMenu(object):
                       m="import", p="create"),
                     M(IMPORT, f="location",
                       m="import", p="create"),
+                    M("Import Activities", f="activity",
+                      m="import", p="create",
+                      check=activities,
+                      ),
                  ),
                  M("Partner Organizations",  f="partners")(
                     M("Create", m="create"),

@@ -21,7 +21,7 @@ ANONYMOUS,Anonymous,,,,gis_layer_wms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
 ANONYMOUS,Anonymous,,doc,sitrep,,,READ,,,,,Public access to External SitReps
 ANONYMOUS,Anonymous,,event,event,,,READ,,,,,Public access to Responses from Homepage
-ANONYMOUS,Anonymous,,event,event_location,,,READ,,,,,Public access to Response Locations on Homepage Map
+ANONYMOUS,Anonymous,,gis,location_tag,,,READ,,,,,Public access to Response Locations on Homepage Map
 ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,Public access to Responses on Homepage
 ANONYMOUS,Anonymous,,,,event_event_location,,READ,,,,,Public access to Responses on Homepage
 ANONYMOUS,Anonymous,,project,activity,,,READ,,,,,Public access to 4W information

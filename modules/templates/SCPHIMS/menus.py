@@ -317,6 +317,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           m="import", p="create"),
                         M("Import Project Locations", f="location",
                           m="import", p="create"),
+                        M("Import Activities", f="activity",
+                          m="import", p="create"),
                      ),
                      M("Partner Organizations",  f="partners")(
                         M("Create", m="create"),

@@ -362,46 +362,60 @@ class S3MobileCRUD(S3Method):
             list_fields = [field.name for field in resource.readable_fields()]
             if UID not in list_fields:
                 list_fields.append(UID)
+            rfields = ["%s.%s" % (resource_tablename, f) for f in list_fields] 
         else:
-            components = []
+            components = resource.components
+            rfields = [] 
             for field in list_fields:
                 if "." in field:
                     component, fieldname = field.split(".", 1)
                     
+                    if component not in components:
+                        continue
+                    tablename = components[component].table._tablename # This way to get aliases
+                    if tablename not in tablenames: 
+                        tablenames[tablename] = component
+                        output[tablename] = []
+                        uuid_field = "%s.%s" % (component, UID) 
+                        if uuid_field not in list_fields:
+                            list_fields.append(uuid_field)
                     if "$" in fieldname:
                         # @ToDo! Handle address.location_id$...
-                        pass
-                    
-                    if component not in components:
-                        components.append(component)
-
-            rcomponents = resource.components
-            for component in components:
-                if component not in rcomponents:
-                    continue
-                tablename = rcomponents[component].table._tablename # This way to get aliases 
-                tablenames[tablename] = component
-                output[tablename] = []
-                uuid_field = "%s.%s" % (component, UID) 
-                if uuid_field not in list_fields:
-                    list_fields.append(uuid_field)
+                        # Lookup linked tablename
+                        fk, field = field.split("$", 1)
+                        table = s3db.table(tablename)
+                        tablename = table[fk].type.split("references ", 1)[1]
+                        rfields.append("%s.%s" % (tablename, field))
+                        if tablename not in tablenames: 
+                            tablenames[tablename] = component
+                            output[tablename] = []
+                            uuid_field = "%s.%s" % (component, UID) 
+                            if uuid_field not in list_fields:
+                                list_fields.append(uuid_field)
+                    else:
+                        rfields.append("%s.%s" % (tablename, field))
+                elif "$" in fieldname:
+                    # @ToDo! Handle location_id$...
+                    raise NotImplementedError
+                else:
+                    rfields.append("%s.%s" % (resource_tablename, field))
             if UID not in list_fields:
                 list_fields.append(UID)
-        data = resource.select(list_fields, as_rows=True)
-        for record in data:
-            for tablename in record:
-                _record = record[tablename]
-                row = []
-                rappend = row.append
-                for field in _record:
-                    if (tablename == resource_tablename and field in list_fields) or \
-                       ("%s.%s" % (tablenames[tablename], field) in list_fields):
-                        value = _record[field]
-                        if isinstance(value, datetime.date) or \
-                           isinstance(value, datetime.datetime):
-                            value = s3_encode_iso_datetime(value).decode("utf-8")
-                        rappend((field, value))
-                output[tablename].append(row)
+                rfields.append("%s.%s" % (resource_tablename, UID))
+        #data = resource.select(list_fields, as_rows=True)
+        data = resource.select(list_fields, raw_data=True)
+        # @ToDo: Ensure we have FKs between all linked records (ID replaced with UUID)
+        for record in data.rows:
+            row = {tablename: [] for tablename in tablenames}
+            for field in record:
+                value = record[field] 
+                if isinstance(value, datetime.date) or \
+                   isinstance(value, datetime.datetime):
+                    value = s3_encode_iso_datetime(value).decode("utf-8")
+                tablename, field = field.split(".", 1)
+                row[tablename].append((field, value))
+            for tablename in tablenames:
+                output[tablename].append(row[tablename])
 
         output = json.dumps(output, separators=SEPARATORS)
         current.response.headers = {"Content-Type": "application/json"}

@@ -27,15 +27,15 @@ class index(S3CustomController):
 
         # Map
         ltable = s3db.gis_layer_feature
-        layers = db(ltable.name.belongs(("Offices", "Responses"))).select(ltable.layer_id,
-                                                                          ltable.name
-                                                                          )
+        layers = db(ltable.name.belongs(("Offices", "Response Areas"))).select(ltable.layer_id,
+                                                                               ltable.name
+                                                                               )
         offices = None
         response_areas = None
         for layer in layers:
             if layer.name == "Offices":
                 offices = layer.layer_id
-            elif layer.name == "Responses":
+            elif layer.name == "Response Areas":
                 response_areas = layer.layer_id
 
         feature_resources = [{"name": T("SCP Offices"),
@@ -61,9 +61,8 @@ class index(S3CustomController):
         list_fields = ["name",
                        "event_location.location_id",
                        ]
-        # @ToDo: Add Category once we have the requirements clear for it
-        #if internal
-        #    list_fields.append("category")
+        if internal:
+            list_fields.insert(1, (T("Category"), "tag.value"))
 
         start = None
         limit = 5

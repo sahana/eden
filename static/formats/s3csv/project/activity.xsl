@@ -8,6 +8,7 @@
          CSV column...........Format..........Content
 
          Project..............string..........Project Name (optional)
+         Event................string..........Event Name (optional)
          Activity.............string..........Activity short description
          Activity Type........;-sep list......List of Activity Types
          Sectors..............;-sep list......List of Activity Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
@@ -49,12 +50,14 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:variable name="ActivityTypePrefix" select="'ActivityType:'"/>
+    <xsl:variable name="EventPrefix" select="'Event:'"/>
     <xsl:variable name="OrgPrefix" select="'Org:'"/>
     <xsl:variable name="ProjectPrefix" select="'Project:'"/>
     <xsl:variable name="SectorPrefix" select="'Sector:'"/>
     <xsl:variable name="StatusPrefix" select="'Status:'"/>
     <xsl:variable name="ThemePrefix" select="'Theme:'"/>
 
+    <xsl:key name="events" match="row" use="col[@field='Event']"/>
     <xsl:key name="org_groups" match="row" use="col[@field='Organisation Group']"/>
     <xsl:key name="projects" match="row" use="col[@field='Project']"/>
     <xsl:key name="statuses" match="row" use="col[@field='Status']"/>
@@ -70,6 +73,12 @@
             <!-- Distribution Items -->
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Item')]">
                 <xsl:call-template name="DistributionItem"/>
+            </xsl:for-each>
+
+            <!-- Events -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('events',
+                                                                   col[@field='Event'])[1])]">
+                <xsl:call-template name="Event"/>
             </xsl:for-each>
 
             <!-- Organisation Groups -->
@@ -97,6 +106,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="Project" select="col[@field='Project']/text()"/>
+        <xsl:variable name="Event" select="col[@field='Event']/text()"/>
         <xsl:variable name="Activity" select="col[@field='Activity']/text()"/>
         <xsl:variable name="ActivityType" select="col[@field='Activity Type']/text()"/>
         <xsl:variable name="Org" select="col[@field='Organisation']/text()"/>
@@ -170,6 +180,17 @@
                             <xsl:value-of select="concat($ProjectPrefix, $Project)"/>
                         </xsl:attribute>
                     </reference>
+                </xsl:if>
+
+                <!-- Link to Event -->
+                <xsl:if test="$Event!=''">
+                    <resource name="event_activity">
+                        <reference field="event_id" resource="event_event">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($EventPrefix, $Event)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
                 </xsl:if>
 
                 <!-- Link to Sectors -->
@@ -468,6 +489,21 @@
                 </xsl:attribute>
             </reference>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Event">
+        <xsl:variable name="Event" select="col[@field='Event']/text()"/>
+
+        <xsl:if test="$Event!=''">
+            <resource name="event_event">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($EventPrefix, $Event)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Event"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

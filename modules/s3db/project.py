@@ -1139,7 +1139,7 @@ class S3ProjectActivityModel(S3Model):
 
         crud_index = 3
         list_index = 1
-        if settings.get_project_sectors():
+        if settings.get_project_activity_sectors():
             crud_fields.insert(crud_index,
                                S3SQLInlineLink("sector",
                                                field = "sector_id",
@@ -1283,6 +1283,8 @@ class S3ProjectActivityModel(S3Model):
                   #create_next = create_next,
                   crud_form = crud_form,
                   deduplicate = S3Duplicate(primary = ("name",
+                                                       "location_id",
+                                                       "date",
                                                        "project_id",
                                                        ),
                                             ),

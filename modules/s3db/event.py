@@ -454,6 +454,14 @@ class S3EventModel(S3Model):
                                             "key": "location_id",
                                             "actuate": "hide",
                                             },
+                            event_activity = {"name": "event_activity",
+                                              "joinby": "event_id",
+                                              },
+                            project_activity = {"link": "event_activity",
+                                                "joinby": "event_id",
+                                                "key": "activity_id",
+                                                "actuate": "replace",
+                                                },
                             event_event_location = "event_id",
                             event_post = "event_id",
                             event_event_tag = {"name": "tag",
@@ -1673,9 +1681,6 @@ class S3EventActivityModel(S3Model):
              )
 
     def model(self):
-
-        if not current.deployment_settings.has_module("project"):
-            return None
 
         tablename = "event_activity"
         self.define_table(tablename,
@@ -3242,6 +3247,8 @@ def event_rheader(r):
                 tabs.append((T("Targets"), "target"))
             if settings.get_event_collection_tab():
                 tabs.append((T("Assessments"), "collection"))
+            if settings.get_project_event_activities():
+                tabs.append((T("Activities"), "activity"))
             if settings.has_module("cr"):
                 tabs.append((T("Shelters"), "event_shelter"))
             #if settings.has_module("req"):
