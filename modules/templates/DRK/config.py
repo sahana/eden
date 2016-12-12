@@ -1086,7 +1086,7 @@ def config(settings):
                     from s3 import FS
 
                     overdue = get_vars.get("overdue")
-                    if overdue == "check-in":
+                    if overdue in ("check-in", "!check-in"):
                         # Filter case list for overdue check-in
                         reg_status = FS("shelter_registration.registration_status")
                         checkout_date = FS("shelter_registration.check_out_date")
@@ -1098,14 +1098,14 @@ def config(settings):
 
                         # Due date for check-in
                         due_date = r.utcnow - \
-                                    datetime.timedelta(days=ABSENCE_LIMIT)
+                                   datetime.timedelta(days=ABSENCE_LIMIT)
 
-                        if overdue == "1":
-                            query = checked_out & \
-                                    ((checkout_date < due_date) | (checkout_date == None))
-                        else:
+                        if overdue[0] == "!":
                             query = not_checked_out | \
                                     checked_out & (checkout_date >= due_date)
+                        else:
+                            query = checked_out & \
+                                    ((checkout_date < due_date) | (checkout_date == None))
                         resource.add_filter(query)
                         check_overdue = True
 
