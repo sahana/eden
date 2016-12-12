@@ -351,12 +351,18 @@ class S3MobileCRUD(S3Method):
             @returns: a JSON string
         """
 
+        ID = "id"
         UID = current.xml.UID
+        s3db = current.s3db
         resource = r.resource
         resource_tablename = resource.tablename
+        
+        # Output in mdata format
         output = {resource_tablename: []}
-        # Lookup for FKs
-        tablenames = {resource_tablename: None}
+        # Lookup to ensure we extract ID, UID fields & joining FKs for all tables
+        tablenames = [resource_tablename]
+        # Keep track of which FKs we have so that we can replace them with UID
+        fks = {resource_tablename: {}}
 
         # Default to the 'mobile_list_fields' setting
         list_fields = resource.get_config("mobile_list_fields")
@@ -374,68 +380,158 @@ class S3MobileCRUD(S3Method):
                 rfield = S3ResourceField(resource, selector)
                 tablename = rfield.tname
                 if tablename not in tablenames:
-                    tablenames[tablename] = component
                     output[tablename] = []
-                    #uuid_field = "%s.%s" % (tablename, UID) 
-                    #if uuid_field not in list_fields:
-                    #    list_fields.append(uuid_field)
+                    tablenames.append(tablename)
+                    # Find the FKs
+                    if tablename in fks:
+                        this_fks = fks[tablename]
+                    else:
+                        fks[tablename] = this_fks = {}
 
-                if "." in fieldname:
-                    # Lookup component tablename
-                    component, fieldname = fieldname.split(".", 1)
-                    
-                    if component not in components:
-                        continue
-                    tablename = components[component].table._tablename # This way to get aliases
-                    if tablename not in tablenames: 
-                        #tablenames[tablename] = None
-                        #output[tablename] = []
+                    for tn in rfield.join:
+                        join = rfield.join[tn]
+                        for q in (join.first, join.second):
+                            if isinstance(q, Field):
+                                if q.referent:
+                                    # FK
+                                    if q.tablename == resource_tablename:
+                                        fieldname = q.name
+                                        if fieldname not in list_fields:
+                                            list_fields.append(fieldname)
+                                            fks[resource_tablename][fieldname] = str(q.referent)
+                                    elif q.tablename == tablename:
+                                        this_fks[q.name] = str(q.referent)
+                                    else:
+                                        tn = q.tablename
+                                        if tn not in fks:
+                                            fks[tn] = {} 
+                                        fks[tn][q.name] = str(q.referent)
+                            else:
+                                for f in (q.first, q.second):
+                                    if isinstance(f, Field):
+                                        if f.referent:
+                                            # FK
+                                            if f.tablename == resource_tablename:
+                                                fieldname = f.name
+                                                if fieldname not in list_fields:
+                                                    list_fields.append(fieldname)
+                                                    fks[resource_tablename][fieldname] = str(f.referent)
+                                            elif f.tablename == tablename:
+                                                this_fks[f.name] = str(f.referent)
+                                            else:
+                                                tn = f.tablename
+                                                if tn not in fks:
+                                                    fks[tn] = {}
+                                                fks[tn][f.name] = str(f.referent)
+
+                    # Add the ID, UUID & any FKs to list_fields
+                    if "." in selector:
+                        component, fieldname = selector.split(".", 1)
+                        for fk in this_fks:
+                            fk_field = "%s.%s" % (component, fk)
+                            if fk_field not in list_fields:
+                                list_fields.append(fk_field)
+                        id_field = "%s.%s" % (component, ID) 
+                        if id_field not in list_fields:
+                            list_fields.append(id_field)
                         uuid_field = "%s.%s" % (component, UID) 
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
-                    if "$" in fieldname:
-                        # Lookup linked tablename
-                        fk, fieldname = fieldname.split("$", 1)
-                        table = s3db.table(tablename)
-                        tablename = table[fk].type.split("references ", 1)[1]
-                        if tablename not in tablenames: 
-                            #tablenames[tablename] = None
-                            #output[tablename] = []
+                        if "$" in fieldname:
+                            fk, fieldname = fieldname.split("$", 1)
+                            fk_field = "%s.%s" % (component, fk)
+                            if fk_field not in list_fields:
+                                list_fields.append(fk_field)
+                            ctablename = components[component].table._tablename # Format to handle Aliases 
+                            if ctablename not in fks:
+                                fks[ctablename] = {}
+                            if fk not in fks[ctablename]:
+                                fks[ctablename][fk] = str(s3db[ctablename][fk].referent) 
+                            id_field = "%s.%s$%s" % (component, fk, ID) 
+                            if id_field not in list_fields:
+                                list_fields.append(id_field)
                             uuid_field = "%s.%s$%s" % (component, fk, UID) 
                             if uuid_field not in list_fields:
                                 list_fields.append(uuid_field)
-
-                elif "$" in fieldname:
-                    # Lookup linked tablename
-                    fk, fieldname = fieldname.split("$", 1)
-                    table = s3db.table(resource_tablename)
-                    tablename = table[fk].type.split("references ", 1)[1]
-                    if tablename not in tablenames: 
-                        #tablenames[tablename] = None
-                        #output[tablename] = []
+                    elif "$" in selector:
+                        fk, fieldname = selector.split("$", 1)
+                        if fk not in list_fields:
+                            list_fields.append(fk)
+                        if fk not in fks[resource_tablename]:
+                            fks[resource_tablename][fk] = str(s3db[resource_tablename][fk].referent)
+                        id_field = "%s$%s" % (fk, ID) 
+                        if id_field not in list_fields:
+                            list_fields.append(id_field)
                         uuid_field = "%s$%s" % (fk, UID) 
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
 
+        if ID not in list_fields:
+            list_fields.append(ID)
         if UID not in list_fields:
             list_fields.append(UID)
 
-        #data = resource.select(list_fields, as_rows=True)
         data = resource.select(list_fields, raw_data=True)
+        rows = data.rows
+
+        # Build lookup of IDs to UUIDs
+        lookup = {}
+        for record in rows:
+            tablenames = {}
+            for field in record:
+                value = record[field]
+                tablename, field = field.split(".", 1)
+                if tablename not in tablenames:
+                    tablenames[tablename] = {ID: None,
+                                             UID: None,
+                                             }
+                if field == ID:
+                    tablenames[tablename][ID] = value
+                elif field == UID:
+                    tablenames[tablename][UID] = value
+            for tablename in tablenames:
+                if tablename not in lookup:
+                    lookup[tablename] = {}
+                lookup[tablename][tablenames[tablename][ID]] = tablenames[tablename][UID]
 
         # Convert to S3Mobile format
-        # @ToDo: replace FKs with UUID
+        # & replace FKs with UUID
         for record in data.rows:
+            # Keep track of which tables have no data
+            empty = []
             row = {tablename: [] for tablename in tablenames}
             for field in record:
-                value = record[field] 
-                if isinstance(value, datetime.date) or \
+                value = record[field]
+                tablename, field = field.split(".", 1)
+                if field == ID:
+                    # Don't include these in output
+                    continue
+                # Debug only
+                if field in ("location_id", "activity_id"):
+                    pass
+                this_fks = fks[tablename]
+                if field in this_fks:
+                    # Replace ID with UUID:
+                    referent = this_fks[field]
+                    tn, fn = referent.split(".", 1)
+                    try:
+                        value = lookup[tn][value]
+                    except:
+                        # pr_pentity => @ToDo: Handle SuperKeys
+                        current.log.error("Cannot lookup tn: %s" % tn)
+                        pass
+
+                elif field == "uuid":
+                    if value is None:
+                        empty.append(tablename)
+                        continue
+                elif isinstance(value, datetime.date) or \
                    isinstance(value, datetime.datetime):
                     value = s3_encode_iso_datetime(value).decode("utf-8")
-                tablename, field = field.split(".", 1)
                 row[tablename].append((field, value))
             for tablename in tablenames:
-                output[tablename].append(row[tablename])
+                if tablename not in empty:
+                    output[tablename].append(row[tablename])
 
         output = json.dumps(output, separators=SEPARATORS)
         current.response.headers = {"Content-Type": "application/json"}

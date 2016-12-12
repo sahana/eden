@@ -474,8 +474,7 @@ def config(settings):
         else:
             s3db.dvr_case.organisation_id.default = SCI
 
-        mobile_list_fields = [#"project_case_activity.activity_id",
-                              "project_activity.name",
+        mobile_list_fields = ["project_case_activity.activity_id$name",
                               "dvr_case.reference",
                               "dvr_case.date",
                               "first_name",
@@ -486,10 +485,11 @@ def config(settings):
                               "person_details.disabled",
                               "phone.value",
                               "email.value",
-                              "address.location_id$L1",
-                              "address.location_id$L2",
-                              "address.location_id$L3",
-                              "address.location_id$L4",
+                              #"address.location_id$L1",
+                              #"address.location_id$L2",
+                              #"address.location_id$L3",
+                              #"address.location_id$L4",
+                              "address.location_id$parent",
                               "address.location_id$addr_street",
                               "dvr_case.comments",
                               ]
