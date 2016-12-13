@@ -513,7 +513,8 @@ class S3OrganisationModel(S3Model):
             configure(tablename,
                       # link table alias (organisation_branch) is ambiguous here
                       # => need to specify the full join
-                      hierarchy = "branch_id:org_organisation_branch.organisation_id",
+                      hierarchy = "parent__link.organisation_id",
+                      hierarchy_link = "parent",
                       )
             org_widgets["hierarchy"] = S3HierarchyWidget(lookup="org_organisation",
                                                          represent=org_organisation_represent,

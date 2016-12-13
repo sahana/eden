@@ -525,7 +525,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_organisation": {"organisation.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
 
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
@@ -544,7 +544,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_organisation": {"office.name__like": "Sync2*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
 
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
@@ -563,7 +563,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_office": {"office.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
@@ -587,7 +587,7 @@ class ResourceExportTests(unittest.TestCase):
                                      uid=["SFO1", "SFO2"])
 
             xmlexport = resource.export_xml(filters=None,
-                                            mcomponents=["org_office"])
+                                            mcomponents=["office"])
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
             types = xmltree.xpath("resource[@name='org_office_type']")
@@ -602,7 +602,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_office_type": {"office_type.name__like": "SFT1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"])
+                                            mcomponents=["office"])
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
             types = xmltree.xpath("resource[@name='org_office_type']")
@@ -3042,7 +3042,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertTrue(resource.components.hq._length > 0)
         assertTrue(resource.components.office._length is None)
 
-        tree = resource.export_tree(mcomponents=["org_office","fieldoffice","hq"])
+        tree = resource.export_tree(mcomponents=["office","fieldoffice","hq"])
         assertTrue(resource.components.office._length > 0)
         assertTrue(resource.components.fieldoffice._length is None)
         assertTrue(resource.components.hq._length is None)

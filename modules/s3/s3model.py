@@ -668,7 +668,7 @@ class S3Model(object):
 
             @param table: the table or table name
             @param names: a list of components names to limit the search to,
-                          None or empty list for all available components
+                          None for all available components
         """
 
         components = current.model.components
@@ -889,6 +889,32 @@ class S3Model(object):
                     if alias:
                         return alias
         return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def hierarchy_link(cls, tablename):
+        """
+            Get the alias of the component that represents the parent
+            node in a hierarchy (for link-table based hierarchies)
+
+            @param tablename: the table name
+
+            @returns: the alias of the hierarchy parent component
+        """
+
+        if not cls.table(tablename, db_only=True):
+            return None
+
+        hierarchy_link = cls.get_config(tablename, "hierarchy_link")
+        if not hierarchy_link:
+
+            hierarchy = cls.get_config(tablename, "hierarchy")
+            if hierarchy and "." in hierarchy:
+                alias = hierarchy.rsplit(".", 1)[0]
+                if "__link" in alias:
+                    hierarchy_link = alias.rsplit("__link", 1)[0]
+
+        return hierarchy_link
 
     # -------------------------------------------------------------------------
     # Resource Methods
