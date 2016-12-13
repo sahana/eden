@@ -352,6 +352,7 @@ class S3MobileCRUD(S3Method):
         """
 
         ID = "id"
+        PID = "pe_id"
         UID = current.xml.UID
         s3db = current.s3db
         resource = r.resource
@@ -507,8 +508,9 @@ class S3MobileCRUD(S3Method):
         data = resource.select(list_fields, raw_data=True)
         rows = data.rows
 
-        # Build lookup of IDs to UUIDs
-        lookup = {}
+        # Build lookups of IDs to UIDs & PIDs to UIDs
+        id_lookup = {}
+        pid_lookup = {}
         for record in rows:
             tablenames = {}
             for field in record:
@@ -516,16 +518,22 @@ class S3MobileCRUD(S3Method):
                 tablename, field = field.split(".", 1)
                 if tablename not in tablenames:
                     tablenames[tablename] = {ID: None,
+                                             PID: None,
                                              UID: None,
                                              }
                 if field == ID:
                     tablenames[tablename][ID] = value
+                elif field == PID:
+                    tablenames[tablename][PID] = value
                 elif field == UID:
                     tablenames[tablename][UID] = value
             for tablename in tablenames:
-                if tablename not in lookup:
-                    lookup[tablename] = {}
-                lookup[tablename][tablenames[tablename][ID]] = tablenames[tablename][UID]
+                if tablename not in id_lookup:
+                    id_lookup[tablename] = {}
+                id_lookup[tablename][tablenames[tablename][ID]] = tablenames[tablename][UID]
+                pid = tablenames[tablename][PID]
+                if pid:
+                    pid_lookup[pid] = tablenames[tablename][UID]
 
         # Convert to S3Mobile format
         # & replace FKs with UUID
@@ -544,12 +552,10 @@ class S3MobileCRUD(S3Method):
                     # Replace ID with UUID:
                     referent = this_fks[field]
                     tn, fn = referent.split(".", 1)
-                    try:
-                        value = lookup[tn][value]
-                    except:
-                        # pr_pentity => @ToDo: Handle SuperKeys
-                        current.log.error("Cannot lookup tn: %s" % tn)
-                        pass
+                    if fn == PID:
+                        value = pid_lookup[value]
+                    else:
+                        value = id_lookup[tn][value]
 
                 elif field == "uuid":
                     if value is None:
