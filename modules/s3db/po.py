@@ -303,8 +303,9 @@ class OutreachHouseholdModel(S3Model):
                      self.gis_location_id(
                         label = T("Address"),
                         widget = S3LocationSelector(show_address=True,
-                                                    show_map=settings.get_gis_map_selector(),
-                                                    show_postcode=settings.get_gis_postcode_selector(),
+                                                    # Defaults:
+                                                    #show_map=settings.get_gis_map_selector(),
+                                                    #show_postcode=settings.get_gis_postcode_selector(),
                                                     prevent_duplicate_addresses = True,
                                                     ),
                         ),

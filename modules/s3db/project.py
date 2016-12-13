@@ -3679,10 +3679,10 @@ class S3ProjectLocationModel(S3Model):
             Calculate the 'name' field used by Map popups
         """
 
-        vars = form.vars
-        id = vars.id
-        if vars.location_id and vars.project_id:
-            name = current.s3db.project_location_represent(None, vars)
+        form_vars = form.vars
+        id = form_vars.get("id")
+        if form_vars.get("location_id") and form_vars.get("project_id"):
+            name = current.s3db.project_location_represent(None, form_vars)
         elif id:
             name = current.s3db.project_location_represent(id)
         else:
