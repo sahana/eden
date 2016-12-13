@@ -45,6 +45,7 @@ except ImportError:
     raise
 
 from gluon import *
+from gluon.dal import Query
 from s3datetime import s3_encode_iso_datetime
 from s3error import S3PermissionError
 from s3forms import S3SQLDefaultForm, S3SQLField
@@ -341,7 +342,8 @@ class S3MobileCRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def mdata_export(self, r, **attr):
+    @staticmethod
+    def mdata_export(r, **attr):
         """
             Provide data for mobile app
 
@@ -375,8 +377,29 @@ class S3MobileCRUD(S3Method):
             list_fields = [field.name for field in resource.readable_fields()]
         else:
             # Ensure that we have all UID fields included
-            # @ToDo: Ensure we have FKs between all linked records
+            # Ensure we have FKs between all linked records
             components = resource.components
+            def find_fks(join):
+                """
+                    Helper function to get the FKs from a Join
+                """
+                for q in (join.first, join.second):
+                    if isinstance(q, Field):
+                        if q.referent:
+                            # FK
+                            if q.tablename == resource_tablename:
+                                fieldname = q.name
+                                if fieldname not in list_fields:
+                                    list_fields.append(fieldname)
+                                    fks[resource_tablename][fieldname] = str(q.referent)
+                            else:
+                                tn = q.tablename
+                                if tn not in fks:
+                                    fks[tn] = {} 
+                                fks[tn][q.name] = str(q.referent)
+                    elif isinstance(q, Query):
+                        find_fks(q)
+
             for selector in list_fields:
                 rfield = S3ResourceField(resource, selector)
                 tablename = rfield.tname
@@ -391,39 +414,7 @@ class S3MobileCRUD(S3Method):
 
                     for tn in rfield.join:
                         join = rfield.join[tn]
-                        for q in (join.first, join.second):
-                            if isinstance(q, Field):
-                                if q.referent:
-                                    # FK
-                                    if q.tablename == resource_tablename:
-                                        fieldname = q.name
-                                        if fieldname not in list_fields:
-                                            list_fields.append(fieldname)
-                                            fks[resource_tablename][fieldname] = str(q.referent)
-                                    elif q.tablename == tablename:
-                                        this_fks[q.name] = str(q.referent)
-                                    else:
-                                        tn = q.tablename
-                                        if tn not in fks:
-                                            fks[tn] = {} 
-                                        fks[tn][q.name] = str(q.referent)
-                            else:
-                                for f in (q.first, q.second):
-                                    if isinstance(f, Field):
-                                        if f.referent:
-                                            # FK
-                                            if f.tablename == resource_tablename:
-                                                fieldname = f.name
-                                                if fieldname not in list_fields:
-                                                    list_fields.append(fieldname)
-                                                    fks[resource_tablename][fieldname] = str(f.referent)
-                                            elif f.tablename == tablename:
-                                                this_fks[f.name] = str(f.referent)
-                                            else:
-                                                tn = f.tablename
-                                                if tn not in fks:
-                                                    fks[tn] = {}
-                                                fks[tn][f.name] = str(f.referent)
+                        find_fks(join)
 
                     # Add the ID, UUID & any FKs to list_fields
                     if "." in selector:
@@ -537,7 +528,7 @@ class S3MobileCRUD(S3Method):
 
         # Convert to S3Mobile format
         # & replace FKs with UUID
-        for record in data.rows:
+        for record in rows:
             # Keep track of which tables have no data
             empty = []
             row = {tablename: [] for tablename in tablenames}
@@ -549,20 +540,21 @@ class S3MobileCRUD(S3Method):
                     continue
                 this_fks = fks[tablename]
                 if field in this_fks:
-                    # Replace ID with UUID:
-                    referent = this_fks[field]
-                    tn, fn = referent.split(".", 1)
-                    if fn == PID:
-                        value = pid_lookup[value]
-                    else:
-                        value = id_lookup[tn][value]
+                    if value:
+                        # Replace ID with UUID:
+                        referent = this_fks[field]
+                        tn, fn = referent.split(".", 1)
+                        if fn == PID:
+                            value = pid_lookup[value]
+                        else:
+                            value = id_lookup[tn][value]
 
                 elif field == "uuid":
                     if value is None:
                         empty.append(tablename)
                         continue
                 elif isinstance(value, datetime.date) or \
-                   isinstance(value, datetime.datetime):
+                     isinstance(value, datetime.datetime):
                     value = s3_encode_iso_datetime(value).decode("utf-8")
                 row[tablename].append((field, value))
             for tablename in tablenames:
@@ -666,7 +658,8 @@ class S3MobileCRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def mform(self, r, **attr):
+    @staticmethod
+    def mform(r, **attr):
         """
             Get the schema definition (as JSON)
 
