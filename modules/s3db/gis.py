@@ -273,7 +273,11 @@ class S3LocationModel(S3Model):
                   ),
             *meta_spatial_fields)
 
+        # Would be nice if this table could be Lazy but it probably can't
         table = db[tablename]
+        # Doesn't set parent properly when field is defined inline as the table isn't yet in db
+        table._create_references()
+
         # Default the owning role to Authenticated. This can be used to allow the site
         # to control whether authenticated users get to create / update locations, or
         # just read them. Having an owner and using ACLs also allows us to take away

@@ -93,7 +93,7 @@ Vietnam,Volunteer Editor,vn_editor@example.com,eden,vol_editor,Viet Nam Red Cros
 Vietnam,Volunteer Super Editor,vn_super@example.com,eden,vol_super,Viet Nam Red Cross,,,vi
 Vietnam,Org Admin,vn_orgadmin@example.com,eden,ORG_ADMIN,Viet Nam Red Cross,,,vi
 NZ,Outreach Admin,nz_admin@example.com,eden,PO_ADMIN,New Zealand Red Cross,,,
-Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_ADMIN/org_organisation.name=Charing Cross,PO_ADMIN/org_organisation.name=Timaru Area",New Zealand Red Cross,,,
+Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_ADMIN/org_organisation.name=Bishopsdale,PO_ADMIN/org_organisation.name=Charing Cross",New Zealand Red Cross,,,
 Kaikoura,Outreach Admin,kaikoura_admin@example.com,eden,PO_ADMIN,Kaikoura,,,
 RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",Africa Zone,,,
 RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",Africa Zone,,,

@@ -474,7 +474,8 @@ def config(settings):
         else:
             s3db.dvr_case.organisation_id.default = SCI
 
-        mobile_list_fields = ["project_case_activity.activity_id$name",
+        mobile_list_fields = [# No need for Mobile client to know which Activity a Case is linked to
+                              #"project_case_activity.activity_id$name",
                               "dvr_case.reference",
                               "dvr_case.date",
                               "first_name",
@@ -485,16 +486,28 @@ def config(settings):
                               "person_details.disabled",
                               "phone.value",
                               "email.value",
+                              # @ToDo: Use just parent in Mobile LocationSelector
                               #"address.location_id$L1",
                               #"address.location_id$L2",
                               #"address.location_id$L3",
                               #"address.location_id$L4",
                               "address.location_id$parent",
+                              # Restore once list_fields working
+                              #"address.location_id$parent$uuid",
                               "address.location_id$addr_street",
                               "dvr_case.comments",
                               ]
 
         s3db.configure("pr_person",
+                       # TESTING - remove when done
+                       #list_fields = [#"address.location_id",
+                       #               #"address.location_id$id",
+                       #               #"address.location_id$uuid",
+                       #               #"address.location_id$parent",
+                       #               #"address.location_id$parent$id",
+                       #               "address.location_id$parent$name",
+                       #               #"address.location_id$parent$uuid",
+                       #               ],
                        mobile_list_fields = mobile_list_fields,
                        )
 

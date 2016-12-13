@@ -427,10 +427,6 @@ class S3MobileCRUD(S3Method):
                     # Add the ID, UUID & any FKs to list_fields
                     if "." in selector:
                         component, fieldname = selector.split(".", 1)
-                        for fk in this_fks:
-                            fk_field = "%s.%s" % (component, fk)
-                            if fk_field not in list_fields:
-                                list_fields.append(fk_field)
                         id_field = "%s.%s" % (component, ID) 
                         if id_field not in list_fields:
                             list_fields.append(id_field)
@@ -445,7 +441,9 @@ class S3MobileCRUD(S3Method):
                             ctablename = components[component].table._tablename # Format to handle Aliases 
                             if ctablename not in fks:
                                 fks[ctablename] = {}
+                            #referent = s3db[ctablename][fk].referent
                             if fk not in fks[ctablename]:
+                                #fks[ctablename][fk] = str(referent) 
                                 fks[ctablename][fk] = str(s3db[ctablename][fk].referent) 
                             id_field = "%s.%s$%s" % (component, fk, ID) 
                             if id_field not in list_fields:
@@ -453,11 +451,32 @@ class S3MobileCRUD(S3Method):
                             uuid_field = "%s.%s$%s" % (component, fk, UID) 
                             if uuid_field not in list_fields:
                                 list_fields.append(uuid_field)
+                            # Restore once list_fields working
+                            #if "$" in fieldname:
+                            #    # e.g. address.location_id$parent$uuid
+                            #    fk2, fieldname = fieldname.split("$", 1)
+                            #    tablename = referent.tablename
+                            #    if fk2 not in fks[tablename]:
+                            #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
+                            #    id_field = "%s.%s$%s$%s" % (component, fk, fk2, ID) 
+                            #    if id_field not in list_fields:
+                            #        list_fields.append(id_field)
+                            #    uuid_field = "%s.%s$%s$%s" % (component, fk, fk2, UID) 
+                            #    if uuid_field not in list_fields:
+                            #        list_fields.append(uuid_field)
+                        else:
+                            for fk in this_fks:
+                                fk_field = "%s.%s" % (component, fk)
+                                if fk_field not in list_fields:
+                                    list_fields.append(fk_field)
+
                     elif "$" in selector:
                         fk, fieldname = selector.split("$", 1)
                         if fk not in list_fields:
                             list_fields.append(fk)
+                        #referent = s3db[resource_tablename][fk].referent
                         if fk not in fks[resource_tablename]:
+                            #fks[resource_tablename][fk] = str(referent)
                             fks[resource_tablename][fk] = str(s3db[resource_tablename][fk].referent)
                         id_field = "%s$%s" % (fk, ID) 
                         if id_field not in list_fields:
@@ -465,6 +484,20 @@ class S3MobileCRUD(S3Method):
                         uuid_field = "%s$%s" % (fk, UID) 
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
+                        # Restore once list_fields working
+                        #if "$" in fieldname:
+                        #    # e.g. location_id$parent$uuid
+                        #    fk2, fieldname = fieldname.split("$", 1)
+                        #    tablename = referent.tablename
+                        #    if fk2 not in fks[tablename]:
+                        #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
+                        #    id_field = "%s$%s$%s" % (fk, fk2, ID) 
+                        #    if id_field not in list_fields:
+                        #        list_fields.append(id_field)
+                        #    uuid_field = "%s$%s$%s" % (fk, fk2, UID) 
+                        #    if uuid_field not in list_fields:
+                        #        list_fields.append(uuid_field)
+                            
 
         if ID not in list_fields:
             list_fields.append(ID)
@@ -506,9 +539,6 @@ class S3MobileCRUD(S3Method):
                 if field == ID:
                     # Don't include these in output
                     continue
-                # Debug only
-                if field in ("location_id", "activity_id"):
-                    pass
                 this_fks = fks[tablename]
                 if field in this_fks:
                     # Replace ID with UUID:
