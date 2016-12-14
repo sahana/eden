@@ -7088,6 +7088,8 @@ class S3HierarchyWidget(FormWidget):
         # Currently selected values
         selected = []
         append = selected.append
+        if isinstance(value, basestring) and value and not value.isdigit():
+            value = self.parse(value)[0]
         if not isinstance(value, (list, tuple, set)):
             values = [value]
         else:
@@ -7096,13 +7098,22 @@ class S3HierarchyWidget(FormWidget):
             if isinstance(v, (int, long)) or str(v).isdigit():
                 append(v)
 
+        # Prepend value parser to field validator
+        requires = field.requires
+        if isinstance(requires, (list, tuple)):
+            requires = [self.parse] + requires
+        elif requires is not None:
+            requires = [self.parse, requires]
+        else:
+            requires = self.parse
+
         # The hidden input field
         hidden_input = INPUT(_type = "hidden",
                              _multiple = "multiple",
                              _name = name,
                              _id = selector,
                              _class = "s3-hierarchy-input",
-                             requires = self.parse,
+                             requires = requires,
                              value = json.dumps(selected),
                              )
 
@@ -7202,6 +7213,7 @@ class S3HierarchyWidget(FormWidget):
             return default, None
         if not self.multiple and isinstance(value, list):
             value = value[0] if value else None
+
         return value, None
 
 # =============================================================================

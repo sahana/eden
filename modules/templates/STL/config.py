@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, DIV, H3, IS_EMPTY_OR, IS_IN_SET, SPAN, URL
+from gluon import current, DIV, H3, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
 from gluon.storage import Storage
 
 def config(settings):
@@ -180,7 +180,7 @@ def config(settings):
                 field.requires = IS_ONE_OF(db, "org_service.id",
                                            field.represent,
                                            filterby = "root_service",
-                                           filter_opts = root_service_id,
+                                           filter_opts = (root_service_id,),
                                            sort=True,
                                            )
                 field.widget = S3HierarchyWidget(multiple = False,
@@ -310,8 +310,8 @@ def config(settings):
                                     )
             field.represent = represent
             field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_project.id",
-                                                represent,
-                                                ))
+                                                   represent,
+                                                   ))
             field.comment = None
             field.label = T("Project Code")
 
@@ -383,7 +383,7 @@ def config(settings):
             field.requires = IS_ONE_OF(db, "org_service.id",
                                        field.represent,
                                        filterby = "root_service",
-                                       filter_opts = root_service_id,
+                                       filter_opts = (root_service_id,),
                                        sort=True,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
@@ -540,7 +540,7 @@ def config(settings):
             field.requires = IS_ONE_OF(db, "org_service.id",
                                        field.represent,
                                        filterby = "root_service",
-                                       filter_opts = root_service_id,
+                                       filter_opts = (root_service_id,),
                                        sort=True,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
@@ -943,9 +943,33 @@ def config(settings):
 
             if controller == "dvr" and not r.component:
 
-                from s3 import IS_ONE_OF, S3HierarchyWidget
+                from s3 import IS_ONE_OF, IS_PERSON_GENDER, S3HierarchyWidget
 
                 table = r.table
+
+                # Last name is required
+                field = table.last_name
+                field.requires = IS_NOT_EMPTY()
+
+                # Date of Birth is required
+                field = table.date_of_birth
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
+
+                # Make gender mandatory, remove "unknown"
+                field = table.gender
+                field.default = None
+                options = dict(s3db.pr_gender_opts)
+                del options[1] # Remove "unknown"
+                field.requires = IS_PERSON_GENDER(options, sort=True)
+
+                # ID label is required
+                field = table.pe_label
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
+
                 ctable = s3db.dvr_case
 
                 # Remove empty option from case status selector
@@ -957,6 +981,9 @@ def config(settings):
 
                 # Hierarchical Organisation Selector
                 field = ctable.organisation_id
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
                 represent = s3db.org_OrganisationRepresent(parent=False)
                 field.widget = S3HierarchyWidget(lookup="org_organisation",
                                                  represent=represent,

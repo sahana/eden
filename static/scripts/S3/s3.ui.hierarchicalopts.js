@@ -110,6 +110,7 @@
                                     .before(this.button)
                                     .detach()
                                     .appendTo('body');
+
             this._isOpen = false;
             this._isBulk = false;
             this.manualCascadeOption = false;
@@ -156,6 +157,11 @@
                 this.noopts.hide();
                 this.button.show();
             }
+
+            // Move error-wrapper behind button
+            this.input.next('.error_wrapper')
+                      .insertAfter(this.button)
+                      .one('click', function() { $(this).fadeOut(); });
 
             // Initially selected nodes
             var currentValue = this.input.val();
@@ -297,6 +303,33 @@
             });
 
             this._bindEvents();
+        },
+
+        /**
+         * Custom actions for option updates
+         *
+         * @param {string} key - they option key
+         * @param {mixed} value - the option value
+         */
+        _setOption: function(key, value) {
+
+            if ( key === "selected" ) {
+
+                // Check selected nodes and update hidden input
+                var inst = jQuery.jstree.reference($(this.tree));
+                if (inst !== undefined) {
+                    inst.uncheck_all();
+                    if (value) {
+                        this.input.val(JSON.stringify(value));
+                        var treeID = this.treeID;
+                        $.each(value, function() {
+                            inst.check_node('#' + treeID + '-' + this);
+                        });
+                        this._updateButtonText(value);
+                    }
+                }
+            }
+            this._super(key, value);
         },
 
         /**
