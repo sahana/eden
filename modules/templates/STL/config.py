@@ -839,21 +839,45 @@ def config(settings):
                             action = s3db.pr_Contacts,
                             )
 
-        table = s3db.pr_person
-
-        # Remove default tooltip for pe_label
-        field = table.pe_label
-        field.comment = None
-
-        # Use "Gender" as label for gender field
-        field = table.gender
-        field.label = current.T("Gender")
-
         if r.controller == "dvr":
-            # Default nationality for case beneficiaries is Syrian
+
+            from s3 import IS_PERSON_GENDER
+
+            table = s3db.pr_person
+
+            # ID label is required, remove tooltip
+            field = table.pe_label
+            field.comment = None
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+            # Last name is required
+            field = table.last_name
+            field.requires = IS_NOT_EMPTY()
+
+            # Date of Birth is required
+            field = table.date_of_birth
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+            # Gender is required, remove "unknown" option, adjust label
+            field = table.gender
+            field.label = current.T("Gender")
+            field.default = None
+            options = dict(s3db.pr_gender_opts)
+            del options[1] # Remove "unknown"
+            field.requires = IS_PERSON_GENDER(options, sort=True)
+
             dtable = s3db.pr_person_details
+
+            # Nationality is required, default is Syrian
             field = dtable.nationality
             field.default = "SY"
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
@@ -943,32 +967,7 @@ def config(settings):
 
             if controller == "dvr" and not r.component:
 
-                from s3 import IS_ONE_OF, IS_PERSON_GENDER, S3HierarchyWidget
-
-                table = r.table
-
-                # Last name is required
-                field = table.last_name
-                field.requires = IS_NOT_EMPTY()
-
-                # Date of Birth is required
-                field = table.date_of_birth
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
-
-                # Make gender mandatory, remove "unknown"
-                field = table.gender
-                field.default = None
-                options = dict(s3db.pr_gender_opts)
-                del options[1] # Remove "unknown"
-                field.requires = IS_PERSON_GENDER(options, sort=True)
-
-                # ID label is required
-                field = table.pe_label
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
+                from s3 import IS_ONE_OF, S3HierarchyWidget
 
                 ctable = s3db.dvr_case
 
@@ -1018,17 +1017,21 @@ def config(settings):
 })'''
                 s3.jquery_ready.append(script)
 
-                # Visibility and tooltip for consent flag
+                # Visibility and tooltip for consent flag, make mandatory
                 field = ctable.disclosure_consent
                 field.readable = field.writable = True
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
                 field.comment = DIV(_class="tooltip",
                                     _title="%s|%s" % (T("Consenting to Data Disclosure"),
                                                       T("Is the client consenting to disclosure of their data towards partner organisations and authorities?"),
                                                       ),
                                     )
 
-                # Custom label for registered-flag
                 dtable = s3db.dvr_case_details
+
+                # Custom label for registered-flag
                 field = dtable.registered
                 field.default = False
                 field.label = T("Registered with Turkish Authorities")
