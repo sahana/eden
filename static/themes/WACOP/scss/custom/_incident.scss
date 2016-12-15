@@ -1,0 +1,395 @@
+// Temporary style sheet for Incident Page
+
+$event-callout-bg: lighten($primary-color, 35%);
+$meta-label-active-color: $success-color;
+
+// TODO integrate into _settings.scss
+$navy-blue: #112E51;
+$clickable-blue: #4D7EB9;
+$active-green: #4DB988;
+$gray-10: #F0F0F0;
+$gray-20: #DDDDDD;
+$gray-40: #888888;
+$gray-70: #4A4A4A;
+
+$descriptive-green: #7EB94D;
+$important-yellow: #E5AA07;
+$critical-red: #FF5959;
+
+@mixin meta-text($color:$gray-70,$size:rem-calc(10),$weight:$font-weight-normal){
+  font-family: $font-family-sans-serif;
+  font-size: $size;
+  color: $color;
+  letter-spacing: rem-calc(0.16);
+  text-transform: uppercase;
+  font-weight: $weight;
+  p, ul, h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+  }
+}
+
+p {
+  font-family: $font-family-sans-serif;
+  font-size: rem-calc(14);
+  color: $gray-70;
+  letter-spacing: rem-calc(0.23);
+  font-weight: $font-weight-normal;
+}
+
+html .tabs {
+  dd, 
+  .tab-title {
+    &.active > a {
+      background-color: transparent;
+      border-bottom-color: inherit;
+      font-weight: bold;
+    }
+    > a {
+      background-color: transparent;
+      border-bottom: 4px solid transparent;
+      padding: 0;
+      margin: $tabs-navigation-padding $tabs-navigation-padding * 2 $tabs-navigation-padding 0;
+      &:hover {
+        background-color: transparent;
+        border-bottom-color: inherit; 
+      }
+    }
+  }
+}
+
+.tabs-content.column,
+.tabs-content.columns {
+  
+}
+
+// This fixes conflict with widgets.css use of .expand
+.button {
+  &.expanded {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    width: 100%;
+  }
+}
+
+label,
+.meta {
+  @include meta-text;
+}
+
+main.main {
+  margin: 0 0.625rem
+}
+
+// Parent event callout
+// - Title
+// - Meta
+
+.event-callout {
+  @include clearfix;
+  @include panel($bg:$event-callout-bg,$border:false);
+  border-top: 4px solid $primary-color;
+  .title.left {
+    margin-right: .25em;
+  }
+}
+
+.meta-container {
+  p {
+    margin-bottom: 0.625rem; //TODO calculate this
+  }
+}
+
+.meta-label {
+  @include label();
+  &.active {
+    background-color: $active-green;
+  }
+}
+
+// Incident display panel
+// - Info bar
+// - Header
+// -- Title
+// -- Meta, tags, input
+// -- Location meta
+// - body, description
+
+// Info Bar
+// - title
+// - controls (left & right)
+.info-bar {
+  @include clearfix;
+  background-color: $tuatara;
+  &.active {
+    background-color: $success-color;
+  }
+
+  color: white;
+  padding: 0 rem-calc(20);
+  a {
+    color: white;
+    &:hover {
+      
+    }
+  }
+
+  ul {
+    margin: 0;
+    line-height: 2;
+    > li {
+      display: inline-block;
+      list-style: none;
+      margin-left: rem-calc(12);
+    }
+    &:first-child > li:first-child {
+      margin-left: 0;
+    }
+    &:first-child > li.icon:first-child {
+      margin-left: rem-calc(-10);
+    }
+    .title {
+      color: white;
+      font-weight: normal;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .borders {
+      border-style: solid;
+      border-color: rgba(255,255,255,.25);
+      border-width: 0 1px;
+      padding: 0 rem-calc(12);
+      & + .borders {
+        margin-left: -1pt;
+        border-left: none;
+      }
+    }
+  }
+}
+
+.incident-body {
+  @include panel($border:false);
+}
+
+.incident-summary {
+  .title {
+    font-weight: bold;
+  }
+  .tags {
+    display: inline;
+    margin: 0 0 0 18px;
+    .tag {
+      display: inline;
+      font-weight: bold;
+      list-style: none;
+      &::after {
+        content: ",";
+      }
+      &:last-child::after {
+        content: "";
+      }
+    }
+  }
+}
+
+.incident-data {
+  @include panel($bg:$gainsboro,$border:false);
+  p {
+    font-size: rem-calc(20);
+    font-weight: bold;
+  }
+}
+
+.incident-resources {
+  .dataTables_paginate {
+    float: none;
+    text-align: center;
+    .pagination {
+      display: inline-block;
+      margin-bottom: 0;
+    }
+  }
+  // TODO generalize table styling
+  table.dataTable {
+    background: transparent;
+    border:none;
+    thead {
+      background: transparent;
+      border:none;
+      th {
+        @include meta-text;
+        border:none;
+        text-align: left;
+      }
+    }
+    tbody {
+      tr.odd {
+        background-color: $gainsboro;
+      }
+      tr.even {
+        background-color: $white;
+      }
+      tr.even,
+      tr.odd {
+        td {
+          background-color: transparent;
+          border: none;
+        }
+      }
+    }
+  }
+  // TODO remove this hack
+  table td:nth-child(3),
+  table th:nth-child(3) { display:none; }
+}
+
+.incident-map {
+  width: 100%;
+  height: 500px;
+}
+
+
+
+// Incident map box
+
+// Resources panel
+
+// Updates
+// - Search filter
+// - New Comment
+// - Posts
+
+// overwrites widget.css
+
+ul.dl {
+  list-style: none;
+  margin-left: 0;
+}
+
+.dl {
+  .dl-row {
+    // overwrite
+    border: none;
+    list-style: none;
+  }
+  .dl-row > .dl-item {
+    background-color: $white;
+    .dl-row > .dl-item {
+      background-color: $smoke;
+      margin-bottom: rem-calc(20);
+    }
+  }
+  .dl-item {
+    // overwrites
+    float: left;
+    padding: 0;
+    width: 100%;
+    // /overwrites
+    .dl-body {
+      padding: rem-calc(20);
+    }
+    footer {
+      padding: 0 rem-calc(20);
+    }
+  }
+  .dl-more,
+  .dl-meta {
+    @include meta-text;
+  }
+  .dl-more::before {
+    content: ">>";
+  }
+
+  .dl-priority {
+    &::before {
+      content: "";
+      color: $tuatara;
+      display: inline-block;
+      font-size: small;
+      font-weight: bold;
+      text-align: center;
+      width: 20px;
+      line-height: 20px;
+    }
+    &.dl-icon-post::before { 
+      content: "D";
+      background-color: $descriptive-green;
+      border-radius: 30px;
+    }
+    &.dl-icon-alert::before {
+      content: "I";
+      background-color: $important-yellow;
+    }
+    &.dl-icon-rep::before {
+      content: "!";
+      background-color: $critical-red;
+    }
+  }
+}
+
+// Directories
+
+// Tasks
+
+// +++++++++++++++++++++++++++++++++++
+// Atomic Elements
+// +++++++++++++++++++++++++++++++++++
+
+// Atoms
+/*
+input
+label
+radio buttons
+drop down
+table row
+tag
+*/
+
+// Molecules
+/*
+search input
+input w/ clear button
+info bar
+card header
+location card
+meta data
+add tag
+sortable table
+pagination
+*/
+
+$ui-widget-tagit-font-size: rem-calc(12);
+
+.ui-widget.tagit {
+  padding: 0 rem-calc(2);
+  border-radius: 0;
+  border-color: #CCC;
+  li {
+    display: block;
+    float: left;
+    margin: 2px 5px 2px 0;
+  }
+  .tagit-choice {
+    border: none;
+    background: $gainsboro;
+    padding: 0 rem-calc(18) 0 rem-calc(6);
+    font-size: $ui-widget-tagit-font-size;
+    text-transform: uppercase;
+  }
+  .tagit-choice-editable {}
+  .tagit-new {
+    padding: 0;
+    input {
+      font-size: $ui-widget-tagit-font-size;
+      height: rem-calc(19);
+    }
+  }
+}
+
+// Organisms
+/*
+search filter
+new comment
+incident card
+resource panel
+incident post
+*/

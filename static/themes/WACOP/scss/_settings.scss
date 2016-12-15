@@ -87,7 +87,7 @@ $column-gutter: rem-calc(20);
 // - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // We use these to define default font stacks
-// $font-family-sans-serif: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+$font-family-sans-serif: 'Open Sans', "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
 // $font-family-serif: Georgia, Cambria, "Times New Roman", Times, serif;
 // $font-family-monospace: Consolas, "Liberation Mono", Courier, monospace;
 
@@ -109,24 +109,24 @@ $white       : #FFFFFF;
 // $white-smoke : #F5F5F5;
 // $silver      : #EFEFEF;
 $smoke       : #EEEEEE;
-// $gainsboro   : #DDDDDD;
+$gainsboro   : #DDDDDD;
 $iron        : #CCCCCC;
 // $base        : #AAAAAA;
 // $aluminum    : #999999;
-// $jumbo       : #888888;
+$jumbo       : #888888;
 // $monsoon     : #777777;
 $steel       : #666666;
 // $charcoal    : #555555;
-// $tuatara     : #444444;
+$tuatara     : #4B4B4B;
 // $oil         : #333333;
 // $jet         : #222222;
 $black       : #000000;
 
 // We use these as default colors throughout
-$primary-color  : #008cba;
+$primary-color  : #4D7EB9;
 $secondary-color: #e7e7e7;
 $alert-color    : #D92C20;
-// $success-color: #43AC6A;
+$success-color: #5BBA89;
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
 
@@ -217,7 +217,7 @@ $alert-color    : #D92C20;
 // $include-html-type-classes: $include-html-classes;
 
 // We use these to control header font styles
-// $header-font-family: $body-font-family;
+$header-font-family: 'Roboto Condensed', "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
 // $header-font-weight: $font-weight-normal;
 // $header-font-style: normal;
 $header-font-color: $darkblue;
@@ -648,7 +648,7 @@ $anchor-font-color-hover: scale-color($lightblue, $lightness: -14%);
 
 // We use these to style the labels in different ways
 // $form-label-pointer: pointer;
-// $form-label-font-size: rem-calc(14);
+$form-label-font-size: rem-calc(12);
 // $form-label-font-weight: $font-weight-normal;
 // $form-label-line-height: 1.5;
 // $form-label-font-color: scale-color($black, $lightness: 30%);
@@ -998,9 +998,9 @@ $anchor-font-color-hover: scale-color($lightblue, $lightness: -14%);
 // $include-html-panel-classes: $include-html-classes;
 
 // We use these to control the background and border styles
-// $panel-bg: scale-color($white, $lightness: -5%);
+$panel-bg: #EFEFEF;
 // $panel-border-style: solid;
-// $panel-border-size: 1px;
+$panel-border-size: 0;
 // $callout-panel-bg: scale-color($primary-color, $lightness: 94%);
 
 // We use this % to control how much we darken things on hover
@@ -1349,14 +1349,14 @@ $sub-nav-item-divider: "|";
 
 // $include-html-tabs-classes: $include-html-classes;
 
-// $tabs-navigation-padding: rem-calc(16);
-// $tabs-navigation-bg-color: $silver;
+$tabs-navigation-padding: rem-calc(16);
+$tabs-navigation-bg-color: $white;
 // $tabs-navigation-active-bg-color: $white;
-// $tabs-navigation-hover-bg-color: scale-color($tabs-navigation-bg-color, $lightness: -6%);
-// $tabs-navigation-font-color: $jet;
-// $tabs-navigation-active-font-color: $tabs-navigation-font-color;
-// $tabs-navigation-font-size: rem-calc(16);
-// $tabs-navigation-font-family: $body-font-family;
+$tabs-navigation-hover-bg-color: $tabs-navigation-bg-color;
+$tabs-navigation-font-color: $jumbo;
+$tabs-navigation-active-font-color: $tuatara;
+$tabs-navigation-font-size: rem-calc(24);
+$tabs-navigation-font-family: $header-font-family;
 
 // $tabs-content-margin-bottom: rem-calc(24);
 // $tabs-content-padding: ($column-gutter/2);

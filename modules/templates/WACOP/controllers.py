@@ -787,6 +787,39 @@ class incident_Profile(custom_WACOP):
         output = {"incident_id": incident_id,
                   }
 
+        # Incident Additions
+
+        # <a href='{{=flag_href}}' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a>
+        output["flag_btn"] = A(ICON("flag"),
+                                SPAN("flag this",
+                                     _class="show-for-sr",
+                                     ),
+                                _title="flag this",
+                                _href="#"
+                               )
+        # <a href='#'><i class='fa fa-share-alt'></i><span class="show-for-sr">share</span></a>
+        output["share_btn"] = A(ICON("share"),
+                                SPAN("share this",
+                                     _class="show-for-sr",
+                                     ),
+                                _title="share this",
+                                _href="#"
+                               )
+
+        # output["edit_btn"] = ""
+
+        #<a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a>
+        output["trash_btn"] = A(ICON("delete"),
+                                SPAN("delete this",
+                                     _class="show-for-sr",
+                                     ),
+                                _title="delte this",
+                                _href="#"
+                               )
+
+        output["modified_by"] = "admin@example.com"
+        output["incident_tags_list"] = ""  # UL list of tags with link to list of incidents with same tag
+
         # Incident Details
         record = r.record
         output["name"] = record.name
@@ -848,8 +881,7 @@ class incident_Profile(custom_WACOP):
         output["updateable"] = updateable
 
         # Tags for Incident
-        tag_list = UL(_class="left inline-list",
-                      _id="incident-tags",
+        tag_list = UL(_id="incident-tags",
                       )
         query = (ittable.incident_id == incident_id) & \
                 (ittable.deleted == False) & \
