@@ -1076,6 +1076,7 @@ def config(settings):
                                         label = T("Family ID Number"),
                                         multiple = False,
                                         name = "family_id",
+                                        required = True,
                                         ),
                                 S3SQLInlineComponent(
                                         "address",
