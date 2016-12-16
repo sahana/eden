@@ -1042,8 +1042,21 @@ input.date.hasDatepicker {
   margin-top: 0.5em;
 }
 
-/* ImageCropWidget */
+/* GroupedOptions widget */
 /* line 103, ../scss/custom/_widgets.scss */
+.s3-groupedopts-label {
+  float: none;
+  margin-bottom: 0.3rem;
+}
+
+/* line 107, ../scss/custom/_widgets.scss */
+.s3-groupedopts-widget table {
+  margin-left: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* ImageCropWidget */
+/* line 113, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1051,36 +1064,36 @@ input.date.hasDatepicker {
 }
 
 /* pr_Contacts widgets */
-/* line 110, ../scss/custom/_widgets.scss */
+/* line 120, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 114, ../scss/custom/_widgets.scss */
+/* line 124, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 117, ../scss/custom/_widgets.scss */
+/* line 127, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 121, ../scss/custom/_widgets.scss */
+/* line 131, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 125, ../scss/custom/_widgets.scss */
+/* line 135, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 129, ../scss/custom/_widgets.scss */
+/* line 139, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1091,7 +1104,7 @@ input.date.hasDatepicker {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 138, ../scss/custom/_widgets.scss */
+/* line 148, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1099,46 +1112,46 @@ input.date.hasDatepicker {
 }
 
 /* Data Lists (including profile) */
-/* line 147, ../scss/custom/_widgets.scss */
+/* line 157, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 151, ../scss/custom/_widgets.scss */
+/* line 161, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 154, ../scss/custom/_widgets.scss */
+/* line 164, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 157, ../scss/custom/_widgets.scss */
+/* line 167, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 160, ../scss/custom/_widgets.scss */
+/* line 170, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 165, ../scss/custom/_widgets.scss */
+/* line 175, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 169, ../scss/custom/_widgets.scss */
+/* line 179, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 173, ../scss/custom/_widgets.scss */
+/* line 183, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 179, ../scss/custom/_widgets.scss */
+/* line 189, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1146,37 +1159,37 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 186, ../scss/custom/_widgets.scss */
+/* line 196, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 191, ../scss/custom/_widgets.scss */
+/* line 201, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 196, ../scss/custom/_widgets.scss */
+/* line 206, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Text representation */
-/* line 202, ../scss/custom/_widgets.scss */
+/* line 212, ../scss/custom/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
-/* line 205, ../scss/custom/_widgets.scss */
+/* line 215, ../scss/custom/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 209, ../scss/custom/_widgets.scss */
+/* line 219, ../scss/custom/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;

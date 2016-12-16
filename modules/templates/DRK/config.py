@@ -1337,6 +1337,8 @@ def config(settings):
                                 # No filter default for case status
                                 if fw.field == "dvr_case.status_id":
                                     fw.opts.default = None
+                                if fw.field == "case_flag_case.flag_id":
+                                    fw.opts.size = None
                                 # Text filter includes EasyOpt Number and Case Comments
                                 if extend_text_filter and isinstance(fw, S3TextFilter):
                                     fw.field.extend(("eo_number.value",
