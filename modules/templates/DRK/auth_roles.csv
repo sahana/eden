@@ -128,3 +128,8 @@ SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case ev
 SECURITY,Security,,,,dvr_note,CREATE|READ,,,,,
 SECURITY,Security,,,,pr_image,READ,,,,,Security can see profile pictures
 SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
+FOOD_STATS,Food Statistics,,dvr,case_event,,READ,,,,,FoodStats role can read case events
+FOOD_STATS,Food Statistics,,dvr,index,,NONE,,,,,FoodStats role can not access DVR index controller
+FOOD_STATS,Food Statistics,,dvr,person,,NONE,,,,,FoodStats role can not access case list
+FOOD_STATS,Food Statistics,,,,dvr_case_event,READ,,,,,FoodStats role can read all case events
+FOOD_STATS,Food Statistics,,,,pr_person,READ,,,,,FoodStats role can look up persons

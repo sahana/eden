@@ -64,8 +64,14 @@ class S3MainMenu(default.S3MainMenu):
                    m = "register",
                    p = "create",
                    # Show only if not authorized to see "Residents"
-                   # (=the last preceding item)
                    check = lambda this: not this.preceding()[-1].check_permission(),
+                   ),
+                MM("Food Distribution Statistics", c="dvr", f="case_event",
+                   m = "report",
+                   vars = {"code": "FOOD"},
+                   restrict = ("FOOD_STATS",),
+                   # Show only if not authorized to see "Residents"
+                   check = lambda this: not this.preceding()[-2].check_permission(),
                    ),
                 MM("ToDo", c="project", f="task"),
                 MM("Dashboard", c="cr", f="shelter",
