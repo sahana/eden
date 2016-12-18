@@ -526,6 +526,13 @@ class S3ProjectModel(S3Model):
                                                 "key": "activity_type_id",
                                                 "actuate": "link",
                                                 },
+                       # Events
+                       event_project = "project_id",
+                       event_event = {"link": "event_project",
+                                      "joinby": "project_id",
+                                      "key": "event_id",
+                                      "actuate": "link",
+                                      },
                        # Goals
                        project_goal = "project_id",
                        # Indicators

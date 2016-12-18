@@ -467,8 +467,8 @@ class S3EventModel(S3Model):
                                                 "actuate": "replace",
                                                 },
                             event_project = {"name": "event_project",
-                                              "joinby": "event_id",
-                                              },
+                                             "joinby": "event_id",
+                                             },
                             project_project = {"link": "event_project",
                                                "joinby": "event_id",
                                                "key": "project_id",
@@ -2513,7 +2513,7 @@ class S3EventProjectModel(S3Model):
 
     def model(self):
 
-        tablename = "event_activity"
+        tablename = "event_project"
         self.define_table(tablename,
                           self.event_event_id(empty = False,
                                               ondelete = "CASCADE"),
