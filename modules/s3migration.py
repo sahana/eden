@@ -66,13 +66,13 @@ class S3Migration(object):
         m = local_import("s3migration")
         migrate = m.S3Migration()
         #migrate.pull()
-        migrate.prep(foreigns=[],
+        migrate.prep(remove_foreigns=[],
                      moves=[],
                      news=[],
                      ondeletes=[],
                      strbools=[],
                      strints=[],
-                     uniques=[],
+                     remove_uniques=[],
                      )
         migrate.migrate()
         migrate.compile()
@@ -151,18 +151,18 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=None,
-                   moves=None,
+    def prep(self, moves=None,
                    news=None,
                    ondeletes=None,
                    strbools=None,
                    strints=None,
-                   uniques=None,
+                   remove_foreigns=None,
+                   remove_uniques=None,
                    ):
         """
             Preparation before migration
 
-            @param foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
+            @param remove_foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
                               - if tablename == "all" then all tables are checked
             @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
                               - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
@@ -174,7 +174,7 @@ class S3Migration(object):
             @param ondeletes : List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
             @param strbools  : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
             @param strints   : List of tuples [(tablename, fieldname)] to convert from string to integer
-            @param uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
+            @param remove_uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
         """
 
         # Backup current database
@@ -184,14 +184,14 @@ class S3Migration(object):
         self.strints = strints
         self.backup()
 
-        if foreigns:
+        if remove_foreigns:
             # Remove Foreign Key constraints which need to go in next code
-            for tablename, fieldname in foreigns:
+            for tablename, fieldname in remove_foreigns:
                 self.remove_foreign(tablename, fieldname)
 
-        if uniques:
+        if remove_uniques:
             # Remove Unique indices which need to go in next code
-            for tablename, fieldname in uniques:
+            for tablename, fieldname in remove_uniques:
                 self.remove_unique(tablename, fieldname)
 
         if ondeletes:
@@ -202,10 +202,10 @@ class S3Migration(object):
         # Remove fields which need to be altered in next code
         if strbools:
             for tablename, fieldname in strbools:
-                self.drop(tablename, fieldname)
+                self.drop_field(tablename, fieldname)
         if strints:
             for tablename, fieldname in strints:
-                self.drop(tablename, fieldname)
+                self.drop_field(tablename, fieldname)
 
         self.db.commit()
 
@@ -667,7 +667,51 @@ class S3Migration(object):
             return None
 
     # -------------------------------------------------------------------------
-    def drop(self, tablename, fieldname):
+    def add_notnull(self, tablename, fieldname):
+        """
+            Add a notnull constraint to a field
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # @ToDo: http://www.sqlite.org/lang_altertable.html
+            raise NotImplementedError
+
+        elif db_engine == "mysql":
+            # http://dev.mysql.com/doc/refman/5.7/en/alter-table.html
+            raise NotImplementedError
+
+        elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
+            sql = "ALTER TABLE %(tablename)s ALTER COLUMN %(fieldname)s SET NOT NULL;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            field = table[fn]
+            if fn == fieldname:
+                field.notnull = True
+            fields.append(field)
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
+
+    # -------------------------------------------------------------------------
+    def drop_field(self, tablename, fieldname):
         """
             Drop a field from a table
             e.g. for when changing type
@@ -803,6 +847,50 @@ class S3Migration(object):
                 import sys
                 e = sys.exc_info()[1]
                 print >> sys.stderr, e
+
+    # -------------------------------------------------------------------------
+    def remove_notnull(self, tablename, fieldname):
+        """
+            Remove a notnull constraint from a field
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # @ToDo: http://www.sqlite.org/lang_altertable.html
+            raise NotImplementedError
+
+        elif db_engine == "mysql":
+            # http://dev.mysql.com/doc/refman/5.7/en/alter-table.html
+            raise NotImplementedError
+
+        elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
+            sql = "ALTER TABLE %(tablename)s ALTER COLUMN %(fieldname)s DROP NOT NULL;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            field = table[fn]
+            if fn == fieldname:
+                field.notnull = False
+            fields.append(field)
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
 
     # -------------------------------------------------------------------------
     def remove_unique(self, tablename, fieldname):

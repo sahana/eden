@@ -762,7 +762,7 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         define_table(tablename,
-                     Field("name", length=255, notnull=True, unique=True,
+                     Field("name", length=255, notnull=True, unique=True, 
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(255),

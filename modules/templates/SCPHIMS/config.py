@@ -757,6 +757,7 @@ def config(settings):
     settings.project.activity_sectors = True
     settings.project.codes = True
     settings.project.event_activities = True
+    settings.project.event_projects = True
     settings.project.hazards = False
     settings.project.hfa = False
     settings.project.programmes = True

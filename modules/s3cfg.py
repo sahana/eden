@@ -4248,6 +4248,12 @@ class S3Config(Storage):
         """
         return self.project.get("event_activities", False)
 
+    def get_project_event_projects(self):
+        """
+            Link Projects to Events
+        """
+        return self.project.get("event_projects", False)
+
     def get_project_goals(self):
         """
             Use Goals in Projects
