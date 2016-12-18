@@ -60,6 +60,20 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu_admin(cls, **attr):
+        """ Custom Admin Menu """
+
+        menu = super(S3MainMenu, cls).menu_admin(**attr)
+        if menu:
+            item = MM("Edit Contacts", c="cms", f="post",
+                      args = ["update"],
+                      vars = {"~.title": "Contacts"},
+                      )
+            menu.append(item)
+        return menu
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
 

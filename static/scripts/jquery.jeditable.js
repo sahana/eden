@@ -15,7 +15,7 @@
  */
 
 /**
-  * Version 1.7.1
+  * Version 1.7.1 (Patched for newer JQuery & for ability to compile with Closure by Fran)
   *
   * ** means there is basic unit tests for this parameter. 
   *
@@ -245,7 +245,13 @@
          
                 /* add created form to self */
                 $(self).append(form);
-         
+
+                /* adjust width: https://github.com/tuupola/jquery_jeditable/pull/53
+                if (settings.width != 'none') {
+                    var adj_width = settings.width - (input.outerWidth(true) - settings.width);
+                    input.width(adj_width);
+                } */
+
                 /* attach 3rd party plugin if requested */
                 plugin.apply(form, [settings, self]);
 
@@ -455,7 +461,7 @@
             },
             text: {
                 element : function(settings, original) {
-                    var input = $('<input />');
+                    var input = $('<input type="text" />');
                     if (settings.width  != 'none') { input.width(settings.width);  }
                     if (settings.height != 'none') { input.height(settings.height); }
                     /* https://bugzilla.mozilla.org/show_bug.cgi?id=236791 */
@@ -491,7 +497,10 @@
                 content : function(data, settings, original) {
                     /* If it is string assume it is json. */
                     if (String == data.constructor) {      
+                        /* This variant doesn't work when compiled with Closure
                         eval ('var json = ' + data);
+                        */
+                        var json = JSON.parse(data);
                     } else {
                     /* Otherwise assume it is a hash already. */
                         var json = data;
@@ -499,6 +508,7 @@
                     /* Sort the options */
                     var option,
                         options = [];
+                    /* This fails in the Closure-compiled version: Gives a 0 length Array! */
                     for (var key in json) {
                         if (!json.hasOwnProperty(key)) {
                             continue;
@@ -517,11 +527,11 @@
                         option = options[i];
                         $('select', this).append($('<option />').val(option['val']).append(option['repr']));
                     }
-                    /* Loop option again to set selected. IE needed this... */ 
+                    /* Loop option again to set selected. IE needed this... */
                     $('select', this).children().each(function() {
                         if ($(this).val() == json['selected'] || 
                             $(this).text() == $.trim(original.revert)) {
-                                $(this).attr('selected', 'selected');
+                                $(this).prop('selected', true);
                         }
                     });
                 }

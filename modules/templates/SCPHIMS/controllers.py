@@ -107,17 +107,13 @@ class index(S3CustomController):
         system_roles = auth.get_system_roles()
         ADMIN = system_roles.ADMIN in current.session.s3.roles
         table = s3db.cms_post
-        ltable = s3db.cms_post_module
-        module = "default"
-        resource = "index"
-        query = (ltable.module == module) & \
-                ((ltable.resource == None) | \
-                 (ltable.resource == resource)) & \
-                (ltable.post_id == table.id) & \
-                (table.deleted != True)
-        item = db(query).select(table.body,
-                                table.id,
-                                limitby=(0, 1)).first()
+        if internal:
+            title = "Announcements"
+        else:
+            title = "Contacts"
+        item = db(table.title == title).select(table.body,
+                                               table.id,
+                                               limitby=(0, 1)).first()
         if item:
             if ADMIN:
                 item = DIV(XML(item.body),
