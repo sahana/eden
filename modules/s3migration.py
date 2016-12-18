@@ -66,12 +66,13 @@ class S3Migration(object):
         m = local_import("s3migration")
         migrate = m.S3Migration()
         #migrate.pull()
-        migrate.prep(remove_foreigns=[],
-                     moves=[],
+        migrate.prep(moves=[],
                      news=[],
                      ondeletes=[],
                      strbools=[],
                      strints=[],
+                     add_notnulls=[],
+                     remove_foreigns=[],
                      remove_uniques=[],
                      )
         migrate.migrate()
@@ -156,14 +157,13 @@ class S3Migration(object):
                    ondeletes=None,
                    strbools=None,
                    strints=None,
+                   add_notnulls=None,
                    remove_foreigns=None,
                    remove_uniques=None,
                    ):
         """
             Preparation before migration
 
-            @param remove_foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
-                              - if tablename == "all" then all tables are checked
             @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
                               - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
             @param news      : List of dicts {new_tablename: {'lookup_field': '',
@@ -174,6 +174,9 @@ class S3Migration(object):
             @param ondeletes : List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
             @param strbools  : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
             @param strints   : List of tuples [(tablename, fieldname)] to convert from string to integer
+            @param add_notnulls     : List of tuples [(tablename, fieldname)] to add notnull to
+            @param remove_foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
+                                      - if tablename == "all" then all tables are checked
             @param remove_uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
         """
 
@@ -183,6 +186,11 @@ class S3Migration(object):
         self.strbools = strbools
         self.strints = strints
         self.backup()
+
+        if add_notnulls:
+            # Add notnull option to fields which need it
+            for tablename, fieldname in add_notnulls:
+                self.add_notnull(tablename, fieldname)
 
         if remove_foreigns:
             # Remove Foreign Key constraints which need to go in next code
