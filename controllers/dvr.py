@@ -282,8 +282,8 @@ def person():
 
                 table = s3db.dvr_evaluation_question
                 rows = db(table.deleted != True).select(table.id,
-                                                        #table.section,
-                                                        table.header,
+                                                        table.section,
+                                                        #table.header,
                                                         table.number,
                                                         table.name,
                                                         orderby = table.number,
@@ -291,11 +291,11 @@ def person():
 
                 #subheadings = {}
 
-                header = None
+                section = None
                 for row in rows:
                     name = "number%s" % row.number
-                    if row.header != header:
-                        label = header = row.header
+                    if row.section != section:
+                        label = section = row.section
                         #subheadings[T(section)] = "sub_%sdata" % name
                     else:
                         label = ""
@@ -783,8 +783,8 @@ def evaluation():
 
     table = s3db.dvr_evaluation_question
     rows = db(table.deleted != True).select(table.id,
-                                            #table.section,
-                                            table.header,
+                                            table.section,
+                                            #table.header,
                                             table.number,
                                             table.name,
                                             orderby = table.number,
@@ -792,11 +792,11 @@ def evaluation():
 
     #subheadings = {}
 
-    header = None
+    section = None
     for row in rows:
         name = "number%s" % row.number
-        if row.header != header:
-            label = header = row.header
+        if row.section != section:
+            label = section = row.section
             #subheadings[T(section)] = "sub_%sdata" % name
         else:
             label = ""

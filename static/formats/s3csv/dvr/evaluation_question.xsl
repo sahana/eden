@@ -8,7 +8,6 @@
          CSV column...........Format..........Content
 
          Section..............string..........Indicator Section
-         Header...............string..........Indicator Header
          Number...............integer.........Indicator Number
          Name.................string..........Indicator Name
 
@@ -26,7 +25,8 @@
     <xsl:template match="row">
         <resource name="dvr_evaluation_question">
             <data field="section"><xsl:value-of select="col[@field='Section']"/></data>
-            <data field="header"><xsl:value-of select="col[@field='Header']"/></data>
+            <!--
+            <data field="header"><xsl:value-of select="col[@field='Header']"/></data>-->
             <data field="number"><xsl:value-of select="col[@field='Number']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
         </resource>
