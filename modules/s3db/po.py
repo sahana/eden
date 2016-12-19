@@ -772,7 +772,7 @@ class OutreachReferralModel(S3Model):
         )
 
         # ---------------------------------------------------------------------
-        # Referral Household=>Agency
+        # Referral Household => Agency
         #
         tablename = "po_organisation_household"
         define_table(tablename,
