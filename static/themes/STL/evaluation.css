@@ -1,0 +1,13 @@
+[id^="dvr_eval"] table.embeddedComponent {
+    border: 0 none;
+    margin-left: 0.3rem;
+    margin-top: 0.5rem;
+}
+[id^="dvr_eval"] table.embeddedComponent tfoot,
+[id^="dvr_eval"] table.embeddedComponent tr {
+    background-color: transparent;
+}
+[id^="dvr_eval"] table.embeddedComponent td[id*="question"] {
+    font-weight: normal;
+    width: 40rem;
+}

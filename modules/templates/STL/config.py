@@ -290,6 +290,7 @@ def config(settings):
                        S3HierarchyWidget, \
                        S3Represent, \
                        S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
                        s3_comments_widget
 
         db = current.db
@@ -437,6 +438,16 @@ def config(settings):
                                         "activity_funding.funding_required",
                                         "activity_funding.reason_id",
                                         "activity_funding.proposal",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Attachments"),
+                                            fields = ["file", "comments"],
+                                            filterby = {"field": "file",
+                                                        "options": "",
+                                                        "invert": True,
+                                                        },
+                                            ),
                                         "comments",
                                         )
             list_fields = ["person_id",
@@ -965,195 +976,195 @@ def config(settings):
                 crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
 
-            if controller == "dvr" and not r.component:
+            if controller == "dvr":
+                if not r.component:
 
-                from s3 import IS_ONE_OF, S3HierarchyWidget
+                    from s3 import IS_ONE_OF, S3HierarchyWidget
 
-                ctable = s3db.dvr_case
+                    ctable = s3db.dvr_case
 
-                # Remove empty option from case status selector
-                field = ctable.status_id
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires = requires.other
-                    requires.zero = None
+                    # Remove empty option from case status selector
+                    field = ctable.status_id
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires = requires.other
+                        requires.zero = None
 
-                # Hierarchical Organisation Selector
-                field = ctable.organisation_id
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
-                represent = s3db.org_OrganisationRepresent(parent=False)
-                field.widget = S3HierarchyWidget(lookup="org_organisation",
-                                                 represent=represent,
-                                                 multiple=False,
-                                                 leafonly=False,
-                                                 )
-                field.comment = DIV(_class = "tooltip",
-                                    _title = "%s|%s" % (T("Organisation"),
-                                                        T("The organisation/branch this case is assigned to"),
-                                                        ),
-                                    )
-                user = current.auth.user
-                if user:
-                    field.default = user.organisation_id
+                    # Hierarchical Organisation Selector
+                    field = ctable.organisation_id
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
+                    represent = s3db.org_OrganisationRepresent(parent=False)
+                    field.widget = S3HierarchyWidget(lookup="org_organisation",
+                                                     represent=represent,
+                                                     multiple=False,
+                                                     leafonly=False,
+                                                     )
+                    field.comment = DIV(_class = "tooltip",
+                                        _title = "%s|%s" % (T("Organisation"),
+                                                            T("The organisation/branch this case is assigned to"),
+                                                            ),
+                                        )
+                    user = current.auth.user
+                    if user:
+                        field.default = user.organisation_id
 
-                # Individual staff assignment
-                field = ctable.human_resource_id
-                field.label = T("Person Responsible")
-                field.readable = field.writable = True
-                field.widget = None
-                field.comment = None
+                    # Individual staff assignment
+                    field = ctable.human_resource_id
+                    field.label = T("Person Responsible")
+                    field.readable = field.writable = True
+                    field.widget = None
+                    field.comment = None
 
-                # Filter staff by organisation
-                script = '''$.filterOptionsS3({
- 'trigger':'sub_dvr_case_organisation_id',
- 'target':'sub_dvr_case_human_resource_id',
- 'lookupPrefix':'hrm',
- 'lookupResource':'human_resource',
- 'lookupKey':'organisation_id',
- 'fncRepresent': function(record){return record.person_id},
- 'optional': true
+                    # Filter staff by organisation
+                    script = '''$.filterOptionsS3({
+'trigger':'sub_dvr_case_organisation_id',
+'target':'sub_dvr_case_human_resource_id',
+'lookupPrefix':'hrm',
+'lookupResource':'human_resource',
+'lookupKey':'organisation_id',
+'fncRepresent': function(record){return record.person_id},
+'optional': true
 })'''
-                s3.jquery_ready.append(script)
+                    s3.jquery_ready.append(script)
 
-                # Visibility and tooltip for consent flag, make mandatory
-                field = ctable.disclosure_consent
-                field.readable = field.writable = True
-                requires = field.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    field.requires = requires.other
-                field.comment = DIV(_class="tooltip",
-                                    _title="%s|%s" % (T("Consenting to Data Disclosure"),
-                                                      T("Is the client consenting to disclosure of their data towards partner organisations and authorities?"),
-                                                      ),
-                                    )
+                    # Visibility and tooltip for consent flag, make mandatory
+                    field = ctable.disclosure_consent
+                    field.readable = field.writable = True
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
+                    field.comment = DIV(_class="tooltip",
+                                        _title="%s|%s" % (T("Consenting to Data Disclosure"),
+                                                          T("Is the client consenting to disclosure of their data towards partner organisations and authorities?"),
+                                                          ),
+                                        )
 
-                dtable = s3db.dvr_case_details
+                    dtable = s3db.dvr_case_details
 
-                # Custom label for registered-flag
-                field = dtable.registered
-                field.default = False
-                field.label = T("Registered with Turkish Authorities")
-                field.comment = DIV(_class="tooltip",
-                                    _title="%s|%s" % (T("Registered with Turkish Authorities"),
-                                                      T("Is the client officially registered with AFAD/DGMM?"),
-                                                      ),
-                                    )
+                    # Custom label for registered-flag
+                    field = dtable.registered
+                    field.default = False
+                    field.label = T("Registered with Turkish Authorities")
+                    field.comment = DIV(_class="tooltip",
+                                        _title="%s|%s" % (T("Registered with Turkish Authorities"),
+                                                          T("Is the client officially registered with AFAD/DGMM?"),
+                                                          ),
+                                        )
 
-                resource = r.resource
-                if r.interactive:
+                    resource = r.resource
+                    if r.interactive:
 
-                    from s3 import S3DateFilter, \
-                                   S3LocationSelector, \
-                                   S3SQLCustomForm, \
-                                   S3SQLInlineComponent, \
-                                   S3TextFilter
+                        from s3 import S3DateFilter, \
+                                       S3LocationSelector, \
+                                       S3SQLCustomForm, \
+                                       S3SQLInlineComponent, \
+                                       S3TextFilter
 
-                    # Custom CRUD form
-                    crud_form = S3SQLCustomForm(
-                                (T("Case Status"), "dvr_case.status_id"),
-                                "dvr_case.date",
-                                "dvr_case.organisation_id",
-                                "dvr_case.human_resource_id",
-                                "first_name",
-                                #"middle_name",
-                                "last_name",
-                                "person_details.nationality",
-                                "case_details.arrival_date",
-                                "date_of_birth",
-                                "gender",
-                                "person_details.marital_status",
-                                "case_details.registered",
-                                (T("Individual ID Number"), "pe_label"),
-                                S3SQLInlineComponent(
-                                        "family_id",
-                                        fields = [("", "value"),
-                                                  ],
-                                        filterby = {"field": "tag",
-                                                    "options": "FAMILY_ID",
-                                                    },
-                                        label = T("Family ID Number"),
-                                        multiple = False,
-                                        name = "family_id",
-                                        required = True,
-                                        ),
-                                S3SQLInlineComponent(
-                                        "address",
-                                        label = T("Current Address"),
-                                        fields = [("", "location_id"),
-                                                  ],
-                                        filterby = {"field": "type",
-                                                    "options": "1",
-                                                    },
-                                        link = False,
-                                        multiple = False,
-                                        ),
-                                S3SQLInlineComponent(
-                                        "contact",
-                                        fields = [("", "value"),
-                                                  ],
-                                        filterby = {"field": "contact_method",
-                                                    "options": "SMS",
-                                                    },
-                                        label = T("Mobile Phone"),
-                                        multiple = False,
-                                        name = "phone",
-                                        ),
-                                "dvr_case.disclosure_consent",
-                                "dvr_case.comments",
-                                (T("Invalid Record"), "dvr_case.archived"),
-                                )
+                        # Custom CRUD form
+                        crud_form = S3SQLCustomForm(
+                                        (T("Case Status"), "dvr_case.status_id"),
+                                        "dvr_case.date",
+                                        "dvr_case.organisation_id",
+                                        "dvr_case.human_resource_id",
+                                        "first_name",
+                                        #"middle_name",
+                                        "last_name",
+                                        "person_details.nationality",
+                                        "case_details.arrival_date",
+                                        "date_of_birth",
+                                        "gender",
+                                        "person_details.marital_status",
+                                        "case_details.registered",
+                                        (T("Individual ID Number"), "pe_label"),
+                                        S3SQLInlineComponent(
+                                                "family_id",
+                                                fields = [("", "value"),
+                                                          ],
+                                                filterby = {"field": "tag",
+                                                            "options": "FAMILY_ID",
+                                                            },
+                                                label = T("Family ID Number"),
+                                                multiple = False,
+                                                name = "family_id",
+                                                required = True,
+                                                ),
+                                        S3SQLInlineComponent(
+                                                "address",
+                                                label = T("Current Address"),
+                                                fields = [("", "location_id"),
+                                                          ],
+                                                filterby = {"field": "type",
+                                                            "options": "1",
+                                                            },
+                                                link = False,
+                                                multiple = False,
+                                                ),
+                                        S3SQLInlineComponent(
+                                                "contact",
+                                                fields = [("", "value"),
+                                                          ],
+                                                filterby = {"field": "contact_method",
+                                                            "options": "SMS",
+                                                            },
+                                                label = T("Mobile Phone"),
+                                                multiple = False,
+                                                name = "phone",
+                                                ),
+                                        "dvr_case.disclosure_consent",
+                                        "dvr_case.comments",
+                                        (T("Invalid Record"), "dvr_case.archived"),
+                                        )
 
-                    resource.configure(crud_form = crud_form,
+                        resource.configure(crud_form = crud_form,
+                                           )
+
+                        # Extend text filter with Family ID and case comments
+                        filter_widgets = resource.get_config("filter_widgets")
+                        extend_text_filter = True
+                        for fw in filter_widgets:
+                            if fw.field == "dvr_case.status_id":
+                                if fw.field == "dvr_case.status_id" and "closed" in r.get_vars:
+                                    fw.opts.default = None
+                                    fw.opts.hidden = True
+                            if extend_text_filter and isinstance(fw, S3TextFilter):
+                                fw.field.extend(("family_id.value",
+                                                 "dvr_case.comments",
+                                                 ))
+                                fw.opts.comment = T("You can search by name, ID, family ID and comments")
+                                extend_text_filter = False
+
+                        # Add filter for date of birth
+                        dob_filter = S3DateFilter("date_of_birth",
+                                                  hidden=True,
+                                                  )
+                        filter_widgets.append(dob_filter)
+
+                        # Add filter for registration date
+                        reg_filter = S3DateFilter("dvr_case.date",
+                                                  hidden = True,
+                                                  )
+                        filter_widgets.append(reg_filter)
+
+                    # Custom list fields (must be outside of r.interactive)
+                    list_fields = [(T("ID"), "pe_label"),
+                                   (T("Family ID"), "family_id.value"),
+                                   "first_name",
+                                   #"middle_name",
+                                   "last_name",
+                                   "date_of_birth",
+                                   "gender",
+                                   "person_details.nationality",
+                                   "dvr_case.date",
+                                   "dvr_case.status_id",
+                                   ]
+                    resource.configure(list_fields = list_fields,
                                        )
 
-                    # Extend text filter with Family ID and case comments
-                    filter_widgets = resource.get_config("filter_widgets")
-                    extend_text_filter = True
-                    for fw in filter_widgets:
-                        if fw.field == "dvr_case.status_id":
-                            if fw.field == "dvr_case.status_id" and "closed" in r.get_vars:
-                                fw.opts.default = None
-                                fw.opts.hidden = True
-                        if extend_text_filter and isinstance(fw, S3TextFilter):
-                            fw.field.extend(("family_id.value",
-                                             "dvr_case.comments",
-                                             ))
-                            fw.opts.comment = T("You can search by name, ID, family ID and comments")
-                            extend_text_filter = False
+                elif r.component_name == "evaluation":
 
-                    # Add filter for date of birth
-                    dob_filter = S3DateFilter("date_of_birth",
-                                              hidden=True,
-                                              )
-                    filter_widgets.append(dob_filter)
-
-                    # Add filter for registration date
-                    reg_filter = S3DateFilter("dvr_case.date",
-                                                hidden = True,
-                                                )
-                    filter_widgets.append(reg_filter)
-
-                    # Inject script to toggle Head of Household form fields
-                    #path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
-                    #if path not in s3.scripts:
-                    #    s3.scripts.append(path)
-
-                # Custom list fields (must be outside of r.interactive)
-                list_fields = [(T("ID"), "pe_label"),
-                               (T("Family ID"), "family_id.value"),
-                               "first_name",
-                               #"middle_name",
-                               "last_name",
-                               "date_of_birth",
-                               "gender",
-                               "person_details.nationality",
-                               "dvr_case.date",
-                               "dvr_case.status_id",
-                               ]
-                resource.configure(list_fields = list_fields,
-                                   )
+                    s3.stylesheets.append("../themes/STL/evaluation.css")
 
             elif controller == "hrm":
 

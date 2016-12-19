@@ -1387,6 +1387,7 @@ class DVRCaseActivityModel(S3Model):
 
         tablename = "dvr_case_activity"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      self.dvr_case_id(comment = None,
                                       empty = False,
                                       label = T("Case Number"),
@@ -1560,6 +1561,7 @@ class DVRCaseActivityModel(S3Model):
                   list_fields = list_fields,
                   orderby = "dvr_case_activity.start_date desc",
                   report_options = report_options,
+                  super_entity = "doc_entity",
                   )
 
         # CRUD Strings

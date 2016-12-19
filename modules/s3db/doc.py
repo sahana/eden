@@ -80,6 +80,7 @@ class S3DocumentLibrary(S3Model):
                                cr_shelter = T("Shelter"),
                                deploy_mission = T("Mission"),
                                doc_sitrep = T("Situation Report"),
+                               dvr_case_activity = T("Case Activity"),
                                event_event = T("Event"),
                                event_incident = T("Incident"),
                                event_incident_report = T("Incident Report"),
