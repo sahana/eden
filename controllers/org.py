@@ -243,7 +243,7 @@ def capacity_assessment():
                                             orderby = table.number,
                                             )
 
-    subheadings = {}
+    #subheadings = {}
 
     section = None
     for row in rows:
@@ -271,7 +271,7 @@ def capacity_assessment():
 
     s3db.configure("org_capacity_assessment",
                    crud_form = crud_form,
-                   subheadings = subheadings,
+                   #subheadings = subheadings,
                    )
 
     return s3_rest_controller()

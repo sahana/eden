@@ -35,6 +35,7 @@ __all__ = ("DVRCaseModel",
            "DVRHouseholdModel",
            "DVRCaseEconomyInformationModel",
            "DVRCaseEventModel",
+           "DVRCaseEvaluationModel",
            "DVRActivityFundingModel",
            "DVRNeedsModel",
            "DVRNotesModel",
@@ -500,6 +501,9 @@ class DVRCaseModel(S3Model):
                             dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
                                            },
+                            dvr_evaluation = {"joinby": "case_id",
+                                              "multiple": False,
+                                              },
                             dvr_need =  {"link": "dvr_case_need",
                                          "joinby": "case_id",
                                          "key": "need_id",
@@ -3136,6 +3140,126 @@ class DVRCaseEventModel(S3Model):
             # Update last_seen_on
             if person_id:
                 dvr_update_last_seen(person_id)
+
+# =============================================================================
+class DVRCaseEvaluationModel(S3Model):
+    """
+        Evaluation of Cases
+        - Flexible Questions (Dynamic Data Model)
+    """
+
+    names = ("dvr_evaluation_question",
+             "dvr_evaluation",
+             "dvr_evaluation_data",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Questions
+        #
+        tablename = "dvr_evaluation_question"
+        define_table(tablename,
+                     Field("section",
+                           label = T("Section"),
+                           ),
+                     Field("header",
+                           label = T("Header"),
+                           ),
+                     Field("number", "integer",
+                           label = T("Number"),
+                           ),
+                     Field("name",
+                           label = T("Question"),
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Question"),
+            title_display = T("Question Details"),
+            title_list = T("Questions"),
+            title_update = T("Edit Question"),
+            label_list_button = T("List Questions"),
+            label_delete_button = T("Delete Question"),
+            msg_record_created = T("Question added"),
+            msg_record_modified = T("Question updated"),
+            msg_record_deleted = T("Question removed"),
+            msg_list_empty = T("No Questions currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Case Evaluations
+        #
+        tablename = "dvr_evaluation"
+        define_table(tablename,
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     #s3_date(future=0),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Evaluation"),
+            title_display = T("Evaluation Details"),
+            title_list = T("Evaluations"),
+            title_update = T("Edit Evaluation"),
+            label_list_button = T("List Evaluations"),
+            label_delete_button = T("Delete Evaluation"),
+            msg_record_created = T("Evaluation added"),
+            msg_record_modified = T("Evaluation updated"),
+            msg_record_deleted = T("Evaluation removed"),
+            msg_list_empty = T("No Evaluations currently registered"))
+
+        # Components
+        self.add_components(tablename,
+                            dvr_evaluation_data = {"name": "data",
+                                                   "joinby": "evaluation_id",
+                                                   },
+                            )
+
+        # ---------------------------------------------------------------------
+        # Case Evaluation Data
+        #
+        tablename = "dvr_evaluation_data"
+        define_table(tablename,
+                     Field("evaluation_id", "reference dvr_evaluation",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("question_id", "reference dvr_evaluation_question",
+                           represent = S3Represent(lookup="dvr_evaluation_question",
+                                                   fields=["number", "name"],
+                                                   field_sep=". "),
+                           writable = False,
+                           ),
+                     Field("answer", "boolean",
+                           label = T("Answer"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        # Custom Report Method
+        #self.set_method("org", "capacity_assessment_data",
+        #                method = "custom_report",
+        #                action = org_CapacityReport())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class DVRActivityFundingModel(S3Model):

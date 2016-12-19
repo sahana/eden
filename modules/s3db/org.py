@@ -1427,6 +1427,7 @@ class S3OrganisationBranchModel(S3Model):
 class S3OrganisationCapacityModel(S3Model):
     """
         (Branch) Organisational Capacity Assessment
+        - Flexible Questions (Dynamic Data Model)
     """
 
     names = ("org_capacity_indicator",

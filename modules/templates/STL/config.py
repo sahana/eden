@@ -1611,6 +1611,7 @@ def stl_dvr_rheader(r, tabs=[]):
                         (T("Individual Case Management"), "case_activity"),
                         (T("Group Activities"), "pss_activity"),
                         (T("Mental Health"), "mh_activity"),
+                        (T("Evaluation"), "evaluation"),
                         ]
 
                 case = resource.select(["family_id.value",

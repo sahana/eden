@@ -271,6 +271,54 @@ def person():
                             field = table[fn]
                             field.writable = False
                             field.comment = None
+            elif r.component_name == "evaluation":
+                S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+                crud_fields = [#"person_id",
+                               #"case_id",
+                               #"date",
+                               ]
+                cappend = crud_fields.append
+
+                table = s3db.dvr_evaluation_question
+                rows = db(table.deleted != True).select(table.id,
+                                                        #table.section,
+                                                        table.header,
+                                                        table.number,
+                                                        table.name,
+                                                        orderby = table.number,
+                                                        )
+
+                #subheadings = {}
+
+                header = None
+                for row in rows:
+                    name = "number%s" % row.number
+                    if row.header != header:
+                        label = header = row.header
+                        #subheadings[T(section)] = "sub_%sdata" % name
+                    else:
+                        label = ""
+                    cappend(S3SQLInlineComponent("data",
+                                                 name = name,
+                                                 label = label,
+                                                 fields = (("", "question_id"),
+                                                           ("", "answer"),
+                                                           ),
+                                                 filterby = dict(field = "question_id",
+                                                                 options = row.id
+                                                                 ),
+                                                 multiple = False,
+                                                 ),
+                            )
+
+                cappend("comments")
+                crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+                s3db.configure("dvr_evaluation",
+                               crud_form = crud_form,
+                               #subheadings = subheadings,
+                               )
 
         # Module-specific list fields (must be outside of r.interactive)
         list_fields = ["dvr_case.reference",
@@ -709,6 +757,75 @@ def activity_funding():
 # -----------------------------------------------------------------------------
 def site_activity():
     """ Site Activity Reports: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation_question():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation():
+    """
+        RESTful CRUD Controller
+        - unused
+    """
+
+    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+    crud_fields = ["person_id",
+                   "case_id",
+                   #"date",
+                   ]
+    cappend = crud_fields.append
+
+    table = s3db.dvr_evaluation_question
+    rows = db(table.deleted != True).select(table.id,
+                                            #table.section,
+                                            table.header,
+                                            table.number,
+                                            table.name,
+                                            orderby = table.number,
+                                            )
+
+    #subheadings = {}
+
+    header = None
+    for row in rows:
+        name = "number%s" % row.number
+        if row.header != header:
+            label = header = row.header
+            #subheadings[T(section)] = "sub_%sdata" % name
+        else:
+            label = ""
+        cappend(S3SQLInlineComponent("data",
+                                     name = name,
+                                     label = label,
+                                     fields = (("", "question_id"),
+                                               ("", "answer"),
+                                               ),
+                                     filterby = dict(field = "question_id",
+                                                     options = row.id
+                                                     ),
+                                     multiple = False,
+                                     ),
+                )
+
+    cappend("comments")
+    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+    s3db.configure("dvr_evaluation",
+                   crud_form = crud_form,
+                   #subheadings = subheadings,
+                   )
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation_data():
+    """ RESTful CRUD Controller """
 
     return s3_rest_controller()
 
