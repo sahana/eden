@@ -780,16 +780,21 @@ def config(settings):
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
-        crud_form = S3SQLCustomForm("name",
-                                    "date",
-                                    "status_id",
-                                    S3SQLInlineComponent("sector_activity",
-                                                         label = T("Sectors"),
-                                                         fields = [("", "sector_id")],
-                                                         ),
-                                    "location_id",
-                                    "comments",
-                                    )
+        crud_fields = ["name",
+                       "date",
+                       "status_id",
+                       S3SQLInlineComponent("sector_activity",
+                                            label = T("Sectors"),
+                                            fields = [("", "sector_id")],
+                                            ),
+                       "location_id",
+                       "comments",
+                       ]
+
+        if current.auth.s3_logged_in():
+            crud_fields.insert(0, "project_id")
+
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         list_fields = ["name",
                        "date",

@@ -118,6 +118,7 @@ def config(settings):
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
                                 org_capacity_assessment_data = "assessment_id",
+                                po_area = EID,
                                 po_household = "area_id",
                                 po_organisation_area = "area_id",
                                 req_req_item = "req_id",
@@ -146,8 +147,9 @@ def config(settings):
         #        # Update not Create
         #        row = rows.first()
 
-        # Check if there is a FK to inherit the realm_entity
         realm_entity = 0
+
+        # Check if there is a FK to inherit the realm_entity
         fk = realm_entity_fks.get(tablename, None)
         fks = [fk] if not isinstance(fk, list) else list(fk)
         fks.extend(default_fks)
@@ -185,12 +187,12 @@ def config(settings):
         use_user_organisation = False
         #use_user_root_organisation = False
 
-        # Suppliers & Partners are owned by the user's organisation
-        # @note: when the organisation record is first written, no
-        #        type-link would exist yet, so this needs to be
-        #        called again every time the type-links for an
-        #        organisation change in order to be effective
         if realm_entity == 0 and tablename == "org_organisation":
+            # Suppliers & Partners are owned by the user's organisation
+            # @note: when the organisation record is first written, no
+            #        type-link would exist yet, so this needs to be
+            #        called again every time the type-links for an
+            #        organisation change in order to be effective
             ottable = s3db.org_organisation_type
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row.id) & \
@@ -200,8 +202,8 @@ def config(settings):
             if not rclink:
                 use_user_organisation = True
 
-        # Facilities & Requisitions are owned by the user's organisation
         elif tablename in ("org_facility", "req_req"):
+            # Facilities & Requisitions are owned by the user's organisation
             use_user_organisation = True
 
         elif tablename == "hrm_training":
@@ -5811,7 +5813,6 @@ def config(settings):
             else:
                 result = True
             # Do not require international phone number format
-            settings = current.deployment_settings
             settings.msg.require_international_phone_numbers = False
             if r.component_name == "household":
                 # Inject JS for household form
@@ -5821,6 +5822,9 @@ def config(settings):
                     if records:
                         record = records[0]
                 household_inject_form_script(r, record)
+            else:
+                f = r.table.organisation_id
+                f.readable = f.writable = False
             return result
         s3.prep = custom_prep
 

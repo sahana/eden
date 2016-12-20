@@ -73,7 +73,6 @@ class OutreachAreaModel(S3Model):
                                                     feature_required = True,
                                                     ),
                      ),
-                     # Only included to set realm entity:
                      self.org_organisation_id(default = auth.user and auth.user.organisation_id,
                                               #default = root_org,
                                               #readable = is_admin,
@@ -950,8 +949,8 @@ def po_organisation_onaccept(form):
     rtable = current.s3db.po_referral_organisation
     query = (rtable.organisation_id == organisation_id) & \
             (rtable.deleted != True)
-    row = current.db(query).select(rtable.id, limitby=(0, 1)).first()
-    if not row:
+    exists = current.db(query).select(rtable.id, limitby=(0, 1)).first()
+    if not exists:
         rtable.insert(organisation_id=organisation_id)
 
 # =============================================================================

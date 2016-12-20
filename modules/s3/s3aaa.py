@@ -8614,6 +8614,7 @@ class S3EntityRoleManager(S3Method):
                     "org_office",
                     "inv_warehouse",
                     "hms_hospital",
+                    "po_area",
                     "pr_group",
                     ]
 
@@ -9244,7 +9245,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
     def get_form_fields(self):
         """
             Return a list of fields, including a field for selecting
-            an organisation or office.
+            a realm entity (such as an organisation or office).
 
             @return: list of Fields
         """

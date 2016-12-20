@@ -92,9 +92,9 @@ Vietnam,Volunteer Data Entry,vn_dataentry@example.com,eden,vol_data_entry,Viet N
 Vietnam,Volunteer Editor,vn_editor@example.com,eden,vol_editor,Viet Nam Red Cross,,,vi
 Vietnam,Volunteer Super Editor,vn_super@example.com,eden,vol_super,Viet Nam Red Cross,,,vi
 Vietnam,Org Admin,vn_orgadmin@example.com,eden,ORG_ADMIN,Viet Nam Red Cross,,,vi
-NZ,Outreach Admin,nz_admin@example.com,eden,PO_ADMIN,New Zealand Red Cross,,,
-Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_ADMIN/org_organisation.name=Bishopsdale,PO_ADMIN/org_organisation.name=Charing Cross",New Zealand Red Cross,,,
-Kaikoura,Outreach Admin,kaikoura_admin@example.com,eden,PO_ADMIN,Kaikoura,,,
+NZ,Outreach Admin,nz_admin@example.com,eden,"PO_ADMIN/org_organisation.name=New Zealand Red Cross,PO_ADMIN/po_area.name=Christchurch wide,PO_ADMIN/po_area.name=Sumner A,PO_ADMIN/po_area.name=Woolston A,PO_ADMIN/po_area.name=Woolston B,PO_ADMIN/po_area.name=Kaikoura",New Zealand Red Cross,,,
+Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_ADMIN/org_organisation.name=New Zealand Red Cross,PO_ADMIN/po_area.name=Christchurch wide,PO_ADMIN/po_area.name=Sumner A,PO_ADMIN/po_area.name=Woolston A,PO_ADMIN/po_area.name=Woolston B",New Zealand Red Cross,,,
+Kaikoura,Outreach Admin,kaikoura_admin@example.com,eden,"PO_ADMIN/org_organisation.name=New Zealand Red Cross,PO_ADMIN/po_area.name=Kaikoura",Kaikoura,,,
 RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",Africa Zone,,,
 RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",Africa Zone,,,
 AP,RDRT Admin,aprdrtadmin@example.com,eden,"RDRT_ADMIN/0,AP_RDRT_ADMIN/0,message_editor",Asia-Pacific Region,,,
