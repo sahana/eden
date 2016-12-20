@@ -14,8 +14,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter
-from s3 import s3_str
+from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter, s3_str
+
 THEME = "SAMBRO"
 
 # =============================================================================
@@ -56,7 +56,7 @@ class index(S3CustomController):
                               "id"        : "search_results",
                               "layer_id"  : layer_id,
                               # @ToDo: Make the filter update timestamp on refresh in the client side
-                              "filter"    : "~.info.expires__gt=%s" % request.utcnow,
+                              "filter"    : "~.info.expires__gt=%s&~.external__ne=True" % request.utcnow,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
                               }]
@@ -81,6 +81,10 @@ class index(S3CustomController):
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
         resource.add_filter(FS("info.expires") >= request.utcnow)
+        # Only show locally generated Alerts
+        resource.add_filter(FS("external") != True)
+        # Change representation
+        resource.table.status.represent = None
         list_id = "cap_alert_datalist"
         list_fields = ["msg_type",
                        "info.headline",
@@ -108,9 +112,14 @@ class index(S3CustomController):
         if numrows == 0:
             current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
 
-        ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl",
+                       vars={"list_id": list_id,
+                             "info.expires__gt": request.utcnow,
+                             "~.approved_by__ne": None,
+                             "~.external__ne": True})
+        #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
-                                        pagesize = None,
+                                        pagesize = 0,
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
@@ -261,7 +270,7 @@ class subscriptions(S3CustomController):
             filters.append(language_filters)
 
         if current.request.get_vars["option"] == "manage_recipient" and \
-           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):          
+           has_role("ADMIN"):
             from s3 import S3Represent
             recipient_filters = [S3OptionsFilter("id",
                                        label = T("People"),
@@ -361,7 +370,7 @@ class subscriptions(S3CustomController):
         from s3.s3widgets import S3GroupedOptionsWidget, S3MultiSelectWidget
         from s3layouts import S3PopupLink
         # Uses Default Eden formstyle
-        from s3theme import formstyle_foundation as formstyle
+        from s3theme import formstyle_foundation_2col as formstyle
 
         # L10n
         T = current.T
@@ -384,6 +393,7 @@ class subscriptions(S3CustomController):
             NOTIFY_BY = T("Notify By"),
             #MORE = T("More Options"),
             #LESS = T("Less Options"),
+            ATTACHMENT = T("Receive XML Attachment in EMAIL?"),
         )
         messages = Storage(
             ERROR = T("Error: could not update notification settings"),
@@ -459,26 +469,11 @@ class subscriptions(S3CustomController):
         rows = []
 
         selector = S3GroupedOptionsWidget(cols=1)
-        # Deactivated trigger selector
-        #rows.append(("trigger_selector__row",
-        #             "%s:" % labels.NOTIFY_ON,
-        #             selector(stable.notify_on,
-        #                      subscription["notify_on"],
-        #                      _id="trigger_selector"),
-        #             ""))
-
-        #switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
-        # Deactivated: frequency selector
-        #rows.append(("frequency_selector__row",
-        #             "%s:" % labels.FREQUENCY,
-        #             switch(stable.frequency,
-        #                    subscription["frequency"],
-        #                    _id="frequency_selector"),
-        #             ""))
 
         methods = [("EMAIL", T("Email")),
                    ("SMS", T("SMS")),
                    ("FTP", T("FTP")),
+                   ("GCM", T("Mobile App")),
                    ]
 
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
@@ -491,8 +486,22 @@ class subscriptions(S3CustomController):
                      ""))
 
         if not (request.get_vars["option"] == "manage_recipient" and \
-           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER"))):
+           has_role("ADMIN")):
             # managing own subscriptions
+            attachment_filter = S3GroupedOptionsWidget(cols=2, multiple=False)
+            attachment_options = [(False, T("No")),
+                                  (True, T("Yes")),
+                                  ]
+
+            rows.append(("attachment_filter__row",
+                         "%s:" % labels.ATTACHMENT,
+                         attachment_filter(Storage(name="attachment-filter",
+                                                   requires=IS_IN_SET(attachment_options)
+                                                   ),
+                                           subscription["attachment"],
+                                           _id="attachment_selector"),
+                         ""))
+
             properties = subscription["comments"]
             if properties:
                 properties = json.loads(properties)
@@ -621,7 +630,7 @@ $('#method_selector').change(function(){
             # Fixed method
             subscription["method"] = formvars.method
             # Fixed Notify On and Frequency
-            subscription["notify_on"] = ["new"]
+            subscription["notify_on"] = ["upd"]
             subscription["frequency"] = "immediately"
             # Alternatively, with notify and frequency selector
             #subscription["notify_on"] = listify(formvars.notify_on)
@@ -630,6 +639,10 @@ $('#method_selector').change(function(){
             group_ids = formvars["group-filter"]
             # Recipient IDs
             user_ids = formvars["person-filter"]
+            # Attachment
+            attachment = False
+            if formvars["attachment-filter"] == "True":
+                attachment = True
 
             from collections import Counter
 
@@ -827,6 +840,7 @@ $('#method_selector').change(function(){
                                         pe_id,
                                         filter_id=row.pr_subscription.filter_id,
                                         subscription_id=subscription_id,
+                                        attachment=attachment,
                                         )
                     else:
                         # Remove
@@ -855,15 +869,19 @@ $('#method_selector').change(function(){
                                         pe_id,
                                         filter_id=row.pr_subscription.filter_id,
                                         subscription_id=row.pr_subscription.id,
+                                        attachment=attachment,
                                         )
                             break
                     else:
                         # Create
                         success_subscription = update_subscription(subscription,
-                                                                   pe_id)
+                                                                   pe_id,
+                                                                   attachment=attachment)
                 else:
                     # Create
-                    success_subscription = update_subscription(subscription, pe_id)
+                    success_subscription = update_subscription(subscription,
+                                                               pe_id,
+                                                               attachment=attachment)
 
                 # Process Sync FTP Subscription
                 if "FTP" in subscription["method"] and formvars.repository_id:
@@ -884,7 +902,7 @@ $('#method_selector').change(function(){
                             (stable.owned_by_group == None) & \
                             (stable.owned_by_user == user_id)
                     db(query).update(comments=None)
-                
+
                 redirect(URL(c="pr", f="subscription"))
 
             if success_subscription:
@@ -912,13 +930,14 @@ $('#method_selector').change(function(){
                     (stable.pe_id == pe_id) & \
                     (stable.owned_by_group == None) & \
                     (stable.owned_by_user == current.auth.user.id)
-    
+
             left = ftable.on(ftable.id == stable.filter_id)
             row = db(query).select(stable.id,
                                    #stable.notify_on,
                                    #stable.frequency,
                                    stable.method,
                                    stable.comments,
+                                   stable.attachment,
                                    ftable.id,
                                    ftable.query,
                                    left=left,
@@ -978,6 +997,7 @@ $('#method_selector').change(function(){
                            "frequency": "immediately",#s.frequency
                            "method": s.method,
                            "comments": s.comments,
+                           "attachment": s.attachment,
                            })
 
         else:
@@ -990,6 +1010,7 @@ $('#method_selector').change(function(){
                            "frequency": "immediately",#stable.frequency.default,
                            "method": stable.method.default,
                            "comments": None,
+                           "attachment": False,
                            })
         return output
 
@@ -1002,7 +1023,7 @@ $('#method_selector').change(function(){
         ftable = s3db.pr_filter
         output = {}
         get_vars = {}
-        if pe_id is not None and subscription_id is not None:
+        if pe_id and subscription_id:
             query = (stable.id == subscription_id) & \
                     (stable.deleted != True) & \
                     (stable.pe_id == pe_id)
@@ -1021,6 +1042,10 @@ $('#method_selector').change(function(){
                     for k, v in filters:
                         if v is None:
                             continue
+                        if k == "info.language__belongs":
+                            k = "language__belongs"
+                        if k == "info.priority__belongs":
+                            k = "priority__belongs"
                         if k in get_vars:
                             if type(get_vars[k]) is list:
                                 get_vars[k].append(v)
@@ -1080,6 +1105,7 @@ $('#method_selector').change(function(){
                              pe_id,
                              filter_id=None,
                              subscription_id=None,
+                             attachment=False,
                              ):
         """ Update subscription settings """
 
@@ -1092,8 +1118,15 @@ $('#method_selector').change(function(){
         # Private alert are not sent through subscription
         filters = subscription.get("filters")
         filters = json.loads(filters)
+        for filter in filters:
+            if filter[0] == "language__belongs":
+                filter[0] = "info.language__belongs"
+            if filter[0] == "priority__belongs":
+                filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
+        system_alert_filter = ["external__ne", "True"]
         filters.append(scope_filter)
+        filters.append(system_alert_filter)
         filters = json.dumps(filters)
 
         if not filter_id:
@@ -1112,7 +1145,8 @@ $('#method_selector').change(function(){
                                     filter_id=filter_id,
                                     notify_on=subscription["notify_on"],
                                     frequency=frequency,
-                                    method=subscription["method"])
+                                    method=subscription["method"],
+                                    attachment=attachment)
             subscription_id = success
         else:
             success = db(stable.id == subscription_id).update(
@@ -1120,7 +1154,8 @@ $('#method_selector').change(function(){
                             filter_id=filter_id,
                             notify_on=subscription["notify_on"],
                             frequency=frequency,
-                            method=subscription["method"])
+                            method=subscription["method"],
+                            attachment=attachment)
         if not success:
             return None
 
@@ -1223,12 +1258,18 @@ $('#method_selector').change(function(){
 
         filters = subscription.get("filters")
         filters = json.loads(filters)
+        for filter in filters:
+            if filter[0] == "language__belongs":
+                filter[0] = "info.language__belongs"
+            if filter[0] == "priority__belongs":
+                filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
+        system_alert_filter = ["external__ne", "True"]
         filters.append(scope_filter)
-        filters = json.dumps(filters)
-        filters_ = json.loads(filters)
-        filters_ = [filter_ for filter_ in filters_
-                    if filter_[0] != "id__belongs"]
+        filters.append(system_alert_filter)
+
+        filters_ = [filter for filter in filters
+                    if filter[0] != "id__belongs"]
         filters_ = json.dumps(filters_)
         if filter_id is None:
             success = ftable.insert(pe_id=pe_id, query=filters_)
@@ -1481,9 +1522,9 @@ $('#method_selector').change(function(){
     def _get_group_pe_id(self, group_ids):
         """
             Get the PE-ID for list of group_ids
-    
+
             @param group_ids: the list of group_ids
-    
+
             @return: dictionary of pe_id and group_id
         """
 
@@ -1529,10 +1570,165 @@ class user_info(S3CustomController):
 
             response = {"r": roles,
                         "uid": user.id,
-                        "pe_id": user.pe_id,
+                        "pid": auth.s3_logged_in_person(),
                         "o": current.deployment_settings.get_cap_expire_offset(),
                         }
             current.response.headers["Content-Type"] = "application/json"
             return json.dumps(response)
+
+# =============================================================================
+class alert_hub_cop(S3CustomController):
+    """ Secondary (home) page for the Alert Hub """
+
+    # -------------------------------------------------------------------------
+    def __call__(self):
+        """ Main entry point, configuration """
+
+        logged_in = current.auth.s3_logged_in()
+        if logged_in:
+            fn = "alert"
+        else:
+            fn = "public"
+
+        T = current.T
+        s3db = current.s3db
+        request = current.request
+
+        output = {}
+
+        # Map
+        ftable = s3db.gis_layer_feature
+        query = (ftable.controller == "cap") & \
+                (ftable.function == fn)
+        layer = current.db(query).select(ftable.layer_id,
+                                         limitby=(0, 1)
+                                         ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            from s3 import s3_debug
+            s3_debug("Cannot find Layer for Map")
+            layer_id = None
+
+        last_month = request.utcnow + timedelta(-30)
+
+        map_filter = "~.external=True&~.status=Actual&~.info.expires__gt=%s" % last_month
+
+        feature_resources = [{"name"      : T("Alerts"),
+                              "id"        : "search_results",
+                              "layer_id"  : layer_id,
+                              "filter"    : map_filter,
+                              # We activate in callback after ensuring URL is updated for current filter status
+                              "active"    : False,
+                              }]
+
+        _map = current.gis.show_map(callback='''S3.search.s3map()''',
+                                    catalogue_layers=True,
+                                    collapsed=True,
+                                    feature_resources=feature_resources,
+                                    save=False,
+                                    search=True,
+                                    toolbar=True,
+                                    )
+        output["_map"] = _map
+
+        # Filterable List of Alerts
+        # - most recent first
+        resource = s3db.resource("cap_alert")
+        # Don't show Templates
+        resource.add_filter(FS("is_template") == False)
+        if not logged_in:
+            # Only show Public Alerts
+            resource.add_filter(FS("scope") == "Public")
+        # Only show Alerts from the past 30 days
+        resource.add_filter(FS("info.expires") >= last_month)
+        # Show External Alerts
+        resource.add_filter(FS("external") == True)
+        # Show only Actual alert
+        resource.add_filter(FS("status") == "Actual")
+        # Change representation
+        resource.table.status.represent = None
+        list_id = "cap_alert_datalist"
+        list_fields = ["msg_type",
+                       "info.headline",
+                       "area.name",
+                       #"info.description",
+                       "info.sender_name",
+                       "info.priority",
+                       "status",
+                       "scope",
+                       "info.event_type_id",
+                       "info.severity",
+                       "info.certainty",
+                       "info.urgency",
+                       "sent",
+                       ]
+        # Order with most recent Alert first
+        orderby = "cap_alert.sent desc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = None,
+                                                   list_id = list_id,
+                                                   orderby = orderby,
+                                                   layout = s3db.cap_alert_list_layout
+                                                   )
+        if numrows == 0:
+            current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
+
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl",
+                       vars={"list_id": list_id,
+                             "info.expires__gt": last_month,
+                             "~.external": True,
+                             "~.status": "Actual"})
+        #@ToDo: Implement pagination properly
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 0,
+                                        )
+
+        # @ToDo: Options are currently built from the full-set rather than the filtered set
+        filter_widgets = [#S3LocationFilter("location.location_id",
+                          #                 label=T("Location"),
+                          #                 levels=("L0",),
+                          #                 widget="multiselect",
+                          #                 ),
+                          S3OptionsFilter("info.event_type_id",
+                                          #label=T("Event Type"),
+                                          ),
+                          S3DateFilter("info.expires",
+                                       label = "",
+                                       #label=T("Expiry Date"),
+                                       hide_time=True,
+                                       ),
+                          ]
+        filter_form = S3FilterForm(filter_widgets,
+                                   ajax=True,
+                                   submit=True,
+                                   url=ajax_url,
+                                   )
+        output["alert_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+
+        # Title and view
+        output["title"] = s3_str(current.deployment_settings.get_cap_alert_hub_title())
+
+        # Button to view datalist from map
+        datalist_btn = A(T("View Datalist"),
+                         _href = URL(c="cap",
+                                     f=fn,
+                                     vars = {"~.external": True}
+                                     ),
+                         _class = "action-btn button tiny",
+                         )
+        output["datalist_btn"] = datalist_btn
+
+        self._view(THEME, "alert_hub.html")
+
+        s3 = current.response.s3
+        # Custom CSS
+        s3.stylesheets.append("../themes/SAMBRO/style.css")
+
+        # Custom JS
+        s3.scripts.append("/%s/static/themes/SAMBRO/js/homepage.js" % request.application)
+
+        return output
 
 # END =========================================================================

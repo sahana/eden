@@ -34,13 +34,7 @@
 
 __all__ = ("S3CRUD",)
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 try:
     from lxml import etree
@@ -58,7 +52,7 @@ from s3datetime import S3DateTime
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
-from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
+from s3utils import s3_str, s3_unicode, s3_validate, s3_represent_value, s3_set_extension
 from s3widgets import S3EmbeddedComponentWidget, S3Selector, ICON
 
 # Compact JSON encoding
@@ -250,24 +244,44 @@ class S3CRUD(S3Method):
                 if buttons:
                     output["buttons"] = buttons
 
-            # Component join
+            # Component defaults and linking
             link = None
             if r.component:
+
+                defaults = r.component.get_defaults(r.record)
+
                 if resource.link is None:
-                    # No link table - direct component
+                    # Apply component defaults
+                    linked = resource.linked
+                    ctable = linked.table if linked else table
+                    for (k, v) in defaults.items():
+                        ctable[k].default = v
+
+                    # Configure post-process for S3EmbeddedComponentWidget
                     link = self._embed_component(resource, record=r.id)
+
+                    # Set default value for parent key (fkey)
                     pkey = resource.pkey
                     fkey = resource.fkey
                     field = table[fkey]
                     value = r.record[pkey]
-                    field.comment = None
-                    field.default = value
-                    field.update = value
+                    field.default = field.update = value
+
+                    # Add parent key to POST vars so that callbacks can see it
                     if r.http == "POST":
                         r.post_vars.update({fkey: value})
+
+                    # Hide the parent link in component forms
+                    field.comment = None
                     field.readable = False
                     field.writable = False
+
                 else:
+                    # Apply component defaults
+                    for (k, v) in defaults.items():
+                        table[k].default = v
+
+                    # Configure post-process to add a link table entry
                     link = Storage(resource=resource.link, master=r.record)
 
             get_vars = r.get_vars
@@ -393,7 +407,14 @@ class S3CRUD(S3Method):
                 elif r.http == "POST" and "save_close" in r.post_vars:
                     create_next = _config("create_next_close")
                 elif session.s3.rapid_data_entry and not r.component:
+                    if "w" in r.get_vars:
+                        # Don't redirect to form tab from summary page
+                        w = r.get_vars.pop("w")
+                    else:
+                        w = None
                     create_next = r.url()
+                    if w:
+                        r.get_vars["w"] = w
                 else:
                     create_next = _config("create_next")
 
@@ -1106,7 +1127,12 @@ class S3CRUD(S3Method):
                 show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
                 from s3filter import S3FilterForm
-                S3FilterForm.apply_filter_defaults(r, resource)
+                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+            else:
+                default_filters = None
+
+            get_vars = r.get_vars
+            attr = dict(attr)
 
             # Data
             list_type = attr.get("list_type", "datatable")
@@ -1115,18 +1141,23 @@ class S3CRUD(S3Method):
                 target = "datalist"
                 output = self._datalist(r, **attr)
             else:
-                # Hide datatable filter box if we have a filter form
                 if filter_widgets and not hide_filter:
                     dtargs = attr.get("dtargs", {})
+                    # Hide datatable filter box if we have a filter form
                     if "dt_searching" not in dtargs:
                         dtargs["dt_searching"] = False
-                    _attr = dict(attr)
-                    _attr["dtargs"] = dtargs
-                else:
-                    _attr = attr
+                    # Override default ajax URL if we have default filters
+                    if default_filters:
+                        ajax_vars = dict(get_vars)
+                        ajax_vars.update(default_filters)
+                        ajax_url = r.url(representation = "aadata",
+                                         vars = ajax_vars,
+                                         )
+                        dtargs["dt_ajax_url"] = ajax_url
+                    attr["dtargs"] = dtargs
                 filter_ajax = True
                 target = "datatable"
-                output = self._datatable(r, **_attr)
+                output = self._datatable(r, **attr)
 
             if representation in ("aadata", "dl"):
                 return output
@@ -1149,35 +1180,36 @@ class S3CRUD(S3Method):
                 # Where to retrieve filtered data from:
                 filter_submit_url = attr.get("filter_submit_url")
                 if not filter_submit_url:
-                    _vars = self._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=_vars)
+                    get_vars_ = self._remove_filters(get_vars)
+                    filter_submit_url = r.url(vars=get_vars_)
 
                 # Where to retrieve updated filter options from:
-                filter_ajax_url = attr.get("filter_ajax_url",
-                                           r.url(method="filter",
-                                                 vars={},
-                                                 representation="options"))
-
+                filter_ajax_url = attr.get("filter_ajax_url")
+                if filter_ajax_url is None:
+                    filter_ajax_url = r.url(method = "filter",
+                                            vars = {},
+                                            representation = "options",
+                                            )
                 filter_clear = get_config("filter_clear",
                                           current.deployment_settings.get_ui_filter_clear())
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                           clear=filter_clear,
-                                           formstyle=filter_formstyle,
-                                           submit=filter_submit,
-                                           ajax=filter_ajax,
-                                           url=filter_submit_url,
-                                           ajaxurl=filter_ajax_url,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % target
+                                           clear = filter_clear,
+                                           formstyle = filter_formstyle,
+                                           submit = filter_submit,
+                                           ajax = filter_ajax,
+                                           url = filter_submit_url,
+                                           ajaxurl = filter_ajax_url,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % target
                                            )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
-                                                              r.get_vars,
-                                                              target=target,
-                                                              alias=alias
+                                                              get_vars,
+                                                              target = target,
+                                                              alias = alias
                                                               )
             else:
                 # Render as empty string to avoid the exception in the view
@@ -1207,10 +1239,11 @@ class S3CRUD(S3Method):
                         addtitle = self.crud_string(tablename, "label_create")
                         output["addtitle"] = addtitle
                         showadd_btn = self.crud_button(None,
-                                                       tablename=tablename,
-                                                       name="label_create",
-                                                       icon="add",
-                                                       _id="show-add-btn")
+                                                       tablename = tablename,
+                                                       name = "label_create",
+                                                       icon = "add",
+                                                       _id = "show-add-btn",
+                                                       )
                         output["showadd_btn"] = showadd_btn
 
                     # Restore the view
@@ -1239,24 +1272,26 @@ class S3CRUD(S3Method):
                        self._permitted(method="update"):
                         items = self.update(r, **attr).get("form", None)
                     else:
-                        items = self.sqlform(request=self.request,
-                                             resource=self.resource,
-                                             record_id=r.id,
-                                             readonly=True,
-                                             format=representation)
+                        items = self.sqlform(request = self.request,
+                                             resource = self.resource,
+                                             record_id = r.id,
+                                             readonly = True,
+                                             format = representation,
+                                             )
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
                 rows = resource.select(list_fields,
-                                       limit=None,
-                                       as_rows=True)
+                                       limit = None,
+                                       as_rows = True,
+                                       )
                 if rows:
                     items = rows.as_list()
                 else:
                     items = []
 
             current.response.view = "plain.html"
-            return dict(item=items)
+            return {"items": items}
 
         elif representation == "csv":
 
@@ -1280,10 +1315,11 @@ class S3CRUD(S3Method):
 
             exporter = S3Exporter().json
             return exporter(resource,
-                            start=start,
-                            limit=limit,
-                            represent=represent,
-                            tooltip=tooltip)
+                            start = start,
+                            limit = limit,
+                            represent = represent,
+                            tooltip = tooltip,
+                            )
 
         elif representation == "pdf":
 
@@ -1293,8 +1329,8 @@ class S3CRUD(S3Method):
 
             exporter = S3Exporter().pdf
             return exporter(resource,
-                            request=r,
-                            list_fields=list_fields,
+                            request = r,
+                            list_fields = list_fields,
                             report_hide_comments = report_hide_comments,
                             report_filename = report_filename,
                             report_formname = report_formname,
@@ -1303,21 +1339,21 @@ class S3CRUD(S3Method):
         elif representation == "shp":
             exporter = S3Exporter().shp
             return exporter(resource,
-                            list_fields=list_fields,
+                            list_fields = list_fields,
                             **attr)
 
         elif representation == "svg":
             exporter = S3Exporter().svg
             return exporter(resource,
-                            list_fields=list_fields,
+                            list_fields = list_fields,
                             **attr)
 
         elif representation == "xls":
             report_groupby = get_config("report_groupby", None)
             exporter = S3Exporter().xls
             return exporter(resource,
-                            list_fields=list_fields,
-                            report_groupby=report_groupby,
+                            list_fields = list_fields,
+                            report_groupby = report_groupby,
                             **attr)
 
         elif representation == "msg":
@@ -1832,7 +1868,7 @@ class S3CRUD(S3Method):
                                     dt_pageLength=display_length,
                                     dt_dom = dt_dom,
                                     )
-                s3.actions = [{"label": str(current.T("Review")),
+                s3.actions = [{"label": s3_str(current.T("Review")),
                                "url": r.url(id="[id]", method="review"),
                                "_class": "action-btn"}]
 
@@ -1914,10 +1950,10 @@ class S3CRUD(S3Method):
             if self._permitted("approve"):
 
                 approve = FORM(INPUT(_value=T("Approve"),
-                                    _type="submit",
-                                    _name="approve-btn",
-                                    _id="approve-btn",
-                                    _class="action-btn"))
+                                     _type="submit",
+                                     _name="approve-btn",
+                                     _id="approve-btn",
+                                     _class="action-btn"))
 
                 reject = FORM(INPUT(_value=T("Reject"),
                                     _type="submit",
@@ -2451,7 +2487,7 @@ class S3CRUD(S3Method):
         """
 
         link = dict(attr)
-        link["label"] = str(label) #s3_unicode(label).encode("utf8")
+        link["label"] = s3_str(label)
         link["url"] = url
         if icon and current.deployment_settings.get_ui_use_button_icons():
             link["icon"] = ICON.css_class(icon)
@@ -2465,8 +2501,9 @@ class S3CRUD(S3Method):
             s3.actions.append(link)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def action_buttons(r,
+    @classmethod
+    def action_buttons(cls,
+                       r,
                        deletable=True,
                        editable=True,
                        copyable=False,
@@ -2511,9 +2548,7 @@ class S3CRUD(S3Method):
             table = r.table
             args = ["[id]"]
 
-        get_vars = Storage()
-        if "viewing" in r.get_vars:
-            get_vars["viewing"] = r.get_vars["viewing"]
+        get_vars = cls._linkto_vars(r)
 
         # If this request is in iframe-format, action URLs should be in
         # iframe-format as well
@@ -2598,7 +2633,6 @@ class S3CRUD(S3Method):
         # Append custom actions
         if custom_actions:
             s3.actions = s3.actions + custom_actions
-        return
 
     # -------------------------------------------------------------------------
     def _default_cancel_button(self, r):
@@ -2680,7 +2714,7 @@ class S3CRUD(S3Method):
     @staticmethod
     def import_url(r):
         """
-            Import data from URL query
+            Import data from vars in URL query
 
             @param r: the S3Request
             @note: can only update single records (no mass-update)
@@ -2962,6 +2996,7 @@ class S3CRUD(S3Method):
                 except TypeError:
                     url = linkto % record_id
             else:
+                get_vars = self._linkto_vars(r)
                 if r.component:
                     if r.link and not r.actuate_link():
                         # We're rendering a link table here, but must
@@ -2986,22 +3021,16 @@ class S3CRUD(S3Method):
                         args = [r.id, r.component_name, record_id]
                     if update:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["update"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["update"],
+                                      vars = get_vars
                                       ))
                     else:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["read"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["read"],
+                                      vars = get_vars
                                       ))
                 else:
                     args = [record_id]
-                    # Don't forward get_vars, except "viewing"
-                    get_vars = Storage()
-                    if "viewing" in r.get_vars:
-                        get_vars.viewing = r.get_vars["viewing"]
                     if update:
                         url = str(URL(r=r, c=c, f=f,
                                       args = args + ["update"],
@@ -3017,6 +3046,32 @@ class S3CRUD(S3Method):
             return url
 
         return list_linkto
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _linkto_vars(r):
+        """
+            Retain certain GET vars of the request in action links
+
+            @param r: the S3Request
+
+            @return: Storage with GET vars
+        """
+
+        get_vars = r.get_vars
+        linkto_vars = Storage()
+
+        # Retain "viewing"
+        if not r.component and "viewing" in get_vars:
+            linkto_vars.viewing = get_vars["viewing"]
+
+        keep_vars = current.response.s3.crud.keep_vars
+        if keep_vars:
+            for key in keep_vars:
+                if key in get_vars:
+                    linkto_vars[key] = get_vars[key]
+
+        return linkto_vars
 
     # -------------------------------------------------------------------------
     @staticmethod

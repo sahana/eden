@@ -74,34 +74,39 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
-                               cap_resource=T("CAP Resource"),
-                               cms_post=T("Post"),
-                               cr_shelter=T("Shelter"),
-                               deploy_mission=T("Mission"),
-                               doc_sitrep=T("Situation Report"),
-                               event_incident=T("Incident"),
-                               event_incident_report=T("Incident Report"),
-                               hms_hospital=T("Hospital"),
-                               hrm_human_resource=T("Human Resource"),
-                               inv_adj=T("Stock Adjustment"),
-                               inv_warehouse=T("Warehouse"),
+        entity_types = Storage(asset_asset = T("Asset"),
+                               cap_resource = T("CAP Resource"),
+                               cms_post = T("Post"),
+                               cr_shelter = T("Shelter"),
+                               deploy_mission = T("Mission"),
+                               doc_sitrep = T("Situation Report"),
+                               dvr_case_activity = T("Case Activity"),
+                               event_event = T("Event"),
+                               event_incident = T("Incident"),
+                               event_incident_report = T("Incident Report"),
+                               fire_station = T("Fire Station"),
+                               hms_hospital = T("Hospital"),
+                               hrm_human_resource = T("Human Resource"),
+                               inv_adj = T("Stock Adjustment"),
+                               inv_warehouse = T("Warehouse"),
                                # @ToDo: Deprecate
-                               irs_ireport=T("Incident Report"),
-                               pr_group=T("Team"),
-                               project_project=T("Project"),
-                               project_activity=T("Project Activity"),
-                               project_framework=T("Project Framework"),
-                               project_task=T("Task"),
-                               org_office=T("Office"),
-                               org_facility=T("Facility"),
-                               org_group=T("Organization Group"),
-                               req_req=T("Request"),
+                               irs_ireport = T("Incident Report"),
+                               police_station = T("Police Station"),
+                               pr_group = T("Team"),
+                               project_project = T("Project"),
+                               project_activity = T("Project Activity"),
+                               project_framework = T("Project Framework"),
+                               project_programme = T("Project Programme"),
+                               project_task = T("Task"),
+                               org_office = T("Office"),
+                               org_facility = T("Facility"),
+                               org_group = T("Organization Group"),
+                               req_req = T("Request"),
                                # @ToDo: Deprecate
-                               stats_people=T("People"),
-                               vulnerability_document=T("Vulnerability Document"),
-                               vulnerability_risk=T("Risk"),
-                               vulnerability_evac_route=T("Evacuation Route"),
+                               #stats_people = T("People"),
+                               vulnerability_document = T("Vulnerability Document"),
+                               vulnerability_risk = T("Risk"),
+                               vulnerability_evac_route = T("Evacuation Route"),
                                )
 
         tablename = "doc_entity"
@@ -139,7 +144,7 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            label = T("Name")
                            ),
                      Field("url",
@@ -193,7 +198,8 @@ class S3DocumentLibrary(S3Model):
             msg_list_empty = T("No Documents found")
         )
 
-        # Search Method
+        # Filter Widgets
+        # - define in-template if-required
 
         # Resource Configuration
         if current.deployment_settings.get_base_solr_url():
@@ -272,7 +278,7 @@ class S3DocumentLibrary(S3Model):
                      Field("name", length=128,
                            label = T("Name"),
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            ),
                      Field("url",
                            label = T("URL"),
@@ -689,6 +695,7 @@ class S3DocSitRepModel(S3Model):
                           self.super_link("doc_id", "doc_entity"),
                           Field("name", length=128,
                                label = T("Name"),
+                               requires = IS_LENGTH(128),
                                ),
                           Field("description", "text",
                                 label = T("Description"),
@@ -765,6 +772,11 @@ class S3DocSitRepModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            event_event = {"link": "event_sitrep",
+                                           "joinby": "sitrep_id",
+                                           "key": "event_id",
+                                           #"actuate": "replace",
+                                           },
                             event_sitrep = {"name": "event_sitrep",
                                             "joinby": "sitrep_id",
                                             },

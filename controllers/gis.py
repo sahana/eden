@@ -1339,6 +1339,12 @@ def hierarchy():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def location_tag():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def menu():
     """ RESTful CRUD controller """
 

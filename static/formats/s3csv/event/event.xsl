@@ -206,7 +206,6 @@
         <xsl:variable name="SubSubType">
             <xsl:value-of select="col[@field='SubSubType']"/>
         </xsl:variable>
-        
 
         <!-- Event -->
         <resource name="event_event">
@@ -278,31 +277,59 @@
             </xsl:choose>
 
             <!-- Link to Event Type -->
-            <reference field="event_type_id" resource="event_event_type">
-                <xsl:attribute name="tuid">
-                    <xsl:choose>
-                        <xsl:when test="$SubSubType!=''">
-                            <!-- Hierarchical Type with 3 levels -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
-                        </xsl:when>
-                        <xsl:when test="$SubType!=''">
-                            <!-- Hierarchical Type with 2 levels -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <!-- Simple Type -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$Type!=''">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:choose>
+                            <xsl:when test="$SubSubType!=''">
+                                <!-- Hierarchical Type with 3 levels -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                            </xsl:when>
+                            <xsl:when test="$SubType!=''">
+                                <!-- Hierarchical Type with 2 levels -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <!-- Simple Type -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Link to Location(s) -->
+            <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+            <xsl:variable name="l1" select="col[@field='L1']/text()"/>
+            <xsl:variable name="l2" select="col[@field='L2']/text()"/>
+            <xsl:variable name="l3" select="col[@field='L3']/text()"/>
+            <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+            <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+
             <xsl:if test="col[contains(
                               document('../labels.xml')/labels/column[@name='Country']/match/text(),
                               concat('|', @field, '|'))]!=''">
                 <resource name="event_event_location">
-                    <xsl:call-template name="LocationReference"/>
+                    <xsl:call-template name="LocationReference">
+                        <xsl:with-param name="l0">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="l1">
+                            <xsl:value-of select="$l1"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="l2">
+                            <xsl:value-of select="$l2"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="l3">
+                            <xsl:value-of select="$l3"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="l4">
+                            <xsl:value-of select="$l4"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="l5">
+                            <xsl:value-of select="$l5"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
                 </resource>
             </xsl:if>
 
@@ -316,6 +343,24 @@
                 <xsl:call-template name="Impact">
                     <xsl:with-param name="Event">
                         <xsl:value-of select="$EventName"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l0">
+                        <xsl:value-of select="$l0"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l1">
+                        <xsl:value-of select="$l1"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l2">
+                        <xsl:value-of select="$l2"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l3">
+                        <xsl:value-of select="$l3"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l4">
+                        <xsl:value-of select="$l4"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l5">
+                        <xsl:value-of select="$l5"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
@@ -369,6 +414,12 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Impact">
         <xsl:param name="Event"/>
+        <xsl:param name="l0"/>
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+        <xsl:param name="l4"/>
+        <xsl:param name="l5"/>
 
         <xsl:variable name="ImpactType" select="normalize-space(substring-after(@field, ':'))"/>
         <xsl:variable name="Value" select="text()"/>
@@ -376,7 +427,7 @@
         <xsl:if test="$Value!=''">
             <resource name="stats_impact">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('IMP:', $Event, '/', $ImpactType)"/>
+                    <xsl:value-of select="concat('IMP:', $Event, '/', $l0, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $ImpactType)"/>
                 </xsl:attribute>
                 <reference field="parameter_id" resource="stats_impact_type">
                     <xsl:attribute name="tuid">
@@ -384,11 +435,32 @@
                     </xsl:attribute>
                 </reference>
                 <data field="value"><xsl:value-of select="$Value"/></data>
+                <!-- Link to Location -->
+                <xsl:call-template name="LocationReference">
+                    <xsl:with-param name="l0">
+                        <xsl:value-of select="$l0"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l1">
+                        <xsl:value-of select="$l1"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l2">
+                        <xsl:value-of select="$l2"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l3">
+                        <xsl:value-of select="$l3"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l4">
+                        <xsl:value-of select="$l4"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="l5">
+                        <xsl:value-of select="$l5"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </resource>
             <resource name="event_event_impact">
                 <reference field="impact_id" resource="stats_impact">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('IMP:', $Event, '/', $ImpactType)"/>
+                        <xsl:value-of select="concat('IMP:', $Event, '/', $l0, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $ImpactType)"/>
                     </xsl:attribute>
                 </reference>
             </resource>
@@ -775,13 +847,12 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="LocationReference">
-
-        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
-        <xsl:variable name="l1" select="col[@field='L1']/text()"/>
-        <xsl:variable name="l2" select="col[@field='L2']/text()"/>
-        <xsl:variable name="l3" select="col[@field='L3']/text()"/>
-        <xsl:variable name="l4" select="col[@field='L4']/text()"/>
-        <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+        <xsl:param name="l0"/>
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+        <xsl:param name="l4"/>
+        <xsl:param name="l5"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">

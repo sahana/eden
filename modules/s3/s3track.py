@@ -88,7 +88,7 @@ class S3Trackable(object):
                 # tablename = trackable
             # fields = self.__get_fields(table)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # query = (table._id > 0)
             # if uid is None:
                 # if record_id is not None:
@@ -149,7 +149,7 @@ class S3Trackable(object):
             # self.rtable = s3db[tablename]
             # fields = self.__get_fields(self.rtable)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # query = trackable
             # fields = [self.rtable[f] for f in fields]
             # rows = db(query).select(*fields)
@@ -158,7 +158,7 @@ class S3Trackable(object):
             self.rtable = s3db[tablename]
             fields = self.__get_fields(self.rtable)
             if not fields:
-                raise SyntaxError("Not a trackable type: %s" % tablename)
+                raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             fields = [self.rtable[f] for f in fields]
             rows = db(query).select(*fields)
 
@@ -168,7 +168,7 @@ class S3Trackable(object):
             # table = s3db[tablename]
             # fields = self.__get_fields(table)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # fields = [table[f] for f in fields]
             # rows = trackable.select(*fields)
 
@@ -181,10 +181,10 @@ class S3Trackable(object):
                 table = s3db[r.instance_type]
                 fields = self.__get_fields(table, super_entity=False)
                 if not fields:
-                    raise SyntaxError("No trackable type: %s" % table._tablename)
+                    raise SyntaxError("Table %s is not a trackable type" % table._tablename)
                 fields = [table[f] for f in fields]
-                query = table[UID] == r[UID]
-                row = db(query).select(limitby=(0, 1), *fields).first()
+                row = db(table[UID] == r[UID]).select(limitby=(0, 1),
+                                                      *fields).first()
                 if row:
                     records.append(row)
             else:
@@ -660,8 +660,8 @@ class S3Trackable(object):
             timestamp = datetime.utcnow()
         if track_id:
             trackable = self.table[track_id]
-        if trackable:
-            trackable.update_record(track_timestmp=timestamp)
+            if trackable:
+                trackable.update_record(track_timestmp=timestamp)
 
 # =============================================================================
 class S3Tracker(object):

@@ -1,7 +1,7 @@
 .org-logo {
     vertical-align: top;
     display: inline-block;
-    padding: 0.5rem 0.5rem 0.5rem 0;
+    padding: 0.4rem 0.5rem 0.3rem 0;
 }
 .system-title {
     display: inline-block;
@@ -58,11 +58,13 @@
     padding: 0.5rem 0;
     padding-right: 0.5rem;
     font-size: 0.7rem;
-    i.icon {
+    i.icon, i.fa {
         padding-left: 0.2rem;
         padding-right: 0;
     }
-    float: right;
+}
+.event-bottom .username {
+    padding: 0;
 }
 .overdue {
     color: red;
@@ -70,11 +72,11 @@
 .invalid-case {
     border: 1px solid red;
     color: red;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: bold;
-    line-height: 1.6rem;
+    line-height: 1.9rem;
     margin-bottom: 0.25rem;
-    padding: 0.2rem;
+    padding: 0.1rem 0.2rem;
     text-transform: uppercase;
 }
 .checkpoint-advise {
@@ -97,8 +99,8 @@
     text-align: right;
 }
 .event-type-setting {
-    color: black;
-    font-size: 1.1rem;
+    color: #afafaf;
+    font-size: 0.9rem;
     margin-left: 0.8rem;
     vertical-align: text-top;
 }
@@ -140,7 +142,7 @@ body.rtl {
     .username {
         padding-left: 0.5rem;
         padding-right: 0;
-        i.icon {
+        i.icon, i.fa {
             padding-left: 0;
             padding-right: 0.2rem;
         }
@@ -148,5 +150,54 @@ body.rtl {
     }
     .event-type-header {
         text-align: left;
+    }
+}
+
+// Event registration UI
+.event-registration-blocked {
+    background-color: #FFAAAA;
+    color: black;
+    padding: 0.2rem 0.5rem;
+    margin: 0.2rem 0.6rem;
+}
+.check-in-warning {
+    color: red;
+    font-weight: bold;
+    margin-left: 0.5rem;
+    i {
+        margin-right: 0.3rem;
+    }
+}
+.profile-picture {
+    margin-top: 1rem;
+    .image-row {
+        margin-bottom: 1rem;
+    }
+}
+
+// Check-in/out UI
+#site_check_in_info__row .controls {
+    width: 100%;
+}
+#site_check_in_status__row .controls {
+    padding-top: 0.3rem;
+    width: 100%;
+}
+#check-in-form {
+    .status-label {
+        font-size: 0.9rem;
+    }
+    .status-message {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    .person-details {
+        font-size: 1rem;
+    }
+}
+.clear-btn {
+    cursor: pointer;
+    .fa {
+        color: #B0B0B0;
     }
 }

@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -416,8 +411,6 @@ def config(settings):
     #
     # Uncomment to allow Staff & Volunteers to be registered without an email address
     settings.hrm.email_required = True
-    # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
-    settings.hrm.filter_certificates = True
     settings.hrm.mix_staff = True
     # Uncomment to show the Organisation name in HR represents
     settings.hrm.show_organisation = True
@@ -430,20 +423,30 @@ def config(settings):
     # Uncomment to disable the use of HR Credentials
     settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Certificates
-    settings.hrm.use_certificates = True
+    #settings.hrm.use_certificates = False
+    # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
+    settings.hrm.filter_certificates = True
+    # Uncomment to auto-create certificates for courses
+    settings.hrm.create_certificates_from_courses = True
     settings.hrm.use_code = True
     settings.hrm.use_description = "Medical"
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = True
+    # Uncomment to hide Job Titles
+    settings.hrm.use_job_titles = False
     settings.hrm.use_skills = True
     # Custom label for Organisations in HR module
     settings.hrm.organisation_label = "National Society / Branch"
+    # Custom label for Top-level Organisations in HR module
+    settings.hrm.root_organisation_label = "National Society"
     # Uncomment to consolidate tabs into a single CV
     settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     settings.hrm.record_tab = "record"
-    # Training Instructors are person_ids
-    settings.hrm.training_instructors = "internal"
+    # Training Instructors are Multiple
+    settings.hrm.training_instructors = "multiple"
+    # Training Filters are Contains
+    settings.hrm.training_filter_and = True
     settings.hrm.record_label = "National Society Information"
     # Pass marks are defined by Course
     settings.hrm.course_pass_marks = True
@@ -1106,12 +1109,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_course_resource(r, tablename):
 
+        from gluon import IS_EMPTY_OR, IS_NOT_IN_DB
         from s3 import IS_ONE_OF, S3SQLCustomForm#, S3SQLInlineLink
 
         db = current.db
         auth = current.auth
         s3db = current.s3db
         table = s3db[tablename]
+
+        # Code should be Unique
+        f = table.code
+        f.requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "hrm_course.code"))
 
         f = table.organisation_id
         f.label = T("Training Center")
@@ -1268,8 +1276,10 @@ def config(settings):
                 from s3 import FS
                 r.resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
 
+            table = r.table
+
             # Default to Volunteers
-            r.table.type.default = 2
+            table.type.default = 2
 
             # Organisation needs to be an NS/Branch
             ns_only("hrm_human_resource",
@@ -1278,6 +1288,24 @@ def config(settings):
                     # default
                     #limit_filter_opts = True,
                     )
+
+            # Hide Venues from the list of Offices
+            from gluon import IS_EMPTY_OR
+            db = current.db
+
+            ttable = s3db.org_facility_type
+            ltable = s3db.org_site_facility_type
+            query = (ltable.facility_type_id == ttable.id) & \
+                    (ttable.name == "Venue")
+            venues = db(query).select(ltable.site_id)
+            venues = [f.site_id for f in venues]
+            stable = s3db.org_site
+            dbset = db(~stable.site_id.belongs(venues))
+
+            f = table.site_id
+            new_requires = f.requires.other
+            new_requires.dbset = dbset
+            f.requires = IS_EMPTY_OR(new_requires)
 
             # For the filter
             s3db.hrm_competency.skill_id.label = T("Language")
@@ -1508,7 +1536,34 @@ def config(settings):
         f = table.grade
         f.readable = f.writable = True
 
-        from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter
+        s3db.hrm_certification.number.label = T("Registration Number")
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter, S3OptionsFilter, S3DateFilter
+
+        if r.function == "person":
+            crud_form = S3SQLCustomForm("course_id",
+                                        "end_date",
+                                        "grade",
+                                        "grade_details",
+                                        S3SQLInlineComponent("certification",
+                                                             fields = (("", "number"),),
+                                                             label = T("Registration Number"),
+                                                             multiple = False,
+                                                             )
+                                        )
+        else:
+            crud_form = S3SQLCustomForm("person_id",
+                                        "end_date",
+                                        "grade",
+                                        "grade_details",
+                                        S3SQLInlineComponent("certification",
+                                                             fields = (("", "number"),),
+                                                             label = T("Registration Number"),
+                                                             multiple = False,
+                                                             )
+                                        )
+            
+
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
                           "person_id$last_name",
@@ -1544,6 +1599,7 @@ def config(settings):
             onaccept = hrm_training_onaccept
 
         s3db.configure(tablename,
+                      crud_form = crud_form,
                       filter_widgets = filter_widgets,
                       onaccept = onaccept,
                       )
@@ -2037,7 +2093,11 @@ def config(settings):
                             type_names = type_filter.split(",")
                             if len(type_names) == 1:
                                 # Strip Type from list_fields
-                                list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                try:
+                                    list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                except:
+                                    # Already removed
+                                    pass
                                 type_label = ""
 
                             if type_filter == RED_CROSS:
@@ -2217,6 +2277,10 @@ def config(settings):
                     s3db.clear_config("hrm_human_resource", "crud_form")
 
             elif not component_name:
+                s3db.configure("pr_person",
+                               listadd = True,
+                               )
+
                 # Basic Details tab
                 f = s3db.pr_person_details.nationality2
                 f.readable = f.writable = True
@@ -2366,11 +2430,24 @@ def config(settings):
                                   ).first()
         if not budget:
             return
-        try:
-            budget.update_record(name = project.name)
-        except:
-            # unique=True violation
-            budget.update_record(name = "Budget for %s" % project.name)
+
+        # Build Budget Name from Project Name
+        project_name = project.name
+
+        # Check for duplicates
+        query = (btable.name == project_name) & \
+                (btable.id != budget.id)
+        duplicate = db(query).select(btable.id,
+                                     limitby=(0, 1)
+                                     ).first()
+
+        if not duplicate:
+            budget_name = project_name[:128]
+        else:
+            # Need another Unique name
+            import uuid
+            budget_name = "%s %s" % (project_name[:91], uuid.uuid4())
+        budget.update_record(name = budget_name)
 
         mtable = s3db.budget_monitoring
         exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
@@ -2692,7 +2769,7 @@ def config(settings):
                             #                                   # that the user has write access to
                             #                                   updateable = True,
                             #                                   )
-                    
+
             else:
                 # Lead Organisation needs to be an NS (not a branch)
                 ns_only(tablename,

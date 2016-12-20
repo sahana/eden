@@ -103,7 +103,8 @@ def station():
     s3.prep = prep
 
     return s3_rest_controller(rheader = fire_rheader,
-                              csv_extra_fields = csv_extra_fields)
+                              csv_extra_fields = csv_extra_fields,
+                              )
 
 # -----------------------------------------------------------------------------
 def station_vehicle():

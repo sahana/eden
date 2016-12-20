@@ -64,21 +64,21 @@
             </data>
             <data field="template_settings">{}</data>
             <!-- Scope -->
-            <xsl:variable name="Scope" select="col[@field='Scope']"/>
+            <!--<xsl:variable name="Scope" select="col[@field='Scope']"/>
             <xsl:if test="$Scope!=''">
                 <data field="scope">
                     <xsl:attribute name="value">
                         <xsl:value-of select="$Scope"/>
                     </xsl:attribute>
                 </data>
-            </xsl:if>
+            </xsl:if>-->
             <!-- Restriction -->
-            <xsl:variable name="Restriction" select="col[@field='Restriction']"/>
+            <!--<xsl:variable name="Restriction" select="col[@field='Restriction']"/>
             <xsl:if test="$Restriction!='' and $Scope='Restricted'">
                 <data field="restriction">
                     <xsl:value-of select="$Restriction"/>
                 </data>
-            </xsl:if>
+            </xsl:if>-->
             <!-- Note -->
             <xsl:variable name="Note" select="col[@field='Note']"/>
             <xsl:if test="$Note!=''">

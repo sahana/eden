@@ -1,0 +1,10 @@
+Organisation,Sex,First Name,Last Name,DOB,Nationality,Family,Head of Family,Case,Registration Date,Status,Label,Tag:FAMILY_ID
+Support to Life,Male,Ahmed,Hamed,1971-03-11,SY,,,,,OPEN,657432,135728
+Support to Life,Male,Alibrahim,Malik,1970-04-12,SY,Malik,true,,,OPEN,657433,135729
+Support to Life,Female,Fatima,Malik,1974-12-01,SY,Malik,,,,OPEN,657434,135729
+Support to Life,Male,Ahmad,Malik,2000-02-12,SY,Malik,,,,OPEN,657433-a,135729
+Support to Life,Female,Zaynab,Aziz,1982-03-01,SY,,,,,OPEN,657435,135731
+Support to Life,Male,Ali,Mohammed,1974-06-01,SY,Mohammed,true,,,OPEN,657436,135732
+Support to Life,Female,Nahidah,Mohammed,1979-07-04,SY,Mohammed,,,,OPEN,657437,135732
+Support to Life,Female,Sedra,Mohammed,2001-02-23,SY,Mohammed,,,,OPEN,657436-a,135732
+Support to Life,Male,Mahmoud,Assi,1981-09-23,SY,,,,,OPEN,657438,135701

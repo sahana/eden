@@ -62,13 +62,16 @@ class S3VehicleModel(S3Model):
         #
         tablename = "vehicle_vehicle_type"
         define_table(tablename,
-                     Field("code", unique=True, notnull=True, length=64,
+                     # @ToDo: deployment_setting for use of Code
+                     Field("code", length=64,
                            label = T("Code"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      #Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
                      #      label = T("SubType of"),

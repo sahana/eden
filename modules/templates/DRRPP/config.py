@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#try:
-#    # Python 2.7
-#    from collections import OrderedDict
-#except:
-#    # Python 2.6
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
@@ -137,6 +132,9 @@ def config(settings):
 
     # =============================================================================
     # UI Settings
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
     # Enable this for a UN-style deployment
     settings.ui.cluster = True
 
@@ -213,14 +211,16 @@ def config(settings):
                             doc_document=(# Files
                                           {"name": "file",
                                            "joinby": "doc_id",
-                                           "filterby": "url",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "url": ("", None),
+                                               },
                                           },
                                           # Links
                                           {"name": "url",
                                            "joinby": "doc_id",
-                                           "filterby": "file",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "file": ("", None),
+                                               },
                                           },
                                          ),
                            )

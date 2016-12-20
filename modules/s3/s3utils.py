@@ -32,6 +32,7 @@
 import collections
 import copy
 import datetime
+import json
 import os
 import re
 import sys
@@ -39,27 +40,14 @@ import time
 import urlparse
 import HTMLParser
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
 
-from s3dal import Expression, Row
+from s3dal import Expression, Row, S3DAL
 from s3datetime import ISOFORMAT, s3_decode_iso_datetime
 
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
@@ -342,27 +330,6 @@ def s3_represent_value(field,
     return text
 
 # =============================================================================
-def s3_set_default_filter(selector, value, tablename=None):
-    """
-        Set a default filter for selector.
-
-        @param selector: the field selector
-        @param value: the value, can be a dict {operator: value},
-                      a list of values, or a single value, or a
-                      callable that returns any of these
-        @param tablename: the tablename
-    """
-
-    s3 = current.response.s3
-
-    filter_defaults = s3
-    for level in ("filter_defaults", tablename):
-        if level not in filter_defaults:
-            filter_defaults[level] = {}
-        filter_defaults = filter_defaults[level]
-    filter_defaults[selector] = value
-
-# =============================================================================
 def s3_dev_toolbar():
     """
         Developer Toolbar - ported from gluon.Response.toolbar()
@@ -552,9 +519,9 @@ def s3_truncate(text, length=48, nice=True):
     text = s3_unicode(text)
     if len(text) > length:
         if nice:
-            return "%s..." % text[:length].rsplit(" ", 1)[0][:45]
+            return "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
         else:
-            return "%s..." % text[:45]
+            return "%s..." % text[:length-3]
     else:
         return text
 
@@ -709,17 +676,19 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         @param truncate: truncate the name to max 24 characters
     """
 
-    db = current.db
-    ptable = db.pr_person
-
     record = None
     query = None
+
     if isinstance(person, (int, long)) or str(person).isdigit():
-        query = (ptable.id == person)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.id == person)
     elif person is not None:
         record = person
     elif pe_id is not None:
-        query = (ptable.pe_id == pe_id)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.pe_id == pe_id)
 
     if not record and query is not None:
         record = db(query).select(ptable.first_name,
@@ -798,6 +767,17 @@ def s3_comments_represent(text, show_link=True):
                  ),
                 )
         return represent
+
+# =============================================================================
+def s3_phone_represent(value):
+    """
+        Ensure that Phone numbers always show as LTR
+        - otherwise + appears at the end which looks wrong even in RTL
+    """
+
+    if not value:
+        return current.messages["NONE"]
+    return "%s%s" % (unichr(8206), s3_unicode(value))
 
 # =============================================================================
 def s3_url_represent(url):
@@ -1241,7 +1221,7 @@ def s3_has_foreign_key(field, m2m=True):
         @param field: the field (Field instance)
         @param m2m: also detect many-to-many links
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
@@ -1251,10 +1231,12 @@ def s3_has_foreign_key(field, m2m=True):
     except:
         # Virtual Field
         return False
-    if ftype[:9] == "reference":
+
+    if ftype[:9] == "reference" or \
+       m2m and ftype[:14] == "list:reference" or \
+       current.s3db.virtual_reference(field):
         return True
-    if m2m and ftype[:14] == "list:reference":
-        return True
+
     return False
 
 # =============================================================================
@@ -1267,25 +1249,27 @@ def s3_get_foreign_key(field, m2m=True):
         @param m2m: also detect many-to-many references
 
         @return: tuple (tablename, key, multiple), where tablename is
-                  the name of the referenced table (or None if this field
-                  has no foreign key constraint), key is the field name of
-                  the referenced key, and multiple indicates whether this is
-                  a many-to-many reference (list:reference) or not.
+                 the name of the referenced table (or None if this field
+                 has no foreign key constraint), key is the field name of
+                 the referenced key, and multiple indicates whether this is
+                 a many-to-many reference (list:reference) or not.
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
 
     ftype = str(field.type)
+    multiple = False
     if ftype[:9] == "reference":
         key = ftype[10:]
-        multiple = False
     elif m2m and ftype[:14] == "list:reference":
         key = ftype[15:]
         multiple = True
     else:
-        return (None, None, None)
+        key = current.s3db.virtual_reference(field)
+        if not key:
+            return (None, None, None)
     if "." in key:
         rtablename, key = key.split(".")
     else:
@@ -1372,8 +1356,10 @@ def s3_orderby_fields(table, orderby, expr=False):
         return
 
     db = current.db
-    COMMA = db._adapter.COMMA
-    INVERT = db._adapter.INVERT
+
+    adapter = S3DAL()
+    COMMA = adapter.COMMA
+    INVERT = adapter.INVERT
 
     if isinstance(orderby, str):
         items = orderby.split(",")
@@ -1859,6 +1845,9 @@ class S3CustomController(object):
     """
         Base class for custom controllers (template/controllers.py),
         implements common helper functions
+
+        @ToDo: Add Helper Function for dataTables
+        @ToDo: Add Helper Function for dataLists
     """
 
     @classmethod
@@ -2572,6 +2561,38 @@ class S3MultiPath:
                 return True
             else:
                 return False
+
+# =============================================================================
+def s3_fieldmethod(name, f, represent=None):
+    """
+        Helper to attach a representation method to a Field.Method.
+
+        @param name: the field name
+        @param f: the field method
+        @param represent: the representation function
+    """
+
+    from gluon import Field
+
+    if represent is not None:
+
+        class Handler(object):
+            def __init__(self, method, row):
+                self.method=method
+                self.row=row
+            def __call__(self, *args, **kwargs):
+                return self.method(self.row, *args, **kwargs)
+        if hasattr(represent, "bulk"):
+            Handler.represent = represent
+        else:
+            Handler.represent = staticmethod(represent)
+
+        fieldmethod = Field.Method(name, f, handler=Handler)
+
+    else:
+        fieldmethod = Field.Method(name, f)
+
+    return fieldmethod
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):

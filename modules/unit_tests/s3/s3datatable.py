@@ -12,6 +12,8 @@ from gluon.storage import Storage
 
 from s3.s3data import S3DataTable
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3DataTableTests(unittest.TestCase):
 
@@ -94,18 +96,6 @@ class S3DataTableTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

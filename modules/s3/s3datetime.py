@@ -1558,7 +1558,11 @@ def s3_encode_iso_datetime(dt):
 
         @param dt: the datetime object
     """
-    dx = dt - datetime.timedelta(microseconds=dt.microsecond)
+
+    if isinstance(dt, (datetime.datetime, datetime.time)):
+        dx = dt.replace(microsecond=0)
+    else:
+        dx = dt
     return dx.isoformat()
 
 # =============================================================================
@@ -1571,6 +1575,7 @@ def s3_utc(dt):
 
         @param dt: the datetime object
     """
+
     if dt:
         if dt.tzinfo is None:
             return dt.replace(tzinfo=dateutil.tz.tzutc())

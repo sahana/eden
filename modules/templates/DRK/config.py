@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
 import datetime
+
+from collections import OrderedDict
 
 from gluon import current, SPAN
 from gluon.storage import Storage
 
-from s3 import S3Method
+from s3 import S3DateTime, S3Method, s3_str, s3_unicode
 
 # Limit after which a checked-out resident is reported overdue (days)
 ABSENCE_LIMIT = 5
@@ -233,7 +228,7 @@ def config(settings):
         row = db(query).select(count).first()
         children = row[count]
 
-        CHILDREN = TR(TD(T("How many Children")),
+        CHILDREN = TR(TD(T("Number of Children")),
                          TD(children),
                          )
 
@@ -255,7 +250,7 @@ def config(settings):
                                 join = join,
                                 )
         families = len(rows)
-        FAMILIES = TR(TD(T("How many Families")),
+        FAMILIES = TR(TD(T("Number of Families")),
                          TD(families),
                          )
 
@@ -398,57 +393,24 @@ def config(settings):
     settings.ui.profile_header = profile_header
 
     # -------------------------------------------------------------------------
-    def show_flag_instructions(site_id, person_id, action=None):
+    def check_in_status(site, person):
         """
-            Show advise/instructions for checkpoint staff if
-            such flags are set for this persons
+            Determine the current check-in status for a person
 
-            @param site_id: the site ID (currently unused)
-            @param person_id: the person record ID
-        """
+            @param site: the site record (instance!)
+            @param person: the person record
 
-        s3db = current.s3db
-
-        flag_info = current.s3db.dvr_get_flag_instructions(person_id,
-                                                           action = action,
-                                                           )
-
-        from gluon import DIV, H4, P
-
-        info = DIV(_class="checkpoint-advise")
-        append = info.append
-
-        for flagname, instructions in flag_info["info"]:
-            append(DIV(H4(T(flagname)),
-                       P(instructions),
-                       _class="checkpoint-instructions",
-                       ))
-
-        from s3 import S3CustomController, s3_fullname
-        S3CustomController._view("DRK", "advise.html")
-
-        output = {"person": DIV(s3_fullname(person_id),
-                                _class="checkpoint-person",
-                                ),
-                  "info": info,
-                  }
-
-        return output
-
-    # -------------------------------------------------------------------------
-    def site_check_in(site_id, person_id):
-        """
-            When a person is checked-in to a Shelter then update the Shelter Registration
-            (We assume they are checked-in during initial registration)
+            see org_SiteCheckInMethod for details of the return value
         """
 
-        from s3 import s3_str
-
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
-        warnings = []
-        wappend = warnings.append
+        result = {"valid": False,
+                  "check_in_allowed": False,
+                  "check_out_allowed": False,
+                  }
+        person_id = person.id
 
         # Check the case status
         ctable = s3db.dvr_case
@@ -460,7 +422,41 @@ def config(settings):
                                   ).first()
 
         if status and status.is_closed:
-            wappend(T("Not currently a resident"))
+            result["error"] = T("Not currently a resident")
+            return result
+
+        # Find the Registration
+        stable = s3db.cr_shelter
+        rtable = s3db.cr_shelter_registration
+        query = (stable.site_id == site.site_id) & \
+                (stable.id == rtable.shelter_id) & \
+                (rtable.person_id == person_id) & \
+                (rtable.deleted != True)
+        registration = db(query).select(rtable.id,
+                                        rtable.registration_status,
+                                        limitby=(0, 1),
+                                        ).first()
+        if not registration:
+            result["error"] = T("Registration not found")
+            return result
+
+        result["valid"] = True
+
+        # Check current status
+        reg_status = registration.registration_status
+        if reg_status == 2:
+            # Currently checked-in at this site
+            status = 1
+        elif reg_status == 3:
+            # Currently checked-out from this site
+            status = 2
+        else:
+            # No previous status
+            status = None
+        result["status"] = status
+
+        check_in_allowed = True
+        check_out_allowed = True
 
         # Check if we have any case flag to deny check-in or to show advise
         ftable = s3db.dvr_case_flag
@@ -469,118 +465,119 @@ def config(settings):
                 (ltable.deleted != True) & \
                 (ftable.id == ltable.flag_id) & \
                 (ftable.deleted != True)
-        flags = db(query).select(ftable.advise_at_check_in,
-                                 ftable.instructions,
+        flags = db(query).select(ftable.name,
                                  ftable.deny_check_in,
+                                 ftable.deny_check_out,
+                                 ftable.advise_at_check_in,
+                                 ftable.advise_at_check_out,
+                                 ftable.advise_at_id_check,
+                                 ftable.instructions,
                                  )
-        callback = None
-        deny_check_in = False
+
+        from gluon import DIV, H4, P
+        info = []
+        append = info.append
         for flag in flags:
             if flag.deny_check_in:
-                deny_check_in = True
-            if flag.advise_at_check_in:
-                callback = show_flag_instructions
+                check_in_allowed = False
+            if flag.deny_check_out:
+                check_out_allowed = False
 
-        if not deny_check_in:
+            # Show flag instructions?
+            if status == 1:
+                advise = flag.advise_at_check_out
+            elif status == 2:
+                advise = flag.advise_at_check_in
+            else:
+                advise = flag.advise_at_check_in or flag.advise_at_check_out
+            if advise:
+                instructions = flag.instructions
+                if instructions is not None:
+                    instructions = instructions.strip()
+                if not instructions:
+                    instructions = current.T("No instructions for this flag")
+                append(DIV(H4(T(flag.name)),
+                           P(instructions),
+                           _class="checkpoint-instructions",
+                           ))
+        if info:
+            result["info"] = DIV(_class="checkpoint-advise", *info)
 
-            # Find the Registration
-            stable = s3db.cr_shelter
-            rtable = s3db.cr_shelter_registration
+        result["check_in_allowed"] = check_in_allowed
+        result["check_out_allowed"] = check_out_allowed
 
-            query = (stable.site_id == site_id) & \
-                    (stable.id == rtable.shelter_id) & \
-                    (rtable.person_id == person_id) & \
-                    (rtable.deleted != True)
-            registration = db(query).select(rtable.id,
-                                            rtable.registration_status,
-                                            limitby=(0, 1),
-                                            ).first()
-            if not registration:
-                error = T("Registration not found")
-                return error, ", ".join(s3_str(w) for w in warnings)
-
-            error = None
-
-            if registration.registration_status == 2:
-                wappend(T("Client was already checked-in"))
-
-            # Update the Shelter Registration
-            registration.update_record(check_in_date = current.request.utcnow,
-                                       registration_status = 2,
-                                       )
-            onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-            if onaccept:
-                onaccept(registration)
-
-        else:
-            # @todo: log as case event anyway?
-            error = T("Check-in denied")
-
-        return error, ", ".join(s3_str(w) for w in warnings), callback
+        return result
 
     # -------------------------------------------------------------------------
-    def site_check_out(site_id, person_id):
+    def site_check_in(site_id, person_id):
         """
-            When a person is checked-out from a Shelter then update the Shelter Registration
+            When a person is checked-in to a Shelter then update the
+            Shelter Registration
+
+            @param site_id: the site_id of the shelter
+            @param person_id: the person_id to check-in
         """
 
         s3db = current.s3db
         db = current.db
 
-        # Check if we have any case flag to deny check-in or to show advise
-        ftable = s3db.dvr_case_flag
-        ltable = s3db.dvr_case_flag_case
-        query = (ltable.person_id == person_id) & \
-                (ltable.deleted != True) & \
-                (ftable.id == ltable.flag_id) & \
-                (ftable.deleted != True)
-        flags = db(query).select(ftable.advise_at_check_out,
-                                 ftable.instructions,
-                                 ftable.deny_check_out,
-                                 )
-        callback = None
-        deny_check_out = False
-        for flag in flags:
-            if flag.deny_check_out:
-                deny_check_out = True
-            if flag.advise_at_check_out:
-                callback = show_flag_instructions
+        # Find the Registration
+        stable = s3db.cr_shelter
+        rtable = s3db.cr_shelter_registration
 
-        warning = None
-        if not deny_check_out:
+        query = (stable.site_id == site_id) & \
+                (stable.id == rtable.shelter_id) & \
+                (rtable.person_id == person_id) & \
+                (rtable.deleted != True)
+        registration = db(query).select(rtable.id,
+                                        rtable.registration_status,
+                                        limitby=(0, 1),
+                                        ).first()
+        if not registration:
+            return
 
-            # Find the Registration
-            stable = s3db.cr_shelter
-            rtable = s3db.cr_shelter_registration
-            query = (stable.site_id == site_id) & \
-                    (stable.id == rtable.shelter_id) & \
-                    (rtable.person_id == person_id) & \
-                    (rtable.deleted != True)
-            registration = db(query).select(rtable.id,
-                                            rtable.registration_status,
-                                            limitby=(0, 1),
-                                            ).first()
-            if not registration:
-                error = T("Registration not found")
-                return error, warning
+        # Update the Shelter Registration
+        registration.update_record(check_in_date = current.request.utcnow,
+                                   registration_status = 2,
+                                   )
+        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+        if onaccept:
+            onaccept(registration)
 
-            error = None
-            if registration.registration_status == 3:
-                warning = T("Client was already checked-out")
+    # -------------------------------------------------------------------------
+    def site_check_out(site_id, person_id):
+        """
+            When a person is checked-out from a Shelter then update the
+            Shelter Registration
 
-            # Update the Shelter Registration
-            registration.update_record(check_out_date = current.request.utcnow,
-                                       registration_status = 3,
-                                       )
-            onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-            if onaccept:
-                onaccept(registration)
+            @param site_id: the site_id of the shelter
+            @param person_id: the person_id to check-in
+        """
 
-        else:
-            # @todo: log as case event anyway?
-            error = T("Check-out denied")
+        s3db = current.s3db
+        db = current.db
 
-        return error, warning, callback
+        # Find the Registration
+        stable = s3db.cr_shelter
+        rtable = s3db.cr_shelter_registration
+        query = (stable.site_id == site_id) & \
+                (stable.id == rtable.shelter_id) & \
+                (rtable.person_id == person_id) & \
+                (rtable.deleted != True)
+        registration = db(query).select(rtable.id,
+                                        rtable.registration_status,
+                                        limitby=(0, 1),
+                                        ).first()
+        if not registration:
+            return
+
+        # Update the Shelter Registration
+        registration.update_record(check_out_date = current.request.utcnow,
+                                    registration_status = 3,
+                                    )
+        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+        if onaccept:
+            onaccept(registration)
 
     # -------------------------------------------------------------------------
     def org_site_check(site_id):
@@ -649,6 +646,7 @@ def config(settings):
                 current.s3db.configure("cr_shelter",
                                        site_check_in = site_check_in,
                                        site_check_out = site_check_out,
+                                       check_in_status = check_in_status,
                                        )
             else:
                 has_role = current.auth.s3_has_role
@@ -708,7 +706,8 @@ def config(settings):
             # Hide side menu and rheader for check-in
             if r.method == "check-in":
                 current.menu.options = None
-                output["rheader"] = ""
+                if isinstance(output, dict):
+                    output["rheader"] = ""
 
             return output
         s3.postp = custom_postp
@@ -799,10 +798,14 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
+    # Uncomment this to enable tracking of transfer origin/destination sites
+    settings.dvr.track_transfer_sites = True
     # Uncomment this to enable features to manage transferability of cases
     settings.dvr.manage_transferability = True
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
     settings.dvr.household_size = "auto"
+    # Uncomment this to enable features to manage case flags
+    settings.dvr.case_flags = True
     # Uncomment this to expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = True
     # Uncomment this to have appointments with personal presence update last_seen_on
@@ -817,6 +820,8 @@ def config(settings):
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
     settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
+    # Issue a "not checked-in" warning in case event registration
+    settings.dvr.event_registration_checkin_warning = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -828,6 +833,60 @@ def config(settings):
         s3_redirect_default(URL(f="person", vars={"closed": "0"}))
 
     settings.customise_dvr_home = customise_dvr_home
+
+    # -------------------------------------------------------------------------
+    def event_overdue(code, interval):
+        """
+            Get cases (person_ids) for which a certain event is overdue
+
+            @param code: the event code
+            @param interval: the interval in days
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ttable = s3db.dvr_case_event_type
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
+        etable = s3db.dvr_case_event
+
+        # Get event type ID
+        query = (ttable.code == code) & \
+                (ttable.deleted != True)
+        row = db(query).select(ttable.id, limitby=(0, 1)).first()
+        if row:
+            type_id = row.id
+        else:
+            # No such event
+            return set()
+
+        # Determine deadline
+        now = current.request.utcnow
+        then = now - datetime.timedelta(days=interval)
+
+        # Check only open cases
+        join = stable.on((stable.id == ctable.status_id) & \
+                         (stable.is_closed == False))
+
+        # Join only events after the deadline
+        left = etable.on((etable.person_id == ctable.person_id) & \
+                         (etable.type_id == type_id) & \
+                         (etable.date != None) & \
+                         (etable.date >= then) & \
+                         (etable.deleted != True))
+
+        # ...and then select the rows which don't have any
+        query = (ctable.archived == False) & \
+                (ctable.date < then.date()) & \
+                (ctable.deleted == False)
+        rows = db(query).select(ctable.person_id,
+                                left = left,
+                                join = join,
+                                groupby = ctable.person_id,
+                                having = (etable.date.max() == None),
+                                )
+        return set(row.person_id for row in rows)
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -858,7 +917,9 @@ def config(settings):
             else:
                 result = True
 
-            archived = r.get_vars.get("archived")
+            get_vars = r.get_vars
+
+            archived = get_vars.get("archived")
             if archived in ("1", "true", "yes"):
                 crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
@@ -1006,12 +1067,6 @@ def config(settings):
                 else:
                     absence_field = None
 
-                # Enable origin and destination site fields
-                field = ctable.origin_site_id
-                field.readable = field.writable = True
-                field = ctable.destination_site_id
-                field.readable = field.writable = True
-
                 # Expose expiration dates
                 field = ctable.valid_until
                 field.label = T("BÜMA valid until")
@@ -1027,11 +1082,12 @@ def config(settings):
                 FAMILY_TRANSFERABLE = T("Family Transferable")
 
                 if not r.record:
-                    overdue = r.get_vars.get("overdue")
-                    if overdue:
-                        # Filter case list for overdue check-in
-                        from s3 import FS
 
+                    from s3 import FS
+
+                    overdue = get_vars.get("overdue")
+                    if overdue in ("check-in", "!check-in"):
+                        # Filter case list for overdue check-in
                         reg_status = FS("shelter_registration.registration_status")
                         checkout_date = FS("shelter_registration.check_out_date")
 
@@ -1042,18 +1098,25 @@ def config(settings):
 
                         # Due date for check-in
                         due_date = r.utcnow - \
-                                    datetime.timedelta(days=ABSENCE_LIMIT)
+                                   datetime.timedelta(days=ABSENCE_LIMIT)
 
-                        if overdue == "1":
-                            query = checked_out & \
-                                    ((checkout_date < due_date) | (checkout_date == None))
-                        else:
+                        if overdue[0] == "!":
                             query = not_checked_out | \
                                     checked_out & (checkout_date >= due_date)
+                        else:
+                            query = checked_out & \
+                                    ((checkout_date < due_date) | (checkout_date == None))
                         resource.add_filter(query)
                         check_overdue = True
 
-                    show_family_transferable = r.get_vars.get("show_family_transferable")
+                    elif overdue:
+                        # Filter for cases for which no such event was
+                        # registered for at least 3 days:
+                        record_ids = event_overdue(overdue.upper(), 3)
+                        query = FS("id").belongs(record_ids)
+                        resource.add_filter(query)
+
+                    show_family_transferable = get_vars.get("show_family_transferable")
                     if show_family_transferable == "1":
                         show_family_transferable = True
 
@@ -1063,8 +1126,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )
@@ -1273,6 +1337,8 @@ def config(settings):
                                 # No filter default for case status
                                 if fw.field == "dvr_case.status_id":
                                     fw.opts.default = None
+                                if fw.field == "case_flag_case.flag_id":
+                                    fw.opts.size = None
                                 # Text filter includes EasyOpt Number and Case Comments
                                 if extend_text_filter and isinstance(fw, S3TextFilter):
                                     fw.field.extend(("eo_number.value",
@@ -1389,7 +1455,9 @@ def config(settings):
                                                         "link": "pr_group_membership",
                                                         "joinby": "person_id",
                                                         "key": "group_id",
-                                                        "filterby": {"group_type": 7},
+                                                        "filterby": {
+                                                            "group_type": 7,
+                                                            },
                                                         },
                                             )
 
@@ -1421,9 +1489,6 @@ def config(settings):
             if QUARTIERMANAGER:
                 # Add Action Button to assign Housing Unit to the Resident
                 from gluon import URL
-                #from s3 import S3CRUD, s3_str
-                from s3 import s3_str
-                #S3CRUD.action_buttons(r)
                 s3.actions = [dict(label=s3_str(T("Assign Shelter")),
                                     _class="action-btn",
                                     url=URL(c="cr",
@@ -1778,8 +1843,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )
@@ -1844,8 +1910,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )
@@ -2009,7 +2076,7 @@ def config(settings):
                 resource.configure(list_fields = list_fields,
                                    insertable = False,
                                    deletable = False,
-                                   updatable = False,
+                                   #editable = False,
                                    )
 
             return result
@@ -2033,9 +2100,260 @@ def config(settings):
     settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
+    def case_event_create_onaccept(form):
+        """
+            Custom onaccept-method for case events
+                - cascade FOOD events to other members of the same case group
+
+            @param form: the Form
+        """
+
+        # Get form.vars.id
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # Prevent recursion
+        try:
+            if formvars._cascade:
+                return
+        except AttributeError:
+            pass
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the person ID and event type code and interval
+        ttable = s3db.dvr_case_event_type
+        etable = s3db.dvr_case_event
+        query = (etable.id == record_id) & \
+                (ttable.id == etable.type_id)
+        row = db(query).select(etable.person_id,
+                               etable.type_id,
+                               etable.date,
+                               ttable.code,
+                               ttable.min_interval,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        # Extract the event attributes
+        event = row.dvr_case_event
+        person_id = event.person_id
+        event_type_id = event.type_id
+        event_date = event.date
+
+        # Extract the event type attributes
+        event_type = row.dvr_case_event_type
+        event_code = event_type.code
+        interval = event_type.min_interval
+
+        if event_code == "FOOD":
+
+            gtable = s3db.pr_group
+            mtable = s3db.pr_group_membership
+            ctable = s3db.dvr_case
+            stable = s3db.dvr_case_status
+
+            # Get all case groups this person belongs to
+            query = ((mtable.person_id == person_id) & \
+                    (mtable.deleted != True) & \
+                    (gtable.id == mtable.group_id) & \
+                    (gtable.group_type == 7))
+            rows = db(query).select(gtable.id)
+            group_ids = set(row.id for row in rows)
+
+            # Find all other members of these case groups, and
+            # the last FOOD event registration date/time for each
+            members = {}
+            if group_ids:
+                left = [ctable.on(ctable.person_id == mtable.person_id),
+                        stable.on(stable.id == ctable.status_id),
+                        etable.on((etable.person_id == mtable.person_id) & \
+                                  (etable.type_id == event_type_id) & \
+                                  (etable.deleted != True)),
+                        ]
+                query = (mtable.person_id != person_id) & \
+                        (mtable.group_id.belongs(group_ids)) & \
+                        (mtable.deleted != True) & \
+                        (ctable.archived != True) & \
+                        (ctable.deleted != True) & \
+                        (stable.is_closed != True)
+                latest = etable.date.max()
+                case_id = ctable._id.min()
+                rows = db(query).select(mtable.person_id,
+                                        case_id,
+                                        latest,
+                                        left = left,
+                                        groupby = mtable.person_id,
+                                        )
+                for row in rows:
+                    person = row[mtable.person_id]
+                    if person not in members:
+                        members[person] = (row[case_id], row[latest])
+
+            # For each case group member, replicate the event
+            now = current.request.utcnow
+            for member, details in members.items():
+
+                case_id, latest = details
+
+                # Check minimum waiting interval
+                passed = True
+                if interval and latest:
+                    earliest = latest + datetime.timedelta(hours=interval)
+                    if earliest > now:
+                        passed = False
+                if not passed:
+                    continue
+
+                # Replicate the event for this member
+                data = {"person_id": member,
+                        "case_id": case_id,
+                        "type_id": event_type_id,
+                        "date": event_date,
+                        }
+                event_id = etable.insert(**data)
+                if event_id:
+                    # Set record owner
+                    auth = current.auth
+                    auth.s3_set_record_owner(etable, event_id)
+                    auth.s3_make_session_owner(etable, event_id)
+                    # Execute onaccept
+                    # => set _cascade flag to prevent recursion
+                    data["id"] = event_id
+                    data["_cascade"] = True
+                    s3db.onaccept(etable, data, method="create")
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_event_resource(r, tablename):
+
+        resource = current.s3db.resource("dvr_case_event")
+
+        # Get the current create_onaccept setting
+        hook = "create_onaccept"
+        callback = resource.get_config(hook)
+
+        # Fall back to generic onaccept
+        if not callback:
+            hook = "onaccept"
+            callback = resource.get_config(hook)
+
+        # Extend with custom onaccept
+        custom_onaccept = case_event_create_onaccept
+        if callback:
+            if isinstance(callback, (tuple, list)):
+                if custom_onaccept not in callback:
+                    callback = list(callback) + [custom_onaccept]
+            else:
+                callback = [callback, custom_onaccept]
+        else:
+            callback = custom_onaccept
+        resource.configure(**{hook: callback})
+
+    settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
+    # -------------------------------------------------------------------------
+    def case_event_report_default_filters(event_code=None):
+        """
+            Set default filters for case event report
+
+            @param event_code: code for the default event type
+        """
+
+        from s3 import s3_set_default_filter
+
+        if event_code:
+            ttable = current.s3db.dvr_case_event_type
+            query = (ttable.code == event_code) & \
+                    (ttable.deleted != True)
+            row = current.db(query).select(ttable.id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                s3_set_default_filter("~.type_id",
+                                      row.id,
+                                      tablename = "dvr_case_event",
+                                      )
+
+        # Minimum date: one week
+        WEEK_AGO = datetime.datetime.now() - \
+                    datetime.timedelta(days=7)
+        min_date = WEEK_AGO.replace(hour=7, minute=0, second=0)
+
+        s3_set_default_filter("~.date",
+                              {"ge": min_date,
+                               },
+                              tablename = "dvr_case_event",
+                              )
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_event_controller(**attr):
 
         s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+            table = resource.table
+
+            if r.method == "report":
+                # Set report default filters
+                event_code = r.get_vars.get("code")
+                case_event_report_default_filters(event_code)
+
+                dates = DRKCaseEventDateAxes()
+
+                # Field method for day-date of events
+                from s3 import s3_fieldmethod
+                table.date_day = s3_fieldmethod(
+                                    "date_day",
+                                    dates.case_event_date_day,
+                                    represent = dates.case_event_date_day_represent,
+                                    )
+                table.date_tod = s3_fieldmethod(
+                                    "date_tod",
+                                    dates.case_event_time_of_day,
+                                    )
+
+                # Pivot axis options
+                report_axes = [(T("Date"), "date_day"),
+                               (T("Time of Day"), "date_tod"),
+                               "type_id",
+                               "created_by",
+                               ]
+
+                # Configure report options
+                report_options = {
+                    "rows": report_axes,
+                    "cols": report_axes,
+                    "fact": [(T("Total Quantity"), "sum(quantity)"),
+                             #(T("Number of Events"), "count(id)"),
+                             ],
+                    "defaults": {"rows": "date_day",
+                                 "cols": "date_tod",
+                                 "fact": "sum(quantity)",
+                                 "totals": True,
+                                 },
+                    }
+                resource.configure(report_options = report_options,
+                                   extra_fields = ["date",
+                                                   "person_id",
+                                                   "type_id",
+                                                   ],
+                                   )
+            return result
+        s3.prep = custom_prep
 
         # Custom postp
         standard_postp = s3.postp
@@ -2066,6 +2384,7 @@ def config(settings):
         s3db.configure("dvr_site_activity",
                        listadd = False,
                        addbtn = True,
+                       editable = False,
                        )
 
         crud_strings = current.response.s3.crud_strings
@@ -2102,6 +2421,10 @@ def config(settings):
                                           show_map = False,
                                           )
 
+        field = table.obsolete
+        field.label = T("Inactive")
+        field.represent = lambda opt: T("Inactive") if opt else current.messages["NONE"]
+
         # Custom list fields
         list_fields = ["name",
                        "site_facility_type.facility_type_id",
@@ -2111,7 +2434,8 @@ def config(settings):
                        "phone1",
                        "phone2",
                        "email",
-                       "website",
+                       #"website",
+                       "obsolete",
                        "comments",
                        ]
 
@@ -2131,9 +2455,17 @@ def config(settings):
                                           ),
                           S3OptionsFilter("organisation_id",
                                           ),
+                          S3OptionsFilter("obsolete",
+                                          options = {False: T("No"),
+                                                     True: T("Yes"),
+                                                     },
+                                          default = [False],
+                                          cols = 2,
+                                          )
                           ]
 
         s3db.configure("org_facility",
+                       #deletable = False,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
@@ -2499,6 +2831,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Allowance"), "allowance"),
                             (T("Presence"), "shelter_registration_history"),
                             (T("Events"), "case_event"),
+                            (T("Photos"), "image"),
                             (T("Notes"), "case_note"),
                             ]
 
@@ -2545,6 +2878,30 @@ def drk_dvr_rheader(r, tabs=[]):
 
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
+
+                # Generate rheader XML
+                rheader = S3ResourceHeader(rheader_fields, tabs)(
+                                r,
+                                table = resource.table,
+                                record = record,
+                                )
+
+                # Add profile picture
+                from gluon import A, URL
+                from s3 import s3_avatar_represent
+                record_id = record.id
+                rheader.insert(0, A(s3_avatar_represent(record_id,
+                                                        "pr_person",
+                                                        _class = "rheader-avatar",
+                                                        ),
+                                    _href=URL(f = "person",
+                                              args = [record_id, "image"],
+                                              vars = r.get_vars,
+                                              ),
+                                    )
+                               )
+
+                return rheader
 
         elif tablename == "dvr_case":
 
@@ -2650,6 +3007,7 @@ class DRKCreateSiteActivityReport(S3Method):
 
         # Form fields
         table = s3db.dvr_site_activity
+        table.date.default = r.utcnow.date()
         formfields = [table.site_id,
                       table.date,
                       ]
@@ -2739,6 +3097,110 @@ class DRKCreateSiteActivityReport(S3Method):
         formvars.date = date
 
 # =============================================================================
+class DRKCaseEventDateAxes(object):
+    """
+        Helper class for virtual date axes in case event statistics
+    """
+
+    def __init__(self):
+        """
+            Constructor; perform all slow lookups outside of the field methods
+        """
+
+        from dateutil import tz
+
+        # Get timezone descriptions
+        self.UTC = tz.tzutc()
+        self.LOCAL = tz.gettz("Europe/Berlin")
+
+        # Lookup FOOD event type_id
+        table = current.s3db.dvr_case_event_type
+        query = (table.code == "FOOD") & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id, limitby=(0, 1)).first()
+        self.FOOD = row.id if row else None
+
+        self.SURPLUS_MEALS = s3_str(current.T("Surplus Meals"))
+
+    # -------------------------------------------------------------------------
+    def case_event_date_day(self, row):
+        """
+            Field method to reduce case event date/time to just date,
+            used in pivot table reports to group case events by day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+
+        if date:
+            # Get local hour
+            date = date.replace(tzinfo=self.UTC).astimezone(self.LOCAL)
+            hour = date.time().hour
+
+            # Convert to date
+            date = date.date()
+            if hour <= 7:
+                # Map early hours to previous day
+                return date - datetime.timedelta(days=1)
+        else:
+            date = None
+        return date
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_event_date_day_represent(value):
+        """
+            Representation method for case_event_date_day, needed in order
+            to sort pivot axis values by raw date, but show them in locale
+            format (default DD.MM.YYYY, doesn't sort properly).
+        """
+
+        return S3DateTime.date_represent(value, utc=True)
+
+    # -------------------------------------------------------------------------
+    def case_event_time_of_day(self, row):
+        """
+            Field method to group events by time of day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+
+        if date:
+            try:
+                person_id = row.person_id
+                type_id = row.type_id
+            except AttributeError:
+                person_id = 0
+                type_id = None
+
+            if type_id == self.FOOD and person_id is None:
+                tod = self.SURPLUS_MEALS
+            else:
+                date = date.replace(tzinfo=self.UTC).astimezone(self.LOCAL)
+                hour = date.time().hour
+
+                if 7 <= hour < 11:
+                    tod = "07:00 - 11:00"
+                elif 11 <= hour < 15:
+                    tod = "11:00 - 15:00"
+                else:
+                    tod = "15:00 - 07:00"
+        else:
+            tod = "-"
+        return tod
+
+# =============================================================================
 class DRKSiteActivityReport(object):
     """
         Helper class to produce site activity reports ("Residents Report")
@@ -2809,6 +3271,7 @@ class DRKSiteActivityReport(object):
                   "GU": None,
                   "Transfer": None,
                   "X-Ray": None,
+                  "Querverlegung": None,
                   }
         COMPLETED = 4
         attable = s3db.dvr_case_appointment_type
@@ -2845,7 +3308,6 @@ class DRKSiteActivityReport(object):
 
         # Represent paid_on as date
         atable = s3db.dvr_allowance
-        from s3 import S3DateTime
         atable.paid_on.represent = lambda dt: \
                                    S3DateTime.date_represent(dt,
                                                              utc=True,
@@ -2932,6 +3394,7 @@ class DRKSiteActivityReport(object):
                        (T("Admitted on"), "dvr_case.date"),
                        "dvr_case.origin_site_id",
                        date_completed("Transfer"),
+                       date_completed("Querverlegung"),
                        #"dvr_case.closed_on",
                        "dvr_case.status_id",
                        "dvr_case.destination_site_id",
@@ -2967,7 +3430,6 @@ class DRKSiteActivityReport(object):
 
         # Post-process rows
         rows = []
-        from s3 import s3_str
         for row in data.rows:
 
             flags = "dvr_case_flag_case.flag_id"
@@ -3032,7 +3494,7 @@ class DRKSiteActivityReport(object):
         data = self.extract()
 
         # Custom header for Excel Export (disabled for now)
-        #settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
+        settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
 
         # Export as XLS
         title = current.T("Resident List")
@@ -3107,7 +3569,6 @@ class DRKSiteActivityReport(object):
         if sheet is not None and data is not None:
 
             T = current.T
-            from s3 import S3DateTime, s3_unicode
             output = (("Date", S3DateTime.date_represent(self.date, utc=True)),
                       ("Previous Total", data["old_total"]),
                       ("Admissions", data["ins"]),

@@ -5,6 +5,7 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3crud.py
 #
+import json
 import unittest
 from gluon import current
 from gluon.storage import Storage
@@ -12,6 +13,8 @@ try:
     from cStringIO import StringIO
 except:
     from StringIO import StringIO
+
+from unit_tests import run_suite
 
 # =============================================================================
 class ValidateTests(unittest.TestCase):
@@ -47,7 +50,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -79,7 +81,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -111,7 +112,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 1)
@@ -137,7 +137,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -181,7 +180,6 @@ class ValidateTests(unittest.TestCase):
 
         output = crud.validate(request)
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -193,18 +191,6 @@ class ValidateTests(unittest.TestCase):
         self.assertTrue(isinstance(role["value"], int))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

@@ -8,6 +8,8 @@
 import unittest
 from gluon import current
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3ConfigTests(unittest.TestCase):
     """ Deployment settings tests """
@@ -89,18 +91,6 @@ class S3ConfigTests(unittest.TestCase):
                 settings.org.dependent_fields = s
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

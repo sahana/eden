@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import *
@@ -62,9 +57,16 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "OCHAROCCA"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
     settings.ui.filter_formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Maps
     #settings.gis.map_height = 600
     #settings.gis.map_width = 854
 
@@ -135,6 +137,7 @@ def config(settings):
     # Events
     # Make Event Types Hierarchical
     settings.event.types_hierarchical = True
+    settings.event.impact_tab = False # Done inline
 
     # -------------------------------------------------------------------------
     # Vulnerability
@@ -306,23 +309,27 @@ def config(settings):
                 s3db.add_components("gis_location",
                                     gis_location_name = {"name": "name_ru",
                                                          "joinby": "location_id",
-                                                         "filterby": "language",
-                                                         "filterfor": ("ru",),
+                                                         "filterby": {
+                                                             "language": "ru",
+                                                             },
                                                          },
                                     gis_location_tag = ({"name": "pcode",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("PCode",),
+                                                         "filterby": {
+                                                             "tag": "PCode",
+                                                             },
                                                          },
                                                         {"name": "lat_lon_source",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("LatLon Source",),
+                                                         "filterby": {
+                                                             "tag": "LatLon Source",
+                                                             },
                                                          },
                                                         {"name": "lat_lon_date",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": ("LatLon Date",),
+                                                         "filterby": {
+                                                             "tag": "LatLon Date",
+                                                             },
                                                          },
                                                         ),
                                     )
@@ -439,9 +446,7 @@ def config(settings):
         table = r.table
         table.name.label = T("Disaster Number")
 
-        location_field = s3db.event_event_location.location_id
-        location_field.requires = IS_LOCATION()
-        location_field.widget = S3LocationSelector(levels=gis_levels)
+        s3db.event_event_location.location_id.widget = S3LocationSelector(levels=gis_levels)
 
         impact_fields = OrderedDict(killed = "Killed",
                                     total_affected = "Total Affected",
@@ -464,8 +469,9 @@ def config(settings):
                                       "link": "event_event_impact",
                                       "joinby": "event_id",
                                       "key": "impact_id",
-                                      "filterby": "parameter_id",
-                                      "filterfor": (parameter,),
+                                      "filterby": {
+                                          "parameter_id": parameter,
+                                          },
                                       })
             label = T(label)
             impact_crud_form_fields.append(S3SQLInlineComponent(tag,
@@ -510,8 +516,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         lappend(("PCode", "event_location.location_id$pcode.value"))
@@ -560,7 +567,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_stats_demographic_data_resource(r, tablename):
         """
-            Customise event_event resource
+            Customise stats_demographic_data resource
             - Configure fields
             Runs after controller customisation
             But runs before prep
@@ -576,8 +583,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         list_fields = s3db.get_config(r.tablename, "list_fields")
@@ -636,8 +644,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         list_fields.insert(7, ("PCode", "location_id$pcode.value"))
@@ -660,7 +669,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
         """
-            Customise event_event resource
+            Customise org_facility resource
             - List Fields
             - Form
             - Filter

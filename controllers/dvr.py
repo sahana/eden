@@ -34,7 +34,15 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
-        CASES = T("Cases")
+        beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
+        if beneficiary:
+            CASES = T("Beneficiaries")
+            CURRENT = T("Current Beneficiaries")
+            CLOSED = T("Former Beneficiaries")
+        else:
+            CASES = T("Cases")
+            CURRENT = T("Current Cases")
+            CLOSED = T("Closed Cases")
 
         # Filters to split case list
         if not r.record:
@@ -56,11 +64,11 @@ def person():
             closed = get_vars.get("closed")
             get_status_opts = s3db.dvr_case_status_filter_opts
             if closed == "1":
-                CASES = T("Closed Cases")
+                CASES = CLOSED
                 query &= FS("dvr_case.status_id$is_closed") == True
                 status_opts = lambda: get_status_opts(closed=True)
             elif closed == "0":
-                CASES = T("Current Cases")
+                CASES = CURRENT
                 query &= (FS("dvr_case.status_id$is_closed") == False) | \
                          (FS("dvr_case.status_id$is_closed") == None)
                 status_opts = lambda: get_status_opts(closed=False)
@@ -102,19 +110,32 @@ def person():
         if r.interactive:
 
             # Adapt CRUD strings to context
-
-            s3.crud_strings["pr_person"] = Storage(
-                label_create = T("Create Case"),
-                title_display = T("Case Details"),
-                title_list = CASES,
-                title_update = T("Edit Case Details"),
-                label_list_button = T("List Cases"),
-                label_delete_button = T("Delete Case"),
-                msg_record_created = T("Case added"),
-                msg_record_modified = T("Case details updated"),
-                msg_record_deleted = T("Case deleted"),
-                msg_list_empty = T("No Cases currently registered")
-                )
+            if beneficiary:
+                s3.crud_strings["pr_person"] = Storage(
+                    label_create = T("Create Beneficiary"),
+                    title_display = T("Beneficiary Details"),
+                    title_list = CASES,
+                    title_update = T("Edit Beneficiary Details"),
+                    label_list_button = T("List Beneficiaries"),
+                    label_delete_button = T("Delete Beneficiary"),
+                    msg_record_created = T("Beneficiary added"),
+                    msg_record_modified = T("Beneficiary details updated"),
+                    msg_record_deleted = T("Beneficiary deleted"),
+                    msg_list_empty = T("No Beneficiaries currently registered")
+                    )
+            else:
+                s3.crud_strings["pr_person"] = Storage(
+                    label_create = T("Create Case"),
+                    title_display = T("Case Details"),
+                    title_list = CASES,
+                    title_update = T("Edit Case Details"),
+                    label_list_button = T("List Cases"),
+                    label_delete_button = T("Delete Case"),
+                    msg_record_created = T("Case added"),
+                    msg_record_modified = T("Case details updated"),
+                    msg_record_deleted = T("Case deleted"),
+                    msg_list_empty = T("No Cases currently registered")
+                    )
 
             if not r.component:
 
@@ -200,15 +221,19 @@ def person():
                                     ),
                     S3OptionsFilter("person_details.nationality",
                                     ),
-                    S3OptionsFilter("case_flag_case.flag_id",
-                                    label = T("Flags"),
-                                    options = s3_get_filter_opts("dvr_case_flag",
-                                                                 translate = True,
-                                                                 ),
-                                    cols = 3,
-                                    hidden = True,
-                                    ),
                     ]
+
+                # Add filter for case flags
+                if settings.get_dvr_case_flags():
+                    filter_widgets.append(
+                        S3OptionsFilter("case_flag_case.flag_id",
+                                        label = T("Flags"),
+                                        options = s3_get_filter_opts("dvr_case_flag",
+                                                                     translate = True,
+                                                                     ),
+                                        cols = 3,
+                                        hidden = True,
+                                        ))
 
                 # Add filter for transferability if relevant for deployment
                 if settings.get_dvr_manage_transferability():
@@ -219,8 +244,7 @@ def person():
                                                    },
                                         cols = 2,
                                         hidden = True,
-                                        )
-                        )
+                                        ))
 
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,
@@ -247,6 +271,54 @@ def person():
                             field = table[fn]
                             field.writable = False
                             field.comment = None
+            elif r.component_name == "evaluation":
+                S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+                crud_fields = [#"person_id",
+                               #"case_id",
+                               #"date",
+                               ]
+                cappend = crud_fields.append
+
+                table = s3db.dvr_evaluation_question
+                rows = db(table.deleted != True).select(table.id,
+                                                        table.section,
+                                                        #table.header,
+                                                        table.number,
+                                                        table.name,
+                                                        orderby = table.number,
+                                                        )
+
+                #subheadings = {}
+
+                section = None
+                for row in rows:
+                    name = "number%s" % row.number
+                    if row.section != section:
+                        label = section = row.section
+                        #subheadings[T(section)] = "sub_%sdata" % name
+                    else:
+                        label = ""
+                    cappend(S3SQLInlineComponent("data",
+                                                 name = name,
+                                                 label = label,
+                                                 fields = (("", "question_id"),
+                                                           ("", "answer"),
+                                                           ),
+                                                 filterby = dict(field = "question_id",
+                                                                 options = row.id
+                                                                 ),
+                                                 multiple = False,
+                                                 ),
+                            )
+
+                cappend("comments")
+                crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+                s3db.configure("dvr_evaluation",
+                               crud_form = crud_form,
+                               #subheadings = subheadings,
+                               )
 
         # Module-specific list fields (must be outside of r.interactive)
         list_fields = ["dvr_case.reference",
@@ -365,6 +437,13 @@ def group_membership():
                               )
 
 # -----------------------------------------------------------------------------
+def activity():
+    """ Activities: RESTful CRUD Controller """
+
+    return s3_rest_controller(rheader = s3db.dvr_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def case_activity():
     """ Case Activities: RESTful CRUD Controller """
 
@@ -414,7 +493,6 @@ def due_followups():
                        "need_details",
                        "emergency",
                        "referral_details",
-                       "followup",
                        "followup_date",
                        "completed",
                        ]
@@ -572,6 +650,24 @@ def case():
 def need():
     """ Needs: RESTful CRUD Controller """
 
+    if settings.get_dvr_needs_hierarchical():
+
+        tablename = "dvr_need"
+
+        from s3 import S3Represent
+        represent = S3Represent(lookup = tablename,
+                                hierarchy = True,
+                                translate = True,
+                                )
+
+        table = s3db[tablename]
+        field = table.parent
+        field.represent = represent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % tablename,
+                                               represent,
+                                               orderby="%s.name" % tablename,
+                                               ))
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -647,8 +743,89 @@ def case_event():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def activity_funding_reason():
+    """ Activity Funding Reasons: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def activity_funding():
+    """ Activity Funding Proposals: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def site_activity():
     """ Site Activity Reports: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation_question():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation():
+    """
+        RESTful CRUD Controller
+        - unused
+    """
+
+    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+    crud_fields = ["person_id",
+                   "case_id",
+                   #"date",
+                   ]
+    cappend = crud_fields.append
+
+    table = s3db.dvr_evaluation_question
+    rows = db(table.deleted != True).select(table.id,
+                                            table.section,
+                                            #table.header,
+                                            table.number,
+                                            table.name,
+                                            orderby = table.number,
+                                            )
+
+    #subheadings = {}
+
+    section = None
+    for row in rows:
+        name = "number%s" % row.number
+        if row.section != section:
+            label = section = row.section
+            #subheadings[T(section)] = "sub_%sdata" % name
+        else:
+            label = ""
+        cappend(S3SQLInlineComponent("data",
+                                     name = name,
+                                     label = label,
+                                     fields = (("", "question_id"),
+                                               ("", "answer"),
+                                               ),
+                                     filterby = dict(field = "question_id",
+                                                     options = row.id
+                                                     ),
+                                     multiple = False,
+                                     ),
+                )
+
+    cappend("comments")
+    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+    s3db.configure("dvr_evaluation",
+                   crud_form = crud_form,
+                   #subheadings = subheadings,
+                   )
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def evaluation_data():
+    """ RESTful CRUD Controller """
 
     return s3_rest_controller()
 

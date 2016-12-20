@@ -25,7 +25,7 @@
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-<link href="/{{=appname}}/static/styles/foundation/normalize.css" rel="stylesheet" />
+<link href="/{{=appname}}/static/themes/foundation/normalize.css" rel="stylesheet" />
 {{theme=settings.get_theme()}}
 {{if s3.debug:}}
 {{if s3.rtl:}}
@@ -68,7 +68,7 @@
 {{else:}}
 <body>
  <div class='row main-title'>
-    <div class='medium-6 columns'>
+    <div class='large-4 medium-6 columns'>
      <a href='{{=URL(c="default", f="index")}}'>
       {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
       <div class="org-logo">{{=org_menu[1]}}</div>
@@ -78,12 +78,12 @@
       </div>
      </a>
     </div>
-    <div class='medium-4 columns'>
-      <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='icon icon-user'></i></div>
-      {{=current.menu.personal}}
-    </div>
-    <div class='medium-2 columns'>
+    <div class='large-push-6 large-2 medium-6 columns'>
       {{=current.menu.lang}}
+    </div>
+    <div class='large-pull-2 large-6 medium-12 columns personal-menu-area'>
+      <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
+      {{=current.menu.personal}}
     </div>
  </div>
  <div class='row main-navigation'>
@@ -116,7 +116,7 @@
    {{include}}
   </div>
  </div>
- <div class='row' id='footer'>
+ <div id='footer'>
   <div class='medium-12 columns'>
    {{include "../modules/templates/%s/views/footer.html" % response.s3.theme}}
    {{if s3.debug:}}

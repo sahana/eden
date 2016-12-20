@@ -42,7 +42,7 @@ class S3MainMenuLayout(S3NavigationItem):
                         classes.append("active")
                     _class = " ".join(classes)
                     # Menu item with Dropdown
-                    if item.get_first(enabled=True):
+                    if item.get_first(enabled=True, link=True):
                         _href = item.url()
                         return LI(A(item.label,
                                     _href=_href,
@@ -93,6 +93,11 @@ class S3MainMenuLayout(S3NavigationItem):
                 right.reverse()
                 if current.response.s3.rtl:
                     right, left = left, right
+
+                T = current.T
+                data_options = {"back": T("Back"),
+                                }
+
                 return NAV(UL(LI(A(" ",
                                    _href=URL(c="default", f="index"),
                                    ),
@@ -108,7 +113,9 @@ class S3MainMenuLayout(S3NavigationItem):
                                    _class="top-bar-section",
                                    ),
                            _class = "top-bar",
-                           data = {"topbar": " "},
+                           data = {"topbar": " ",
+                                   "options": "back_text:%(back)s" % data_options,
+                                   },
                            )
         else:
             return None
@@ -189,7 +196,7 @@ class S3AboutMenuLayout(S3NavigationItem):
             # The menu
             items = item.render_components()
             if items:
-                return TAG["ul"](items, _class="sub-nav about-menu left")
+                return TAG["ul"](items, _class="sub-nav about-menu")
             else:
                 return "" # menu is empty
         else:

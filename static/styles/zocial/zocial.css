@@ -11,11 +11,11 @@ Enjoy
 	font-family: 'zocial';
 	font-style: normal;
 	font-weight: normal;
-	src: url('zocial-regular-webfont.eot');
-	src: url('zocial-regular-webfont.eot?#iefix') format('embedded-opentype'),
-		url('zocial-regular-webfont.woff') format('woff'),
-		url('zocial-regular-webfont.ttf') format('truetype'),
-		url('zocial-regular-webfont.svg#ZocialRegular') format('svg');
+	src: url('../../fonts/zocial-regular-webfont.eot');
+	src: url('../../fonts/zocial-regular-webfont.eot?#iefix') format('embedded-opentype'),
+		 url('../../fonts/zocial-regular-webfont.woff') format('woff'),
+		 url('../../fonts/zocial-regular-webfont.ttf') format('truetype'),
+		 url('../../fonts/zocial-regular-webfont.svg#ZocialRegular') format('svg');
 }
 
 /* Button structure */
@@ -373,7 +373,7 @@ Credit to @guillermovs for suggesting
 
 /* Humanitarian.ID Button (added for Sahana) */
 
-.zocial.humanitarianid > span:before {content: url(humanitarianid.png); height:24px; padding-top: 3px;}
+.zocial.humanitarianid > span:before {content: url(../../img/humanitarianid.png); height:24px; padding-top: 3px;}
 .zocial.humanitarianid {background: ##e2e2e2; color: #2a5d81 !important;}
 .zocial.humanitarianid {
         border: 1px solid rgba(0,0,0,0.3);

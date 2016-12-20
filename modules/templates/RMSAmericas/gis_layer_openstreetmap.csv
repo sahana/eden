@@ -1,2 +1,2 @@
 Name,Config,Enabled,Visible,Base,Default,Folder,URL,URL2,URL3,Attribution,Zoom Levels
-OpenStreetMap (Humanitarian),,True,,,,,//a.tile.openstreetmap.fr/hot/,//b.tile.openstreetmap.fr/hot/,//c.tile.openstreetmap.fr/hot/,"Tiles Courtesy of <a href=""http://hot.openstreetmap.org/"" target=""_blank"">Humanitarian OpenStreetMap Team</a>",
+OpenStreetMap (Humanitarian),,"True",,,,,//a.tile.openstreetmap.fr/hot/,//b.tile.openstreetmap.fr/hot/,//c.tile.openstreetmap.fr/hot/,"Tiles Courtesy of <a href=""http://hot.openstreetmap.org/"" target=""_blank"">Humanitarian OpenStreetMap Team</a>",

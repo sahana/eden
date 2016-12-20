@@ -1,0 +1,114 @@
+/* Datatables */
+.dataTables_length {
+    float: left !important;
+    label {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-right: 10em;
+        margin-bottom: 0.3em;
+    }
+    select {
+        height: auto;
+        padding: 2px;
+        font-size: 0.75rem;
+    }
+}
+
+#table-container {
+    margin-bottom: 1.5rem;
+}
+
+table.dataTable {
+    thead th, th, td {
+        border: 1px solid $datatables_border_color;
+        padding: 0.2em 1.5em 0.2em 0.5em;
+    }
+    thead {
+        th, td {
+            background-color: $datatables_bgcolor_head;
+        }
+    }
+    tbody {
+        tr.even {
+            background-color: $datatables_bgcolor_even;
+            // Current sorting column:
+            td.sorting_1 {
+                background-color: $datatables_bgcolor_even_highlight;
+            }
+        }
+        tr.odd {
+            background-color: $datatables_bgcolor_odd;
+            td {
+                border-color: $datatables_border_color;
+            }
+            // Current sorting column:
+            td.sorting_1 {
+                background-color: $datatables_bgcolor_odd_highlight;
+            }
+        }
+    }
+    tfoot {
+        th, td {
+            background-color: $datatables_bgcolor_foot;
+            border-top: 2px solid $datatables_border_color;
+            padding: 0.5em;
+        }
+
+    }
+    .selected-action {
+        margin: 5px 0 5px;
+    }
+
+    &.dtr-inline.collapsed tbody td:first-child::before,
+    &.dtr-inline.collapsed tbody th:first-child::before {
+        top: 6px;
+        background-color: $primary-color;
+    }
+    &.dtr-inline.collapsed tbody tr.parent td:first-child::before,
+    &.dtr-inline.collapsed tbody tr.parent th:first-child::before {
+        top: 6px;
+        background-color: $alert-color;
+    }
+}
+#bulk_select_options input[type=checkbox] {
+    margin-bottom: 0.2rem;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.dataTables_processing {
+     padding: 14px 0 28px;
+}
+.dataTables_filter {
+    text-align: left;
+    font-size: 0.75rem;
+    margin-right: 3rem;
+    input[type="search"] {
+        margin-left: 0.2rem;
+    }
+}
+.dt-export-options {
+    float: right;
+    .list_formats {
+        padding-top: 0;
+        margin-left: 5px;
+    }
+    .dt-export {
+        margin: 0 0.085rem;
+    }
+}
+
+body.rtl {
+    .dt-export-options {
+        float: left;
+    }
+    .list_formats div {
+        float: left;
+    }
+}
+
+/* Empty-sections */
+.empty {
+    font-style: italic;
+    font-size: 0.8em;
+}

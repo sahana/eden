@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -186,6 +181,9 @@ def config(settings):
     # Formstyle
     settings.ui.formstyle = "table"
     settings.ui.filter_formstyle = "table_inline"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
 
     settings.gis.map_height = 600
     settings.gis.map_width = 869

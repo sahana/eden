@@ -6,6 +6,7 @@
          Missions - CSV Import Stylesheet
 
          CSV fields:
+         Organisation............deploy_mission.organisation_id
          Name....................deploy_mission.name
          Date....................deploy_mission.modified_on
          Event Type..............event_event.event_type_id
@@ -30,7 +31,9 @@
     </xsl:variable>
 
     <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
     <xsl:key name="type" match="row" use="col[@field='Event Type']"/>
+    <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -39,6 +42,13 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
                                                                        col[@field='Event Type'])[1])]">
                 <xsl:call-template name="EventType" />
+            </xsl:for-each>
+
+            <!-- Orgs -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('orgs',
+                                                        col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
             <!-- Missions -->
@@ -51,7 +61,7 @@
     <xsl:template match="row">
         <xsl:variable name="EventType" select="col[@field='Event Type']"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
-        
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <!-- Mission -->
         <resource name="deploy_mission">
@@ -60,6 +70,15 @@
                     <xsl:value-of select="col[@field='Date']"/>
                 </xsl:attribute>
             </xsl:if>
+
+            <xsl:if test="$OrgName!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -120,6 +139,20 @@
                 <data field="name"><xsl:value-of select="$EventType"/></data>
             </resource>
         </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$OrgName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+        </resource>
 
     </xsl:template>
 

@@ -1603,7 +1603,6 @@
 		dayNamesShort: ['اتوار','پير','منگل','بدھ','جمعرات','جمعہ','ہفتہ'],
 		dayNamesMin: ['اتوار','پير','منگل','بدھ','جمعرات','جمعہ','ہفتہ'],
 		dateFormat: 'dd/mm/yyyy',
-		firstDay: 0,
 		firstDay: 1,
 		isRTL: true
 	};

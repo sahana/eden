@@ -334,9 +334,10 @@ class S3FieldPath(object):
 
         # Initialize
         self.original = None
-        self.tname = table._tablename
+        tname = self.tname = table._tablename
         self.fname = None
         self.field = None
+        self.method = None
         self.ftype = None
         self.virtual = False
         self.colname = None
@@ -397,22 +398,25 @@ class S3FieldPath(object):
             # End of the expression
             if self.ftype != "context":
                 # Expression is resolved, head is a field name:
-                self.field = self._resolve_field(table, head)
-                if not self.field:
+                field, method = self._resolve_field(table, head)
+                if not field:
                     self.virtual = True
+                    self.field = None
+                    self.method = method
                     self.ftype = "virtual"
                 else:
                     self.virtual = False
-                    self.ftype = str(self.field.type)
+                    self.field = field
+                    self.method = None
+                    self.ftype = str(field.type)
                 self.fname = head
-                self.colname = "%s.%s" % (self.tname, self.fname)
-
+                self.colname = "%s.%s" % (tname, head)
         else:
-
             # Read field data from tail
             self.tname = tail.tname
             self.fname = tail.fname
             self.field = tail.field
+            self.method = tail.method
             self.ftype = tail.ftype
             self.virtual = tail.virtual
             self.colname = tail.colname
@@ -432,18 +436,28 @@ class S3FieldPath(object):
             @param table: the Table
             @param fieldname: the field name
 
-            @return: the Field
+            @return: tuple (Field, Field.Method)
         """
+
+        method = None
 
         if fieldname == "uid":
             fieldname = current.xml.UID
+
         if fieldname == "id":
             field = table._id
         elif fieldname in table.fields:
             field = ogetattr(table, fieldname)
         else:
+            # Virtual Field
             field = None
-        return field
+            try:
+                method = ogetattr(table, fieldname)
+            except AttributeError:
+                # not yet defined, skip
+                pass
+
+        return field, method
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -671,6 +685,13 @@ class S3ResourceField(object):
         elif self.colname:
             self.virtual = True
             self.ftype = "virtual"
+            # Check whether the fieldmethod handler has a
+            # representation method (s3_fieldmethod)
+            method = lf.method
+            if hasattr(method, "handler"):
+                handler = method.handler
+                if hasattr(handler, "represent"):
+                    self.represent = handler.represent
         else:
             self.ftype = "context"
 

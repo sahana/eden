@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current, URL
 from gluon.storage import Storage
@@ -32,6 +27,7 @@ def config(settings):
     settings.base.theme = "SSF"
 
     # UI
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "watch": "icon-eye-open",
         "unwatch": "icon-eye-close",

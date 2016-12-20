@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import *
@@ -92,8 +87,14 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "CRMT"
+
+    # Formstyles
     settings.ui.formstyle = "foundation_2col"
     #settings.ui.report_formstyle = "foundation_inline"
+
+    # Icons
+    settings.ui.icons = "foundation"
+
     settings.ui.hide_report_options = False
     settings.ui.inline_component_layout = CRMTSubFormLayout
     settings.ui.read_label = "" # replaced with icon
@@ -371,8 +372,9 @@ def config(settings):
                     s3db.add_components("pr_pentity",
                                         pr_contact = ({"name": "home",
                                                        "joinby": "pe_id",
-                                                       "filterby": "contact_method",
-                                                       "filterfor": ["HOME_PHONE"],
+                                                       "filterby": {
+                                                           "contact_method": "HOME_PHONE",
+                                                           },
                                                        }),
                                         )
                     list_fields.extend(((T("Email"), "email.value"),

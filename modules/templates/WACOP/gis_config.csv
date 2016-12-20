@@ -1,0 +1,3 @@
+UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker
+SITE_DEFAULT,Default,,US,7,47.5576,-120.7006,900913,-90,90,-180,180,marker_red
+WA,Washington,,US,7,47.5576,-120.7006,900913,40,50,-130,-110,marker_red

@@ -1,0 +1,151 @@
+.org-logo {
+    vertical-align: top;
+    display: inline-block;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+}
+.system-title {
+    display: inline-block;
+}
+.system-title h5 {
+    color: #333333;
+}
+.system-title h6 {
+    color: #999999;
+}
+.system-name {
+    margin-bottom: 0;
+}
+.system-acronym {
+    font-weight: bold;
+}
+.org-name {
+    margin-bottom: 0.125rem;
+    line-height: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.personal-menu {
+    float: right;
+    clear: right;
+    padding-top: 0;
+    margin-bottom: 0.125rem;
+    li a {
+        padding: 0 0.375rem;
+    }
+}
+.language-selector {
+    display: block;
+    margin-top: 0.625rem;
+    margin-bottom: 0.125rem;
+}
+.sub-nav.about-menu {
+    margin-left: 0;
+    margin-right: 0;
+}
+#dashboard > li {
+    display: inline-block;
+}
+.home-map,
+.home-cms {
+    margin: 1rem 0;
+}
+.home-map {
+    border: 1px solid #999999;
+}
+.username {
+    color: #666666;
+    padding: 0.5rem 0;
+    padding-right: 0.5rem;
+    font-size: 0.7rem;
+    i.icon, i.fa {
+        padding-left: 0.2rem;
+        padding-right: 0;
+    }
+    float: right;
+}
+.overdue {
+    color: red;
+}
+.invalid-case {
+    border: 1px solid red;
+    color: red;
+    font-size: 1.25rem;
+    font-weight: bold;
+    line-height: 1.6rem;
+    margin-bottom: 0.25rem;
+    padding: 0.2rem;
+    text-transform: uppercase;
+}
+.checkpoint-advise {
+    background: #fff0f0 none repeat scroll 0 0;
+    border: 2px solid red;
+    margin-bottom: 1rem;
+    padding: 0.6rem;
+    p {
+        white-space: pre-wrap;
+    }
+}
+.checkpoint-person {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+.event-top {
+    margin-top: 0.3rem!important;
+}
+.event-type-header {
+    text-align: right;
+}
+.event-type-setting {
+    color: black;
+    font-size: 1.1rem;
+    margin-left: 0.8rem;
+    vertical-align: text-top;
+}
+.event-type-toggle {
+    cursor: pointer;
+}
+.controls.has-flaginfo,
+.controls.has-details {
+    width: 100%;
+    table {
+        width: 100%;
+        border: none;
+    }
+}
+.payment-amount {
+    color: darkgreen;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+#payment-form {
+    #allowance_date__row,
+    #allowance_comments__row {
+        display: none;
+    }
+}
+.dashboard-action {
+    margin-bottom: 1.0rem;
+}
+
+// Overrides for right-to-left orientation
+body.rtl {
+    .personal-menu {
+        clear: left;
+        float: left;
+    }
+    .language-selector {
+        float: left;
+    }
+    .username {
+        padding-left: 0.5rem;
+        padding-right: 0;
+        i.icon, i.fa {
+            padding-left: 0;
+            padding-right: 0.2rem;
+        }
+        float: left;
+    }
+    .event-type-header {
+        text-align: left;
+    }
+}

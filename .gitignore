@@ -24,3 +24,7 @@
 .idea
 .sass-cache
 /yaml/*
+# Ignore plugins
+/modules/plugins/*
+!/modules/plugins/__init__.py
+!/modules/plugins/skeleton.py

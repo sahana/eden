@@ -41,17 +41,7 @@ __all__ = ("S3StatsModel",
            )
 
 import datetime
-
-try:
-    # try stdlib (Python 2.6)
-    import json
-except ImportError:
-    try:
-        # try external module
-        import simplejson as json
-    except:
-        # fallback to pure-Python module
-        import gluon.contrib.simplejson as json
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -70,6 +60,7 @@ class S3StatsModel(S3Model):
              "stats_source",
              "stats_source_superlink",
              "stats_source_id",
+             "stats_accuracy",
              #"stats_source_details",
              )
 
@@ -132,6 +123,22 @@ class S3StatsModel(S3Model):
                            #climate_data = T("Climate Data"),
                            )
 
+        accuracy_opts = {1 : T("Official Measurement"),
+                         2 : T("Measurement"),
+                         3 : T("Official Estimate"),
+                         4 : T("Estimate"), # e.g. Interpolation
+                         5 : T("Official Projection"),
+                         6 : T("Projection"),
+                         }
+        accuracy = S3ReusableField("accuracy", "integer",
+                                   represent = lambda opt: \
+                                        accuracy_opts.get(opt,
+                                                          current.messages.UNKNOWN_OPT),
+                                   requires = IS_EMPTY_OR(IS_IN_SET(accuracy_opts,
+                                                                    zero=None),
+                                                          ),
+                                   )
+
         tablename = "stats_data"
         super_entity(tablename, "data_id",
                      sd_types,
@@ -153,6 +160,7 @@ class S3StatsModel(S3Model):
                      s3_date("end_date",
                              label = T("End Date"),
                              ),
+                     accuracy(),
                      )
 
         # ---------------------------------------------------------------------
@@ -206,6 +214,7 @@ class S3StatsModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(stats_source_superlink = source_superlink,
                     stats_source_id = source_id,
+                    stats_accuracy = accuracy,
                     )
 
     # -------------------------------------------------------------------------
@@ -341,6 +350,7 @@ class S3StatsDemographicModel(S3Model):
                            readable = False,
                            writable = False
                            ),
+                     self.stats_accuracy(),
                      Field("year", "list:integer",
                            compute = lambda row: \
                              stats_year(row, "stats_demographic_data"),
@@ -1257,6 +1267,7 @@ class S3StatsImpactModel(S3Model):
                      super_link("data_id", "stats_data"),
                      # Instance (link to Photos/Reports)
                      super_link("doc_id", "doc_entity"),
+                     self.gis_location_id(widget = S3LocationSelector(show_map=False)),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
@@ -1278,7 +1289,7 @@ class S3StatsImpactModel(S3Model):
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     #self.gis_location_id(),
+                     self.stats_accuracy(default=3), # Default: Official Estimate
                      s3_comments(),
                      *s3_meta_fields())
 

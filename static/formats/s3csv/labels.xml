@@ -70,22 +70,29 @@
             <label>V</label>
             <label>F</label>
             <label>f</label>
-            <label>Femme</label>
             <label>Female</label>
+            <label>Femenino</label>
+            <label>Femme</label>
             <label>female</label>
+            <label>femenino</label>
+            <label>femme</label>
             <label>Mrs</label>
             <label>Mrs.</label>
             <label>Ms</label>
             <label>Ms.</label>
         </option>
         <option value="3" name="male">
+            <label>H</label>
             <!-- mg -->
             <label>L</label>
             <label>M</label>
             <label>m</label>
             <label>Homme</label>
             <label>Male</label>
+            <label>Masculino</label>
+            <label>homme</label>
             <label>male</label>
+            <label>masculino</label>
             <label>Mr</label>
             <label>Mr.</label>
         </option>

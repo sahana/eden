@@ -820,6 +820,7 @@
         if (email) {
             data['email'] = email;
         }
+        // @ToDo: Allow controller to be configurable
         var url = S3.Ap.concat('/pr/person/check_duplicates');
         $.ajaxS3({
             url: url,

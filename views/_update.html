@@ -3,8 +3,8 @@
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
 </div>
-<div class='row'>
- <div id='rheader' class='small-12 columns'>
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
   {{try:}}{{=XML(rheader)}}
  </div>
 </div>
@@ -14,9 +14,7 @@
 </div>
 <div class='row'>
 {{pass}}
- <div class='small-12 columns'>
-  {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
- </div>
+ {{try:}}{{if subtitle:}}<div class='small-12 columns'>{{=H3(subtitle)}}</div>{{pass}}{{except:}}{{pass}}
  <div class='small-12 columns'>
   {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
   {{try:}}{{=deduplicate}}{{except:}}{{pass}}

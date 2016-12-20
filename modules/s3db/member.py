@@ -83,7 +83,9 @@ class S3MembersModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -255,15 +257,15 @@ class S3MembersModel(S3Model):
                         (T("Phone"), "phone.value"),
                         ]
 
-        report_fields = ["person_id"]
+        report_fields = ["organisation_id",
+                         "person_id",
+                         ]
         if types:
             report_fields.append("membership_type_id")
-            default_row = "membership.membership_type_id"
+            default_col = "membership.membership_type_id"
         else:
-            default_row = "membership.paid"
-        report_fields += [(T("Paid"), "paid"),
-                          "organisation_id",
-                          ]
+            default_col = "membership.paid"
+        report_fields.append((T("Paid"), "paid"))
 
         text_fields = ["organisation_id$name",
                        "organisation_id$acronym",
@@ -286,6 +288,7 @@ class S3MembersModel(S3Model):
                                            hidden = True,
                                            leafonly = False,
                                            )
+            report_fields.insert(1, (settings.get_hrm_root_organisation_label(), "organisation_id$root_organisation"))
         else:
             org_filter = S3OptionsFilter("organisation_id",
                                          filter = True,
@@ -326,8 +329,8 @@ class S3MembersModel(S3Model):
                                  cols = report_fields,
                                  facts = report_fields,
                                  defaults = Storage(
-                                    cols = "membership.organisation_id",
-                                    rows = default_row,
+                                    cols = default_col,
+                                    rows = "membership.organisation_id",
                                     fact = "count(membership.person_id)",
                                     totals = True,
                                     )
@@ -382,8 +385,9 @@ class S3MembersModel(S3Model):
                                            "key": "pe_id",
                                            "fkey": "pe_id",
                                            "pkey": "person_id",
-                                           "filterby": "contact_method",
-                                           "filterfor": ("EMAIL",),
+                                           "filterby": {
+                                               "contact_method": "EMAIL",
+                                                },
                                            },
                                           # Phone
                                           {"name": "phone",
@@ -392,11 +396,12 @@ class S3MembersModel(S3Model):
                                            "key": "pe_id",
                                            "fkey": "pe_id",
                                            "pkey": "person_id",
-                                           "filterby": "contact_method",
-                                           "filterfor": ("SMS",
-                                                         "HOME_PHONE",
-                                                         "WORK_PHONE",
-                                                         ),
+                                           "filterby": {
+                                               "contact_method": ("SMS",
+                                                                  "HOME_PHONE",
+                                                                  "WORK_PHONE",
+                                                                  ),
+                                               },
                                            },
                                           ),
                             hrm_programme = {"link": "member_membership_programme",

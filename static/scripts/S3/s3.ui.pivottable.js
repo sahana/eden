@@ -70,7 +70,9 @@
             filterTab: null,            // ID of the summary tab to activate upon
                                         // plot-click (default: first tab)
 
-            autoSubmit: 1000,
+            autoSubmit: 1000, // 1s but controlled by get_ui_report_auto_submit()
+            timeout: 10000, // 10s but controlled by get_ui_report_timeout()
+
             thousandSeparator: ' ',
             thousandGrouping: '3',
             minTickSize: null,
@@ -88,6 +90,7 @@
 
             this.table = null;
             this.chart = null;
+            this.openRequest = null;
         },
 
         /**
@@ -1869,6 +1872,7 @@
                 // Use $.searchS3 if available, otherwise (e.g. custom
                 // page without s3.filter.js) fall back to $.ajaxS3:
                 var ajaxURL = this.options.ajaxURL,
+                    timeout = this.options.timeout,
                     ajaxMethod = $.ajaxS3;
                 if ($.searchS3 !== undefined) {
                     ajaxMethod = $.searchS3;
@@ -1877,11 +1881,19 @@
                 // Hide empty section while loading
                 $el.find('.pt-empty').hide();
 
-                ajaxMethod({
+                if (pt.openRequest) {
+                    // Abort previously open request
+                    pt.openRequest.onreadystatechange = null;
+                    pt.openRequest.abort();
+                }
+
+                pt.openRequest = ajaxMethod({
+                    'timeout': timeout,
                     'url': ajaxURL,
                     'dataType': 'json',
                     'type': 'GET',
                     'success': function(data) {
+                        pt.openRequest = null;
                         pivotdata.first().val(JSON.stringify(data));
                         pt.refresh();
                     },

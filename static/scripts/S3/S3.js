@@ -202,12 +202,38 @@ S3.addModals = function() {
                 //select.css('z-index', 1049);
             }
         }
-        var id = S3.uid();
-        // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
-                      .appendTo('body');
+
+        // Create an iframe
+        var id = S3.uid(),
+            dialog = $('<iframe>', {
+                'id': id,
+                // Start empty to prevent contents reload at
+                // DOM re-insertion (=unnecessary HTTP request)
+                'src': '',
+                // Set initial 'loading' class to show spinner until contents loaded
+                'class': 'loading',
+                'load': function(event, ui) {
+                    S3.popup_loaded(id);
+                },
+                'marginWidth': '0',
+                'marginHeight': '0',
+                'frameBorder': '0'
+            }).appendTo('body');
+
+        // Create jQuery UI dialog
         dialog.dialog({
-            // add a close listener to prevent adding multiple divs to the document
+            autoOpen: false,
+            title: title,
+            minHeight: 480,
+            minWidth: 320,
+            modal: true,
+            closeText: '',
+            open: function(event, ui) {
+                // Clicking outside of the popup closes it
+                $('.ui-widget-overlay').bind('click', function() {
+                    dialog.dialog('close');
+                });
+            },
             close: function(event, ui) {
                 if (self.parent) {
                     // There is a parent modal: refresh it to fix layout
@@ -218,20 +244,15 @@ S3.addModals = function() {
                         iframe.width(width);
                     }, 300);
                 }
-                // remove div with all data and events
-                dialog.remove();
+                // Clear src to prevent DOM manipulation from triggering
+                // post-close contents reload (=unnecessary HTTP request)
+                dialog.attr('src', '').remove();
             },
-            minHeight: 480,
-            modal: true,
-            open: function(event, ui) {
-                $('.ui-widget-overlay').bind('click', function() {
-                    dialog.dialog('close');
-                });
-            },
-            title: title,
-            minWidth: 320,
-            closeText: ''
         });
+
+        // Only now set the iframe source URL and open the dialog
+        dialog.attr('src', url).dialog('open');
+
         // Prevent browser from following link
         return false;
     });
@@ -436,16 +457,11 @@ var S3EnableNavigateAwayConfirm = function() {
 };
 
 // ============================================================================
-/**
- * ajaxS3
- * - wrapper for jQuery AJAX to handle poor network environments
- * - retries failed requests & alerts on errors
- */
-
 (function($) {
+
     // Default AJAX settings
     $.ajaxS3Settings = {
-        timeout : 10000,
+        timeout : 10000, // 10s
         //msgTimeout: 2000,
         retryLimit: 5,
         dataType: 'json',
@@ -453,58 +469,204 @@ var S3EnableNavigateAwayConfirm = function() {
         type: 'GET'
     };
 
-    $.ajaxS3 = function(s) {
-        var message;
-        var options = $.extend( {}, $.ajaxS3Settings, s );
-        options.tryCount = 0;
-        options.error = null;   // prevent callback from being executed twice
-        options.success = null; // prevent callback from being executed twice
-        if (s.message) {
-            message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
-            S3.showAlert(message, 'info');
+    /**
+     * Wrapper for jQuery.ajax to handle poor network environments
+     * - retries failed requests & alerts on errors
+     *
+     * @param {object} ajaxOptions - the Ajax options
+     */
+    function AjaxS3(ajaxOptions) {
+
+        this.xhr = null;
+
+        // Ajax options
+        var options = $.extend({}, $.ajaxS3Settings, ajaxOptions);
+        this.options = options;
+
+        // Callbacks
+        this.successCallback = ajaxOptions.success;
+        this.errorCallback = ajaxOptions.error;
+
+        // Prevent callbacks from being executed by $.ajax itself
+        options.success = null;
+        options.error = null;
+
+        // Activity Message
+        this.message = ajaxOptions.message;
+
+        // Retry
+        this.tryCount = 0;
+        this.retryLimit = options.retryLimit;
+
+        // Alerts
+        this.alerts = [];
+    }
+
+    /**
+     * Success callback
+     *
+     * @param {mixed} data - the data returned from server
+     *
+     * NB: executed in the context of the options object passed
+     *     to $.ajax (=this), which holds the AjaxS3 instance as
+     *     'AjaxS3' property
+     */
+    AjaxS3.prototype.onSuccess = function(data) {
+
+        // Get the instance from context
+        var self = this.AjaxS3;
+        if (!self) {
+            return;
         }
-        $.ajax(
-            options
-        ).done(function(data, status) {
-            S3.hideAlerts();
-            this.tryCount = 0;
-            if (data.message) {
-                S3.showAlert(data.message, 'success');
-            }
-            // @ToDo: support drop-in replacement functions by calling .done()
-            if (s.success) {
-                // Calling function's success callback
-                s.success(data, status);
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == 'timeout') {
-                this.tryCount++;
-                if (this.tryCount <= this.retryLimit) {
-                    // Try again
-                    message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount;
-                    S3.showAlert(message, 'warning');
-                    $.ajax(this);
-                    return;
-                }
-                message = i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn;
-                S3.showAlert(message, 'error');
-                if (s.error) {
-                    // Calling function's error callback
-                    s.error(jqXHR, textStatus, errorThrown);
-                }
+
+        // Reset try count and forget the xhr
+        self.tryCount = 0;
+        self.xhr = null;
+
+        // Remove all warnings generated by this request
+        S3.hideAlerts(self.alerts);
+
+        // Show final success message
+        if (data && data.message) {
+            S3.showAlert(data.message, 'success');
+        }
+
+        // Apply the caller's success callback
+        var successCallback = self.successCallback;
+        if (successCallback) {
+            successCallback.apply(this, arguments);
+        }
+    };
+
+    /**
+     * Error callback
+     *
+     * @param {jqXHR} jqXHR - the jqXHR object (extended XMLHttpRequest)
+     * @param {string} textStatus - the final request status:
+     *                              timeout|error|abort|parsererror
+     *
+     * NB: executed in the context of the options object passed
+     *     to $.ajax (=this), which holds the AjaxS3 instance as
+     *     'AjaxS3' property
+     */
+    AjaxS3.prototype.onFailure = function(jqXHR, textStatus) {
+
+        // Get the instance form context
+        var self = this.AjaxS3;
+        if (!self) {
+            return;
+        }
+
+        if (textStatus == 'abort') {
+
+            // Request aborted...don't show nasty messages
+            self.tryCount = 0;
+            self.xhr = null;
+
+        } else if (textStatus == 'timeout') {
+
+            // Request timeout => retry?
+            self.tryCount++;
+
+            var tryCount = self.tryCount,
+                message = self.message;
+
+            if (tryCount <= self.retryLimit) {
+
+                // Show retry-warning
+                message = i18n.ajax_get + ' ' + (message ? message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + tryCount;
+                self.alerts.push(S3.showAlert(message, 'warning'));
+
+                // Send again
+                self.send();
                 return;
-            }
-            if (jqXHR.status == 500) {
-                // @ToDo: Can we find & show the ticket URL?
-                S3.showAlert(i18n.ajax_500, 'error');
+
             } else {
-                S3.showAlert(i18n.ajax_dwn, 'error');
+                self.xhr = null;
             }
-            if (s.error) {
-                // Calling function's error callback
-                s.error(jqXHR, textStatus, errorThrown);
-            }
+
+            // Show final error
+            message = i18n.ajax_wht + ' ' + tryCount + ' ' + i18n.ajax_gvn;
+            S3.showAlert(message, 'error');
+
+        } else if (jqXHR.status == 500) {
+            // Internal server error
+            S3.showAlert(i18n.ajax_500, 'error');
+        } else {
+            // Other error or server unreachable
+            S3.showAlert(i18n.ajax_dwn, 'error');
+        }
+
+        // Apply the caller's error callback
+        var errorCallback = self.errorCallback;
+        if (errorCallback) {
+            errorCallback.apply(this, arguments);
+        }
+    };
+
+    /**
+     * Start processing this instance
+     * - shows initial activity message
+     * - sends the request
+     */
+    AjaxS3.prototype.start = function() {
+
+        if (this.xhr !== null) {
+            // Already started
+            return;
+        }
+
+        // Show initial message
+        var message = this.message;
+        if (message) {
+            message = i18n.ajax_get + ' ' + (message ? message : i18n.ajax_fmd) + '...';
+            this.alerts.push(S3.showAlert(message, 'info'));
+        }
+
+        // Send request
+        this.send();
+
+        return this;
+    };
+
+    /**
+     * Send (or re-send) the request
+     * - registers the deferred-handlers and passes the instance to
+     *   their context object
+     */
+    AjaxS3.prototype.send = function() {
+
+        var options = this.options;
+
+        // Pass this instance to the deferred-handlers
+        options.AjaxS3 = this;
+
+        this.xhr = $.ajax(
+            options
+        ).done(function() {
+            this.AjaxS3.onSuccess.apply(this, arguments);
+        }).fail(function() {
+            this.AjaxS3.onFailure.apply(this, arguments);
         });
+    };
+
+    /**
+     * Abort the currently active jqXHR
+     */
+    AjaxS3.prototype.abort = function() {
+
+        if (this.xhr) {
+            this.xhr.abort();
+            this.xhr = null;
+        }
+    };
+
+    /**
+     * Expose AjaxS3 in jQuery API ($.ajaxS3)
+     */
+    $.ajaxS3 = function(options) {
+
+        return new AjaxS3(options).start();
     };
 
     // Simplified wrappers for .ajaxS3
@@ -549,31 +711,46 @@ var S3EnableNavigateAwayConfirm = function() {
 })($);
 
 /**
- * Display Status in Alerts section
+ * Display a message in the alerts section
  *
- *  To display an alert:
- *  S3.showAlert(message, type)
- *    message - string - message to display
- *    type    - string - alert type: 'error', 'info', 'success', 'warning'
+ * @param {string} message - the message to display
+ * @param {string} type - the alert type:
+ *                        'error', 'info', 'success', 'warning'
  *
- *  To hide alerts:
- *  S3.hideAlerts()
+ * @returns {jQuery} - the DOM node of the new alert
  */
 S3.showAlert = function(message, type) {
-    if (undefined == type) {
+
+    if (!type) {
         type = 'success';
     }
-    var alert = '<div class="alert alert-' + type + '">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>';
-    $('#alert-space').append(alert);
-    $('.alert-' + type).click(function() {
-        $(this).fadeOut('slow');
+    var alertSpace = $('#alert-space'),
+        alert = $('<div class="alert alert-' + type + '">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+
+    alertSpace.append(alert).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+        $(this).fadeOut('slow').remove();
         return false;
     });
+    return alert;
 };
 
-S3.hideAlerts = function(type) {
-    if (type) {
-        $('.alert-' + type).remove();
+/**
+ * Remove messages from the alerts section
+ *
+ * @param {string|Array} alerts - remove the specified alerts (optional):
+ *                                => a string to specify an alert type
+ *                                => an array of DOM nodes to specify specific alerts
+ *                                => if omitted, all alerts in the alert-space will be
+ *                                   removed
+ */
+S3.hideAlerts = function(alerts) {
+
+    if (typeof alerts == 'string') {
+        $('.alert-' + alerts).remove();
+    } else if (alerts) {
+        alerts.forEach(function(alert) {
+            alert.remove();
+        });
     } else {
         $('#alert-space').empty();
     }
@@ -622,14 +799,14 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
         func = curl[3];
 
     url += '?controller=' + controller + '&function=' + func;
-    if (curl.length>4) {
+    if (curl.length > 4) {
         // Record id
         if ($.isNumeric(curl[4])) {
             url += '&rid=' + curl[4];
         }
     }
 
-    if ($map.length==0 || popup=='True') {
+    if ($map.length == 0 || popup == 'True') {
         url += '&popup=1';
         S3.openPopup(url, true);
     }
@@ -754,7 +931,10 @@ S3.openPopup = function(url, center) {
                 prefix += setting.alias;
             }
             var type = setting.inlineType || 'sub',
-                rows = setting.inlineRows || true;
+                rows = setting.inlineRows;
+            if (rows === undefined) {
+                rows = true;
+            }
             if (type == 'sub') {
                 var name = setting.name;
                 if (rows) {
@@ -798,28 +978,46 @@ S3.openPopup = function(url, center) {
     };
 
     /**
-     * Update the AddResourceLink for the lookup resource with the lookup value
+     * Update the AddResourceLink for the target with lookup key and
+     * value, so that the popup can pre-populate them; or hide the
+     * AddResourceLink if no trigger value has been selected
      *
-     * @todo: rename resource => resourceName or lookupResource
-     * @todo: docstring
+     * @param {string} resourceName - the target resource name
+     * @param {string} key - the lookup key
+     * @param {string} value - the selected trigger value
      */
-    var updateAddResourceLink = function(resource, key, value) {
+    var updateAddResourceLink = function(resourceName, key, value) {
 
-        var addResourceLink = $('#' + resource + '_add');
-        if (addResourceLink.length) {
-            var href = addResourceLink.attr('href');
-            if (href.indexOf(key) == -1) {
-                // Add to URL
-                // @todo: make safe for URLs without query part
-                href += '&' + key + '=' + value;
-            } else {
-                // Update URL
-                // @todo: make safe for URLs with multiple query expressions
-                var re = new RegExp(key + '=.*', 'g');
-                href = href.replace(re, key + '=' + value);
+        $('a#' + resourceName + '_add').each(function() {
+            var search = this.search,
+                queries = [],
+                selectable = false;
+            if (search) {
+                var items = search.substring(1).split('&');
+                items.forEach(function(item) {
+                    if (decodeURIComponent(item.split('=')[0]) != key) {
+                        queries.push(item);
+                    }
+                });
             }
-            addResourceLink.attr('href', href).show();
-        }
+            if (value !== undefined && value !== null) {
+                var query = encodeURIComponent(key) + '=' + encodeURIComponent(value);
+                queries.push(query);
+                selectable = true;
+            }
+            if (queries.length) {
+                search = '?' + queries.join('&');
+            } else {
+                search = '';
+            }
+            var href = this.protocol + '//' + this.host + this.pathname + search + this.hash,
+                $this = $(this).attr('href', href);
+            if (selectable) {
+                $this.parent().show();
+            } else {
+                $this.parent().hide();
+            }
+        });
     };
 
     /**
@@ -1071,17 +1269,18 @@ S3.openPopup = function(url, center) {
         }
 
         // Disable the target field if no value selected in trigger field
+        var lookupResource = settings.lookupResource;
         if (value === '' || value === null || value === undefined) {
             target.val('').prop('disabled', true);
             if (target.multiselect('instance')) {
                 target.multiselect('refresh')
                       .multiselect('disable');
             }
+            updateAddResourceLink(lookupResource, lookupKey);
             return;
         }
 
         // Construct the URL for the Ajax request
-        var lookupResource = settings.lookupResource;
         var url;
         if (settings.lookupURL) {
             url = settings.lookupURL;
@@ -1763,6 +1962,15 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             }
         });
 
+        // T2 Layer
+        //try { $('.zoom').fancyZoom( {
+        //    scaleImg: true,
+        //    closeOnClick: true,
+        //    directory: S3.Ap.concat('/static/media')
+        //}); } catch(e) {}
+
+        // S3 Layer
+
         // If a form is submitted with errors, this will scroll
         // the window to the first form error message
         var inputErrorId = $('form .error[id]').eq(0).attr('id');
@@ -1775,14 +1983,6 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             } catch(e) {}
         }
 
-        // T2 Layer
-        //try { $('.zoom').fancyZoom( {
-        //    scaleImg: true,
-        //    closeOnClick: true,
-        //    directory: S3.Ap.concat('/static/media')
-        //}); } catch(e) {}
-
-        // S3 Layer
         // dataTables' delete button
         // (can't use S3.confirmClick as the buttons haven't yet rendered)
         if (S3.interactive) {
@@ -1817,6 +2017,37 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         $('input[name="first_name"]').focusout(function() {
             this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
         });
+
+        // Ensure that phone fields appear with + at beginning not end in RTL
+        if (S3.rtl) {
+            $('.phone-widget').each(function() {
+                // When form initially renders, ensure the LTR mark is placed at the beginning so that it looks correct
+                // http://www.fileformat.info/info/unicode/char/200e/index.htm
+                var value = this.value;
+                if (value && (value.charAt(0) != '\u200E')) {
+                    this.value = '\u200E' + value;
+                };
+            });
+            $('.phone-widget').focusout(function() {
+                var value = this.value;
+                if (value) {
+                    // When new data is entered then:
+                    // 1. Ensure the LTR mark is placed at the beginning so that it looks correct
+                    // 2. Ensure that if there is a trailing + then it is moved to the beginning
+                    if (value.charAt(0) != '\u200E') {
+                        if (value.charAt(value.length - 1) == '+') {
+                            this.value = '\u200E' + '+' + value.substr(0, value.length - 2);
+                        } else {
+                            this.value = '\u200E' + value;
+                        }
+                    } else {
+                         if (value.charAt(value.length - 1) == '+') {
+                            this.value = '\u200E' + '+' + value.substr(1, value.length - 2);
+                        }
+                    }
+                }
+            });
+        };
 
         // ListCreate Views
         $('#show-add-btn').click(function() {

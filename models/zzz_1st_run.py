@@ -227,6 +227,7 @@ if len(pop_list) > 0:
     bi = s3base.S3BulkImporter()
 
     # Register handlers
+    s3.import_feed = bi.import_feed
     s3.import_font = bi.import_font
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv
@@ -243,7 +244,10 @@ if len(pop_list) > 0:
     s3db.configure("auth_user",
                    onaccept = lambda form: auth.s3_approve_user(form.vars),
                    )
-    s3db.add_components("auth_user", auth_membership="user_id")
+    # Now done in 00_tables.py
+    #s3db.add_components("auth_user",
+    #                    auth_membership="user_id",
+    #                    )
 
     # Flag that Assets are being imported, not synced
     s3.asset_import = True

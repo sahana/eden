@@ -6,7 +6,7 @@
          Organisation Locations - CSV Import Stylesheet
 
          CSV fields:
-         Organisation.........................org_organsiation.name
+         Organisation.........................org_organisation.name
          Country.................optional.....gis_location.L0 Name or ISO2
          L1......................optional.....gis_location.L1
          L2......................optional.....gis_location.L2

@@ -64,6 +64,7 @@
          Year...........................optional.....person education year
          Institute......................optional.....person education institute
          Photo..........................optional.....pr_image.image (URL to remote server to download)
+         Group Name.....................optional.....pr_group.name
 
          Column headers looked up in labels.xml:
 
@@ -93,6 +94,8 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="education_level" match="row"
              use="col[@field='Education Level']"/>
+    <xsl:key name="group_name" match="row"
+             use="col[@field='Group Name']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -102,6 +105,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('education_level',
                                                                    col[@field='Education Level'])[1])]">
                 <xsl:call-template name="EducationLevel"/>
+            </xsl:for-each>
+
+            <!-- Group Name -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('group_name',
+                                                                   col[@field='Group Name'])[1])]">
+                <xsl:call-template name="GroupInformation"/>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -268,6 +277,18 @@
                 </resource>
             </xsl:if>
 
+            <!-- Link to Group -->
+            <xsl:variable name="GroupName" select="col[@field='Group Name']/text()"/>
+            <xsl:if test="$GroupName!=''">
+                <resource name="pr_group_membership">
+                    <reference field="group_id" resource="pr_group">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$GroupName"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
         <!-- Locations -->
@@ -342,6 +363,19 @@
             </resource>
         </xsl:if>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="GroupInformation">
+        <xsl:variable name="GroupName" select="col[@field='Group Name']/text()"/>
+        <xsl:if test="$GroupName!=''">
+            <resource name="pr_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$GroupName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$GroupName"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

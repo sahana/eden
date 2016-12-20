@@ -78,12 +78,16 @@ class S3WorkflowStatusModel(S3Model):
         tablename = "workflow_status"
         define_table(tablename,
                      super_link("workflow_id", "workflow_entity"),
-                     Field("name",
-                           length=64,
-                           notnull=True),
-                     Field("status",
-                           length=64,
-                           notnull=True),
+                     Field("name", length=64, notnull=True,
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
+                           ),
+                     Field("status", length=64, notnull=True,
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
+                           ),
                      *s3_meta_fields(),
                      )
 

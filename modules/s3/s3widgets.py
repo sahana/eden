@@ -57,6 +57,7 @@ __all__ = ("S3ACLWidget",
            "S3LocationDropdownWidget",
            "S3LocationLatLonWidget",
            "S3PasswordWidget",
+           "S3PhoneWidget",
            "S3Selector",
            "S3LocationSelector",
            "S3LocationSelectorWidget",
@@ -83,16 +84,9 @@ __all__ = ("S3ACLWidget",
            )
 
 import datetime
+import json
 import os
 import re
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from dateutil.relativedelta import relativedelta
@@ -423,7 +417,7 @@ class S3AddPersonWidget(FormWidget):
         formstyle = s3.crud.formstyle
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
+                       value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide"
 
@@ -650,7 +644,7 @@ class S3AddPersonWidget2(FormWidget):
     def __call__(self, field, value, **attributes):
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
+                       value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide"
 
@@ -885,9 +879,9 @@ class S3AddPersonWidget2(FormWidget):
         fieldname = str(field).replace(".", "_")
 
         # Section Title
-        id = "%s_title" % fieldname
+        _id = "%s_title" % fieldname
         label = field.label
-        label = LABEL(label, _for=id)
+        label = LABEL(label, _for=_id)
         # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
         widget = DIV(A(ICON("edit"),
                        _title=T("Edit Entry"), # "Edit Selection"
@@ -906,7 +900,7 @@ class S3AddPersonWidget2(FormWidget):
         #    _controls = DIV(widget, _class="controls")
         #    row = DIV(label, _controls,
         #              _class="control-group hide box_top",
-        #              _id="%s__row" % id,
+        #              _id="%s__row" % _id,
         #              )
         #    rows.append(row)
         #else:
@@ -920,11 +914,11 @@ class S3AddPersonWidget2(FormWidget):
                         _class="box_top_td",
                         _colspan=2,
                         ),
-                     _id="%s__row" % id,
+                     _id="%s__row" % _id,
                      )
             rows.append(row)
         else:
-            row = formstyle("%s__row" % id, label, widget, comment)
+            row = formstyle("%s__row" % _id, label, widget, comment)
             row.add_class("box_top hide")
             rows.append(row)
 
@@ -1005,7 +999,7 @@ class S3AddPersonWidget2(FormWidget):
 
         for f in fields:
             fname = f[0]
-            id = "%s_%s" % (fieldname, fname)
+            _id = "%s_%s" % (fieldname, fname)
             label = f[1]
             if f[3]:
                 # Mark Required
@@ -1013,10 +1007,10 @@ class S3AddPersonWidget2(FormWidget):
                             SPAN(" *", _class="req"))
             else:
                 label = "%s:" % label
-            label = LABEL(label, _for=id)
+            label = LABEL(label, _for=_id)
             widget = f[2]
             if fname not in ("date_of_birth", "gender"):
-                widget["_id"] = id
+                widget["_id"] = _id
                 widget["_name"] = fname
                 widget["_value"] = s3_unicode(values.get(fname, "")).encode("utf-8")
             #if bootstrap:
@@ -1030,11 +1024,11 @@ class S3AddPersonWidget2(FormWidget):
             #    _controls = DIV(widget, _class="controls")
             #    row = DIV(label, _controls,
             #              _class="control-group hide box_middle",
-            #              _id="%s__row" % id,
+            #              _id="%s__row" % _id,
             #              )
             #    rows.append(row)
             #else:
-            row = formstyle("%s__row" % id, label, widget, comment)
+            row = formstyle("%s__row" % _id, label, widget, comment)
             if tuple_rows:
                 row[0].add_class("box_middle")
                 row[1].add_class("box_middle")
@@ -1137,7 +1131,7 @@ class S3AutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -1298,7 +1292,7 @@ class S3ColorPickerWidget(FormWidget):
 
         default = dict(#_type = "color", # We don't want to use native HTML5 widget as it doesn't support our options & is worse for documentation
                        _type = "text",
-                       value = (value != None and str(value)) or "",
+                       value = (value is not None and str(value)) or "",
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
@@ -1851,7 +1845,7 @@ class S3DateWidget(FormWidget):
                           .replace("%b", "M")
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "",
+                       value = (value is not None and str(value)) or "",
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
@@ -2504,7 +2498,7 @@ def S3GenericAutocompleteTemplate(post_process,
 
     default = dict(
         _type = "text",
-        value = (value != None and s3_unicode(value)) or "",
+        value = (value is not None and s3_unicode(value)) or "",
         )
     attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3048,7 +3042,7 @@ class S3HiddenWidget(StringWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide %s" % attr["_class"]
@@ -3087,7 +3081,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3549,7 +3543,7 @@ class S3LocationAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and s3_unicode(value)) or "",
+            value = (value is not None and s3_unicode(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3674,7 +3668,7 @@ class S3LocationLatLonWidget(FormWidget):
             requires = IS_EMPTY_OR(requires)
 
         defaults = dict(_type = "text",
-                        value = (value != None and str(value)) or "")
+                        value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
         # Hide the real field
         attr["_class"] = "hide"
@@ -3829,7 +3823,7 @@ class S3LocationSelectorWidget(FormWidget):
             # "dummy" left in the value.
             value = None
         defaults = dict(_type = "text",
-                        value = (value != None and str(value)) or "")
+                        value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
         if request.controller == "appadmin":
             # Don't use this widget in appadmin
@@ -4851,7 +4845,8 @@ class S3LocationSelector(S3Selector):
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
                                address line
-            @param show_address: show a field for street address
+            @param show_address: show a field for street address.
+                                 If the parameter is set to a string then this is used as the label.
             @param show_postcode: show a field for postcode
             @param show_latlon: show fields for manual Lat/Lon input
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
@@ -5062,12 +5057,18 @@ class S3LocationSelector(S3Selector):
                                            gtable.lon_max,
                                            cache=s3db.cache,
                                            limitby=(0, 1)).first()
-                default = country.id
-                default_bounds = [country.lon_min,
-                                  country.lat_min,
-                                  country.lon_max,
-                                  country.lat_max,
-                                  ]
+                try:
+                    default = country.id
+                    default_bounds = [country.lon_min,
+                                      country.lat_min,
+                                      country.lon_max,
+                                      country.lat_max,
+                                      ]
+                except AttributeError:
+                    error = "Default country data not in database (incorrect prepop setting?)"
+                    current.log.critical(error)
+                    if s3.debug:
+                        raise RuntimeError(error)
 
         if not location_id and values.keys() == ["id"]:
             location_id = values["id"] = default
@@ -5110,10 +5111,14 @@ class S3LocationSelector(S3Selector):
         show_address = self.show_address
         if show_address:
             address = values.get("address")
+            if show_address is True:
+                label = T("Street Address")
+            else:
+                label = show_address
             components["address"] = manual_input(fieldname,
                                                  "address",
                                                  address,
-                                                 T("Street Address"),
+                                                 label,
                                                  hidden = not address,
                                                  )
 
@@ -7079,12 +7084,41 @@ class S3HierarchyWidget(FormWidget):
                          )
         else:
             header = ""
-        widget = DIV(INPUT(_type = "hidden",
-                           _multiple = "multiple",
-                           _name = name,
-                           _id = selector,
-                           _class = "s3-hierarchy-input",
-                           requires = self.parse),
+
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if isinstance(value, basestring) and value and not value.isdigit():
+            value = self.parse(value)[0]
+        if not isinstance(value, (list, tuple, set)):
+            values = [value]
+        else:
+            values = value
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
+
+        # Prepend value parser to field validator
+        requires = field.requires
+        if isinstance(requires, (list, tuple)):
+            requires = [self.parse] + requires
+        elif requires is not None:
+            requires = [self.parse, requires]
+        else:
+            requires = self.parse
+
+        # The hidden input field
+        hidden_input = INPUT(_type = "hidden",
+                             _multiple = "multiple",
+                             _name = name,
+                             _id = selector,
+                             _class = "s3-hierarchy-input",
+                             requires = requires,
+                             value = json.dumps(selected),
+                             )
+
+        # The widget
+        widget = DIV(hidden_input,
                      DIV(header,
                          DIV(h.html("%s-tree" % widget_id,
                                     none=self.none,
@@ -7099,17 +7133,6 @@ class S3HierarchyWidget(FormWidget):
         s3 = current.response.s3
         scripts = s3.scripts
         script_dir = "/%s/static/scripts" % current.request.application
-
-        # Currently selected values
-        selected = []
-        append = selected.append
-        if not isinstance(value, (list, tuple, set)):
-            values = [value]
-        else:
-            values = value
-        for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
-                append(v)
 
         # Custom theme
         theme = settings.get_ui_hierarchy_theme()
@@ -7190,6 +7213,7 @@ class S3HierarchyWidget(FormWidget):
             return default, None
         if not self.multiple and isinstance(value, list):
             value = value[0] if value else None
+
         return value, None
 
 # =============================================================================
@@ -7386,7 +7410,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7480,7 +7504,7 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7574,7 +7598,7 @@ class S3PriorityListWidget(StringWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7613,7 +7637,7 @@ class S3SiteAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7776,7 +7800,7 @@ class S3StringWidget(StringWidget):
     def __call__(self, field, value, **attributes):
 
         default = dict(
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
 
         if self.textarea:
@@ -8092,15 +8116,16 @@ class S3PasswordWidget(FormWidget):
     """
         Widget for password fields, allows unmasking of passwords
     """
+
     def __call__(self, field, value, **attributes):
 
-        s3 = current.response.s3
         T = current.T
 
         tablename = field._tablename
         fieldname = field.name
-        s3.js_global.append('''i18n.password_view="%s"''' % T("View"))
-        s3.js_global.append('''i18n.password_mask="%s"''' % T("Mask"))
+        js_append = current.response.s3.js_global.append
+        js_append('''i18n.password_view="%s"''' % T("View"))
+        js_append('''i18n.password_mask="%s"''' % T("Mask"))
 
         password_input = INPUT(_name = fieldname,
                                _id = "%s_%s" % (tablename, fieldname),
@@ -8120,6 +8145,27 @@ class S3PasswordWidget(FormWidget):
                    )
 
 # =============================================================================
+class S3PhoneWidget(StringWidget):
+    """
+        Extend the default Web2Py widget to ensure that the + is at the
+        beginning not the end in RTL.
+        Adds class to be acted upon by S3.js
+    """
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            value = (value is not None and str(value)) or "",
+            )
+
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "string phone-widget"
+
+        widget = INPUT(**attr)
+
+        return widget
+
+# =============================================================================
 def s3_comments_widget(field, value, **attr):
     """
         A smaller-than-normal textarea
@@ -8130,6 +8176,7 @@ def s3_comments_widget(field, value, **attr):
         _id = "%s_%s" % (field._tablename, field.name)
     else:
         _id = attr["_id"]
+
     if "_name" not in attr:
         _name = field.name
     else:
@@ -8698,145 +8745,94 @@ class ICON(I):
     #
     icons = {
         "font-awesome": {
-            "_base": "icon",
-            "active": "icon-check",
-            "activity": "icon-tag",
-            "add": "icon-plus",
-            "arrow-down": "icon-arrow-down",
-            "attachment": "icon-paper-clip",
-            "bar-chart": "icon-bar-chart",
-            "book": "icon-book",
-            "bookmark": "icon-bookmark",
-            "bookmark-empty": "icon-bookmark-empty",
-            "briefcase": "icon-briefcase",
-            "calendar": "icon-calendar",
-            "certificate": "icon-certificate",
-            "comment-alt": "icon-comment-alt",
-            "commit": "icon-truck",
-            "delete": "icon-trash",
-            "deploy": "icon-plus",
-            "deployed": "icon-ok",
-            "down": "icon-caret-down",
-            "edit": "icon-edit",
-            "exclamation": "icon-exclamation",
-            "facebook": "icon-facebook",
-            "facility": "icon-home",
-            "file": "icon-file",
-            "file-alt": "icon-file-alt",
-            "folder-open-alt": "icon-folder-open-alt",
-            "fullscreen": "icon-fullscreen",
-            "globe": "icon-globe",
-            "group": "icon-group",
-            "home": "icon-home",
-            "inactive": "icon-check-empty",
-            "link": "icon-external-link",
-            "list": "icon-list",
-            "location": "icon-globe",
-            "mail": "icon-envelope-alt",
-            "map-marker": "icon-map-marker",
-            "offer": "icon-truck",
-            "organisation": "icon-sitemap",
-            "org-network": "icon-umbrella",
-            "other": "icon-circle",
-            "paper-clip": "icon-paper-clip",
-            "phone": "icon-phone",
-            "plus": "icon-plus",
-            "plus-sign": "icon-plus-sign",
-            "print": "icon-print",
-            "radio": "icon-microphone",
-            "remove": "icon-remove",
-            "request": "icon-flag",
-            "responsibility": "icon-briefcase",
-            "rss": "icon-rss",
-            "sent": "icon-ok",
-            "settings": "icon-wrench",
-            "site": "icon-home",
-            "skype": "icon-skype",
-            "star": "icon-star",
-            "table": "icon-table",
-            "tag": "icon-tag",
-            "tags": "icon-tags",
-            "tasks": "icon-tasks",
-            "time": "icon-time",
-            "truck": "icon-truck",
-            "twitter": "icon-twitter",
-            "unsent": "icon-remove",
-            "up": "icon-caret-up",
-            "upload": "icon-upload-alt",
-            "user": "icon-user",
-            "zoomin": "icon-zoomin",
-            "zoomout": "icon-zoomout",
+            "_base": "fa",
+            "active": "fa-check",
+            "activity": "fa-cogs",
+            "add": "fa-plus",
+            "administration": "fa-cog",
+            "alert": "fa-bell",
+            "arrow-down": "fa-arrow-down",
+            "assessment": "fa-bar-chart",
+            "asset": "fa-fire-extinguisher",
+            "attachment": "fa-paperclip",
+            "bar-chart": "fa-bar-chart",
+            "book": "fa-book",
+            "bookmark": "fa-bookmark",
+            "bookmark-empty": "fa-bookmark-o",
+            "briefcase": "fa-briefcase",
+            "calendar": "fa-calendar",
+            "certificate": "fa-certificate",
+            "comment-alt": "fa-comment-o",
+            "commit": "fa-check-square-o",
+            "delete": "fa-trash",
+            "delivery": "fa-thumbs-up",
+            "deploy": "fa-plus",
+            "deployed": "fa-check",
+            "done": "fa-check",
+            "down": "fa-caret-down",
+            "edit": "fa-edit",
+            "event": "fa-bolt",
+            "exclamation": "fa-exclamation",
+            "facebook": "fa-facebook",
+            "facility": "fa-home",
+            "file": "fa-file",
+            "file-alt": "fa-file-alt",
+            "flag": "fa-flag",
+            "flag-alt": "fa-flag-o",
+            "folder-open-alt": "fa-folder-open-o",
+            "fullscreen": "fa-fullscreen",
+            "globe": "fa-globe",
+            "goods": "fa-cubes",
+            "group": "fa-group",
+            "hint": "fa-hand-o-right",
+            "home": "fa-home",
+            "inactive": "fa-check-empty",
+            "incident": "fa-bolt",
+            "link": "fa-external-link",
+            "list": "fa-list",
+            "location": "fa-globe",
+            "mail": "fa-envelope-o",
+            "map-marker": "fa-map-marker",
+            "move": "fa-arrows",
+            "news": "fa-info",
+            "offer": "fa-truck",
+            "organisation": "fa-institution",
+            "org-network": "fa-umbrella",
+            "other": "fa-circle",
+            "paper-clip": "fa-paperclip",
+            "phone": "fa-phone",
+            "plus": "fa-plus",
+            "plus-sign": "fa-plus-sign",
+            "project": "fa-dashboard",
+            "radio": "fa-microphone",
+            "remove": "fa-remove",
+            "request": "fa-flag",
+            "responsibility": "fa-briefcase",
+            "rss": "fa-rss",
+            "sent": "fa-check",
+            "settings": "fa-wrench",
+            "share": "fa-share-alt",
+            "shipment": "fa-truck",
+            "site": "fa-home",
+            "skype": "fa-skype",
+            "staff": "fa-user",
+            "star": "fa-star",
+            "table": "fa-table",
+            "tag": "fa-tag",
+            "tags": "fa-tags",
+            "tasks": "fa-tasks",
+            "time": "fa-time",
+            "truck": "fa-truck",
+            "twitter": "fa-twitter",
+            "unsent": "fa-times",
+            "up": "fa-caret-up",
+            "upload": "fa-upload",
+            "user": "fa-user",
+            "volunteer": "fa-hand-paper-o",
+            "wrench": "fa-wrench",
+            "zoomin": "fa-zoomin",
+            "zoomout": "fa-zoomout",
         },
-        # @todo: integrate
-        #"font-awesome4": {
-            #"_base": "fa",
-            #"active": "fa-check",
-            #"activity": "fa-tag",
-            #"add": "fa-plus",
-            #"arrow-down": "fa-arrow-down",
-            #"attachment": "fa-paper-clip",
-            #"bar-chart": "fa-bar-chart",
-            #"book": "fa-book",
-            #"bookmark": "fa-bookmark",
-            #"bookmark-empty": "fa-bookmark-empty",
-            #"briefcase": "fa-briefcase",
-            #"calendar": "fa-calendar",
-            #"certificate": "fa-certificate",
-            #"comment-alt": "fa-comment-o",
-            #"commit": "fa-truck",
-            #"delete": "fa-trash",
-            #"deploy": "fa-plus",
-            #"deployed": "fa-check",
-            #"down": "fa-caret-down",
-            #"edit": "fa-edit",
-            #"exclamation": "fa-exclamation",
-            #"facebook": "fa-facebook",
-            #"facility": "fa-home",
-            #"file": "fa-file",
-            #"file-alt": "fa-file-alt",
-            #"folder-open-alt": "fa-folder-open-o",
-            #"fullscreen": "fa-fullscreen",
-            #"globe": "fa-globe",
-            #"group": "fa-group",
-            #"home": "fa-home",
-            #"inactive": "fa-check-empty",
-            #"link": "fa-external-link",
-            #"list": "fa-list",
-            #"location": "fa-globe",
-            #"mail": "fa-envelope-o",
-            #"map-marker": "fa-map-marker",
-            #"offer": "fa-truck",
-            #"organisation": "fa-institution",
-            #"org-network": "fa-umbrella",
-            #"other": "fa-circle",
-            #"paper-clip": "fa-paper-clip",
-            #"phone": "fa-phone",
-            #"plus": "fa-plus",
-            #"plus-sign": "fa-plus-sign",
-            #"radio": "fa-microphone",
-            #"remove": "fa-remove",
-            #"request": "fa-flag",
-            #"responsibility": "fa-briefcase",
-            #"rss": "fa-rss",
-            #"sent": "fa-check",
-            #"settings": "fa-wrench",
-            #"site": "fa-home",
-            #"skype": "fa-skype",
-            #"star": "fa-star",
-            #"table": "fa-table",
-            #"tag": "fa-tag",
-            #"tags": "fa-tags",
-            #"tasks": "fa-tasks",
-            #"time": "fa-time",
-            #"truck": "fa-truck",
-            #"twitter": "fa-twitter",
-            #"unsent": "fa-times",
-            #"up": "fa-caret-up",
-            #"upload": "fa-upload",
-            #"user": "fa-user",
-            #"zoomin": "fa-zoomin",
-            #"zoomout": "fa-zoomout",
-        #},
         "foundation": {
             "active": "fi-check",
             "activity": "fi-price-tag",
@@ -8860,6 +8856,8 @@ class ICON(I):
             "facility": "fi-home",
             "file": "fi-page-filled",
             "file-alt": "fi-page",
+            "flag": "fi-flag",
+            "flag-alt": "fi-flag",
             "folder-open-alt": "fi-folder",
             "fullscreen": "fi-arrows-out",
             "globe": "fi-map",
@@ -8887,6 +8885,7 @@ class ICON(I):
             "rss": "fi-rss",
             "sent": "fi-check",
             "settings": "fi-wrench",
+            "share": "fi-share",
             "site": "fi-home",
             "skype": "fi-social-skype",
             "star": "fi-star",
@@ -8901,6 +8900,81 @@ class ICON(I):
             "user": "fi-torso",
             "zoomin": "fi-zoom-in",
             "zoomout": "fi-zoom-out",
+        },
+        "font-awesome3": {
+            "_base": "icon",
+            "active": "icon-check",
+            "activity": "icon-tag",
+            "add": "icon-plus",
+            "administration": "icon-cog",
+            "arrow-down": "icon-arrow-down",
+            "attachment": "icon-paper-clip",
+            "bar-chart": "icon-bar-chart",
+            "book": "icon-book",
+            "bookmark": "icon-bookmark",
+            "bookmark-empty": "icon-bookmark-empty",
+            "briefcase": "icon-briefcase",
+            "calendar": "icon-calendar",
+            "certificate": "icon-certificate",
+            "comment-alt": "icon-comment-alt",
+            "commit": "icon-truck",
+            "delete": "icon-trash",
+            "deploy": "icon-plus",
+            "deployed": "icon-ok",
+            "down": "icon-caret-down",
+            "edit": "icon-edit",
+            "exclamation": "icon-exclamation",
+            "facebook": "icon-facebook",
+            "facility": "icon-home",
+            "file": "icon-file",
+            "file-alt": "icon-file-alt",
+            "flag": "icon-flag",
+            "flag-alt": "icon-flag-alt",
+            "folder-open-alt": "icon-folder-open-alt",
+            "fullscreen": "icon-fullscreen",
+            "globe": "icon-globe",
+            "group": "icon-group",
+            "home": "icon-home",
+            "inactive": "icon-check-empty",
+            "link": "icon-external-link",
+            "list": "icon-list",
+            "location": "icon-globe",
+            "mail": "icon-envelope-alt",
+            "map-marker": "icon-map-marker",
+            "offer": "icon-truck",
+            "organisation": "icon-sitemap",
+            "org-network": "icon-umbrella",
+            "other": "icon-circle",
+            "paper-clip": "icon-paper-clip",
+            "phone": "icon-phone",
+            "plus": "icon-plus",
+            "plus-sign": "icon-plus-sign",
+            "print": "icon-print",
+            "radio": "icon-microphone",
+            "remove": "icon-remove",
+            "request": "icon-flag",
+            "responsibility": "icon-briefcase",
+            "rss": "icon-rss",
+            "sent": "icon-ok",
+            "settings": "icon-wrench",
+            "share": "icon-share",
+            "site": "icon-home",
+            "skype": "icon-skype",
+            "star": "icon-star",
+            "table": "icon-table",
+            "tag": "icon-tag",
+            "tags": "icon-tags",
+            "tasks": "icon-tasks",
+            "time": "icon-time",
+            "truck": "icon-truck",
+            "twitter": "icon-twitter",
+            "unsent": "icon-remove",
+            "up": "icon-caret-up",
+            "upload": "icon-upload-alt",
+            "user": "icon-user",
+            "wrench": "icon-wrench",
+            "zoomin": "icon-zoomin",
+            "zoomout": "icon-zoomout",
         },
     }
 

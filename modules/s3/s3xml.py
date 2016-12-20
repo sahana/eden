@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ S3XML Toolkit
 
@@ -33,18 +33,11 @@
 """
 
 import datetime
+import json
 import os
 import re
 import sys
 import urllib2
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from lxml import etree
@@ -234,7 +227,8 @@ class S3XML(S3Codec):
             try:
                 source = urllib2.urlopen(source)
             except:
-                pass
+                self.error = "XML Source error: %s" % sys.exc_info()[1]
+                return None
         try:
             parser = etree.XMLParser(no_network = False,
                                      remove_blank_text = True,
@@ -242,8 +236,7 @@ class S3XML(S3Codec):
             result = etree.parse(source, parser)
             return result
         except:
-            e = sys.exc_info()[1]
-            self.error = e
+            self.error = "XML Parse error: %s" % sys.exc_info()[1]
             return None
 
     # -------------------------------------------------------------------------
@@ -1219,10 +1212,9 @@ class S3XML(S3Codec):
             represent = dbfield.represent
             value = None
 
-            if fieldtype == "datetime":
+            if fieldtype in ("datetime", "date", "time"):
                 value = s3_encode_iso_datetime(v).decode("utf-8")
-            elif fieldtype in ("date", "time") or \
-                 fieldtype[:7] == "decimal":
+            elif fieldtype[:7] == "decimal":
                 value = str(formatter(v)).decode("utf-8")
 
             # Get the representation
@@ -1564,13 +1556,14 @@ class S3XML(S3Codec):
             is_text = field_type in ("string", "text")
 
             if value is None:
-                decode_value = not is_text
                 if field_type == "password":
                     value = child.text
                     # Do not re-encrypt the password if it already
                     # comes encrypted:
                     skip_validation = True
+                    decode_value = False
                 else:
+                    decode_value = not is_text
                     value = xml_decode(child.text)
             else:
                 decode_value = True
@@ -1675,7 +1668,7 @@ class S3XML(S3Codec):
         options = None
         try:
             field = table[fieldname]
-        except AttributeError:
+        except (KeyError, AttributeError):
             pass
         else:
             requires = field.requires
@@ -2431,9 +2424,8 @@ class S3XML(S3Codec):
                 # Use header row in the work sheet
                 headers = {}
 
-            # Lambda to decode XLS dates into an ISO datetime-string
-            decode_date = lambda v: datetime.datetime(
-                                    *xlrd.xldate_as_tuple(v, wb.datemode))
+            # Lambda to decode XLS dates into a datetime.datetime
+            decode_date = lambda v: xlrd.xldate.xldate_as_datetime(v, wb.datemode)
 
             def decode(t, v):
                 """
@@ -2452,6 +2444,7 @@ class S3XML(S3Codec):
                     elif t == xlrd.XL_CELL_NUMBER:
                         text = str(long(v)) if long(v) == v else str(v)
                     elif t == xlrd.XL_CELL_DATE:
+                        # Convert into an ISO datetime string
                         text = s3_encode_iso_datetime(decode_date(v))
                     elif t == xlrd.XL_CELL_BOOLEAN:
                         text = str(value).lower()

@@ -21,8 +21,9 @@ class S3MainMenu(default.S3MainMenu):
         # Modules menus
         main_menu = MM()(
             cls.menu_modules(),
+            cls.menu_login(),
             cls.menu_personal(),
-            cls.menu_lang(),
+            #cls.menu_lang(),
         )
 
         current.menu.footer = cls.menu_footer()
@@ -41,12 +42,14 @@ class S3MainMenu(default.S3MainMenu):
                             current.request.application,
                      ),
             MM("Newsfeed", c="cms", f="newsfeed", m="datalist"),
-            MM("Organizations", c="org", f="organisation"),
-            MM("Activities", c="project", f="activity", m="summary"),
-            MM("Projects", c="project", f="project"),
+            MM("Needs", c="project", f="activity", m="summary"),
+            MM("Services", c="org", f="service_location", m="summary"),
+            MM("Organizations", c="org", f="organisation", m="summary"),
+            MM("Projects", c="project", f="project", m="summary"),
             #MM("Aid Requests", link=False),
             #MM("Aid Deliveries", link=False),
             MM("Map", c="gis", f="index"),
+            MM("About", c="default", f="about"),
         ]
 
     # -------------------------------------------------------------------------
@@ -65,57 +68,51 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu_login(cls):
+
+        if current.auth.s3_logged_in():
+            return None
+
+        login = MA("Login", c="default", f="user", m="login", button="secondary", column="5")
+        #settings = current.deployment_settings
+        #self_registration = settings.get_security_self_registration()
+        #if self_registration:
+        register = MA("Register", c="default", f="user", m="register", button="primary", column="7 end")
+        #else:
+        #    register = None
+        return MA()(login, register)
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_personal(cls):
         """ Custom Personal Menu """
 
         auth = current.auth
+
+        if not auth.is_logged_in():
+            return None
+
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        if not auth.is_logged_in():
+        s3_has_role = auth.s3_has_role
+        is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                 not s3_has_role("ADMIN")
 
-            request = current.request
-
-            login_next = URL(args=request.args, vars=request.vars)
-            if request.controller == "default" and \
-               request.function == "user" and \
-               "_next" in request.get_vars:
-                login_next = request.get_vars["_next"]
-
-            self_registration = settings.get_security_self_registration()
-            menu_personal = MM(icon="icon-cog", link=False)(
-                        MM("Register", c="default", f="user",
-                           m="register",
-                           check = self_registration,
-                           ),
-                        MM("Login", c="default", f="user",
-                           m="login",
-                           vars = {"_next": login_next},
-                           ),
-                        MM("Lost Password", c="default", f="user",
-                           m="retrieve_password",
-                           ),
-                        )
-
-        else:
-            s3_has_role = auth.s3_has_role
-            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
-                                     not s3_has_role("ADMIN")
-
-            menu_personal = MM(icon="user", link=False)(
-                        MM("Administration", c="admin", f="index",
-                           restrict = "ADMIN",
-                           ),
-                        MM("Administration", c="admin", f="user",
-                           check = is_org_admin,
-                           ),
-                        MM("Change Password", c="default", f="user",
-                           m = "change_password",
-                           ),
-                        MM("Logout", c="default", f="user",
-                           m = "logout",
-                           ),
-                        )
+        menu_personal = MM(icon="user", link=False)(
+                            MM("Administration", c="admin", f="index",
+                               restrict = "ADMIN",
+                               ),
+                            MM("Administration", c="admin", f="user",
+                               check = is_org_admin,
+                               ),
+                            MM("Change Password", c="default", f="user",
+                               m = "change_password",
+                               ),
+                            MM("Logout", c="default", f="user",
+                               m = "logout",
+                               ),
+                            )
 
         return menu_personal
 
@@ -143,11 +140,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def gis():
         """ GIS / GIS Controllers """
 
-        if not current.auth.is_logged_in():
+        auth = current.auth
+        if not auth.s3_has_role("MAP_ADMIN"):
             # No Side Menu
             return None
-
-        MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
 
         settings = current.deployment_settings
         gis_menu = settings.get_gis_menu()
@@ -161,9 +157,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return False
 
         def config_menu(i):
-            auth = current.auth
             if not auth.is_logged_in():
-                # Anonymous users can never cofnigure the Map
+                # Anonymous users can never configure the Map
                 return False
             s3db = current.s3db
             if auth.s3_has_permission("create",
@@ -180,14 +175,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 return True
 
         def config_args():
-            auth = current.auth
-            if not auth.user:
-                # Won't show anyway due to check
-                return []
+            #if not auth.user:
+            #    # Won't show anyway due to check
+            #    return []
 
-            if auth.s3_has_role(MAP_ADMIN):
+            #if auth.s3_has_role("MAP_ADMIN"):
                 # Full List
-                return []
+            return []
 
             # Look for this user's config
             s3db = current.s3db
@@ -209,7 +203,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Locations", c="gis", f="location")(
                         M("Create", m="create"),
                         #M("Create Location Group", m="create", vars={"group": 1}),
-                        M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
+                        M("Import from CSV", m="import"),
                         M("Import from OpenStreetMap", m="import_poi",
                           restrict=[MAP_ADMIN]),
                         #M("Geocode", f="geocode_manual"),
@@ -340,40 +334,40 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        if not current.auth.is_logged_in():
+        if not current.auth.s3_has_role("ADMIN"):
             # No Side Menu
             return None
-        else:
-            system_roles = current.session.s3.system_roles
 
-            ADMIN = system_roles.ADMIN
-            AUTHENTICATED = system_roles.AUTHENTICATED
+        system_roles = current.session.s3.system_roles
 
-            INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+        ADMIN = system_roles.ADMIN
+        AUTHENTICATED = system_roles.AUTHENTICATED
 
-            return M()(
-                        M("Organizations", c="org", f="organisation")(
-                            M("Create", m="create",
-                              restrict=AUTHENTICATED),
-                        ),
-                        M(INDIVIDUALS, c="hrm", f=("staff", "person"),
-                          t="hrm_human_resource")(
-                            #M("Search"),
-                            M("Create", m="create"),
-                        ),
-                        M("Service Locations", c="org", f="service_location",
-                          m="summary")(
-                            M("Search", m="summary"),
-                        ),
-                        M("Administration", c=("org", "hrm"),
-                          link=False, restrict=ADMIN)(
-                            M("Organisation Types", c="org", f="organisation_type"),
-                            M("Sectors", c="org", f="sector"),
-                            M("Service Types", c="org", f="service"),
-                            M("Facility Types", c="org", f="facility_type"),
-                            M("Job Title Catalog", c="hrm", f="job_title"),
-                        ),
-                       )
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
+        return M()(
+                    M("Organizations", c="org", f="organisation")(
+                        M("Create", m="create",
+                          restrict=AUTHENTICATED),
+                    ),
+                    M(INDIVIDUALS, c="hrm", f=("staff", "person"),
+                      t="hrm_human_resource")(
+                        #M("Search"),
+                        M("Create", m="create"),
+                    ),
+                    M("Service Locations", c="org", f="service_location",
+                      m="summary")(
+                        M("Search", m="summary"),
+                    ),
+                    M("Administration", c=("org", "hrm"),
+                      link=False, restrict=ADMIN)(
+                        M("Organisation Types", c="org", f="organisation_type"),
+                        M("Sectors", c="org", f="sector"),
+                        M("Service Types", c="org", f="service"),
+                        M("Facility Types", c="org", f="facility_type"),
+                        M("Job Title Catalog", c="hrm", f="job_title"),
+                    ),
+                   )
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -383,13 +377,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if not current.auth.is_logged_in():
             # No Side Menu
             return None
-        else:
-            return cls.org()
+
+        return cls.org()
 
     # -------------------------------------------------------------------------
     @staticmethod
     def project():
         """ Project Management """
+
+        if not current.auth.s3_has_role("ADMIN"):
+            # No Side Menu
+            return None
 
         ADMIN = current.session.s3.system_roles.ADMIN
 

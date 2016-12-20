@@ -59,40 +59,61 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 current.menu = Storage(oauth="", options=None, override={})
 if auth.permission.format in ("html"):
 
-    theme = settings.get_theme()
-
-    package = "applications.%s.modules.templates.%%s.menus" % appname
+    # NB cascading templates:
+    #
+    # - uses the last of S3MainMenu/S3OptionsMenu definition in the
+    #   template cascade
+    # - templates can override just one of S3MainMenu/S3OptionsMenu,
+    #   while "inheriting" the other one from the cascade
+    # - final fallback is the default menu
+    # - layouts.py is always loaded from the *theme* location, so that
+    #   the HTML matches the theme's CSS.
+    #
+    # Example:
+    #
+    # - have an S3MainMenu in templates/MY/SUB/menus.py
+    # - settings.template = ["MY", "MY.SUB"]
+    # - settings.theme = "MY"
+    # => will use:
+    # - Layouts from templates/MYTEMPLATE/layouts.py
+    # - S3MainMenu from templates/MY/SUB/menus.py
+    # - S3OptionsMenu from templates/MY/menus.py
 
     menu_locations = []
-    if theme != "default":
-        if s3.theme_location:
-            theme = "%s.%s" % (s3.theme_location[:-1], theme)
-        menu_locations.append(theme)
-    else:
-        template = settings.get_template()
+    template = settings.get_template()
+    if template != "default":
         if isinstance(template, (tuple, list)):
-            menu_locations.extend(template)
+            menu_locations.extend(template[::-1])
         else:
             menu_locations.append(template)
 
-    for name in menu_locations:
-        if name == "default":
-            # Using s3menus.py
-            continue
-        try:
-            deployment_menus = __import__(package % name,
-                                          fromlist=["S3MainMenu",
-                                                    "S3OptionsMenu",
-                                                    ],
-                                          )
-        except ImportError:
-            # No menus.py (using except is faster than os.stat)
-            continue
-        else:
-            if hasattr(deployment_menus, "S3MainMenu"):
-                S3MainMenu = deployment_menus.S3MainMenu
-            if hasattr(deployment_menus, "S3OptionsMenu"):
-                S3OptionsMenu = deployment_menus.S3OptionsMenu
+    if menu_locations:
+        custom_main_menu = custom_options_menu = False
+
+        package = "applications.%s.modules.templates.%%s.menus" % appname
+        for name in menu_locations:
+            if name == "default":
+                continue
+            try:
+                deployment_menus = __import__(package % name,
+                                              fromlist=["S3MainMenu",
+                                                        "S3OptionsMenu",
+                                                        ],
+                                              )
+            except ImportError:
+                # No menus.py (using except is faster than os.stat)
+                continue
+            else:
+                if not custom_main_menu and \
+                   hasattr(deployment_menus, "S3MainMenu"):
+                    S3MainMenu = deployment_menus.S3MainMenu
+                    custom_main_menu = True
+                if not custom_options_menu and \
+                   hasattr(deployment_menus, "S3OptionsMenu"):
+                    S3OptionsMenu = deployment_menus.S3OptionsMenu
+                    custom_options_menu = True
+                if custom_main_menu and custom_options_menu:
+                    break
 
     # Instantiate main menu
     main = S3MainMenu.menu()
@@ -179,17 +200,19 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                             vars={"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
     set_handler("filter", s3base.S3Filter)
+    set_handler("grouped", s3base.S3GroupedItemsReport)
     set_handler("hierarchy", s3base.S3HierarchyCRUD)
     set_handler("import", s3base.S3Importer)
-    set_handler("xform", s3base.S3XForms)
     set_handler("map", s3base.S3Map)
+    set_handler("mdata", s3base.S3MobileCRUD, representation="json")
+    set_handler("mform", s3base.S3MobileCRUD, representation="json")
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
     set_handler("report", s3base.S3Report, transform=True)
-    set_handler("timeplot", s3base.S3TimePlot)
-    set_handler("grouped", s3base.S3GroupedItemsReport)
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
+    set_handler("timeplot", s3base.S3TimePlot)
+    set_handler("xform", s3base.S3XForms)
 
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method

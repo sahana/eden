@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
+from collections import OrderedDict
 from datetime import timedelta
 
 from gluon import current, Field, URL
@@ -71,8 +65,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "Syria"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Map
     settings.gis.map_height = 400
     #settings.gis.map_width = 854
     # Use a non-default fillColor for Clustered points
@@ -1049,8 +1050,9 @@ def config(settings):
                     s3db.add_components("org_organisation",
                                         org_office={"name": "nat_office",
                                                     "joinby": "organisation_id",
-                                                    "filterby": "office_type_id",
-                                                    "filterfor": [national],
+                                                    "filterby": {
+                                                        "office_type_id": national,
+                                                        },
                                                    },
                                        )
                     list_fields.append("nat_office.location_id$addr_street")

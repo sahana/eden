@@ -33,24 +33,17 @@ if user:
 
 """
 
-import urllib
+import base64
 import hashlib
 import hmac
-import base64
+import json
+import urllib
 
 try:
     import requests
 except:
     from gluon import current
     current.log.warning("S3MSG: Requests module needed for posting to Facebook")
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 # Find a query string parser
 try:

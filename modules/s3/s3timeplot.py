@@ -37,16 +37,9 @@ __all__ = ("S3TimePlot",
 
 import datetime
 import dateutil.tz
+import json
 import re
 import sys
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except ImportError:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from dateutil.relativedelta import *
 from dateutil.rrule import *
@@ -826,10 +819,15 @@ class S3TimeSeries(object):
             representations = []
             append = representations.append()
             stripper = S3MarkupStripper()
+
+            represent = rfield.represent
+            if not represent:
+                represent = s3_unicode
+
             for value in values:
                 if value is None:
                     append((value, "-"))
-                text = s3_unicode(value)
+                text = represent(value)
                 if "<" in text:
                     stripper.feed(text)
                     append((value, stripper.stripped()))

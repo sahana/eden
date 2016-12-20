@@ -182,6 +182,7 @@
 'Add Detailed Evaluation': '詳細な評価を追加',
 'Add Disaster Victims': '被災者情報を追加',
 'Add Distribution.': '配給所を追加',
+'Add Document': '文書を新規追加',
 'Add Donor': '資金提供組織を追加',
 'Add Flood Report': '洪水レポートを追加',
 'Add Group Member': 'グループメンバを追加',

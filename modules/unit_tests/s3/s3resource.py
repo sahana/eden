@@ -5,14 +5,19 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3resource.py
 #
-import unittest
 import datetime
+import json
+import unittest
+
 from lxml import etree
+
 from gluon import *
 from gluon.storage import Storage
 
 from s3dal import Row
 from s3 import *
+
+from unit_tests import run_suite
 
 # =============================================================================
 class ComponentJoinConstructionTests(unittest.TestCase):
@@ -520,7 +525,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_organisation": {"organisation.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
 
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
@@ -539,7 +544,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_organisation": {"office.name__like": "Sync2*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
 
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
@@ -558,7 +563,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_office": {"office.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"],
+                                            mcomponents=["office"],
                                             dereference=False)
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
@@ -582,7 +587,7 @@ class ResourceExportTests(unittest.TestCase):
                                      uid=["SFO1", "SFO2"])
 
             xmlexport = resource.export_xml(filters=None,
-                                            mcomponents=["org_office"])
+                                            mcomponents=["office"])
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
             types = xmltree.xpath("resource[@name='org_office_type']")
@@ -597,7 +602,7 @@ class ResourceExportTests(unittest.TestCase):
             filters = {"org_office_type": {"office_type.name__like": "SFT1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
-                                            mcomponents=["org_office"])
+                                            mcomponents=["office"])
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
 
             types = xmltree.xpath("resource[@name='org_office_type']")
@@ -653,7 +658,6 @@ class ResourceImportTests(unittest.TestCase):
         resource = current.s3db.resource("pr_person")
         msg = resource.import_xml(xmltree)
 
-        from gluon.contrib import simplejson as json
         msg = json.loads(msg)
 
         assertEqual(msg["status"], "success")
@@ -2642,8 +2646,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2663,8 +2668,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [5],
+                                          "filterby": {
+                                              "office_type_id": [5],
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2673,12 +2679,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(str(component.filter),
                     str((table.office_type_id == 5)))
 
-        # Define a filtered component with value list
+        # Define a filtered component with value tuple
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [4, 5],
+                                          "filterby": {
+                                              "office_type_id": (4, 5),
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2691,8 +2698,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [],
+                                          "filterby": {
+                                              "office_type_id": [],
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2715,8 +2723,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2749,8 +2758,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2821,8 +2831,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2890,8 +2901,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": type_id,
+                                          "filterby": {
+                                              "office_type_id": type_id,
+                                              },
                                          },
                            )
 
@@ -3006,13 +3018,15 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = ({"name": "fieldoffice",
                                            "joinby": "organisation_id",
-                                           "filterby": "office_type_id",
-                                           "filterfor": 5,
+                                           "filterby": {
+                                               "office_type_id": 5,
+                                               },
                                           },
                                           {"name": "hq",
                                            "joinby": "organisation_id",
-                                           "filterby": "office_type_id",
-                                           "filterfor": 4,
+                                           "filterby": {
+                                               "office_type_id": 4,
+                                               },
                                           },
                                          ),
                            )
@@ -3028,7 +3042,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertTrue(resource.components.hq._length > 0)
         assertTrue(resource.components.office._length is None)
 
-        tree = resource.export_tree(mcomponents=["org_office","fieldoffice","hq"])
+        tree = resource.export_tree(mcomponents=["office","fieldoffice","hq"])
         assertTrue(resource.components.office._length > 0)
         assertTrue(resource.components.fieldoffice._length is None)
         assertTrue(resource.components.hq._length is None)
@@ -3800,18 +3814,6 @@ class LinkDeletionTests(unittest.TestCase):
                        msg = "Unrelated component record deleted")
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

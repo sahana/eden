@@ -60,31 +60,42 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
         has_role = auth.s3_has_role
+        alert_hub_menu = MM("Alert Hub", c="default", f="index",
+                            args=["alert_hub_cop"])
         if auth.s3_logged_in():
+            alerting_menu = MM("Alerts", c="cap", f="alert")
+            mapping_menu = MM("Map", c="gis", f="index")
+            recipient_menu = MM("Recipients", c="pr", f="subscription",
+                                vars={"option": "manage_recipient"})
+
             if has_role("ADMIN"):
                 # Full set
                 # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
-                return super(S3MainMenu, cls).menu_modules()
+                return [homepage(),
+                        alerting_menu,
+                        alert_hub_menu,
+                        MM("Organizations", c="org", f="organisation"),
+                        MM("Persons", c="pr", f="person"),
+                        recipient_menu,
+                        mapping_menu,                                                
+                        ]
             else:
                 # Publisher sees minimal options
                 menus_ = [homepage(),
+                          alerting_menu,
+                          alert_hub_menu,
                           ]
 
                 if has_role("MAP_ADMIN"):
-                    menus_.extend([homepage("cap"),
-                                  homepage("gis"),
-                                  ])
-                elif has_role("ALERT_EDITOR") or \
-                     has_role("ALERT_APPROVER"):
-                    menus_.append(homepage("cap"),
-                                  )
+                    menus_.append(mapping_menu)
                 else:
-                    menus_ = menus_
+                    return menus_
 
                 return menus_
 
         # Public or CUG reader sees minimal options
         return [homepage(),
+                alert_hub_menu,
                 ]
 
     # -------------------------------------------------------------------------
@@ -128,7 +139,7 @@ class S3MainMenu(default.S3MainMenu):
                             MM("Manage Users", f="user"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Error Tickets", f="errors"),
-                            MM("Synchronization", c="sync", f="index"),
+                            #MM("Synchronization", c="sync", f="index"),
                          )
         else:
             menu_admin = None
@@ -157,46 +168,153 @@ class S3OptionsMenu(default.S3OptionsMenu):
         underscore prefix).
     """
 
+    # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings_messaging = self.settings_messaging()
+
+        return M(restrict=[ADMIN])(
+                    M("Settings", c="admin", f="setting")(
+                        settings_messaging,
+                    ),
+                    M("User Management", c="admin", f="user")(
+                        M("Create User", m="create"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
+                        M("List All Roles", f="role"),
+                        M("List All Organization Approvers & Whitelists", f="organisation"),
+                    ),
+                    M("Database", c="appadmin", f="index")(
+                        M("Raw Database access", c="appadmin", f="index")
+                    ),
+                    M("Error Tickets", c="admin", f="errors")
+                )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cap():
         """ CAP menu """
 
-        s3_has_role = current.auth.s3_has_role
-        cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
-                                s3_has_role("ALERT_APPROVER")
+        if current.request.get_vars["~.external"] == "True":
+            # Alert Hub
+            return M(c="cap")(
+                        M("Alert Hub", f="alert", vars={"~.external": True})(
+                            M("Map View", c="default",
+                              f="index", args=["alert_hub_cop"]),
+                        ),
+                    )
+        else:
+            s3_has_role = current.auth.s3_has_role
+            cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
+                                    s3_has_role("ALERT_APPROVER")
+            return M(c="cap", check=cap_editors)(
+                        M("Alerts", f="alert")(
+                            M("Create", m="create", check=cap_editors),
+                            M("Import from Feed URL", m="import_feed", p="create",
+                              check=cap_editors),
+                            M("To Review", c="cap", f="alert", m="review",
+                              check=s3_has_role("ALERT_APPROVER")),
+                        ),
+                        M("View", check=cap_editors)(
+                            M("Approved Alerts", c="cap", f="alert",
+                              vars={"~.approved_by__ne": None},
+                              ),
+                            M("Incomplete Alerts", c="cap", f="alert", m="review",
+                              vars={"status": "incomplete"}
+                              ),
+                            M("Archived Alerts/ Alert History", c="cap",
+                              f="alert_history", restrict=["ADMIN"]
+                              ),
+                        ),
+                        M("Templates", f="template")(
+                            M("Create", m="create",
+                              restrict=["ADMIN"]),
+                        ),
+                        M("Warning Classifications", f="warning_priority",
+                          restrict=["ADMIN"])(
+                            M("Create", m="create"),
+                            M("Import from CSV", m="import", p="create"),
+                        ),
+                        M("Predefined Alert Area", f="area", vars={"~.is_template": True},
+                          restrict=["ADMIN"])(
+                            M("Create", m="create"),
+                            M("Import from CSV", m="import", p="create"),
+                        ),
+                        M("Event Types", c="event", f="event_type",
+                          restrict=["ADMIN"])(
+                            M("Create", m="create"),
+                            M("Import from CSV", m="import", p="create"),
+                        ),
+                    )
 
-        return M(c="cap")(
-                    M("Manage Recipients",
-                      c="pr",
-                      f="subscription",
-                      vars={"option": "manage_recipient"},
-                      check=cap_editors,
-                      ),
-                    M("Manage Recipient Groups",
-                      c="pr",
-                      f="group",
-                      check=cap_editors,
-                      ),
-                    M("Alerts", f="alert",
-                      check=cap_editors)(
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org():
+        """ ORG / Organization Registry """
+
+        return M(c="org")(
+                    M("Organizations", f="organisation")(
                         M("Create", m="create"),
-                        M("Import from Feed URL", m="import_feed", p="create",
-                          check=cap_editors),
-                    ),
-                    M("Templates", f="template")(
-                        M("Create", m="create",
-                          restrict=["ADMIN"]),
-                    ),
-                    M("Warning Priorities", f="warning_priority",
-                      restrict=["ADMIN"])(
-                        M("Create", m="create"),
-                        M("Import from CSV", m="import", p="create"),
-                    ),
-                    M("Predefined Alert Area", f="area", vars={"~.is_template": True},
-                      restrict=["ADMIN"])(
-                        M("Create", m="create"),
-                        M("Import from CSV", m="import", p="create"),
+                        M("Import", m="import")
                     ),
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr():
+        """ PR / Person Registry """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        if current.request.vars.option == "manage_recipient":
+            return M(c="pr", restrict=ADMIN)(
+                        M("Manage Recipients", f="subscription",
+                              vars={"option": "manage_recipient"})(
+                            M("Add Recipient to List", c="default", f="index",
+                              m="subscriptions", vars={"option": "manage_recipient"})
+                        )
+                    )
+        else:
+            return M(c="pr", restrict=ADMIN)(
+                        M("Persons", f="person")(
+                            M("Create", m="create"),
+                        ),
+                        M("Groups", f="group")(
+                            M("Create", m="create"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def settings_messaging(cls):
+        """ Messaging settings menu items:
+
+            These items are used in multiple menus, but each item instance can
+            always only belong to one parent, so we need to re-instantiate
+            with the same parameters, and therefore this is defined as a
+            function here.
+
+            This separates the RSS containing CAP Feeds or CMS Feeds
+        """
+
+        return [
+            M("Email Channels (Inbound)", c="msg", f="email_channel"),
+            M("Facebook Channels", c="msg", f="facebook_channel"),
+            M("RSS Channels", link=False)(
+                M("Create RSS Feed for CAP", c="msg", f="rss_channel", vars={"type": "cap"}),
+                M("Create RSS Feed for CMS", c="msg", f="rss_channel"),
+            ),
+            M("SMS Outbound Gateways", c="msg", f="sms_outbound_gateway")(
+                M("SMS Modem Channels", c="msg", f="sms_modem_channel"),
+                M("SMS SMTP Channels", c="msg", f="sms_smtp_channel"),
+                M("SMS WebAPI Channels", c="msg", f="sms_webapi_channel"),
+            ),
+            M("Mobile Commons Channels", c="msg", f="mcommons_channel"),
+            M("Twilio Channels", c="msg", f="twilio_channel"),
+            M("Twitter Channels", c="msg", f="twitter_channel"),
+            M("Parsers", c="msg", f="parser"),
+        ]
 
 # END =========================================================================

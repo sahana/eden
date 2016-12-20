@@ -10,6 +10,8 @@ from gluon.languages import lazyT
 
 from s3.s3fields import *
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3RepresentTests(unittest.TestCase):
 
@@ -1263,18 +1265,6 @@ class S3ReusableFieldTests(unittest.TestCase):
         self.assertRaises(NameError, rf, widget="other")
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

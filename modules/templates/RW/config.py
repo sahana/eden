@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
@@ -115,9 +110,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Custom icon classes
     settings.ui.custom_icons = {
-        "news": "icon-info",
-        "needs": "icon-list",
-        "organisations": "icon-group",
+        "news": "fa fa-info",
+        "needs": "fa fa-list",
+        "organisations": "fa fa-group",
     }
 
     # -------------------------------------------------------------------------
@@ -349,8 +344,9 @@ def config(settings):
         s3db.add_components(tablename,
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
-                                            "filterby": "main_facility",
-                                            "filterfor": True,
+                                            "filterby": {
+                                                "main_facility": True,
+                                                },
                                             },
                             )
 

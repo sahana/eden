@@ -14,6 +14,8 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+from unit_tests import run_suite
+
 # =============================================================================
 class POSTFilterTests(unittest.TestCase):
     """ Tests for POST filter queries """
@@ -478,18 +480,6 @@ class URLBuilderTests(unittest.TestCase):
                          "/%s/pr/person/deduplicate.xml" % a)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

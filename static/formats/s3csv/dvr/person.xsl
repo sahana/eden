@@ -671,6 +671,11 @@
                 </resource>
             </xsl:if>
 
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'Tag')]">
+                <xsl:call-template name="PersonTag"/>
+            </xsl:for-each>
+
         </resource>
 
         <!-- Locations -->
@@ -1298,4 +1303,19 @@
 
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="PersonTag">
+
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="pr_person_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- END ************************************************************** -->
 </xsl:stylesheet>

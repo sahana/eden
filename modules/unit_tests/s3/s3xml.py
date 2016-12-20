@@ -5,10 +5,10 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3xml.py
 #
+import json
 import unittest
-from gluon import *
-from gluon.contrib import simplejson as json
 
+from gluon import *
 try:
     from cStringIO import StringIO
 except:
@@ -17,6 +17,8 @@ except:
 from lxml import etree
 
 from s3 import S3Hierarchy, s3_meta_fields, S3Represent, S3XMLFormat, IS_ONE_OF
+
+from unit_tests import run_suite
 
 # =============================================================================
 class TreeBuilderTests(unittest.TestCase):
@@ -910,18 +912,6 @@ class S3JSONParsingTests(unittest.TestCase):
         assertEqual(v, "2")
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

@@ -31,13 +31,7 @@
 
 __all__ = ("S3Hierarchy", "S3HierarchyCRUD")
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -828,8 +822,14 @@ class S3Hierarchy(object):
                 self.__lkey = None
                 self.__left = None
             else:
-                alias = rfield.tname.split("_", 1)[1]
-                link = resource.links.get(alias)
+                # Try to find the link table resource from parent selector
+                links = resource.links
+                alias = parent.split(".%s" % rfield.fname)[0]
+                link = links.get(alias)
+                if not link:
+                    # Fall back to table name of parent field
+                    alias = rfield.tname.split("_", 1)[1]
+                    link = links.get(alias)
                 if link:
                     fkey = rfield.field
                     self.__link = rfield.tname

@@ -321,6 +321,18 @@ if settings.has_module("msg"):
     tasks["msg_parse"] = msg_parse
 
     # -------------------------------------------------------------------------
+    def msg_gcm(title, uri, message, registration_ids, user_id=None):
+        """ Push the data relating to google cloud messaging server """
+
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        msg.gcm_push(title, uri, message, eval(registration_ids))
+
+    tasks["msg_gcm"] = msg_gcm
+
+    # -------------------------------------------------------------------------
     def notify_check_subscriptions(user_id=None):
         """
             Scheduled task to check subscriptions for updates,

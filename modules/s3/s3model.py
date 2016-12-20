@@ -329,10 +329,23 @@ class S3Model(object):
 
         # Define importer tables
         from s3import import S3Importer, S3ImportJob
-
         S3Importer.define_upload_table()
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
+
+        # Define sessions table
+        if current.deployment_settings.get_base_session_db():
+            # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
+            # Not DRY, bit no easy way to make it so
+            current.db.define_table("web2py_session",
+                                    Field("locked", "boolean", default=False),
+                                    Field("client_ip", length=64),
+                                    Field("created_datetime", "datetime",
+                                          default=current.request.now),
+                                    Field("modified_datetime", "datetime"),
+                                    Field("unique_key", length=64),
+                                    Field("session_data", "blob"),
+                                    )
 
         # Don't do this again within the current request cycle
         s3.load_all_models = False
@@ -420,6 +433,51 @@ class S3Model(object):
             else:
                 [config[tn].pop(k, None) for k in keys]
         return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def virtual_reference(cls, field):
+        """
+            Reverse-lookup of virtual references which are declared for
+            the respective lookup-table as:
+
+                configure(tablename,
+                          referenced_by = [(tablename, fieldname), ...],
+                          )
+
+            & in the table with the fields(auth_user only current example) as:
+
+                configure(tablename,
+                          references = {fieldname: tablename,
+                                        ...
+                                        },
+                          )
+
+            @param field: the Field
+
+            @returns: the name of the referenced table
+        """
+
+        if str(field.type) == "integer":
+
+            config = current.model.config
+            tablename, fieldname = str(field).split(".")
+
+            # 1st try this table's references
+            this_config = config[tablename]
+            if this_config:
+                references = this_config.get("references")
+                if references is not None and fieldname in references:
+                    return references[fieldname]
+
+            # Then try other tables' referenced_by
+            key = (tablename, fieldname)
+            for tn in config:
+                referenced_by = config[tn].get("referenced_by")
+                if referenced_by is not None and key in referenced_by:
+                    return tn
+
+        return None
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -511,7 +569,6 @@ class S3Model(object):
                     defaults = None
                     multiple = True
                     filterby = None
-                    filterfor = None
 
                 elif isinstance(link, dict):
                     alias = link.get("name", name)
@@ -566,7 +623,6 @@ class S3Model(object):
                     defaults = link.get("defaults")
                     multiple = link.get("multiple", True)
                     filterby = link.get("filterby")
-                    filterfor = link.get("filterfor")
 
                 else:
                     continue
@@ -583,7 +639,7 @@ class S3Model(object):
                                     defaults=defaults,
                                     multiple=multiple,
                                     filterby=filterby,
-                                    filterfor=filterfor)
+                                    )
                 hooks[alias] = component
 
         components[master] = hooks
@@ -612,7 +668,7 @@ class S3Model(object):
 
             @param table: the table or table name
             @param names: a list of components names to limit the search to,
-                          None or empty list for all available components
+                          None for all available components
         """
 
         components = current.model.components
@@ -719,9 +775,6 @@ class S3Model(object):
             if hook.filterby is not None:
                 component.filterby = hook.filterby
 
-            if hook.filterfor is not None:
-                component.filterfor = hook.filterfor
-
             components[alias] = component
         return components
 
@@ -800,22 +853,27 @@ class S3Model(object):
         if not table:
             return None
 
-        def get_alias(hooks, alias):
-            for alias in hooks:
-                hook = hooks[alias]
-                if hook.linktable:
-                    prefix, name = hook.linktable.split("_", 1)
-                    if name == link:
-                        return alias
+        def get_alias(hooks, link):
+
+            if link[-6:] == "__link":
+                alias = link.rsplit("__link", 1)[0]
+                hook = hooks.get(alias)
+                if hook:
+                    return alias
+            else:
+                for alias in hooks:
+                    hook = hooks[alias]
+                    if hook.linktable:
+                        prefix, name = hook.linktable.split("_", 1)
+                        if name == link:
+                            return alias
             return None
 
-        hooks = components.get(tablename, None)
+        hooks = components.get(tablename)
         if hooks:
             alias = get_alias(hooks, link)
             if alias:
                 return alias
-        else:
-            hooks = []
 
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
@@ -825,12 +883,38 @@ class S3Model(object):
                 table = cls.table(s)
                 if table is None:
                     continue
-                hooks = components.get(table._tablename, [])
+                hooks = components.get(table._tablename)
                 if hooks:
                     alias = get_alias(hooks, link)
                     if alias:
                         return alias
         return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def hierarchy_link(cls, tablename):
+        """
+            Get the alias of the component that represents the parent
+            node in a hierarchy (for link-table based hierarchies)
+
+            @param tablename: the table name
+
+            @returns: the alias of the hierarchy parent component
+        """
+
+        if not cls.table(tablename, db_only=True):
+            return None
+
+        hierarchy_link = cls.get_config(tablename, "hierarchy_link")
+        if not hierarchy_link:
+
+            hierarchy = cls.get_config(tablename, "hierarchy")
+            if hierarchy and "." in hierarchy:
+                alias = hierarchy.rsplit(".", 1)[0]
+                if "__link" in alias:
+                    hierarchy_link = alias.rsplit("__link", 1)[0]
+
+        return hierarchy_link
 
     # -------------------------------------------------------------------------
     # Resource Methods

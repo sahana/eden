@@ -33,6 +33,7 @@ __all__ = ("S3ChannelModel",
            "S3EmailModel",
            "S3FacebookModel",
            "S3MCommonsModel",
+           "S3GCMModel",
            "S3ParsingModel",
            "S3RSSModel",
            "S3SMSModel",
@@ -83,6 +84,7 @@ class S3ChannelModel(S3Model):
         #
         channel_types = Storage(msg_email_channel = T("Email (Inbound)"),
                                 msg_facebook_channel = T("Facebook"),
+                                msg_gcm_channel = T("Google Cloud Messaging"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
                                 msg_rss_channel = T("RSS Feed"),
                                 msg_sms_modem_channel = T("SMS Modem"),
@@ -603,7 +605,10 @@ class S3EmailModel(S3ChannelModel):
                      Field("username"),
                      Field("password", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
+                           widget = S3PasswordWidget(),
                            ),
                      # Set true to delete messages from the remote
                      # inbox after fetching them.
@@ -640,7 +645,7 @@ class S3EmailModel(S3ChannelModel):
                      s3_datetime(default = "now"),
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject"),
-                           requires = IS_EMPTY_OR(IS_LENGTH(78)),
+                           requires = IS_LENGTH(78),
                            ),
                      Field("body", "text",
                            label = T("Message"),
@@ -734,7 +739,10 @@ class S3FacebookModel(S3ChannelModel):
                            ),
                      Field("app_secret", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
+                           widget = S3PasswordWidget(),
                            ),
                      # Optional
                      Field("page_id", "bigint",
@@ -858,7 +866,9 @@ class S3MCommonsModel(S3ChannelModel):
                            represent = s3_yes_no_represent,
                            ),
                      Field("campaign_id", length=128, unique=True,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
                            ),
                      Field("url",
                            default = \
@@ -871,6 +881,7 @@ class S3MCommonsModel(S3ChannelModel):
                      Field("password", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
                            ),
                      Field("query"),
                      Field("timestmp", "datetime",
@@ -897,6 +908,79 @@ class S3MCommonsModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return {}
+
+# =============================================================================
+class S3GCMModel(S3ChannelModel):
+    """
+        Google Cloud Messaging
+            Channels
+
+        https://developers.google.com/cloud-messaging/
+    """
+
+    names = ("msg_gcm_channel",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        set_method = self.set_method
+
+        # ---------------------------------------------------------------------
+        # GCM Channels
+        #
+        tablename = "msg_gcm_channel"
+        self.define_table(tablename,
+                          # Instance
+                          self.super_link("channel_id", "msg_channel"),
+                          Field("name"),
+                          Field("description"),
+                          Field("enabled", "boolean",
+                                default = True,
+                                label = T("Enabled?"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          #Field("login", "boolean",
+                          #      default = False,
+                          #      label = T("Use for Login?"),
+                          #      represent = s3_yes_no_represent,
+                          #      ),
+                          Field("api_key",
+                                notnull = True,
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = self.msg_gcm_channel_onaccept,
+                       super_entity = "msg_channel",
+                       )
+
+        set_method("msg", "gcm_channel",
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
+
+        set_method("msg", "gcm_channel",
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
+
+        #set_method("msg", "gcm_channel",
+        #           method = "poll",
+        #           action = self.msg_channel_poll)
+
+        # ---------------------------------------------------------------------
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def msg_gcm_channel_onaccept(form):
+
+        if form.vars.enabled:
+            # Ensure only a single account enabled
+            current.db(current.s3db.msg_gcm_channel.id != form.vars.id).update(enabled = False)
+
+        # Normal onaccept processing
+        S3ChannelModel.channel_onaccept(form)
 
 # =============================================================================
 class S3ParsingModel(S3Model):
@@ -962,6 +1046,7 @@ class S3ParsingModel(S3Model):
         # ---------------------------------------------------------------------
         # Message parsing status
         # - component to core msg_message table
+        # - messages which need parsing are placed here & updated when parsed
         #
         tablename = "msg_parsing_status"
         define_table(tablename,
@@ -1206,6 +1291,7 @@ class S3RSSModel(S3ChannelModel):
 
     names = ("msg_rss_channel",
              "msg_rss",
+             "msg_rss_link",
              )
 
     def model(self):
@@ -1225,6 +1311,7 @@ class S3RSSModel(S3ChannelModel):
                      super_link("channel_id", "msg_channel"),
                      Field("name", length=255, unique=True,
                            label = T("Name"),
+                           requires = IS_LENGTH(255),
                            ),
                      Field("description",
                            label = T("Description"),
@@ -1238,12 +1325,39 @@ class S3RSSModel(S3ChannelModel):
                            label = T("URL"),
                            requires = IS_URL(),
                            ),
+                     Field("content_type", "boolean",
+                           default = False,
+                           label = T("Content-Type Override"),
+                           represent = s3_yes_no_represent,
+                           # Some feeds have text/html set which feedparser refuses to parse
+                           comment = T("Force content-type to application/xml"),
+                           ),
                      s3_datetime(label = T("Last Polled"),
                                  writable = False,
                                  ),
                      Field("etag",
                            label = T("ETag"),
                            writable = False
+                           ),
+                     # Enable this when required in the template
+                     # Used by SAMBRO to separate the RSS for cap or cms
+                     Field("type",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("username",
+                           label = T("Username"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Username"),
+                                                           T("Optional username for HTTP Basic Authentication."))),
+                           ),
+                     Field("password", "password",
+                           label = T("Password"),
+                           readable = False,
+                           widget = S3PasswordWidget(),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Password"),
+                                                           T("Optional password for HTTP Basic Authentication."))),
                            ),
                      *s3_meta_fields())
 
@@ -1319,6 +1433,41 @@ class S3RSSModel(S3ChannelModel):
                                       "body"
                                       ],
                        super_entity = current.s3db.msg_message,
+                       )
+        # Components
+        self.add_components(tablename,
+                            msg_rss_link = "rss_id",
+                            )
+
+        rss_represent = S3Represent(lookup = tablename,
+                                    fields = ["title", "from_address",],
+                                    field_sep = " - ")
+
+        rss_id = S3ReusableField("rss_id", "reference %s" % tablename,
+                                 label = T("RSS Link"),
+                                 ondelete = "CASCADE",
+                                 represent = rss_represent,
+                                 requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "msg_rss.id",
+                                                          rss_represent)),
+                                 )
+
+        # ---------------------------------------------------------------------
+        # Links for RSS Feed
+        #
+        tablename = "msg_rss_link"
+        define_table(tablename,
+                     rss_id(),
+                     Field("url",
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
+                     Field("type",
+                           ),
+                     *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("rss_id", "url"),
+                                                 ),
                        )
 
         # ---------------------------------------------------------------------
@@ -1481,9 +1630,11 @@ class S3SMSOutboundModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("address", length=64,
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_LENGTH(64),
                            ),
-                     Field("subject", length=64),
+                     Field("subject", length=64,
+                           requires = IS_LENGTH(64),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            ),
@@ -1513,7 +1664,8 @@ class S3SMSOutboundModel(S3Model):
                            #default = "http://sms1.cardboardfish.com:9001/HTTPSMS?", # Cardboardfish
                            default = "https://api.clickatell.com/http/sendmsg", # Clickatell
                            #default = "https://secure.mcommons.com/api/send_message", # Mobile Commons
-                           #default =  "https://www.textmagic.com/app/api", # Text Magic
+                           #default = "https://www.textmagic.com/app/api", # Text Magic
+                           #default = "http://bulkmessage-api.dhiraagu.com.mv/jsp/receiveSMS.jsp", # Dhiraagu (Maldives local provider)
                            #default = "https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages", # Twilio (Untested)
                            requires = IS_URL(),
                            ),
@@ -1522,18 +1674,19 @@ class S3SMSOutboundModel(S3Model):
                            default = "user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
                            #default = "campaign_id=yourid", # Mobile Commons
                            #default = "username=yourusername&password=yourpassword&cmd=send&unicode=1", # Text Magic
+                           #default = "userid=yourusername&password=yourpassword", # Dhiraagu
                            #default = "From={RegisteredTelNumber}", # Twilio (Untested)
                            ),
                      Field("message_variable", "string",
                            #default = "M", # Cardboardfish
-                           default = "text", # Clickatell, Text Magic
+                           default = "text", # Clickatell, Text Magic, Dhiraagu
                            #default = "body", # Mobile Commons
                            #default = "Body", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("to_variable", "string",
                            #default = "DA", # Cardboardfish
-                           default = "to", # Clickatell
+                           default = "to", # Clickatell, Dhiraagu
                            #default = "phone_number", # Mobile Commons
                            #default = "phone", # Text Magic
                            #default = "To", # Twilio (Untested)
@@ -1544,7 +1697,10 @@ class S3SMSOutboundModel(S3Model):
                            ),
                      # If using HTTP Auth (e.g. Mobile Commons)
                      Field("username"),
-                     Field("password"),
+                     Field("password", "password",
+                           readable = False,
+                           widget = S3PasswordWidget(),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            ),
@@ -1662,11 +1818,16 @@ class S3TwilioModel(S3ChannelModel):
                                "https://api.twilio.com/2010-04-01/Accounts"
                            ),
                      Field("account_sid", length=64,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("auth_token", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
+                           widget = S3PasswordWidget(),
                            ),
                      *s3_meta_fields())
 
@@ -1723,10 +1884,10 @@ class S3TwitterModel(S3Model):
         password_widget = S3PasswordWidget()
         tablename = "msg_twitter_channel"
         define_table(tablename,
-                     #Instance
+                     # Instance
                      self.super_link("channel_id", "msg_channel"),
-                     # @ToDo: Allow different Twitter accounts for different PEs (Orgs / Teams)
-                     #self.pr_pe_id(),
+                     # @ToDo: Allow different Twitter accounts for different Orgs
+                     #self.org_organisation_id(),
                      Field("name",
                            label = T("Name"),
                            ),
@@ -1749,18 +1910,22 @@ class S3TwitterModel(S3Model):
                      # Get these from https://apps.twitter.com
                      Field("consumer_key", "password",
                            label = T("Consumer Key"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("consumer_secret", "password",
                            label = T("Consumer Secret"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("access_token", "password",
                            label = T("Access Token"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("access_token_secret", "password",
                            label = T("Access Token Secret"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      *s3_meta_fields())
@@ -1796,6 +1961,7 @@ class S3TwitterModel(S3Model):
                                  ),
                      Field("body", length=140,
                            label = T("Message"),
+                           requires = IS_LENGTH(140),
                            ),
                      Field("from_address", #notnull=True,
                            label = T("From"),
@@ -2240,9 +2406,11 @@ class S3BaseStationModel(S3Model):
 
         if current.deployment_settings.get_msg_basestation_code_unique():
             db = current.db
-            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "msg_basestation.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "msg_basestation.code")
+                                         ])
         else:
-            code_unique = None
+            code_requires = IS_LENGTH(10)
 
         tablename = "msg_basestation"
         self.define_table(tablename,
@@ -2250,11 +2418,13 @@ class S3BaseStationModel(S3Model):
                           Field("name", notnull=True,
                                 length=64, # Mayon Compatibility
                                 label = T("Name"),
-                                requires = IS_NOT_EMPTY(),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("code", length=10, # Mayon compatibility
                                 label = T("Code"),
-                                requires = code_unique,
+                                requires = code_requires,
                                 ),
                           self.org_organisation_id(
                                  label = T("Operator"),

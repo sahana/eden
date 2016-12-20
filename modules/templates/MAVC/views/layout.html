@@ -25,7 +25,7 @@
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-<link href="/{{=appname}}/static/styles/foundation/normalize.css" rel="stylesheet" />
+<link href="/{{=appname}}/static/themes/foundation/normalize.css" rel="stylesheet" />
 {{if s3.debug:}}
 {{if s3.rtl:}}
 <link href="/{{=appname}}/static/themes/{{=theme}}/foundation/foundation.rtl.css" rel="stylesheet" />
@@ -67,9 +67,7 @@
 {{else:}}
 <body>
  <div class='row main-navigation'>
-    <div class='small-12 columns'>
-      {{=current.menu.main}}
-    </div>
+  {{=current.menu.main}}
  </div>
  <div class='row main-content'>
   {{if current.menu.options is not None:}}
@@ -98,7 +96,7 @@
   <div class='medium-12 columns'>
    {{include "../modules/templates/%s/views/footer.html" % response.s3.theme}}
    {{if s3.debug:}}
-   <div class="row">
+   <div class='row'>
     <div class='medium-12 columns'>{{=s3.toolbar()}}</div>
    </div>
    {{pass}}

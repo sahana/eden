@@ -474,8 +474,8 @@ def open_tasks_for_project():
     s3.postp = postp
 
     return s3_rest_controller(module, "project",
-                              hide_filter=False,
-                             )
+                              hide_filter = False,
+                              )
 # -----------------------------------------------------------------------------
 def set_theme_requires(sector_ids):
     """
@@ -585,9 +585,9 @@ def hazard():
 def framework():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(dtargs={"dt_text_maximum_len": 160},
-                              hide_filter=True,
-                             )
+    return s3_rest_controller(dtargs = {"dt_text_maximum_len": 160},
+                              hide_filter = True,
+                              )
 
 # =============================================================================
 def organisation():
@@ -658,7 +658,8 @@ def beneficiary():
     #    return True
     #s3.prep = prep
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter = False,
+                              )
 
 # =============================================================================
 def activity_type():
@@ -714,18 +715,57 @@ def activity():
     def prep(r):
         if r.interactive:
             if r.component is not None:
-                if r.component_name == "document":
-                    doc_table = s3db.doc_document
-                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
-                    doc_table.person_id.readable = doc_table.person_id.writable = False
-                    doc_table.location_id.readable = doc_table.location_id.writable = False
+                component_name = r.component_name
+                if component_name == "distribution":
+                    dtable = s3db.supply_distribution
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
+                    f = dtable.date
+                    f.default = r.record.date
+                    f.readable = f.writable = False
+                elif component_name == "case":
+                    # Use Assign to add new entries
+                    s3db.configure("project_case_activity",
+                                   listadd = False)
+                elif component_name == "document":
+                    dtable = s3db.doc_document
+                    dtable.organisation_id.readable = dtable.organisation_id.writable = False
+                    dtable.person_id.readable = dtable.person_id.writable = False
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
         return True
     s3.prep = prep
 
-    return s3_rest_controller(csv_template = "activity",
-                              hide_filter = False,
+    return s3_rest_controller("project", "activity",
+                              csv_template = "activity",
+                              #hide_filter = False,
                               rheader = s3db.project_rheader,
                               )
+
+# -----------------------------------------------------------------------------
+def distribution():
+    """ Activities which include Distributions """
+
+    # Load model
+    table = s3db.project_activity
+
+    # CRUD strings
+    s3.crud_strings["project_activity"] = Storage(
+        label_create = T("Create Distribution"),
+        title_display = T("Distribution Details"),
+        title_list = T("Distributions"),
+        title_update = T("Edit Distribution"),
+        title_report = T("Distribution Report"),
+        label_list_button = T("List Distributions"),
+        msg_record_created = T("Distribution Added"),
+        msg_record_modified = T("Distribution Updated"),
+        msg_record_deleted = T("Distribution Deleted"),
+        msg_list_empty = T("No Distributions Found")
+    )
+
+    return activity()
 
 # -----------------------------------------------------------------------------
 def location():
@@ -825,9 +865,9 @@ def location():
     s3.postp = postp
 
     return s3_rest_controller(interactive_report = True,
-                              rheader = s3db.project_rheader,
-                              hide_filter = False,
                               csv_template = "location",
+                              hide_filter = False,
+                              rheader = s3db.project_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -1048,7 +1088,8 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller(hide_filter=hide_filter)
+    return s3_rest_controller(hide_filter = hide_filter,
+                              )
 
 # =============================================================================
 # Programmes
@@ -1062,6 +1103,7 @@ def programme_project():
     """ RESTful controller for Programmes <> Projects """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # =============================================================================
@@ -1267,13 +1309,14 @@ def comments():
     field.writable = field.readable = False
 
     # Create S3Request for S3SQLForm
-    r = s3_request(prefix="project",
-                   name="comment",
+    r = s3_request(prefix = "project",
+                   name = "comment",
                    # Override task_id
-                   args=[],
-                   vars=None,
+                   args = [],
+                   vars = None,
                    # Override .loads
-                   extension="html")
+                   extension = "html",
+                   )
 
     # Customise resource
     r.customise_resource()
@@ -1286,7 +1329,8 @@ def comments():
                                            table.parent,
                                            table.body,
                                            table.created_by,
-                                           table.created_on)
+                                           table.created_on,
+                                           )
 
     output = UL(_id="comments")
     for comment in comments:
@@ -1363,6 +1407,7 @@ def human_resource_project():
     """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # END =========================================================================

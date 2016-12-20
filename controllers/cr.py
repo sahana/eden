@@ -129,12 +129,12 @@ def shelter():
         elif method == "profile":
             shelter_id = r.id
             name = r.record.name
-            
+
             profile_header = settings.get_ui_profile_header(r)
 
             map_widget = dict(label = T("Housing Units"),
                               type = "map",
-                              icon = "icon-map",
+                              icon = "globe",
                               colspan = 2,
                               height = 500,
                               #bbox = bbox,

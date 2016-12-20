@@ -74,10 +74,9 @@ class S3MainMenu(object):
         menu_modules = []
         all_modules = current.deployment_settings.modules
 
-        # Home always 1st
-        module = all_modules["default"]
-
-        menu_modules.append(MM(module.name_nice, c="default", f="index"))
+        # Home always 1st (commented because redundant/unnecessary)
+        #module = all_modules["default"]
+        #menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
         # Modules to hide due to insufficient permissions
         hidden_modules = current.auth.permission.hidden_modules()
@@ -193,6 +192,7 @@ class S3MainMenu(object):
 
         auth = current.auth
         logged_in = auth.is_logged_in()
+        settings = current.deployment_settings
 
         if not logged_in:
             request = current.request
@@ -202,7 +202,7 @@ class S3MainMenu(object):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = current.deployment_settings.get_security_registration_visible()
+            self_registration = settings.get_security_registration_visible()
             if self_registration == "index":
                 register = MM("Register", c="default", f="index", m="register",
                                vars=dict(_next=login_next),
@@ -212,16 +212,27 @@ class S3MainMenu(object):
                                vars=dict(_next=login_next),
                                check=self_registration)
 
+            if settings.get_auth_password_changes():
+                lost_pw = MM("Lost Password", m="retrieve_password")
+            else:
+                lost_pw = None
+
             menu_auth = MM("Login", c="default", f="user", m="login",
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
-                            MM("Login", m="login",
-                               vars=dict(_next=login_next)),
-                            register,
-                            MM("Lost Password", m="retrieve_password")
-                        )
+                                MM("Login", m="login",
+                                   vars=dict(_next=login_next)),
+                                register,
+                                lost_pw,
+                                )
         else:
             # Logged-in
+
+            if settings.get_auth_password_changes():
+                change_pw = MM("Change Password", m="change_password")
+            else:
+                change_pw = None
+
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
@@ -234,7 +245,7 @@ class S3MainMenu(object):
                             #MM("Subscriptions", c="pr", f="person",
                             #    args="pe_subscription",
                             #    vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Change Password", m="change_password"),
+                            change_pw,
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
                                "id": "rapid_toggle",
@@ -413,7 +424,10 @@ class S3OptionsMenu(object):
 
         try:
             self.menu = getattr(self, name)()
-        except:
+        except AttributeError:
+            if hasattr(self, name):
+                # Error inside the menu function, don't obscure it
+                raise
             self.menu = None
 
     # -------------------------------------------------------------------------
@@ -659,7 +673,7 @@ class S3OptionsMenu(object):
     def dc():
         """ Data Collection Tool """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="dc")(
                     M("Templates", f="template")(
@@ -821,6 +835,13 @@ class S3OptionsMenu(object):
     def dvr():
         """ DVR Menu """
 
+        if current.deployment_settings.get_dvr_label(): # == "Beneficiary"
+            return M(c="dvr")(
+                        M("Beneficiaries", f="person")(
+                            M("Create", m="create"),
+                        ),
+                    )
+
         return M(c="dvr")(
                     M("Cases", f="person")(
                         M("Create", m="create"),
@@ -850,18 +871,40 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def edu():
+        """ Education Module """
+
+        return M()(
+                    M("Schools", c="edu", f="school")(
+                        M("Create", m="create"),
+                    ),
+                    M("School Types", c="edu", f="school_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def event():
         """ EVENT / Event Module """
+
+        if current.deployment_settings.get_event_label(): # == "Disaster"
+            EVENTS = "Disasters"
+            EVENT_TYPES = "Disaster Types"
+        else:
+            EVENTS = "Events"
+            EVENT_TYPES = "Event Types"
 
         return M()(
                     M("Scenarios", c="scenario", f="scenario")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Events", c="event", f="event")(
+                    M(EVENTS, c="event", f="event")(
                         M("Create", m="create"),
                     ),
-                    M("Event Types", c="event", f="event_type")(
+                    M(EVENT_TYPES, c="event", f="event_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
@@ -1500,7 +1543,6 @@ class S3OptionsMenu(object):
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )
 
-
     # -------------------------------------------------------------------------
     @staticmethod
     def org():
@@ -1556,7 +1598,7 @@ class S3OptionsMenu(object):
         return M(c="patient")(
                     M("Patients", f="patient")(
                         M("Create", m="create"),
-                    )
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1586,6 +1628,20 @@ class S3OptionsMenu(object):
                     M("Referral Agencies", f="organisation")(
                         M("Create", m="create"),
                     ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def police():
+        """ Police """
+
+        return M(c="police")(
+                    M("Police Stations", f="station")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Station Types", f="station_type")(
+                    #    M("Create", m="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------
@@ -1624,7 +1680,7 @@ class S3OptionsMenu(object):
         """ PROJECT / Project Tracking & Management """
 
         settings = current.deployment_settings
-        #activities = lambda i: settings.get_project_activities()
+        activities = lambda i: settings.get_project_activities()
         activity_types = lambda i: settings.get_project_activity_types()
         community = settings.get_project_community()
         if community:
@@ -1692,6 +1748,10 @@ class S3OptionsMenu(object):
                       m="import", p="create"),
                     M(IMPORT, f="location",
                       m="import", p="create"),
+                    M("Import Activities", f="activity",
+                      m="import", p="create",
+                      check=activities,
+                      ),
                  ),
                  M("Partner Organizations",  f="partners")(
                     M("Create", m="create"),

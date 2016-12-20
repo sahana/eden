@@ -1,0 +1,11 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Save the Children,,project,activity,activity,"Contact, Dreadlocks",{location_id}: {name},"name,location_id",~.organisation_id$name=Save the Children,,True,,,,Activities (4W),False,,,
+Other Organizations,,project,activity,activity,"Contact, Dreadlocks",{location_id}: {name} ({organisation_id}),"name,location_id,organisation_id",~.organisation_id$name__ne=Save the Children,,True,,,,Activities (4W),False,,,
+Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,False,0,0
+Contacts,All Active Contacts,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Volunteer'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,False,,
+Clinics,All Active Rural Health Units,hms,hospital,hospital,Medical Facility,{name} (T('Clinic')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
+Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,False,0,0
+Offices,All Active Offices,org,office,office,Building,{name} (T('Office')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
+Response Areas,For home page,gis,location_tag,,,{location_id}: {value},"location_id,value",~.tag=sectors&~.value__ne=None,,,,"{'fill':'ff0000','fillOpacity':0.5}",0.9,,False,False,0,0
+Schools,All Active Schools,edu,school,school,Building,{name} (T('School')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,
+Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,{name} (T('Warehouse')),name,~.obsolete=False,,True,,,,Infrastructure,False,,,

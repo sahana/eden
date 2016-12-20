@@ -142,6 +142,7 @@
 'Add Credentials': '添加凭证',
 'Add Disaster Victims': '添加灾难受害者',
 'Add Distribution.': '添加分发。',
+'Add Document': '添加新文档',
 'Add Donor': '添加捐赠人',
 'Add Flood Report': '添加洪水报告',
 'Add Group Member': '添加组成员',

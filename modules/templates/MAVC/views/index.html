@@ -1,42 +1,14 @@
 {{extend "layout.html"}}
 <div class='container'>
-<div class='row carousel'>
- <div id='title-image'>
-  <img src='{{=URL(c="static", f="themes", args=["Philippines", "img", "haiyan.jpg"])}}'/>
- </div>
- <div class='image-caption'>
-  <h1>{{=settings.get_system_name()}}</h1>
-  <p>{{=T("Improving disaster prevention, preparedness and response in Philippines.")}}</p>
-  {{if not auth.is_logged_in():}}
+ <div class='caption small-centered small-12 medium-8 large-4 columns'>
   <p>
-   <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
-   {{if settings.get_security_self_registration():}}
-   <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a>
-   {{pass}}
-  </p>{{pass}}
+   {{=caption}}
+  </p>
+  <p>
+   {{=get_started}}
+  </p>
  </div>
-</div>
-<div id='homepage-about' class='row'>
- <div class='columns large-4'>
-  <h2><a href='/{{=appname}}/org/organisation/summary'><i class='icon-wrench'></i> {{=T("Stakeholders")}}</a></h2>
-  <p class='quote mb4'>{{=T("Organizations working in response and recovery.")}}</p>
+ <div class='image'>
+  <img src='{{=URL(c="static", f="themes", args=["MAVC", "img", "image_city_intro.png"])}}'/>
  </div>
- <div class='columns large-4'>
-  <h2><a href='/{{=appname}}/req/req/summary'><i class='icon-flag'></i> {{=T("Requests for Aid")}}</a></h2>
-  <p class='quote mb4'>{{=T("Both for response and recovery and also for longer-term Community Resilience.")}}</p>
- </div>
- <div class='columns large-4'>
-  <h2><a href='/{{=appname}}/inv/send/summary'><i class='icon-truck'></i> {{=T("Aid Delivery")}}</a></h2>
-  <p class='quote mb4'>{{=T("Aid which is being delivered by organizations.")}}</p>
- </div>
-</div>
-<div id='what-they-do' class='row'>
- <div class='columns large-6'>
-  <h2><i class='icon-bookmark-empty'></i> {{=T("What we do")}}</h2>
-  <p>Enhancing cross sector collaboration and transparency in disaster management for Typhoon Yolanda and beyond</p>
- </div>
- <div class='columns large-6'>
-  <img src='/{{=appname}}/static/themes/Philippines/img/map_ph.png'>
- </div>
-</div>
 </div>

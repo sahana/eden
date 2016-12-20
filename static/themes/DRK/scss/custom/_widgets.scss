@@ -99,6 +99,16 @@ input.date.hasDatepicker {
     margin-top: 0.5em;
 }
 
+/* GroupedOptions widget */
+.s3-groupedopts-label {
+    float: none;
+    margin-bottom: 0.3rem;
+}
+.s3-groupedopts-widget table {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+}
+
 /* ImageCropWidget */
 .imagecrop-btn {
     font-size: 1em;

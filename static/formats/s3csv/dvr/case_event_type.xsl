@@ -11,6 +11,9 @@
          Name........................string..........Type Name
          Default.....................string..........is default type
                                                      true|false
+         Minimum Interval............number..........minimum interval (hours)
+         Presence required...........string..........requires personal presence
+                                                     true|false
          Comments....................string..........Comments
 
     *********************************************************************** -->
@@ -48,6 +51,29 @@
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+
+            <xsl:variable name="MinimumInterval" select="col[@field='Minimum Interval']/text()"/>
+            <xsl:if test="$MinimumInterval!=''">
+                <data field="min_interval">
+                    <xsl:value-of select="$MinimumInterval"/>
+                </data>
+            </xsl:if>
+
+            <!-- Requires personal presence -->
+
+            <xsl:variable name="presence_required" select="col[@field='Presence required']/text()"/>
+            <data field="presence_required">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$presence_required='false'">
+                            <xsl:value-of select="'false'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'true'"/>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:attribute>

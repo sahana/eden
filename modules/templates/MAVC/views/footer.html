@@ -1,3 +1,20 @@
 <div class='row'>
- {{try:}}{{=current.menu.footer}}{{except:}}{{pass}}
+ <div class='large-4 large-offset-1 medium-6 columns'>
+  <img class='footer-logo' src='{{=URL(c="static", f="themes", args=["MAVC", "img", "image_mtp_logo_footer.png"])}}'></img>
+  <span class='footer-icon'><i class='fa fa-plus'></i></span>
+  <img class='footer-logo' src='{{=URL(c="static", f="themes", args=["MAVC", "img", "image_bayanihan.png"])}}'></img>
+ </div>
+ <div class='text-left large-4 large-offset-1 medium-5 columns'>
+  <p class='footer-text'>
+   {{caption=T("Map the Philippines helps citizens, NGOs, business and government work better together.")}}
+   {{explain=T("By working in real-time and sharing data on the UN Sustainable Development Goals, we help make more informed decisions about our communities.")}}
+   {{twitter="http://twitter.com/share?text=%s&amp;url=http://mapph.com&amp;hashtags=MapPH" % caption}}
+   {{=SPAN(caption, explain, XML("&nbsp;"), A("#MapPH", _class="twitter-link", _target="_blank", _href=twitter, _title=T("Share this on Twitter")))}}
+  </p>
+ </div>
+ <div class='text-center large-offset-1 medium-1 columns end'>
+  <a target='_blank' href='https://www.facebook.com/mapPHL' title='{{=T("MapPH on Facebook")}}'>
+   <img src='{{=URL(c="static", f="themes", args=["MAVC", "img", "FB-f-Logo__blue_50.png"])}}' alt="Facebook Icon"></img>
+  </a>
+ </div>
 </div>

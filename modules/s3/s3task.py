@@ -45,14 +45,7 @@
 __all__ = ("S3Task",)
 
 import datetime
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 from gluon import current, HTTP, IS_EMPTY_OR
 from gluon.storage import Storage
@@ -287,6 +280,7 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Run the task asynchronously
+        # @ToDo: Switch to API: self.scheduler.queue_task()
         record = current.db.scheduler_task.insert(application_name="%s/default" % current.request.application,
                                                   task_name=task,
                                                   function_name=task,
@@ -390,6 +384,7 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Add to DB for pickup by Scheduler task
+        # @ToDo: Switch to API: self.scheduler.queue_task()
         db = current.db
         record = db.scheduler_task.insert(application_name="%s/default" % current.request.application,
                                           task_name=task,

@@ -3,6 +3,12 @@ form {
     font-size: 0.8rem;
     .form-row {
         margin-top: 0.5rem !important;
+        .button {
+            margin-right: 0.5rem;
+            i.fa {
+                margin-right: 0.3rem;
+            }
+        }
         & > .columns {
             &:first-child {
                 overflow: hidden;
@@ -16,6 +22,14 @@ form {
         }
         select {
             min-width: 4rem;
+        }
+        .controls span.postfix {
+            height: 1.75rem;
+            line-height: 1.5rem;
+            font-size: 0.8rem;
+            .fa {
+                line-height: inherit;
+            }
         }
     }
     label.inline {
@@ -131,6 +145,10 @@ textarea {
     resize: both;
     max-width: 100%;
 }
+
+select {
+    padding-right: 1rem !important;
+}
 /* Form and Item containers */
 #last_update {
     float: none;
@@ -140,6 +158,9 @@ textarea {
     form {
         background: $form_container_bgcolor;
         padding: 5px 10px;
+        tr td {
+            padding: rem-calc(3);
+        }
     }
     width: auto;
     overflow: inherit;

@@ -40,13 +40,8 @@ __all__ = ("S3ContentModel",
            "S3CMS",
            )
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import datetime
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -67,6 +62,7 @@ class S3ContentModel(S3Model):
              "cms_post_id",
              "cms_post_module",
              "cms_tag",
+             "cms_tag_id",
              "cms_tag_post",
              "cms_comment",
              )
@@ -92,6 +88,7 @@ class S3ContentModel(S3Model):
                      Field("name", length=255, notnull=True, unique=True,
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),
@@ -424,6 +421,10 @@ class S3ContentModel(S3Model):
                    method = "remove_bookmark",
                    action = self.cms_remove_bookmark)
 
+        set_method("cms", "post",
+                   method = "calendar",
+                   action = cms_Calendar)
+
         # ---------------------------------------------------------------------
         # Modules/Resources <> Posts link table
         #
@@ -536,7 +537,7 @@ class S3ContentModel(S3Model):
                                         IS_ONE_OF(db, "cms_comment.id")),
                            readable = False,
                            ),
-                     post_id(empty=False),
+                     post_id(empty = False),
                      Field("body", "text", notnull=True,
                            label = T("Comment"),
                            requires = IS_NOT_EMPTY(),
@@ -556,6 +557,7 @@ class S3ContentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(cms_post_id = post_id,
+                    cms_tag_id = tag_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -569,6 +571,7 @@ class S3ContentModel(S3Model):
                                 writable = False)
 
         return dict(cms_post_id = lambda **attr: dummy("post_id"),
+                    cms_tag_id = lambda **attr: dummy("tag_id"),
                     )
 
     # -------------------------------------------------------------------------
@@ -948,7 +951,7 @@ class S3ContentUserModel(S3Model):
         #
         tablename = "cms_post_user"
         self.define_table(tablename,
-                          self.cms_post_id(empty=False),
+                          self.cms_post_id(empty = False),
                           Field("user_id", current.auth.settings.table_user),
                           *s3_meta_fields())
 
@@ -1811,5 +1814,104 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class cms_Calendar(S3Method):
+    """
+        Display Posts on a Calendar format
+
+       @ToDo: Customisable Date Range
+                - currently hardcoded to 1 day in past, today & 5 days ahead
+       @ToDo: Interactive version
+                - drag/drop entries
+                - edit entries
+       @ToDo: PDF/XLS representations
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "post":
+            if r.representation == "html":
+                output = self.html(r, **attr)
+                return output
+            #elif r.representation == "xls":
+            #    output = self.xls(r, **attr)
+            #    return output
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    def _extract(self, days, r, **attr):
+        """
+            Extract the Data
+        """
+
+        rows = 0
+
+        # Respect any filters present
+        resource = r.resource
+
+        # Provide additional Filter based on days
+        resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
+                            (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
+
+        fields = ["name",
+                  "date",
+                  "location_id",
+                  ]
+
+        posts = resource.select(fields)
+
+        # @ToDo: Reformat posts into Array by day & return the maximum number of Posts in a day
+
+        return rows, posts
+
+    # -------------------------------------------------------------------------
+    def html(self, r, **attr):
+        """
+            HTML Representation
+        """
+
+        T = current.T
+
+        now = current.request.now
+        timedelta = datetime.timedelta
+
+        # @ToDo: Make this configurable
+        days = (now - timedelta(days = 1), # Yesterday
+                now,                       # Today
+                now + timedelta(days = 1), # Tomorrow
+                now + timedelta(days = 2),
+                now + timedelta(days = 3),
+                now + timedelta(days = 4),
+                now + timedelta(days = 5),
+                )
+
+        rows, posts = self._extract(days, r, **attr)
+
+        item = TABLE()
+        title_row = TR()
+        rappend = title_row.append
+        for day in days:
+            rappend(TD(day.strftime("%A")))
+        item.append(title_row)
+
+        output = dict(item=item)
+        output["title"] = T("Weekly Schedule")
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
 
 # END =========================================================================

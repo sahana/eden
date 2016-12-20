@@ -438,7 +438,7 @@
 'Clean-Up Campaign': 'យុទ្ធនាការ​បោសសំអាត',
 'Cleaner': 'កម្មវិធី​សំអាត',
 'Clear All': 'ជ​ម្រះ​ទាំងអស់',
-'Clear filter': 'ជម្រះ​​តម្រង',
+'Clear Filter': 'ជម្រះ​​តម្រង',
 'Clear selection': 'ជម្រះការ​ជ្រើស',
 'Clear': 'ជម្រះ',
 'Click anywhere on the map for full functionality': 'ចុច​ត្រង់​ណា​មួយ​នៅ​លើផែនទី​សម្រាប់​ដំណើរការ​ពេញលេញ',

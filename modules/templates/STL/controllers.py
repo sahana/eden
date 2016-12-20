@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from os import path
+import json
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from os import path
 
 from gluon import current
 from gluon.html import *
@@ -196,8 +190,7 @@ $('#show-register').click(function(e){
 
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
-                                   P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
-                                            dict(sign_up_now=B(T("sign-up now"))))))
+                                   P(XML(T("If you would like to help, then please <b>sign up now</b>"))))
 
                 register_script = '''
 $('#register-btn').click(function(e){
@@ -216,8 +209,7 @@ $('#login-btn').click(function(e){
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
             login_div = DIV(H3(T("Login")),
-                            P(XML(T("Registered users can %(login)s to access the system") % \
-                                  dict(login=B(T("login"))))))
+                            P(XML(T("Registered users can <b>login</b> to access the system"))))
 
         else:
             login_buttons = ""

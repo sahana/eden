@@ -36,12 +36,15 @@ __all__ = ("GIS",
            )
 
 import datetime         # Needed for Feed Refresh checks & web2py version check
+import json
 import os
 import re
 import sys
 #import logging
 import urllib           # Needed for urlencoding
 import urllib2          # Needed for quoting & error handling on fetch
+
+from collections import OrderedDict
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -54,21 +57,6 @@ except ImportError:
     raise
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
 # Here are dependencies listed for reference:
@@ -85,7 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_unicode #, S3ModuleDebug
+from s3utils import s3_include_ext, s3_str, s3_unicode #, S3ModuleDebug
 
 #DEBUG = False
 #if DEBUG:
@@ -202,6 +190,7 @@ GPS_SYMBOLS = ("Airport",
                "Pharmacy",
                "Picnic Area",
                "Pizza",
+               "Police Station",
                "Post Office",
                "Private Field",
                "Radio Beacon",
@@ -1371,66 +1360,67 @@ class GIS(object):
             if auth.is_logged_in():
                 # Read personalised config, if available.
                 user = auth.user
-                pe_id = user.pe_id
-                # Also look for OU configs
-                pes = []
-                if user.organisation_id:
-                    # Add the user account's Org to the list
-                    # (Will take lower-priority than Personal)
-                    otable = s3db.org_organisation
-                    org = db(otable.id == user.organisation_id).select(otable.pe_id,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                    try:
-                        pes.append(org.pe_id)
-                    except:
-                        current.log.warning("Unable to find Org %s" % user.organisation_id)
-                    if current.deployment_settings.get_org_branches():
-                        # Also look for Parent Orgs
-                        ancestors = s3db.pr_get_ancestors(org.pe_id)
-                        pes += ancestors
+                pe_id = user.get("pe_id")
+                if pe_id:
+                    # Also look for OU configs
+                    pes = []
+                    if user.organisation_id:
+                        # Add the user account's Org to the list
+                        # (Will take lower-priority than Personal)
+                        otable = s3db.org_organisation
+                        org = db(otable.id == user.organisation_id).select(otable.pe_id,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                        try:
+                            pes.append(org.pe_id)
+                        except:
+                            current.log.warning("Unable to find Org %s" % user.organisation_id)
+                        if current.deployment_settings.get_org_branches():
+                            # Also look for Parent Orgs
+                            ancestors = s3db.pr_get_ancestors(org.pe_id)
+                            pes += ancestors
 
-                if user.site_id:
-                    # Add the user account's Site to the list
-                    # (Will take lower-priority than Org/Personal)
-                    site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
-                    if site_pe_id:
-                        pes.append(site_pe_id)
+                    if user.site_id:
+                        # Add the user account's Site to the list
+                        # (Will take lower-priority than Org/Personal)
+                        site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
+                        if site_pe_id:
+                            pes.append(site_pe_id)
 
-                if user.org_group_id:
-                    # Add the user account's Org Group to the list
-                    # (Will take lower-priority than Site/Org/Personal)
-                    ogtable = s3db.org_group
-                    ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-                    pes = list(pes)
-                    try:
-                        pes.append(ogroup.pe_id)
-                    except:
-                        current.log.warning("Unable to find Org Group %s" % user.org_group_id)
+                    if user.org_group_id:
+                        # Add the user account's Org Group to the list
+                        # (Will take lower-priority than Site/Org/Personal)
+                        ogtable = s3db.org_group
+                        ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
+                                                                            limitby=(0, 1)
+                                                                            ).first()
+                        pes = list(pes)
+                        try:
+                            pes.append(ogroup.pe_id)
+                        except:
+                            current.log.warning("Unable to find Org Group %s" % user.org_group_id)
 
-                query = (ctable.uuid == "SITE_DEFAULT") | \
-                        ((ctable.pe_id == pe_id) & \
-                         (ctable.pe_default != False))
-                if len(pes) == 1:
-                    query |= (ctable.pe_id == pes[0])
-                else:
-                    query |= (ctable.pe_id.belongs(pes))
-                # Personal/OU may well not be complete, so Left Join
-                left = (ptable.on(ptable.id == ctable.projection_id),
-                        stable.on((stable.config_id == ctable.id) & \
-                                  (stable.layer_id == None)),
-                        mtable.on(mtable.id == stable.marker_id),
-                        )
-                # Order by pe_type (defined in gis_config)
-                # @ToDo: Sort orgs from the hierarchy?
-                # (Currently we just have branch > non-branch in pe_type)
-                rows = db(query).select(*fields,
-                                        left=left,
-                                        orderby=ctable.pe_type)
-                if len(rows) == 1:
-                    row = rows.first()
+                    query = (ctable.uuid == "SITE_DEFAULT") | \
+                            ((ctable.pe_id == pe_id) & \
+                             (ctable.pe_default != False))
+                    if len(pes) == 1:
+                        query |= (ctable.pe_id == pes[0])
+                    else:
+                        query |= (ctable.pe_id.belongs(pes))
+                    # Personal/OU may well not be complete, so Left Join
+                    left = (ptable.on(ptable.id == ctable.projection_id),
+                            stable.on((stable.config_id == ctable.id) & \
+                                      (stable.layer_id == None)),
+                            mtable.on(mtable.id == stable.marker_id),
+                            )
+                    # Order by pe_type (defined in gis_config)
+                    # @ToDo: Sort orgs from the hierarchy?
+                    # (Currently we just have branch > non-branch in pe_type)
+                    rows = db(query).select(*fields,
+                                            left=left,
+                                            orderby=ctable.pe_type)
+                    if len(rows) == 1:
+                        row = rows.first()
 
         if rows and not row:
             # Merge Configs
@@ -7378,9 +7368,13 @@ def addFeatureResources(feature_resources):
     layers_feature_resource = []
     append = layers_feature_resource.append
     for layer in feature_resources:
-        name = str(layer["name"])
+        name = s3_str(layer["name"])
         _layer = dict(name=name)
-        _id = str(layer["id"])
+        _id = layer.get("id")
+        if _id:
+            _id = str(_id)
+        else:
+            _id = name
         _id = re.sub("\W", "_", _id)
         _layer["id"] = _id
 
@@ -7663,7 +7657,11 @@ class Layer(object):
                 if style:
                     style_dict = style.style
                     if isinstance(style_dict, basestring):
-                        # Matryoshka?
+                        # Matryoshka (=double-serialized JSON)?
+                        # - should no longer happen, but a (now-fixed) bug
+                        #   regularly produced double-serialized JSON, so
+                        #   catching it here to keep it working with legacy
+                        #   databases:
                         try:
                             style_dict = json.loads(style_dict)
                         except ValueError:
@@ -9137,8 +9135,7 @@ class S3Map(S3Method):
 
             output = {}
 
-            title = response.s3.crud_strings[tablename].get("title_map",
-                                                            current.T("Map"))
+            title = self.crud_string(tablename, "title_map")
             output["title"] = title
 
             # Filter widgets

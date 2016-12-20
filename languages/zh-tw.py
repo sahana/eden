@@ -195,6 +195,7 @@
 'Add Credentials': '新增認證',
 'Add Disaster Victims': '新增災難受害者',
 'Add Distribution': '新增配送',
+'Add Document': '新增文件',
 'Add Donor': '新增Donor',
 'Add Flood Report': '新增水災報告',
 'Add GIS Feature': '新增GIS功能',

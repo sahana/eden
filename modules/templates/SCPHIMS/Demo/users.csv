@@ -1,0 +1,5 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Humanitarian,Manager,hru@example.com,eden,HUM_MANAGER,Save the Children
+Logistics,Manager,logs@example.com,eden,LOGISTICS,Save the Children
+ERT,Leader,ert@example.com,eden,ERT_LEADER,Save the Children
+Comms,,comms@example.com,eden,COMMS,Save the Children

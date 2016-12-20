@@ -83,28 +83,33 @@ def staff():
                            "person_id",
                            "job_title_id",
                            "organisation_id",
-                           "department_id",
                            "site_id",
                            #"site_contact",
                            ]
+            if settings.get_hrm_staff_departments():
+                list_fields.insert(4, "department_id")
+            resource.configure(list_fields = list_fields)
+        elif r.representation == "xls":
+            s3db.hrm_xls_list_fields(r, vol=False)
         else:
             # Adapt list_fields
             list_fields = ["person_id",
                            "job_title_id",
                            "organisation_id",
-                           "department_id",
                            "site_id",
                            #"site_contact",
                            (T("Email"), "email.value"),
                            (settings.get_ui_label_mobile_phone(), "phone.value"),
                            ]
+            if settings.get_hrm_staff_departments():
+                list_fields.insert(3, "department_id")
             if settings.get_hrm_use_trainings():
                 list_fields.append("person_id$training.course_id")
             if settings.get_hrm_use_certificates():
                 list_fields.append("person_id$certification.certificate_id")
             list_fields.append((T("Contract End Date"), "end_date"))
             list_fields.append("status")
-        resource.configure(list_fields = list_fields)
+            resource.configure(list_fields = list_fields)
 
         if r.interactive:
             if r.id:
@@ -152,36 +157,7 @@ def staff():
                     dob.widget = S3CalendarWidget(past_months = 972,
                                                   future_months = -192,
                                                   )
-        elif r.representation == "xls":
-            # Make it match Import sheets
-            list_fields = s3db.get_config(tablename, "list_fields")
-            # Remove "id" as XLS exporter doesn't like this not being first & has complicated skipping routines
-            try:
-                list_fields.remove("id")
-            except ValueError:
-                pass
-            # Separate Facility Type from Facility Name
-            table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
-            i = 0
-            for f in list_fields:
-                i += 1
-                if f == "site_id":
-                    break
 
-            list_fields.insert(i,
-                               (T("Facility Type"),
-                                "person_id$human_resource.site_id$instance_type"))
-            # Split person_id into first/middle/last
-            try:
-                list_fields.remove("person_id")
-            except ValueError:
-                pass
-            list_fields = ["person_id$first_name",
-                           "person_id$middle_name",
-                           "person_id$last_name",
-                           ] + list_fields
-            s3db.configure(tablename,
-                           list_fields = list_fields)
         return True
     s3.prep = prep
 
@@ -377,8 +353,8 @@ def group_membership():
     s3.prep = prep
 
     output = s3_rest_controller("pr", "group_membership",
-                                csv_template="group_membership",
-                                csv_stylesheet=("hrm", "group_membership.xsl"),
+                                csv_stylesheet = ("hrm", "group_membership.xsl"),
+                                csv_template = "group_membership",
                                 )
     return output
 
@@ -409,6 +385,17 @@ def job_title():
     def prep(r):
         if mode is not None:
             auth.permission.fail()
+        elif r.representation == "xls":
+            # Export format should match Import format
+            current.messages["NONE"] = ""
+            table = s3db.hrm_job_title
+            table.organisation_id.represent = \
+                s3db.org_OrganisationRepresent(acronym=False,
+                                               parent=False)
+            table.organisation_id.label = None
+            table.type.label = None
+            table.comments.label = None
+            table.comments.represent = lambda v: v or ""
         return True
     s3.prep = prep
 
@@ -486,13 +473,16 @@ def course():
     def prep(r):
         if mode is not None:
             auth.permission.fail()
+        if r.component_name == "training":
+            s3.crud_strings["hrm_training"].label_create = T("Add Trainee")
         return True
     s3.prep = prep
 
     if not auth.s3_has_role(ADMIN) and not s3.filter:
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
-    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    output = s3_rest_controller(rheader = s3db.hrm_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -524,7 +514,8 @@ def certificate():
        not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
-    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    output = s3_rest_controller(rheader = s3db.hrm_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------

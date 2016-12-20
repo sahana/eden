@@ -151,9 +151,8 @@ if settings.get_auth_openid():
         from gluon.contrib.login_methods.openid_auth import OpenIDAuth
         openid_login_form = OpenIDAuth(auth)
         from gluon.contrib.login_methods.extended_login_form import ExtendedLoginForm
-        extended_login_form = ExtendedLoginForm(auth, openid_login_form,
-                                                signals=["oid", "janrain_nonce"])
-        auth.settings.login_form = extended_login_form
+        _settings.login_form = ExtendedLoginForm(auth, openid_login_form,
+                                                 signals=["oid", "janrain_nonce"])
     except ImportError:
         session.warning = "Library support not available for OpenID"
 

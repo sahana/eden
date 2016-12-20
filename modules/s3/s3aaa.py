@@ -38,23 +38,11 @@ __all__ = ("AuthS3",
            )
 
 import datetime
+import json
 #import re
+
+from collections import OrderedDict
 from uuid import uuid4
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
 from gluon.sqlhtml import OptionsWidget
@@ -235,13 +223,14 @@ Thank you"""
         self.org_site_types = Storage(transport_airport = T("Airport"),
                                       msg_basestation = T("Cell Tower"),
                                       cr_shelter = shelter,
-                                      org_facility = T("Facility"),
-                                      #org_facility = T("Site"),
+                                      org_facility = T("Facility"), # @ToDo: Use deployment setting for label
                                       org_office = T("Office"),
                                       transport_heliport = T("Heliport"),
                                       hms_hospital = T("Hospital"),
-                                      #fire_station = T("Fire Station"),
+                                      fire_station = T("Fire Station"),
                                       dvi_morgue = T("Morgue"),
+                                      police_station = T("Police Station"),
+                                      edu_school = T("School"),
                                       transport_seaport = T("Seaport"),
                                       inv_warehouse = T("Warehouse"),
                                       )
@@ -517,7 +506,7 @@ Thank you"""
               onaccept = DEFAULT,
               log = DEFAULT,
               inline = False, # Set to True to use an 'inline' variant of the style
-              lost_pw_link = True,
+              lost_pw_link = None,
               register_link = True,
               ):
         """
@@ -584,6 +573,8 @@ Thank you"""
                 buttons.append(register_link)
 
             # Lost-password action link
+            if lost_pw_link is None:
+                lost_pw_link = deployment_settings.get_auth_password_changes()
             if lost_pw_link:
                 lost_pw_link = A(T("Lost Password"),
                                  _href=URL(f="user", args="retrieve_password"),
@@ -591,10 +582,10 @@ Thank you"""
                                  )
                 buttons.append(lost_pw_link)
 
-            # If we have custom buttons, add submit button
-            if buttons:
-                submit_button = INPUT(_type="submit", _value=T("Login"))
-                buttons.insert(0, submit_button)
+            # Add submit button
+            #if buttons:
+            submit_button = INPUT(_type="submit", _value=T("Login"))
+            buttons.insert(0, submit_button)
 
             form = SQLFORM(utable,
                            fields = [userfield, passfield],
@@ -667,11 +658,19 @@ Thank you"""
                         if domain in gmail_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
+                    office365_domains = current.deployment_settings.get_auth_office365_domains()
+                    if office365_domains:
+                        from gluon.contrib.login_methods.email_auth import email_auth
+                        domain = form.vars[userfield].split("@")[1]
+                        if domain in office365_domains:
+                            settings.login_methods.append(
+                                email_auth("smtp.office365.com:587", "@%s" % domain))
+
                 # Check for username in db
                 query = (utable[userfield] == form.vars[userfield])
                 user = db(query).select(limitby=(0, 1)).first()
                 if user:
-                    # user in db, check if registration pending or disabled
+                    # User in db, check if registration pending or disabled
                     temp_user = user
                     if temp_user.registration_key == "pending":
                         response.warning = deployment_settings.get_auth_registration_pending()
@@ -714,6 +713,15 @@ Thank you"""
                                 if not self in settings.login_methods:
                                     # Do not store password in db
                                     form.vars[passfield] = None
+                                # Ensure new users go through their post registration tasks
+                                register_onaccept = settings.register_onaccept
+                                if register_onaccept:
+                                    settings.register_onaccept = \
+                                        [self.s3_register_onaccept,
+                                         register_onaccept, # Used by DRRPP
+                                         ]
+                                else:
+                                    settings.register_onaccept = self.s3_register_onaccept
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
@@ -736,11 +744,16 @@ Thank you"""
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
+                # Ensure new users go through their post registration tasks
+                register_onaccept = settings.register_onaccept
+                if register_onaccept:
+                    settings.register_onaccept = \
+                        [self.s3_register_onaccept,
+                         register_onaccept, # Used by DRRPP
+                         ]
+                else:
+                    settings.register_onaccept = self.s3_register_onaccept
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
-                # @ToDo: Complete Registration for new users
-                #form = Storage()
-                #form.vars = user
-                #self.s3_user_register_onaccept(form)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
@@ -1331,7 +1344,7 @@ Thank you"""
 
         import time
         reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
-        reset_password_url = "%s/default/user/reset_password/%s" % \
+        reset_password_url = "%s/default/user/reset_password?key=%s" % \
                              (current.response.s3.base_url, reset_password_key)
 
         message = self.messages.reset_password % dict(url=reset_password_url)
@@ -1382,7 +1395,6 @@ Thank you"""
         """
 
         settings = self.settings
-        messages = self.messages
         request = current.request
 
         # Customise the resource
@@ -1398,7 +1410,7 @@ Thank you"""
             redirect(settings.verify_email_next)
 
         if log == DEFAULT:
-            log = messages.verify_email_log
+            log = self.messages.verify_email_log
         if next == DEFAULT:
             next = settings.verify_email_next
 
@@ -1834,12 +1846,11 @@ $.filterOptionsS3({
 
         db = current.db
         s3db = current.s3db
+        set_record_owner = self.s3_set_record_owner
         update_super = s3db.update_super
         otable = s3db.org_organisation
 
         resource, tree = data
-
-        ORG_ADMIN = not self.s3_has_role("ADMIN")
 
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
@@ -1872,7 +1883,7 @@ $.filterOptionsS3({
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
                     update_super(table, Storage(id=id))
-                    self.s3_set_record_owner(table, id)
+                    set_record_owner(table, id)
                     record = db(table.id == id).select(table.id,
                                                        table.pe_id,
                                                        limitby=(0, 1)).first()
@@ -1886,84 +1897,111 @@ $.filterOptionsS3({
 
         # Organisations
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
-        orgs = looked_up["org_organisation"]
-        for element in elements:
-            org_full = element.text
-            if org_full in orgs:
-                # Replace string with id
-                element.text = orgs[org_full]["id"]
-                # Don't check again
-                continue
-            try:
-                # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
-                int(org_full)
-            except ValueError:
-                # This is a non-integer, so must be 1st or only phase
-                if "+BRANCH+" in org_full:
-                    parent, org = org_full.split("+BRANCH+")
-                else:
-                    parent = None
-                    org = org_full
-
+        if elements:
+            ORG_ADMIN = not self.s3_has_role("ADMIN")
+            TRANSLATE = current.deployment_settings.get_L10n_translate_org_organisation()
+            if TRANSLATE:
+                ltable = s3db.org_organisation_name
+            def add_org(name, parent=None):
+                """ Helper to add a New Organisation """
+                id = otable.insert(name=name)
+                update_super(otable, Storage(id=id))
+                set_record_owner(otable, id)
+                # @ToDo: Call onaccept?
                 if parent:
-                    btable = s3db.org_organisation_branch
-                    ptable = db.org_organisation.with_alias("org_parent_organisation")
-                    query = (otable.name == org) & \
-                            (ptable.name == parent) & \
-                            (btable.organisation_id == ptable.id) & \
-                            (btable.branch_id == otable.id)
-                else:
-                    query = (otable.name == org)
+                    records = db(otable.name == parent).select(otable.id)
+                    if len(records) == 1:
+                        # Add branch link
+                        link_id = btable.insert(organisation_id = records.first().id,
+                                                branch_id = id)
+                        onaccept = s3db.get_config("org_organisation_branch", "onaccept")
+                        callback(onaccept, Storage(vars=Storage(id=link_id)))
+                    elif len(records) > 1:
+                        # Ambiguous
+                        s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (org, parent))
+                    else:
+                        # Create Parent
+                        parent_id = otable.insert(name=parent)
+                        update_super(otable, Storage(id=parent_id))
+                        set_record_owner(otable, id)
+                        # @ToDo: Call onaccept?
+                        # Create link
+                        link_id = btable.insert(organisation_id == parent_id,
+                                                branch_id == id)
+                        onaccept = s3db.get_config("org_organisation_branch", "onaccept")
+                        callback(onaccept, Storage(vars=Storage(id=link_id)))
 
-                records = db(query).select(otable.id)
-                if len(records) == 1:
-                    id = records.first().id
-                elif len(records) > 1:
-                    # Ambiguous
-                    s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
-                    id = ""
-                else:
-                    if ORG_ADMIN:
+            orgs = looked_up["org_organisation"]
+            for element in elements:
+                org_full = element.text
+                if org_full in orgs:
+                    # Replace string with id
+                    element.text = orgs[org_full]["id"]
+                    # Don't check again
+                    continue
+                try:
+                    # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
+                    int(org_full)
+                except ValueError:
+                    # This is a non-integer, so must be 1st or only phase
+                    if "+BRANCH+" in org_full:
+                        parent, org = org_full.split("+BRANCH+")
+                    else:
+                        parent = None
+                        org = org_full
+
+                    query = (otable.name.lower() == org.lower()) & \
+                            (otable.deleted != True)
+                    if parent:
+                        btable = s3db.org_organisation_branch
+                        ptable = db.org_organisation.with_alias("org_parent_organisation")
+                        query &= (ptable.name == parent) & \
+                                 (btable.organisation_id == ptable.id) & \
+                                 (btable.branch_id == otable.id)
+
+                    records = db(query).select(otable.id, limitby = (0, 2))
+                    if len(records) == 1:
+                        id = records.first().id
+                    elif len(records) > 1:
+                        # Ambiguous
+                        s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                        id = ""
+                    elif TRANSLATE:
+                        # Search by local name
+                        query = (ltable.name_l10n.lower() == org.lower()) & \
+                                (ltable.organisation_id == otable.id) & \
+                                (ltable.deleted != True)
+                        records = db(query).select(otable.id, limitby = (0, 2))
+                        if len(records) == 1:
+                            id = records.first().id
+                        elif len(records) > 1:
+                            # Ambiguous
+                            s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                            id = ""
+                        elif ORG_ADMIN:
+                            # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
+                            s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
+                            id = ""
+                        else:
+                            # Add a new record
+                            add_org(org, parent)
+
+                    elif ORG_ADMIN:
                         # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
                         s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
                         id = ""
                     else:
                         # Add a new record
-                        id = otable.insert(name=org)
-                        update_super(otable, Storage(id=id))
-                        self.s3_set_record_owner(otable, id)
-                        # @ToDo: Call onaccept?
-                        if parent:
-                            records = db(otable.name == parent).select(otable.id)
-                            if len(records) == 1:
-                                # Add branch link
-                                link_id = btable.insert(organisation_id = records.first().id,
-                                                        branch_id = id)
-                                onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                                callback(onaccept, Storage(vars=Storage(id=link_id)))
-                            elif len(records) > 1:
-                                # Ambiguous
-                                s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (org, parent))
-                            else:
-                                # Create Parent
-                                parent_id = otable.insert(name=parent)
-                                update_super(otable, Storage(id=parent_id))
-                                self.s3_set_record_owner(otable, id)
-                                # @ToDo: Call onaccept?
-                                # Create link
-                                link_id = btable.insert(organisation_id == parent_id,
-                                                        branch_id == id)
-                                onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                                callback(onaccept, Storage(vars=Storage(id=link_id)))
+                        add_org(org, parent)
 
-                # Replace string with id
-                id = str(id)
-                element.text = id
-                # Store in case we get called again with same value
-                orgs[org_full] = dict(id=id)
-            else:
-                # Store in case we get called again with same value
-                orgs[org_full] = dict(id=org_full)
+                    # Replace string with id
+                    id = str(id)
+                    element.text = id
+                    # Store in case we get called again with same value
+                    orgs[org_full] = dict(id=id)
+                else:
+                    # Store in case we get called again with same value
+                    orgs[org_full] = dict(id=org_full)
 
         # Organisation Groups
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
@@ -2094,6 +2132,23 @@ $.filterOptionsS3({
                 # Using RawSQL as table not created in web2py
                 sql_query="insert into ofGroupUser values (\'%s\',\'%s\' ,0);" % (chat_server["groupname"], chat_username)
                 chatdb.executesql(sql_query)
+
+    # -------------------------------------------------------------------------
+    def s3_register_onaccept(self, form):
+        """
+            S3 framework function
+
+            Designed to be called when a user is created through:
+                - registration via OAuth, LDAP, etc
+
+            Does the following:
+                - Sets session.auth.user for authorstamp, etc
+                - Approves user (to set registration groups, such as AUTHENTICATED, link to Person)
+        """
+
+        user = form.vars
+        current.session.auth = Storage(user=user)
+        self.s3_approve_user(user)
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):
@@ -2317,49 +2372,70 @@ $.filterOptionsS3({
         db = current.db
         s3db = current.s3db
         deployment_settings = current.deployment_settings
+        settings = self.settings
 
-        utable = self.settings.table_user
+        utable = settings.table_user
 
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
-        self.add_membership(authenticated, user_id)
+        add_membership = self.add_membership
+        add_membership(authenticated, user_id)
+
+        organisation_id = user.organisation_id
 
         # Add User to required registration roles
         entity_roles = deployment_settings.get_auth_registration_roles()
         if entity_roles:
-            gtable = self.settings.table_group
+            gtable = settings.table_group
+            get_pe_id = s3db.pr_get_pe_id
             for entity in entity_roles.keys():
                 roles = entity_roles[entity]
 
                 # Get User's Organisation or Site pe_id
                 if entity in ("organisation_id", "org_group_id", "site_id"):
                     tablename = "org_%s" % entity.split("_")[0]
-                    entity = s3db.pr_get_pe_id(tablename, user[entity])
+                    entity = get_pe_id(tablename, user[entity])
                     if not entity:
                         continue
 
-                query = (gtable.uuid.belongs(roles))
-                rows = db(query).select(gtable.id)
+                rows = db(gtable.uuid.belongs(roles)).select(gtable.id)
                 for role in rows:
-                    self.add_membership(role.id, user_id, entity=entity)
+                    add_membership(role.id, user_id, entity=entity)
+
+        if organisation_id and \
+           deployment_settings.get_auth_org_admin_to_first():
+            # If this is the 1st user to register for an Org, give them ORG_ADMIN for that Org
+            entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
+            gtable = settings.table_group
+            ORG_ADMIN = db(gtable.uuid == "ORG_ADMIN").select(gtable.id,
+                                                              limitby=(0, 1)
+                                                              ).first().id
+            mtable = settings.table_membership
+            query = (mtable.group_id == ORG_ADMIN) & \
+                    (mtable.pe_id == entity)
+            exists = db(query).select(mtable.id,
+                                      limitby=(0, 1))
+            if not exists:
+                add_membership(ORG_ADMIN, user_id, entity=entity)
 
         if deployment_settings.has_module("delphi"):
             # Add user as a participant of the default problem group
             table = s3db.delphi_group
-            query = (table.uuid == "DEFAULT")
-            group = db(query).select(table.id,
-                                     limitby=(0, 1)).first()
+            group = db(table.uuid == "DEFAULT").select(table.id,
+                                                       limitby=(0, 1)).first()
             if group:
                 table = s3db.delphi_membership
-                table.insert(group_id=group.id,
-                             user_id=user_id,
-                             status=3)
+                table.insert(group_id = group.id,
+                             user_id = user_id,
+                             status = 3,
+                             )
 
         self.s3_link_user(user)
 
         if current.response.s3.bulk is True:
             # Non-interactive imports should stop here
-            user_email = db(utable.id == user_id).select(utable.email).first().email
+            user_email = db(utable.id == user_id).select(utable.email,
+                                                         ).first().email
             self.auth_user_onaccept(user_email, user_id)
             return
 
@@ -2367,11 +2443,24 @@ $.filterOptionsS3({
         db(utable.id == user_id).update(registration_key = "")
 
         # Approve User's Organisation
-        if user.organisation_id and \
-           "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
-            s3db.resource("org_organisation", user.organisation_id, unapproved=True).approve()
+        if organisation_id and \
+           "org_organisation" in \
+           deployment_settings.get_auth_record_approval_required_for():
+            org_resource = s3db.resource("org_organisation",
+                                         organisation_id,
+                                         # Do not re-approve (would
+                                         # overwrite original approver)
+                                         approved = False,
+                                         unapproved = True,
+                                         )
+            approved = org_resource.approve()
+            if not approved:
+                # User is verifying their email and is not yet
+                # logged-in, so approve by system authority
+                org_resource.approve(approved_by=0)
 
-        user_email = db(utable.id == user_id).select(utable.email).first().email
+        user_email = db(utable.id == user_id).select(utable.email,
+                                                     ).first().email
         self.auth_user_onaccept(user_email, user_id)
         # Send Welcome mail
         self.s3_send_welcome_email(user)
@@ -3266,7 +3355,9 @@ $.filterOptionsS3({
         s3 = current.response.s3
         if "restricted_tables" in s3:
             del s3["restricted_tables"]
-        self.permission.clear_cache()
+
+        permission = self.permission
+        permission.clear_cache()
 
         system_roles = self.get_system_roles()
         ANONYMOUS = system_roles.ANONYMOUS
@@ -3308,7 +3399,7 @@ $.filterOptionsS3({
             # Permissions of a group apply only for records owned by any of
             # the entities which belong to the realm of the group membership
 
-            if not self.permission.entity_realm:
+            if not permission.entity_realm:
                 # Group memberships have no realms (policy 5 and below)
                 self.user["realms"] = Storage([(row.group_id, None) for row in rows])
                 self.user["delegations"] = Storage()
@@ -3350,7 +3441,7 @@ $.filterOptionsS3({
                     elif pe_id not in realm:
                         realms[group_id].append(pe_id)
 
-                if self.permission.entity_hierarchy:
+                if permission.entity_hierarchy:
                     # Realms include subsidiaries of the realm entities
 
                     # Get all entities in realms
@@ -3363,7 +3454,7 @@ $.filterOptionsS3({
                                     append(entity)
 
                     # Lookup all delegations to any OU ancestor of the user
-                    if self.permission.delegations and self.user.pe_id:
+                    if permission.delegations and self.user.pe_id:
 
                         ancestors = s3db.pr_get_ancestors(self.user.pe_id)
 
@@ -3419,7 +3510,7 @@ $.filterOptionsS3({
                                         append(subsidiary)
 
                     # Process the delegations
-                    if self.permission.delegations:
+                    if permission.delegations:
                         for row in rows:
 
                             # owner == delegates group_id to ==> partner
@@ -3512,8 +3603,9 @@ $.filterOptionsS3({
                                    description=description,
                                    **system_data)
         if role_id:
+            update_acl = self.permission.update_acl
             for acl in acls:
-                self.permission.update_acl(role_id, **acl)
+                update_acl(role_id, **acl)
 
         return role_id
 
@@ -3766,10 +3858,12 @@ $.filterOptionsS3({
                 role = int(role)
             else:
                 gtable = self.settings.table_group
-                query = (gtable.deleted != True) & \
-                        (gtable.uuid == role)
+                query = (gtable.uuid == role) & \
+                        (gtable.deleted != True)
                 row = current.db(query).select(gtable.id,
-                                               limitby=(0, 1)).first()
+                                               cache = (current.cache.ram, 600),
+                                               limitby = (0, 1),
+                                               ).first()
                 if row:
                     role = row.id
                 else:
@@ -5299,7 +5393,7 @@ class S3Permission(object):
                             # apply this ACL only to records owned
                             # by this entity
                             Field("entity", "integer"),
-                            # apply this ACL to all record regardless
+                            # apply this ACL to all records regardless
                             # of the realm entity
                             Field("unrestricted", "boolean",
                                   default=False),
@@ -5528,11 +5622,12 @@ class S3Permission(object):
             @return: True if the current user owns the record, else False
         """
 
+        auth = self.auth
         user_id = None
-        sr = self.auth.get_system_roles()
+        sr = auth.get_system_roles()
 
-        if self.auth.user is not None:
-            user_id = self.auth.user.id
+        if auth.user is not None:
+            user_id = auth.user.id
 
         session = current.session
         roles = [sr.ANONYMOUS]
@@ -5557,7 +5652,7 @@ class S3Permission(object):
                 record_id = record[table._id.name]
             else:
                 record_id = record
-            if self.auth.s3_session_owns(table, record_id):
+            if auth.s3_session_owns(table, record_id):
                 # Session owns record
                 return True
             else:
@@ -5575,7 +5670,7 @@ class S3Permission(object):
 
         # OrgAuth: apply only group memberships within the realm
         if self.entity_realm and realm_entity:
-            realms = self.auth.user.realms
+            realms = auth.user.realms
             roles = [sr.ANONYMOUS]
             append = roles.append
             for r in realms:
@@ -6372,7 +6467,7 @@ class S3Permission(object):
                 # RFC1945/2617 compliance:
                 # Must raise an HTTP Auth challenge with status 401
                 challenge = {"WWW-Authenticate":
-                             u"Basic realm=%s" % current.request.application}
+                             u"Basic realm=\"%s\"" % current.request.application}
                 raise HTTP(401, body=self.AUTHENTICATION_REQUIRED, **challenge)
 
     # -------------------------------------------------------------------------
@@ -6504,7 +6599,7 @@ class S3Permission(object):
                 if row.unrestricted:
                     entities = [ANY]
                 elif row.entity is not None:
-                    entities = row.entity
+                    entities = [row.entity]
                 else:
                     entities = realms[group_id]
                 if entities is None:
@@ -7491,6 +7586,7 @@ class S3RoleManager(S3Method):
             ANY = "ANY"
             controllers = [c for c in self.controllers.keys()
                              if c not in self.HIDE_CONTROLLER]
+            controllers.sort()
             ptables = []
             query = (acl_table.deleted != True) & \
                     (acl_table.group_id == role_id)
@@ -7651,6 +7747,7 @@ class S3RoleManager(S3Method):
                 tacls = db(query).select(acl_table.tablename, distinct=True)
                 if tacls:
                     ptables = [acl.tablename for acl in tacls]
+                    ptables.sort()
                 # Relevant ACLs
                 acls = dict((acl.tablename, acl) for acl in records
                                                  if acl.tablename in ptables)
@@ -8056,8 +8153,9 @@ class S3RoleManager(S3Method):
 
                 # Roles selector
                 gtable = settings.table_group
-                query = (gtable.deleted != True) & \
-                        (~(gtable.id.belongs(unassignable)))
+                query = (~(gtable.id.belongs(unassignable))) & \
+                        (gtable.hidden != True) & \
+                        (gtable.deleted != True)
                 rows = db(query).select(gtable.id, gtable.role)
                 select_grp = SELECT(OPTION(_value=None, _selected="selected"),
                                     _name="group_id")
@@ -8685,7 +8783,7 @@ class S3EntityRoleManager(S3Method):
 
         T = current.T
 
-        # organisation or office entity
+        # organisation or site entity
         self.entity = self.get_entity()
 
         # user account to assigned roles to
@@ -9100,7 +9198,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
     # -------------------------------------------------------------------------
     def get_user(self):
         """
-            We are on a person account so we need to find the associated user
+            We are on a person record so we need to find the associated user
             account.
 
             @return: dictionary with ID and username/email of the user account

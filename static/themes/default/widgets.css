@@ -133,6 +133,9 @@ table.embeddedComponent tr.label-row td {
 .form-container form .embeddedComponent  textarea  {
     width: auto;
 }
+table.embeddedComponent input.integer {
+    max-width: 10rem;
+}
 
 .inline-throbber {
     background-image: url(../../img/indicator.gif);
@@ -737,11 +740,14 @@ body.popup {
 #rheader th,
 #rheader td {
     text-align: left;
-    padding: 1px 5px 1px 5px;
+    padding: 0.1rem 0.5rem 0.05rem 0;
     white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
+}
+#rheader td {
+    padding-right: 1.25rem;
 }
 
 /* Tabs */
@@ -1662,4 +1668,61 @@ button.toggle-text {
 .s3-twitter-container {
     width: 350px;
     height: 130px;
+}
+
+/* Dashboard Controls */
+.db-config {
+    padding-top: 0.2rem;
+    float: right;
+}
+.db-config-on,
+.db-config-off {
+    cursor: pointer;
+    padding: 0.125rem;
+    font-size: 1rem!important;
+}
+.db-config-on:hover,
+.db-config-off:hover {
+    background-color: #7f7f7f;
+}
+.db-config-on {
+    color: #7f7f7f;
+}
+.db-config-on:hover {
+    color: white;
+}
+.db-config-off {
+    color: green;
+}
+.db-config-off:hover {
+    color: lightgreen;
+}
+.db-configbar {
+    background-color: #7f7f7f;
+    padding: 0.125rem;
+    display: none;
+}
+.db-configbar-right {
+    float: right;
+}
+.db-configbar i {
+    color: white;
+    padding: 0.125rem;
+    cursor: pointer;
+}
+.db-configbar i:hover {
+    background-color: silver;
+}
+.db-config-active {
+    padding: 0.125rem;
+    border: 1px solid #7f7f7f;
+}
+.db-has-dialog .db-configbar {
+    background-color: #af4f4f;
+}
+
+/* Right-to-left adjustments for dashboard controls */
+body.rtl .db-config,
+body.rtl .db-configbar-right {
+    float: left;
 }

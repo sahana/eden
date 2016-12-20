@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import json
 import sys
 import datetime
 
@@ -66,15 +67,22 @@ class S3Sync(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            RESTful method handler (repository/sync, repository/register)
+            RESTful method handler, responds to:
+                - GET [prefix]/[name]/sync.xml          - incoming pull
+                - PUT|POST [prefix]/[name]/sync.xml     - incoming push
+                - POST sync/repository/register.json    - remote registration
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            NB incoming pull/push reponse normally by local sync/sync
+               controller as resource proxy => back-end generated S3Request
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
         """
 
-        output = dict()
+        output = {}
 
-        if r.method == "sync":
+        method = r.method
+        if method == "sync":
 
             if r.http == "GET":
                 # Incoming pull
@@ -87,11 +95,14 @@ class S3Sync(S3Method):
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
-        elif r.name == "repository" and r.method == "register":
+        elif method == "register":
 
-            if r.http == "GET":
+            if r.http in ("PUT", "POST"):
                 # Incoming registration request
-                output = self.__register(r, **attr)
+                if r.representation == "json":
+                    output = self.__register(r, **attr)
+                else:
+                    r.error(415, current.ERROR.BAD_FORMAT)
 
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
@@ -109,57 +120,96 @@ class S3Sync(S3Method):
             Respond to an incoming registration request
 
             @param r: the S3Request
-            @param attr: the controller attributes
+            @param attr: controller parameters for the request
         """
 
+        # Parse the request parameters
+        from s3validators import JSONERRORS
+        source = r.read_body()
+        if not source:
+            r.error(400, "Missing parameters")
+        try:
+            parameters = json.load(source[0])
+        except JSONERRORS:
+            r.error(400, "Invalid parameters: %s" % (sys.exc_info()[1]))
+
         log = self.log
+
         result = log.SUCCESS
-        message = "registration successful"
         repository_id = None
 
-        if "repository" in r.vars:
-            ruid = r.vars["repository"]
+        ruid = parameters.get("uuid")
+        if ruid:
+
+            # New repository or update?
             db = current.db
             rtable = current.s3db.sync_repository
-            row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            row = db(rtable.uuid == ruid).select(rtable.id,
+                                                 limitby=(0, 1),
+                                                 ).first()
+
+            # Check permissions
+            permitted = current.auth.s3_has_permission
             if row:
                 repository_id = row.id
-                if not row.accept_push and current.auth.s3_has_role("ADMIN"):
-                    row.update_record(accept_push=True)
+                if not permitted("update", rtable, record_id = repository_id):
+                    r.unauthorised()
+                data = {"deleted": False}
             else:
-                if current.auth.s3_has_role("ADMIN"):
-                    accept_push = True
+                if not permitted("create", rtable):
+                    r.unauthorised()
+                data = {"uuid": ruid}
+
+            # Add repository parameters
+            apitype = parameters.get("apitype")
+            if apitype:
+                data["apitype"] = apitype
+
+            name = parameters.get("name")
+            if name:
+                data["name"] = name
+
+            # Update or insert repository record
+            if row:
+                success = row.update_record(**data)
+                if success:
+                    message = "Registration update successful"
                 else:
-                    accept_push = False
-                repository_id = rtable.insert(name=ruid,
-                                              uuid=ruid,
-                                              accept_push=accept_push)
-                if not repository_id:
                     result = log.ERROR
-                    message = "registration failed"
+                    message = "Registration update failed"
+            else:
+                repository_id = rtable.insert(**data)
+                if repository_id:
+                    message = "Registration successful"
+                else:
+                    result = log.ERROR
+                    message = "Registration failed"
         else:
             result = log.ERROR
-            message = "no repository identifier specified"
+            message = "No repository identifier specified"
 
+        # Response message (JSON)
         if result == log.SUCCESS:
-            output = current.xml.json_message(message=message,
-                                              sender="%s" % self.config.uuid)
+            output = current.xml.json_message(message = message,
+                                              sender = "%s" % self.config.uuid,
+                                              )
         else:
             output = current.xml.json_message(False, 400,
-                                              message=message,
-                                              sender="%s" % self.config.uuid)
+                                              message = message,
+                                              sender = "%s" % self.config.uuid,
+                                              )
 
-        # Set content type header
-        headers = current.response.headers
-        headers["Content-Type"] = "application/json"
+        # Set Content-Type response header
+        current.response.headers["Content-Type"] = "application/json"
 
         # Log the operation
-        log.write(repository_id=repository_id,
-                  resource_name=log.NONE,
-                  transmission=log.IN,
-                  mode=log.REGISTER,
-                  result=result,
-                  message=message)
+        log.write(repository_id = repository_id,
+                  resource_name = log.NONE,
+                  transmission = log.IN,
+                  mode = log.REGISTER,
+                  result = result,
+                  message = message,
+                  )
 
         return output
 
@@ -286,12 +336,14 @@ class S3Sync(S3Method):
             if row:
                 connector = S3SyncRepository(row)
 
-        # Check that the repository is registered and allowed to push
-        if connector is None or not connector.accept_push:
-            r.error(403, current.ERROR.NOT_PERMITTED)
+        if connector is None:
+            # Repositories must be registered to push, so that we
+            # can track sync times and log operations properly
+            r.error(403, "Registration required")
 
         current.log.debug("S3Sync PUSH from %s (%s)" % (connector.name,
-                                                        connector.apitype))
+                                                        connector.apitype,
+                                                        ))
 
         # Get strategy and policy
         default_update_policy = S3ImportItem.POLICY.NEWER
@@ -752,7 +804,7 @@ class S3SyncLog(S3Method):
 
 # =============================================================================
 class S3SyncRepository(object):
-    """ Class representation a peer repository """
+    """ Class representation of a peer repository """
 
     def __init__(self, repository):
         """
@@ -789,7 +841,6 @@ class S3SyncRepository(object):
         self.proxy = repository.proxy
 
         # Processing Options
-        self.accept_push = repository.accept_push
         self.synchronise_uuids = repository.synchronise_uuids
         self.keep_source = repository.keep_source
 

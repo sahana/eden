@@ -9,6 +9,8 @@ import unittest
 
 from s3 import S3NavigationItem as M
 
+from unit_tests import run_suite
+
 class SelectTests(unittest.TestCase):
     """ Tests for S3NavigationItem selection/deselection """
 
@@ -203,18 +205,6 @@ class SelectTests(unittest.TestCase):
         assertTrue(items["a22"].selected)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

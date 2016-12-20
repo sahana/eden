@@ -37,16 +37,7 @@ __all__ = ("S3ShelterModel",
            "cr_notification_dispatcher",
            )
 
-try:
-    # try stdlib (Python 2.6)
-    import json
-except ImportError:
-    try:
-        # try external module
-        import simplejson as json
-    except:
-        # fallback to pure-Python module
-        import gluon.contrib.simplejson as json
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -297,7 +288,9 @@ class S3ShelterModel(S3Model):
                      Field("name", notnull=True,
                            length=64,            # Mayon compatibility
                            label = T("Shelter Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
@@ -604,7 +597,8 @@ class S3ShelterModel(S3Model):
 
         set_method("cr", "shelter",
                    method="check-in",
-                   action = self.org_SiteCheckInMethod())
+                   action = self.org_SiteCheckInMethod,
+                   )
 
         set_method("cr", "shelter",
                    method = "dispatch",
@@ -674,7 +668,9 @@ class S3ShelterModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length = 64,
                            label = T("Housing Unit Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      # @ToDo: Using site_id would be more flexible & link
                      #        better to default_site/auth.user.site_id

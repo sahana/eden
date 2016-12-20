@@ -54,6 +54,8 @@ Bangladesh,Volunteer Super Editor,bd_super@example.com,eden,vol_super,Bangladesh
 Cambodia,Volunteer Data Entry,kh_dataentry@example.com,eden,vol_data_entry,Cambodian Red Cross Society,,,km
 Cambodia,Volunteer Editor,kh_editor@example.com,eden,vol_editor,Cambodian Red Cross Society,,,km
 Cambodia,Volunteer Super Editor,kh_super@example.com,eden,vol_super,Cambodian Red Cross Society,,,km
+Fiji,Volunteer Super Editor,fj_super@example.com,eden,"vol_super",Fiji Red Cross Society,,,
+Fiji,Volunteer Editor,fj_editor@example.com,eden,"vol_editor,SYNC/org_organisation.name=Fiji Red Cross Society",Ba Branch,,,
 Indonesia,Volunteer Data Entry,id_dataentry@example.com,eden,vol_data_entry,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Editor,id_editor@example.com,eden,vol_editor,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Super Editor,id_super@example.com,eden,vol_super,Indonesian Red Cross Society (Palang Merah Indonesia),,,
@@ -90,7 +92,10 @@ Vietnam,Volunteer Data Entry,vn_dataentry@example.com,eden,vol_data_entry,Viet N
 Vietnam,Volunteer Editor,vn_editor@example.com,eden,vol_editor,Viet Nam Red Cross,,,vi
 Vietnam,Volunteer Super Editor,vn_super@example.com,eden,vol_super,Viet Nam Red Cross,,,vi
 Vietnam,Org Admin,vn_orgadmin@example.com,eden,ORG_ADMIN,Viet Nam Red Cross,,,vi
-RecoveryOutreach,Admin,roadmin@example.com,eden,PO_ADMIN,New Zealand Red Cross,,,
+NZ,Outreach Admin,nz_admin@example.com,eden,PO_ADMIN,New Zealand Red Cross,,,
+Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_ADMIN/org_organisation.name=Bishopsdale,PO_ADMIN/org_organisation.name=Charing Cross",New Zealand Red Cross,,,
+Kaikoura,Outreach Admin,kaikoura_admin@example.com,eden,PO_ADMIN,Kaikoura,,,
 RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",Africa Zone,,,
 RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",Africa Zone,,,
-AP,RDRT Admin,aprdrtadmin@example.com,eden,"RDRT_ADMIN/0,AP_RDRT_ADMIN/0",Asia-Pacific Region,,,
+AP,RDRT Admin,aprdrtadmin@example.com,eden,"RDRT_ADMIN/0,AP_RDRT_ADMIN/0,message_editor",Asia-Pacific Region,,,
+Lillian,Aquino,lillian.acquino@redcross.org.ph,eden,RDRT_MEMBER,Philippine Red Cross,,,

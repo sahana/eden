@@ -1,0 +1,20 @@
+<div>
+ {{if request.controller == "default" and request.function == "index" or request.args == ["alert_hub_cop"]:}}
+  <!-- Show in Home Page Only -->
+  <ul class='home-social' style='display:inline-block; list-style-type:none'>
+   <li><h5 style='color:#008CBA'>{{=T("Follow Us")}}</h5></li>
+   <li style='display:inline-block;padding-left: 2.5rem;padding-right: 1.5rem;'>
+    <a href='https://twitter.com/dost_pagasa'><i class='fa fa-twitter-square fa-4x' aria-hidden='true'></i></a>
+   </li>
+   <li style='display:inline-block;padding-left: 2.5rem;padding-right: 1.5rem;'>
+    <a href='https://www.facebook.com/PAGASA.DOST.GOV.PH/'><i class='fa fa-facebook-official fa-4x' aria-hidden='true'></i></a>
+   </li>
+  </ul>
+ {{pass}}
+ <p id='poweredby' style='display:inline-block; float:right'>
+  {{poweredby=T("Powered by Sahana")}}
+  <img src='/{{=appname}}/static/img/S3menu_logo.png' width='30' height='28' style='vertical-align:middle' alt='{{=poweredby}}' /><a target='_blank' href='http://eden.sahanafoundation.org' title='{{=poweredby}}'>{{=poweredby}}</a>
+ </p>
+</div>
+
+

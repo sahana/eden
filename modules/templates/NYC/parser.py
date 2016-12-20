@@ -118,7 +118,9 @@ class S3Parser(object):
             post_id = exists.id
             db(post_table.id == post_id).update(title = record.title,
                                                 body = body,
+                                                # @ToDo: Remove created_on when we know not used in rendering
                                                 created_on = record.date,
+                                                date = record.date,
                                                 location_id = record.location_id,
                                                 person_id = person_id,
                                                 )
@@ -175,7 +177,9 @@ class S3Parser(object):
 
             post_id = post_table.insert(title = record.title,
                                         body = body,
+                                        # @ToDo: Remove created_on when we know not used in rendering
                                         created_on = record.date,
+                                        date = record.date,
                                         location_id = record.location_id,
                                         person_id = person_id,
                                         series_id = series_id,

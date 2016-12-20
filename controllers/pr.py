@@ -122,6 +122,7 @@ def person():
             person_ids = session.s3.filter_staff
             session.s3.filter_staff = None
             r.resource.add_filter = (~(db.pr_person.id.belongs(person_ids)))
+
         elif r.interactive:
             if r.representation == "popup":
                 # Hide "pe_label" and "missing" fields in person popups
@@ -362,12 +363,12 @@ def contact_emergency():
             elif access == "2":
                 method = "public_contacts"
             s3db.configure("pr_contact_emergency",
-                           create_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, method]),
-                           update_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, method])
+                           create_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method]),
+                           update_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method])
                            )
             if r.method == "create":
                 table = s3db.pr_person
@@ -445,6 +446,12 @@ def group():
 # -----------------------------------------------------------------------------
 def group_member_role():
     """ Group Member Roles: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def group_status():
+    """ Group Statuses: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

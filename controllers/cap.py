@@ -17,6 +17,33 @@ def index():
     s3_redirect_default(URL(f="alert"))
 
 # -----------------------------------------------------------------------------
+def alerting_authority():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+    
+# -----------------------------------------------------------------------------
+def alert_history():
+    """
+        RESTful CRUD controller
+    """
+
+    output = s3_rest_controller("cap", "alert_history",
+                                rheader = s3db.cap_history_rheader,
+                                )
+    return output
+
+# -----------------------------------------------------------------------------
+def alert_ack():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def info_prep(r):
     """
         Preprocessor for CAP Info segments
@@ -67,7 +94,7 @@ def public():
         Filtered version of the Alerts controller
     """
 
-    s3.filter = (s3base.FS("scope") == "Public")
+    s3.filter = (FS("scope") == "Public")
 
     return alert()
 
@@ -79,22 +106,30 @@ def alert():
 
     def prep(r):
         from s3 import S3OptionsFilter
+        resource = r.resource
+        table = r.table
         itable = s3db.cap_info
+
         rows = db(itable.expires < request.utcnow).select(itable.id,
                                                           orderby=itable.id)
-        if rows:
-            expired_ids = ",".join([str(row.id) for row in rows])
-        else:
-            expired_ids = "*"
+        expired_ids = ",".join([str(row.id) for row in rows]) or None
+
         rows = db(itable.expires >= request.utcnow).select(itable.id,
                                                            orderby=itable.id)
-        if rows:
-            unexpired_ids = ",".join([str(row.id) for row in rows])
-        else:
-            unexpired_ids = "*"
+        unexpired_ids = default_filter = ",".join([str(row.id) for row in rows]) or None
+
+
+        rows = db(table.external == True).select(table.id,
+                                                 orderby=table.id)
+        external_alerts = ",".join([str(row.id) for row in rows]) or None
+
+        rows = db(table.external != True).select(table.id,
+                                                 orderby=table.id)
+        internal_alerts = default_alert = ",".join([str(row.id) for row in rows]) or None
 
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
-        filter_widgets.insert(0, S3OptionsFilter("info.id",
+        filter_widgets_insert = filter_widgets.insert
+        filter_widgets_insert(0, S3OptionsFilter("info.id",
                                                  label = T("Expiration"),
                                                  options = OrderedDict(
                                                         [(expired_ids, T("Expired")),
@@ -103,13 +138,28 @@ def alert():
                                                          ]),
                                                  cols = 3,
                                                  multiple = False,
+                                                 default = default_filter,
+                                                 ))
+        filter_widgets_insert(1, S3OptionsFilter("id",
+                                                 label = T("Source"),
+                                                 options = OrderedDict(
+                                                        [(internal_alerts, T("Internal")),
+                                                         (external_alerts, T("External")),
+                                                         ("*", T("All")),
+                                                         ]),
+                                                 cols = 3,
+                                                 multiple = False,
+                                                 default = default_alert,
                                                  ))
         # No need to put them back - the edit happens in-place
         #s3db.configure(tablename,
         #               filter_widgets = filter_widgets,
         #               )
+        representation = r.representation
+        if representation in ("html", "aadata"):
+            table.msg_type.represent = None
 
-        if r.representation == "dl":
+        elif representation == "dl":
             # DataList: match list_layout
             list_fields = ["msg_type",
                            "info.headline",
@@ -129,7 +179,7 @@ def alert():
                            list_fields = list_fields,
                            )
 
-        elif r.representation == "json":
+        elif representation == "json":
             # @ToDo: fix JSON representation's ability to use component list_fields
             list_fields = ["id",
                            "identifier",
@@ -160,6 +210,12 @@ def alert():
                            list_fields = list_fields,
                            )
 
+        elif representation == "rss":
+            # filter non-template internal alerts that are approved
+            filter = (table.is_template != True) & (table.external != True) & \
+                     (table.approved_on != None)
+            resource.add_filter(filter)
+
         #elif r.representation == "cap":
         #    # This is either importing from or exporting to cap format. Set both
         #    # postprocessing hooks so we don't have to enumerate methods.
@@ -167,28 +223,43 @@ def alert():
         #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
         #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
         #                   )
-
+        record = r.record
         if r.id:
-            if r.record.is_template:
+
+            if record.is_template:
                 redirect(URL(c="cap", f="template",
                              args = request.args,
                              vars = request.vars))
-            if r.record.approved_by is not None:
+
+            if record.external != True:
+                from s3 import S3Represent
+                table.addresses.represent = S3Represent(lookup = "pr_group",
+                                                        fields = ["name"],
+                                                        multiple = True,
+                                                        )
+
+            # Don't show event_type_id and template once created
+            # If the user used the wrong event type,
+            # then they should "Cancel" that alert and start a new one
+            table.event_type_id.readable = False
+            table.event_type_id.writable = False
+            table.template_id.readable = False
+            table.template_id.writable = False
+
+            if record.approved_by is not None:
                 # Once approved, don't allow to edit
                 # Don't allow to delete
                 s3db.configure(tablename,
-                               editable=False,
-                               deletable=False,
-                               insertable=False,
+                               deletable = False,
+                               editable = False,                               
+                               insertable = False,
                                )
-            if r.record.reference is not None:
-                # Don't show template_id for Updated/Cancelled/Error/Relay Alert
-                r.table.template_id.readable = False
-                r.table.template_id.writable = False
+            if record.reference is not None:
+                table.msg_type.writable = False
+
             if settings.get_cap_restrict_fields():
-                if r.record.msg_type in ("Update", "Cancel", "Error"):
+                if record.msg_type in ("Update", "Cancel", "Error"):
                     # Use case for change in msg_type
-                    atable = r.table
                     for f in ("template_id",
                               "sender",
                               "status",
@@ -202,22 +273,141 @@ def alert():
                               "reference",
                               "incidents",
                               ):
-                        atable[f].writable = False
+                        table[f].writable = False
         else:
-            r.resource.add_filter(r.table.is_template == False)
+            r.resource.add_filter(table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
-
+            if r.method not in ("import", "import_feed"):
+                # Internal Alerts
+                table.external.default = False
             if not r.component:
-                if r.method == "profile":
+                if r.get_vars["~.approved_by__ne"] == "None":
+                    # Filter to internal alerts
+                    r.resource.add_filter(table.external != True)
+                    s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
+                    s3_action_buttons(r, deletable=False, editable=False,
+                                      read_url=URL(args="[id]"))
+                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                                      "_class": "action-btn",
+                                      "_target": "_blank",
+                                      "label": str(T("View Profile"))
+                                      }
+                    s3.actions.insert(1, profile_button)
+                    list_fields = ["info.event_type_id",
+                                   "msg_type",
+                                   (T("Sent"), "sent"),
+                                   "info.headline",
+                                   "info.sender_name",
+                                   "approved_by",
+                                   ]
+
+                    s3db.configure(tablename,
+                                   filter_widgets = None,
+                                   insertable = False,
+                                   list_fields = list_fields,
+                                   )
+                elif r.get_vars["~.external"] == "True":
+                    query = (table.id == itable.alert_id) & \
+                            (table.external == True) & \
+                            (table.is_template != True) & \
+                            (table.deleted != True)
+                    rows = db(query).select(itable.sender_name,
+                                            groupby=itable.sender_name)
+                    sender_options = {}
+                    from s3 import s3_str
+                    for row in rows:
+                        sender_name = row.sender_name
+                        sender_options[sender_name] = s3_str(T(sender_name))
+
+                    rows = db(query).select(itable.event_type_id,
+                                            groupby=itable.event_type_id)
+                    event_type_options = {}
+                    for row in rows:
+                        event_type_id = row.event_type_id
+                        event_type_options[event_type_id] = itable.event_type_id.represent(event_type_id)
+                    filter_widgets = [
+                        S3OptionsFilter("info.sender_name",
+                                        label = T("Sender"),
+                                        options = sender_options,
+                                        ),
+                        S3OptionsFilter("info.event_type_id",
+                                        options = event_type_options,
+                                        ),
+                        S3OptionsFilter("scope",
+                                        ),
+                        S3OptionsFilter("msg_type",
+                                        default = "Alert",
+                                        ),
+                        ]
+                    s3.crud_strings["cap_alert"].title_list = T("Alerts Hub")
+                    s3base.S3CRUD.action_buttons(r, deletable=False)
+                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                                      "_class": "action-btn",
+                                      "_target": "_blank",
+                                      "label": str(T("View Profile"))
+                                      }
+                    s3.actions.insert(1, profile_button)
+
+                    s3db.configure(tablename,
+                                   deletable = False,
+                                   editable = False,
+                                   filter_widgets = filter_widgets,
+                                   insertable = False,                                  
+                                   )
+
+                if r.method == "review":
+                    alert_id = r.id
+                    if alert_id:
+                        artable = s3db.cap_area
+                        irow = db(itable.alert_id == alert_id).select(itable.id,
+                                                                      itable.urgency,
+                                                                      itable.severity,
+                                                                      itable.certainty,
+                                                                      limitby=(0, 1)).first()
+                        arow = db(artable.alert_id == alert_id).select(artable.id,
+                                                                       limitby=(0, 1)).first()
+                        if not irow or not arow:
+                            # This is incomplete alert
+                            session.warning = T("This Alert is incomplete! You can complete it now.")
+                            redirect(URL(c="cap", f="alert", args=[alert_id]))
+                        elif not irow.urgency or not irow.severity or not irow.certainty:
+                            # Some required element is missing
+                            # This could arise because info segments are copied from templates
+                            # and there is no any urgency or severity or certainty in the info template
+                            session.warning = T("Urgency or Severity or Certainty is missing in info segment!.")
+                            redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                    else:
+                        if r.get_vars["status"] == "incomplete":
+                            # Show incomplete alerts, ie. without info and area segment
+                            s3.filter = ((FS("info.id") == None) | (FS("area.id") == None)) & \
+                                        (FS("external") != True)
+                            s3.crud_strings["cap_alert"].title_list = T("Incomplete Alerts")
+                            url = URL(c="cap", f="alert", args=["[id]"])
+                            s3base.S3CRUD.action_buttons(r, update_url=url, read_url=url)
+                        elif not r.get_vars:
+                            # Filter those alerts having at least info and area segment
+                            s3.filter = ((FS("info.id") != None) & (FS("area.id") != None)) & \
+                                        (FS("external") != True)
+                            s3.crud_strings["cap_alert"].title_list = T("Review Alerts")
+                        list_fields = ["info.event_type_id",
+                                       "msg_type",
+                                       (T("Sent"), "sent"),
+                                       "info.headline",
+                                       "info.sender_name",
+                                       "created_by",
+                                       ]
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
+                elif r.method == "profile":
                     # Provide a nice display of the Alert details
 
                     # Hide the side menu
                     current.menu.options = None
 
                     # Header
-                    record = r.record
                     profile_header = DIV(SPAN(SPAN("%s :: " % T("Message ID"),
                                                    _class="cap-label upper"
                                                    ),
@@ -241,34 +431,45 @@ def alert():
                     alert_id = record.id
 
                     # Info
-                    # @ToDo: handle multiple languages
-                    itable = s3db.cap_info
-                    info = db(itable.alert_id == alert_id).select(itable.language,
-                                                                  itable.category,
-                                                                  itable.event_type_id,
-                                                                  itable.response_type,
-                                                                  itable.urgency,
-                                                                  itable.severity,
-                                                                  itable.certainty,
-                                                                  itable.audience,
-                                                                  itable.effective,
-                                                                  itable.onset,
-                                                                  itable.expires,
-                                                                  itable.sender_name,
-                                                                  itable.headline,
-                                                                  itable.description,
-                                                                  itable.instruction,
-                                                                  itable.contact,
-                                                                  itable.web,
-                                                                  itable.parameter,
-                                                                  limitby=(0, 1)
-                                                                  ).first()
+                    # Fields to extract
+                    fields = ["info.id",
+                              "info.category",
+                              "info.event_type_id",
+                              "info.response_type",
+                              "info.priority",
+                              "info.urgency",
+                              "info.severity",
+                              "info.certainty",
+                              "info.audience",
+                              "info.effective",
+                              "info.onset",
+                              "info.expires",
+                              "info.sender_name",
+                              "info.headline",
+                              "info.description",
+                              "info.instruction",
+                              "info.contact",
+                              "info.web",
+                              "info_parameter.name",
+                              "info_parameter.value",
+                              "area.name",
+                              "resource.resource_desc",
+                              "resource.uri",
+                              "resource.image",
+                              "resource.doc_id",
+                              ]
 
-                    # Area
-                    # @ToDo: handle multiple areas
-                    atable = s3db.cap_area
-                    area = db(atable.alert_id == alert_id).select(atable.name,
-                                                                  limitby=(0, 1)).first()
+                    # Extract the data
+                    data = resource.select(fields, raw_data=True)
+                    info = data["rows"][0]
+                    if info:
+                        ptable = s3db.cap_info_parameter
+                        if isinstance(info["cap_info.id"], list):
+                            query = (ptable.info_id.belongs(info["cap_info.id"]))
+                        else:
+                            query = (ptable.info_id == info["cap_info.id"])
+                        parameters = db(query).select(ptable.name,
+                                                      ptable.value)
 
                     # Map
                     ftable = s3db.gis_layer_feature
@@ -313,13 +514,19 @@ def alert():
                         # Default bounds
                         bbox = {}
 
-                    label = TAG[""](SPAN("%s :: " % T("Area"),
-                                         _class="cap-label upper"
-                                         ),
-                                    SPAN(area.name,
-                                         _class="cap-value"
-                                         ),
-                                    )
+                    area_name = info["cap_area.name"]
+                    if area_name:
+                        label = TAG[""](SPAN("%s :: " % T("Area"),
+                                             _class="cap-label upper"
+                                             ),
+                                        SPAN(", ".join(area_name)
+                                             if isinstance(area_name, list)
+                                             else area_name,
+                                             _class="cap-value"
+                                             ),
+                                        )
+                    else:
+                        label = ""
                     map_widget = dict(label = label,
                                       type = "map",
                                       #context = "alert",
@@ -329,247 +536,190 @@ def alert():
                                       bbox = bbox,
                                       )
 
-                    table = r.table
+                    widget = s3db.cap_AlertProfileWidget
+                    component = widget.component
+    
+                    @widget(None)
+                    def alert_widget(r, **attr):
+                        return (
+                          component("Headline", info["cap_info.headline"],
+                                    uppercase = True,
+                                    headline = True,
+                                    ),
+                          component("Description", info["cap_info.description"],
+                                    uppercase = True,
+                                    ),
+                          component("Response Type", info["cap_info.response_type"]
+                                    if info["cap_info.response_type"] else None,
+                                    uppercase = True,
+                                    strong = True,
+                                    hide_empty = True,
+                                    ),
+                          component("Instructions", info["cap_info.instruction"],
+                                    uppercase = True,
+                                    ),
+                        )
 
-                    def custom_widget_fn_1(r, **attr):
-                        return DIV(DIV(SPAN("%s :: " % T("Headline"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(info.headline,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(" "),
-                                   DIV(SPAN("%s :: " % T("Description"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(info.description,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Response Type"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(" ".join(info.response_type) if info.response_type is not None else None,
-                                            _class="cap-strong"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Instructions"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(info.instruction,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   )
+                    @widget("Information",
+                            label = "Event",
+                            value = itable.event_type_id.represent(info["cap_info.event_type_id"]),
+                            )
+                    def info_widget(r, **attr):
 
-                    custom_widget_1 = dict(type = "custom",
-                                           fn = custom_widget_fn_1,
-                                           )
+                        if len(parameters):
+                            params = ", ".join("%s: %s" % (p.name, p.value)
+                                               for p in parameters)
+                        else:
+                            params = None
 
-                    def custom_widget_fn_2(r, **attr):
-                        return DIV(DIV(SPAN("%s " % T("Information"),
-                                            _class="cap-value upper"
-                                            ),
-                                       SPAN("%s :: " % T("Event"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(itable.event_type_id.represent(info.event_type_id),
-                                            _class="cap-strong"
-                                            ),
-                                       ),
-                                   DIV(_class="cap-label underline"
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Language"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.language.represent(info.language),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Category"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.category.represent(info.category),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Urgency"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.urgency.represent(info.urgency),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Severity"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.severity.represent(info.severity),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Certainty"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.certainty.represent(info.certainty),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Audience"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.audience,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Effective Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.effective.represent(info.effective),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Onset Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.onset.represent(info.onset),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Expiry Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.expires.represent(info.expires),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Sender"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.sender_name,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Information URL"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.web,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Contact Info"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.contact,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Parameters"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.parameter.represent(info.parameter),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   )
+                        return (
+                            component("Priority",
+                                      info["cap_info.priority"],
+                                      represent = itable.priority.represent,
+                                      hide_empty = True,
+                                      ),
+                            component("Category",
+                                      info["cap_info.category"],
+                                      represent = itable.category.represent,
+                                      ),
+                            component("Urgency",
+                                      info["cap_info.urgency"],
+                                      represent = itable.urgency.represent,
+                                      ),
+                            component("Severity",
+                                      info["cap_info.severity"],
+                                      represent = itable.severity.represent,
+                                      ),
+                            component("Certainty",
+                                      info["cap_info.certainty"],
+                                      represent = itable.certainty.represent,
+                                      ),
+                            component("Audience",
+                                      info["cap_info.audience"],
+                                      ),
+                            component("Effective Date",
+                                      info["cap_info.effective"],
+                                      represent = itable.effective.represent,
+                                      ),
+                            component("Onset Date",
+                                      info["cap_info.onset"],
+                                      represent = itable.onset.represent,
+                                      ),
+                            component("Expiry Date",
+                                      info["cap_info.expires"],
+                                      represent = itable.expires.represent,
+                                      ),
+                            component("Information URL",
+                                      info["cap_info.web"],
+                                      ),
+                            component("Sender",
+                                      info["cap_info.sender_name"],
+                                      ),
+                            component("Contact Info",
+                                      info["cap_info.contact"],
+                                      ),
+                            component("Parameters",
+                                      params,
+                                      ),
+                        )
+    
+                    @widget("Alert Qualifiers")
+                    def qualifiers_widget(r, **attr):
+    
+                        return (
+                            component("Sender ID",
+                                      record.sender,
+                                      ),
+                            component("Sent Date/Time",
+                                      record.sent,
+                                      represent = table.sent.represent,
+                                      ),
+                            component("Message Status",
+                                      record.status,
+                                      represent = table.status.represent,
+                                      ),
+                            component("Message Type",
+                                      record.msg_type,
+                                      ),
+                            component("Handling Code",
+                                      record.codes,
+                                      represent = table.codes.represent,
+                                      ),
+                            component("Scope",
+                                      record.scope,
+                                      ),
+                            component("Note",
+                                      record.note,
+                                      ),
+                            component("Reference ID",
+                                      record.reference,
+                                      ),
+                            component("Incident IDs",
+                                      record.incidents,
+                                      represent = table.incidents.represent,
+                                      ),
+                        )
+    
+                    resource_desc = info["cap_resource.resource_desc"]
+                    dtable = s3db.doc_document
+                    documents_ = []
+                    resource_title = None
+                    if resource_desc:
+                        resource_title = T("Resources")
+                        doc_id = info["cap_resource.doc_id"]
+                        resource_image = info["cap_resource.image"]
+                        if doc_id:
+                            if isinstance(doc_id, list):
+                                query = (dtable.doc_id.belongs(doc_id)) & \
+                                        (dtable.deleted != True)
+                            else:
+                                query = (dtable.doc_id == doc_id) & (dtable.deleted != True)
+                            drows = db(query).select(dtable.file)
+                            for drow in drows:
+                                documents_.append(drow.file)
 
-                    custom_widget_2 = dict(type = "custom",
-                                           fn = custom_widget_fn_2,
-                                           )
+                    @widget(resource_title)
+                    def resource_widget(r, **attr):
 
-                    def custom_widget_fn_3(r, **attr):
-                        return DIV(DIV(SPAN(T("Alert Qualifiers"),
-                                            _class="cap-value upper"
-                                            ),
-                                       ),
-                                   DIV(_class="underline"
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Sender ID"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.sender,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Sent Date/Time"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.sent.represent(record.sent),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Message Status"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.status.represent(record.status),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Message Type"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.msg_type.represent(record.msg_type),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Scope"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.scope.represent(record.scope),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Handling Code"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.codes.represent(record.codes),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Note"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.note,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Reference ID"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.reference,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Incident IDs"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.incidents.represent(record.incidents),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(_class="underline"
-                                       ),
-                                   DIV(SPAN(T("Resources"),
-                                            _class="cap-value upper"
-                                            ),
-                                       ),
-                                   )
-
-                    custom_widget_3 = dict(type = "custom",
-                                           fn = custom_widget_fn_3,
-                                           )
+                        return (
+                            component("Resource Description",
+                                      resource_desc,
+                                      ),
+                            component("Resource Link",
+                                      info["cap_resource.uri"],
+                                      ),
+                            component("Attached Image",
+                                      info["cap_resource.image"],
+                                      represent = s3db.doc_image_represent,
+                                      resource_segment = True,
+                                      ),
+                            component("Attached Document",
+                                      documents_,
+                                      represent = dtable.file.represent,
+                                      resource_segment = True,
+                                      ),
+                        )
 
                     s3db.configure(tablename,
                                    profile_header = profile_header,
                                    profile_layers = (layer,),
-                                   profile_widgets = (custom_widget_1,
+                                   profile_widgets = ({"type": "custom",
+                                                       "fn": alert_widget,
+                                                       },
                                                       map_widget,
-                                                      custom_widget_2,
-                                                      custom_widget_3,
+                                                      {"type": "custom",
+                                                       "fn": info_widget,
+                                                       },
+                                                      {"type": "custom",
+                                                       "fn": qualifiers_widget,
+                                                       },
+                                                      {"type": "custom",
+                                                       "fn": resource_widget,
+                                                       },
                                                       ),
                                    )
 
-                    response.s3.stylesheets.append("../themes/default/cap.css")
+                    s3.stylesheets.append("../themes/default/cap.css")
 
                 elif r.method == "assign":
                     translate = settings.get_L10n_translate_cap_area()
@@ -592,22 +742,34 @@ def alert():
                                               ),)
 
             elif r.component_name == "info":
-                itable = r.component.table
+                # Filter the langauge options
+                itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(\
+                                            zero=None,
+                                            translate=True,
+                                            select=settings.get_cap_languages())
+                itable.language.comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Denotes the language of the information"),
+                                                                T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html"))
                 # Do not show this as overwritten in onaccept
                 itable.web.readable = False
                 itable.web.writable = False
 
                 alert_id = request.args(0)
+
                 # Check for prepopulate
                 if alert_id:
-                    atable = r.table
+                    row = db(table.id == alert_id).select(table.scope,
+                                                          table.event_type_id,
+                                                          limitby=(0, 1)).first()
+                    if row and row.scope == "Public":
+                        fn = "public"
+                    else:
+                        fn = "alert"
                     itable.web.default = settings.get_base_public_url()+\
-                                         URL(c="cap", f="alert", args=alert_id)
-                    row = db(atable.id == alert_id).select(atable.event_type_id,
-                                                           limitby=(0, 1)).first()
+                                         URL(c="cap", f=fn, args=alert_id)
                     itable.event_type_id.default = row.event_type_id
 
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow info segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_info",
@@ -616,7 +778,7 @@ def alert():
                                    insertable = False,
                                    )
                 if settings.get_cap_restrict_fields():
-                    if r.record.msg_type in ("Update", "Cancel", "Error"):
+                    if record.msg_type in ("Update", "Cancel", "Error"):
                         # Use case for change in msg_type
                         for f in ("language",
                                   "category",
@@ -625,7 +787,7 @@ def alert():
                                   "audience",
                                   "event_code",
                                   "sender_name",
-                                  "parameter",
+                                  #"parameter",
                                   ):
                             itable[f].writable = False
 
@@ -634,16 +796,16 @@ def alert():
                 list_fields = ["name",
                                "altitude",
                                "ceiling",
-                               "location.location_id",
+                               (T("Polygon"), "location.location_id"),
+                               "tag.tag",
+                               (T("Geocode Value"), "tag.value"),
                                ]
                 s3db.configure("cap_area",
                                list_fields = list_fields,
                                )
 
-                for f in ("event_type_id", "priority"):
-                    # Do not show for the actual area
-                    field = atable[f]
-                    field.writable = field.readable = False
+                # Do not show for the actual area
+                atable.event_type_id.writable = atable.event_type_id.readable = False
 
                 translate = settings.get_L10n_translate_cap_area()
                 if translate:
@@ -655,7 +817,7 @@ def alert():
                         cap_area_options = cap_AreaRowOptionsBuilder(r.id)
                         atable.name.represent = S3Represent(options=cap_area_options)
 
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow area segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_area",
@@ -665,7 +827,7 @@ def alert():
                                    )
 
             elif r.component_name == "resource":
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow resource segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_resource",
@@ -680,7 +842,6 @@ def alert():
                 tid = post_vars["template_id"]
                 if tid:
                     # Read template and copy locked fields to post_vars
-                    table = db.cap_alert
                     template = db(table.id == tid).select(table.template_settings,
                                                           limitby=(0, 1)).first()
                     try:
@@ -711,8 +872,13 @@ def alert():
                       (itable.deleted != True)
             irows_ = db(iquery_).select(itable.template_info_id)
 
-            if alert and not \
+            parameter_table = s3db.cap_info_parameter
+            if alert.template_id and not \
                (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
+
+                parameter_query_ = (parameter_table.alert_id == alert.template_id) & \
+                                   (parameter_table.deleted != True)
+
                 # Clone all cap_info entries from the alert template
                 # If already created dont copy again
                 unwanted_fields = set(("deleted_rb",
@@ -730,10 +896,22 @@ def alert():
                                        "template_settings",
                                        ))
                 fields = [itable[f] for f in itable.fields
+                          if f not in unwanted_fields]
+
+                parameter_fields = [parameter_table[f] for f in parameter_table.fields
                                     if f not in unwanted_fields]
+                scope_row = db(table.id == lastid).select(table.scope,
+                                                          limitby=(0, 1)).first()
+                if scope_row and scope_row.scope == "Public":
+                    fn = "public"
+                else:
+                    fn = "alert"
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
                 for row in rows:
                     row_clone = row.as_dict()
+                    audience = row_clone["audience"]
+                    if not audience or audience == messages["NONE"]:
+                        audience = None
                     del row_clone["id"]
                     row_clone["alert_id"] = lastid
                     row_clone["template_info_id"] = row.id
@@ -741,7 +919,21 @@ def alert():
                     row_clone["effective"] = request.utcnow
                     row_clone["expires"] = s3db.cap_expiry_date()
                     row_clone["sender_name"] = s3db.cap_sender_name()
-                    itable.insert(**row_clone)
+                    row_clone["web"] = settings.get_base_public_url() + \
+                                        URL(c="cap", f=fn, args=lastid)
+                    row_clone["audience"] = audience
+                    new_info_id = itable.insert(**row_clone)
+
+                    # Copy info_parameter as well
+                    parameter_query = parameter_query_ & \
+                                      (parameter_table.info_id == row.id)
+                    parameter_rows =db(parameter_query).select(*parameter_fields)
+                    for parameter_row in parameter_rows:
+                        parameter_row_clone = parameter_row.as_dict()
+                        del parameter_row_clone["id"]
+                        parameter_row_clone["alert_id"] = lastid
+                        parameter_row_clone["info_id"] = new_info_id
+                        parameter_table.insert(**parameter_row_clone)
 
                 # Clone all cap_resource entries from the alert template
                 # First get the info_id
@@ -750,7 +942,7 @@ def alert():
                 rtable = s3db.cap_resource
                 r_unwanted_fields = set(s3base.s3_all_meta_field_names())
                 rfields = [rtable[f] for f in rtable.fields
-                                     if f not in r_unwanted_fields]
+                           if f not in r_unwanted_fields]
                 rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
                 for row in rows_:
                     row_clone = row.as_dict()
@@ -768,6 +960,21 @@ def alert():
                 r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
 
         if r.interactive:
+            if not r.component and not r.method:
+                s3_action_buttons(r, read_url=URL(args="[id]"))
+                profile_button = {"url": URL(args=["[id]", "profile"]),
+                                  "_class": "action-btn",
+                                  "_target": "_blank",
+                                  "label": str(T("View Profile"))
+                                  }
+                cap_button = {"url": URL(args=["[id].cap"]),
+                              "_class": "action-btn",
+                              "_target": "_blank",
+                              "label": str(T("View CAP File"))
+                              }
+                s3.actions.insert(1, profile_button)
+                s3.actions.insert(2, cap_button)
+
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
 
@@ -785,6 +992,7 @@ def alert():
                            "info.priority",
                            "status",
                            "scope",
+                           "msg_type",
                            "info.event_type_id",
                            "info.description",
                            "info.response_type",
@@ -825,7 +1033,6 @@ def info():
             table.language.represent = None
             table.category.represent = None
             table.response_type.represent = None
-            
             list_fields = ["alert_id",
                            "language",
                            "category",
@@ -838,7 +1045,6 @@ def info():
                            "description",
                            "instruction",
                            "contact",
-                           "parameter",
                            ]
 
             s3db.configure("cap_info",
@@ -873,6 +1079,33 @@ def info():
     return output
 
 # -----------------------------------------------------------------------------
+def info_parameter():
+    """
+        RESTful CRUD controller
+            should only be accessed from mobile client
+    """
+
+    def prep(r):
+        if r.representation == "json":
+            list_fields = ["id",
+                           "alert_id",
+                           "info_id",
+                           "name",
+                           "value",
+                           "mobile",
+                           ]
+
+            s3db.configure("cap_info_parameter",
+                           list_fields = list_fields,
+                           )
+        else:
+            return
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def template():
     """ REST controller for CAP templates """
 
@@ -890,23 +1123,21 @@ def template():
     def prep(r):
         list_fields = ["template_title",
                        "identifier",
-                       "info.event_type_id",
-                       "scope",
+                       "event_type_id",
                        "incidents",
                        "info.category",
                        ]
 
         s3db.configure(tablename,
                        list_fields = list_fields,
-                       list_orderby = "cap_info.event_type_id desc",
-                       orderby = "cap_info.event_type_id desc",
+                       list_orderby = "cap_alert.event_type_id asc",
+                       orderby = "cap_alert.event_type_id asc",
                        )
         if r.representation == "xls":
             r.table.scope.represent = None
             r.table.incidents.represent = None
             list_fields = [(T("ID"), "id"),
                            "template_title",
-                           "scope",
                            "restriction",
                            "note",
                            "incidents",
@@ -915,13 +1146,15 @@ def template():
             s3db.configure(tablename,
                            list_fields = list_fields,
                            )
-        for f in ("identifier", "msg_type"):
+        for f in ("identifier", "msg_type", "sender", "source", "scope"):
             field = atable[f]
             field.writable = False
             field.readable = False
             field.requires = None
         atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
+        atable.addresses.readable = atable.addresses.writable = False
+        atable.external.default = False
 
         if r.component_name == "info":
             itable = r.component.table
@@ -945,10 +1178,15 @@ def template():
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
-                itable.web.default = settings.get_base_public_url()+\
-                                     URL(c="cap", f="alert", args=alert_id)
-                row = db(atable.id == alert_id).select(atable.event_type_id,
+                row = db(atable.id == alert_id).select(atable.scope,
+                                                       atable.event_type_id,
                                                        limitby=(0, 1)).first()
+                if row and row.scope == "Public":
+                    fn = "public"
+                else:
+                    fn = "alert"
+                itable.web.default = settings.get_base_public_url()+\
+                                     URL(c="cap", f=fn, args=alert_id)
                 itable.event_type_id.default = row.event_type_id
 
         elif r.component_name == "resource":
@@ -1042,14 +1280,34 @@ def area():
         # Area create from this controller is template
         artable.is_template.default = True
 
-        response.s3.crud_strings["cap_area"].title_list = T("Predefined Areas")
+        s3.crud_strings["cap_area"] = Storage(
+            label_create = T("Create Predefined Area"),
+            title_display = T("Predefined Area"),
+            title_list = T("Predefined Areas"),
+            title_update = T("Edit Predefined Area"),
+            title_upload = T("Import Predefined Areas"),
+            label_list_button = T("List Predefined Areas"),
+            label_delete_button = T("Delete Predefined Area"),
+            msg_record_created = T("Predefined Area created"),
+            msg_record_modified = T("Predefined Area modified"),
+            msg_record_deleted = T("Predefined Area deleted"),
+            msg_list_empty = T("No Predefined Areas to show"))
+
+        list_fields = ["name",
+                       "event_type_id",
+                       #"priority",
+                       ]
+
+        s3db.configure("cap_area",
+                       list_fields = list_fields,
+                       )
 
         if r.representation == "json":
             list_fields = ["id",
                            "name",
                            "event_type_id",
                            (T("Event Type"), "event_type_id$name"),
-                           "priority",
+                           #"priority",
                            "altitude",
                            "ceiling",
                            "location.location_id",
@@ -1083,6 +1341,25 @@ def warning_priority():
         RESTful CRUD controller
     """
 
+    def prep(r):
+        if r.representation == "json":
+            # This is for the dropdown options for the priority
+            list_fields = ["id",
+                           "priority_rank",
+                           "color_code",
+                           "severity",
+                           "certainty",
+                           "urgency",
+                           "event_type_id",
+                           "event_code",
+                           "name",
+                           ]
+            s3db.configure("cap_warning_priority",
+                           list_fields = list_fields,
+                           )
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -1098,7 +1375,8 @@ def notify_approver():
         if not alert_id and not auth.s3_has_permission("update", atable,
                                                        record_id=alert_id):
             auth.permission.fail()
-        row = db(atable.id == alert_id).select(atable.approved_by,
+        row = db(atable.id == alert_id).select(atable.created_by,
+                                               atable.approved_by,
                                                limitby=(0, 1)).first()
         if not row.approved_by:
             # Get the user ids for the role alert_approver
@@ -1108,6 +1386,7 @@ def notify_approver():
                                                         limitby=(0, 1)).first()
             if group_row:
                 user_pe_id = auth.s3_user_pe_id
+                full_name = s3_fullname(pe_id=user_pe_id(row.created_by), truncate=False)
                 user_ids = auth.s3_group_members(group_row.id) # List of user_ids
                 pe_ids = [] # List of pe_ids
                 pe_append = pe_ids.append
@@ -1116,7 +1395,13 @@ def notify_approver():
                 subject = "%s: Alert Approval Required" % settings.get_system_name_short()
                 url = "%s%s" % (settings.get_base_public_url(),
                                 URL(c="cap", f="alert", args=[alert_id, "review"]))
-                message = "You are requested to take action on this alert:\n\n%s" % url
+                message = """
+Hello Approver,
+%(full_name)s has created the alert message.
+Your action is required to approve or reject the message.
+Please go to %(url)s to complete the actions.\n
+Remember to verify the content before approving by using Edit button.""" % \
+                        {"full_name": full_name, "url": url}
                 msg.send_by_pe_id(pe_ids, subject, message)
                 try:
                     msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
@@ -1147,7 +1432,7 @@ def set_priority_js():
     p_settings = [(s3_str(T(r.name)), r.urgency, r.severity, r.certainty, r.color_code)\
                  for r in rows]
 
-    priority_conf = '''S3.cap_priorities=%s''' % jsons(p_settings)
+    priority_conf = s3_str('''S3.cap_priorities=%s''' % jsons(p_settings))
     js_global = s3.js_global
     if not priority_conf in js_global:
         js_global.append(priority_conf)

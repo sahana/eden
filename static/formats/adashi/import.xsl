@@ -3,9 +3,9 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         ADASHI Configuration Import Templates for Sahana-Eden
+         ADASHI Configuration Import Templates for Sahana Eden
 
-         Copyright (c) 2015 Sahana Software Foundation
+         Copyright (c) 2015-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -53,11 +53,11 @@
     <!-- ****************************************************************** -->
     <xsl:template match="CadStatus">
 
-        <resource name="event_team_status">
-            <data field="name">
+        <resource name="pr_group_status">
+            <data field="code">
                 <xsl:value-of select="CadDatabaseString/text()"/>
             </data>
-            <data field="description">
+            <data field="name">
                 <xsl:value-of select="LongDisplayString/text()"/>
             </data>
             <data field="comments">

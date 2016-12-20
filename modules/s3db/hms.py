@@ -120,10 +120,11 @@ class HospitalDataModel(S3Model):
                      # @ToDo: Move to a KV in hms_hospital_tag table?
                      Field("gov_uuid", unique=True, length=128,
                            label = T("Government UID"),
-                           requires = IS_EMPTY_OR(
+                           requires = IS_EMPTY_OR([
+                                       IS_LENGTH(128),
                                        IS_NOT_ONE_OF(db,
-                                           "%s.gov_uuid" % tablename)
-                                       ),
+                                           "%s.gov_uuid" % tablename),
+                                       ]),
                            readable = False,
                            writable = False,
                            ),
@@ -131,7 +132,9 @@ class HospitalDataModel(S3Model):
                      Field("name", notnull=True,
                            length=64, # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ]
                            ),
                      # Alternate name, or name in local language
                      Field("aka1",
@@ -147,6 +150,7 @@ class HospitalDataModel(S3Model):
                            #notnull=True, unique=True,
                            # @ToDo: code_requires
                            label = T("Code"),
+                           requires = IS_LENGTH(120),
                            ),
                      Field("facility_type", "integer",
                            default = 1,
@@ -607,6 +611,7 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("ems_reason", length=128,
                            label = T("ER Status Reason"),
+                           requires = IS_LENGTH(128),
                            ),
 
                      # Operating Room Status
@@ -621,6 +626,7 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("or_reason", length=128,
                            label = T("OR Status Reason"),
+                           requires = IS_LENGTH(128),
                            ),
 
                      # Morgue status and capacity
@@ -747,8 +753,10 @@ class HospitalDataModel(S3Model):
         define_table(tablename,
                      hospital_id(ondelete = "CASCADE"),
                      Field("unit_id", length=128, unique=True,
+                           requires = IS_LENGTH(128),
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      Field("bed_type", "integer",
                            default = 6,
                            label = T("Bed Type"),
@@ -1215,7 +1223,9 @@ class HospitalActivityReportModel(S3Model):
                                 represent = represent_int_amount,
                                 requires = is_number_of_patients,
                                 ),
-                          Field("comment", length=128),
+                          Field("comment", length=128,
+                                requires = IS_LENGTH(128),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings

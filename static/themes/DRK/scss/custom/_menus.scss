@@ -45,3 +45,23 @@
   background-color: #E0E0E0;
 }
 
+/* Personal Menu */
+.personal-menu-area {
+    text-align: right;
+}
+
+/* About Menu */
+.about-menu {
+    text-align: left;
+}
+#poweredby {
+    text-align: right;
+}
+body.rtl {
+    .about-menu {
+        text-align: right;
+    }
+    #poweredby {
+        text-align: left;
+    }
+}

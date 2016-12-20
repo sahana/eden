@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import A, URL, TR, TD
@@ -55,7 +50,9 @@ def config(settings):
     settings.gis.postcode_selector = False
     # Enable this to change the label for 'Postcode'
     #settings.ui.label_postcode = "ZIP Code"
-    # Custom icon classes
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "alert": "icon-alert",
         "event": "icon-event",
@@ -498,8 +495,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def org_organisation_postprocess(form):
         """
-            If the user selects the City (L2), or Borough (L3) for Area Served,
-            then add all Zipcodes in instead
+            * If the user selects the City (L2), or Borough (L3) for Area Served,
+            then add all Zipcodes in instead.
+            * RSS Subscriptions handling
         """
 
         db = current.db
@@ -590,8 +588,9 @@ def config(settings):
         s3db.add_components("org_organisation",
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
-                                            "filterby": "main_facility",
-                                            "filterfor": True,
+                                            "filterby": {
+                                                "main_facility": True,
+                                                },
                                             },
                             )
 

@@ -35,6 +35,7 @@
 
     <xsl:variable name="Namespace" select="'adashi'"/>
     <xsl:variable name="DefaultL0" select="'urn:iso:std:iso:3166:-1:code:US'"/>
+    <xsl:variable name="ActiveStatus" select="'Active'"/>
 
     <!-- ****************************************************************** -->
     <xsl:template name="adashi">
@@ -82,11 +83,11 @@
                                                                     status/text())[1])]">
             <xsl:variable name="StatusCode" select="status/text()"/>
             <xsl:if test="$StatusCode!=''">
-                <resource name="event_team_status">
+                <resource name="pr_group_status">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
                     </xsl:attribute>
-                    <data field="name">
+                    <data field="code">
                         <xsl:value-of select="$StatusCode"/>
                     </data>
                 </resource>
@@ -99,6 +100,7 @@
     <xsl:template name="AdashiAVL">
 
         <xsl:variable name="UnitName" select="title/text()"/>
+        <xsl:variable name="StatusCode" select="status/text()"/>
         <xsl:variable name="Time">
             <xsl:choose>
                 <xsl:when test="lastModified/text()!=''">
@@ -121,6 +123,15 @@
                 <data field="name">
                     <xsl:value-of select="$UnitName"/>
                 </data>
+
+                <!-- Status -->
+                <xsl:if test="$StatusCode">
+                    <reference field="status_id" resource="pr_group_status">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
 
                 <!-- Presence (location) -->
                 <xsl:variable name="LatLon" select="normalize-space(georss:point/text())"/>
@@ -161,22 +172,19 @@
                     </resource>
                 </xsl:if>
 
-                <!-- Status -->
-                <xsl:variable name="StatusCode" select="status/text()"/>
-                <xsl:if test="$StatusCode">
-                    <resource name="event_team_status_team">
-                        <xsl:attribute name="modified_on">
-                            <xsl:value-of select="$Time"/>
-                        </xsl:attribute>
-                        <reference field="status_id" resource="event_team_status">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
-                            </xsl:attribute>
-                        </reference>
-                    </resource>
-                </xsl:if>
-
             </resource>
+
+            <!-- Status -->
+            <xsl:if test="$StatusCode">
+                <resource name="pr_group_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
+                    </xsl:attribute>
+                    <data field="code">
+                        <xsl:value-of select="$StatusCode"/>
+                    </data>
+                </resource>
+            </xsl:if>
         </xsl:if>
 
     </xsl:template>
@@ -227,7 +235,7 @@
 
                 <!-- Zero-hour -->
                 <xsl:if test="$ZeroHour!=''">
-                    <data field="zero_hour">
+                    <data field="date">
                         <xsl:value-of select="$ZeroHour"/>
                     </data>
                 </xsl:if>
@@ -284,6 +292,17 @@
                 </xsl:if>
 
             </resource>
+
+            <!-- Active Status for tuid match -->
+            <resource name="event_team_status">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('UnitStatus:', $ActiveStatus)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$ActiveStatus"/>
+                </data>
+            </resource>
+
         </xsl:if>
 
     </xsl:template>
@@ -414,7 +433,12 @@
                     </xsl:attribute>
                 </reference>
                 <!-- Status: Active -->
-                <data field="status" value="3"/>
+                <reference field="status_id" resource="event_team_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('UnitStatus:', $ActiveStatus)"/>
+                    </xsl:attribute>
+                </reference>
+
             </resource>
         </xsl:if>
 

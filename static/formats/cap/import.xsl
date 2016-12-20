@@ -94,11 +94,12 @@
                     <xsl:value-of select="cap:restriction" />
                 </data>
             </xsl:if>
-            <xsl:if test="cap:addresses!=''">
-                <data field="addresses"> <!-- further in python code -->
-                    <xsl:value-of select="cap:addresses" />
+            <!--@ToDo-->
+            <!--<xsl:if test="cap:addresses!=''">-->
+                <!--<data field="addresses">--> <!-- further in python code -->
+                    <!--<xsl:value-of select="cap:addresses" />
                 </data>
-            </xsl:if>
+            </xsl:if>-->
             <xsl:if test="cap:code!=''">
                 <data field="codes">
                     <xsl:attribute name="value">
@@ -308,7 +309,7 @@
                     <xsl:value-of select="cap:contact" />
                 </data>
             </xsl:if>
-            <xsl:if test="cap:parameter!=''">
+            <!--<xsl:if test="cap:parameter!=''">
                 <data field="parameter">
                     <xsl:attribute name="value">
                         <xsl:text>[</xsl:text>
@@ -325,10 +326,25 @@
                         <xsl:text>]</xsl:text>
                     </xsl:attribute>
                 </data>
+            </xsl:if>-->
+            <xsl:if test="cap:parameter!=''">
+                <xsl:apply-templates select="cap:parameter" />
             </xsl:if>
 
             <xsl:apply-templates select="cap:resource" />
             <xsl:apply-templates select="cap:area" />
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="cap:parameter">
+        <resource name="cap_info_parameter">                    
+            <data field="name">
+                <xsl:value-of select="cap:valueName" />
+            </data>
+            <data field="value">
+                <xsl:value-of select="cap:value" />
+            </data>            
         </resource>
     </xsl:template>
 
@@ -391,12 +407,16 @@
                     <xsl:value-of select="cap:ceiling" />
                 </data>
             </xsl:if>
-            <xsl:apply-templates select="cap:polygon">
-                <xsl:with-param name="name" select="$areaDesc"/>
-            </xsl:apply-templates>
-            <xsl:apply-templates select="cap:circle">
-                <xsl:with-param name="name" select="$areaDesc"/>
-            </xsl:apply-templates>
+	     <xsl:if test="cap:polygon!=''">
+                 <xsl:apply-templates select="cap:polygon">
+		     <xsl:with-param name="name" select="$areaDesc"/>
+		 </xsl:apply-templates>
+	     </xsl:if>
+	     <xsl:if test="cap:circle!=''">
+	         <xsl:apply-templates select="cap:circle">
+	             <xsl:with-param name="name" select="$areaDesc"/>
+	         </xsl:apply-templates>
+	     </xsl:if>
             <xsl:apply-templates select="cap:geocode" />
         </resource>
     </xsl:template>
@@ -443,7 +463,7 @@
                     
                     <data field="radius">
                         <!-- Radius comes in as km, so convert to m -->
-                        <xsl:value-of select="number($radius) * 0.001"/>
+                        <xsl:value-of select="number($radius) * 1000"/>
                     </data>
                 </resource>
             </reference>

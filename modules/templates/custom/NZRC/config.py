@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -77,7 +72,7 @@ def config(settings):
     # PR
     # Uncomment to do a search for duplicates in AddPersonWidget2
     settings.pr.lookup_duplicates = True
-    
+
     # -------------------------------------------------------------------------
     # HRM
     settings.hrm.email_required = False
@@ -87,7 +82,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Projects
     settings.project.mode_task = True
-    
+
     # -------------------------------------------------------------------------
     # Req
     settings.req.req_type = ["People"]
@@ -584,7 +579,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     def hrm_human_resource_create_onaccept(form):
-        
+
         s3db = current.s3db
 
         # Make Volunteer deployable
@@ -592,7 +587,7 @@ def config(settings):
 
         # Fire nromal onaccept
         s3db.hrm_human_resource_onaccept(form)
-        
+
 
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
@@ -695,6 +690,7 @@ def config(settings):
                                               orderby=htable.date)
         if programmes:
             # Ignore up to 3 months of records
+            import datetime
             three_months_prior = (now - datetime.timedelta(days=92))
             end = max(programmes.last().date, three_months_prior.date())
             last_year = end - datetime.timedelta(days=365)

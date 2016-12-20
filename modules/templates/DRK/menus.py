@@ -64,12 +64,16 @@ class S3MainMenu(default.S3MainMenu):
                    m = "register",
                    p = "create",
                    # Show only if not authorized to see "Residents"
-                   # (=the last preceding item)
                    check = lambda this: not this.preceding()[-1].check_permission(),
                    ),
+                MM("Food Distribution Statistics", c="dvr", f="case_event",
+                   m = "report",
+                   vars = {"code": "FOOD"},
+                   restrict = ("FOOD_STATS",),
+                   # Show only if not authorized to see "Residents"
+                   check = lambda this: not this.preceding()[-2].check_permission(),
+                   ),
                 MM("ToDo", c="project", f="task"),
-                #homepage("req"),
-                homepage("inv"),
                 MM("Dashboard", c="cr", f="shelter",
                    args = [shelter_id, "profile"],
                    check = shelter_id is not None,
@@ -81,7 +85,18 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 homepage("vol"),
                 homepage("hrm"),
-                MM("Facilities", c="org", f="facility"),
+                MM("More", link=False)(
+                    MM("Facilities", c="org", f="facility"),
+                    #homepage("req"),
+                    homepage("inv"),
+                    SEP(link=False),
+                    MM("Surplus Meals", c="default", f="index",
+                       args = "surplus_meals",
+                       t = "dvr_case_event",
+                       p = "create",
+                       restrict = ("ADMINISTRATION", "ADMIN_HEAD", "INFO_POINT"),
+                       ),
+                    ),
             ]
 
     # -------------------------------------------------------------------------
@@ -187,9 +202,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Reports", link=False)(
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
-                          vars = {"closed": "0", "overdue": "1"},
+                          vars = {"closed": "0", "overdue": "check-in"},
+                          ),
+                        M("Food Distribution overdue", c=("dvr", "pr"), f="person",
+                          vars = {"closed": "0", "overdue": "food"},
                           ),
                         M("Residents Reports", c="dvr", f="site_activity",
+                          ),
+                        M("Food Distribution Statistics", c="dvr", f="case_event",
+                          m = "report",
+                          vars = {"code": "FOOD"},
                           ),
                         ),
                     M("Activities", f="case_activity")(
@@ -221,7 +243,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars={"archived": "1"},
                           ),
                         ),
-                    M("Administration", restrict=ADMIN)(
+                    M("Administration", restrict=(ADMIN, "ADMIN_HEAD"))(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
                         M("Appointment Types", f="case_appointment_type"),

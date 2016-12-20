@@ -1,7 +1,7 @@
-Name,URL
-Myanmar Public CAP Alerts,http://203.81.87.42/eden/cap/public.rss
-Philippines Public CAP Alerts,http://sambro.meteopilipinas.gov.ph/eden/cap/public.rss
-Alberta Alerts,http://www.emergencyalert.alberta.ca/aeapublic/feed.atom
-NOAA,http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml
-PTWC Public Ocean,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml
-PTWC Hawaii,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml
+Name,URL,Type
+NOAA,http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml,cms
+PTWC Public Ocean,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,cms
+PTWC Hawaii,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,cms
+EPA Air Quality Alerts,http://feeds.enviroflash.info/cap/aggregate.xml,cms
+USA -NWS,http://alerts.weather.gov/cap/us.php?x=0,cms
+PAGASA Public Alerts,http://publicalert.pagasa.dost.gov.ph/feeds/,cap

@@ -1,10 +1,23 @@
 /* Footer */
 #footer {
-    text-align: center;
-    padding-top: 1.75rem;
-    padding-bottom: 1.75rem;
+    background-color: $lightblue;
+    .columns {
+        padding-top: 0.5rem;
+        padding-bottom: 1rem;
+    }
 
-    background-color: #FDC334;
+    // Footer contents
+    color: #FFFFFF;
+    text-align: center;
+    .footer-logo {
+        max-height: 83px;
+    }
+    .footer-icon {
+        padding: 1rem;
+    }
+    .footer-text {
+        font-size: 1rem;
+    }
 
     // Debug buttons in footer - use action-button styles
     button.btn {
@@ -17,29 +30,6 @@
     button.btn:hover {
         color: $action_btn_fgcolor_debug_hover;
         background: $action_btn_bgcolor_debug_hover;
-    }
-}
-.footer-menu {
-
-    list-style: none;
-    & > li {
-        display: inline;
-        padding: 1.75rem;
-        & > a {
-            font-size: 0.8125rem;
-            font-weight: bold;
-            color: white;
-            &:hover {
-                color: #e0e0e0;
-            }
-        }
-    }
-}
-.footer-home {
-    display: block;
-    margin: 3rem;
-    img {
-        width: 24px;
     }
 }
 

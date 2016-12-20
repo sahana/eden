@@ -3,11 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Office Types - CSV Import Stylesheet
+         Warehouse Types - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
-         Name.................string..........Office Type Name
+         Name.................string..........Warehouse Type Name
          Organisation.........string..........Organisation Name
          Comments.............string..........Comments
 

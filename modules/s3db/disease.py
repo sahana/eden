@@ -35,17 +35,7 @@ __all__ = ("DiseaseDataModel",
            )
 
 import datetime
-
-try:
-    # try stdlib (Python 2.6)
-    import json
-except ImportError:
-    try:
-        # try external module
-        import simplejson as json
-    except:
-        # fallback to pure-Python module
-        import gluon.contrib.simplejson as json
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -311,8 +301,10 @@ class CaseTrackingModel(S3Model):
         tablename = "disease_case"
         define_table(tablename,
                      Field("case_number", length=64,
-                           requires = IS_EMPTY_OR(
-                                        IS_NOT_IN_DB(db, "disease_case.case_number")),
+                           requires = IS_EMPTY_OR([
+                                IS_LENGTH(64),
+                                IS_NOT_IN_DB(db, "disease_case.case_number"),
+                                ]),
                            ),
                      person_id(empty = False,
                                ondelete = "CASCADE",
@@ -539,7 +531,8 @@ class CaseTrackingModel(S3Model):
                      case_id(),
                      # @todo: make a lookup table in DiseaseDataModel:
                      Field("probe_type"),
-                     Field("probe_number", length = 64, unique = True,
+                     Field("probe_number", length=64, unique=True,
+                           requires = IS_LENGTH(64),
                            ),
                      s3_date("probe_date",
                              default = "now",
