@@ -1384,11 +1384,17 @@
                 self = this;
 
             // Button events
-            el.delegate('.read-row', 'click' + ns, function() {
-                var names = $(this).attr('id').split('-');
-                var rowindex = names.pop();
-                self._editRow(rowindex);
-                return false;
+            el.delegate('.read-row', 'click' + ns, function(e) {
+                // Click into read-row opens the row for edit
+                // (unless the click-target is a link anchor)
+                var target = e.target;
+                if (!target || target.tagName != "A" || !target.href) {
+                    var names = $(this).attr('id').split('-'),
+                        rowindex = names.pop();
+                    e.preventDefault();
+                    self._editRow(rowindex);
+                    return false;
+                }
             }).delegate('.inline-add', 'click' + ns, function() {
                 self._addRow();
                 return false;
