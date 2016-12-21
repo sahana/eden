@@ -1673,6 +1673,7 @@ class S3SQLSubForm(S3SQLFormElement):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
+
             @return: the value for the input field that corresponds
                       to the specified record.
         """
@@ -2198,6 +2199,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
+
             @return: the JSON for the input field.
         """
 
@@ -2268,12 +2270,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 start = 0
                 limit = 1 if options.multiple is False else None
                 data = component.select(all_fields,
-                                        start=start,
-                                        limit=limit,
-                                        represent=True,
-                                        raw_data=True,
-                                        show_links=False,
-                                        orderby=orderby)
+                                        start = start,
+                                        limit = limit,
+                                        represent = True,
+                                        raw_data = True,
+                                        show_links = False,
+                                        orderby = orderby,
+                                        )
 
                 records = data["rows"]
                 rfields = data["rfields"]
@@ -2340,9 +2343,14 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     else:
                         # Virtual Field
                         value = row[colname]
+
                     text = s3_unicode(record[colname])
-                    if "<" in text:
-                        text = s3_strip_markup(text)
+                    # Text representation is only used in read-forms where
+                    # representation markup cannot interfere with the inline
+                    # form logic - so stripping the markup should not be
+                    # necessary here:
+                    #if "<" in text:
+                    #    text = s3_strip_markup(text)
 
                     item[fname] = {"value": value, "text": text}
 
@@ -2916,7 +2924,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                     values[fkey] = link_record[pkey]
                                 else:
                                     s3_debug("S3Forms", "Cannot find case for person ID: %s" % master[pkey])
-                                
+
                             else:
                                 values[fkey] = master[pkey]
 
@@ -3752,6 +3760,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
+
             @return: the JSON for the input field.
         """
 
