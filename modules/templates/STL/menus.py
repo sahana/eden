@@ -150,7 +150,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M(follow_up_label, f="due_followups"),
                         ),
                     M("Activities", link=False)(
-                        M("Psychosocial Support", f="activity",
+                        M("Group Activities", f="activity",
                           vars={"service_type": "PSS"},
                           ),
                         M("Mental Health Support", f="activity",

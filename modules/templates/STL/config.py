@@ -216,7 +216,7 @@ def config(settings):
 
             elif service_type == "PSS":
 
-                crud_strings["title_list"] = T("Psychosocial Support Activities")
+                crud_strings["title_list"] = T("Group Activities")
 
                 # Get service root types
                 stable = s3db.org_service
