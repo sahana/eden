@@ -65,7 +65,9 @@ def index():
                                               as_rows=True)
     total_attempted_visits = 0
     for row in areas:
-        total_attempted_visits += row.attempted_visits
+        attempted_visits = row.attempted_visits
+        if attempted_visits:
+            total_attempted_visits += attempted_visits
 
     # Summary
     output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),

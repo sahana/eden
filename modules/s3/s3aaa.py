@@ -4637,6 +4637,7 @@ $.filterOptionsS3({
             success = db(q).update(**data)
 
             # Update realm-components
+            # Only goes down 1 level: doesn't do components of components
             if success and update and REALM in data:
                 rc = s3db.get_config(table, "realm_components", ())
                 resource = s3db.resource(table, components=rc)
