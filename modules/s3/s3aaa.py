@@ -6503,13 +6503,6 @@ class S3Permission(object):
         else:
             acls = {}
 
-        db = current.db
-        table = self.table
-
-        c = c or self.controller
-        f = f or self.function
-        page_restricted = self.page_restricted(c=c, f=f)
-
         # Get all roles
         if realms:
             roles = set(realms.keys())
@@ -6519,6 +6512,13 @@ class S3Permission(object):
         else:
             # No roles available (deny all)
             return acls
+
+        db = current.db
+        table = self.table
+
+        c = c or self.controller
+        f = f or self.function
+        page_restricted = self.page_restricted(c=c, f=f)
 
         # Base query
         query = (table.deleted != True) & \
