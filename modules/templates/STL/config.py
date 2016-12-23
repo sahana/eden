@@ -192,9 +192,15 @@ def config(settings):
                 field = table.facilitator
                 field.label = T("Counselor")
 
+                # Expose gender type
+                field = table.gender
+                field.readable = field.writable = True
+
                 # Custom list fields
                 list_fields = ["name",
                                "service_id",
+                               (T("Type of Group"), "group_type_id"),
+                               "gender",
                                "facilitator",
                                "site_id",
                                "room_id",
@@ -203,6 +209,8 @@ def config(settings):
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
                                             "service_id",
+                                            (T("Type of Group"), "group_type_id"),
+                                            "gender",
                                             "facilitator",
                                             "site_id",
                                             "room_id",
@@ -250,11 +258,16 @@ def config(settings):
                                                  filter = (FS("root_service").belongs(root_service_ids)),
                                                  )
 
+                # Expose gender type
+                field = table.gender
+                field.readable = field.writable = True
+
                 # Custom list fields
                 list_fields = ["service_id",
                                "start_date",
                                "end_date",
                                "period",
+                               "gender",
                                "facilitator",
                                ]
 
@@ -263,6 +276,7 @@ def config(settings):
                                             "start_date",
                                             "end_date",
                                             "period",
+                                            "gender",
                                             "facilitator",
                                             "comments",
                                             )
@@ -778,8 +792,8 @@ def config(settings):
                                                                    "female",
                                                                    "male",
                                                                    "other",
-                                                                   "in_school",
-                                                                   "employed",
+                                                                   "out_of_school",
+                                                                   (T("Number Working"), "employed"),
                                                                    ],
                                                          label = T("Household Members"),
                                                          explicit_add = T("Add Household Members"),
@@ -1064,7 +1078,7 @@ def config(settings):
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
-                                        (T("Case Status"), "dvr_case.status_id"),
+                                        "dvr_case.status_id",
                                         "dvr_case.date",
                                         "dvr_case.organisation_id",
                                         "dvr_case.human_resource_id",

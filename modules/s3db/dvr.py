@@ -1294,6 +1294,56 @@ class DVRCaseActivityModel(S3Model):
         service_id = self.org_service_id
 
         # ---------------------------------------------------------------------
+        # Activity Group Type
+        #
+        tablename = "dvr_activity_group_type"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Type"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.name" % tablename,
+                                                     ),
+                                       ],
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Group Type"),
+            title_display = T("Group Type Details"),
+            title_list = T("Group Types"),
+            title_update = T("Edit Group Type"),
+            label_list_button = T("List Group Types"),
+            label_delete_button = T("Delete Group Type"),
+            msg_record_created = T("Group Type added"),
+            msg_record_modified = T("Group Type updated"),
+            msg_record_deleted = T("Group Type deleted"),
+            msg_list_empty = T("No Group Types currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        group_type_id = S3ReusableField("group_type_id", "reference %s" % tablename,
+                                        label = T("Group Type"),
+                                        ondelete = "CASCADE",
+                                        represent = represent,
+                                        requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              sort = True,
+                                                              )),
+                                        sortby = "name",
+                                        )
+
+        # ---------------------------------------------------------------------
         # Activity (not case-specific)
         #
         site_represent = self.org_SiteRepresent(show_link=False)
@@ -1304,6 +1354,15 @@ class DVRCaseActivityModel(S3Model):
         period_opts = {"R": T("regular"),
                        "O": T("occasional"),
                        }
+
+        # Target gender type options
+        # (Tuple list to enforce this order in drop-down)
+        gender_opts = [("M", T("Male")),
+                       ("F", T("Female")),
+                       ("A", T("Mixed")),
+                       ]
+        if not settings.get_pr_hide_third_gender():
+            gender_opts.insert(-1, ("X", T("Other")))
 
         tablename = "dvr_activity"
         define_table(tablename,
@@ -1341,9 +1400,17 @@ class DVRCaseActivityModel(S3Model):
                            ),
                      #Field("modality"), @todo: event or outreach?
                      #self.gis_location_id(), @todo: outreach area (if outreach)
-                     #Field("gender"), @todo: targeted gender group(s)
+                     Field("gender", length=4,
+                           label = T("Gender"),
+                           represent = S3Represent(options=dict(gender_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(gender_opts,
+                                                            sort = False,
+                                                            )),
+                           readable = False,
+                           writable = False,
+                           ),
                      #Field("age_group"), @todo: targeted age group(s)
-                     #Field("group_type"), @todo: other target group type
+                     group_type_id(ondelete="SET NULL"),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2177,6 +2244,11 @@ class DVRHouseholdModel(S3Model):
                            ),
                      Field("in_school", "integer",
                            label = T("Number in School"),
+                           represent = int_represent,
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
+                     Field("out_of_school", "integer",
+                           label = T("Number out of School"),
                            represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),

@@ -173,6 +173,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Income Sources", f="income_source"),
                         M("Need Types", f="need"),
                         M("SNF Justifications", f="activity_funding_reason"),
+                        M("Activity Group Types", f="activity_group_type"),
                         ),
                 )
 
