@@ -447,6 +447,29 @@ def config(settings):
             field.label = T("DS/IS Case Explanation")
             field.readable = field.writable = True
 
+            # Customise date fields
+            field = table.start_date
+            field.label = T("Opened on")
+            field = table.end_date
+            field.label = T("Closed on")
+            field.readable = True
+
+            # Customise "completed" flag
+            # => label as "Status" and use drop-down for open/closed
+            field = table.completed
+            field.label = T("Status")
+            field.represent = lambda v, row=None: T("Closed") if v else T("Open")
+            field.requires = [IS_IN_SET([(False, T("Open")),
+                                         (True, T("Closed")),
+                                         ],
+                                        zero=None,
+                                        ),
+                              # Form option is a str => convert to boolean
+                              lambda v: (str(v) == "True", None),
+                              ]
+            from gluon.sqlhtml import OptionsWidget
+            field.widget = OptionsWidget.widget
+
             # Customise SNF fields
             ftable = s3db.dvr_activity_funding
             field = ftable.funding_required
@@ -465,8 +488,11 @@ def config(settings):
                                         "project_id",
                                         "need_id",
                                         "need_details",
+                                        "start_date",
                                         "followup",
                                         "followup_date",
+                                        "completed",
+                                        "end_date",
                                         "activity_funding.funding_required",
                                         "activity_funding.reason_id",
                                         "activity_funding.proposal",
@@ -487,8 +513,11 @@ def config(settings):
                            "human_resource_id",
                            "project_id",
                            "need_id",
+                           "start_date",
                            "followup",
                            "followup_date",
+                           "completed",
+                           "end_date",
                            ]
 
         elif r.component_name == "pss_activity":

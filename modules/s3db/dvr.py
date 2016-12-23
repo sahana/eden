@@ -1522,6 +1522,11 @@ class DVRCaseActivityModel(S3Model):
                              label = T("Registered on"),
                              default = "now",
                              ),
+                     s3_date("end_date",
+                             label = T("Completed on"),
+                             readable = False,
+                             writable = False,
+                             ),
                      self.dvr_need_id(),
                      Field("need_details", "text",
                            label = T("Need Details"),
@@ -1577,10 +1582,6 @@ class DVRCaseActivityModel(S3Model):
                            label = T("Completed"),
                            represent = s3_yes_no_represent,
                            ),
-                     #s3_date("end_date",
-                     #        readable = False,
-                     #        writable = False,
-                     #        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1676,6 +1677,7 @@ class DVRCaseActivityModel(S3Model):
         configure(tablename,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  onaccept = self.case_activity_onaccept,
                   orderby = "dvr_case_activity.start_date desc",
                   report_options = report_options,
                   super_entity = "doc_entity",
@@ -1758,6 +1760,44 @@ class DVRCaseActivityModel(S3Model):
         return {"dvr_case_activity_id": lambda name="activity_id", **attr: \
                                                dummy(name, **attr),
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_activity_onaccept(form):
+        """
+            Onaccept-callback for case activites:
+                - automatically set end date when marked as completed
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Get the record
+        atable = s3db.dvr_case_activity
+        query = (atable.id == record_id)
+        row = db(query).select(atable.id,
+                               atable.end_date,
+                               atable.completed,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        # Update closed_on date
+        if row.completed:
+            if not row.end_date:
+                row.update_record(end_date = current.request.utcnow.date())
+        elif row.end_date:
+            row.update_record(end_date = None)
 
 # =============================================================================
 class DVRCaseAppointmentModel(S3Model):
