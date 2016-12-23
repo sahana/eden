@@ -437,6 +437,12 @@ def group_membership():
                               )
 
 # -----------------------------------------------------------------------------
+def activity_age_group():
+    """ Activity Age Groups: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def activity_group_type():
     """ Activity Group Types: RESTful CRUD Controller """
 

@@ -1344,6 +1344,56 @@ class DVRCaseActivityModel(S3Model):
                                         )
 
         # ---------------------------------------------------------------------
+        # Activity Age Group
+        #
+        tablename = "dvr_activity_age_group"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Age Group"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.name" % tablename,
+                                                     ),
+                                       ],
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Age Group"),
+            title_display = T("Age Group Details"),
+            title_list = T("Age Groups"),
+            title_update = T("Edit Age Group"),
+            label_list_button = T("List Age Groups"),
+            label_delete_button = T("Delete Age Group"),
+            msg_record_created = T("Age Group added"),
+            msg_record_modified = T("Age Group updated"),
+            msg_record_deleted = T("Age Group deleted"),
+            msg_list_empty = T("No Age Groups currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        age_group_id = S3ReusableField("age_group_id", "reference %s" % tablename,
+                                       label = T("Age Group"),
+                                       ondelete = "CASCADE",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              sort = True,
+                                                              )),
+                                       sortby = "name",
+                                       )
+
+        # ---------------------------------------------------------------------
         # Activity (not case-specific)
         #
         site_represent = self.org_SiteRepresent(show_link=False)
@@ -1409,7 +1459,7 @@ class DVRCaseActivityModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     #Field("age_group"), @todo: targeted age group(s)
+                     age_group_id(ondelete="SET NULL"),
                      group_type_id(ondelete="SET NULL"),
                      s3_comments(),
                      *s3_meta_fields())

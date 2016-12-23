@@ -201,6 +201,7 @@ def config(settings):
                                "service_id",
                                (T("Type of Group"), "group_type_id"),
                                "gender",
+                               "age_group_id",
                                "facilitator",
                                "site_id",
                                "room_id",
@@ -211,6 +212,7 @@ def config(settings):
                                             "service_id",
                                             (T("Type of Group"), "group_type_id"),
                                             "gender",
+                                            "age_group_id",
                                             "facilitator",
                                             "site_id",
                                             "room_id",
@@ -268,6 +270,7 @@ def config(settings):
                                "end_date",
                                "period",
                                "gender",
+                               "age_group_id",
                                "facilitator",
                                ]
 
@@ -277,6 +280,7 @@ def config(settings):
                                             "end_date",
                                             "period",
                                             "gender",
+                                            "age_group_id",
                                             "facilitator",
                                             "comments",
                                             )
@@ -372,6 +376,20 @@ def config(settings):
 
         elif r.component_name == "case_activity" or r.function == "due_followups":
             # "Individual Support" tab or "Due Follow-ups"
+
+            # CRUD Strings use "Intervention"
+            s3.crud_strings["dvr_case_activity"] = Storage(
+                label_create = T("Create Intervention"),
+                title_display = T("Intervention Details"),
+                title_list = T("Interventions"),
+                title_update = T("Edit Intervention"),
+                label_list_button = T("List Interventions"),
+                label_delete_button = T("Delete Intervention"),
+                msg_record_created = T("Intervention added"),
+                msg_record_modified = T("Intervention updated"),
+                msg_record_deleted = T("Intervention deleted"),
+                msg_list_empty = T("No Interventions currently registered"),
+                )
 
             # Get service root type
             stable = s3db.org_service
@@ -683,6 +701,9 @@ def config(settings):
                 result = True
 
             if r.function == "due_followups":
+
+                crud_strings = s3.crud_strings["dvr_case_activity"]
+                crud_strings["title_list"] = T("Interventions to follow-up")
 
                 # Show person_id as link to case
                 table = r.resource.table

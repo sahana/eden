@@ -174,6 +174,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Need Types", f="need"),
                         M("SNF Justifications", f="activity_funding_reason"),
                         M("Activity Group Types", f="activity_group_type"),
+                        M("Activity Age Groups", f="activity_age_group"),
                         ),
                 )
 
