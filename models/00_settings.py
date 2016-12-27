@@ -151,9 +151,8 @@ if settings.get_auth_openid():
         from gluon.contrib.login_methods.openid_auth import OpenIDAuth
         openid_login_form = OpenIDAuth(auth)
         from gluon.contrib.login_methods.extended_login_form import ExtendedLoginForm
-        extended_login_form = ExtendedLoginForm(auth, openid_login_form,
-                                                signals=["oid", "janrain_nonce"])
-        auth.settings.login_form = extended_login_form
+        _settings.login_form = ExtendedLoginForm(auth, openid_login_form,
+                                                 signals=["oid", "janrain_nonce"])
     except ImportError:
         session.warning = "Library support not available for OpenID"
 
@@ -258,10 +257,12 @@ if s3.debug:
 # CRUD
 
 s3_formstyle = settings.get_ui_formstyle()
+s3_formstyle_read = settings.get_ui_formstyle_read()
 s3_formstyle_mobile = s3_formstyle
 submit_button = T("Save")
 _crud = s3.crud
 _crud.formstyle = s3_formstyle
+_crud.formstyle_read = s3_formstyle_read
 _crud.submit_button = submit_button
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"
@@ -292,9 +293,8 @@ s3.ROWSPERPAGE = 20
 s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG"]
 
 # Default CRUD strings
-ADD_RECORD = T("Add Record")
 s3.crud_strings = Storage(
-    label_create = ADD_RECORD,
+    label_create = T("Add Record"),
     title_display = T("Record Details"),
     title_list = T("Records"),
     title_update = T("Edit Record"),
@@ -308,7 +308,6 @@ s3.crud_strings = Storage(
     msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
     msg_no_match = T("No Matching Records"),
-    name_nice = T("Record"),
-    name_nice_plural = T("Records"))
+    )
 
 # END =========================================================================

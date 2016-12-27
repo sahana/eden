@@ -47,6 +47,13 @@ def membership():
 
     def prep(r):
         if r.interactive:
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                from s3 import s3_phone_represent, S3PhoneWidget
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if r.id and r.component is None and r.method != "delete":
                 # Redirect to person controller
                 vars = {"membership.id": r.id}
@@ -85,7 +92,10 @@ def person():
     tablename = "pr_person"
     table = s3db.pr_person
 
-    s3db.configure(tablename, deletable=False)
+    s3db.configure(tablename,
+                   deletable = False,
+                   )
+
     s3.crud_strings[tablename].update(
             title_upload = T("Import Members"))
 
@@ -147,13 +157,20 @@ def person():
     # CRUD pre-process
     def prep(r):
         if r.interactive:
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                from s3 import s3_phone_represent, S3PhoneWidget
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if r.component_name == "membership":
                 s3.crud_strings["member_membership"].update(
                     label_delete_button = T("Delete Membership"),
                     label_list_button = T("List Memberships")
                 )
 
-            if r.method != "import":
+            if r.method not in ("import", "search_ac", "validate"):
                 if not r.component:
                     # Assume members under 120
                     s3db.pr_person.date_of_birth.widget = \

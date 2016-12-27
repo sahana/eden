@@ -2,7 +2,7 @@
 
 """ Sahana Eden Setup Model
 
-@copyright: 2015 (c) Sahana Software Foundation
+@copyright: 2015-2016 (c) Sahana Software Foundation
 @license: MIT
 
 Permission is hereby granted, free of charge, to any person
@@ -116,7 +116,9 @@ class S3DeployModel(S3Model):
                            custom_retrieve = retrieve_file,
                            custom_store = store_file,
                            label = T("Private Key"),
+                           length = current.MAX_FILENAME_LENGTH,
                            required = True,
+                           requires = IS_LENGTH(current.MAX_FILENAME_LENGTH),
                            ),
                      Field("webserver_type", "integer",
                            label = T("Web Server"),
@@ -138,6 +140,7 @@ class S3DeployModel(S3Model):
                            default = "https://github.com/flavour/eden",
                            label = T("Eden Repo git URL"),
                            ),
+                     # @ToDo: Allow Multiple
                      Field("template",
                            label = T("Template"),
                            required = True,
@@ -555,10 +558,9 @@ def setup_log(filename, category, data):
 # -----------------------------------------------------------------------------
 def setup_get_templates():
     path = os.path.join(current.request.folder, "modules", "templates")
-    templates = set(
-                    os.path.basename(folder) for folder, subfolders, files in os.walk(path) \
-                        for file_ in files if file_ == 'config.py'
-                )
+    templates = set(os.path.basename(folder) for folder, subfolders, files in os.walk(path) \
+                        for file_ in files if file_ == "config.py"
+                    )
 
     return templates
 

@@ -9,7 +9,7 @@
     Messages get sent to the Outbox (& Log)
     From there, the Scheduler tasks collect them & send them
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -41,23 +41,17 @@ __all__ = ("S3Msg",
 
 import base64
 import datetime
+import json
 import re
 import string
 import urllib
 import urllib2
+import os
 
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from lxml import etree
@@ -126,7 +120,7 @@ class S3Msg(object):
         self.CONTACT_OPTS = {"EMAIL":       T("Email"),
                              "FACEBOOK":    T("Facebook"),
                              "FAX":         T("Fax"),
-                             "HOME_PHONE":  T("Home phone"),
+                             "HOME_PHONE":  T("Home Phone"),
                              "RADIO":       T("Radio Callsign"),
                              "RSS":         T("RSS Feed"),
                              "SKYPE":       T("Skype"),
@@ -137,6 +131,7 @@ class S3Msg(object):
                              "WORK_PHONE":  T("Work phone"),
                              "IRC":         T("IRC handle"),
                              "GITHUB":      T("Github Repo"),
+                             "GCM":         T("Google Cloud Messaging"),
                              "LINKEDIN":    T("LinkedIn Profile"),
                              "BLOG":        T("Blog"),
                              "OTHER":       T("Other")
@@ -280,6 +275,8 @@ class S3Msg(object):
                 type = "SMS",
                 recipient_type = None,
                 recipient = None,
+                #@ToDo:
+                #sender = None,
                 #hide = True,
                 subject = "",
                 message = "",
@@ -373,6 +370,7 @@ class S3Msg(object):
                       subject = "",
                       message = "",
                       contact_method = "EMAIL",
+                      document_ids = None,
                       from_address = None,
                       system_generated = False):
         """
@@ -390,6 +388,8 @@ class S3Msg(object):
         # Place the Message in the appropriate Log
         if contact_method == "EMAIL":
             if not from_address:
+                # Fallback to system default
+                # @ToDo: Allow a multi-context lookup here for multi-tenancy?
                 from_address = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
@@ -402,6 +402,15 @@ class S3Msg(object):
             record = dict(id=_id)
             s3db.update_super(table, record)
             message_id = record["message_id"]
+            if document_ids:
+                ainsert = s3db.msg_attachment.insert
+                if not isinstance(document_ids, list):
+                    document_ids = [document_ids]
+                for document_id in document_ids:
+                    ainsert(message_id=message_id,
+                            document_id=document_id,
+                            )
+
         elif contact_method == "SMS":
             table = s3db.msg_sms
             _id = table.insert(body=message,
@@ -515,9 +524,11 @@ class S3Msg(object):
                               message,
                               outbox_id,
                               message_id,
+                              attachments = [],
                               organisation_id = None,
                               contact_method = contact_method,
                               channel_id = channel_id,
+                              from_address = None,
                               outgoing_sms_handler = outgoing_sms_handler,
                               lookup_org = lookup_org,
                               channels = channels):
@@ -547,7 +558,10 @@ class S3Msg(object):
                 if contact_method == "EMAIL":
                     return self.send_email(address,
                                            subject,
-                                           message)
+                                           message,
+                                           sender = from_address,
+                                           attachments = attachments,
+                                           )
                 elif contact_method == "SMS":
                     if lookup_org:
                         channel = channels.get(organisation_id)
@@ -609,7 +623,7 @@ class S3Msg(object):
 
         if contact_method == "EMAIL":
             mailbox = s3db.msg_email
-            fields.extend([mailbox.subject, mailbox.body])
+            fields.extend([mailbox.subject, mailbox.body, mailbox.from_address])
             left.append(mailbox.on(mailbox.message_id == outbox.message_id))
         elif contact_method == "SMS":
             mailbox = s3db.msg_sms
@@ -661,7 +675,7 @@ class S3Msg(object):
                      ptable.on((ptable.id == ttable.person_id) & \
                                (ptable.deleted != True)),
                      ]
-            
+
             atable = s3db.table("deploy_alert")
             if atable:
                 ltable = db.deploy_alert_recipient
@@ -679,22 +693,44 @@ class S3Msg(object):
 
         # Set a default for non-SMS
         organisation_id = None
+        attachment_table = s3db.msg_attachment
+        document_table = s3db.doc_document
+        file_field = document_table.file
+        if file_field.custom_retrieve_file_properties:
+            retrieve_file_properties = file_field.custom_retrieve_file_properties
+        else:
+            retrieve_file_properties = file_field.retrieve_file_properties
+        mail_attachment = current.mail.Attachment
 
         for row in rows:
-
+            attachments = []
             status = True
+            message_id = row.msg_outbox.message_id
 
             if contact_method == "EMAIL":
                 subject = row["msg_email.subject"] or ""
                 message = row["msg_email.body"] or ""
+                from_address = row["msg_email.from_address"] or ""
+                query = (attachment_table.message_id == message_id) & \
+                        (attachment_table.deleted != True) & \
+                        (attachment_table.document_id == document_table.id) & \
+                        (document_table.deleted != True)
+                arows = db(query).select(file_field)
+                for arow in arows:
+                    file = arow.file
+                    prop = retrieve_file_properties(file)
+                    _file_path = os.path.join(prop["path"], file)
+                    attachments.append(mail_attachment(_file_path))
             elif contact_method == "SMS":
                 subject = None
                 message = row["msg_sms.body"] or ""
+                from_address = None
                 if lookup_org:
                     organisation_id = row["msg_sms.organisation_id"]
             elif contact_method == "TWITTER":
                 subject = None
                 message = row["msg_twitter.body"] or ""
+                from_address = None
             else:
                 # @ToDo
                 continue
@@ -711,12 +747,16 @@ class S3Msg(object):
             if entity_type == "pr_person":
                 # Send the message to this person
                 try:
-                    status = dispatch_to_pe_id(pe_id,
-                                               subject,
-                                               message,
-                                               row.id,
-                                               message_id,
-                                               organisation_id)
+                    status = dispatch_to_pe_id(
+                                    pe_id,
+                                    subject,
+                                    message,
+                                    row.id,
+                                    message_id,
+                                    organisation_id = organisation_id,
+                                    from_address = from_address,
+                                    attachments = attachments,
+                                    )
                 except:
                     status = False
 
@@ -799,6 +839,58 @@ class S3Msg(object):
         if chainrun:
             self.process_outbox(contact_method)
 
+    # -------------------------------------------------------------------------
+    # Google Cloud Messaging Push
+    # -------------------------------------------------------------------------
+    def gcm_push(self, title=None, uri=None, message=None, registration_ids=None, channel_id=None):
+        """
+            Push the message relating to google cloud messaging server
+
+            @param title: The title for notification
+            @param message: The message to be sent to GCM server
+            @param api_key: The API key for GCM server
+            @param registration_ids: The list of id that will be notified
+            @param channel_id: The specific channel_id to use for GCM push
+        """
+
+        if not title or not uri or not message or not len(registration_ids):
+            return
+
+        from gcm import GCM
+        gcmtable = current.s3db.msg_gcm_channel
+        if channel_id:
+            query = (gcmtable.channel_id == channel_id)
+        else:
+            query = (gcmtable.enabled == True) & (gcmtable.deleted != True)
+
+        row = current.db(query).select(gcmtable.api_key,
+                                       limitby=(0, 1)).first()
+        try:
+            gcm = GCM(row.api_key)
+        except Exception as e:
+            current.log.error("No API Key configured for GCM: ", e)
+        else:
+            try:
+                # @ToDo: Store notification in outbox if-required
+                # @ToDo: Implement other methods for GCM as required
+                # See: https://github.com/geeknam/python-gcm
+                notification = {"title": title,
+                                "message": message,
+                                "uri": uri,
+                                }
+                response = gcm.json_request(registration_ids=registration_ids,
+                                            data=notification)
+            except Exception as e:
+                current.log.error("Google Cloud Messaging Error", e)
+            else:
+                if "errors" in response:
+                    for error, reg_ids in response["errors"].items():
+                        for reg_id in reg_ids:
+                            current.log.error("Google Cloud Messaging Error: %s for Registration ID %s" % (error, reg_id))
+                # @ToDo: Handle for canonical when required
+                #if "canonical" in response:
+                #    for reg_id, canonical_id in response["canonical"].items():
+                        # @ToDo: Replace registration_id with canonical_id
         return
 
     # -------------------------------------------------------------------------
@@ -857,6 +949,8 @@ class S3Msg(object):
                                    reply_to=reply_to,
                                    sender=sender,
                                    encoding=encoding,
+                                   # e.g. Return-Receipt-To:<user@domain>
+                                   headers={},
                                    # Added to Web2Py 2014-03-04
                                    # - defaults to sender
                                    #from_address=from_address,
@@ -1199,7 +1293,9 @@ class S3Msg(object):
             #    redirect(URL(f='index'))
         except:
             pass
-        return False # Returning False because the API needs to ask us for the messsage again.
+
+        # Return False because the API needs to ask us for the messsage again.
+        return False
 
     # -------------------------------------------------------------------------
     def send_sms_by_pe_id(self,
@@ -1243,6 +1339,7 @@ class S3Msg(object):
             All chunks, except for first, start with prefix.
         """
 
+        from s3 import s3_str
         res = []
         current_prefix = "" # first chunk has no prefix
         while text:
@@ -1255,8 +1352,8 @@ class S3Msg(object):
                 if i > 0: # got a blank
                     c = c[:i]
                 text = text[len(c):].lstrip()
-                res.append((current_prefix + c.rstrip() + suffix))
-                current_prefix = prefix # from now on, we want a prefix
+                res.append(current_prefix + c.rstrip() + s3_str(suffix))
+                current_prefix = s3_str(prefix) # from now on, we want a prefix
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1476,8 +1573,6 @@ class S3Msg(object):
             This is a simple mailbox polling script for the Messaging Module.
             It is normally called from the scheduler.
 
-            @ToDo: Handle MIME attachments
-                   http://docs.python.org/2/library/email-examples.html
             @ToDo: If there is a need to collect from non-compliant mailers
                    then suggest using the robust Fetchmail to collect & store
                    in a more compliant mailer!
@@ -1882,21 +1977,53 @@ class S3Msg(object):
         channel = db(query).select(table.date,
                                    table.etag,
                                    table.url,
+                                   table.content_type,
+                                   table.username,
+                                   table.password,
                                    limitby=(0, 1)).first()
         if not channel:
             return "No Such RSS Channel: %s" % channel_id
 
         # http://pythonhosted.org/feedparser
         import feedparser
+        # Basic Authentication
+        username = channel.username
+        password = channel.password
+        if username and password:
+            # feedparser doesn't do pre-emptive authentication with urllib2.HTTPBasicAuthHandler() and throws errors on the 401
+            base64string = base64.encodestring("%s:%s" % (username, password)).replace("\n", "")
+            request_headers = {"Authorization": "Basic %s" % base64string}
+        else:
+            # Doesn't help to encourage servers to set correct content-type
+            #request_headers = {"Accept": "application/xml"}
+            request_headers = None
+
+        if channel.content_type:
+            # Override content-type (some feeds have text/html set which feedparser refuses to parse)
+            response_headers = {"content-type": "application/xml"}
+        else:
+            response_headers = None
+
         if channel.etag:
             # http://pythonhosted.org/feedparser/http-etag.html
             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
-            d = feedparser.parse(channel.url, etag=channel.etag)
+            d = feedparser.parse(channel.url,
+                                 etag=channel.etag,
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
         elif channel.date:
-            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple())
+            d = feedparser.parse(channel.url,
+                                 modified=channel.date.utctimetuple(),
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
         else:
             # We've not polled this feed before
-            d = feedparser.parse(channel.url)
+            d = feedparser.parse(channel.url,
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
 
         if d.bozo:
             # Something doesn't seem right
@@ -1922,6 +2049,8 @@ class S3Msg(object):
         ginsert = gtable.insert
         mtable = db.msg_rss
         minsert = mtable.insert
+        ltable = db.msg_rss_link
+        linsert = ltable.insert
         update_super = s3db.update_super
 
         # Is this channel connected to a parser?
@@ -1949,7 +2078,7 @@ class S3Msg(object):
             else:
                 location_id = None
 
-            title = entry.title
+            title = entry.get("title")
 
             content = entry.get("content", None)
             if content:
@@ -2010,6 +2139,8 @@ class S3Msg(object):
                     # Don't die on badly-formed Geo
                     pass
 
+            # Get links - these can be multiple with certain type
+            links = entry.get("links", [])
             if exists:
                 db(mtable.id == exists.id).update(channel_id = channel_id,
                                                   title = title,
@@ -2021,13 +2152,32 @@ class S3Msg(object):
                                                   tags = tags,
                                                   # @ToDo: Enclosures
                                                   )
+                if links:
+                    query_ = (ltable.rss_id == exists.id) & (ltable.deleted != True)
+                    for link_ in links:
+                        url_ = link_["url"]
+                        type_ = link_["type"]
+                        query = query_ & (ltable.url == url_) & \
+                                (ltable.type == type_)
+                        dbset = db(query)
+                        row = dbset.select(ltable.id, limitby=(0, 1)).first()
+                        if row:
+                            dbset.update(rss_id = exists.id,
+                                         url = url_,
+                                         type = type_,
+                                         )
+                        else:
+                            linsert(rss_id = exists.id,
+                                    url = url_,
+                                    type = type_,
+                                    )
                 if parser:
                     pinsert(message_id = exists.message_id,
                             channel_id = channel_id)
 
             else:
                 _id = minsert(channel_id = channel_id,
-                              title = entry.title,
+                              title = title,
                               from_address = link,
                               body = content,
                               author = entry.get("author", None),
@@ -2038,6 +2188,11 @@ class S3Msg(object):
                               )
                 record = dict(id=_id)
                 update_super(mtable, record)
+                for link_ in links:
+                    linsert(rss_id = _id,
+                            url = link_["url"],
+                            type = link_["type"],
+                            )
                 if parser:
                     pinsert(message_id = record["message_id"],
                             channel_id = channel_id)
@@ -2061,7 +2216,7 @@ class S3Msg(object):
             Function  to call to fetch tweets into msg_twitter table
             - called via Scheduler or twitter_inbox controller
 
-            http://tweepy.readthedocs.org/en/v3.3.0/api.html  
+            http://tweepy.readthedocs.org/en/v3.3.0/api.html
         """
 
         try:
@@ -2076,7 +2231,7 @@ class S3Msg(object):
         # Initialize Twitter API
         twitter_settings = S3Msg.get_twitter_api(channel_id)
         if twitter_settings:
-            # This is can account with login info, so pull DMs
+            # This is an account with login info, so pull DMs
             dm = True
         else:
             # This is can account without login info, so pull public tweets
@@ -2164,7 +2319,7 @@ class S3Msg(object):
                                       ).first()
         if old_status:
             # Update
-            if status[0] == "+":
+            if status and status[0] == "+":
                 # Increment status if-numeric
                 old_status = old_status.status
                 try:
@@ -2443,7 +2598,7 @@ class S3Compose(S3CRUD):
         if self.method == "compose":
             output = dict(form=form)
         else:
-            r.error(501, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         # Complete the page
         if r.representation == "html":
@@ -2659,7 +2814,8 @@ class S3Compose(S3CRUD):
                                               # Breaks PG
                                               #orderby="instance_type",
                                               filterby="instance_type",
-                                              filter_opts=(recipient_type,))
+                                              filter_opts=(recipient_type,),
+                                              )
                 pe_field.widget = S3PentityAutocompleteWidget(types=(recipient_type,))
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
@@ -2671,20 +2827,23 @@ class S3Compose(S3CRUD):
                  T("Please enter the first few letters of the Person/Group for the autocomplete.")))
 
         sqlform = S3SQLDefaultForm()
-        logform = sqlform(request=request,
-                          resource=s3db.resource("msg_message"),
-                          onvalidation=self._compose_onvalidation,
-                          message="Message Sent",
-                          format="html")
-        outboxform = sqlform(request=request,
-                             resource=s3db.resource("msg_outbox"),
-                             message="Message Sent",
-                             format="html")
 
-        mailform = sqlform(request=request,
-                           resource=s3db.resource("msg_email"),
-                           message="Message Sent",
-                           format="html")
+        s3resource = s3db.resource
+        logform = sqlform(request = request,
+                          resource = s3resource("msg_message"),
+                          onvalidation = self._compose_onvalidation,
+                          message = "Message Sent",
+                          format = "html")
+
+        outboxform = sqlform(request = request,
+                             resource = s3resource("msg_outbox"),
+                             message = "Message Sent",
+                             format = "html")
+
+        mailform = sqlform(request = request,
+                           resource = s3resource("msg_email"),
+                           message = "Message Sent",
+                           format = "html")
 
         # Shortcuts
         lcustom = logform.custom
@@ -2701,7 +2860,7 @@ class S3Compose(S3CRUD):
             pe_row.append(TD(ocustom.widget.pe_id))
             pe_row.append(TD(ocustom.comment.pe_id))
 
-        # Build a custom form from the 2 source forms
+        # Build a custom form from the 3 source forms
         form = DIV(lcustom.begin,
                    TABLE(TBODY(TR(TD(LABEL(ocustom.label.contact_method)),
                                   TD(ocustom.widget.contact_method),
@@ -2727,12 +2886,14 @@ class S3Compose(S3CRUD):
                                TR(TD(),
                                   TD(INPUT(_type="submit",
                                            _value=T("Send message"),
-                                           _id="dummy_submit")),
+                                           _id="dummy_submit"),
+                                     ),
                                   _id="submit_record__row"
+                                  ),
                                ),
                          ),
-                   ),
-                   lcustom.end)
+                   lcustom.end,
+                   )
 
         s3 = current.response.s3
         if s3.debug:

@@ -1,0 +1,2 @@
+UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker
+SITE_DEFAULT,Default,FJ,FJ,8,-17.243,179.2,900913,-20,-12,-180,180,marker_red

@@ -9,10 +9,12 @@ import unittest
 
 from lxml import etree
 
-from s3dal import Field, Query
+from s3dal import Field, Query, S3DAL
 from s3.s3utils import *
 from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields
+
+from unit_tests import run_suite
 
 # =============================================================================
 class S3HierarchyTests(unittest.TestCase):
@@ -1257,6 +1259,7 @@ class S3TypeOfTests(unittest.TestCase):
         current.auth.override = True
 
         db = current.db
+        self.adapter = S3DAL()
 
         if not hasattr(self, "rows"):
             rows = db(db.typeof_hierarchy.id>0).select()
@@ -1726,6 +1729,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1745,8 +1749,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1758,6 +1762,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1777,8 +1782,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1790,6 +1795,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1819,8 +1825,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1832,6 +1838,8 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
+
         uids = self.uids
 
         # Remove hierarchy setting
@@ -1847,8 +1855,8 @@ class S3TypeOfTests(unittest.TestCase):
         expected = set(uids[uid] for uid in ("HIERARCHY1",))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1863,8 +1871,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -2080,18 +2088,6 @@ class S3TypeOfTests(unittest.TestCase):
                         msg = "%s != %s" % (query, expected_query))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

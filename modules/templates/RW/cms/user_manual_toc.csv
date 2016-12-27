@@ -1,0 +1,8 @@
+Module,Name,Title,Body
+manual,UserManual,"User Manual","<div class=""online-documentation"">
+<h3>Table of contents</h3>
+<ul>
+ <li><em>...tbw</em></li>
+ <!--<li><a href=""{{name:UserManualDataEntry}}"">Data Entry</a></li>-->
+</ul>
+</div>"

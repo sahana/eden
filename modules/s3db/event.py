@@ -2,7 +2,7 @@
 
 """ Sahana Eden Event Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,22 +34,26 @@ __all__ = ("S3EventModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
            "S3EventActivityModel",
-           "S3EventAlertModel",
            "S3EventAssetModel",
+           "S3EventBookmarkModel",
            "S3EventCMSModel",
+           "S3EventDCModel",
            "S3EventHRModel",
            "S3EventTeamModel",
            "S3EventImpactModel",
            #"S3EventIReportModel",
            "S3EventMapModel",
            "S3EventOrganisationModel",
+           "S3EventProjectModel",
            #"S3EventRequestModel",
            "S3EventResourceModel",
            "S3EventSiteModel",
            "S3EventSitRepModel",
+           "S3EventTagModel",
            "S3EventTaskModel",
            "S3EventShelterModel",
            "event_notification_dispatcher",
+           "event_event_list_layout",
            "event_incident_list_layout",
            "event_rheader",
            )
@@ -58,7 +62,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3EventModel(S3Model):
@@ -96,15 +100,20 @@ class S3EventModel(S3Model):
         NONE = messages["NONE"]
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
+        disaster = settings.get_event_label() # If we add more options in future then == "Disaster"
+        exercise = settings.get_event_exercise()
         hierarchical_event_types = settings.get_event_types_hierarchical()
 
         # ---------------------------------------------------------------------
-        # Event Types / Disaster Types
+        # Event Types
         #
         tablename = "event_event_type"
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
                            label = T("SubType of"),
@@ -145,22 +154,39 @@ class S3EventModel(S3Model):
             #                        _title="%s|%s" % (T("Event Type"),
             #                                          AUTOCOMPLETE_HELP))
 
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Event Type"),
-            title_display = T("Event Type Details"),
-            title_list = T("Event Types"),
-            title_update = T("Edit Event Type"),
-            title_upload = T("Import Event Types"),
-            label_list_button = T("List Event Types"),
-            label_delete_button = T("Delete Event Type"),
-            msg_record_created = T("Event Type added"),
-            msg_record_modified = T("Event Type updated"),
-            msg_record_deleted = T("Event Type removed"),
-            msg_list_empty = T("No Event Types currently registered")
-            )
+        if disaster:
+            label = T("Disaster Type")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Disaster Type"),
+                title_display = T("Disaster Type Details"),
+                title_list = T("Disaster Types"),
+                title_update = T("Edit Disaster Type"),
+                title_upload = T("Import Disaster Types"),
+                label_list_button = T("List Disaster Types"),
+                label_delete_button = T("Delete Disaster Type"),
+                msg_record_created = T("Disaster Type added"),
+                msg_record_modified = T("Disaster Type updated"),
+                msg_record_deleted = T("Disaster Type removed"),
+                msg_list_empty = T("No Disaster Types currently registered")
+                )
+        else:
+            label = T("Event Type")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Event Type"),
+                title_display = T("Event Type Details"),
+                title_list = T("Event Types"),
+                title_update = T("Edit Event Type"),
+                title_upload = T("Import Event Types"),
+                label_list_button = T("List Event Types"),
+                label_delete_button = T("Delete Event Type"),
+                msg_record_created = T("Event Type added"),
+                msg_record_modified = T("Event Type updated"),
+                msg_record_deleted = T("Event Type removed"),
+                msg_list_empty = T("No Event Types currently registered")
+                )
 
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
-                                        label = T("Event Type"),
+                                        label = label,
                                         ondelete = "RESTRICT",
                                         represent = type_represent,
                                         requires = IS_EMPTY_OR(
@@ -174,7 +200,7 @@ class S3EventModel(S3Model):
                                         )
 
         configure(tablename,
-                  deduplicate = self.event_type_duplicate,
+                  deduplicate = S3Duplicate(),
                   hierarchy = hierarchy,
                   )
 
@@ -186,12 +212,21 @@ class S3EventModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "event_event"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      Field("name",      # Name could be a code
                            length = 64,   # Mayon compatibility
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
                      event_type_id(),
+                     #Field("intensity",
+                     #      label = T("Intensity"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Intensity"),
+                     #                                      T("e.g. Category for a Typhoon or Magnitude for an Earthquake"))),
+                     #      ),
                      self.org_organisation_id(
                         comment = DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Organization"),
@@ -204,6 +239,8 @@ class S3EventModel(S3Model):
                            default = False,
                            label = T("Exercise?"),
                            represent = lambda opt: "√" if opt else NONE,
+                           readable = exercise,
+                           writable = exercise,
                            #comment = DIV(_class="tooltip",
                            #              _title="%s|%s" % (T("Exercise"),
                                                            # Should!
@@ -232,18 +269,34 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_EVENT = T("New Event")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_EVENT,
-            title_display = T("Event Details"),
-            title_list = T("Events"),
-            title_update = T("Edit Event"),
-            label_list_button = T("List Events"),
-            label_delete_button = T("Delete Event"),
-            msg_record_created = T("Event added"),
-            msg_record_modified = T("Event updated"),
-            msg_record_deleted = T("Event deleted"),
-            msg_list_empty = T("No Events currently registered"))
+        if disaster:
+            label = T("Disaster")
+            ADD_EVENT = T("New Disaster")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_EVENT,
+                title_display = T("Disaster Details"),
+                title_list = T("Disasters"),
+                title_update = T("Edit Disaster"),
+                label_list_button = T("List Disasters"),
+                label_delete_button = T("Delete Disaster"),
+                msg_record_created = T("Disaster added"),
+                msg_record_modified = T("Disaster updated"),
+                msg_record_deleted = T("Disaster deleted"),
+                msg_list_empty = T("No Disasters currently registered"))
+        else:
+            label = T("Event")
+            ADD_EVENT = T("New Event")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_EVENT,
+                title_display = T("Event Details"),
+                title_list = T("Events"),
+                title_update = T("Edit Event"),
+                label_list_button = T("List Events"),
+                label_delete_button = T("Delete Event"),
+                msg_record_created = T("Event added"),
+                msg_record_modified = T("Event updated"),
+                msg_record_deleted = T("Event deleted"),
+                msg_list_empty = T("No Events currently registered"))
 
         represent = S3Represent(lookup=tablename)
         event_id = S3ReusableField("event_id", "reference %s" % tablename,
@@ -256,7 +309,7 @@ class S3EventModel(S3Model):
                                                           orderby="event_event.name",
                                                           sort=True)),
                                    represent = represent,
-                                   label = T("Event"),
+                                   label = label,
                                    ondelete = "CASCADE",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
                                    #widget = S3AutocompleteWidget()
@@ -268,34 +321,42 @@ class S3EventModel(S3Model):
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
+        filter_widgets = [S3LocationFilter("event_location.location_id",
+                                           levels = levels,
+                                           label = T("Location"),
+                                           ),
+                          # @ToDo: Filter for events which are open within a date range
+                          #S3DateFilter("start_date",
+                          #             label = None,
+                          #             hide_time = True,
+                          #             input_labels = {"ge": "From", "le": "To"}
+                          #             ),
+                          # Typically we just need to filter by Year
+                          S3OptionsFilter("year",
+                                          label = T("Year"),
+                                          ),
+                          S3OptionsFilter("closed",
+                                          label = T("Status"),
+                                          options = OrderedDict([(False, T("Open")),
+                                                                 (True, T("Closed")),
+                                                                 ]),
+                                          cols = 2,
+                                          sort = False,
+                                          ),
+                          ]
+
         if hierarchical_event_types:
-            filter_widgets = [S3HierarchyFilter("event_type_id",
-                                                label = T("Type"),
-                                                #multiple = False,
-                                                ),
-                              ]
+            filter_widgets.insert(0, S3HierarchyFilter("event_type_id",
+                                                       label = T("Type"),
+                                                       ))
         else:
-            filter_widgets = [S3OptionsFilter("event_type_id",
-                                              label = T("Type"),
-                                              multiple = False,
-                                              #options = lambda: \
-                                              #  get_s3_filter_opts("event_event_type",
-                                              #                     translate = True)
-                                              ),
-                              ]
-
-        filter_widgets.extend((S3LocationFilter("event_location.location_id",
-                                                levels = levels,
-                                                label = T("Location"),
-                                                ),
-                               # @ToDo: Filter for any event which starts or ends within a date range
-                               S3DateFilter("start_date",
-                                            label = None,
-                                            hide_time = True,
-                                            input_labels = {"ge": "From", "le": "To"}
-                                            ),
-                               ))
-
+            filter_widgets.insert(0, S3OptionsFilter("event_type_id",
+                                                     label = T("Type"),
+                                                     #multiple = False,
+                                                     #options = lambda: \
+                                                     #  s3_get_filter_opts("event_event_type",
+                                                     #                     translate = True)
+                                                     ))
         report_fields = ["event_type_id",
                          ]
         rappend = report_fields.append
@@ -317,45 +378,119 @@ class S3EventModel(S3Model):
                 ),
             )
 
+        # Custom Form
+        crud_fields = ["name",
+                       "event_type_id",
+                       "start_date",
+                       "closed",
+                       "end_date",
+                       S3SQLInlineComponent("event_location",
+                                            label = T("Locations"),
+                                            #multiple = False,
+                                            fields = [("", "location_id")],
+                                            ),
+                       "comments",
+                       ]
+
+        list_fields = ["name",
+                       (T("Type"), "event_type_id$name"),
+                       (T("Location"), "location.name"),
+                       "start_date",
+                       "closed",
+                       "comments",
+                       ]
+
+        if exercise:
+            crud_fields.insert(1, "exercise")
+            list_fields.insert(4, "exercise")
+            filter_widgets.insert(2, S3OptionsFilter("exercise",
+                                                     label = T("Exercise"),
+                                                     options = OrderedDict([(True, T("Yes")),
+                                                                            (False, T("No")),
+                                                                            ]),
+                                                     cols = 2,
+                                                     sort = False,
+                                                     ))
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
         configure(tablename,
                   context = {"location": "event_location.location_id",
                              },
-                  deduplicate = self.event_duplicate,
+                  crud_form = crud_form,
+                  deduplicate = S3Duplicate(primary = ("name",
+                                                       ),
+                                            secondary = ("event_type_id",
+                                                         "start_date",
+                                                         ),
+                                            ),
                   extra_fields = ["start_date"],
                   filter_widgets = filter_widgets,
-                  list_fields = ["id",
-                                 "name",
-                                 "event_type_id$name",
-                                 (T("Location"), "location.name"),
-                                 "start_date",
-                                 "exercise",
-                                 "closed",
-                                 "comments",
-                                 ],
+                  list_fields = list_fields,
+                  list_layout = event_event_list_layout,
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
                   report_options = report_options,
+                  super_entity = "doc_entity",
                   update_onaccept = self.event_update_onaccept,
                   )
 
         # Components
         self.add_components(tablename,
                             event_incident = "event_id",
+                            dc_collection = {"link": "event_collection",
+                                             "joinby": "event_id",
+                                             "key": "collection_id",
+                                             "actuate": "replace",
+                                             },
+                            dc_target = {"link": "event_target",
+                                         "joinby": "event_id",
+                                         "key": "target_id",
+                                         "actuate": "replace",
+                                         },
+                            doc_sitrep = {"link": "event_sitrep",
+                                          "joinby": "event_id",
+                                          "key": "sitrep_id",
+                                          "actuate": "replace",
+                                          },
                             gis_location = {"link": "event_event_location",
                                             "joinby": "event_id",
                                             "key": "location_id",
                                             "actuate": "hide",
                                             },
+                            event_activity = {"name": "event_activity",
+                                              "joinby": "event_id",
+                                              },
+                            project_activity = {"link": "event_activity",
+                                                "joinby": "event_id",
+                                                "key": "activity_id",
+                                                "actuate": "replace",
+                                                },
+                            event_project = {"name": "event_project",
+                                             "joinby": "event_id",
+                                             },
+                            project_project = {"link": "event_project",
+                                               "joinby": "event_id",
+                                               "key": "project_id",
+                                               "actuate": "replace",
+                                               },
                             event_event_location = "event_id",
                             event_post = "event_id",
                             event_event_tag = {"name": "tag",
                                                "joinby": "event_id",
                                                },
+                            event_team = "event_id",
+                            pr_group = {"link": "event_team",
+                                        "joinby": "event_id",
+                                        "key": "group_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
                             req_req = "event_id",
                             stats_impact = {"link": "event_event_impact",
                                             "joinby": "event_id",
                                             "key": "impact_id",
-                                            #"actuate": "hide",
+                                            "actuate": "replace",
                                             },
                             event_event_impact = "event_id",
                             )
@@ -371,16 +506,25 @@ class S3EventModel(S3Model):
         define_table(tablename,
                      event_id(),
                      self.gis_location_id(
-                        widget = S3LocationAutocompleteWidget(),
+                        widget = S3LocationSelector(show_map=False),
+                        #widget = S3LocationAutocompleteWidget(),
                         requires = IS_LOCATION(),
                         represent = self.gis_LocationRepresent(sep=", "),
-                        comment = S3AddResourceLink(c="gis",
-                                                    f="location",
-                                                    label = T("Create Location"),
-                                                    title=T("Location"),
-                                                    tooltip=AUTOCOMPLETE_HELP),
+                        #comment = S3PopupLink(c = "gis",
+                        #                      f = "location",
+                        #                      label = T("Create Location"),
+                        #                      title = T("Location"),
+                        #                      tooltip = AUTOCOMPLETE_HELP,
+                        #                      ),
                         ),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "location_id",
+                                                       ),
+                                            ),
+                  )
 
         # ---------------------------------------------------------------------
         # Event Tags
@@ -404,7 +548,10 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.event_event_tag_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "tag",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -439,6 +586,8 @@ class S3EventModel(S3Model):
             Requires "start_date" to be in extra_fields
 
             @param row: the Row
+
+            @ToDo: Extend this to show multiple years if open for multiple?
         """
 
         try:
@@ -480,83 +629,6 @@ class S3EventModel(S3Model):
             for row in rows:
                 db(table.id == row.post_id).update(expired=True)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_duplicate(item):
-        """
-            Deduplication of Events
-        """
-
-        table = item.table
-        data = item.data
-        query = None
-        # Mandatory checks: Name &/or Start Date
-        for field in ("name", "start_date"):
-            value = data.get(field, None)
-            if value:
-                q = (table[field] == value)
-                if query:
-                    query &= q
-                else:
-                    query = q
-
-        if not query:
-            return
-
-        # Optional check: Include Type
-        event_type_id = data.get("event_type_id", None)
-        if event_type_id:
-            query &= (table.event_type_id == event_type_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_type_duplicate(item):
-        """
-            Deduplication of Event Types
-        """
-
-        data = item.data
-        name = data.get("name", None)
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name == name)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_event_tag_deduplicate(item):
-        """
-           Deduplication of Event Tags
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        event = data.get("event_id", None)
-        if not tag or not event:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.event_id == event)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
 # =============================================================================
 class S3IncidentModel(S3Model):
     """
@@ -578,6 +650,11 @@ class S3IncidentModel(S3Model):
         settings = current.deployment_settings
         set_method = self.set_method
 
+        if settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Incidents
         #
@@ -589,7 +666,8 @@ class S3IncidentModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           # Enable in template if-required
-                          self.event_event_id(readable = False,
+                          self.event_event_id(ondelete = ondelete,
+                                              readable = False,
                                               writable = False,
                                               ),
                           self.event_incident_type_id(),
@@ -597,6 +675,9 @@ class S3IncidentModel(S3Model):
                           Field("name", notnull=True, # Name could be a code
                                 length = 64,
                                 label = T("Name"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("exercise", "boolean",
                                 label = T("Exercise?"),
@@ -606,11 +687,9 @@ class S3IncidentModel(S3Model):
                                                                  # Should!
                                 #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                                 ),
-                          s3_datetime(name = "zero_hour",
-                                      default = "now",
-                                      label = T("Zero Hour"),
+                          s3_datetime(default = "now",
                                       comment = DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Zero Hour"),
+                                                    _title="%s|%s" % (T("Date"),
                                                                       T("The time at which the Incident started."))),
                                       ),
                           s3_datetime(name = "end_date",
@@ -668,19 +747,23 @@ class S3IncidentModel(S3Model):
         # @ToDo: Move this workflow into Templates?
         # - or useful to have good defaults
         if settings.has_module("project"):
-            create_next_url = URL(args=["[id]", "task"])
+            create_next_url = URL(c="event", f="incident",
+                                  args=["[id]", "task"])
         elif settings.has_module("hrm"):
-            create_next_url = URL(args=["[id]", "human_resource"])
+            create_next_url = URL(c="event", f="incident",
+                                  args=["[id]", "human_resource"])
         elif settings.has_module("asset"):
-            create_next_url = URL(args=["[id]", "asset"])
+            create_next_url = URL(c="event", f="incident",
+                                  args=["[id]", "asset"])
         else:
-            create_next_url = URL(args=["[id]", "site"])
+            create_next_url = URL(c="event", f="incident",
+                                  args=["[id]", "site"])
 
         self.configure(tablename,
                        create_next = create_next_url,
                        create_onaccept = self.incident_create_onaccept,
-                       deduplicate = self.incident_duplicate,
-                       list_fields = ["id",
+                       deduplicate = S3Duplicate(),
+                       list_fields = ["date",
                                       "name",
                                       "incident_type_id",
                                       "exercise",
@@ -689,7 +772,7 @@ class S3IncidentModel(S3Model):
                                       ],
                        list_layout = event_incident_list_layout,
                        # Most recent Incident first
-                       orderby = "event_incident.zero_hour desc",
+                       orderby = "event_incident.date desc",
                        super_entity = "doc_entity",
                        update_onaccept = self.incident_update_onaccept,
                        )
@@ -774,6 +857,23 @@ class S3IncidentModel(S3Model):
                                             },
                             )
 
+        # Custom Methods
+        set_method("event", "incident",
+                   method = "add_tag",
+                   action = self.incident_add_tag)
+
+        set_method("event", "incident",
+                   method = "remove_tag",
+                   action = self.incident_remove_tag)
+
+        set_method("event", "incident",
+                   method = "add_bookmark",
+                   action = self.incident_add_bookmark)
+
+        set_method("event", "incident",
+                   method = "remove_bookmark",
+                   action = self.incident_remove_bookmark)
+
         # Custom Method to Assign HRs
         set_method("event", "incident",
                    method = "assign",
@@ -813,11 +913,11 @@ class S3IncidentModel(S3Model):
 
         closed = form_vars.get("closed", False)
 
-        incident = form_vars.get("id", None)
+        incident = form_vars.get("id")
         if incident and not closed:
             # Set the Incident in the session
             current.session.s3.incident = incident
-        event = form_vars.get("event_id", None)
+        event = form_vars.get("event_id")
         if event and not closed:
             # Set the Event in the session
             current.session.s3.event = event
@@ -826,13 +926,13 @@ class S3IncidentModel(S3Model):
         db = current.db
         ctable = s3db.gis_config
         mapconfig = None
-        scenario = form_vars.get("scenario_id", None)
+        scenario = form_vars.get("scenario_id")
         if scenario:
             # We have been instantiated from a Scenario, so
             # copy all resources from the Scenario to the Incident
 
             # Read the source resource tables
-            table = db.scenario_scenario
+            table = s3db.scenario_scenario
             otable = s3db.scenario_organisation
             stable = s3db.scenario_site
             mtable = s3db.scenario_config
@@ -885,9 +985,10 @@ class S3IncidentModel(S3Model):
             del mapconfig["uuid"]
             mapconfig["name"] = form_vars.name
             config = ctable.insert(**mapconfig.as_dict())
-            mtable = db.event_config
-            mtable.insert(incident_id=incident,
-                          config_id=config)
+            mtable = s3db.event_config
+            mtable.insert(incident_id = incident,
+                          config_id = config,
+                          )
             # Activate this config
             if not closed:
                 current.gis.set_config(config)
@@ -897,7 +998,7 @@ class S3IncidentModel(S3Model):
             # We have been created without a Scenario or from a Scenario without a Map Config
             # Create a new Map Config
             config = ctable.insert(name = form_vars.name)
-            mtable = db.event_config
+            mtable = s3db.event_config
             mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
@@ -936,28 +1037,178 @@ class S3IncidentModel(S3Model):
             for row in rows:
                 db(table.id == row.post_id).update(expired=True)
 
-    # -------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
     @staticmethod
-    def incident_duplicate(item):
+    def incident_add_tag(r, **attr):
         """
-            Deduplication of Incidents
+            Add a Tag to an Incident
+
+            S3Method for interactive requests
+            - designed to be called as an afterTagAdded callback to tag-it.js
         """
 
-        data = item.data
-        name = data.get("name", None)
-        event_id = data.get("event_id", None)
+        incident_id = r.id
+        if not incident_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
-        table = item.table
-        query = (table.name == name)
-        if event_id:
-            query = query & ((table.event_id == event_id) | \
-                             (table.event_id == None))
+        tag = r.args[2]
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.cms_tag
+        ltable = s3db.event_tag
+        exists = db(ttable.name == tag).select(ttable.id,
+                                               ttable.deleted,
+                                               ttable.deleted_fk,
+                                               limitby=(0, 1)
+                                               ).first()
+        if exists:
+            tag_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ttable.id == tag_id).update(**data)
+        else:
+            tag_id = ttable.insert(name=tag)
+        query = (ltable.tag_id == tag_id) & \
+                (ltable.incident_id == incident_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == exists.id).update(**data)
+        else:
+            ltable.insert(incident_id = incident_id,
+                          tag_id = tag_id,
+                          )
 
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
+        output = current.xml.json_message(True, 200, "Tag Added")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def incident_remove_tag(r, **attr):
+        """
+            Remove a Tag from an Incident
+
+            S3Method for interactive requests
+            - designed to be called as an afterTagRemoved callback to tag-it.js
+        """
+
+        incident_id = r.id
+        if not incident_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        tag = r.args[2]
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.cms_tag
+        exists = db(ttable.name == tag).select(ttable.id,
+                                               ttable.deleted,
+                                               limitby=(0, 1)
+                                               ).first()
+        if exists:
+            tag_id = exists.id
+            ltable = s3db.event_tag
+            query = (ltable.tag_id == tag_id) & \
+                    (ltable.incident_id == incident_id)
+            exists = db(query).select(ltable.id,
+                                      ltable.deleted,
+                                      limitby=(0, 1)
+                                      ).first()
+            if exists and not exists.deleted:
+                resource = s3db.resource("event_tag", id=exists.id)
+                resource.delete()
+
+        output = current.xml.json_message(True, 200, "Tag Removed")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def incident_add_bookmark(r, **attr):
+        """
+            Bookmark an Incident
+
+            S3Method for interactive requests
+        """
+
+        incident_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not incident_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.incident_id == incident_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(incident_id = incident_id,
+                                    user_id = user_id,
+                                    )
+
+        output = current.xml.json_message(True, 200, "Bookmark Added")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def incident_remove_bookmark(r, **attr):
+        """
+            Remove a Bookmark for an Incident
+
+            S3Method for interactive requests
+        """
+
+        incident_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not incident_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.incident_id == incident_id) & \
+                (ltable.user_id == user_id)
+        exists = current.db(query).select(ltable.id,
+                                          ltable.deleted,
+                                          limitby=(0, 1)
+                                          ).first()
+        if exists and not exists.deleted:
+            resource = s3db.resource("event_bookmark", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, "Bookmark Removed")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
 
 # =============================================================================
 class S3IncidentReportModel(S3Model):
@@ -985,11 +1236,12 @@ class S3IncidentReportModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           # @ToDo: Use link tables?
-                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
                           s3_datetime(default="now"),
                           Field("name", notnull=True,
                                 label = T("Title"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           self.event_incident_type_id(),
                           self.gis_location_id(),
@@ -1084,6 +1336,29 @@ class S3IncidentReportModel(S3Model):
         return {}
 
 # =============================================================================
+class S3EventActivityModel(S3Model):
+    """
+        Link Project Activities to Events
+    """
+
+    names = ("event_activity",
+             )
+
+    def model(self):
+
+        tablename = "event_activity"
+        self.define_table(tablename,
+                          self.event_event_id(empty = False,
+                                              ondelete = "CASCADE"),
+                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.project_activity_id(#ondelete = "CASCADE", # default anyway
+                                                   ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class S3EventResourceModel(S3Model):
     """
         Resources Assigned to Events/Incidents
@@ -1120,7 +1395,7 @@ class S3EventResourceModel(S3Model):
                           super_link("data_id", "stats_data"),
                           super_link("track_id", "sit_trackable"),
                           # Resources are normally managed at the Incident level
-                          #self.event_event_id(ondelete = "CASCADE",
+                          #self.event_event_id(ondelete = ondelete,
                           #                    # enable in template if-required
                           #                    readable = False,
                           #                    writable = False,
@@ -1136,10 +1411,11 @@ class S3EventResourceModel(S3Model):
                                                              translate=True),
                                      readable = True,
                                      writable = True,
-                                     comment = S3AddResourceLink(c="org",
-                                                                 f="resource_type",
-                                                                 vars = dict(child = "parameter_id"),
-                                                                 title=T("Create Resource Type")),
+                                     comment = S3PopupLink(c = "org",
+                                                           f = "resource_type",
+                                                           vars = {"child": "parameter_id"},
+                                                           title = T("Create Resource Type"),
+                                                           ),
                                      ),
                           Field("status", "integer",
                                 label = T("Status"),
@@ -1308,6 +1584,9 @@ class S3IncidentTypeModel(S3Model):
         self.define_table(tablename,
                           Field("name", notnull=True, length=64,
                                 label = T("Name"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
                                 ),
                           Field("parent", "reference event_incident_type", # This form of hierarchy may not work on all Databases
                                 label = T("SubType of"),
@@ -1377,7 +1656,7 @@ class S3IncidentTypeModel(S3Model):
                                            comment = incident_type_comment,
                                            )
         self.configure(tablename,
-                       deduplicate = self.incident_type_duplicate,
+                       deduplicate = S3Duplicate(),
                        hierarchy = hierarchy,
                        )
 
@@ -1398,26 +1677,6 @@ class S3IncidentTypeModel(S3Model):
 
         return dict(event_incident_type_id = lambda **attr: dummy("incident_type_id"),
                     )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def incident_type_duplicate(item):
-        """
-            Deduplication of Incident Types
-        """
-
-        data = item.data
-        name = data.get("name", None)
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3IncidentTypeTagModel(S3Model):
@@ -1446,31 +1705,6 @@ class S3IncidentTypeTagModel(S3Model):
                           Field("tag", label=T("Key")),
                           Field("value", label=T("Value")),
                           s3_comments(),
-                          *s3_meta_fields())
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class S3EventActivityModel(S3Model):
-    """
-        Link Project Activities to Events
-    """
-
-    names = ("event_activity",
-             )
-
-    def model(self):
-
-        if not current.deployment_settings.has_module("project"):
-            return None
-
-        tablename = "event_activity"
-        self.define_table(tablename,
-                          self.event_event_id(empty = False,
-                                              ondelete = "CASCADE"),
-                          #self.event_incident_id(ondelete = "CASCADE"),
-                          self.project_activity_id(empty = False),
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
@@ -1508,6 +1742,7 @@ class S3EventAlertModel(S3Model):
                      Field("subject", length=78,    # RFC 2822
                            comment = T("The subject of the alert (optional)"),
                            label = T("Subject"),
+                           requires = IS_LENGTH(78),
                            ),
                      Field("body", "text",
                            label = T("Message"),
@@ -1568,7 +1803,7 @@ class S3EventAlertModel(S3Model):
             label_delete_button = T("Delete Recipient"),
             msg_record_created = T("Recipient added"),
             msg_record_modified = T("Recipient Details updated"),
-            msg_record_deleted = T("Recipient deleted"),
+            msg_record_deleted = T("Recipient removed"),
             msg_list_empty = T("No Recipients currently defined"))
 
         # Pass names back to global scope (s3.*)
@@ -1646,7 +1881,10 @@ class S3EventAssetModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       deduplicate = self.event_asset_duplicate,
+                       deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "asset_id",
+                                                            ),
+                                                 ),
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "asset_id",
                                       "status",
@@ -1661,26 +1899,42 @@ class S3EventAssetModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_asset_duplicate(item):
-        """ Import item de-duplication """
+# =============================================================================
+class S3EventBookmarkModel(S3Model):
+    """
+        Bookmarks for Events &/or Incidents
+    """
 
-        data = item.data
-        incident_id = data.get("incident_id")
-        asset_id = data.get("asset_id")
+    names = ("event_bookmark",
+             )
 
-        if incident_id and asset_id:
-            table = item.table
+    def model(self):
 
-            query = (table.incident_id == incident_id) & \
-                    (table.asset_id == asset_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Bookamrks: Link table between Users & Events/Incidents
+        tablename = "event_bookmark"
+        self.define_table(tablename,
+                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          Field("user_id", current.auth.settings.table_user),
+                          *s3_meta_fields())
+
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Bookmark Incident"),
+        #    title_display = T("Bookmark Details"),
+        #    title_list = T("Bookmarks"),
+        #    title_update = T("Edit Bookmark"),
+        #    label_list_button = T("List Bookmarks"),
+        #    label_delete_button = T("Remove Bookmark for this Incident"),
+        #    msg_record_created = T("Bookmark added"),
+        #    msg_record_modified = T("Bookmark updated"),
+        #    msg_record_deleted = T("Bookmark removed"),
+        #    msg_list_empty = T("No Incidents currently bookmarked"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3EventCMSModel(S3Model):
@@ -1696,15 +1950,17 @@ class S3EventCMSModel(S3Model):
 
         #T = current.T
 
+        post_id = self.cms_post_id
+
         # ---------------------------------------------------------------------
         # Link table between Posts & Events/Incidents
         tablename = "event_post"
         self.define_table(tablename,
                           self.event_event_id(ondelete = "CASCADE"),
                           self.event_incident_id(ondelete = "CASCADE"),
-                          self.cms_post_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
+                          post_id(empty = False,
+                                  ondelete = "CASCADE",
+                                  ),
                           *s3_meta_fields())
 
         #current.response.s3.crud_strings[tablename] = Storage(
@@ -1723,12 +1979,54 @@ class S3EventCMSModel(S3Model):
         # Link table between Posts & Incident Types
         tablename = "event_post_incident_type"
         self.define_table(tablename,
-                          self.cms_post_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
+                          post_id(empty = False,
+                                  ondelete = "CASCADE",
+                                  ),
                           self.event_incident_type_id(empty = False,
                                                       ondelete = "CASCADE",
                                                       ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventDCModel(S3Model):
+    """
+        Link Data Collections to Events &/or Incidents
+    """
+
+    names = ("event_collection",
+             "event_target",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        event_id = self.event_event_id
+        incident_id = self.event_incident_id
+
+        # ---------------------------------------------------------------------
+        # Link table between Collections & Events/Incidents
+        tablename = "event_collection"
+        self.define_table(tablename,
+                          event_id(ondelete = "CASCADE"),
+                          incident_id(ondelete = "CASCADE"),
+                          self.dc_collection_id(empty = False,
+                                                ondelete = "CASCADE",
+                                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Link table between Targets & Events/Incidents
+        tablename = "event_target"
+        self.define_table(tablename,
+                          event_id(ondelete = "CASCADE"),
+                          incident_id(ondelete = "CASCADE"),
+                          self.dc_target_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
@@ -1780,6 +2078,7 @@ class S3EventHRModel(S3Model):
                                        status_opts.get(opt, current.messages.UNKNOWN_OPT),
                                 requires = IS_IN_SET(status_opts),
                                 ),
+                          s3_comments(),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1812,7 +2111,10 @@ class S3EventHRModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       deduplicate = self.event_human_resource_duplicate,
+                       deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "human_resource_id",
+                                                            ),
+                                                 ),
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "human_resource_id",
                                       "status",
@@ -1827,34 +2129,12 @@ class S3EventHRModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_human_resource_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        incident_id = data.get("incident_id")
-        human_resource_id = data.get("human_resource_id")
-
-        if incident_id and human_resource_id:
-            table = item.table
-
-            query = (table.incident_id == incident_id) & \
-                    (table.human_resource_id == human_resource_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
-
 # =============================================================================
 class S3EventTeamModel(S3Model):
     """ Link teams to incidents """
 
-    names = ("event_team",
-             "event_team_status",
-             "event_team_status_team",
+    names = ("event_team_status",
+             "event_team",
              )
 
     def model(self):
@@ -1864,70 +2144,44 @@ class S3EventTeamModel(S3Model):
 
         define_table = self.define_table
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
 
-        group_id = self.pr_group_id
-
-        status_opts = {1: T("Alerted"),
-                       2: T("Standing By"),
-                       3: T("Active"),
-                       4: T("Deactivated"),
-                       5: T("Unable to activate"),
-                       }
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
-        # Link table incident<=>team
+        # Event Team Statuses
         #
-        tablename = "event_team"
-        define_table(tablename,
-                     self.event_incident_id(ondelete = "CASCADE"),
-                     group_id(empty = False,
-                              ondelete = "RESTRICT",
-                              # Dropdown, not Autocomplete
-                              widget = None,
-                              ),
-                     Field("status", "integer",
-                           default = 1,
-                           represent = lambda opt: \
-                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(status_opts),
-                           ),
-                     *s3_meta_fields())
-
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Assign Team"),
-            title_display = T("Team Details"),
-            title_list = T("Assigned Teams"),
-            title_update = T("Edit Team"),
-            label_list_button = T("List Assigned Teams"),
-            label_delete_button = T("Remove Team from this incident"),
-            msg_record_created = T("Team assigned"),
-            msg_record_modified = T("Team Assignment updated"),
-            msg_record_deleted = T("Team Assignment removed"),
-            msg_list_empty = T("No Teams currently assigned to this incident"))
-
-        configure(tablename,
-                  # Team can be assigned to multiple incidents,
-                  # so updates must match both incident_id and group_id:
-                  deduplicate = S3Duplicate(primary=("incident_id",
-                                                     "group_id",
-                                                     )),
-                  )
-
-        # ---------------------------------------------------------------------
-        # Taxonomy for response team (unit) status
+        # @ToDo: May need to categorise these by Organisation
         #
         tablename = "event_team_status"
         define_table(tablename,
                      Field("name",
                            length = 64,
-                           label = T("Status Code"),
-                           requires = IS_NOT_EMPTY(),
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
-                     Field("description"),
-                     # Not currently needed (...yet):
-                     #self.org_organisation_id(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # CRUD Strings
+        CREATE_STATUS = T("Create Group Status")
+        crud_strings[tablename] = Storage(
+            label_create = CREATE_STATUS,
+            title_display = T("Group Status Details"),
+            title_list = T("Group Statuses"),
+            title_update = T("Edit Group Status"),
+            label_list_button = T("List Group Statuses"),
+            label_delete_button = T("Delete Group Status"),
+            msg_record_created = T("Group Status added"),
+            msg_record_modified = T("Group Status updated"),
+            msg_record_deleted = T("Group Status deleted"),
+            msg_list_empty = T("No Group Statuses currently defined"),
+            )
 
         represent = S3Represent(lookup=tablename)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
@@ -1948,27 +2202,73 @@ class S3EventTeamModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Link table status<=>team
+        # Link table incident<=>team
         #
-        tablename = "event_team_status_team"
+        tablename = "event_team"
         define_table(tablename,
-                     group_id(empty = False,
-                              ondelete = "RESTRICT",
-                              # Dropdown, not Autocomplete
-                              widget = None,
-                              ),
+                     self.event_event_id(ondelete = ondelete),
+                     self.event_incident_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                     self.pr_group_id(empty = False,
+                                      ondelete = "RESTRICT",
+                                      # Dropdown, not Autocomplete
+                                      widget = None,
+                                      ),
                      status_id(),
                      *s3_meta_fields())
 
+        crud_strings[tablename] = Storage(
+            label_create = T("Assign Team"),
+            title_display = T("Team Details"),
+            title_list = T("Assigned Teams"),
+            title_update = T("Edit Team"),
+            label_list_button = T("List Assigned Teams"),
+            label_delete_button = T("Remove Team from this incident"),
+            msg_record_created = T("Team assigned"),
+            msg_record_modified = T("Team Assignment updated"),
+            msg_record_deleted = T("Team Assignment removed"),
+            msg_list_empty = T("No Teams currently assigned to this incident"))
+
         configure(tablename,
-                  # Team can only have one status at a time,
-                  # so any group_id match is an update:
-                  deduplicate = S3Duplicate(primary = ("group_id",)),
+                  # Team can be assigned to multiple incidents,
+                  # so updates must match both incident_id and group_id:
+                  deduplicate = S3Duplicate(primary=("incident_id",
+                                                     "group_id",
+                                                     )),
+                  onaccept = self.event_team_onaccept,
                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
+
+    #--------------------------------------------------------------------------    
+    @staticmethod
+    def event_team_onaccept(form):
+        """
+            Set the event_id from the incident_id
+        """
+
+        form_vars = form.vars
+        event_id = form_vars.get("event_id")
+        incident_id = form_vars.get("incident_id")
+        if incident_id and not event_id:
+            db = current.db
+            s3db = current.s3db
+            itable = s3db.event_incident
+            incident = db(itable.id == incident_id).select(itable.event_id,
+                                                           limitby=(0, 1)
+                                                           ).first()
+            try:
+                event_id = incident.event_id
+            except:
+                # Nothing we can do if Incident is invalid
+                pass
+            else:
+                if not event_id:
+                    return
+                db(s3db.event_team.id == form_vars.get("id")).update(event_id = event_id)
 
 # =============================================================================
 class S3EventImpactModel(S3Model):
@@ -2004,6 +2304,19 @@ class S3EventImpactModel(S3Model):
                        onaccept = self.event_impact_onaccept,
                        )
 
+        # Not accessed directly
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Add Impact"),
+        #    title_display = T("Impact Details"),
+        #    title_list = T("Impacts"),
+        #    title_update = T("Edit Impact"),
+        #    label_list_button = T("List Impacts"),
+        #    label_delete_button = T("Delete Impact"),
+        #    msg_record_created = T("Impact added"),
+        #    msg_record_modified = T("Impact updated"),
+        #    msg_record_deleted = T("Impact removed"),
+        #    msg_list_empty = T("No Impacts currently registered in this Event"))
+
         # Pass names back to global scope (s3.*)
         return {}
 
@@ -2016,8 +2329,8 @@ class S3EventImpactModel(S3Model):
         """
 
         try:
-            formvars = form.vars
-            record_id = formvars.id
+            form_vars = form.vars
+            record_id = form_vars.id
         except KeyError:
             return
         if not record_id:
@@ -2029,7 +2342,7 @@ class S3EventImpactModel(S3Model):
         table = s3db.event_event_impact
 
         # Make sure we have both keys
-        if any(f not in formvars for f in ("event_id", "incident_id")):
+        if any(f not in form_vars for f in ("event_id", "incident_id")):
             query = (table.id == record_id)
             record = db(query).select(table.id,
                                       table.event_id,
@@ -2038,7 +2351,7 @@ class S3EventImpactModel(S3Model):
             if not record:
                 return
         else:
-            record = formvars
+            record = form_vars
 
         # If event_id is empty - populate it from the incident
         if not record.event_id and record.incident_id:
@@ -2047,7 +2360,7 @@ class S3EventImpactModel(S3Model):
             incident = db(query).select(itable.event_id,
                                         limitby=(0, 1)).first()
             if incident:
-                db(table.id == record_id).update(event_id=incident.event_id)
+                db(table.id == record_id).update(event_id = incident.event_id)
 
 # =============================================================================
 class S3EventIReportModel(S3Model):
@@ -2171,6 +2484,7 @@ class S3EventOrganisationModel(S3Model):
                                 requires = IS_IN_SET(status_opts),
                                 ),
                           # @ToDo: Role?
+                          s3_comments(),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2184,6 +2498,29 @@ class S3EventOrganisationModel(S3Model):
             msg_record_modified = T("Organization updated"),
             msg_record_deleted = T("Organization removed"),
             msg_list_empty = T("No Organizations currently registered in this incident"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventProjectModel(S3Model):
+    """
+        Link Projects to Events
+    """
+
+    names = ("event_project",
+             )
+
+    def model(self):
+
+        tablename = "event_project"
+        self.define_table(tablename,
+                          self.event_event_id(empty = False,
+                                              ondelete = "CASCADE"),
+                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.project_project_id(#ondelete = "CASCADE", # default anyway
+                                                  ),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2275,7 +2612,10 @@ class S3EventSiteModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       deduplicate = self.event_site_duplicate,
+                       deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "site_id",
+                                                            ),
+                                                 ),
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "site_id",
                                       "status",
@@ -2290,31 +2630,10 @@ class S3EventSiteModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_site_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        incident_id = data.get("incident_id")
-        site_id = data.get("site_id")
-
-        if incident_id and site_id:
-            table = item.table
-
-            query = (table.incident_id == incident_id) & \
-                    (table.site_id == site_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
-
 # =============================================================================
 class S3EventSitRepModel(S3Model):
     """
-        Link Incidents to SitReps
+        Link SitReps to Events &/or Incidents
     """
 
     names = ("event_sitrep",
@@ -2331,9 +2650,10 @@ class S3EventSitRepModel(S3Model):
 
         tablename = "event_sitrep"
         self.define_table(tablename,
-                          #self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
+                          # @ToDo: Validate that SitRep is linked to either an Event or an Incident
+                          self.event_event_id(ondelete = "CASCADE",
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
                                                  ),
                           self.doc_sitrep_id(empty = False,
                                              ondelete = "CASCADE",
@@ -2354,32 +2674,48 @@ class S3EventSitRepModel(S3Model):
         #    msg_list_empty = T("No SitReps currently registered in this incident"))
 
         self.configure(tablename,
-                       deduplicate = self.event_sitrep_duplicate,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "sitrep_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_sitrep_duplicate(item):
-        """ Import item de-duplication """
+# =============================================================================
+class S3EventTagModel(S3Model):
+    """
+        Link Tags to Incidents
+    """
 
-        data = item.data
-        incident_id = data.get("incident_id")
-        sitrep_id = data.get("sitrep_id")
+    names = ("event_tag",
+             )
 
-        if incident_id and sitrep_id:
-            table = item.table
+    def model(self):
 
-            query = (table.incident_id == incident_id) & \
-                    (table.sitrep_id == sitrep_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Tasks
+        # Tasks are to be assigned to resources managed by this EOC
+        # - we manage in detail
+        # @ToDo: Task Templates
+
+        tablename = "event_tag"
+        self.define_table(tablename,
+                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_incident_id(empty = False,
+                                                 ondelete = "CASCADE",
+                                                 ),
+                          self.cms_tag_id(empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3EventTaskModel(S3Model):
@@ -2425,32 +2761,14 @@ class S3EventTaskModel(S3Model):
         #    msg_list_empty = T("No Tasks currently registered in this incident"))
 
         self.configure(tablename,
-                       deduplicate = self.event_task_duplicate,
+                       deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "task_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_task_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        incident_id = data.get("incident_id")
-        task_id = data.get("task_id")
-
-        if incident_id and task_id:
-            table = item.table
-
-            query = (table.incident_id == incident_id) & \
-                    (table.task_id == task_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3EventShelterModel(S3Model):
@@ -2557,7 +2875,7 @@ def event_notification_dispatcher(r, **attr):
             record = r.record
             id = record.id
             incName = record.name
-            zeroHour = record.zero_hour
+            zeroHour = record.start_date
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
@@ -2628,10 +2946,10 @@ def event_notification_dispatcher(r, **attr):
         raise HTTP(501, current.messages.BADMETHOD)
 
 # =============================================================================
-def event_incident_list_layout(list_id, item_id, resource, rfields, record,
-                               icon="incident"):
+def event_event_list_layout(list_id, item_id, resource, rfields, record,
+                            icon="event"):
     """
-        Default dataList item renderer for Projects on Profile pages
+        Default dataList item renderer for Incidents on Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -2640,16 +2958,105 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
         @param record: the record as dict
     """
 
-    record_id = record["event_incident.id"]
+    record_id = record["event_event.id"]
     item_class = "thumbnail"
 
     raw = record._row
+    author = record["event_event.modified_by"]
+    #date = record["event_event.modified_on"]
+
+    name = record["event_event.name"]
+    event_type = record["event_event.event_type_id"] or ""
+    description = record["event_event.comments"]
+    start_date = record["event_event.start_date"]
+
+    location = record["event_event_location.location_id"] or ""
+    #location_id = raw["event_event.location_id"]
+
+    comments = raw["event_event.comments"]
+
+    # Edit Bar
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
+    permit = current.auth.s3_has_permission
+    table = current.db.event_event
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(ICON("edit"),
+                     _href=URL(c="event", f="event",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id},
+                               ),
+                     _class="s3_modal",
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(ICON("delete"),
+                       _class="dl-item-delete",
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(ICON(icon),
+                   SPAN(event_type, _class="type-title"),
+                   SPAN(location, _class="location-title"),
+                   SPAN(start_date, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(A(name,
+                          _href=URL(c="event", f="event",
+                                    args=[record_id, "profile"])),
+                        _class="card-title"),
+                   DIV(DIV((description or ""),
+                           DIV(author or "",
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
+def event_incident_list_layout(list_id, item_id, resource, rfields, record,
+                               icon="incident"):
+    """
+        Default dataList item renderer for Incidents on Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    raw = record._row
+    record_id = raw["event_incident.id"]
+    item_class = "thumbnail"
+
     author = record["event_incident.modified_by"]
-    date = record["event_incident.modified_on"]
+    #date = record["event_incident.modified_on"]
 
     name = record["event_incident.name"]
     description = record["event_incident.comments"]
-    zero_hour = record["event_incident.zero_hour"]
+    start_date = record["event_incident.start_date"]
 
     organisation = record["event_incident.organisation_id"]
     organisation_id = raw["event_incident.organisation_id"]
@@ -2686,14 +3093,16 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
                                      "record": record_id},
                                ),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.event_incident.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings.event_incident.label_delete_button,
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""
@@ -2705,7 +3114,7 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     # Render the item
     item = DIV(DIV(ICON(icon),
                    SPAN(location, _class="location-title"),
-                   SPAN(zero_hour, _class="date-title"),
+                   SPAN(start_date, _class="date-title"),
                    edit_bar,
                    _class="card-header",
                    ),
@@ -2747,10 +3156,10 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    record_id = record["event_resource.id"]
+    raw = record._row
+    record_id = raw["event_resource.id"]
     item_class = "thumbnail"
 
-    raw = record._row
     author = record["event_resource.modified_by"]
     date = record["event_resource.date"]
     quantity = record["event_resource.value"]
@@ -2796,13 +3205,16 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
                                args=[record_id, "update.popup"],
                                vars=vars),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.event_resource.title_update,
+                     _title=S3CRUD.crud_string(resource.tablename,
+                                               "title_update"),
                      )
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
         delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
+                       _title=S3CRUD.crud_string(resource.tablename,
+                                                 "label_delete_button"),
                        )
     else:
         delete_btn = ""
@@ -2862,13 +3274,31 @@ def event_rheader(r):
 
         if r.name == "event":
             # Event Controller
-            tabs = [(T("Event Details"), None),
+            if settings.get_event_label(): # == "Disaster"
+                label = T("Disaster Details")
+            else:
+                label = T("Event Details")
+            tabs = [(label, None),
                     ]
+            if settings.has_module("doc"):
+                tabs += [(T("Documents"), "document"),
+                         (T("Photos"), "image"),
+                         ]
+            if settings.get_event_impact_tab():
+                tabs.append((T("Impact"), "impact"))
+            if settings.get_event_target_tab():
+                tabs.append((T("Targets"), "target"))
+            if settings.get_event_collection_tab():
+                tabs.append((T("Assessments"), "collection"))
+            if settings.get_project_event_projects():
+                tabs.append((T("Projects"), "project"))
+            if settings.get_project_event_activities():
+                tabs.append((T("Activities"), "activity"))
             if settings.has_module("cr"):
                 tabs.append((T("Shelters"), "event_shelter"))
             #if settings.has_module("req"):
             #    tabs.append((T("Requests"), "req"))
-            if settings.has_module("msg"):
+            if settings.get_event_dispatch_tab():
                 tabs.append((T("Send Notification"), "dispatch"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2894,13 +3324,13 @@ def event_rheader(r):
                                     TR(closed),
                                     ), rheader_tabs)
 
-        if r.name == "incident":
+        elif r.name == "incident":
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
             append = tabs.append
 
             # Impact tab
-            if settings.get_event_incident_impact_tab():
+            if settings.get_incident_impact_tab():
                 append((T("Impact"), "impact"))
 
             # Tasks tab
@@ -2915,7 +3345,7 @@ def event_rheader(r):
                      append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
 
             # Teams tab:
-            teams_tab = settings.get_event_incident_teams_tab()
+            teams_tab = settings.get_incident_teams_tab()
             if teams_tab:
                 tab_label = T("Teams") if teams_tab is True else T(teams_tab)
                 append((tab_label, "group"))
@@ -2932,7 +3362,7 @@ def event_rheader(r):
                          ))
 
             # Messaging tab
-            if settings.has_module("msg"):
+            if settings.get_incident_dispatch_tab():
                 append((T("Send Notification"), "dispatch"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2953,8 +3383,8 @@ def event_rheader(r):
                                        record.name),
                                     TR(TH("%s: " % table.comments.label),
                                        record.comments),
-                                    TR(TH("%s: " % table.zero_hour.label),
-                                       table.zero_hour.represent(record.zero_hour)),
+                                    TR(TH("%s: " % table.date.label),
+                                       table.date.represent(record.date)),
                                     TR(closed),
                                     ), rheader_tabs)
 

@@ -95,6 +95,7 @@ settings.auth.hmac_key = "akeytochange"
 #settings.mail.server = "127.0.0.1:25"
 #settings.mail.tls = True
 # Useful for Windows Laptops:
+# https://www.google.com/settings/security/lesssecureapps
 #settings.mail.server = "smtp.gmail.com:587"
 #settings.mail.tls = True
 #settings.mail.login = "username:password"
@@ -215,7 +216,8 @@ settings.frontpage.rss = [
 # Change for different authority and organisations
 # See http://alerting.worldweather.org/ for prefix and oid
 #settings.cap.identifier_prefix = "PAGASA-DOST"
-#settings.cap.identifier_oid = "2.49.0.1.608.0"
+# Country root oid. The oid for the organisation includes this base with an additional suffix
+#settings.cap.identifier_oid = "2.49.0.1.608"
 #settings.cap.identifier_suffix = "alert"
 # Change this for the offset period in days that the alert will be effective for
 # Expire Date = Effective Date + expire_offset
@@ -234,7 +236,8 @@ settings.import_template()
 
 # e.g.
 #settings.base.system_name = T("Sahana TEST")
-#settings.base.prepopulate = ("default", "default/users")
+#settings.base.prepopulate = ("MY_TEMPLATE_ONLY")
+#settings.base.prepopulate += ("default", "default/users")
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs

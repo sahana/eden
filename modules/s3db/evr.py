@@ -2,7 +2,7 @@
 
 """ Sahana Eden Evacuees Registry Model
 
-    @copyright: 2015 (c) Sahana Software Foundation
+    @copyright: 2015-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -496,7 +496,7 @@ class evr_AddGroupMembers(S3Method):
                r.representation == "aadata":
                 return self.add_members(r, **attr)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 

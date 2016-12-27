@@ -1,5 +1,10 @@
 {{extend "layout.html"}}
-<h2>Sahana Eden Test Results Compilation:</h2>
->> <a href="result_automated">View Automated Test Results</a><br />
->> <a href="result_smoke">View Smoke Test Results</a><br />
->> <a href="result_roles">View Roles Test Results</a><br />
+{{=H2("%s:" % T("Sahana Eden Test Results Compilation"))}}
+{{try:}}{{overview=overview}}{{except:}}{{overview=False}}{{pass}}
+{{if overview:}}
+{{=links}}
+{{else:}}
+{{=H5("%s:" % title)}}
+{{=links}}
+{{=P(A("<<< %s" % T("Back to test results overview"), _href=URL(args=[], vars={}), _class="action-lnk"), _style="margin-top:3rem;")}}
+{{pass}}

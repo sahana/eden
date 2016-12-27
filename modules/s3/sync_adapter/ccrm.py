@@ -2,7 +2,7 @@
 
 """ S3 Synchronization: Peer Repository Adapter
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,15 +34,14 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3sync import S3SyncBaseAdapter
+from ..s3utils import S3ModuleDebug
 
 DEBUG = False
 if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
+    print >> sys.stderr, "S3SYNC/CCRM: DEBUG MODE"
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -93,7 +92,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         response, error = self._send_request(**request)
 
         if error:
-            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
             return error
 
         api_key = response.findall("//api_key")
@@ -101,14 +100,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             self.api_key = api_key[0].text
         else:
             error = "No API Key returned by CiviCRM"
-            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
             return error
         PHPSESSID = response.findall("//PHPSESSID")
         if len(PHPSESSID):
             self.PHPSESSID = PHPSESSID[0].text
         else:
             error = "No PHPSESSID returned by CiviCRM"
-            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
             return error
 
         _debug("S3SyncCiviCRM.login SUCCESS")
@@ -133,7 +132,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.pull(%s, %s)" % (repository.url, resource_name))
+        _debug("S3SyncCiviCRM.pull(%s, %s)", repository.url, resource_name)
 
         mtime = None
         message = ""
@@ -254,7 +253,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        _debug("S3SyncCiviCRM.pull import %s: %s" % (result, message))
+        _debug("S3SyncCiviCRM.pull import %s: %s", result, message)
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -276,7 +275,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.push(%s, %s)" % (repository.url, resource_name))
+        _debug("S3SyncCiviCRM.push(%s, %s)", repository.url, resource_name)
 
         result = log.FATAL
         remote = False
@@ -293,7 +292,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        _debug("S3SyncCiviCRM.push export %s: %s" % (result, message))
+        _debug("S3SyncCiviCRM.push export %s: %s", result, message)
         return(output, None)
 
     # -------------------------------------------------------------------------
@@ -321,7 +320,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Proxy handling
         proxy = repository.proxy or config.proxy or None
         if proxy:
-            _debug("using proxy=%s" % proxy)
+            _debug("using proxy=%s", proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
             handlers.append(proxy_handler)
 

@@ -1,0 +1,49 @@
+#title h1 {
+    padding: 0!important;
+    background: transparent!important;
+    font-size: 1.5rem!important;
+    margin-bottom: 0;
+}
+#title h1 .S3menulogo {
+    margin-left: 0.5rem;
+    margin-right: 0;
+    vertical-align: text-bottom;
+}
+#title .intro-text {
+    font-size: 85%;
+    color: silver;
+    margin-bottom: 0.5rem;
+}
+#title .title-links {
+    margin-bottom: 1rem;
+}
+#title .title-links a {
+    margin-right: 1rem;
+}
+#title .title-links a i {
+    margin-right: 0.3rem;
+}
+#contact_message {
+    height: 7rem;
+}
+#login_form,
+#register_form {
+    padding: 0!important;
+}
+.homepage-tip {
+    background: #ecfdff url("../../img/dialog-information.png") no-repeat scroll 0.5rem 0.5rem!important;
+    font-size: 80%;
+    padding: 0.25rem 1.25rem 0.5rem 2.25rem!important;
+}
+#feed-control {
+    margin-top: 2rem;
+}
+.homepage-menu-box a.button {
+    width: 100%;
+}
+.homepage-menu-box a.button label {
+    color: white;
+}
+.homepage-menu-box a i {
+    font-size: 1.4rem;
+}

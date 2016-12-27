@@ -9,6 +9,8 @@ import unittest
 
 from s3.s3grouped import S3GroupedItems, S3GroupAggregate
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3GroupedItemsTests(unittest.TestCase):
     """ Tests for grouped items """
@@ -423,18 +425,6 @@ class S3GroupAggregateTests(unittest.TestCase):
             S3GroupAggregate((ga1, ga2, ga))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

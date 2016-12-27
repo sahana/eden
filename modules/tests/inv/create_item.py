@@ -2,7 +2,7 @@
 
 """ Sahana Eden Automated Tests - INV005 Create Item
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,8 +34,8 @@ class CreateItem(SeleniumUnitTest):
         """
             @case: INV005
             @description: Create an Item
-            
-            
+
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -44,7 +44,7 @@ class CreateItem(SeleniumUnitTest):
         # Login, if not-already done so
         self.login(account="admin", nexturl="asset/item/create")
         self.browser.find_element_by_id("supply_item_um").clear()
-        self.create("supply_item", 
+        self.create("supply_item",
                     [( "name",
                        "Soup" ),
                      ( "um",
@@ -58,4 +58,3 @@ class CreateItem(SeleniumUnitTest):
                      ( "comments",
                        "This is a Test Item" )]
                      )
-        

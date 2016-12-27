@@ -133,6 +133,9 @@ table.embeddedComponent tr.label-row td {
 .form-container form .embeddedComponent  textarea  {
     width: auto;
 }
+table.embeddedComponent input.integer {
+    max-width: 10rem;
+}
 
 .inline-throbber {
     background-image: url(../../img/indicator.gif);
@@ -478,6 +481,7 @@ div.dl {
 .dl-item {
     float: left;
     padding: 3px 5px 3px 5px;
+    width: 98.7%;
 }
 .dl-row.even,
 .dl-row.even .dl-item {
@@ -521,7 +525,8 @@ div.dl {
     padding-bottom: 2px;
 }
 .card_1_line {
-    height: 14px; /* Height needs to be same with or without contents */
+    height: 16px; /* Height needs to be same with or without contents */
+    line-height: normal;
     margin-bottom: 0;
     text-overflow: none;
     overflow: hidden;
@@ -689,11 +694,13 @@ body.popup {
     color: #c00;
 }
 /* Copy of BootStrap Styling */
-button.close {
+.alert button.close {
     background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
     border: 0 none;
     cursor: pointer;
     padding: 0;
+    display: inline;
+    margin: 0 0.3rem;
 }
 
 /* Throbber */
@@ -733,11 +740,14 @@ button.close {
 #rheader th,
 #rheader td {
     text-align: left;
-    padding: 1px 5px 1px 5px;
+    padding: 0.1rem 0.5rem 0.05rem 0;
     white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
+}
+#rheader td {
+    padding-right: 1.25rem;
 }
 
 /* Tabs */
@@ -968,20 +978,16 @@ span.tab_next_inactive a {
 .box_top {
    padding-top: 8px;
 }
+.box_top_inner {
+   padding-top: 0.2rem;
+   padding-bottom: 0.5rem;
+}
 form table td.box_top_td {
     padding-top: 8px;
 }
-
 .box_top label,
 .box_top_inner label {
-    display: block;
-    /* @ToDo: Move colour out of widgets.css */
-    background-color: #fbfbfb;
-    float: left;
-    margin-top: -6px;
-    margin-left: 50px;
-    padding: 0 10px;
-    width: auto;
+    display: inline-block;
 }
 
 .box_bottom { /* For Bootstrap */
@@ -1005,10 +1011,9 @@ form table tr.box_bottom td { /* For regular themes */
 
 /* Add Person 2 */
 .add_person_edit_bar {
-    float: right;
-    padding-right: 10px;
-    padding-top: 5px;
     cursor: pointer;
+    display: inline-block;
+    padding-left: 1.2rem;
 }
 .add_person_edit_bar a {
     text-decoration: none;
@@ -1326,8 +1331,7 @@ ul.x-tree-root-ct {
 /* Vertical arrangement of multi-button multi-select filter widgets such as S3LocationFilter */
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: left;
-    float: left;
+    display: block;
     min-width: 220px;
 }
 
@@ -1344,11 +1348,6 @@ ul.x-tree-root-ct {
 /* Don't display the default widget, only the multiselect generated widget is displayed */
 select.multiselect-filter-widget {
     display: none;
-}
-
-body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: right;
-    float: right;
 }
 
 .filter-advanced {
@@ -1661,9 +1660,69 @@ button.toggle-text {
     margin-left: 10px;
     cursor: pointer;
 }
+.s3-password-widget {
+    display: inline-block;
+}
 
 /* Tweet Display */
 .s3-twitter-container {
     width: 350px;
     height: 130px;
+}
+
+/* Dashboard Controls */
+.db-config {
+    padding-top: 0.2rem;
+    float: right;
+}
+.db-config-on,
+.db-config-off {
+    cursor: pointer;
+    padding: 0.125rem;
+    font-size: 1rem!important;
+}
+.db-config-on:hover,
+.db-config-off:hover {
+    background-color: #7f7f7f;
+}
+.db-config-on {
+    color: #7f7f7f;
+}
+.db-config-on:hover {
+    color: white;
+}
+.db-config-off {
+    color: green;
+}
+.db-config-off:hover {
+    color: lightgreen;
+}
+.db-configbar {
+    background-color: #7f7f7f;
+    padding: 0.125rem;
+    display: none;
+}
+.db-configbar-right {
+    float: right;
+}
+.db-configbar i {
+    color: white;
+    padding: 0.125rem;
+    cursor: pointer;
+}
+.db-configbar i:hover {
+    background-color: silver;
+}
+.db-config-active {
+    padding: 0.125rem;
+    border: 1px solid #7f7f7f;
+}
+.db-has-dialog .db-configbar {
+    background-color: #af4f4f;
+}
+
+/* Right-to-left adjustments for dashboard controls */
+body.rtl .db-config,
+body.rtl .db-configbar-right {
+    float: left;
 }

@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current, URL
 from gluon.storage import Storage
@@ -25,13 +20,14 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SSF", "default/users")
+    settings.base.prepopulate += ("SSF", "default/users")
     # Base settings
     settings.base.system_name = T("Sahana Sunflower: A Community Portal")
     settings.base.system_name_short = T("Sahana Sunflower")
     settings.base.theme = "SSF"
 
     # UI
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "watch": "icon-eye-open",
         "unwatch": "icon-eye-close",
@@ -94,9 +90,9 @@ def config(settings):
 
     # Finance settings
     #settings.fin.currencies = {
-    #    "USD" :T("United States Dollars"),
-    #    "EUR" :T("Euros"),
-    #    "GBP" :T("Great British Pounds")
+    #    "USD" : "United States Dollars",
+    #    "EUR" : "Euros",
+    #    "GBP" : "Great British Pounds",
     #}
     #settings.fin.currency_default = "USD" # Dollars
     #settings.fin.currency_writable = False # False currently breaks things

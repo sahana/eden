@@ -1,0 +1,2 @@
+Repository,Resource,Input File,Delete Input Files,Output File,Human-readable Output,Mode,Strategy,Update Policy,Conflict Policy
+ADASHI FTP,mixed,"*.xml",true,,,PULL,ALL,NEWER,NEWER

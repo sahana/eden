@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - INV004 Create Warehouse
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -77,4 +77,3 @@ class CreateWarehouse(SeleniumUnitTest):
             # Create a record using the data
             result = self.create(tablename, _data)
 
-            

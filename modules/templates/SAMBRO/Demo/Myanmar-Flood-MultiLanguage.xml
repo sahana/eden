@@ -3,11 +3,11 @@
     <cap:identifier>MyanmarDMH-2.49.0.0.104.0-20150910-058-alert</cap:identifier>
     <cap:sender>dmh.gov.mm</cap:sender>
     <cap:sent>2015-09-10T02:29:56+00:00</cap:sent>
-    <cap:status>Draft</cap:status>
+    <cap:status>Test</cap:status>
     <cap:msgType>Alert</cap:msgType>
     <cap:source>sambro-server@dmh.gov.mm</cap:source>
     <cap:scope>Restricted</cap:scope>
-    <cap:addresses>RRD "Water Related Organization and Department" "Local Government" "Local DMH" "Ministry of Information"</cap:addresses>
+    <cap:restriction>RRD</cap:restriction>
     <cap:note>This template is intended for CAP on a Map project 'Exercise'. The template is flood alert warning and bulletin. Simultaneously targeting the public and First Responders. It contain info segments for both English and Myanmar languages. </cap:note>
     <cap:incidents>Flood</cap:incidents>
     <cap:info>

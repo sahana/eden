@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
+from collections import OrderedDict
 from datetime import timedelta
 
 from gluon import current, Field, URL
@@ -27,7 +21,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("Syria", "default/users")
+    settings.base.prepopulate += ("Syria", "default/users")
 
     settings.base.system_name = T("IFRC MENA 4W Portal")
     settings.base.system_name_short = T("IFRC MENA 4W")
@@ -71,8 +65,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "Syria"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Map
     settings.gis.map_height = 400
     #settings.gis.map_width = 854
     # Use a non-default fillColor for Clustered points
@@ -122,10 +123,10 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "CHF" : T("Swiss Francs"),
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        "USD" : T("United States Dollars"),
+        "CHF" : "Swiss Francs",
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
     }
 
     # -----------------------------------------------------------------------------
@@ -1049,8 +1050,9 @@ def config(settings):
                     s3db.add_components("org_organisation",
                                         org_office={"name": "nat_office",
                                                     "joinby": "organisation_id",
-                                                    "filterby": "office_type_id",
-                                                    "filterfor": [national],
+                                                    "filterby": {
+                                                        "office_type_id": national,
+                                                        },
                                                    },
                                        )
                     list_fields.append("nat_office.location_id$addr_street")
@@ -1138,12 +1140,14 @@ def config(settings):
                                                 represent,
                                                 orderby = "org_site.name")
 
-                from s3layouts import S3AddResourceLink
-                site_field.comment = S3AddResourceLink(c="org", f="office",
-                                                       vars={"child": "site_id"},
-                                                       label=T("Create Office"),
-                                                       title=T("Office"),
-                                                       tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
+                from s3layouts import S3PopupLink
+                site_field.comment = S3PopupLink(c = "org",
+                                                 f = "office",
+                                                 vars = {"child": "site_id"},
+                                                 label = T("Create Office"),
+                                                 title = T("Office"),
+                                                 tooltip = T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."),
+                                                 )
 
                 # Best to have no labels when only 1 field in the row
                 s3db.pr_contact.value.label = ""

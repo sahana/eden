@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -57,6 +57,7 @@ __all__ = ("S3ACLWidget",
            "S3LocationDropdownWidget",
            "S3LocationLatLonWidget",
            "S3PasswordWidget",
+           "S3PhoneWidget",
            "S3Selector",
            "S3LocationSelector",
            "S3LocationSelectorWidget",
@@ -83,16 +84,9 @@ __all__ = ("S3ACLWidget",
            )
 
 import datetime
+import json
 import os
 import re
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from dateutil.relativedelta import relativedelta
@@ -423,7 +417,7 @@ class S3AddPersonWidget(FormWidget):
         formstyle = s3.crud.formstyle
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
+                       value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide"
 
@@ -454,7 +448,7 @@ class S3AddPersonWidget(FormWidget):
                         _class="box_top")
             # Select from registry buttons
             _class ="box_top"
-            select_row = TR(TD(A(T("Select from registry"),
+            select_row = TR(TD(A(T("Select from Registry"),
                                  _href="#",
                                  _id="select_from_registry",
                                  _class="action-btn"),
@@ -629,12 +623,11 @@ class S3AddPersonWidget2(FormWidget):
 
         @ToDo: get working AC/validator for human_resource_id
                - perhaps re-implement as S3SQLFormElement
-        @ToDo: provide option for entering data in 2-3 separate name fields
-               instead of all in 1 field
     """
 
     def __init__(self,
                  controller = None,
+                 separate_name_fields = None,
                  father_name = None,
                  grandfather_name = None,
                  year_of_birth = None, # Whether to use Year of Birth (as well as, or instead of, Date of Birth)
@@ -643,6 +636,7 @@ class S3AddPersonWidget2(FormWidget):
         # Controller to retrieve the person or hrm record
         self.controller = controller
 
+        self.separate_name_fields = separate_name_fields
         self.father_name = father_name
         self.grandfather_name = grandfather_name
         self.year_of_birth = year_of_birth
@@ -650,17 +644,18 @@ class S3AddPersonWidget2(FormWidget):
     def __call__(self, field, value, **attributes):
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
+                       value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide"
 
         request = current.request
-        if not value and request.env.request_method == "POST":
+        POST = request.env.request_method == "POST"
+        if not value and POST:
             # Read the POST vars:
             values = request.post_vars
             # @ToDo: Format these for Display?
             if values.get(str(field).split(".", 1)[1], None) and \
-               "full_name" not in values:
+               "full_name" not in values and "first_name" not in values:
                 # We selected an existing user...this would fail as the non-existent gender would fail to validate
                 # and we can optimise by simply returning the simple widget
                 return INPUT(**attr)
@@ -685,13 +680,6 @@ class S3AddPersonWidget2(FormWidget):
 
         s3 = current.response.s3
 
-        #bootstrap = settings.ui.formstyle == "bootstrap"
-        #if bootstrap:
-        #    # We need to make the HTML markup compliant with this CSS framework
-        #    # @ToDo: This should now be possible by calling the formstyle as-normal
-        #    # No need to test this formstyle as we know it up-front
-        #    tuple_rows = False
-        #else:
         # Test the formstyle
         formstyle = s3.crud.formstyle
         row = formstyle("test", "test", "test", "test")
@@ -707,72 +695,84 @@ class S3AddPersonWidget2(FormWidget):
             #else:
             #    foundation = False
 
-        controller = self.controller or request.controller
         settings = current.deployment_settings
+
+        separate_name_fields = self.separate_name_fields
+        if separate_name_fields is None:
+            separate_name_fields = settings.get_pr_separate_name_fields()
+        if separate_name_fields:
+            middle_name = separate_name_fields == 3
 
         date_of_birth = None
         year_of_birth = self.year_of_birth
 
-        dtable = None
         ptable = s3db.pr_person
+        dtable = s3db.pr_person_details
+        first_name_field = ptable.first_name
+        middle_name_field = ptable.middle_name
+        last_name_field = ptable.last_name
 
         if year_of_birth is None:
             # Use Global deployment_setting
-            settings.get_pr_request_year_of_birth()
+            year_of_birth = settings.get_pr_request_year_of_birth()
         if year_of_birth:
-            dtable = s3db.pr_person_details
             year_of_birth = dtable.year_of_birth
 
         if settings.get_pr_request_dob():
             date_of_birth = ptable.date_of_birth
+            dob_required = settings.get_pr_dob_required()
 
         if settings.get_pr_request_gender():
             gender = ptable.gender
-            if request.env.request_method == "POST":
+            if POST:
                 gender.requires = IS_EMPTY_OR(gender.requires)
         else:
             gender = None
 
         req_email = settings.get_pr_request_email()
         req_home_phone = settings.get_pr_request_home_phone()
+        req_mobile_phone = settings.get_pr_request_mobile_phone()
 
         emailRequired = settings.get_hrm_email_required()
-        occupation = None
+
+        # Determine controller for autocomplete
+        controller = self.controller
+        if not controller:
+            controller = request.controller
+            if controller not in ("hrm", "vol"):
+                if hrm:
+                    # Always use hrm for human_resource_id
+                    controller = "hrm"
+                else:
+                    # Always use pr for person_id
+                    controller = "pr"
+                    emailRequired = False
+
+        # Widget-Options for additional fields
         father_name = self.father_name
         grandfather_name = self.grandfather_name
 
-        if controller == "hrm":
-            pass
+        if father_name is None:
+            # Use Global deployment_setting
+            father_name = settings.get_pr_request_father_name()
+        if father_name:
+            father_name = dtable.father_name
+        if grandfather_name is None:
+            # Use Global deployment_setting
+            grandfather_name  = settings.get_pr_request_grandfather_name()
+        if grandfather_name:
+            grandfather_name = dtable.grandfather_name
 
-        elif controller == "vol":
-            dtable = s3db.pr_person_details
+        if controller == "vol":
             occupation = dtable.occupation
-            if father_name is None:
-                # Use Global deployment_setting
-                father_name = settings.get_pr_request_father_name()
-            if father_name:
-                father_name = dtable.father_name
-            if grandfather_name is None:
-                # Use Global deployment_setting
-                grandfather_name  = settings.get_pr_request_grandfather_name()
-            if grandfather_name:
-                grandfather_name = dtable.grandfather_name
-
-        elif controller == "patient":
-            controller = "pr"
-
-        elif hrm:
-            controller = "hrm"
-
         else:
-            controller = "pr"
-            emailRequired = False
+            occupation = None
 
         if value:
             db = current.db
-            fields = [ptable.first_name,
-                      ptable.middle_name,
-                      ptable.last_name,
+            fields = [first_name_field,
+                      middle_name_field,
+                      last_name_field,
                       ptable.pe_id,
                       ]
             details = False
@@ -826,7 +826,13 @@ class S3AddPersonWidget2(FormWidget):
                 values["father_name"] = person_details.father_name
             if grandfather_name:
                 values["grandfather_name"] = person_details.grandfather_name
-            values["full_name"] = s3_fullname(person)
+            if separate_name_fields:
+                values["first_name"] = person.first_name
+                values["last_name"] = person.last_name
+                if middle_name:
+                    values["middle_name"] = person.middle_name
+            else:
+                values["full_name"] = s3_fullname(person)
             if year_of_birth:
                 values["year_of_birth"] = person_details.year_of_birth
             if date_of_birth:
@@ -835,31 +841,34 @@ class S3AddPersonWidget2(FormWidget):
                 values["gender"] = person.gender
 
             # Contacts as separate query as we can't easily limitby
-            ctable = s3db.pr_contact
-            contact_methods = ["SMS"]
+            contact_methods = []
             if req_email:
                 contact_methods.append("EMAIL")
             if req_home_phone:
                 contact_methods.append("HOME_PHONE")
-            query = (ctable.pe_id == person.pe_id) & \
-                    (ctable.deleted == False) & \
-                    (ctable.contact_method.belongs(contact_methods))
-            contacts = db(query).select(ctable.contact_method,
-                                        ctable.value,
-                                        orderby=ctable.priority,
-                                        )
+            if req_mobile_phone:
+                contact_methods.append("SMS")
             email = mobile_phone = home_phone = ""
-            for contact in contacts:
-                if req_email and not email and contact.contact_method == "EMAIL":
-                    email = contact.value
-                elif not mobile_phone and contact.contact_method == "SMS":
-                    mobile_phone = contact.value
-                elif req_home_phone and not home_phone and contact.contact_method == "HOME_PHONE":
-                    home_phone = contact.value
-                if mobile_phone and \
-                   ((req_email and email) or (not req_email)) and \
-                   ((req_home_phone and home_phone) or (not req_home_phone)):
-                    break
+            if contact_methods:
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == person.pe_id) & \
+                        (ctable.deleted == False) & \
+                        (ctable.contact_method.belongs(contact_methods))
+                contacts = db(query).select(ctable.contact_method,
+                                            ctable.value,
+                                            orderby=ctable.priority,
+                                            )
+                for contact in contacts:
+                    if req_email and not email and contact.contact_method == "EMAIL":
+                        email = contact.value
+                    elif not mobile_phone and contact.contact_method == "SMS":
+                        mobile_phone = contact.value
+                    elif req_home_phone and not home_phone and contact.contact_method == "HOME_PHONE":
+                        home_phone = contact.value
+                    if mobile_phone and \
+                       ((req_email and email) or (not req_email)) and \
+                       ((req_home_phone and home_phone) or (not req_home_phone)):
+                        break
             values["home_phone"] = home_phone
             values["email"] = email
             values["mobile_phone"] = mobile_phone
@@ -870,9 +879,9 @@ class S3AddPersonWidget2(FormWidget):
         fieldname = str(field).replace(".", "_")
 
         # Section Title
-        id = "%s_title" % fieldname
+        _id = "%s_title" % fieldname
         label = field.label
-        label = LABEL(label, _for=id)
+        label = LABEL(label, _for=_id)
         # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
         widget = DIV(A(ICON("edit"),
                        _title=T("Edit Entry"), # "Edit Selection"
@@ -891,7 +900,7 @@ class S3AddPersonWidget2(FormWidget):
         #    _controls = DIV(widget, _class="controls")
         #    row = DIV(label, _controls,
         #              _class="control-group hide box_top",
-        #              _id="%s__row" % id,
+        #              _id="%s__row" % _id,
         #              )
         #    rows.append(row)
         #else:
@@ -905,11 +914,11 @@ class S3AddPersonWidget2(FormWidget):
                         _class="box_top_td",
                         _colspan=2,
                         ),
-                     _id="%s__row" % id,
+                     _id="%s__row" % _id,
                      )
             rows.append(row)
         else:
-            row = formstyle("%s__row" % id, label, widget, comment)
+            row = formstyle("%s__row" % _id, label, widget, comment)
             row.add_class("box_top hide")
             rows.append(row)
 
@@ -933,11 +942,32 @@ class S3AddPersonWidget2(FormWidget):
                                           _id = "%s_organisation_id" % fieldname),
                      settings.get_hrm_org_required()))
 
-        # Name field
-        # - can search for an existing person
-        # - can create a new person
-        # - multiple names get assigned to first, middle, last
-        fappend(("full_name", T("Name"), INPUT(data=data), True))
+        if separate_name_fields:
+            mandatory_lastname = settings.get_L10n_mandatory_lastname()
+            mandatory_middlename = settings.get_L10n_mandatory_middlename()
+            name_format = settings.get_pr_name_format()
+            if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
+                # Vietnamese Style
+                fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
+                if middle_name:
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), mandatory_middlename))
+                fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
+            elif name_format == "%(last_name)s, %(first_name)s":
+                # DRK Style
+                fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
+                fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
+            else:
+                fappend(("first_name", first_name_field.label, INPUT(data=data, _size=40), True))
+                if middle_name:
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), mandatory_middlename))
+                fappend(("last_name", last_name_field.label, INPUT(_size=40), mandatory_lastname))
+        else:
+            # Unified Name field
+            # - can search for an existing person
+            # - can create a new person
+            # - multiple names get assigned to first, middle, last
+            full_name_label = settings.get_pr_label_fullname()
+            fappend(("full_name", T(full_name_label), INPUT(data=data, _size=40), True))
 
         if father_name:
             fappend(("father_name", father_name.label, INPUT(), False))
@@ -949,7 +979,7 @@ class S3AddPersonWidget2(FormWidget):
             fappend(("date_of_birth", date_of_birth.label,
                      date_of_birth.widget(date_of_birth, values.get("date_of_birth", None),
                                           _id = "%s_date_of_birth" % fieldname),
-                     False))
+                     dob_required))
         if gender:
             fappend(("gender", gender.label,
                      OptionsWidget.widget(gender, values.get("gender", None),
@@ -961,14 +991,15 @@ class S3AddPersonWidget2(FormWidget):
         if req_email:
             fappend(("email", T("Email"), INPUT(), emailRequired))
 
-        fappend(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
+        if req_mobile_phone:
+            fappend(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
 
         if req_home_phone:
             fappend(("home_phone", T("Home Phone"), INPUT(), False))
 
         for f in fields:
             fname = f[0]
-            id = "%s_%s" % (fieldname, fname)
+            _id = "%s_%s" % (fieldname, fname)
             label = f[1]
             if f[3]:
                 # Mark Required
@@ -976,10 +1007,10 @@ class S3AddPersonWidget2(FormWidget):
                             SPAN(" *", _class="req"))
             else:
                 label = "%s:" % label
-            label = LABEL(label, _for=id)
+            label = LABEL(label, _for=_id)
             widget = f[2]
             if fname not in ("date_of_birth", "gender"):
-                widget["_id"] = id
+                widget["_id"] = _id
                 widget["_name"] = fname
                 widget["_value"] = s3_unicode(values.get(fname, "")).encode("utf-8")
             #if bootstrap:
@@ -993,11 +1024,11 @@ class S3AddPersonWidget2(FormWidget):
             #    _controls = DIV(widget, _class="controls")
             #    row = DIV(label, _controls,
             #              _class="control-group hide box_middle",
-            #              _id="%s__row" % id,
+            #              _id="%s__row" % _id,
             #              )
             #    rows.append(row)
             #else:
-            row = formstyle("%s__row" % id, label, widget, comment)
+            row = formstyle("%s__row" % _id, label, widget, comment)
             if tuple_rows:
                 row[0].add_class("box_middle")
                 row[1].add_class("box_middle")
@@ -1100,7 +1131,7 @@ class S3AutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -1261,7 +1292,7 @@ class S3ColorPickerWidget(FormWidget):
 
         default = dict(#_type = "color", # We don't want to use native HTML5 widget as it doesn't support our options & is worse for documentation
                        _type = "text",
-                       value = (value != None and str(value)) or "",
+                       value = (value is not None and str(value)) or "",
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
@@ -1467,8 +1498,8 @@ class S3CalendarWidget(FormWidget):
 
         T = current.T
         options = {"calendar": calendar,
-                   "dateFormat": date_format,
-                   "timeFormat": time_format,
+                   "dateFormat": str(date_format),
+                   "timeFormat": str(time_format),
                    "separator": separator,
                    "firstDOW": firstDOW,
                    "monthSelector": self.month_selector,
@@ -1518,7 +1549,8 @@ class S3CalendarWidget(FormWidget):
 
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
-        pyears, fyears = 10, 10
+        # RAD : default to something quite generous
+        pyears, fyears = 80, 80
 
         # Minimum
         earliest = None
@@ -1651,13 +1683,13 @@ class S3CalendarWidget(FormWidget):
             # Localise if we have configured a Date Format and we have a jQueryUI options file
 
             # Do we have a suitable locale file?
-            if language in ("prs", "ps"):
-                # Dari & Pashto use Farsi
-                language = "fa"
+            #if language in ("prs", "ps"):
+            #    # Dari & Pashto use Farsi
+            #    language = "fa"
             #elif language == "ur":
             #    # Urdu uses Arabic
             #    language = "ar"
-            elif "-" in language:
+            if "-" in language:
                 parts = language.split("_", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
 
@@ -1730,8 +1762,10 @@ class S3DateWidget(FormWidget):
 
     def __init__(self,
                  format = None,
-                 past=1440,
-                 future=1440,
+                 #past=1440,
+                 #future=1440,
+                 past=None,
+                 future=None,
                  start_field = None,
                  default_interval = None,
                  default_explicit = False,
@@ -1811,7 +1845,7 @@ class S3DateWidget(FormWidget):
                           .replace("%b", "M")
 
         default = dict(_type = "text",
-                       value = (value != None and str(value)) or "",
+                       value = (value is not None and str(value)) or "",
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
@@ -1827,41 +1861,47 @@ class S3DateWidget(FormWidget):
         # Convert to Days
         now = current.request.utcnow
         past = self.past
-        if past:
-            past = now - relativedelta(months=past)
-            if now > past:
-                days = (now - past).days
-                minDate = "-%s" % days
-            else:
-                days = (past - now).days
-                minDate = "+%s" % days
+        if past is None:
+            past = ""
         else:
-            minDate = "-0"
+            if past:
+                past = now - relativedelta(months=past)
+                if now > past:
+                    days = (now - past).days
+                    minDate = "-%s" % days
+                else:
+                    days = (past - now).days
+                    minDate = "+%s" % days
+            else:
+                minDate = "-0"
+            past = ",minDate:%s" % minDate
+
         future = self.future
-        if future:
-            future = now + relativedelta(months=future)
-            if future > now:
-                days = (future - now).days
-                maxDate = "+%s" % days
-            else:
-                days = (now - future).days
-                maxDate = "-%s" % days
+        if future is None:
+            future = ""
         else:
-            maxDate = "+0"
+            if future:
+                future = now + relativedelta(months=future)
+                if future > now:
+                    days = (future - now).days
+                    maxDate = "+%s" % days
+                else:
+                    days = (now - future).days
+                    maxDate = "-%s" % days
+            else:
+                maxDate = "+0"
+            future = ",maxDate:%s" % maxDate
 
         # Set auto updation of end_date based on start_date if start_field attr are set
         start_field = self.start_field
         default_interval = self.default_interval
 
         script = \
-'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
- dateFormat:'%(format)s',
- minDate:%(past)s,
- maxDate:%(future)s}).one('click',function(){$(this).focus()})''' % \
+'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',dateFormat:'%(format)s'%(past)s%(future)s}).one('click',function(){$(this).focus()})''' % \
             dict(selector = selector,
                  format = format,
-                 past = minDate,
-                 future = maxDate,
+                 past = past,
+                 future = future,
                  )
 
         if script not in jquery_ready: # Prevents loading twice when form has errors
@@ -2458,7 +2498,7 @@ def S3GenericAutocompleteTemplate(post_process,
 
     default = dict(
         _type = "text",
-        value = (value != None and s3_unicode(value)) or "",
+        value = (value is not None and s3_unicode(value)) or "",
         )
     attr = StringWidget._attributes(field, default, **attributes)
 
@@ -2528,7 +2568,8 @@ class S3GroupedOptionsWidget(FormWidget):
                  cols=None,
                  help_field=None,
                  none=None,
-                 sort=True):
+                 sort=True,
+                 orientation=None):
         """
             Constructor
 
@@ -2544,6 +2585,7 @@ class S3GroupedOptionsWidget(FormWidget):
                                a tooltip text from (for foreign keys only)
             @param none: True to render "None" as normal option
             @param sort: sort the options (only effective if size==None)
+            @param orientation: the ordering orientation, "columns"|"rows"
         """
 
         self.options = options
@@ -2553,6 +2595,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.help_field = help_field
         self.none = none
         self.sort = sort
+        self.orientation = orientation
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2591,8 +2634,8 @@ class S3GroupedOptionsWidget(FormWidget):
         widget.add_class("groupedopts-widget")
         widget_opts = {"columns": self.cols,
                        "emptyText": str(current.T("No options available")),
-                       "order": "columns",
-                       "sort": True,
+                       "orientation": self.orientation or "columns",
+                       "sort": self.sort,
                        }
         script = '''$('#%s').groupedopts(%s)''' % \
                  (_id, json.dumps(widget_opts, separators=SEPARATORS))
@@ -2805,8 +2848,11 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Add tooltips
         items = []
+        T = current.T
         for key, label in group_items:
-            tooltip = helptext.get(key, None)
+            tooltip = helptext.get(key)
+            if tooltip:
+                tooltip = s3_str(T(tooltip))
             item = (key, label, key in values, tooltip)
             items.append(item)
 
@@ -2996,7 +3042,7 @@ class S3HiddenWidget(StringWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide %s" % attr["_class"]
@@ -3035,7 +3081,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3497,7 +3543,7 @@ class S3LocationAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and s3_unicode(value)) or "",
+            value = (value is not None and s3_unicode(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -3622,7 +3668,7 @@ class S3LocationLatLonWidget(FormWidget):
             requires = IS_EMPTY_OR(requires)
 
         defaults = dict(_type = "text",
-                        value = (value != None and str(value)) or "")
+                        value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
         # Hide the real field
         attr["_class"] = "hide"
@@ -3777,7 +3823,7 @@ class S3LocationSelectorWidget(FormWidget):
             # "dummy" left in the value.
             value = None
         defaults = dict(_type = "text",
-                        value = (value != None and str(value)) or "")
+                        value = (value is not None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
         if request.controller == "appadmin":
             # Don't use this widget in appadmin
@@ -4760,7 +4806,7 @@ class S3LocationSelector(S3Selector):
     """
 
     keys = ("L0", "L1", "L2", "L3", "L4", "L5",
-            "address", "postcode", "lat", "lon", "wkt", "specific", "id")
+            "address", "postcode", "lat", "lon", "wkt", "specific", "id", "radius")
 
     def __init__(self,
                  levels = None,
@@ -4778,6 +4824,7 @@ class S3LocationSelector(S3Selector):
                  lines = False,
                  points = True,
                  polygons = False,
+                 circles = False,
                  color_picker = False,
                  catalog_layers = False,
                  min_bbox = None,
@@ -4798,7 +4845,8 @@ class S3LocationSelector(S3Selector):
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
                                address line
-            @param show_address: show a field for street address
+            @param show_address: show a field for street address.
+                                 If the parameter is set to a string then this is used as the label.
             @param show_postcode: show a field for postcode
             @param show_latlon: show fields for manual Lat/Lon input
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
@@ -4809,6 +4857,7 @@ class S3LocationSelector(S3Selector):
             @param lines: use a line draw tool
             @param points: use a point draw tool
             @param polygons: use a polygon draw tool
+            @param circles: use a circle draw tool
             @param color_picker: display a color-picker to set per-feature styling
                                  (also need to enable in the feature layer to show on map)
             @param catalog_layers: display catalogue layers or just the default base layer
@@ -4847,9 +4896,9 @@ class S3LocationSelector(S3Selector):
 
         if feature_required:
             show_map = True
-            if not any((points,lines, polygons)):
+            if not any((points,lines, polygons, circles)):
                 points = True
-            if lines or polygons:
+            if lines or polygons or circles:
                 required = "wkt" if not points else "any"
             else:
                 required = "latlon"
@@ -4864,11 +4913,12 @@ class S3LocationSelector(S3Selector):
         self.lines = lines
         self.points = points
         self.polygons = polygons
+        self.circles = circles
 
         self.color_picker = color_picker
         self.catalog_layers = catalog_layers
 
-        self.min_bbox = min_bbox
+        self.min_bbox = min_bbox or settings.get_gis_bbox_min_size()
 
         self.labels = labels
         self.placeholders = placeholders
@@ -5007,12 +5057,18 @@ class S3LocationSelector(S3Selector):
                                            gtable.lon_max,
                                            cache=s3db.cache,
                                            limitby=(0, 1)).first()
-                default = country.id
-                default_bounds = [country.lon_min,
-                                  country.lat_min,
-                                  country.lon_max,
-                                  country.lat_max,
-                                  ]
+                try:
+                    default = country.id
+                    default_bounds = [country.lon_min,
+                                      country.lat_min,
+                                      country.lon_max,
+                                      country.lat_max,
+                                      ]
+                except AttributeError:
+                    error = "Default country data not in database (incorrect prepop setting?)"
+                    current.log.critical(error)
+                    if s3.debug:
+                        raise RuntimeError(error)
 
         if not location_id and values.keys() == ["id"]:
             location_id = values["id"] = default
@@ -5055,10 +5111,14 @@ class S3LocationSelector(S3Selector):
         show_address = self.show_address
         if show_address:
             address = values.get("address")
+            if show_address is True:
+                label = T("Street Address")
+            else:
+                label = show_address
             components["address"] = manual_input(fieldname,
                                                  "address",
                                                  address,
-                                                 T("Street Address"),
+                                                 label,
                                                  hidden = not address,
                                                  )
 
@@ -5153,6 +5213,7 @@ class S3LocationSelector(S3Selector):
         # then we need to launch the client-side JS as a callback to the
         # MapJS loader
         wkt = values.get("wkt")
+        radius = values.get("radius")
         if lat is not None or lon is not None or wkt is not None:
             use_callback = True
         else:
@@ -5203,6 +5264,7 @@ class S3LocationSelector(S3Selector):
                                  lat,
                                  lon,
                                  wkt,
+                                 radius,
                                  callback = callback,
                                  geocoder = geocoder,
                                  tablename = field.tablename,
@@ -5729,6 +5791,7 @@ class S3LocationSelector(S3Selector):
              lat,
              lon,
              wkt,
+             radius,
              callback = None,
              geocoder = False,
              tablename = None):
@@ -5739,6 +5802,7 @@ class S3LocationSelector(S3Selector):
             @param lat: the Latitude of the current point location
             @param lon: the Longitude of the current point location
             @param wkt: the WKT
+            @param radius: the radius of the location
             @param callback: the script to initialize the widget, if to be
                              initialized as callback of the MapJS loader
             @param geocoder: use a geocoder
@@ -5755,7 +5819,8 @@ class S3LocationSelector(S3Selector):
         lines = self.lines
         points = self.points
         polygons = self.polygons
-        use_wkt = polygons or lines
+        circles = self.circles
+        use_wkt = polygons or lines or circles
 
         db = current.db
         gis = current.gis
@@ -5769,7 +5834,7 @@ class S3LocationSelector(S3Selector):
         settings = current.deployment_settings
 
         # Toolbar options
-        add_points_active = add_polygon_active = add_line_active = False
+        add_points_active = add_polygon_active = add_line_active = add_circle_active = False
         if points and lines:
             # Allow selection between drawing a point or a line
             toolbar = True
@@ -5789,6 +5854,13 @@ class S3LocationSelector(S3Selector):
                 add_polygon_active = True
             else:
                 add_points_active = True
+        elif points and circles:
+            # Allow selection between drawing a point or a circle
+            toolbar = True
+            if wkt:
+                add_circle_active = True
+            else:
+                add_points_active = True
         elif points:
             # No toolbar needed => always drawing points
             toolbar = False
@@ -5803,14 +5875,38 @@ class S3LocationSelector(S3Selector):
                     add_polygon_active = True
             else:
                 add_polygon_active = True
+        elif lines and circles:
+            # Allow selection between drawing a line or a circle
+            toolbar = True
+            if wkt:
+                if wkt.startswith("LINE"):
+                    add_line_active = True
+                else:
+                    add_circle_active = True
+            else:
+                add_circle_active = True
         elif lines:
             # No toolbar needed => always drawing lines
             toolbar = False
             add_line_active = True
+        elif polygons and circles:
+            # Allow selection between drawing a polygon or a circle
+            toolbar = True
+            if wkt:
+                if radius is not None:
+                    add_circle_active = True
+                else:
+                    add_polygon_active = True
+            else:
+                add_polygon_active = True
         elif polygons:
             # No toolbar needed => always drawing polygons
             toolbar = False
             add_polygon_active = True
+        elif circles:
+            # No toolbar needed => always drawing circles
+            toolbar = False
+            add_circle_active = True
         else:
             # No Valid options!
             raise SyntaxError
@@ -5867,6 +5963,8 @@ class S3LocationSelector(S3Selector):
                             add_line_active = add_line_active,
                             add_polygon = polygons,
                             add_polygon_active = add_polygon_active,
+                            add_circle = circles,
+                            add_circle_active = add_circle_active,
                             catalogue_layers = self.catalog_layers,
                             color_picker = colorpicker,
                             toolbar = toolbar,
@@ -5995,7 +6093,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Initialize the values dict
         if values is None:
             values = {}
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent"):
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent", "radius"):
             if key not in values:
                 values[key] = None
 
@@ -6012,6 +6110,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = values.get("lat")
         lon = values.get("lon")
         wkt = values.get("wkt")
+        radius = values.get("radius")
         address = values.get("address")
         postcode = values.get("postcode")
 
@@ -6025,6 +6124,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                   table.lat,
                                                   table.lon,
                                                   table.wkt,
+                                                  table.radius,
                                                   table.addr_street,
                                                   table.addr_postcode,
                                                   limitby=(0, 1)).first()
@@ -6080,11 +6180,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 else:
                     lat = None
                     lon = None
-                if self.lines or self.polygons:
+                if self.lines or self.polygons or self.circles:
                     if not wkt:
                         if record.gis_feature_type != 1:
                             # Only use WKT for non-Points
                             wkt = record.wkt
+                            if record.radius is not None:
+                                radius = record.radius
                         else:
                             wkt = None
                 else:
@@ -6111,10 +6213,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         values["address"] = address
         values["postcode"] = postcode
 
-        # Lat/Lon/WKT
+        # Lat/Lon/WKT/Radius
         values["lat"] = lat
         values["lon"] = lon
         values["wkt"] = wkt
+        values["radius"] = radius
 
         return values
 
@@ -6142,6 +6245,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = value.get("lat")
         lon = value.get("lon")
         wkt = value.get("wkt")
+        radius = value.get("radius")
         address = value.get("address")
         postcode = value.get("postcode")
 
@@ -6225,7 +6329,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         else:
             text = represent(record)
 
-        return s3_unicode(text)
+        return s3_str(text)
 
     # -------------------------------------------------------------------------
     def validate(self, value, requires=None):
@@ -6254,34 +6358,43 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         msg = self.error_message
 
-        # Check for valid Lat/Lon/WKT (if any)
+        # Check for valid Lat/Lon/WKT/Radius (if any)
         lat = values.get("lat")
-        if lat == "":
-            lat = None
         if lat:
             try:
                 lat = float(lat)
             except ValueError:
                 errors["lat"] = current.T("Latitude is Invalid!")
+        elif lat == "":
+            lat = None
 
         lon = values.get("lon")
-        if lon == "":
-            lon = None
         if lon:
             try:
                 lon = float(lon)
             except ValueError:
                 errors["lon"] = current.T("Longitude is Invalid!")
+        elif lon == "":
+            lon = None
 
         wkt = values.get("wkt")
-        if wkt == "":
-            wkt = None
         if wkt:
             try:
                 from shapely.wkt import loads as wkt_loads
                 wkt_loads(wkt)
             except:
                 errors["wkt"] = current.T("WKT is Invalid!")
+        elif wkt == "":
+            wkt = None
+
+        radius = values.get("radius")
+        if radius:
+            try:
+                radius = float(radius)
+            except ValueError:
+                errors["radius"] = current.T("Radius is Invalid!")
+        elif radius == "":
+            radius = None
 
         if errors:
             error = "\n".join(errors[fn] for fn in errors)
@@ -6295,7 +6408,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # Currently not possible
             #   => widget always retains specific
             #   => must take care of orphaned specific locations otherwise
-            lat = lon = wkt = None
+            lat = lon = wkt = radius = None
         else:
             # Read other details
             parent = values.get("parent")
@@ -6305,7 +6418,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         if parent or address or postcode or \
            wkt is not None or \
            lat is not None or \
-           lon is not None:
+           lon is not None or \
+           radius is not None:
 
             # Specific location with details
             if specific:
@@ -6379,10 +6493,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                       addr_postcode=postcode,
                                       parent=parent,
                                       )
-                    if any(detail is not None for detail in (lat, lon, wkt)):
+                    if any(detail is not None for detail in (lat, lon, wkt, radius)):
                         feature.lat = lat
                         feature.lon = lon
                         feature.wkt = wkt
+                        feature.radius = radius
                         feature.inherited = False
                     onvalidation = current.s3db.gis_location_onvalidation
 
@@ -6415,10 +6530,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   parent=parent,
                                   inherited=True,
                                   )
-                if any(detail is not None for detail in (lat, lon, wkt)):
+                if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat
                     feature.lon = lon
                     feature.wkt = wkt
+                    feature.radius = radius
                     feature.inherited = False
                 onvalidation = current.s3db.gis_location_onvalidation
 
@@ -6527,7 +6643,12 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Read the values
         lat = values.get("lat")
         lon = values.get("lon")
+        lat_min = values.get("lat_min") # Values brought in by onvalidation
+        lon_min = values.get("lon_min")
+        lat_max = values.get("lat_max")
+        lon_max = values.get("lon_max")
         wkt = values.get("wkt")
+        radius = values.get("radius")
         the_geom = values.get("the_geom")
         address = values.get("address")
         postcode = values.get("postcode")
@@ -6543,7 +6664,12 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
             feature = Storage(lat=lat,
                               lon=lon,
+                              lat_min=lat_min,
+                              lon_min=lon_min,
+                              lat_max=lat_max,
+                              lon_max=lon_max,
                               wkt=wkt,
+                              radius=radius,
                               inherited=inherited,
                               addr_street=address,
                               addr_postcode=postcode,
@@ -6566,14 +6692,19 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # specific is None for Lx locations
             if specific and specific == location_id:
                 # Update specific location
-                feature = Storage(addr_street=values.get("address"),
-                                  addr_postcode=values.get("postcode"),
-                                  parent=values.get("parent"),
+                feature = Storage(addr_street=address,
+                                  addr_postcode=postcode,
+                                  parent=parent,
                                   )
-                if any(detail is not None for detail in (lat, lon, wkt)):
+                if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat
                     feature.lon = lon
+                    feature.lat_min = lat_min
+                    feature.lon_min = lon_min
+                    feature.lat_max = lat_max
+                    feature.lon_max = lon_max
                     feature.wkt = wkt
+                    feature.radius = radius
                     feature.inherited = False
 
                 # These could have been added during validate:
@@ -6953,12 +7084,41 @@ class S3HierarchyWidget(FormWidget):
                          )
         else:
             header = ""
-        widget = DIV(INPUT(_type = "hidden",
-                           _multiple = "multiple",
-                           _name = name,
-                           _id = selector,
-                           _class = "s3-hierarchy-input",
-                           requires = self.parse),
+
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if isinstance(value, basestring) and value and not value.isdigit():
+            value = self.parse(value)[0]
+        if not isinstance(value, (list, tuple, set)):
+            values = [value]
+        else:
+            values = value
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
+
+        # Prepend value parser to field validator
+        requires = field.requires
+        if isinstance(requires, (list, tuple)):
+            requires = [self.parse] + requires
+        elif requires is not None:
+            requires = [self.parse, requires]
+        else:
+            requires = self.parse
+
+        # The hidden input field
+        hidden_input = INPUT(_type = "hidden",
+                             _multiple = "multiple",
+                             _name = name,
+                             _id = selector,
+                             _class = "s3-hierarchy-input",
+                             requires = requires,
+                             value = json.dumps(selected),
+                             )
+
+        # The widget
+        widget = DIV(hidden_input,
                      DIV(header,
                          DIV(h.html("%s-tree" % widget_id,
                                     none=self.none,
@@ -6973,17 +7133,6 @@ class S3HierarchyWidget(FormWidget):
         s3 = current.response.s3
         scripts = s3.scripts
         script_dir = "/%s/static/scripts" % current.request.application
-
-        # Currently selected values
-        selected = []
-        append = selected.append
-        if not isinstance(value, (list, tuple, set)):
-            values = [value]
-        else:
-            values = value
-        for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
-                append(v)
 
         # Custom theme
         theme = settings.get_ui_hierarchy_theme()
@@ -7064,6 +7213,7 @@ class S3HierarchyWidget(FormWidget):
             return default, None
         if not self.multiple and isinstance(value, list):
             value = value[0] if value else None
+
         return value, None
 
 # =============================================================================
@@ -7260,7 +7410,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7354,7 +7504,7 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7448,7 +7598,7 @@ class S3PriorityListWidget(StringWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7487,7 +7637,7 @@ class S3SiteAutocompleteWidget(FormWidget):
 
         default = dict(
             _type = "text",
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
 
@@ -7650,7 +7800,7 @@ class S3StringWidget(StringWidget):
     def __call__(self, field, value, **attributes):
 
         default = dict(
-            value = (value != None and str(value)) or "",
+            value = (value is not None and str(value)) or "",
             )
 
         if self.textarea:
@@ -7706,6 +7856,11 @@ class S3TimeIntervalWidget(FormWidget):
 
         if value is None:
             value = 0
+        elif isinstance(value, basestring):
+            try:
+                value = int(value)
+            except ValueError:
+                value = 0
 
         if value == 0:
             multiplier = 1
@@ -7961,15 +8116,16 @@ class S3PasswordWidget(FormWidget):
     """
         Widget for password fields, allows unmasking of passwords
     """
+
     def __call__(self, field, value, **attributes):
 
-        s3 = current.response.s3
         T = current.T
 
         tablename = field._tablename
         fieldname = field.name
-        s3.js_global.append('''i18n.password_view="%s"''' % T("View"))
-        s3.js_global.append('''i18n.password_mask="%s"''' % T("Mask"))
+        js_append = current.response.s3.js_global.append
+        js_append('''i18n.password_view="%s"''' % T("View"))
+        js_append('''i18n.password_mask="%s"''' % T("Mask"))
 
         password_input = INPUT(_name = fieldname,
                                _id = "%s_%s" % (tablename, fieldname),
@@ -7985,7 +8141,29 @@ class S3PasswordWidget(FormWidget):
                             )
         return DIV(password_input,
                    password_unmask,
+                   _class = "s3-password-widget",
                    )
+
+# =============================================================================
+class S3PhoneWidget(StringWidget):
+    """
+        Extend the default Web2Py widget to ensure that the + is at the
+        beginning not the end in RTL.
+        Adds class to be acted upon by S3.js
+    """
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            value = (value is not None and str(value)) or "",
+            )
+
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "string phone-widget"
+
+        widget = INPUT(**attr)
+
+        return widget
 
 # =============================================================================
 def s3_comments_widget(field, value, **attr):
@@ -7998,6 +8176,7 @@ def s3_comments_widget(field, value, **attr):
         _id = "%s_%s" % (field._tablename, field.name)
     else:
         _id = attr["_id"]
+
     if "_name" not in attr:
         _name = field.name
     else:
@@ -8012,21 +8191,34 @@ def s3_comments_widget(field, value, **attr):
 # =============================================================================
 def s3_richtext_widget(field, value):
     """
-        A larger-than-normal textarea to be used by the CMS Post Body field
+        A Rich Text field to be used by the CMS Post Body, etc
+        - uses CKEditor
+        - requires doc module loaded to be able to upload/browse Images
     """
 
     s3 = current.response.s3
     id = "%s_%s" % (field._tablename, field.name)
 
     # Load the scripts
+    sappend = s3.scripts.append
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-    s3.scripts.append(ckeditor)
+    sappend(ckeditor)
     adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                   "jquery.js"])
-    s3.scripts.append(adapter)
+    sappend(adapter)
 
-    # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-    js = '''var ck_config={toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}'''
+    table = current.s3db.table("doc_ckeditor")
+    if table:
+        # Doc module enabled: can upload/browse images
+        url = '''filebrowserUploadUrl:'/%(appname)s/doc/ck_upload',filebrowserBrowseUrl:'/%(appname)s/doc/ck_browse',''' \
+                % dict(appname=current.request.application)
+    else:
+        # Doc module not enabled: cannot upload/browse images
+        url = ""
+
+    # Toolbar options: http://docs.ckeditor.com/#!/guide/dev_toolbar
+    js = '''var ck_config={toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,%sremovePlugins:'elementspath'}''' \
+            % url
     s3.js_global.append(js)
 
     js = '''$('#%s').ckeditor(ck_config)''' % id
@@ -8553,142 +8745,94 @@ class ICON(I):
     #
     icons = {
         "font-awesome": {
-            "_base": "icon",
-            "active": "icon-check",
-            "activity": "icon-tag",
-            "add": "icon-plus",
-            "arrow-down": "icon-arrow-down",
-            "attachment": "icon-paper-clip",
-            "bar-chart": "icon-bar-chart",
-            "book": "icon-book",
-            "bookmark": "icon-bookmark",
-            "bookmark-empty": "icon-bookmark-empty",
-            "briefcase": "icon-briefcase",
-            "calendar": "icon-calendar",
-            "certificate": "icon-certificate",
-            "comment-alt": "icon-comment-alt",
-            "commit": "icon-truck",
-            "delete": "icon-trash",
-            "deploy": "icon-plus",
-            "deployed": "icon-ok",
-            "down": "icon-caret-down",
-            "edit": "icon-edit",
-            "exclamation": "icon-exclamation",
-            "facebook": "icon-facebook",
-            "facility": "icon-home",
-            "file": "icon-file",
-            "file-alt": "icon-file-alt",
-            "folder-open-alt": "icon-folder-open-alt",
-            "fullscreen": "icon-fullscreen",
-            "globe": "icon-globe",
-            "group": "icon-group",
-            "home": "icon-home",
-            "inactive": "icon-check-empty",
-            "link": "icon-external-link",
-            "list": "icon-list",
-            "location": "icon-globe",
-            "mail": "icon-envelope-alt",
-            "map-marker": "icon-map-marker",
-            "offer": "icon-truck",
-            "organisation": "icon-sitemap",
-            "org-network": "icon-umbrella",
-            "other": "icon-circle",
-            "paper-clip": "icon-paper-clip",
-            "phone": "icon-phone",
-            "plus": "icon-plus",
-            "plus-sign": "icon-plus-sign",
-            "radio": "icon-microphone",
-            "remove": "icon-remove",
-            "request": "icon-flag",
-            "responsibility": "icon-briefcase",
-            "rss": "icon-rss",
-            "sent": "icon-ok",
-            "site": "icon-home",
-            "skype": "icon-skype",
-            "star": "icon-star",
-            "table": "icon-table",
-            "tag": "icon-tag",
-            "tags": "icon-tags",
-            "tasks": "icon-tasks",
-            "time": "icon-time",
-            "truck": "icon-truck",
-            "twitter": "icon-twitter",
-            "unsent": "icon-remove",
-            "up": "icon-caret-up",
-            "upload": "icon-upload-alt",
-            "user": "icon-user",
-            "zoomin": "icon-zoomin",
-            "zoomout": "icon-zoomout",
+            "_base": "fa",
+            "active": "fa-check",
+            "activity": "fa-cogs",
+            "add": "fa-plus",
+            "administration": "fa-cog",
+            "alert": "fa-bell",
+            "arrow-down": "fa-arrow-down",
+            "assessment": "fa-bar-chart",
+            "asset": "fa-fire-extinguisher",
+            "attachment": "fa-paperclip",
+            "bar-chart": "fa-bar-chart",
+            "book": "fa-book",
+            "bookmark": "fa-bookmark",
+            "bookmark-empty": "fa-bookmark-o",
+            "briefcase": "fa-briefcase",
+            "calendar": "fa-calendar",
+            "certificate": "fa-certificate",
+            "comment-alt": "fa-comment-o",
+            "commit": "fa-check-square-o",
+            "delete": "fa-trash",
+            "delivery": "fa-thumbs-up",
+            "deploy": "fa-plus",
+            "deployed": "fa-check",
+            "done": "fa-check",
+            "down": "fa-caret-down",
+            "edit": "fa-edit",
+            "event": "fa-bolt",
+            "exclamation": "fa-exclamation",
+            "facebook": "fa-facebook",
+            "facility": "fa-home",
+            "file": "fa-file",
+            "file-alt": "fa-file-alt",
+            "flag": "fa-flag",
+            "flag-alt": "fa-flag-o",
+            "folder-open-alt": "fa-folder-open-o",
+            "fullscreen": "fa-fullscreen",
+            "globe": "fa-globe",
+            "goods": "fa-cubes",
+            "group": "fa-group",
+            "hint": "fa-hand-o-right",
+            "home": "fa-home",
+            "inactive": "fa-check-empty",
+            "incident": "fa-bolt",
+            "link": "fa-external-link",
+            "list": "fa-list",
+            "location": "fa-globe",
+            "mail": "fa-envelope-o",
+            "map-marker": "fa-map-marker",
+            "move": "fa-arrows",
+            "news": "fa-info",
+            "offer": "fa-truck",
+            "organisation": "fa-institution",
+            "org-network": "fa-umbrella",
+            "other": "fa-circle",
+            "paper-clip": "fa-paperclip",
+            "phone": "fa-phone",
+            "plus": "fa-plus",
+            "plus-sign": "fa-plus-sign",
+            "project": "fa-dashboard",
+            "radio": "fa-microphone",
+            "remove": "fa-remove",
+            "request": "fa-flag",
+            "responsibility": "fa-briefcase",
+            "rss": "fa-rss",
+            "sent": "fa-check",
+            "settings": "fa-wrench",
+            "share": "fa-share-alt",
+            "shipment": "fa-truck",
+            "site": "fa-home",
+            "skype": "fa-skype",
+            "staff": "fa-user",
+            "star": "fa-star",
+            "table": "fa-table",
+            "tag": "fa-tag",
+            "tags": "fa-tags",
+            "tasks": "fa-tasks",
+            "time": "fa-time",
+            "truck": "fa-truck",
+            "twitter": "fa-twitter",
+            "unsent": "fa-times",
+            "up": "fa-caret-up",
+            "upload": "fa-upload",
+            "user": "fa-user",
+            "volunteer": "fa-hand-paper-o",
+            "wrench": "fa-wrench",
+            "zoomin": "fa-zoomin",
+            "zoomout": "fa-zoomout",
         },
-        # @todo: integrate
-        #"font-awesome4": {
-            #"_base": "fa",
-            #"active": "fa-check",
-            #"activity": "fa-tag",
-            #"add": "fa-plus",
-            #"arrow-down": "fa-arrow-down",
-            #"attachment": "fa-paper-clip",
-            #"bar-chart": "fa-bar-chart",
-            #"book": "fa-book",
-            #"bookmark": "fa-bookmark",
-            #"bookmark-empty": "fa-bookmark-empty",
-            #"briefcase": "fa-briefcase",
-            #"calendar": "fa-calendar",
-            #"certificate": "fa-certificate",
-            #"comment-alt": "fa-comment-o",
-            #"commit": "fa-truck",
-            #"delete": "fa-trash",
-            #"deploy": "fa-plus",
-            #"deployed": "fa-check",
-            #"down": "fa-caret-down",
-            #"edit": "fa-edit",
-            #"exclamation": "fa-exclamation",
-            #"facebook": "fa-facebook",
-            #"facility": "fa-home",
-            #"file": "fa-file",
-            #"file-alt": "fa-file-alt",
-            #"folder-open-alt": "fa-folder-open-o",
-            #"fullscreen": "fa-fullscreen",
-            #"globe": "fa-globe",
-            #"group": "fa-group",
-            #"home": "fa-home",
-            #"inactive": "fa-check-empty",
-            #"link": "fa-external-link",
-            #"list": "fa-list",
-            #"location": "fa-globe",
-            #"mail": "fa-envelope-o",
-            #"map-marker": "fa-map-marker",
-            #"offer": "fa-truck",
-            #"organisation": "fa-institution",
-            #"org-network": "fa-umbrella",
-            #"other": "fa-circle",
-            #"paper-clip": "fa-paper-clip",
-            #"phone": "fa-phone",
-            #"plus": "fa-plus",
-            #"plus-sign": "fa-plus-sign",
-            #"radio": "fa-microphone",
-            #"remove": "fa-remove",
-            #"request": "fa-flag",
-            #"responsibility": "fa-briefcase",
-            #"rss": "fa-rss",
-            #"sent": "fa-check",
-            #"site": "fa-home",
-            #"skype": "fa-skype",
-            #"star": "fa-star",
-            #"table": "fa-table",
-            #"tag": "fa-tag",
-            #"tags": "fa-tags",
-            #"tasks": "fa-tasks",
-            #"time": "fa-time",
-            #"truck": "fa-truck",
-            #"twitter": "fa-twitter",
-            #"unsent": "fa-times",
-            #"up": "fa-caret-up",
-            #"upload": "fa-upload",
-            #"user": "fa-user",
-            #"zoomin": "fa-zoomin",
-            #"zoomout": "fa-zoomout",
-        #},
         "foundation": {
             "active": "fi-check",
             "activity": "fi-price-tag",
@@ -8712,6 +8856,8 @@ class ICON(I):
             "facility": "fi-home",
             "file": "fi-page-filled",
             "file-alt": "fi-page",
+            "flag": "fi-flag",
+            "flag-alt": "fi-flag",
             "folder-open-alt": "fi-folder",
             "fullscreen": "fi-arrows-out",
             "globe": "fi-map",
@@ -8731,12 +8877,15 @@ class ICON(I):
             "phone": "fi-telephone",
             "plus": "fi-plus",
             "plus-sign": "fi-plus",
+            "print": "fi-print",
             "radio": "fi-microphone",
             "remove": "fi-x",
             "request": "fi-flag",
             "responsibility": "fi-sheriff-badge",
             "rss": "fi-rss",
             "sent": "fi-check",
+            "settings": "fi-wrench",
+            "share": "fi-share",
             "site": "fi-home",
             "skype": "fi-social-skype",
             "star": "fi-star",
@@ -8751,6 +8900,81 @@ class ICON(I):
             "user": "fi-torso",
             "zoomin": "fi-zoom-in",
             "zoomout": "fi-zoom-out",
+        },
+        "font-awesome3": {
+            "_base": "icon",
+            "active": "icon-check",
+            "activity": "icon-tag",
+            "add": "icon-plus",
+            "administration": "icon-cog",
+            "arrow-down": "icon-arrow-down",
+            "attachment": "icon-paper-clip",
+            "bar-chart": "icon-bar-chart",
+            "book": "icon-book",
+            "bookmark": "icon-bookmark",
+            "bookmark-empty": "icon-bookmark-empty",
+            "briefcase": "icon-briefcase",
+            "calendar": "icon-calendar",
+            "certificate": "icon-certificate",
+            "comment-alt": "icon-comment-alt",
+            "commit": "icon-truck",
+            "delete": "icon-trash",
+            "deploy": "icon-plus",
+            "deployed": "icon-ok",
+            "down": "icon-caret-down",
+            "edit": "icon-edit",
+            "exclamation": "icon-exclamation",
+            "facebook": "icon-facebook",
+            "facility": "icon-home",
+            "file": "icon-file",
+            "file-alt": "icon-file-alt",
+            "flag": "icon-flag",
+            "flag-alt": "icon-flag-alt",
+            "folder-open-alt": "icon-folder-open-alt",
+            "fullscreen": "icon-fullscreen",
+            "globe": "icon-globe",
+            "group": "icon-group",
+            "home": "icon-home",
+            "inactive": "icon-check-empty",
+            "link": "icon-external-link",
+            "list": "icon-list",
+            "location": "icon-globe",
+            "mail": "icon-envelope-alt",
+            "map-marker": "icon-map-marker",
+            "offer": "icon-truck",
+            "organisation": "icon-sitemap",
+            "org-network": "icon-umbrella",
+            "other": "icon-circle",
+            "paper-clip": "icon-paper-clip",
+            "phone": "icon-phone",
+            "plus": "icon-plus",
+            "plus-sign": "icon-plus-sign",
+            "print": "icon-print",
+            "radio": "icon-microphone",
+            "remove": "icon-remove",
+            "request": "icon-flag",
+            "responsibility": "icon-briefcase",
+            "rss": "icon-rss",
+            "sent": "icon-ok",
+            "settings": "icon-wrench",
+            "share": "icon-share",
+            "site": "icon-home",
+            "skype": "icon-skype",
+            "star": "icon-star",
+            "table": "icon-table",
+            "tag": "icon-tag",
+            "tags": "icon-tags",
+            "tasks": "icon-tasks",
+            "time": "icon-time",
+            "truck": "icon-truck",
+            "twitter": "icon-twitter",
+            "unsent": "icon-remove",
+            "up": "icon-caret-up",
+            "upload": "icon-upload-alt",
+            "user": "icon-user",
+            "wrench": "icon-wrench",
+            "zoomin": "icon-zoomin",
+            "zoomout": "icon-zoomout",
         },
     }
 

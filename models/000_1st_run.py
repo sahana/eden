@@ -80,13 +80,7 @@ if update_check_needed:
 
 # -----------------------------------------------------------------------------
 import os
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
+from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
@@ -97,34 +91,17 @@ from gluon.storage import Storage
 # http://en.wikipedia.org/wiki/Anti_pattern#Programming_anti-patterns
 response.s3 = Storage()
 s3 = response.s3
-s3.gis = Storage()  # Defined early for use by S3Config.
+s3.gis = Storage() # Defined early for use by S3Config.
 
 current.cache = cache
+# Limit for filenames on filesystem:
+# https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
+# NB This takes effect during the file renaming algorithm - the length of uploaded filenames is unaffected
+current.MAX_FILENAME_LENGTH = 255 # Defined early for use by S3Config.
 
 # Import S3Config
 import s3cfg
 settings = s3cfg.S3Config()
 current.deployment_settings = deployment_settings = settings
-
-def template_path():
-    """
-        Return the path of the Template config.py to load
-
-        @todo: deprecated, S3Config finds the path itself,
-               modern 000_config.py should not use this anymore
-    """
-
-    path = os.path.join(request.folder,
-                        "modules",
-                        "templates",
-                        settings.get_template(),
-                        "config.py")
-    if not os.path.exists(path):
-        path = os.path.join(request.folder,
-                            "private",
-                            "templates",
-                            settings.get_template(),
-                            "config.py")
-    return path
 
 # END =========================================================================

@@ -2,7 +2,7 @@
 
 """ Translation API
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,6 +33,9 @@ import token
 
 from gluon import current
 from gluon.languages import read_dict, write_dict
+from gluon.storage import Storage
+
+from s3fields import S3ReusableField
 
 """
     List of classes with description :
@@ -814,8 +817,8 @@ class TranslateReadFiles:
 
             # List of database strings
             database_strings = []
+            dappend = database_strings.append
             template_list = []
-            tappend = template_list.append
             base_dir = current.request.folder
             path = os.path
             # If all templates flag is set we look in all templates' tasks.cfg file
@@ -823,6 +826,7 @@ class TranslateReadFiles:
                 template_dir = path.join(base_dir, "modules", "templates")
                 files = os.listdir(template_dir)
                 # template_list will have the list of all templates
+                tappend = template_list.append
                 for f in files:
                     curFile = path.join(template_dir, f)
                     baseFile = path.basename(curFile)
@@ -830,7 +834,14 @@ class TranslateReadFiles:
                         tappend(baseFile)
             else:
                 # Set current template.
-                tappend(current.deployment_settings.base.template)
+                template_list.append(current.deployment_settings.base.template)
+
+            # List of fields which don't have an S3ReusableFiled defined but we
+            # know we wish to translate
+            # @ToDo: Extend to dict if we need to support some which don't just translate the name
+            always_translate = ("project_beneficiary_type_id",
+                                "stats_demographic_id",
+                                )
 
             # Use bulk importer class to parse tasks.cfg in template folder
             bi = S3BulkImporter()
@@ -852,19 +863,23 @@ class TranslateReadFiles:
                     # assuming represent.translate is always on primary key id
                     translate = False
                     fieldname = "%s_%s_id" % (csv[1], csv[2])
-                    if hasattr(s3db, fieldname) == False:
+                    if fieldname in always_translate:
+                        translate = True
+                        represent = Storage(fields = ["name"])
+                    elif hasattr(s3db, fieldname) is False:
                         continue
-                    reusable_field = s3db.get(fieldname)
-                    # Callable check excludes lambdas which are in defaults()
-                    # i.e. reusable fields in disabled modules
-                    if reusable_field and not callable(reusable_field):
-                        represent = reusable_field.attr.represent
-                        if hasattr(represent, "translate"):
-                            translate = represent.translate
+                    else:
+                        reusable_field = s3db.get(fieldname)
+                        # Excludes lambdas which are in defaults()
+                        # i.e. reusable fields in disabled modules
+                        if reusable_field and isinstance(reusable_field, S3ReusableField):
+                            represent = reusable_field.attr.represent
+                            if hasattr(represent, "translate"):
+                                translate = represent.translate
 
                     # If translate attribute is set to True
                     if translate:
-                        if hasattr(represent, "fields") == False:
+                        if hasattr(represent, "fields") is False:
                             # Only name field is considered
                             fields = ["name"]
                         else:
@@ -895,11 +910,12 @@ class TranslateReadFiles:
                                 # If string is not empty
                                 for idx in idxlist:
                                     try:
-                                        if row[idx] != "":
-                                            loc = "%s:%s" % (csv_path, line_number)
-                                            database_strings.append((loc, row[idx]))
+                                        s = row[idx]
                                     except:
                                         current.log.error("CSV row incomplete", csv_path)
+                                    if s != "":
+                                        loc = "%s:%s" % (csv_path, line_number)
+                                        dappend((loc, s))
 
             return database_strings
 
@@ -997,8 +1013,13 @@ class Strings:
             request = current.request
             settings = current.deployment_settings
             appname = request.application
+
+            folder = request.folder
+            join = os.path.join
+
             langcode = langfile[:-3]
-            langfile = os.path.join(request.folder, "languages", langfile)
+            langfile = join(folder, "languages", langfile)
+
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
                 f = open(langfile, "w")
@@ -1010,14 +1031,20 @@ class Strings:
 
             if all_template_flag == 1:
                 # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "modules", "templates"))
+                A.grp.group_files(join(folder, "modules", "templates"))
             else:
-                # A specific template is selected
-                template_folder = os.path.join(request.folder, "modules", "templates", settings.get_template())
-                A.grp.group_files(template_folder)
+                # Specific template(s) is selected
+                templates = settings.get_template()
+                if not isinstance(templates, (tuple, list)):
+                    templates = (templates,)
+                group_files = A.grp.group_files
+                for template in templates:
+                    template_folder = join(folder, "modules", "templates", template)
+                    group_files(template_folder)
+
             R = TranslateReadFiles()
 
-            # Select Modules
+            ## Select Modules
 
             # Core Modules are always included
             core_modules = ("auth", "default")

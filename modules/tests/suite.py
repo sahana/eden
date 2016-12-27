@@ -31,16 +31,25 @@ from tests.person import *
 
 def loadAllTests():
 
+    folder = request.folder
+
     # Run the file modules/templates/<current_template>/tests.py to get tests list.
-    path = os.path.join(request.folder,
-                        "modules", "templates",
-                        settings.get_template(),
-                        "tests.py")
-    if os.path.exists(path):
-        settings.exec_template(path)
-    else:
+    found = False
+    templates = settings.get_template()
+    if not isinstance(templates, (tuple, list)):
+        templates = (templates,)
+    for template in templates[::-1]:
+        path = os.path.join(folder,
+                            "modules", "templates",
+                            template,
+                            "tests.py")
+        if os.path.exists(path):
+            settings.exec_template(path)
+            found = True
+            break
+    if not found:
         # Fallback to the default template tests.
-        path = os.path.join(request.folder,
+        path = os.path.join(folder,
                             "modules", "templates",
                             "default",
                             "tests.py")

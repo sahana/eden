@@ -2,7 +2,7 @@
 
 """ S3 Synchronization: Peer Repository Adapter for ADASHI
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,15 +33,6 @@ import sys
 from gluon import *
 
 from ..s3sync import S3SyncBaseAdapter
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -82,21 +73,78 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         repository = self.repository
-
-        # Log the operation
         log = repository.log
-        log.write(repository_id = repository.id,
-                  resource_name = task.resource_name,
-                  transmission = log.OUT,
-                  mode = log.PUSH,
-                  action = None,
-                  remote = False,
-                  result = log.FATAL,
-                  message = "Pull from ADASHI currently not supported",
-                  )
 
-        output = current.xml.json_message(False, 400, message)
-        return(output, None)
+        # Import path
+        PATH = os.path.join(current.request.folder, "uploads", "adashi_feeds")
+
+        # Read names from path
+        try:
+            files_list = os.listdir(PATH)
+        except os.error:
+            message = "Upload path does not exist or can not be accessed"
+            log.write(repository_id = repository.id,
+                      resource_name = "mixed",
+                      transmission = log.IN,
+                      mode = log.PUSH,
+                      action = "read files from %s" % PATH,
+                      remote = False,
+                      result = log.FATAL,
+                      message = message,
+                      )
+            return message, None
+
+        # Add path to file names, filter for .xml files, sort by mtime
+        files = [os.path.join(PATH, f)
+                 for f in files_list if f[-4:] == ".xml"]
+        files = filter(os.path.isfile, files)
+        files.sort(key=os.path.getmtime)
+
+        # Strategy and Policies
+        from ..s3import import S3ImportItem
+        default_update_policy = S3ImportItem.POLICY.NEWER
+        default_conflict_policy = S3ImportItem.POLICY.MASTER
+        strategy = task.strategy
+        update_policy = task.update_policy or default_update_policy
+        conflict_policy = task.conflict_policy or default_conflict_policy
+        if update_policy not in ("THIS", "OTHER"):
+            last_sync = task.last_pull
+
+        # Import files
+        for f in files:
+            current.log.debug("ADASHI Sync: importing %s" % f)
+            try:
+                with open(f, "r") as source:
+                    result = self.receive([source],
+                                          None,
+                                          strategy=strategy,
+                                          update_policy=update_policy,
+                                          conflict_policy=conflict_policy,
+                                          onconflict=onconflict,
+                                          last_sync=last_sync,
+                                          mixed=True,
+                                          )
+            except IOError:
+                continue
+
+            # Log the operation
+            log.write(repository_id = repository.id,
+                      resource_name = "mixed",
+                      transmission = log.IN,
+                      mode = log.PUSH,
+                      action = "import %s" % f,
+                      remote = result["remote"],
+                      result = result["status"],
+                      message = result["message"],
+                      )
+
+            # Remove the file
+            try:
+                os.remove(f)
+            except os.error:
+                current.log.error("ADASHI Sync: can not delete %s" % f)
+
+        return None, current.request.utcnow
 
     # -------------------------------------------------------------------------
     def push(self, task):
@@ -121,7 +169,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   )
 
         output = current.xml.json_message(False, 400, message)
-        return(output, None)
+        return output, None
 
     # -------------------------------------------------------------------------
     def send(self,
@@ -130,7 +178,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
              limit=None,
              msince=None,
              filters=None,
-             mixed=False):
+             mixed=False,
+             pretty_print=False):
         """
             Respond to an incoming pull from a peer repository
 
@@ -140,6 +189,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param msince: minimum modification date/time for records to send
             @param filters: URL filters for record extraction
             @param mixed: negotiate resource with peer (disregard resource)
+            @param pretty_print: make the output human-readable
         """
 
         if not resource or mixed:
@@ -157,6 +207,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                      filters=filters,
                                      msince=msince,
                                      stylesheet=stylesheet,
+                                     pretty_print=pretty_print,
                                      )
         count = resource.results
         msg = "Data sent to peer (%s records)" % count
@@ -237,6 +288,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     "remote": remote,
                     "response": xml.json_message(False, 400, msg),
                     }
+
+        # Store source data?
+        repository = self.repository
+        if repository.keep_source:
+            self.keep_source(tree, category)
 
         # Import transformation stylesheet
         stylesheet = os.path.join(current.request.folder,
@@ -363,5 +419,46 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             inactive = set(row.id for row in rows)
             current.db(ltable.id.belongs(inactive)).update(status=4)
 
+    # -------------------------------------------------------------------------
+    def keep_source(self, tree, category):
+        """
+            Helper method to store source data in file system
+
+            @param tree: the XML element tree of the source
+            @param category: the feed category
+        """
+
+        repository = self.repository
+
+        # Log the operation
+        log = repository.log
+        log.write(repository_id = repository.id,
+                  resource_name = None,
+                  transmission = log.IN,
+                  mode = log.PUSH,
+                  action = "receive",
+                  remote = False,
+                  result = log.WARNING,
+                  message = "'Keep Source Data' active for this repository!",
+                  )
+
+        request = current.request
+        folder = os.path.join(request.folder, "uploads", "adashi")
+        dt = request.utcnow.replace(microsecond=0).isoformat()
+        dt = dt.replace(":", "").replace("-", "")
+        filename = os.path.join(folder,
+                                "%s_%s.xml" % (category, dt),
+                                )
+        if not os.path.exists(folder):
+            try:
+                os.mkdir(folder)
+            except OSError:
+                return
+        if filename:
+            try:
+                with open(filename, "w") as f:
+                    tree.write(f, pretty_print=True)
+            except IOError:
+                return
 
 # End =========================================================================

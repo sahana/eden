@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - HRM005 Add Staff To Organization
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,11 +29,11 @@ from tests.web2unittest import SeleniumUnitTest
 
 class AddStaffToOrganisation(SeleniumUnitTest):
     def test_hrm005_add_staff_to_organization(self):
-        
+
         """
             @case: HRM005
             @description: Add a premade made staff to a Organisation
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -55,8 +55,8 @@ class AddStaffToOrganisation(SeleniumUnitTest):
         add_btn = self.browser.find_elements_by_id("show-add-btn")
         if len(add_btn) > 0:
             add_btn[0].click()
-        
-        self.create("hrm_human_resource", 
+
+        self.create("hrm_human_resource",
                     [( "site_id",
                        "Lori (Facility)"),
                      ( "first_name",

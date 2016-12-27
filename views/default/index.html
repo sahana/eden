@@ -1,37 +1,58 @@
 {{extend "layout.html"}}
 <div id='home'>
-{{try:}}<h2 align='center'>{{=title}}</h2>{{except:}}{{pass}}
-{{=XML(item)}}
-<div id='menu_box_center'>
-{{try:}}{{=sit_dec_res_box}}{{except:}}{{pass}}
-{{=facility_box}}
-{{if AUTHENTICATED not in session.s3.roles:}}
- <div id='login_box' class='menu_box'>
-  <div id='login_form' {{if self_registration and not registered and not login_form.errors:}}class='hide'{{pass}}>
-   {{=login_div}}
-   {{include "auth/_login.html"}}
-  </div>
-  {{if self_registration:}}
-   <div id='register_form' {{if registered or login_form.errors:}}class='hide'{{pass}}>
-    {{=register_div}}
-    {{include "auth/_register.html"}}
-   </div>
-  {{pass}}
+ {{try:}}
+ <div class='row' id='homepage-title'>
+  <h2 align='center'>{{=title}}</h2>
  </div>
-{{pass}}
-{{=manage_facility_box}}
-{{=org_box}}
-</div>
+ {{except:}}{{pass}}
+ <div class='row' id='homepage-cms'>
+  {{=XML(item)}}
+ </div>
+ <div class='row' id='homepage-main'>
+  <div class='small-12 medium-12 large-push-6 large-5 columns'>
+   {{if AUTHENTICATED not in session.s3.roles:}}
+   <div id='login_box'>
+    <div id='login_form' {{if self_registration and not registered and not login_form.errors:}}class='hide'{{pass}}>
+     {{=login_div}}
+     {{include "auth/_login.html"}}
+    </div>
+    {{if self_registration:}}
+    <div id='register_form' {{if registered or login_form.errors:}}class='hide'{{pass}}>
+     {{=register_div}}
+     {{include "auth/_register.html"}}
+    </div>
+    {{pass}}
+   </div>
+   {{pass}}
+   {{=manage_facility_box}}
+   {{=org_box}}
+  </div>
+  <div class='hide-for-small medium-12 large-pull-6 large-5 columns' id='homepage-menus'>
+   {{try:}}{{=sit_menu}}{{except:}}{{pass}}
+   {{try:}}{{=org_menu}}{{except:}}{{pass}}
+   {{try:}}{{=res_menu}}{{except:}}{{pass}}
+   {{try:}}{{=aid_menu}}{{except:}}{{pass}}
+  </div>
+ </div>
 </div>
 <div id='about'>
- <p>
- {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
- <br/>{{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
- </p>
+ <div class='row'>
+  <div class='small-12 columns'>
+   <p>
+    {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
+    <br/>
+    {{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
+   </p>
+  </div>
+ </div>
 </div>
 {{if settings.frontpage.rss:}}
 <div id='feed-control'>
- <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+ <div class='row'>
+  <div class='small-12 columns'>
+   <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+  </div>
+ </div>
 </div>
 {{pass}}
 {{if settings.get_base_guided_tour() and request.get_vars.tour:}}{{=joyride_div}}{{pass}}

@@ -5,7 +5,7 @@
     <!-- **********************************************************************
          CAP Export Templates
 
-         Copyright (c) 2011-15 Sahana Software Foundation
+         Copyright (c) 2011-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -76,7 +76,7 @@
                 <xsl:value-of select="translate(data[@field='status']/@value, '&quot;', '')"/>
             </status>
             <msgType>
-                <xsl:value-of select="translate(data[@field='msg_type']/@value, '&quot;', '')"/>
+                <xsl:value-of select="data[@field='msg_type']"/>
             </msgType>
             
             <xsl:if test="data[@field='source']!=''">
@@ -84,14 +84,14 @@
             </xsl:if>
 
             <scope>
-                <xsl:value-of select="translate(data[@field='scope']/@value, '&quot;', '')"/>
+                <xsl:value-of select="data[@field='scope']"/>
             </scope>
 
             <xsl:if test="data[@field='scope']='Restricted'">
                 <restriction><xsl:value-of select="data[@field='restriction']"/></restriction>
             </xsl:if>
 
-            <xsl:if test="data[@field='addresses']">
+            <xsl:if test="data[@field='addresses']/@value!='[]'">
                 <addresses>
                     <xsl:call-template name="make-space-delimited">
                         <xsl:with-param name="string">
@@ -113,6 +113,12 @@
                 <note><xsl:value-of select="data[@field='note']"/></note>
             </xsl:if>
 
+            <xsl:if test="data[@field='reference']!=''">
+            	<references>
+            		<xsl:value-of select="data[@field='reference']"/>
+            	</references>
+            </xsl:if>
+
             <xsl:if test="data[@field='incidents']!=''">
                 <incidents>
                     <xsl:call-template name="make-space-delimited">
@@ -131,8 +137,9 @@
     <!-- cap_info -->
     <xsl:template match="resource[@name='cap_info']">
         <info>
+            <xsl:variable name="info_uuid" select="@uuid"/>
             <xsl:if test="data[@field='language']!=''">
-                <language><xsl:value-of select="data[@field='language']"/></language>
+                <language><xsl:value-of select="translate(data[@field='language']/@value, '&quot;', '')"/></language>
             </xsl:if>
 
             <xsl:if test="data[@field='category']">
@@ -227,7 +234,7 @@
             </xsl:if>
 
             <xsl:if test="data[@field='web']!=''">
-                <web><xsl:value-of select="data[@field='web']"/></web>
+                <web><xsl:value-of select="concat(data[@field='web'], '/profile')"/></web>
             </xsl:if>
 
             <xsl:if test="data[@field='contact']!=''">
@@ -236,26 +243,78 @@
 
             <xsl:if test="reference[@field='event_type_id']!=''">
             	<parameter>
-                	<valueName>event type</valueName>
-                	<value><xsl:value-of select="reference[@field='event_type_id']"/></value>
+                    <valueName>sahana:event type</valueName>
+                    <value><xsl:value-of select="reference[@field='event_type_id']"/></value>
                 </parameter>
             </xsl:if>
 
             <xsl:if test="reference[@field='priority']!=''">
             	<parameter>
-                	<valueName>warning priority</valueName>
-                	<value><xsl:value-of select="reference[@field='priority']"/></value>
+                    <valueName>sahana:warning priority</valueName>
+                    <value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
             </xsl:if>
+            
+            <xsl:for-each select="../resource[@name='cap_info_parameter'][reference[@field='info_id' and @uuid=$info_uuid]]">
+                <parameter>
+                    <valueName>
+                        <xsl:value-of select="data[@field='name']"/>
+                    </valueName>
+                    <value>
+                        <xsl:value-of select="data[@field='value']"/>
+                    </value>
+                </parameter>
+            </xsl:for-each>
 
-            <xsl:if test="data[@field='parameter']">
+            <!-- Not used -->
+            <!--<xsl:if test="data[@field='parameter']">
                 <xsl:call-template name="key-value-pairs">
                     <xsl:with-param name="string">
                         <xsl:value-of select="translate(data[@field='parameter']/@value, '&quot;[\]', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
-            </xsl:if>
+            </xsl:if>-->
+
+            <parameter>
+                <valueName>layer:tweet</valueName>
+                <value>
+                    <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/><xsl:text>: </xsl:text><xsl:value-of select="data[@field='headline']"/>
+                    <xsl:text>&#x0A;</xsl:text>
+                    <xsl:text>Sender: </xsl:text><xsl:value-of select="../data[@field='sender']"/>
+                    <xsl:text>&#x0A;</xsl:text>
+                    <xsl:text>Website: </xsl:text><xsl:value-of select="concat(data[@field='web'], '/profile')"/>
+                </value>
+            </parameter>
+
+            <parameter>
+                <valueName>layer:sms</valueName>
+                <value>
+                    <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/>
+		    <xsl:text>&#160;</xsl:text><xsl:value-of select="translate(../data[@field='msg_type']/@value, '&quot;', '')"/>
+                    <xsl:text>&#160;for&#160;</xsl:text>
+		    <xsl:value-of select="../resource[@name='cap_area']/data[@field='name']"/>
+		    <xsl:text>&#160;with&#160;</xsl:text>
+		    <xsl:choose>
+		        <xsl:when test="reference[@field='priority']!=''">
+			    <xsl:value-of select="reference[@field='priority']"/>
+			</xsl:when>
+			<xsl:otherwise>
+			    <xsl:text>Unknown</xsl:text>
+			</xsl:otherwise>
+		    </xsl:choose>
+		    <xsl:text>&#160;priority&#160;</xsl:text>
+		    <xsl:value-of select="reference[@field='event_type_id']"/>
+		    <xsl:text>&#160;issued&#160;by&#160;</xsl:text>
+		    <xsl:value-of select="data[@field='sender_name']"/>
+		    <xsl:text>&#160;at&#160;</xsl:text>
+		    <xsl:value-of select="../data[@field='sent']/@value"/>
+		    <xsl:text>&#160;(ID:</xsl:text>
+		    <xsl:value-of select="../data[@field='identifier']"/>
+                    <xsl:text>)</xsl:text>
+                </value>
+            </parameter>
+
             <xsl:variable name="uuid" select="@uuid"/>
 
             <!-- Resources -->
@@ -353,7 +412,7 @@
                 </xsl:variable>
                 <circle>
                     <!-- Convert radius from m to km -->
-                    <xsl:value-of select="concat($lat, ',', $lon, ' ', $radius * 1000)"/>
+                    <xsl:value-of select="concat($lat, ',', $lon, ' ', $radius * 0.001)"/>
                 </circle>
             </xsl:when>
             <xsl:when test="starts-with($wkt,'&#34;POLYGON')">
@@ -502,25 +561,34 @@
     <!-- ****************************************************************** -->
     <!-- cap_resource -->
     <xsl:template match="resource[@name='cap_resource']">
-        <resource>
-            <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
-            <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
-            <xsl:if test="data[@field='size']!=''">
-                <size><xsl:value-of select="data[@field='size']"/></size>
-            </xsl:if>
-            <xsl:if test="data[@name='size']!=''">
-                <size><xsl:value-of select="data[@name='size']"/></size>
-            </xsl:if>
-            <xsl:if test="data[@name='uri']!=''">
-                <uri><xsl:value-of select="data[@name='uri']"/></uri>
-            </xsl:if>
-            <xsl:if test="data[@name='deref_uri']!=''">
-                <derefUri><xsl:value-of select="data[@name='deref_uri']"/></derefUri>
-            </xsl:if>
-            <xsl:if test="data[@name='digest']!=''">
-                <digest><xsl:value-of select="data[@name='digest']"/></digest>
-            </xsl:if>
-        </resource>
+        <xsl:if test="data[@field='mime_type']!=''">
+            <resource>
+                <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
+                <xsl:choose>
+                    <xsl:when test="data[@field='mime_type']='cap'">
+                        <mimeType><xsl:text>text/xml</xsl:text></mimeType>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <xsl:if test="data[@field='size']!=''">
+                    <size><xsl:value-of select="data[@field='size']"/></size>
+                </xsl:if>
+                <xsl:if test="data[@name='size']!=''">
+                    <size><xsl:value-of select="data[@name='size']"/></size>
+                </xsl:if>
+                <xsl:if test="data[@name='uri']!=''">
+                    <uri><xsl:value-of select="data[@name='uri']"/></uri>
+                </xsl:if>
+                <xsl:if test="data[@name='deref_uri']!=''">
+                    <derefUri><xsl:value-of select="data[@name='deref_uri']"/></derefUri>
+                </xsl:if>
+                <xsl:if test="data[@name='digest']!=''">
+                    <digest><xsl:value-of select="data[@name='digest']"/></digest>
+                </xsl:if>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -563,10 +631,20 @@
 
             <xsl:when test="starts-with($arg, '`')">
                 <xsl:variable name="valueName">
-                    <xsl:value-of select="substring-before(substring-after($item, 'key:'), ',')"/>
+                    <xsl:if test="contains(substring-before($item, ','), 'key:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-before($item, ','), 'key:'))"/>
+                    </xsl:if>
+                    <xsl:if test="contains(substring-after($item, ','), 'key:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-after($item, ','), 'key:'))"/>
+                    </xsl:if>
                 </xsl:variable>
                 <xsl:variable name="value">
-                    <xsl:value-of select="substring-after($item, 'value:')"/>
+                    <xsl:if test="contains(substring-before($item, ','), 'value:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-before($item, ','), 'value:'))"/>
+                    </xsl:if>
+                    <xsl:if test="contains(substring-after($item, ','), 'value:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-after($item, ','), 'value:'))"/>
+                    </xsl:if>
                 </xsl:variable>
                 <xsl:element name="{substring-after($arg, '`')}">
                     <valueName><xsl:value-of select="$valueName"/></valueName>

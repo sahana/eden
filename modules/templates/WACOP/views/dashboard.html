@@ -1,0 +1,80 @@
+{{extend "layout.html"}}
+<div class='row panel'>
+ {{=XML(map)}}
+</div>
+<div class='row'>
+ <ul class='tabs tab-navigation' data-tab>
+  <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+  <li class='tab-title'><a href='#panel2'>Directories</a></li>
+  <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+ </ul>
+ <div class='tabs-content panel'>
+  <div class='content active' id='panel1'>
+   <div class='row'>
+    <div class='large-3 columns'>
+     {{=filter_form}}
+    </div>
+    <div class='large-9 columns'>
+     {{if create_post_form:}}
+        {{=create_post_form}}
+        <hr>
+      {{pass}}
+     <ul class='no-bullet'>
+      {{=updates_datalist}}
+     </ul>
+    </div>
+   </div>
+  </div>
+  <section class='staff content' id='panel2'>
+   <div class='row'>
+    <ul class='large-3 columns tabs vertical' data-tab>
+     <li class='tab-title active'><a href='#staff'>Staff</a></li>
+     <li class='tab-title'><a href='#organisations'>Organizations</a></li>
+    </ul>
+    <div class='tabs-content large-9 columns'>
+     <div class='row collapse prefix-radius content active' id='staff'>
+      <div class='large-2 columns'>
+       <label for='hrm_human_resource-search' class='prefix'>Search</label>
+      </div>
+      <div class='large-6 columns' id='dt-search-hrm_human_resource'></div>
+      <div class='large-4 columns'>
+       {{=create_hrm_human_resource_popup}}
+      </div>
+      <div id='dt-event_human_resource'>
+       {{=hrm_human_resource_datatable}}
+      </div>
+     </div>
+     <div class='row collapse prefix-radius content' id='organisations'>
+      <div class='large-2 columns'>
+       <label for='org_organisation-search' class='prefix'>Search</label>
+      </div>
+      <div class='large-6 columns' id='dt-search-org_organisation'></div>
+      <div class='large-4 columns'>
+       {{=create_org_organisation_popup}}
+      </div>
+      <div id='dt-event_organisation'>
+       {{=org_organisation_datatable}}
+      </div>
+     </div>
+    </div>
+   </div>
+  </section>
+  <section class='tasks content' id='panel3'>
+   <div class='row collapse prefix-radius'>
+    <div class='large-2 columns'>
+     <label for='project_task-search' class='prefix'>Search</label>
+    </div>
+    <div class='large-6 columns' id='dt-search-project_task'></div>
+    <div class='large-4 columns'>
+     {{=create_project_task_popup}}
+    </div>
+    <div id='dt-project_task'>
+     {{=project_task_datatable}}
+    </div>
+   </div>
+  </section>
+ </div>
+</div>
+{{include "dataLists.html"}}
+{{include "dataTables.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/dashboard.js" % appname)}}

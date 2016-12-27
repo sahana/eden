@@ -45,20 +45,26 @@ Vulnerability,Reader,vul_reader@example.com,eden,"reader/0,vulnerability_reader/
 Vulnerability,Data Entry,vul_data_entry@example.com,eden,"reader/0,vulnerability_data_entry/0",International Federation of Red Cross and Red Crescent Societies,,,
 Vulnerability,Editor,vul_editor@example.com,eden,"reader/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies,,,
 Vulnerability,Super Editor,vul_super@example.com,eden,"reader/0,vulnerability_super/0",International Federation of Red Cross and Red Crescent Societies,,,
-Afghanistan,Volunteer Data Entry,af_dataentry@example.com,eden,vol_data_entry,Afghan Red Crescent Society,,,prs
-Afghanistan,Volunteer Editor,af_editor@example.com,eden,vol_editor,Afghan Red Crescent Society,,,prs
-Afghanistan,Volunteer Super Editor,af_super@example.com,eden,vol_super,Afghan Red Crescent Society,,,prs
+Afghanistan,Disaster Management,af_dm@example.com,eden,af_dm,Afghan Red Crescent Society,,,prs
+Afghanistan,Volunteer Administrator,af_vol_admin@example.com,eden,af_volunteer_admin,Afghan Red Crescent Society,,,prs
+Afghanistan,Volunteer Manager,af_vol_manager@example.com,eden,af_volunteer_manager,Afghan Red Crescent Society,,,prs
 Bangladesh,Volunteer Data Entry,bd_dataentry@example.com,eden,vol_data_entry,Bangladesh Red Crescent Society,,,
 Bangladesh,Volunteer Editor,bd_editor@example.com,eden,vol_editor,Bangladesh Red Crescent Society,,,
 Bangladesh,Volunteer Super Editor,bd_super@example.com,eden,vol_super,Bangladesh Red Crescent Society,,,
 Cambodia,Volunteer Data Entry,kh_dataentry@example.com,eden,vol_data_entry,Cambodian Red Cross Society,,,km
 Cambodia,Volunteer Editor,kh_editor@example.com,eden,vol_editor,Cambodian Red Cross Society,,,km
 Cambodia,Volunteer Super Editor,kh_super@example.com,eden,vol_super,Cambodian Red Cross Society,,,km
+Fiji,Volunteer Super Editor,fj_super@example.com,eden,"vol_super",Fiji Red Cross Society,,,
+Fiji,Volunteer Editor,fj_editor@example.com,eden,"vol_editor,SYNC/org_organisation.name=Fiji Red Cross Society",Ba Branch,,,
 Indonesia,Volunteer Data Entry,id_dataentry@example.com,eden,vol_data_entry,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Editor,id_editor@example.com,eden,vol_editor,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Indonesia,Volunteer Super Editor,id_super@example.com,eden,vol_super,Indonesian Red Cross Society (Palang Merah Indonesia),,,
 Iraq,Volunteer Super Editor,iq_super@example.com,eden,vol_super,Iraqi Red Crescent Society,,,ar
 Iraq,Org Admin,iq_orgadmin@example.com,eden,ORG_ADMIN,Iraqi Red Crescent Society,,,ar
+Madagascar,Project Super Editor,mg_project_super@example.com,eden,project_super,Malagasy Red Cross Society,,,fr
+Madagascar,Volunteer Data Entry,mg_vol_dataentry@example.com,eden,"vol_data_entry,member_data_entry",Malagasy Red Cross Society,,,mg
+Madagascar,Volunteer Editor,mg_vol_editor@example.com,eden,"vol_editor,member_editor",Malagasy Red Cross Society,,,fr
+Madagascar,Volunteer Super Editor,mg_vol_super@example.com,eden,"vol_super,member_super",Malagasy Red Cross Society,,,fr
 Malaysia,Volunteer Data Entry,my_dataentry@example.com,eden,vol_data_entry,Malaysian Red Crescent Society,,,
 Malaysia,Volunteer Editor,my_editor@example.com,eden,vol_editor,Malaysian Red Crescent Society,,,
 Malaysia,Volunteer Super Editor,my_super@example.com,eden,vol_super,Malaysian Red Crescent Society,,,
@@ -86,6 +92,10 @@ Vietnam,Volunteer Data Entry,vn_dataentry@example.com,eden,vol_data_entry,Viet N
 Vietnam,Volunteer Editor,vn_editor@example.com,eden,vol_editor,Viet Nam Red Cross,,,vi
 Vietnam,Volunteer Super Editor,vn_super@example.com,eden,vol_super,Viet Nam Red Cross,,,vi
 Vietnam,Org Admin,vn_orgadmin@example.com,eden,ORG_ADMIN,Viet Nam Red Cross,,,vi
-RecoveryOutreach,Admin,roadmin@example.com,eden,PO_ADMIN,New Zealand Red Cross,,,
-RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",International Federation of Red Cross and Red Crescent Societies,,,
-RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",International Federation of Red Cross and Red Crescent Societies,,,
+NZ,Org Admin,nz_admin@example.com,eden,"ORG_ADMIN/org_organisation.name=New Zealand Red Cross",New Zealand Red Cross,,,
+Christchurch,Outreach Admin,christchurch_admin@example.com,eden,"PO_AGENCIES/org_organisation.name=New Zealand Red Cross,PO_ADMIN/po_area.name=Christchurch wide,PO_ADMIN/po_area.name=Sumner A,PO_ADMIN/po_area.name=Woolston A,PO_ADMIN/po_area.name=Woolston B",New Zealand Red Cross,,,
+Kaikoura,Outreach Admin,kaikoura_admin@example.com,eden,"PO_AGENCIES/org_organisation.name=New Zealand Red Cross,PO_ADMIN/po_area.name=Kaikoura",Kaikoura,,,
+RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",Africa Zone,,,
+RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",Africa Zone,,,
+AP,RDRT Admin,aprdrtadmin@example.com,eden,"RDRT_ADMIN/0,AP_RDRT_ADMIN/0,message_editor",Asia-Pacific Region,,,
+Lillian,Aquino,lillian.acquino@redcross.org.ph,eden,RDRT_MEMBER,Philippine Red Cross,,,

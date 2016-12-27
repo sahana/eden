@@ -141,8 +141,8 @@ def group_membership():
     s3.prep = prep
 
     return s3_rest_controller("pr", "group_membership",
-                              csv_template=("hrm", "group_membership"),
-                              csv_stylesheet=("hrm", "group_membership.xsl"),
+                              csv_stylesheet = ("hrm", "group_membership.xsl"),
+                              csv_template = ("hrm", "group_membership"),
                               )
 
 # =============================================================================
@@ -171,6 +171,17 @@ def job_title():
     def prep(r):
         if mode is not None:
             auth.permission.fail()
+        elif r.representation == "xls":
+            # Export format should match Import format
+            current.messages["NONE"] = ""
+            table = s3db.hrm_job_title
+            table.organisation_id.represent = \
+                s3db.org_OrganisationRepresent(acronym=False,
+                                               parent=False)
+            table.organisation_id.label = None
+            table.type.label = None
+            table.comments.label = None
+            table.comments.represent = lambda v: v or ""
         return True
     s3.prep = prep
 
@@ -180,8 +191,8 @@ def job_title():
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "job_title"),
-                              csv_stylesheet=("hrm", "job_title.xsl"),
+                              csv_stylesheet = ("hrm", "job_title.xsl"),
+                              csv_template = ("hrm", "job_title"),
                               )
 
 # =============================================================================
@@ -198,8 +209,8 @@ def skill():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "skill"),
-                              csv_stylesheet=("hrm", "skill.xsl"),
+                              csv_stylesheet = ("hrm", "skill.xsl"),
+                              csv_template = ("hrm", "skill"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -227,8 +238,8 @@ def competency_rating():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "competency_rating"),
-                              csv_stylesheet=("hrm", "competency_rating.xsl"),
+                              csv_stylesheet = ("hrm", "competency_rating.xsl"),
+                              csv_template = ("hrm", "competency_rating"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -259,9 +270,9 @@ def course():
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
-                              csv_template=("hrm", "course"),
-                              csv_stylesheet=("hrm", "course.xsl"),
+                              csv_stylesheet = ("hrm", "course.xsl"),
+                              csv_template = ("hrm", "course"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -293,9 +304,9 @@ def certificate():
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
-                              csv_template=("hrm", "certificate"),
-                              csv_stylesheet=("hrm", "certificate.xsl"),
+                              csv_stylesheet = ("hrm", "certificate.xsl"),
+                              csv_template = ("hrm", "certificate"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -398,6 +409,108 @@ def staff_org_site_json():
     return records.json()
 
 # =============================================================================
+def activity_type():
+    
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def activity():
+
+    def prep(r):
+        if r.component_name == "hours":
+            # Limit Activity Types to those for the Activity
+            ltable = s3db.vol_activity_activity_type
+            query = (ltable.deleted == False) & \
+                    (ltable.activity_id == r.id)
+            rows = db(query).select(ltable.activity_type_id)
+            activity_types = [row.activity_type_id for row in rows]
+            # S3SQLInlineComponentCheckbox uses it's own filter, not the requires
+            #field = s3db.vol_activity_hours_activity_type.activity_type_id
+            #field.requires = \
+            #    IS_EMPTY_OR(IS_ONE_OF(db,
+            #                          "vol_activity_type.id",
+            #                          field.represent,
+            #                          filterby="id",
+            #                          filter_opts=activity_types,
+            #                          ))
+
+            from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+            crud_form = S3SQLCustomForm("person_id",
+                                        "date",
+                                        #"end_date",
+                                        "job_title_id",
+                                        "hours",
+                                        S3SQLInlineComponentCheckbox("activity_type",
+                                                                     label = T("Activity Types"),
+                                                                     field = "activity_type_id",
+                                                                     #filter = {"lookuptable": ,
+                                                                     #          "lookuptable": ,
+                                                                     #          }
+                                                                     filterby = {"field": "id",
+                                                                                 "options": activity_types,
+                                                                                 },
+                                                                     option_help = "comments",
+                                                                     cols = 4,
+                                                                     ),
+                                        "comments",
+                                        )
+
+            # Limit the Dates to the same as the Activity
+            record = r.record
+            start_date = record.date
+            end_date = record.end_date
+            if end_date is None or start_date == end_date:
+                field = s3db.vol_activity_hours.date
+                field.default = start_date
+                field.readable = field.writable = False
+            else:
+                # @ToDo: Check widget options (currently this branch is never taken)
+                s3db.vol_activity_hours.date.requires = IS_UTC_DATE(calendar="Gregorian",
+                                                                    minimum=start_date,
+                                                                    maximum=end_date,
+                                                                    )
+
+            s3db.configure("vol_activity_hours",
+                           crud_form = crud_form,
+                           )
+        
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.hrm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def activity_hours():
+    """
+        Volunteer Activity Hours controller
+        - used for Imports & Reports
+    """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+def facility():
+    """
+        e.g. Training Venues
+    """
+
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="vol", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
+
+# =============================================================================
 def programme():
     """ Volunteer Programmes controller """
 
@@ -411,19 +524,19 @@ def programme():
             auth.permission.fail()
         if r.component_name == "person":
             s3db.configure("hrm_programme_hours",
-                           list_fields=["person_id",
-                                        "training",
-                                        "programme_id",
-                                        "date",
-                                        "hours",
-                                        ])
+                           list_fields = ["person_id",
+                                          "training",
+                                          "programme_id",
+                                          "date",
+                                          "hours",
+                                          ])
         return True
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
                               csv_stylesheet = ("hrm", "programme.xsl"),
-                              csv_template = ("hrm", "programme")
+                              csv_template = ("hrm", "programme"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -441,8 +554,8 @@ def programme_hours():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_stylesheet=("hrm", "programme_hours.xsl"),
-                              csv_template=("hrm", "programme_hours")
+                              csv_stylesheet = ("hrm", "programme_hours.xsl"),
+                              csv_template = ("hrm", "programme_hours")
                               )
 
 # =============================================================================
@@ -454,7 +567,7 @@ def award():
 # -----------------------------------------------------------------------------
 def volunteer_award():
     """
-        Used for returning options to the S3AddResourceLink PopUp
+        Used for returning options to the S3PopupLink PopUp
     """
 
     # We use component form instead
@@ -491,7 +604,7 @@ def cluster_position():
 
 # -----------------------------------------------------------------------------
 def volunteer_cluster():
-    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+    """ ONLY FOR RETURNING options to the S3PopupLink PopUp """
 
     return s3_rest_controller()
 

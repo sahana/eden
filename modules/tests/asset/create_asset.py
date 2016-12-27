@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - ASSET001 Create Asset
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,7 +33,7 @@ class CreateAsset(SeleniumUnitTest):
         """
             @case: asset001
             @description: Create an Asset
-            
+
             @Test Doc: https://docs.google.com/a/aidiq.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE#gid=2
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -46,12 +46,12 @@ class CreateAsset(SeleniumUnitTest):
         # Login, if not-already done so
         self.login(account="admin", nexturl="asset/asset/create")
 
-        self.create("asset_asset", 
+        self.create("asset_asset",
                     [( "number",
                        "WS_100_17"),
                      ( "item_id",
                        "Blankets"),
-                     ("organisation_id", 
+                     ("organisation_id",
                       "International Federation of Red Cross and Red Crescent Societies"),
                      ( "site_id",
                        "AP Zone"),
@@ -73,8 +73,8 @@ class CreateAsset(SeleniumUnitTest):
 
         # Set Base Facility/Site
         self.browser.find_element_by_link_text("Set Base Facility/Site").click()
-        
-        
+
+
         self.create("asset_log",
                     [
 # The datetime doesn't work so need to fix it
@@ -88,13 +88,13 @@ class CreateAsset(SeleniumUnitTest):
                      ( "comments",
                        "Test site")]
                      )
-        
+
         # Give time for submission of record
         time.sleep(1)
-        
+
         # Assign to Facility/Site
         self.browser.find_element_by_link_text("Assign to Facility/Site").click()
-        
+
         self.create("asset_log",
                     [
 #                     ( "datetime",
@@ -115,11 +115,11 @@ class CreateAsset(SeleniumUnitTest):
                      ( "comments",
                        "Test assign")]
                      )
-        
+
         # Give time for submission of record
         time.sleep(1)
-                          
-        self.browser.find_element_by_link_text("Assign to Person").click()        
+
+        self.browser.find_element_by_link_text("Assign to Person").click()
 
         self.create("asset_log",
 #                    [( "datetime",

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Staff Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,7 +38,7 @@ class ImportStaff(SeleniumUnitTest):
             @description: Import Staff
         """
         print "\n"
-        
+
         import datetime
         from dateutil.relativedelta import relativedelta
         base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
@@ -49,7 +49,7 @@ class ImportStaff(SeleniumUnitTest):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # HRM004
         # Login, if not-already done so
         self.login(account="admin", nexturl="hrm/person/import?group=staff")
@@ -68,7 +68,7 @@ class ImportStaff(SeleniumUnitTest):
             This test removes any exsisting data before importing
         """
         print "\n"
-        
+
         import datetime
         from dateutil.relativedelta import relativedelta
         base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
@@ -79,7 +79,7 @@ class ImportStaff(SeleniumUnitTest):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # HRM004
         # Login, if not-already done so
         self.login(account="admin", nexturl="hrm/person/import?group=staff")
@@ -93,5 +93,5 @@ class ImportStaff(SeleniumUnitTest):
         self.browser.find_element_by_id("submitSelection").click()
 
 
-		
-		
+
+

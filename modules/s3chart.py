@@ -2,7 +2,7 @@
 
 """ S3 Charting Toolkit
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{NumPy}} <http://www.numpy.org>}
@@ -56,7 +56,7 @@ class S3Chart(object):
     def __init__(self, path, width=9, height=6):
         """
             Create the base Figure object
-            
+
             @param: height x100px
             @param: width x100px
         """
@@ -172,7 +172,7 @@ class S3Chart(object):
         canvas.print_figure(chart.body)
         #return response.body.getvalue()
         image = chart.body.getvalue()
-        # IE 8 and before has a 32K limit on URIs this can be quickly 
+        # IE 8 and before has a 32K limit on URIs this can be quickly
         # gobbled up if the image is too large. So the image will
         # stored on the server and a URI used in the src
         cachePath = self.storeCachedFile(self.filename, image)

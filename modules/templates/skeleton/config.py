@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -26,7 +21,8 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("skeleton", "default/users")
+    #settings.base.prepopulate = ("skeleton", "default/users")
+    settings.base.prepopulate += ("skeleton", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "skeleton"
@@ -103,9 +99,9 @@ def config(settings):
     #settings.L10n.translate_org_organisation = True
     # Finance settings
     #settings.fin.currencies = {
-    #    "EUR" : T("Euros"),
-    #    "GBP" : T("Great British Pounds"),
-    #    "USD" : T("United States Dollars"),
+    #    "EUR" : "Euros",
+    #    "GBP" : "Great British Pounds",
+    #    "USD" : "United States Dollars",
     #}
     #settings.fin.currency_default = "USD"
 
@@ -199,12 +195,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 2,
         #)),
-        #("cms", Storage(
-        #  name_nice = T("Content Management"),
-        #  #description = "Content Management System",
-        #  restricted = True,
-        #  module_type = 10,
-        #)),
+        ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+        )),
         #("doc", Storage(
         #    name_nice = T("Documents"),
         #    #description = "A library of digital resources, such as photos, documents and reports",

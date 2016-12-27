@@ -1,23 +1,33 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,cap,public,,READ,,,,,Can only see scope=public alerts
+ANONYMOUS,Anonymous,,cap,alert,,READ,,,,,for subscriptions purpose
 ANONYMOUS,Anonymous,,cms,post,,READ,,,,,
 AUTHENTICATED,Authenticated,,cap,index,,READ,,,,,
-AUTHENTICATED,Authenticated,,cap,alert,,READ,,,,,
 AUTHENTICATED,Authenticated,,pr,,,READ,,,,,
 AUTHENTICATED,Authenticated,,pr,contact,,CREATE,READ|UPDATE|DELETE,,,,Can edit their own record
 AUTHENTICATED,Authenticated,,pr,person,,READ|CREATE,READ|UPDATE,,,,Can edit their own record
 AUTHENTICATED,Authenticated,,gis,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,,,READ,,,,,
+AUTHENTICATED,Authenticated,,sync,repository,,CREATE,READ|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,cap,warning_priority,,READ,,,,,For subscriptions
+AUTHENTICATED,Authenticated,,pr,subscription,,READ|CREATE,READ|UPDATE|DELETE,,,,Subscription Settings
+AUTHENTICATED,Authenticated,,cap,alert_ack,,READ,READ|UPDATE,,,,Can edit their own record
+AUTHENTICATED,Authenticated,,cap,info_parameter,,READ,,,,,
 MAP_ADMIN,Map Admin,,gis,,,ALL,,,,,
 MAP_ADMIN,Map Admin,,cap,area,,READ|CREATE|UPDATE|DELETE,,,,,
-ALERT_EDITOR,Alert Editor,Can create and disseminate the CAP Message,cap,alert,,READ|CREATE|UPDATE|PUBLISH,,,,,
+ALERT_EDITOR,Alert Editor,Can create the CAP Message and submit that for approval,cap,alert,,READ|CREATE|UPDATE,,,,,
+ALERT_EDITOR,Alert Editor,,cap,info,,READ,,,,,
+ALERT_EDITOR,Alert Editor,,cap,alerting_authority,,READ,,,,,
 ALERT_EDITOR,Alert Editor,,cap,template,,READ,,,,,Use template to create actual alert
 ALERT_EDITOR,Alert Editor,,cap,area,,READ,,,,,For predefined area 
-ALERT_EDITOR,Alert Editor,,cap,compose,,READ,,,,,To send message to Alert Approver
-ALERT_EDITOR,Alert Editor,,cap,priority_get,,READ,,,,,Priority based on event
-ALERT_EDITOR,Alert Editor,,msg,,,READ,,,,,
-ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE|PUBLISH,,,,,
+ALERT_EDITOR,Alert Editor,,cap,notify_approver,,READ,,,,,To send message to Alert Approver
+ALERT_EDITOR,Alert Editor,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
+ALERT_EDITOR,Alert Editor,,pr,group,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
+ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE,,,,,
+ALERT_APPROVER,Alert Approver,,cap,info,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,cap,alerting_authority,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,template,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,area,,READ,,,,,
-ALERT_APPROVER,Alert Approver,,cap,priority_get,,READ,,,,,
-ALERT_APPROVER,Alert Approver,,msg,,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,cap,notify_approver,,READ,,,,,To send message to Alert Approver
+ALERT_APPROVER,Alert Approver,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
+ALERT_APPROVER,Alert Approver,,pr,group,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients

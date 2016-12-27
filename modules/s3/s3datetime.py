@@ -2,7 +2,7 @@
 
 """ S3 Date/Time Toolkit
 
-    @copyright: 2015 (c) Sahana Software Foundation
+    @copyright: 2015-2016 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -718,10 +718,6 @@ class S3PersianCalendar(S3Calendar):
                confusion about naming differences between these two components.
     """
 
-    # -------------------------------------------------------------------------
-    # Constants to be implemented by subclasses
-    # -------------------------------------------------------------------------
-
     CALENDAR = "Persian"
 
     JDEPOCH = 1948320.5 # first day of this calendar as Julian Day number
@@ -820,24 +816,20 @@ class S3AfghanCalendar(S3PersianCalendar):
         @note: this is using "romanized" Dari month names as translation
                basis (rather than their actual English translation, which
                would simply be the names of the signs of Zodiac the sun is
-               passing through in the respective months, e.g. Tawr = Taurus).
+               passing through in the respective months, e.g. Tawr (Sawr) = Taurus).
                Transcriptions vary widely between sources, though - as do
                the Dari and Pashto spellings :/
     """
 
-    # -------------------------------------------------------------------------
-    # Constants to be implemented by subclasses
-    # -------------------------------------------------------------------------
-
     CALENDAR = "Afghan"
 
-    MONTH_NAME = ("Hamal", "Tawr", "Jawza",
+    MONTH_NAME = ("Hamal", "Sawr", "Jawza",
                   "Saratan", "Asad", "Sonbola",
                   "Mizan", "Aqrab", "Qaws",
                   "Jadi", "Dalw", "Hut",
                   )
 
-    MONTH_ABBR = ("Ham", "Taw", "Jaw", "Sar", "Asa", "Son",
+    MONTH_ABBR = ("Ham", "Saw", "Jaw", "Sar", "Asa", "Son",
                   "Miz", "Aqr", "Qaw", "Jad", "Dal", "Hut",
                   )
 
@@ -1566,7 +1558,11 @@ def s3_encode_iso_datetime(dt):
 
         @param dt: the datetime object
     """
-    dx = dt - datetime.timedelta(microseconds=dt.microsecond)
+
+    if isinstance(dt, (datetime.datetime, datetime.time)):
+        dx = dt.replace(microsecond=0)
+    else:
+        dx = dt
     return dx.isoformat()
 
 # =============================================================================
@@ -1579,6 +1575,7 @@ def s3_utc(dt):
 
         @param dt: the datetime object
     """
+
     if dt:
         if dt.tzinfo is None:
             return dt.replace(tzinfo=dateutil.tz.tzutc())

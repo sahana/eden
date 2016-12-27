@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
+from collections import OrderedDict
 from datetime import timedelta
 
 from gluon import current
@@ -27,7 +21,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("MCOP", "default/users")
+    settings.base.prepopulate += ("MCOP", "default/users")
 
     settings.base.system_name = T("Sahana: Washington Common Operating Picture (WA-COP)")
     settings.base.system_name_short = T("Sahana")
@@ -75,6 +69,7 @@ def config(settings):
     settings.ui.use_button_icons = True
 
     # Custom icon classes
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "alert": "icon-alert",
         "building": "icon-building",
@@ -477,12 +472,11 @@ def config(settings):
         table.organisation_id.readable = table.organisation_id.writable = True
 
         if r.interactive:
-            table.zero_hour.label = T("Date")
             table.comments.label = T("Description")
 
             crud_strings["event_incident"].label_delete_button = T("Delete Incident")
 
-        list_fields = ["zero_hour",
+        list_fields = ["date",
                        "name",
                        "location_id",
                        "comments",
@@ -506,7 +500,7 @@ def config(settings):
         #from gluon.validators import IS_EMPTY_OR
         #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
-        crud_fields = ["zero_hour",
+        crud_fields = ["date",
                        "name",
                        "location_id",
                        "comments",
@@ -1329,12 +1323,14 @@ def config(settings):
                                         represent,
                                         orderby = "org_site.name")
 
-        from s3layouts import S3AddResourceLink
-        site_field.comment = S3AddResourceLink(c="org", f="facility",
-                                               vars={"child": "site_id"},
-                                               label=T("Create Facility"),
-                                               title=T("Facility"),
-                                               tooltip=T("If you don't see the Facility in the list, you can add a new one by clicking link 'Create Facility'."))
+        from s3layouts import S3PopupLink
+        site_field.comment = S3PopupLink(c = "org",
+                                         f = "facility",
+                                         vars = {"child": "site_id"},
+                                         label = T("Create Facility"),
+                                         title = T("Facility"),
+                                         tooltip = T("If you don't see the Facility in the list, you can add a new one by clicking link 'Create Facility'."),
+                                         )
 
         # ImageCrop widget doesn't currently work within an Inline Form
         image_field = s3db.pr_image.image

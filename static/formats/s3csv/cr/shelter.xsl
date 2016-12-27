@@ -8,14 +8,18 @@
          Column headers defined in this stylesheet:
 
          Name...........................required.....cr_shelter.name
+         Name L10n:XX...................org_site_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          Organisation...................org_organisation
          Branch.........................org_organisation[_branch]
          Type...........................shelter_type_id.name
-         Service........................shelter_service_id.name
+         #Service........................shelter_service_id.name
          Country........................optional.....country
          L1.............................optional.....L1
          L2.............................optional.....L2
          L3.............................optional.....L3
+         L4.............................optional.....L4
+         L5.............................optional.....L5
+         Building.......................optional.....Building
          Address........................optional.....Address
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
@@ -24,6 +28,7 @@
          Capacity Night.................cr_shelter.capacity_night
          Population.....................cr_shelter.population
          Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
+         KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -202,12 +207,6 @@
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
 
-        <xsl:variable name="postcode">
-            <xsl:call-template name="GetColumnValue">
-                <xsl:with-param name="colhdrs" select="$Postcode"/>
-            </xsl:call-template>
-        </xsl:variable>
-
         <resource name="cr_shelter">
             <data field="name"><xsl:value-of select="$ShelterName"/></data>
             <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
@@ -225,7 +224,7 @@
 
             <!-- Link to Location -->
             <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
-                 S3LocationSelectorWidget2 doesn't have this limitation -->
+                 S3LocationSelector doesn't have this limitation -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat($OrgName, $ShelterName)"/>
@@ -252,6 +251,21 @@
                     <xsl:value-of select="$Type"/>
                 </xsl:attribute>
             </reference>
+
+            <!-- L10n -->
+            <xsl:for-each select="col[starts-with(@field, 'Name L10n')]">
+                <xsl:variable name="Lang" select="normalize-space(substring-after(@field, ':'))"/>
+                <xsl:call-template name="L10n">
+                    <xsl:with-param name="Lang">
+                        <xsl:value-of select="$Lang"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
 
         </resource>
 
@@ -313,6 +327,32 @@
             <data field="name"><xsl:value-of select="$type"/></data>
        </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_site_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L10n">
+        <xsl:param name="Lang"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_site_name">
+                <data field="language"><xsl:value-of select="$Lang"/></data>
+                <data field="name_l10n"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

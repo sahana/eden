@@ -1,17 +1,1 @@
-{{T = current.T}}
-{{if new is not None:}}
-{{for record in new_records:}}
- {{new_alert_record=dict(record)}}
-{{new_alert_message = T("""New Alert: %(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s. Msg:%(Identifier)s sent on %(Date)s""") \
-% dict(Status=new_alert_record["Status"], MessageType=new_alert_record["Message Type"], AreaDescription=new_alert_record["Area Description"],\
-Priority=new_alert_record["Priority"], EventType=new_alert_record["Event"], SenderName=new_alert_record["Sender's name"],\
-Identifier=new_alert_record["Identifier"], Date=new_alert_record["Date"])}}
-{{=XML(new_alert_message)}}{{pass}}{{pass}}
-{{if upd is not None:}}
-{{for record in upd_records:}}
- {{updated_alert_record=dict(record)}}
-{{updated_alert_message = T("""Updated Alert: %(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s. Msg:%(Identifier)s sent on %(Date)s""") \
-% dict(Status=updated_alert_record["Status"], MessageType=updated_alert_record["Message Type"], AreaDescription=updated_alert_record["Area Description"],\
-Priority=updated_alert_record["Priority"], EventType=updated_alert_record["Event"], SenderName=updated_alert_record["Sender's name"],\
-Identifier=updated_alert_record["Identifier"], Date=updated_alert_record["Date"])}}
-{{=XML(updated_alert_message)}}{{pass}}{{pass}}
+{{if upd is not None:}}{{for record in upd_records:}}{{=XML(record)}}{{pass}}{{pass}}

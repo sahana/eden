@@ -1,23 +1,161 @@
-Parent,Name,Comments
-Africa,Sahel,
-Africa,Central Africa,
-Africa,East Africa,
-Africa,Indian Ocean,
-Africa,Southern Africa,
-Africa,West Coast,
-Americas,Caribbean,
-Americas,Central America,
-Americas,North America,
-Americas,South America,
-Asia Pacific,East Asia,
-Asia Pacific,Pacific,
-Asia Pacific,South Asia,
-Asia Pacific,South East Asia,
+Parent,Region,Country
+Africa,Central Africa,CD
+Africa,Central Africa,CF
+Africa,Central Africa,CG
+Africa,Central Africa,CM
+Africa,Central Africa,GA
+Africa,Central Africa,GN
+Africa,Central Africa,SD
+Africa,Central Africa,ST
+Africa,Central Africa,TD
+Africa,East Africa,BI
+Africa,East Africa,DJ
+Africa,East Africa,ER
+Africa,East Africa,ET
+Africa,East Africa,KE
+Africa,East Africa,RW
+Africa,East Africa,SO
+Africa,East Africa,SS
+Africa,East Africa,TZ
+Africa,East Africa,UG
+Africa,Indian Ocean,KM
+Africa,Indian Ocean,MG
+Africa,Indian Ocean,MU
+Africa,Indian Ocean,SC
+Africa,Sahel,BF
+Africa,Sahel,CV
+Africa,Sahel,GM
+Africa,Sahel,GQ
+Africa,Sahel,GW
+Africa,Sahel,ML
+Africa,Sahel,MR
+Africa,Sahel,NE
+Africa,Sahel,SN
+Africa,Southern Africa,AO
+Africa,Southern Africa,BW
+Africa,Southern Africa,LS
+Africa,Southern Africa,MW
+Africa,Southern Africa,MZ
+Africa,Southern Africa,NA
+Africa,Southern Africa,SZ
+Africa,Southern Africa,ZA
+Africa,Southern Africa,ZW
+Africa,West Coast,BJ
+Africa,West Coast,CI
+Africa,West Coast,GH
+Africa,West Coast,LR
+Africa,West Coast,NG
+Africa,West Coast,SL
+Africa,West Coast,TG
+Americas,Central America,BZ
+Americas,Central America,CR
+Americas,Central America,GT
+Americas,Central America,HN
+Americas,Central America,MX
+Americas,Central America,NI
+Americas,Central America,PA
+Americas,Central America,SV
+Americas,English Caribbean,AG
+Americas,English Caribbean,BB
+Americas,English Caribbean,BS
+Americas,English Caribbean,GD
+Americas,English Caribbean,JM
+Americas,English Caribbean,KN
+Americas,English Caribbean,LC
+Americas,English Caribbean,TT
+Americas,English Caribbean,VC
+Americas,Latin Caribbean,CU
+Americas,Latin Caribbean,DM
+Americas,Latin Caribbean,DO
+Americas,Latin Caribbean,HT
+Americas,North America,CA
+Americas,North America,US
+Americas,South America,AR
+Americas,South America,BO
+Americas,South America,BR
+Americas,South America,CL
+Americas,South America,CO
+Americas,South America,EC
+Americas,South America,GY
+Americas,South America,PE
+Americas,South America,PY
+Americas,South America,SR
+Americas,South America,UY
+Americas,South America,VE
+Asia Pacific,East Asia,CN
+Asia Pacific,East Asia,HK
+Asia Pacific,East Asia,JP
+Asia Pacific,East Asia,KP
+Asia Pacific,East Asia,KR
+Asia Pacific,East Asia,MN
+Asia Pacific,Pacific,AU
+Asia Pacific,Pacific,CK
+Asia Pacific,Pacific,FJ
+Asia Pacific,Pacific,FM
+Asia Pacific,Pacific,KI
+Asia Pacific,Pacific,NZ
+Asia Pacific,Pacific,PG
+Asia Pacific,Pacific,PW
+Asia Pacific,Pacific,SB
+Asia Pacific,Pacific,TO
+Asia Pacific,Pacific,TV
+Asia Pacific,Pacific,VU
+Asia Pacific,Pacific,WS
+Asia Pacific,South Asia,AF
+Asia Pacific,South Asia,BD
+Asia Pacific,South Asia,IN
+Asia Pacific,South Asia,LK
+Asia Pacific,South Asia,MV
+Asia Pacific,South Asia,NP
+Asia Pacific,South Asia,PK
+Asia Pacific,South East Asia,BN
+Asia Pacific,South East Asia,ID
+Asia Pacific,South East Asia,KH
+Asia Pacific,South East Asia,LA
+Asia Pacific,South East Asia,MM
+Asia Pacific,South East Asia,MY
+Asia Pacific,South East Asia,PH
+Asia Pacific,South East Asia,SG
+Asia Pacific,South East Asia,TH
+Asia Pacific,South East Asia,TL
+Asia Pacific,South East Asia,VN
 Europe and Central Asia,"Belarus, Russian Federation, Ukraine, Moldova",
+Europe and Central Asia,Central Asia,KG
+Europe and Central Asia,Central Asia,TJ
+Europe and Central Asia,Central Asia,UZ
 Europe and Central Asia,Central and Southern Europe,
-Europe and Central Asia,Central Asia,
-Europe and Central Asia,Turkey and southern Caucasus,
-Europe and Central Asia,Western Europe,
-Middle East and North Africa,North Africa,
-Middle East and North Africa,Middle East,
-Middle East and North Africa,Gulf,
+Europe and Central Asia,Turkey and Southern Caucasus,AM
+Europe and Central Asia,Turkey and Southern Caucasus,TR
+Europe and Central Asia,Western Europe,AT
+Europe and Central Asia,Western Europe,BE
+Europe and Central Asia,Western Europe,CH
+Europe and Central Asia,Western Europe,DE
+Europe and Central Asia,Western Europe,DK
+Europe and Central Asia,Western Europe,ES
+Europe and Central Asia,Western Europe,FI
+Europe and Central Asia,Western Europe,FR
+Europe and Central Asia,Western Europe,GB
+Europe and Central Asia,Western Europe,IS
+Europe and Central Asia,Western Europe,IT
+Europe and Central Asia,Western Europe,LU
+Europe and Central Asia,Western Europe,NL
+Europe and Central Asia,Western Europe,NO
+Europe and Central Asia,Western Europe,SE
+Middle East and North Africa,Gulf,AE
+Middle East and North Africa,Gulf,BH
+Middle East and North Africa,Gulf,KW
+Middle East and North Africa,Gulf,QA
+Middle East and North Africa,Gulf,SA
+Middle East and North Africa,Gulf,YE
+Middle East and North Africa,Middle East,IL
+Middle East and North Africa,Middle East,IQ
+Middle East and North Africa,Middle East,IR
+Middle East and North Africa,Middle East,JO
+Middle East and North Africa,Middle East,LB
+Middle East and North Africa,Middle East,PS
+Middle East and North Africa,Middle East,SY
+Middle East and North Africa,North Africa,DZ
+Middle East and North Africa,North Africa,EG
+Middle East and North Africa,North Africa,LY
+Middle East and North Africa,North Africa,MA
+Middle East and North Africa,North Africa,TN

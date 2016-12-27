@@ -41,25 +41,31 @@ def update_check(settings):
     # Get mandatory global dependencies
     app_path = request.folder
 
-    template = settings.get_template()
-    location = settings.get_template_location()
     gr_path = os.path.join(app_path, "requirements.txt")
-    tr_path = os.path.join(app_path, location, "templates", template, "requirements.txt")
     or_path = os.path.join(app_path, "optional_requirements.txt")
-    tor_path = os.path.join(app_path, location, "templates", template, "optional_requirements.txt")
 
-    global_dep = parse_requirements(gr_path)
-    template_dep = parse_requirements(tr_path)
-    optional_dep = parse_requirements(or_path)
-    template_optional_dep = parse_requirements(tor_path)
+    global_dep = parse_requirements({}, gr_path)
+    optional_dep = parse_requirements({}, or_path)
 
-    # remove optional dependencies which are already accounted for in template dependencies
+    templates = settings.get_template()
+    location = settings.get_template_location()
+    if not isinstance(templates, (tuple, list)):
+        templates = (templates,)
+    template_dep = {}
+    template_optional_dep = {}
+    for template in templates:
+        tr_path = os.path.join(app_path, location, "templates", template, "requirements.txt")
+        tor_path = os.path.join(app_path, location, "templates", template, "optional_requirements.txt")
+        parse_requirements(template_dep, tr_path)
+        parse_requirements(template_optional_dep, tor_path)
+
+    # Remove optional dependencies which are already accounted for in template dependencies
     unique = set(optional_dep.keys()).difference(set(template_dep.keys()))
     for dependency in optional_dep.keys():
         if dependency not in unique:
             del optional_dep[dependency]
 
-    # override optional dependency messages from template
+    # Override optional dependency messages from template
     unique = set(optional_dep.keys()).difference(set(template_optional_dep.keys()))
     for dependency in optional_dep.keys():
         if dependency not in unique:
@@ -101,9 +107,11 @@ def update_check(settings):
         try:
             web2py_minimum_parsed = parse_version(web2py_minimum_version)
             web2py_minimum_datetime = web2py_minimum_parsed[datetime_index]
-            web2py_installed_version = request.global_settings.web2py_version
+            version_info = open("VERSION", "r")
+            web2py_installed_version = version_info.read().split()[-1].strip()
+            version_info.close()
             if isinstance(web2py_installed_version, str):
-                # Post 2.4.2, request.global_settings.web2py_version is unparsed
+                # Post 2.4.2, global_settings.web2py_version is unparsed
                 web2py_installed_parsed = parse_version(web2py_installed_version)
                 web2py_installed_datetime = web2py_installed_parsed[datetime_index]
             else:
@@ -221,11 +229,10 @@ def update_check(settings):
     return {"error_messages": errors, "warning_messages": warnings}
 
 # -------------------------------------------------------------------------
-def parse_requirements(filepath):
+def parse_requirements(output, filepath):
     """
     """
 
-    output = {}
     try:
         with open(filepath) as filehandle:
             dependencies = filehandle.read().splitlines()

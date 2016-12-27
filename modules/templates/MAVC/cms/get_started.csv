@@ -1,0 +1,44 @@
+Name,Module,Title,Body
+GetStarted,default,"Get Started with MapPH","
+<section class=""get-started-report"" style=""background-color:#E7F1F5;padding:3rem 2rem"">
+<h4 class=""text-center"">Help make our maps better by sharing your local needs and data in real-time</h4>
+<div class=""row"" style=""padding: 2rem 0"">
+<div class=""small-12 medium-6 medium-push-6 columns"">
+<img src=""{{c:static,f:themes,noargs}}/MAVC/img/image_report_illustration.png"" alt=""illustration""></img>
+</div>
+<div class=""small-12 medium-6 medium-pull-6 columns"">
+<p style=""padding-top:3rem"" class=""text-center"">Report public and private sector needs in your community</p>
+<p style=""padding-top:1rem"" class=""text-center"">
+<a class=""medium primary button"" href=""{{c:project,f:activity,args:create}}"">Report a Need&nbsp;<i class=""fa fa-caret-right""></i></a>
+</p>
+</div>
+</div>
+</section>
+<section class=""get-started-connect"" style=""background-color:#FEEF52;padding:3rem 2rem"">
+<h4 class=""text-center"">Connect to community members on the issues you care about</h4>
+<div class=""row"" style=""padding: 2rem 0"">
+<div class=""small-12 medium-6 medium-push-6 columns"">
+<img src=""{{c:static,f:themes,noargs}}/MAVC/img/image_community_illustration.png"" alt=""illustration""></img>
+</div>
+<div class=""small-12 medium-6 medium-pull-6 columns"">
+<p style=""padding-top:3rem"" class=""text-center"">Create a profile to share your interests and programs</p>
+<p style=""padding-top:1rem"" class=""text-center"">
+<a class=""medium primary button"" href=""{{c:default,f:index,args:profile}}"">Create a profile&nbsp;<i class=""fa fa-caret-right""></i></a>
+</p>
+</div>
+</div>
+</section>
+<section class=""get-started-maps"" style=""background-color:#EA4A4B;padding:3rem 2rem"">
+<h4 class=""text-center"">Better understand the risks in your community by viewing our maps</h4>
+<div class=""row"" style=""padding: 2rem 0"">
+<div class=""small-12 medium-6 medium-push-6 columns"">
+<img src=""{{c:static,f:themes,noargs}}/MAVC/img/image_risk_illustration.png"" alt=""illustration""></img>
+</div>
+<div class=""small-12 medium-6 medium-pull-6 columns"">
+<p style=""padding-top:3rem"" class=""text-center"">
+<a class=""medium primary button""  href=""{{c:gis,f:index,noargs}}"">View maps&nbsp;<i class=""fa fa-caret-right""></i></a>
+</p>
+</div>
+</div>
+</section>
+"

@@ -238,7 +238,7 @@ textarea {
 /* Help Popup */
 .inline-tooltip {
   display: inline-block;
-  vertical-align: top;
+  vertical-align: middle;
   padding-left: 0.75rem;
 }
 .inline-tooltip .tooltip,
@@ -600,6 +600,10 @@ table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
 
+.dt-wrapper {
+  margin-bottom: 1.5rem;
+}
+
 .dataTables_processing {
   padding: 14px 0 28px;
 }
@@ -629,9 +633,10 @@ body.rtl .list_formats div {
 }
 
 /* Empty-sections */
-.empty {
+.empty,
+.dl-empty {
   font-style: italic;
-  font-size: 0.8em;
+  font-size: 0.825rem;
 }
 
 /* jQuery UI widgets */
@@ -731,6 +736,19 @@ input.date.hasDatepicker {
   margin-top: 0.5em;
 }
 
+/* GroupedOptionsWidget */
+.s3-groupedopts-label,
+.s3-groupedopts-label.expanded {
+  margin: 0.25rem 0 0.675rem 0;
+  float: none;
+}
+
+table.s3-groupedopts-widget {
+  margin-left: 0;
+  margin-top: 0.375rem;
+  border: 0;
+}
+
 /* ImageCropWidget */
 .imagecrop-btn {
   font-size: 1em;
@@ -779,6 +797,11 @@ input.date.hasDatepicker {
   font-size: 0.8rem;
 }
 
+/* Checkboxes Widget */
+.controls .checkboxes-widget-s3 {
+  display: inline-flex;
+}
+
 /* Data Lists (including profile) */
 .dl .dl-header {
   float: none;
@@ -821,6 +844,11 @@ h4.profile-sub-header {
 /* Comment feeds */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
+}
+
+/* Text representation */
+.text-body {
+  white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) */

@@ -26,6 +26,8 @@
          Width...........................supply_item.width
          Height..........................supply_item.height
          Volume..........................supply_item.volume
+         Kit.............................supply_item.kit
+         Distributed.....................supply_distribution_item (boolean to create)
          Comments........................supply_item.comments
 
          supply_catalog_item uses references to supply_catalog,
@@ -34,6 +36,7 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+    <xsl:include href="../../xml/commons.xsl"/>
     
     <xsl:key name="catalog" match="row" use="col[@field='Catalog']"/>
     <xsl:key name="item_category" match="row" use="col[@field='Category']"/>
@@ -145,18 +148,33 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="SupplyItem">
-        <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
+        <xsl:variable name="item_name" select="col[@field='Item Name']"/>
+        <xsl:variable name="item_code" select="col[@field='Item Code']"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="um" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
+        <xsl:variable name="distributed">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Distributed']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="kit">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Kit']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$item"/>
+                <xsl:value-of select="concat($item_name, $item_code)"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
-            <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
+            <data field="name"><xsl:value-of select="$item_name"/></data>
+            <data field="code"><xsl:value-of select="$item_code"/></data>
             <data field="um"><xsl:value-of select="$um"/></data>
             <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
             <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
@@ -166,6 +184,9 @@
             <data field="height"><xsl:value-of select="col[@field='Height']"/></data>
             <data field="volume"><xsl:value-of select="col[@field='Volume']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+	        <xsl:if test="$kit='Y' or $kit='YES' or $kit='T' or $kit='TRUE'">
+	            <data field="kit"><xsl:value-of select="col[@field='Comments']"/></data>
+	        </xsl:if>
             <!-- Link to Brand -->
             <reference field="brand_id" resource="supply_brand">
                 <xsl:attribute name="tuid">
@@ -184,7 +205,7 @@
                     <xsl:value-of select="$category"/>
                 </xsl:attribute>
             </reference>
-            <!-- Nest to Supply Item Pack-->
+            <!-- Supply Item Packs-->
 	        <resource name="supply_item_pack">
 	            <data field="name"><xsl:value-of select="$um"/></data>
 	            <data field="quantity">1</data>
@@ -205,6 +226,12 @@
 	            <resource name="supply_item_pack">
 	                <data field="name"><xsl:value-of select="col[@field='Pack3']"/></data>
 	                <data field="quantity"><xsl:value-of select="col[@field='Pack3 Quantity']"/></data>
+	            </resource>
+	        </xsl:if>
+            <!-- Supply Distribution Items -->
+	        <xsl:if test="$distributed='Y' or $distributed='YES' or $distributed='T' or $distributed='TRUE'">
+	            <resource name="supply_distribution_item">
+	                <data field="name"><xsl:value-of select="$item_name"/></data>
 	            </resource>
 	        </xsl:if>
         </resource>

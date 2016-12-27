@@ -48,9 +48,10 @@ def index():
         result.append((group, latest_problems, actions))
 
     response.title = module_name
-    return dict(groups_problems=result,
-                name=T("Active Problems"),
-                module_name=module_name)
+    return dict(groups_problems = result,
+                name = T("Active Problems"),
+                module_name = module_name,
+                )
 
 # =============================================================================
 # Groups
@@ -91,7 +92,6 @@ def group_rheader(r, tabs = []):
                         rheader_tabs
                     )
         return rheader
-    return None
 
 # -----------------------------------------------------------------------------
 def group():
@@ -122,9 +122,9 @@ def group():
     s3.prep = prep
 
     rheader = group_rheader
-    return s3_rest_controller(rheader=rheader,
+    return s3_rest_controller(rheader = rheader,
                               # Allow components with components (such as problem) to breakout from tabs
-                              native=True,
+                              native = True,
                               )
 
 # =============================================================================
@@ -187,7 +187,6 @@ def problem_rheader(r, tabs = []):
         rheader = DIV(rtable,
                       rheader_tabs)
         return rheader
-    return None
 
 # -----------------------------------------------------------------------------
 def problem():
@@ -225,9 +224,9 @@ def problem():
 
     if not s3_has_role("DelphiAdmin"):
         s3db.configure(tablename,
-                       deletable=False,
+                       deletable = False,
                        # Remove ability to create new Problems
-                       #insertable=False
+                       #insertable = False
                        )
 
     def prep(r):
@@ -236,7 +235,7 @@ def problem():
                 duser = s3db.delphi_DelphiUser(r.record.group_id)
                 if duser.authorised:
                     s3db.configure(tablename,
-                                   deletable=True,
+                                   deletable = True,
                                    )
             if r.component_name == "solution":
                 r.component.table.modified_on.label = T("Last Updated")
@@ -282,6 +281,14 @@ def problems(r, **attr):
         raise HTTP(400)
     else:
         redirect(URL(f="group", args=[group_id, "problem"]))
+
+# -----------------------------------------------------------------------------
+def solution():
+    """
+        Used for Imports
+    """
+
+    return s3_rest_controller()
 
 # =============================================================================
 # Voting
@@ -342,11 +349,12 @@ i18n.delphi_vote="''', str(T("Save Vote")), '''"'''))
                           args=["S3", "s3.delphi.js"]))
 
     response.view = "delphi/vote.html"
-    return dict(rheader=rheader,
-                duser=duser,
-                votes=votes,
-                options=options,
-                rankings=rankings)
+    return dict(rheader = rheader,
+                duser = duser,
+                votes = votes,
+                options = options,
+                rankings = rankings,
+                )
 
 # -----------------------------------------------------------------------------
 def save_vote():

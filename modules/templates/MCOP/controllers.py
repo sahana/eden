@@ -79,13 +79,13 @@ for(var i=0,len=layers.length;i<len;i++){
         list_id = "event_incident_datalist"
         list_fields = ["name",
                        "location_id",
-                       "zero_hour",
+                       "date",
                        "modified_by",
                        "organisation_id",
                        "comments",
                        ]
         # Order with most recent Incident first
-        orderby = "event_incident.zero_hour desc"
+        orderby = "event_incident.date desc"
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
                                                    limit = 5,

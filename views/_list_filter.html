@@ -4,20 +4,29 @@
   {{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
  </div>
 </div>
-<div class='row'>
- <div id='rheader' class='small-12 columns'>
-  {{try:}}{{=XML(rheader)}}
+{{try:}}{{rheader=rheader}}
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(rheader)}}
  </div>
 </div>
 <div id='component' class='row'>
 {{except:}}
- </div>
-</div>
 <div class='row'>
 {{pass}}
  <div class='small-12 columns'>
   <div class='row'>
    <div id='map' class='small-12 columns'></div>
+  </div>
+  <div id='list-add' class='row'>
+   <div class="small-12 columns">
+    {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+    {{try:}}{{=addheader}}{{except:}}{{pass}}
+    {{include "key.html"}}
+    <div class='form-container'>
+     {{try:}}{{=form}}{{except:}}{{pass}}
+    </div>
+   </div>
   </div>
   <div class='row'>
    <div class='medium-3 large-4 medium-push-9 large-push-8 columns'>
@@ -28,14 +37,6 @@
     </div>
    </div>
    <div class='medium-9 large-8 medium-pull-3 large-pull-4 columns'>
-    <div id='list-add'>
-     {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
-     {{try:}}{{=addheader}}{{except:}}{{pass}}
-     {{include "key.html"}}
-     <div class='form-container'>
-      {{try:}}{{=form}}{{except:}}{{pass}}
-     </div>
-    </div>
     {{try:}}{{if list_filter_form:}}
     <div id='list-filter' class='form-container'>
      {{=list_filter_form}}
@@ -48,7 +49,7 @@
    {{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
    {{try:}}{{items = items}}
    {{if ltype == "datalist":}}
-    <div id='dl-container' class='small-12 columns'>
+    <div id='dl-container' class='card-holder-home small-12 columns'>
      {{=items}}
     </div>
    {{else:}}
@@ -60,18 +61,14 @@
   </div>
  </div>
 </div>
+{{if s3.rfooter:}}
 <div class='row'>
- {{if s3.rfooter:}}
  <div id='rfooter' class='small-12 columns'>
   {{=XML(s3.rfooter)}}
  </div>
- {{pass}}
-</div>
-{{if ltype == "datalist":}}
-{{include "dataLists.html"}}
-{{else:}}
-{{include "dataTables.html"}}
-{{pass}}
+</div>{{pass}}
+{{if ltype == "datalist":}}{{include "dataLists.html"}}
+{{else:}}{{include "dataTables.html"}}{{pass}}
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}

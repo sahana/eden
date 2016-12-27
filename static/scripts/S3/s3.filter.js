@@ -8,6 +8,191 @@ S3.search = {};
 (function() {
 
     /**
+     * Rewrite the Ajax options for a filtered GET, converting into a POST
+     *
+     * @param {object} s - the Ajax options dict
+     */
+    var searchRewriteAjaxOptions = function(s, method) {
+
+        // Rewrite only GET
+        if (s.type != 'GET') {
+            return;
+        } else {
+            s.type = 'POST';
+        }
+
+        // Helper function to check whether a URL variable is a filter expression
+        var isFilterKey = function(k) {
+            var k0 = k[0];
+            return (k == '$filter' || k0 != '_' && (k.search(/\./) != -1 || k0 == '(' && k.search(/\)/) != -1));
+        };
+
+        var parts = s.url.split('#'),
+            path = parts[0],
+            fragment = null,
+            query = null;
+
+        // Split the URL into path, query and fragment
+        if (parts.length > 1) {
+            fragment = parts[1];
+        }
+        parts = path.split('?');
+        path = parts[0];
+        if (parts.length > 1) {
+            query = parts[1];
+        }
+
+        var ajaxData = s.data,
+            postData = {},
+            queryDict = {},
+            queryItem,
+            valueCount,
+            itemCount,
+            i,
+            j,
+            k,
+            v;
+
+        // Helper function to add a query item to a query item dict
+        var addQueryItem = function(items, key, val) {
+            if (Array.isArray(val)) {
+                for (j = 0, valueCount = val.length; j < valueCount; j++) {
+                    addQueryItem(items, key, val[j]);
+                }
+                return;
+            }
+            if (!items.hasOwnProperty(key)) {
+                items[key] = val;
+            } else if (Array.isArray(items[key])) {
+                items[key].push(val);
+            } else {
+                items[key] = [items[key], val];
+            }
+        };
+
+        // Add the original ajaxData to the queryDict
+        if (ajaxData) {
+            for (i = 0, itemCount = ajaxData.length; i < itemCount; i++) {
+                queryItem = ajaxData[i];
+                addQueryItem(queryDict, queryItem.name, queryItem.value);
+            }
+        }
+
+        // Parse the query string, add filter expressions to the
+        // postData, and other query items to the queryDict
+        if (query) {
+            var items = S3.queryString.parse(query);
+            for (k in items) {
+                v = items[k];
+                if (isFilterKey(k)) {
+                    addQueryItem(postData, k, v);
+                } else {
+                    addQueryItem(queryDict, k, v);
+                }
+            }
+        }
+        if (method == "ajax") {
+            s.data = JSON.stringify(postData);
+        } else {
+            s.data = postData;
+        }
+        s.processData = false;
+
+        // Construct new Ajax URL
+        var ajaxURL = path + '?$search=' + method;
+
+        // Stringify and append queryDict
+        var queryString = S3.queryString.stringify(queryDict);
+        if (queryString) {
+            ajaxURL += '&' + queryString;
+        }
+
+        // Append fragment
+        if (fragment !== null) {
+            ajaxURL += '#' + fragment;
+        }
+        s.url = ajaxURL;
+    };
+
+    /**
+     * Default options for $.searchS3
+     */
+    var searchS3Defaults = {
+        timeout : 10000, // 10s
+        retryLimit: 5,
+        dataType: 'json',
+        contentType: 'application/json; charset=utf-8',
+        processData: false,
+        async: true,
+        type: 'POST'
+    };
+
+    /**
+     * Ajax search request method, converts GET into POST, encoding
+     * URL filters as JSON request body, thus allowing arbitrary
+     * length of filter options as well as TLS encryption of filters
+     *
+     * @param {object} s - the Ajax options
+     * @prop {string} s.url - the Ajax URL
+     * @prop {Array} s.data - Filters as array of dicts {name: k, value: v},
+     *                        will be encoded as JSON body of the POST request
+     * @prop {function} s.success - the success-callback
+     * @prop {function} s.error - the error-callback
+     *
+     * @note: only GET requests will be converted, while POST requests
+     *        will be sent unmodified (=equivalent to $.ajaxS3)
+     */
+    $.searchS3 = function(ajaxOptions) {
+
+        // Apply searchS3-specific defaults
+        var options = $.extend({}, searchS3Defaults, ajaxOptions);
+
+        // Rewrite the GET as POST
+        searchRewriteAjaxOptions(options, 'ajax');
+
+        // Forward to $.ajaxS3
+        return $.ajaxS3(options);
+    };
+
+    /**
+     * Non-Ajax search request method, converts GET into POST, encoding
+     * URL filters as form data, thus allowing arbitrary length of filter
+     * options as well as TLS encryption of filters. Opens the filtered URL
+     * in the window specified by target (default: _self)
+     *
+     * @param {string} url: the request URL
+     * @param {string} target: the target window
+     */
+    $.searchDownloadS3 = function(url, target) {
+
+        var options = $.extend({}, searchS3Defaults, {url: url}),
+            form = document.createElement("form");
+
+        options.type = 'GET';
+        searchRewriteAjaxOptions(options, 'form');
+
+        form.action = options.url;
+        form.method = 'POST';
+        form.target = target || '_self';
+        form.enctype = 'multipart/form-data';
+
+        var data = options.data;
+        if (data) {
+            var key,
+                input;
+            for (key in data) {
+                input = document.createElement('textarea');
+                input.name = key;
+                input.value = JSON.stringify(data[key]);
+                form.appendChild(input);
+            }
+        }
+        form.style.display = 'none';
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    /**
      * pendingTargets: targets which were invisible during last filter-submit
      */
     var pendingTargets = {};
@@ -70,7 +255,7 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.options-filter, .location-filter').each(function() {
-            $this = $(this);
+            var $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
                 $this.val('');
                 if ($this.hasClass('groupedopts-filter-widget') &&
@@ -131,31 +316,49 @@ S3.search = {};
      */
     var getCurrentFilters = function(form) {
 
-        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
+        // Fall back to first filter form in page
+        if (typeof form == 'undefined') {
+            form = $('body').find('form.filter-form').first();
+        }
 
         var i,
             id,
             queries = [],
             $this,
-            url_var,
+            urlVar,
             value,
-            values;
+            values,
+            subString,
+            operator;
 
         // Text widgets
         form.find('.text-filter:visible').each(function() {
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            value = $this.val();
+            urlVar = $('#' + id + '-data').val();
+            value = $this.val().trim();
             if (value) {
                 values = value.split(' ');
-                var v;
+                var match = $this.data('match'),
+                    quoted,
+                    anyValue = [];
                 for (i=0; i < values.length; i++) {
-                    v = '*' + values[i] + '*';
-                    queries.push([url_var, quoteValue(v)]);
+                    subString = $.trim(values[i]);
+                    if (subString === "") {
+                        continue;
+                    }
+                    quoted = quoteValue('*' + subString + '*');
+                    if (match == "any") {
+                        anyValue.push(quoted);
+                    } else {
+                        queries.push([urlVar, quoted]);
+                    }
+                }
+                if (match == "any") {
+                    queries.push([urlVar, anyValue.join(',')])
                 }
             } else {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             }
         });
 
@@ -172,23 +375,22 @@ S3.search = {};
         .each(function() {
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+            urlVar = $('#' + id + '-data').val();
+            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
             var contains = /__contains$/;
             var anyof = /__anyof$/;
-            if (operator == 'any' && url_var.match(contains)) {
-                url_var = url_var.replace(contains, '__anyof');
-            } else if (operator == 'all' && url_var.match(anyof)) {
-                url_var = url_var.replace(anyof, '__contains');
+            if (operator == 'any' && urlVar.match(contains)) {
+                urlVar = urlVar.replace(contains, '__anyof');
+            } else if (operator == 'all' && urlVar.match(anyof)) {
+                urlVar = urlVar.replace(anyof, '__contains');
             }
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
                 value = '';
                 values = $this.val();
                 if (values) {
-                    if (values instanceof Array) {
-                        // multiple=True
-                    } else {
+                    if (!(values instanceof Array)) {
                         // multiple=False, but a single option may contain multiple
                         values = values.split(',');
                     }
@@ -214,44 +416,56 @@ S3.search = {};
                 });
             }
             if ((value === '') || (value == '*')) {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 
         // Numerical range widgets -- each widget has two inputs.
         form.find('.range-filter-input:visible').each(function() {
-            $this = $(this);
+
+            $this = $(this),
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
+            urlVar = $('#' + id + '-data').val();
             value = $this.val();
+
             if (value) {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             } else {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             }
         });
 
         // Date(time) range widgets -- each widget has two inputs.
         form.find('.date-filter-input:visible').each(function() {
 
-            var $this = $(this),
-                id = $this.attr('id'),
-                operator = id.split('-').pop(),
-                urlVariable = $('#' + id + '-data').val();
+            $this = $(this),
+            id = $this.attr('id'),
+            urlVar = $('#' + id + '-data').val();
+            value = $this.val();
+
+            operator = id.split('-').pop();
 
             // Helper to convert a JS Date into an ISO format string
-            var isoFormat = function(dt) {
-                return dt.getFullYear() + '-' +
-                       ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
-                       ('0' + dt.getDate()).slice(-2) + 'T' +
-                       ('0' + dt.getHours()).slice(-2) + ':' +
-                       ('0' + dt.getMinutes()).slice(-2) + ':' +
-                       ('0' + dt.getSeconds()).slice(-2);
-            };
+            var isoFormat;
+            if ($this.hasClass('datetimepicker')) {
+                isoFormat = function(dt) {
+                    return dt.getFullYear() + '-' +
+                           ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                           ('0' + dt.getDate()).slice(-2) + 'T' +
+                           ('0' + dt.getHours()).slice(-2) + ':' +
+                           ('0' + dt.getMinutes()).slice(-2) + ':' +
+                           ('0' + dt.getSeconds()).slice(-2);
+                };
+            } else {
+                isoFormat = function(dt) {
+                    return dt.getFullYear() + '-' +
+                           ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                           ('0' + dt.getDate()).slice(-2);
+                };
+            }
 
-            var value = $this.val();
             if (value) {
                 var end = false;
                 if (operator == 'le') {
@@ -259,10 +473,10 @@ S3.search = {};
                 }
                 var jsDate = $this.calendarWidget('getJSDate', end),
                     urlValue = isoFormat(jsDate);
-                queries.push([urlVariable, urlValue]);
+                queries.push([urlVar, urlValue]);
             } else {
                 // Remove the filter (explicit null)
-                queries.push([urlValue, null]);
+                queries.push([urlVar, null]);
             }
         });
 
@@ -277,13 +491,18 @@ S3.search = {};
                   '.location-filter.multiselect-filter-widget.active' /*+
           ',.location-filter.multiselect-filter-bootstrap.active'*/)))
         .each(function() {
-            id = $(this).attr('id');
-            url_var = $('#' + id + '-data').val();
-            var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
+            $this = $(this);
+            id = $this.attr('id');
+            urlVar = $('#' + id + '-data').val();
+            value = '';
+
+            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
-                value = '';
                 values = $(this).val();
+                var v;
                 if (values) {
                     for (i=0; i < values.length; i++) {
                         v = quoteValue(values[i]);
@@ -296,7 +515,6 @@ S3.search = {};
                 }
             } else {
                 // Checkboxes widget
-                value = '';
                 $("input[name='" + id + "']:checked").each(function() {
                     if (value === '') {
                         value = quoteValue($(this).val());
@@ -306,19 +524,21 @@ S3.search = {};
                 });
             }
             if (value === '') {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 
         // Hierarchy filter (experimental)
         form.find('.hierarchy-filter:visible').each(function() {
+
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            values = $this.hierarchicalopts('get');
+            urlVar = $('#' + id + '-data').val();
             value = '';
+
+            values = $this.hierarchicalopts('get');
             if (values) {
                 for (i=0; i < values.length; i++) {
                     if (value === '') {
@@ -329,9 +549,9 @@ S3.search = {};
                 }
             }
             if (value === '') {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 
@@ -684,7 +904,7 @@ S3.search = {};
             k = q[0];
             v = q[1];
             if (update[k]) {
-                query.push(k + '=' + v);
+                query.push(k + '=' + encodeURIComponent(v));
             }
         }
 
@@ -1206,7 +1426,7 @@ S3.search = {};
         widget.options3 = [];
         widget.options4 = [];
         widget.options5 = [];
-        var new_level, opt, _opt, i;
+        var new_level, opt, _opt, i, option;
         if (hierarchy.hasOwnProperty('L' + level)) {
             // Top-level
             var _hierarchy = hierarchy['L' + level];
@@ -1612,7 +1832,7 @@ S3.search = {};
             $('.show-filter-manager').hide();
         });
 
-        // Filter-form submission
+        // Manual form submission
         $('.filter-submit').click(function() {
             filterSubmit($(this).closest('.filter-form'));
         });
@@ -1910,6 +2130,7 @@ S3.search = {};
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
+                'contentType': 'application/json; charset=utf-8',
                 'data': JSON.stringify(filter),
                 'success': function(data) {
                     var new_id = data.created;
@@ -1962,6 +2183,7 @@ S3.search = {};
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
+                'contentType': 'application/json; charset=utf-8',
                 'data': JSON.stringify(filter),
                 'success': function() {
                     fm.options.filters[id] = filter.query;
@@ -2011,6 +2233,7 @@ S3.search = {};
                 'url': url,
                 'type': 'POST',
                 'dataType': 'json',
+                'contentType': 'application/json; charset=utf-8',
                 'data': JSON.stringify(filter),
                 'success': function() {
                     // Remove options from element

@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - HRM006 Add Staff To Office
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class AddStaffToOffice(SeleniumUnitTest):
         """
             @case: HRM006
             @description: Add a premade made staff to an Office
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -54,10 +54,10 @@ class AddStaffToOffice(SeleniumUnitTest):
         add_btn = self.browser.find_elements_by_id("show-add-btn")
         if len(add_btn) > 0:
             add_btn[0].click()
-        
+
         select_from_registry_btn = self.browser.find_element_by_id("select_from_registry")
         select_from_registry_btn.click()
-        self.create("hrm_human_resource", 
+        self.create("hrm_human_resource",
                     [
                      ( "person_id",
                        "Beatriz de Carvalho")

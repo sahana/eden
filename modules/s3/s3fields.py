@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -45,9 +45,9 @@ from gluon.languages import lazyT
 from s3dal import Query, SQLCustomType
 from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
-from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
+from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
-from s3widgets import S3CalendarWidget, S3DateWidget, S3DateTimeWidget
+from s3widgets import S3CalendarWidget, S3DateWidget
 
 try:
     db = current.db
@@ -330,6 +330,8 @@ class S3Represent(object):
 
         labels = self.labels
 
+        translated = False
+
         if self.slabels:
             # String Template
             v = labels % row
@@ -339,12 +341,22 @@ class S3Represent(object):
         else:
             # Default
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
-            if values:
+
+            if len(values) > 1:
+                # Multiple values => concatenate with separator
+                if self.translate:
+                    # Translate items individually before concatenating
+                    T = current.T
+                    values = [T(v) if not type(v) is lazyT else v for v in values]
+                    translated = True
                 sep = self.field_sep
-                v = sep.join([s3_unicode(v) for v in values])
+                v = sep.join([s3_str(v) for v in values])
+            elif values:
+                v = s3_str(values[0])
             else:
                 v = self.none
-        if self.translate and not type(v) is lazyT:
+
+        if not translated and self.translate and not type(v) is lazyT:
             output = current.T(v)
         else:
             output = v
@@ -372,7 +384,7 @@ class S3Represent(object):
         """
 
         if self.linkto:
-            k = s3_unicode(k)
+            k = s3_str(k)
             return A(v, _href=self.linkto.replace("[id]", k) \
                                          .replace("%5Bid%5D", k))
         else:
@@ -452,7 +464,7 @@ class S3Represent(object):
             if show_link:
                 link = self.link
                 rows = self.rows
-                labels = [[link(k, s3_unicode(items[k]), row=rows.get(k)), ", "]
+                labels = [[link(k, s3_str(items[k]), row=rows.get(k)), ", "]
                           if k in items else [default, ", "]
                           for k in values]
                 if labels:
@@ -460,7 +472,7 @@ class S3Represent(object):
                 else:
                     return ""
             else:
-                labels = [s3_unicode(items[k])
+                labels = [s3_str(items[k])
                           if k in items else default for k in values]
                 if labels:
                     return ", ".join(labels)
@@ -548,7 +560,7 @@ class S3Represent(object):
             else:
                 return ""
         else:
-            return ", ".join([s3_unicode(labels[v])
+            return ", ".join([s3_str(labels[v])
                               if v in labels else self.default
                               for v in value])
 
@@ -564,13 +576,20 @@ class S3Represent(object):
         # Default representations
         messages = current.messages
         if self.default is None:
-            self.default = s3_unicode(messages.UNKNOWN_OPT)
+            self.default = s3_str(messages.UNKNOWN_OPT)
         if self.none is None:
             self.none = messages["NONE"]
 
         # Initialize theset
         if self.options is not None:
-            self.theset = self.options
+            if self.translate:
+                T = current.T
+                self.theset = dict((opt, T(label))
+                                   if isinstance(label, basestring) else (opt, label)
+                                   for opt, label in self.options.items()
+                                   )
+            else:
+                self.theset = self.options
         else:
             self.theset = {}
 
@@ -606,7 +625,6 @@ class S3Represent(object):
             self.htemplate = "%s > %s"
 
         self.setup = True
-        return
 
     # -------------------------------------------------------------------------
     def _lookup(self, values, rows=None):
@@ -675,13 +693,21 @@ class S3Represent(object):
         # Use the given rows to lookup the values
         pop = lookup.pop
         represent_row = self.represent_row
+        represent_path = self._represent_path
         if rows and not self.custom_lookup:
-            _rows = self.rows
+            rows_ = dict((row[key], row) for row in rows)
+            self.rows.update(rows_)
             for row in rows:
                 k = row[key]
-                _rows[k] = row
                 if k not in theset:
-                    theset[k] = represent_row(row)
+                    if h:
+                        theset[k] = represent_path(k,
+                                                   row,
+                                                   rows = rows_,
+                                                   hierarchy = h,
+                                                   )
+                    else:
+                        theset[k] = represent_row(row)
                 if pop(k, None):
                     items[keys.get(k, k)] = theset[k]
 
@@ -702,18 +728,19 @@ class S3Represent(object):
             rows = dict((row[key], row) for row in rows)
             self.rows.update(rows)
             if h:
-                represent_path = self._represent_path
                 for k, row in rows.items():
                     if lookup.pop(k, None):
                         items[keys.get(k, k)] = represent_path(k,
                                                                row,
-                                                               rows=rows,
-                                                               hierarchy=h)
+                                                               rows = rows,
+                                                               hierarchy = h,
+                                                               )
             else:
                 for k, row in rows.items():
                     lookup.pop(k, None)
                     items[keys.get(k, k)] = theset[k] = represent_row(row)
 
+        # Anything left gets set to default
         if lookup:
             for k in lookup:
                 items[keys.get(k, k)] = self.default
@@ -736,8 +763,6 @@ class S3Represent(object):
 
         if value in theset:
             return theset[value]
-
-        represent_row = self.represent_row
 
         prefix = None
         parent = hierarchy.parent(value)
@@ -779,7 +804,7 @@ class S3RepresentLazy(object):
     # -------------------------------------------------------------------------
     def __repr__(self):
 
-        return s3_unicode(self.represent())
+        return s3_str(self.represent())
 
     # -------------------------------------------------------------------------
     def represent(self):
@@ -788,7 +813,7 @@ class S3RepresentLazy(object):
         value = self.value
         renderer = self.renderer
         if renderer.lazy:
-            labels = renderer.bulk(renderer.lazy)
+            labels = renderer.bulk(renderer.lazy, show_link=False)
             renderer.lazy = []
         else:
             labels = renderer.theset
@@ -840,8 +865,7 @@ class S3RepresentLazy(object):
         """
 
         # Render value
-        text = self.represent()
-        text = s3_unicode(text)
+        text = s3_unicode(self.represent())
 
         # Strip markup + XML-escape
         if text and "<" in text:
@@ -882,18 +906,18 @@ s3uuid = SQLCustomType(type = "string",
 
 # Universally unique identifier for a record
 s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
-                               length=128,
-                               notnull=True,
-                               unique=True,
-                               readable=False,
-                               writable=False,
-                               default="")
+                               length = 128,
+                               notnull = True,
+                               unique = True,
+                               readable = False,
+                               writable = False,
+                               default = "")
 
 # Master-Copy-Index (for Sync)
 s3_meta_mci = S3ReusableField("mci", "integer",
-                              default=0,
-                              readable=False,
-                              writable=False)
+                              default = 0,
+                              readable = False,
+                              writable = False)
 
 def s3_uid():
     return (s3_meta_uuid(),
@@ -904,21 +928,21 @@ def s3_uid():
 
 # "Deleted"-flag
 s3_meta_deletion_status = S3ReusableField("deleted", "boolean",
-                                          readable=False,
-                                          writable=False,
-                                          default=False)
+                                          default = False,
+                                          readable = False,
+                                          writable = False)
 
 # Parked foreign keys of a deleted record in JSON format
 # => to be restored upon "un"-delete
 s3_meta_deletion_fk = S3ReusableField("deleted_fk", #"text",
-                                      readable=False,
-                                      writable=False)
+                                      readable = False,
+                                      writable = False)
 
 # ID of the record replacing this record
 # => for record merger (de-duplication)
 s3_meta_deletion_rb = S3ReusableField("deleted_rb", "integer",
-                                      readable=False,
-                                      writable=False)
+                                      readable = False,
+                                      writable = False)
 
 def s3_deletion_status():
     return (s3_meta_deletion_status(),
@@ -929,17 +953,17 @@ def s3_deletion_status():
 # Record timestamp meta-fields
 
 s3_meta_created_on = S3ReusableField("created_on", "datetime",
-                                     readable=False,
-                                     writable=False,
-                                     default=lambda: \
+                                     readable = False,
+                                     writable = False,
+                                     default = lambda: \
                                         datetime.datetime.utcnow())
 
 s3_meta_modified_on = S3ReusableField("modified_on", "datetime",
-                                      readable=False,
-                                      writable=False,
-                                      default=lambda: \
+                                      readable = False,
+                                      writable = False,
+                                      default = lambda: \
                                         datetime.datetime.utcnow(),
-                                      update=lambda: \
+                                      update = lambda: \
                                         datetime.datetime.utcnow())
 
 def s3_timestamp():
@@ -957,6 +981,7 @@ def s3_authorstamp():
     utable = auth.settings.table_user
 
     if auth.is_logged_in():
+        # Not current.auth.user to support impersonation
         current_user = current.session.auth.user.id
     else:
         current_user = None
@@ -968,22 +993,22 @@ def s3_authorstamp():
 
     # Author of a record
     s3_meta_created_by = S3ReusableField("created_by", utable,
-                                         readable=False,
-                                         writable=False,
-                                         requires=None,
-                                         default=current_user,
-                                         represent=represent,
-                                         ondelete="RESTRICT")
+                                         readable = False,
+                                         writable = False,
+                                         requires = None,
+                                         default = current_user,
+                                         represent = represent,
+                                         ondelete = "RESTRICT")
 
     # Last author of a record
     s3_meta_modified_by = S3ReusableField("modified_by", utable,
-                                          readable=False,
-                                          writable=False,
-                                          requires=None,
-                                          default=current_user,
-                                          update=current_user,
-                                          represent=represent,
-                                          ondelete="RESTRICT")
+                                          readable = False,
+                                          writable = False,
+                                          requires = None,
+                                          default = current_user,
+                                          update = current_user,
+                                          represent = represent,
+                                          ondelete = "RESTRICT")
 
     return (s3_meta_created_by(),
             s3_meta_modified_by())
@@ -999,36 +1024,37 @@ def s3_ownerstamp():
 
     # Individual user who owns the record
     s3_meta_owned_by_user = S3ReusableField("owned_by_user", utable,
-                                            readable=False,
-                                            writable=False,
-                                            requires=None,
-                                            default=current.session.auth.user.id
+                                            readable = False,
+                                            writable = False,
+                                            requires = None,
+                                            # Not current.auth.user to support impersonation
+                                            default = current.session.auth.user.id
                                                         if auth.is_logged_in()
                                                         else None,
-                                            represent=lambda id: \
+                                            represent = lambda id: \
                                                 id and s3_auth_user_represent(id) or \
                                                        current.messages.UNKNOWN_OPT,
                                             ondelete="RESTRICT")
 
     # Role of users who collectively own the record
     s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
-                                             readable=False,
-                                             writable=False,
-                                             requires=None,
-                                             default=None,
-                                             represent=S3Represent(lookup="auth_group",
-                                                                   fields=["role"])
+                                             readable = False,
+                                             writable = False,
+                                             requires = None,
+                                             default = None,
+                                             represent = S3Represent(lookup="auth_group",
+                                                                     fields=["role"])
                                              )
 
     # Person Entity controlling access to this record
     s3_meta_realm_entity = S3ReusableField("realm_entity", "integer",
-                                           readable=False,
-                                           writable=False,
-                                           requires=None,
-                                           default=None,
+                                           default = None,
+                                           readable = False,
+                                           writable = False,
+                                           requires = None,
                                            # use a lambda here as we don't
                                            # want the model to be loaded yet
-                                           represent=lambda val: \
+                                           represent = lambda val: \
                                                current.s3db.pr_pentity_represent(val))
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
@@ -1042,10 +1068,10 @@ def s3_meta_fields():
 
     # Approver of a record
     s3_meta_approved_by = S3ReusableField("approved_by", "integer",
-                                          readable=False,
-                                          writable=False,
-                                          requires=None,
-                                          represent=s3_auth_user_represent)
+                                          readable = False,
+                                          writable = False,
+                                          requires = None,
+                                          represent = s3_auth_user_represent)
 
     fields = (s3_meta_uuid(),
               s3_meta_mci(),
@@ -1155,7 +1181,7 @@ def s3_currency(name="currency", **attr):
     """
         Return a standard Currency field
 
-        @ToDo: Move to a Finance module
+        @ToDo: Move to a Finance module?
     """
 
     settings = current.deployment_settings
@@ -1258,7 +1284,7 @@ def s3_date(name="date", **attr):
         # @todo: deprecate (once S3CalendarWidget supports all legacy options)
 
         # Must use Gregorian calendar
-        calendar == "Gregorian"
+        calendar = "Gregorian"
 
         # Past/future options
         if past is not None:

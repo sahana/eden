@@ -1,7 +1,7 @@
 /**
  * jQuery UI InlineComponent Widget
  *
- * @copyright 2015 (c) Sahana Software Foundation
+ * @copyright 2015-2016 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -48,7 +48,7 @@
             inlinecomponentID += 1;
 
             // Namespace for events
-            this.namespace = '.inlinecomponent';
+            this.eventNamespace = '.inlinecomponent';
         },
 
         /**
@@ -61,7 +61,7 @@
             this.formname = el.attr('id').split('-').pop();
             this.input = $('#' + el.attr('field'));
 
-            // Configure layout-dependend functions
+            // Configure layout-dependent functions
             var layout = this._layout;
             if ($.inlineComponentLayout) {
                 // Use custom script
@@ -157,7 +157,7 @@
         // Layout -------------------------------------------------------------
 
         /**
-         * The default layout-dependend functions
+         * The default layout-dependent functions
          */
         _layout: {
 
@@ -384,7 +384,7 @@
          */
         _catchSubmit: function(element) {
 
-            var ns = this.namespace + this.id;
+            var ns = this.eventNamespace + this.id;
             $(this.element).closest('form')
                            .unbind(ns)
                            .bind('submit' + ns, {widget: this}, this._submitAll);
@@ -763,6 +763,10 @@
                             input.groupedopts('refresh');
                         } else if (input.hasClass('location-selector') && input.locationselector('instance')) {
                             input.locationselector('refresh');
+                        } else if (S3.rtl && input.hasClass('phone-widget')) {
+                            if (value && (value.charAt(0) != '\u200E')) {
+                                input.val('\u200E' + value);
+                            };
                         } else {
                             // Populate text in autocompletes
                             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
@@ -972,7 +976,7 @@
                 add_button.removeClass('hide');
             }
             if (success) {
-                $(this.element).closest('form').unbind(this.namespace + this.id);
+                $(this.element).closest('form').unbind(this.eventNamespace + this.id);
             }
 
             return success;
@@ -1217,7 +1221,7 @@
             if (!errors) {
                 // Remove the submit-event handler for this widget and
                 // continue submitting the main form (=this)
-                $(this).unbind(self.namespace + self.id).submit();
+                $(this).unbind(self.eventNamespace + self.id).submit();
             }
         },
 
@@ -1376,15 +1380,21 @@
         _bindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             // Button events
-            el.delegate('.read-row', 'click' + ns, function() {
-                var names = $(this).attr('id').split('-');
-                var rowindex = names.pop();
-                self._editRow(rowindex);
-                return false;
+            el.delegate('.read-row', 'click' + ns, function(e) {
+                // Click into read-row opens the row for edit
+                // (unless the click-target is a link anchor)
+                var target = e.target;
+                if (!target || target.tagName != "A" || !target.href) {
+                    var names = $(this).attr('id').split('-'),
+                        rowindex = names.pop();
+                    e.preventDefault();
+                    self._editRow(rowindex);
+                    return false;
+                }
             }).delegate('.inline-add', 'click' + ns, function() {
                 self._addRow();
                 return false;
@@ -1427,6 +1437,12 @@
 
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
+                // Event to be triggered to force recollection of data (used by LocationSelector when modifying Point/Polygon on map)
+                $this.find('div.map_wrapper').bind('change' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+
                 $this.find(textInputs).bind('input' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit(this);
@@ -1525,7 +1541,7 @@
         _unbindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             // Remove inline-multiselect-widget event handlers
             if (el.hasClass('inline-multiselect')) {

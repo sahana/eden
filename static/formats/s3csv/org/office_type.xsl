@@ -52,10 +52,12 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>
             </xsl:for-each>
+
         </resource>
     </xsl:template>
 

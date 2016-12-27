@@ -73,15 +73,16 @@ def project():
                 r.resource.add_component_filter("human_resource", query)
 
         if r.interactive:
-            htable = s3db.hrm_human_resource
-            htable.person_id.comment = DIV(_class="tooltip",
-                                           _title="%s|%s" % (T("Person"),
-                                                             T("Select the person assigned to this role for this project."),
-                                                             )
-                                           )
+            htable = s3db.table("hrm_human_resource")
+            if htable:
+                htable.person_id.comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Person"),
+                                                                 T("Select the person assigned to this role for this project."),
+                                                                 )
+                                               )
 
-            if not component or component_name == "activity":
-                # Filter Themes/Activity Types based on Sector
+            if not component:
+                # Filter Themes based on Sector
                 if r.record:
                     table = s3db.project_sector_project
                     query = (table.project_id == r.id) & \
@@ -90,7 +91,6 @@ def project():
                     sector_ids = [row.sector_id for row in rows]
                     set_theme_requires(sector_ids)
 
-            if not r.component:
                 if r.method in ("create", "update"):
                     # Context from a Profile page?"
                     location_id = get_vars.get("(location)", None)
@@ -103,6 +103,28 @@ def project():
                         field = r.table.organisation_id
                         field.default = organisation_id
                         field.readable = field.writable = False
+
+                elif r.method == "details":
+                    # Until we can automate this inside s3profile
+                    # - remove the fkey from the list_fields
+                    configure = s3db.configure
+                    get_config = s3db.get_config
+                    define_resource = s3db.resource
+                    for tablename in ("project_organisation",
+                                      "project_location",
+                                      "project_beneficiary",
+                                      "project_human_resource_project",
+                                      ):
+                        s3db.table(tablename)
+                        list_fields = get_config(tablename, "list_fields")
+                        if not list_fields:
+                            list_fields = define_resource(tablename).list_fields()
+                        try:
+                            list_fields.remove("project_id")
+                        except:
+                            # Already removed
+                            pass
+                        configure(tablename, list_fields=list_fields)
 
                 if r.id:
                     r.table.human_resource_id.represent = \
@@ -122,6 +144,7 @@ def project():
                     allowed_roles = dict(settings.get_project_organisation_roles())
                     if settings.get_template() == "DRRPP":
                         # Partner NS should only come via sync from RMS
+                        # @ToDo: Move to Template customise
                         allowed_roles.pop(9, None)
 
                     lead_role = 1
@@ -138,10 +161,18 @@ def project():
                     otable.role.requires = IS_EMPTY_OR(IS_IN_SET(allowed_roles))
 
             elif component_name == "activity":
-                # Filter Activity Type based on Sector
+                # Filter Activity Types/Themes based on Sector
+                table = s3db.project_sector_project
+                query = (table.project_id == r.id) & \
+                        (table.deleted == False)
+                rows = db(query).select(table.sector_id)
+                sector_ids = [row.sector_id for row in rows]
                 set_activity_type_requires("project_activity_activity_type", sector_ids)
+                set_theme_requires(sector_ids)
 
             elif component_name == "goal":
+                # Not working for embedded create form
+                #if r.method == "create":
                 if r.method != "update":
                     ctable = r.component.table
                     field = ctable.weighting
@@ -157,7 +188,6 @@ def project():
                     ctable.current_status.readable = False
                     ctable.overall_status.readable = False
                 if settings.get_project_goals():
-                    #ctable =
                     # Filter to just those for this Project & make mandatory
                     r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
                                                                    s3db.project_goal_represent,
@@ -165,12 +195,6 @@ def project():
                                                                    filterby="project_id",
                                                                    filter_opts=[r.id],
                                                                    )
-                    # Not working for embedded create form
-                    #if r.method == "create":
-                    field = r.component.table.weighting
-                    field.readable = field.writable = False
-                    r.component.table.current_status.readable = False
-                    r.component.table.overall_status.readable = False
 
             elif component_name == "output":
                 if r.method != "update":
@@ -187,6 +211,14 @@ def project():
                                                                       filterby="project_id",
                                                                       filter_opts=[r.id],
                                                                       )
+                elif settings.get_project_goals():
+                    # Filter to just those for this Project & make mandatory
+                    r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
+                                                                   s3db.project_goal_represent,
+                                                                   sort=True,
+                                                                   filterby="project_id",
+                                                                   filter_opts=[r.id],
+                                                                   )
 
             elif component_name == "indicator":
                 if r.method != "update":
@@ -230,7 +262,7 @@ def project():
                                                          filter_opts=[r.id],
                                                          )
                 # @ToDo: end_date cannot be before Project Start
-                #ctable.end_date.requires = 
+                #ctable.end_date.requires =
 
                 # Have a filter for indicator in indicator data report
                 #if r.method == "report":
@@ -292,7 +324,7 @@ def project():
                                           )
                                 )
 
-            elif component_name == "human_resource":
+            elif component_name in ("human_resource", "human_resource_project"):
 
                 htable = s3db.hrm_human_resource
                 htable.person_id.represent = \
@@ -325,6 +357,37 @@ def project():
                                   sort=True
                         )
 
+                # @ToDo:
+                #if settings.has_module("budget"):
+                #    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                #    field = s3db.budget_allocation.budget_entity_id
+                #    field.readable = field.writable = True
+                #    field.requires = S3Represent(lookup="budget_budget", key="budget_entity_id")
+                #    field.requires = IS_ONE_OF()
+                #
+                #    crud_form = S3SQLCustomForm("project_id",
+                #                                "human_resource_id",
+                #                                "status",
+                #                                S3SQLInlineComponent("allocation",
+                #                                                     label = T("Budget"),
+                #                                                     fields = ["budget_entity_id",
+                #                                                               "start_date",
+                #                                                               "end_date",
+                #                                                               "daily_cost",
+                #                                                               ],
+                #                                                     ),
+                #                                )
+                #    s3db.configure("project_human_resoruce_project",
+                #                   crud_form = crud_form,
+                #                   list_fields = [#"project_id", # Not being dropped in component view
+                #                                  "human_resource_id",
+                #                                  "status",
+                #                                  "allocation.budget_entity_id",
+                #                                  "allocation.start_date",
+                #                                  "allocation.end_date",
+                #                                  "allocation.daily_cost",
+                #                                  ],
+
             elif component_name == "document":
                 # Hide unnecessary fields
                 dtable = component.table
@@ -352,14 +415,15 @@ def project():
                                       read_url=read_url,
                                       update_url=update_url)
 
-            elif component_name == "indicator_data" and r.record and \
-                 isinstance(output, dict):
-                report_link = A(current.T("Show Report"),
-                                _href=r.url(method="report"),
-                                _class="action-btn",
-                                )
-                showadd_btn = output.get("showadd_btn", "")
-                output["showadd_btn"] = TAG[""](showadd_btn, report_link)
+            #elif component_name == "indicator":
+            #    # Open should open the profile page
+            #    read_url = URL(f="indicator",
+            #                   args=["[id]", "profile"])
+            #    update_url = URL(f="indicator",
+            #                     args=["[id]", "profile"])
+            #    s3_action_buttons(r,
+            #                      read_url=read_url,
+            #                      update_url=update_url)
 
             elif component_name == "task" and r.component_id:
                 # Put Comments in rfooter
@@ -410,8 +474,8 @@ def open_tasks_for_project():
     s3.postp = postp
 
     return s3_rest_controller(module, "project",
-                              hide_filter=False,
-                             )
+                              hide_filter = False,
+                              )
 # -----------------------------------------------------------------------------
 def set_theme_requires(sector_ids):
     """
@@ -429,15 +493,16 @@ def set_theme_requires(sector_ids):
     theme_ids = [row.project_theme.id for row in rows
                  if not row.project_theme_sector.sector_id or
                     row.project_theme_sector.sector_id in sector_ids]
+
     table = s3db.project_theme_project
-    table.theme_id.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(db, "project_theme.id",
-                                          s3base.S3Represent(lookup="project_theme"),
-                                          filterby="id",
-                                          filter_opts=theme_ids,
-                                          sort=True,
-                                          )
-                                )
+    field = table.theme_id
+    field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_theme.id",
+                                           field.represent,
+                                           filterby="id",
+                                           filter_opts=theme_ids,
+                                           sort=True,
+                                           )
+                                 )
 
 # -----------------------------------------------------------------------------
 def set_activity_type_requires(tablename, sector_ids):
@@ -520,9 +585,9 @@ def hazard():
 def framework():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(dtargs={"dt_text_maximum_len": 160},
-                              hide_filter=True,
-                             )
+    return s3_rest_controller(dtargs = {"dt_text_maximum_len": 160},
+                              hide_filter = True,
+                              )
 
 # =============================================================================
 def organisation():
@@ -531,9 +596,10 @@ def organisation():
     if settings.get_project_multiple_organisations():
         # e.g. IFRC
         s3db.configure("project_organisation",
-                       insertable=False,
-                       editable=False,
-                       deletable=False)
+                       deletable = False,
+                       editable = False,
+                       insertable = False,
+                       )
 
         #list_btn = A(T("Funding Report"),
         #             _href=URL(c="project", f="organisation",
@@ -551,7 +617,8 @@ def organisation():
                 ]
         rheader = lambda r: s3db.org_rheader(r, tabs)
         return s3_rest_controller("org", resourcename,
-                                  rheader=rheader)
+                                  rheader = rheader,
+                                  )
 
 # =============================================================================
 def beneficiary_type():
@@ -591,7 +658,8 @@ def beneficiary():
     #    return True
     #s3.prep = prep
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter = False,
+                              )
 
 # =============================================================================
 def activity_type():
@@ -647,18 +715,57 @@ def activity():
     def prep(r):
         if r.interactive:
             if r.component is not None:
-                if r.component_name == "document":
-                    doc_table = s3db.doc_document
-                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
-                    doc_table.person_id.readable = doc_table.person_id.writable = False
-                    doc_table.location_id.readable = doc_table.location_id.writable = False
+                component_name = r.component_name
+                if component_name == "distribution":
+                    dtable = s3db.supply_distribution
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
+                    f = dtable.date
+                    f.default = r.record.date
+                    f.readable = f.writable = False
+                elif component_name == "case":
+                    # Use Assign to add new entries
+                    s3db.configure("project_case_activity",
+                                   listadd = False)
+                elif component_name == "document":
+                    dtable = s3db.doc_document
+                    dtable.organisation_id.readable = dtable.organisation_id.writable = False
+                    dtable.person_id.readable = dtable.person_id.writable = False
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
         return True
     s3.prep = prep
 
-    return s3_rest_controller(csv_template = "activity",
-                              hide_filter = False,
+    return s3_rest_controller("project", "activity",
+                              csv_template = "activity",
+                              #hide_filter = False,
                               rheader = s3db.project_rheader,
                               )
+
+# -----------------------------------------------------------------------------
+def distribution():
+    """ Activities which include Distributions """
+
+    # Load model
+    table = s3db.project_activity
+
+    # CRUD strings
+    s3.crud_strings["project_activity"] = Storage(
+        label_create = T("Create Distribution"),
+        title_display = T("Distribution Details"),
+        title_list = T("Distributions"),
+        title_update = T("Edit Distribution"),
+        title_report = T("Distribution Report"),
+        label_list_button = T("List Distributions"),
+        msg_record_created = T("Distribution Added"),
+        msg_record_modified = T("Distribution Updated"),
+        msg_record_deleted = T("Distribution Deleted"),
+        msg_list_empty = T("No Distributions Found")
+    )
+
+    return activity()
 
 # -----------------------------------------------------------------------------
 def location():
@@ -757,10 +864,10 @@ def location():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(interactive_report=True,
-                              rheader=s3db.project_rheader,
-                              hide_filter=False,
-                              csv_template="location",
+    return s3_rest_controller(interactive_report = True,
+                              csv_template = "location",
+                              hide_filter = False,
+                              rheader = s3db.project_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -803,6 +910,9 @@ def partners():
 
     # Load model
     table = s3db.org_organisation
+
+    # Type is Mandatory (otherwise they can disappear from view)
+    # @ToDo: How to achieve this in an S3SQLInlineLink?
 
     # Modify CRUD Strings
     s3.crud_strings.org_organisation = Storage(
@@ -978,7 +1088,8 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller(hide_filter=hide_filter)
+    return s3_rest_controller(hide_filter = hide_filter,
+                              )
 
 # =============================================================================
 # Programmes
@@ -992,6 +1103,7 @@ def programme_project():
     """ RESTful controller for Programmes <> Projects """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # =============================================================================
@@ -1014,6 +1126,79 @@ def output():
 
 def indicator():
     """ RESTful CRUD controller """
+
+    def prep(r):
+        if r.method == "profile":
+            # @ToDo: Needs Edit button
+            table = r.table
+            record = r.record
+            code = record.code
+            def dt_row_actions(component):
+                return lambda r, list_id: [
+                    {"label": T("Open"),
+                     "url": r.url(component=component,
+                                  component_id="[id]",
+                                  method="update.popup",
+                                  vars={"refresh": list_id}),
+                     "_class": "action-btn edit s3_modal",
+                     },
+                    {"label": T("Delete"),
+                     "_ajaxurl": r.url(component=component,
+                                       component_id="[id]",
+                                       method="delete.json",
+                                       ),
+                     "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                     },
+                ]
+
+            data_widget = dict(label = "Data",
+                               label_create = "Add Data",
+                               type = "datatable",
+                               actions = dt_row_actions("indicator_data"),
+                               tablename = "project_indicator_data",
+                               filter = FS("indicator_id") == record.id,
+                               create_controller = "project",
+                               create_function = "indicator",
+                               create_component = "indicator_data",
+                               #icon = "book",
+                               )
+            profile_widgets = [data_widget,
+                               ]
+            s3db.configure("project_indicator",
+                           profile_cols = 1,
+                           profile_header = DIV(H2(code),
+                                                H3(table.name.label),
+                                                P(record.name),
+                                                H3(table.verification.label),
+                                                P(record.verification),
+                                                _class="profile-header",
+                                                ),
+                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["project_indicator"].title_display),
+                                                        code),
+                           profile_widgets = profile_widgets,
+                           )
+            s3db.configure("project_indicator_data",
+                           list_fields = ["name",
+                                          "end_date",
+                                          "target_value",
+                                          "value",
+                                          (T("Percentage"), "percentage"),
+                                          "comments",
+                                          ],
+                           )
+            s3.rfooter = A(T("Return to Project"),
+                           _href=URL(f="project",
+                                     args=[record.project_id, "indicator"]),
+                           _class = "action-btn"
+                           )
+
+        elif r.component_name == "indicator_data":
+            field = s3db.project_indicator_data.project_id
+            field.default = r.record.project_id
+            field.readable = field.writable = False
+
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 
@@ -1124,13 +1309,14 @@ def comments():
     field.writable = field.readable = False
 
     # Create S3Request for S3SQLForm
-    r = s3_request(prefix="project",
-                   name="comment",
+    r = s3_request(prefix = "project",
+                   name = "comment",
                    # Override task_id
-                   args=[],
-                   vars=None,
+                   args = [],
+                   vars = None,
                    # Override .loads
-                   extension="html")
+                   extension = "html",
+                   )
 
     # Customise resource
     r.customise_resource()
@@ -1143,7 +1329,8 @@ def comments():
                                            table.parent,
                                            table.body,
                                            table.created_by,
-                                           table.created_on)
+                                           table.created_on,
+                                           )
 
     output = UL(_id="comments")
     for comment in comments:
@@ -1220,6 +1407,7 @@ def human_resource_project():
     """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # END =========================================================================

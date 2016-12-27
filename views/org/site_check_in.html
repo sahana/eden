@@ -1,0 +1,13 @@
+{{extend "layout.html"}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div class="row">
+ <div class="large-6 medium-8 small-12 columns">
+  {{include "key.html"}}
+  <div class='form-container'>
+  {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+ <div id="profile-picture" class="medium-4 small-12 columns end">
+  {{try:}}{{=picture}}{{except:}}{{pass}}
+ </div>
+</div>

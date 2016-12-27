@@ -2,7 +2,7 @@
 
 """ Sahana Eden Project Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -41,13 +41,13 @@ class Projects(SeleniumUnitTest):
 
         # Login, if not-already done so
         self.login(account="normal", nexturl="project/project/search")
-        
+
 		# Project Search
         # Search by Project
 		self.search( "project_search_simple",
 					 "road")]
 					 )
-					 
+
 		# Search by Cluster - Filter type = All
 		self.search( "project_search",
 					[( "sector_filter",
@@ -59,8 +59,8 @@ class Projects(SeleniumUnitTest):
 					 ( "sector",
 					   "Health",
 					   "checked")]
-					 )			   
-					 
+					 )
+
 		# Search by Cluster - Filter type = Any
 		self.search( "project_search",
 					[( "sector_filter",
@@ -75,8 +75,8 @@ class Projects(SeleniumUnitTest):
 					 ( "sector",
 					   "Health",
 					   "unchecked")]
-					 )			   
-		
+					 )
+
 		# Search by Hazard - Filter type = All
 		self.search( "project_search",
 					[( "sector",
@@ -94,8 +94,8 @@ class Projects(SeleniumUnitTest):
 					 ( "hazard",
 					   "Drought",
 					   "checked")]
-					 )			   
-					 
+					 )
+
 		# Search by Hazard - Filter type = Any
 		self.search( "project_search",
 					[( "hazard_filter",
@@ -110,8 +110,8 @@ class Projects(SeleniumUnitTest):
 					 ( "hazard",
 					   "Cyclone",
 					   "unchecked")]
-					 )			   
-		
+					 )
+
 		# Search by Description and Hazard
 		self.search( "project_search",
 					[( "simple",
@@ -122,5 +122,4 @@ class Projects(SeleniumUnitTest):
 					 ( "hazard",
 					   "Cyclone",
 					   "unchecked")]
-					 )			   
-		
+					 )

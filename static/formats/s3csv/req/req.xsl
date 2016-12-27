@@ -25,6 +25,7 @@
          Security Required..............req_req.security_req
          Date Delivered.................req_req.date_recv
          Received By....................req_req.recv_by_id (lookup only)
+         KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
          Comments.......................req_req.comments
 
          @ToDo: Templates
@@ -272,8 +273,26 @@
             <data field="transport_req"><xsl:value-of select="col[@field='Transportation Required']"/></data>
             <data field="security_req"><xsl:value-of select="col[@field='Security Required']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
         </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="req_req_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

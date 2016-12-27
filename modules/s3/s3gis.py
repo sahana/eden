@@ -36,12 +36,15 @@ __all__ = ("GIS",
            )
 
 import datetime         # Needed for Feed Refresh checks & web2py version check
+import json
 import os
 import re
 import sys
 #import logging
 import urllib           # Needed for urlencoding
 import urllib2          # Needed for quoting & error handling on fetch
+
+from collections import OrderedDict
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -55,21 +58,6 @@ except ImportError:
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
@@ -77,6 +65,7 @@ from gluon import *
 #from gluon.http import HTTP, redirect
 from gluon.fileutils import parse_version
 from gluon.languages import lazyT, regex_translate
+from gluon.settings import global_settings
 from gluon.storage import Storage
 
 from s3dal import Rows
@@ -84,15 +73,14 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_unicode
+from s3utils import s3_include_ext, s3_str, s3_unicode #, S3ModuleDebug
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3GIS: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
+#DEBUG = False
+#if DEBUG:
+#    print >> sys.stderr, "S3GIS: DEBUG MODE"
+#    _debug = S3ModuleDebug.on
+#else:
+#    _debug = S3ModuleDebug.off
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -202,6 +190,7 @@ GPS_SYMBOLS = ("Airport",
                "Pharmacy",
                "Picnic Area",
                "Pizza",
+               "Police Station",
                "Post Office",
                "Private Field",
                "Radio Beacon",
@@ -270,6 +259,8 @@ class GIS(object):
 
         self.relevant_hierarchy_levels = None
 
+        self.google_geocode_retry = True
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gps_symbols():
@@ -295,16 +286,14 @@ class GIS(object):
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
 
-        request = current.request
-
         table = current.s3db.gis_layer_kml
         record = current.db(table.id == record_id).select(table.url,
                                                           limitby=(0, 1)
                                                           ).first()
         url = record.url
 
-        filepath = os.path.join(request.global_settings.applications_parent,
-                                request.folder,
+        filepath = os.path.join(global_settings.applications_parent,
+                                current.request.folder,
                                 "uploads",
                                 "gis_cache",
                                 filename)
@@ -516,11 +505,33 @@ class GIS(object):
 
         from geopy import geocoders
 
-        if geocoder == "google":
+        if geocoder == "google" or geocoder is True:
             g = geocoders.GoogleV3()
+            if current.gis.google_geocode_retry:
+                # Retry when reaching maximum requests per second
+                import time
+                from geopy.geocoders.googlev3 import GTooManyQueriesError
+                def geocode_(names, g=g, **kwargs):
+                    attempts = 0
+                    while attempts < 3:
+                        try:
+                            result = g.geocode(names, **kwargs)
+                        except GTooManyQueriesError:
+                            if attempts == 2:
+                                # Daily limit reached
+                                current.gis.google_geocode_retry = False
+                                raise
+                            time.sleep(1)
+                        else:
+                            break
+                        attempts += 1
+                    return result
+            else:
+                geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
         elif geocoder == "yahoo":
             apikey = current.deployment_settings.get_gis_api_yahoo()
             g = geocoders.Yahoo(apikey)
+            geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
         else:
             # @ToDo
             raise NotImplementedError
@@ -577,13 +588,13 @@ class GIS(object):
                 Lx = Lx.as_dict()
 
         try:
-            results = g.geocode(location, exactly_one=False)
+            results = geocode_(location, exactly_one=False)
             if len(results) == 1:
                 place, (lat, lon) = results[0]
                 if Lx:
                     output = None
                     # Check Results are for a specific address & not just that for the City
-                    results = g.geocode(Lx_names, exactly_one=False)
+                    results = geocode_(Lx_names, exactly_one=False)
                     if not results:
                         output = "Can't check that these results are specific enough"
                     for result in results:
@@ -770,8 +781,11 @@ class GIS(object):
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=None, parent=None,
-                   bbox_min_size = 0.05, bbox_inset = 0.007):
+    def get_bounds(self,
+                   features = None,
+                   parent = None,
+                   bbox_min_size = None,
+                   bbox_inset = None):
         """
             Calculate the Bounds of a list of Point Features, suitable for
             setting map bounds. If no features are supplied, the current map
@@ -839,6 +853,8 @@ class GIS(object):
                 lat_max = max(lat, lat_max)
 
             # Assure a reasonable-sized box.
+            settings = current.deployment_settings
+            bbox_min_size = bbox_min_size or settings.get_gis_bbox_inset()
             delta_lon = (bbox_min_size - (lon_max - lon_min)) / 2.0
             if delta_lon > 0:
                 lon_min -= delta_lon
@@ -849,6 +865,7 @@ class GIS(object):
                 lat_max += delta_lat
 
             # Move bounds outward by specified inset.
+            bbox_inset = bbox_inset or settings.get_gis_bbox_inset()
             lon_min -= bbox_inset
             lon_max += bbox_inset
             lat_min -= bbox_inset
@@ -1343,66 +1360,67 @@ class GIS(object):
             if auth.is_logged_in():
                 # Read personalised config, if available.
                 user = auth.user
-                pe_id = user.pe_id
-                # Also look for OU configs
-                pes = []
-                if user.organisation_id:
-                    # Add the user account's Org to the list
-                    # (Will take lower-priority than Personal)
-                    otable = s3db.org_organisation
-                    org = db(otable.id == user.organisation_id).select(otable.pe_id,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                    try:
-                        pes.append(org.pe_id)
-                    except:
-                        current.log.warning("Unable to find Org %s" % user.organisation_id)
-                    if current.deployment_settings.get_org_branches():
-                        # Also look for Parent Orgs
-                        ancestors = s3db.pr_get_ancestors(org.pe_id)
-                        pes += ancestors
+                pe_id = user.get("pe_id")
+                if pe_id:
+                    # Also look for OU configs
+                    pes = []
+                    if user.organisation_id:
+                        # Add the user account's Org to the list
+                        # (Will take lower-priority than Personal)
+                        otable = s3db.org_organisation
+                        org = db(otable.id == user.organisation_id).select(otable.pe_id,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                        try:
+                            pes.append(org.pe_id)
+                        except:
+                            current.log.warning("Unable to find Org %s" % user.organisation_id)
+                        if current.deployment_settings.get_org_branches():
+                            # Also look for Parent Orgs
+                            ancestors = s3db.pr_get_ancestors(org.pe_id)
+                            pes += ancestors
 
-                if user.site_id:
-                    # Add the user account's Site to the list
-                    # (Will take lower-priority than Org/Personal)
-                    site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
-                    if site_pe_id:
-                        pes.append(site_pe_id)
+                    if user.site_id:
+                        # Add the user account's Site to the list
+                        # (Will take lower-priority than Org/Personal)
+                        site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
+                        if site_pe_id:
+                            pes.append(site_pe_id)
 
-                if user.org_group_id:
-                    # Add the user account's Org Group to the list
-                    # (Will take lower-priority than Site/Org/Personal)
-                    ogtable = s3db.org_group
-                    ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-                    pes = list(pes)
-                    try:
-                        pes.append(ogroup.pe_id)
-                    except:
-                        current.log.warning("Unable to find Org Group %s" % user.org_group_id)
+                    if user.org_group_id:
+                        # Add the user account's Org Group to the list
+                        # (Will take lower-priority than Site/Org/Personal)
+                        ogtable = s3db.org_group
+                        ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
+                                                                            limitby=(0, 1)
+                                                                            ).first()
+                        pes = list(pes)
+                        try:
+                            pes.append(ogroup.pe_id)
+                        except:
+                            current.log.warning("Unable to find Org Group %s" % user.org_group_id)
 
-                query = (ctable.uuid == "SITE_DEFAULT") | \
-                        ((ctable.pe_id == pe_id) & \
-                         (ctable.pe_default != False))
-                if len(pes) == 1:
-                    query |= (ctable.pe_id == pes[0])
-                else:
-                    query |= (ctable.pe_id.belongs(pes))
-                # Personal/OU may well not be complete, so Left Join
-                left = (ptable.on(ptable.id == ctable.projection_id),
-                        stable.on((stable.config_id == ctable.id) & \
-                                  (stable.layer_id == None)),
-                        mtable.on(mtable.id == stable.marker_id),
-                        )
-                # Order by pe_type (defined in gis_config)
-                # @ToDo: Sort orgs from the hierarchy?
-                # (Currently we just have branch > non-branch in pe_type)
-                rows = db(query).select(*fields,
-                                        left=left,
-                                        orderby=ctable.pe_type)
-                if len(rows) == 1:
-                    row = rows.first()
+                    query = (ctable.uuid == "SITE_DEFAULT") | \
+                            ((ctable.pe_id == pe_id) & \
+                             (ctable.pe_default != False))
+                    if len(pes) == 1:
+                        query |= (ctable.pe_id == pes[0])
+                    else:
+                        query |= (ctable.pe_id.belongs(pes))
+                    # Personal/OU may well not be complete, so Left Join
+                    left = (ptable.on(ptable.id == ctable.projection_id),
+                            stable.on((stable.config_id == ctable.id) & \
+                                      (stable.layer_id == None)),
+                            mtable.on(mtable.id == stable.marker_id),
+                            )
+                    # Order by pe_type (defined in gis_config)
+                    # @ToDo: Sort orgs from the hierarchy?
+                    # (Currently we just have branch > non-branch in pe_type)
+                    rows = db(query).select(*fields,
+                                            left=left,
+                                            orderby=ctable.pe_type)
+                    if len(rows) == 1:
+                        row = rows.first()
 
         if rows and not row:
             # Merge Configs
@@ -2255,17 +2273,23 @@ class GIS(object):
 
         if settings.get_gis_spatialdb():
             if geojson:
-                # Do the Simplify & GeoJSON direct from the DB
-                web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
-                web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
-                if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
-                    # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
-                    rows = db(query).select(table.id,
-                                            gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                precision = settings.get_gis_precision()
+                if tolerance:
+                    # Do the Simplify & GeoJSON direct from the DB
+                    web2py_installed_version = parse_version(global_settings.web2py_version)
+                    web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
+                    if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
+                        # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=precision).with_alias("geojson"))
+                    else:
+                        # Use http://www.postgis.org/docs/ST_Simplify.html
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=precision).with_alias("geojson"))
                 else:
-                    # Use http://www.postgis.org/docs/ST_Simplify.html
+                    # Do the GeoJSON direct from the DB
                     rows = db(query).select(table.id,
-                                            gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                                            gtable.the_geom.st_asgeojson(precision=precision).with_alias("geojson"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
@@ -2273,9 +2297,13 @@ class GIS(object):
                     else:
                         output[key] = [row.geojson]
             else:
-                # Do the Simplify direct from the DB
-                rows = db(query).select(table.id,
-                                        gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
+                if tolerance:
+                    # Do the Simplify direct from the DB
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
+                else:
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_astext().with_alias("wkt"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
@@ -2309,24 +2337,40 @@ class GIS(object):
                             output[row.id] = g
 
             else:
-                # Simplify the polygon to reduce download size
-                # & also to work around the recursion limit in libxslt
-                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
                 if join:
-                    for row in rows:
-                        wkt = simplify(row["gis_location"].wkt)
-                        if wkt:
-                            key = row[tablename].id
-                            if key in output:
-                                output[key].append(wkt)
-                            else:
-                                output[key] = [wkt]
+                    if tolerance:
+                        # Simplify the polygon to reduce download size
+                        # & also to work around the recursion limit in libxslt
+                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                        for row in rows:
+                            wkt = simplify(row["gis_location"].wkt)
+                            if wkt:
+                                key = row[tablename].id
+                                if key in output:
+                                    output[key].append(wkt)
+                                else:
+                                    output[key] = [wkt]
+                    else:
+                        for row in rows:
+                            wkt = row["gis_location"].wkt
+                            if wkt:
+                                key = row[tablename].id
+                                if key in output:
+                                    output[key].append(wkt)
+                                else:
+                                    output[key] = [wkt]
                 else:
                     # gis_location: always single
-                    for row in rows:
-                        wkt = simplify(row.wkt)
-                        if wkt:
-                            output[row.id] = wkt
+                    if tolerance:
+                        for row in rows:
+                            wkt = simplify(row.wkt)
+                            if wkt:
+                                output[row.id] = wkt
+                    else:
+                        for row in rows:
+                            wkt = row.wkt
+                            if wkt:
+                                output[row.id] = wkt
 
         return output
 
@@ -2352,7 +2396,8 @@ class GIS(object):
             return {}
 
         format = current.auth.permission.format
-        if format == "geojson":
+        geojson = format == "geojson"
+        if geojson:
             if count and \
                count > current.deployment_settings.get_gis_max_features():
                 headers = {"Content-Type": "application/json"}
@@ -2472,7 +2517,6 @@ class GIS(object):
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
-        geojson = format == "geojson"
         if geojson:
             # Build the Attributes now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
@@ -2490,6 +2534,7 @@ class GIS(object):
 
                 data = resource.select(fields,
                                        limit = None,
+                                       raw_data = True,
                                        represent = True,
                                        show_links = False)
 
@@ -2518,7 +2563,8 @@ class GIS(object):
                         attribute = {}
                         for fieldname in attr_cols:
                             represent = row[fieldname]
-                            if represent and represent != NONE:
+                            if represent is not None and \
+                               represent not in (NONE, ""):
                                 # Skip empty fields
                                 _attr = attr_cols[fieldname]
                                 ftype = _attr[0]
@@ -2528,26 +2574,13 @@ class GIS(object):
                                         represent = s3_unicode(represent)
                                     else:
                                         # Attributes should be numbers not strings
+                                        # (@ToDo: Add a JS i18n formatter for the tooltips)
                                         # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
-                                        try:
-                                            represent = int(represent.replace(",", ""))
-                                        except:
-                                            # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                            #        (although we *do* want the represent in the tooltips!)
-                                            pass
-                                elif ftype == "double":
+                                        represent = row["_row"][fieldname]
+                                elif ftype in ("double", "float"):
                                     # Attributes should be numbers not strings
-                                    try:
-                                        float_represent = float(represent.replace(",", ""))
-                                        int_represent = int(float_represent)
-                                        if int_represent == float_represent:
-                                            represent = int_represent
-                                        else:
-                                            represent = float_represent
-                                    except:
-                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                        #        (although we *do* want the represent in the tooltips!)
-                                        pass
+                                    # (@ToDo: Add a JS i18n formatter for the tooltips)
+                                    represent = row["_row"][fieldname]
                                 else:
                                     represent = s3_unicode(represent)
                                 attribute[_attr[1]] = represent
@@ -2565,8 +2598,10 @@ class GIS(object):
                 #                                                      ).first().name
                 #    else:
                 #        layer_name = "Unknown"
-                #    _debug("Attributes lookup of layer %s completed in %s seconds" % \
-                #            (layer_name, duration))
+                #    _debug("Attributes lookup of layer %s completed in %s seconds",
+                #           layer_name,
+                #           duration,
+                #           )
 
             _markers = get_vars.get("markers", None)
             if _markers:
@@ -2634,7 +2669,9 @@ class GIS(object):
                 pass
             else:
                 _latlons = tracker.get_location(_fields=[gtable.lat,
-                                                         gtable.lon])
+                                                         gtable.lon],
+                                                empty = False,
+                                                )
                 index = 0
                 for _id in ids:
                     _location = _latlons[index]
@@ -2723,8 +2760,10 @@ class GIS(object):
         #    end = datetime.datetime.now()
         #    duration = end - start
         #    duration = "{:.2f}".format(duration.total_seconds())
-        #    _debug("latlons lookup of layer %s completed in %s seconds" % \
-        #            (layer_name, duration))
+        #    _debug("latlons lookup of layer %s completed in %s seconds",
+        #           layer_name,
+        #           duration,
+        #           )
 
         # Used by S3XML's gis_encode()
         return dict(geojsons = geojsons,
@@ -3215,7 +3254,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                            levels=("L0", "L1", "L2", "L3"),
                            format="geojson",
                            simplify=0.01,
-                           decimals=4,
+                           precision=4,
                            ):
         """
             Export admin areas to /static/cache for use by interactive web-mapping services
@@ -3225,7 +3264,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param levels: list of which Lx levels to export
             @param format: Only GeoJSON supported for now (may add KML &/or OSM later)
             @param simplify: tolerance for the simplification algorithm. False to disable simplification
-            @param decimals: number of decimal points to include in the coordinates
+            @param precision: number of decimal points to include in the coordinates
         """
 
         db = current.db
@@ -3250,10 +3289,10 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             _field = table.the_geom
             if simplify:
                 # Do the Simplify & GeoJSON direct from the DB
-                field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             else:
                 # Do the GeoJSON direct from the DB
-                field = _field.st_asgeojson(precision=decimals).with_alias("geojson")
+                field = _field.st_asgeojson(precision=precision).with_alias("geojson")
         else:
             spatial = False
             field = table.wkt
@@ -3277,7 +3316,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
         if "L0" in levels:
             # Reduce the decimals in output by 1
-            _decimals = decimals -1
+            _decimals = precision -1
             if spatial:
                 if simplify:
                     field = _field.st_simplify(simplify).st_asgeojson(precision=_decimals).with_alias("geojson")
@@ -3295,7 +3334,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     wkt = row.wkt
                     if wkt:
                         geojson = _simplify(wkt, tolerance=simplify,
-                                            decimals=_decimals,
+                                            precision=_decimals,
                                             output="geojson")
                     else:
                         name = db(table.id == id).select(table.name,
@@ -3344,7 +3383,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.005 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     _id = country.id
@@ -3364,7 +3403,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         wkt = row.wkt
                         if wkt:
                             geojson = _simplify(wkt, tolerance=simplify,
-                                                decimals=decimals,
+                                                precision=precision,
                                                 output="geojson")
                         else:
                             name = db(table.id == id).select(table.name,
@@ -3402,7 +3441,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 4 # 0.00125 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3425,7 +3464,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                             wkt = row.wkt
                             if wkt:
                                 geojson = _simplify(wkt, tolerance=simplify,
-                                                    decimals=decimals,
+                                                    precision=precision,
                                                     output="geojson")
                             else:
                                 name = db(table.id == id).select(table.name,
@@ -3463,7 +3502,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.000625 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3489,7 +3528,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                 wkt = row.wkt
                                 if wkt:
                                     geojson = _simplify(wkt, tolerance=simplify,
-                                                        decimals=decimals,
+                                                        precision=precision,
                                                         output="geojson")
                                 else:
                                     name = db(table.id == id).select(table.name,
@@ -3527,7 +3566,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.0003125 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3556,7 +3595,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                     wkt = row.wkt
                                     if wkt:
                                         geojson = _simplify(wkt, tolerance=simplify,
-                                                            decimals=decimals,
+                                                            precision=precision,
                                                             output="geojson")
                                     else:
                                         name = db(table.id == id).select(table.name,
@@ -4684,7 +4723,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 @param parent: gis_location id of parent
             """
 
-            # No need to filter out deleted since the parent FK is None for these records 
+            # No need to filter out deleted since the parent FK is None for these records
             query = (table.parent == parent) & \
                     (table.inherited == True)
             rows = db(query).select(*fields)
@@ -5775,81 +5814,102 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     if "lat_max" not in form_vars or form_vars.lat_max is None:
                         form_vars.lat_max = lat
 
-        elif form_vars.get("wkt", None):
-            # Parse WKT for LineString, Polygon, etc
-            from shapely.wkt import loads as wkt_loads
-            try:
-                shape = wkt_loads(form_vars.wkt)
-            except:
-                try:
-                    # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                    linestring = "LINESTRING%s" % form_vars.wkt[8:-1]
-                    shape = wkt_loads(linestring)
-                    form_vars.wkt = linestring
-                except:
-                    form.errors["wkt"] = current.messages.invalid_wkt
-                    return
-            gis_feature_type = shape.type
-            if gis_feature_type == "Point":
-                form_vars.gis_feature_type = 1
-            elif gis_feature_type == "LineString":
-                form_vars.gis_feature_type = 2
-            elif gis_feature_type == "Polygon":
-                form_vars.gis_feature_type = 3
-            elif gis_feature_type == "MultiPoint":
-                form_vars.gis_feature_type = 4
-            elif gis_feature_type == "MultiLineString":
-                form_vars.gis_feature_type = 5
-            elif gis_feature_type == "MultiPolygon":
-                form_vars.gis_feature_type = 6
-            elif gis_feature_type == "GeometryCollection":
-                form_vars.gis_feature_type = 7
-            try:
-                centroid_point = shape.centroid
-                form_vars.lon = centroid_point.x
-                form_vars.lat = centroid_point.y
-                bounds = shape.bounds
-                if gis_feature_type != "Point" or \
-                   "lon_min" not in form_vars or form_vars.lon_min is None or \
-                   form_vars.lon_min == form_vars.lon_max:
-                    # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
-                    form_vars.lon_min = bounds[0]
-                    form_vars.lat_min = bounds[1]
-                    form_vars.lon_max = bounds[2]
-                    form_vars.lat_max = bounds[3]
-            except:
-                form.errors.gis_feature_type = current.messages.centroid_error
-
-        elif (form_vars.lon is None and form_vars.lat is None) or \
-             (form_vars.lon == "" and form_vars.lat == ""):
-            # No Geometry available
-            # Don't clobber existing records (e.g. in Prepop)
-            #form_vars.gis_feature_type = "0"
-            # Cannot create WKT, so Skip
-            return
         else:
-            # Point
-            form_vars.gis_feature_type = "1"
-            if form_vars.lat is None or form_vars.lat == "":
-                form.errors["lat"] = current.messages.lat_empty
-            elif form_vars.lon is None or form_vars.lon == "":
-                form.errors["lon"] = current.messages.lon_empty
+            wkt = form_vars.get("wkt", None)
+            if wkt:
+                if wkt[0] == "{":
+                    # This is a GeoJSON geometry
+                    from shapely.geometry import shape as shape_loads
+                    try:
+                        js = json.load(wkt)
+                        shape = shape_loads(js)
+                    except:
+                        form.errors["wkt"] = current.messages.invalid_wkt
+                        return
+                    else:
+                        form_vars.wkt = shape.wkt
+                else:
+                    # Assume WKT
+                    from shapely.wkt import loads as wkt_loads
+                    try:
+                        shape = wkt_loads(wkt)
+                    except:
+                        try:
+                            # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
+                            linestring = "LINESTRING%s" % wkt[8:-1]
+                            shape = wkt_loads(linestring)
+                            form_vars.wkt = linestring
+                        except:
+                            form.errors["wkt"] = current.messages.invalid_wkt
+                            return
+
+                    if shape.has_z:
+                        # Shapely export of WKT is 2D only
+                        form_vars.wkt = shape.wkt
+                        current.session.warning = current.T("Only 2D geometry stored as PostGIS cannot handle 3D geometries")
+
+                gis_feature_type = shape.type
+                if gis_feature_type == "Point":
+                    form_vars.gis_feature_type = 1
+                elif gis_feature_type == "LineString":
+                    form_vars.gis_feature_type = 2
+                elif gis_feature_type == "Polygon":
+                    form_vars.gis_feature_type = 3
+                elif gis_feature_type == "MultiPoint":
+                    form_vars.gis_feature_type = 4
+                elif gis_feature_type == "MultiLineString":
+                    form_vars.gis_feature_type = 5
+                elif gis_feature_type == "MultiPolygon":
+                    form_vars.gis_feature_type = 6
+                elif gis_feature_type == "GeometryCollection":
+                    form_vars.gis_feature_type = 7
+                try:
+                    centroid_point = shape.centroid
+                    form_vars.lon = centroid_point.x
+                    form_vars.lat = centroid_point.y
+                    bounds = shape.bounds
+                    if gis_feature_type != "Point" or \
+                       "lon_min" not in form_vars or form_vars.lon_min is None or \
+                       form_vars.lon_min == form_vars.lon_max:
+                        # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
+                        form_vars.lon_min = bounds[0]
+                        form_vars.lat_min = bounds[1]
+                        form_vars.lon_max = bounds[2]
+                        form_vars.lat_max = bounds[3]
+                except:
+                    form.errors.gis_feature_type = current.messages.centroid_error
+
             else:
-                form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
-                if "lon_min" not in form_vars or form_vars.lon_min is None:
-                    form_vars.lon_min = form_vars.lon
-                if "lon_max" not in form_vars or form_vars.lon_max is None:
-                    form_vars.lon_max = form_vars.lon
-                if "lat_min" not in form_vars or form_vars.lat_min is None:
-                    form_vars.lat_min = form_vars.lat
-                if "lat_max" not in form_vars or form_vars.lat_max is None:
-                    form_vars.lat_max = form_vars.lat
+                lat = form_vars.get("lat", None)
+                lon = form_vars.get("lon", None)
+                if (lon is None and lat is None) or \
+                   (lon == "" and lat == ""):
+                    # No Geometry available
+                    # Don't clobber existing records (e.g. in Prepop)
+                    #form_vars.gis_feature_type = "0"
+                    # Cannot create WKT, so Skip
+                    return
+                else:
+                    # Point
+                    form_vars.gis_feature_type = "1"
+                    if lat is None or lat == "":
+                        form.errors["lat"] = current.messages.lat_empty
+                    elif lon is None or lon == "":
+                        form.errors["lon"] = current.messages.lon_empty
+                    else:
+                        form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                        if "lon_min" not in form_vars or form_vars.lon_min is None:
+                            form_vars.lon_min = lon
+                        if "lon_max" not in form_vars or form_vars.lon_max is None:
+                            form_vars.lon_max = lon
+                        if "lat_min" not in form_vars or form_vars.lat_min is None:
+                            form_vars.lat_min = lat
+                        if "lat_max" not in form_vars or form_vars.lat_max is None:
+                            form_vars.lat_max = lat
 
         if current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
             form_vars.the_geom = form_vars.wkt
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5994,7 +6054,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                  tolerance=None,
                  preserve_topology=True,
                  output="wkt",
-                 decimals=4
+                 precision=None
                  ):
         """
             Simplify a complex Polygon using the Douglas-Peucker algorithm
@@ -6008,7 +6068,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param tolerance: how aggressive a simplification to perform
             @param preserve_topology: whether the simplified geometry should be maintained
             @param output: whether to output as WKT or GeoJSON format
-            @param decimals: the number of decimal places to include in the output
+            @param precision: the number of decimal places to include in the output
         """
 
         from shapely.geometry import Point, LineString, Polygon, MultiPolygon
@@ -6029,14 +6089,19 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.error("Invalid Shape: %s" % wkt)
             return None
 
-        if not tolerance:
-            tolerance = current.deployment_settings.get_gis_simplify_tolerance()
+        settings = current.deployment_settings
+
+        if not precision:
+            precision = settings.get_gis_precision()
+
+        if tolerance is None:
+            tolerance = settings.get_gis_simplify_tolerance()
 
         if tolerance:
             shape = shape.simplify(tolerance, preserve_topology)
 
         # Limit the number of decimal places
-        formatter = ".%sf" % decimals
+        formatter = ".%sf" % precision
         def shrink_polygon(shape):
             """ Helper Function """
             points = shape.exterior.coords
@@ -6100,6 +6165,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                  add_line_active = False,
                  add_polygon = False,
                  add_polygon_active = False,
+                 add_circle = False,
+                 add_circle_active = False,
                  features = None,
                  feature_queries = None,
                  feature_resources = None,
@@ -6153,6 +6220,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param add_feature_active: Whether the DrawFeature control should be active by default
             @param add_polygon: Whether to include a DrawFeature control to allow drawing a polygon over the map
             @param add_polygon_active: Whether the DrawFeature control should be active by default
+            @param add_circle: Whether to include a DrawFeature control to allow drawing a circle over the map
+            @param add_circle_active: Whether the DrawFeature control should be active by default
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
                 [wkt]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
@@ -6237,6 +6306,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                    add_line_active = add_line_active,
                    add_polygon = add_polygon,
                    add_polygon_active = add_polygon_active,
+                   add_circle = add_circle,
+                   add_circle_active = add_circle_active,
                    features = features,
                    feature_queries = feature_queries,
                    feature_resources = feature_resources,
@@ -6731,6 +6802,13 @@ class MAP(DIV):
                 options["draw_polygon"] = "active"
             else:
                 options["draw_polygon"] = "inactive"
+
+        if opts.get("add_circle", False):
+            i18n["gis_draw_circle"] = T("Add Circle")
+            if opts.get("add_circle_active", False):
+                options["draw_circle"] = "active"
+            else:
+                options["draw_circle"] = "inactive"
 
         # Clear Layers
         clear_layers = opts.get("clear_layers") is not False and settings.get_gis_clear_layers()
@@ -7290,9 +7368,13 @@ def addFeatureResources(feature_resources):
     layers_feature_resource = []
     append = layers_feature_resource.append
     for layer in feature_resources:
-        name = str(layer["name"])
+        name = s3_str(layer["name"])
         _layer = dict(name=name)
-        _id = str(layer["id"])
+        _id = layer.get("id")
+        if _id:
+            _id = str(_id)
+        else:
+            _id = name
         _id = re.sub("\W", "_", _id)
         _layer["id"] = _id
 
@@ -7575,7 +7657,11 @@ class Layer(object):
                 if style:
                     style_dict = style.style
                     if isinstance(style_dict, basestring):
-                        # Matryoshka?
+                        # Matryoshka (=double-serialized JSON)?
+                        # - should no longer happen, but a (now-fixed) bug
+                        #   regularly produced double-serialized JSON, so
+                        #   catching it here to keep it working with legacy
+                        #   databases:
                         try:
                             style_dict = json.loads(style_dict)
                         except ValueError:
@@ -9049,8 +9135,7 @@ class S3Map(S3Method):
 
             output = {}
 
-            title = response.s3.crud_strings[tablename].get("title_map",
-                                                            current.T("Map"))
+            title = self.crud_string(tablename, "title_map")
             output["title"] = title
 
             # Filter widgets
@@ -9098,7 +9183,7 @@ class S3Map(S3Method):
             return output
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def widget(self,
@@ -9431,6 +9516,7 @@ class S3ImportPOI(S3Method):
                             default = T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
                             writable = False),
                       Field("file", "upload",
+                            length = current.MAX_FILENAME_LENGTH,
                             uploadfolder = uploadpath,
                             label = T("File")),
                       Field("text2", # Dummy Field to add text inside the Form
@@ -9585,6 +9671,6 @@ class S3ImportPOI(S3Method):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

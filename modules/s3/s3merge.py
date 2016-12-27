@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -369,7 +369,7 @@ class S3Merge(S3Method):
             current.response.view = self._view(r, "list.html")
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 

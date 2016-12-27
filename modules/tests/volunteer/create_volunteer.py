@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM002 Create Volunteer
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateVolunteer(SeleniumUnitTest):
         """
             @case: HRM002
             @description: Create Volunteer
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -41,7 +41,7 @@ class CreateVolunteer(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="vol/volunteer/create")
 
-        self.create("hrm_human_resource", 
+        self.create("hrm_human_resource",
                    [( "organisation_id",
                        "International Federation of Red Cross and Red Crescent Societies"),
                      ( "first_name",
@@ -68,8 +68,8 @@ class CreateVolunteer(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        print "\n"   
-                    
+        print "\n"
+
         self.login(account="admin", nexturl="vol/volunteer/create")
 
         # If a confirmation is shown then clear it so that it doesn't give a false positive later
@@ -82,8 +82,8 @@ class CreateVolunteer(SeleniumUnitTest):
             pass
 
         self.browser.find_element_by_id("select_from_registry").click()
-        
-        self.create("hrm_human_resource", 
+
+        self.create("hrm_human_resource",
                     [( "person_id",
                        "Duarte Botelheiro"),
                      ( "organisation_id",

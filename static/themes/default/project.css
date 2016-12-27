@@ -1,0 +1,38 @@
+@charset "UTF-8";
+
+/* Project Planning reports */
+
+span.project_status {
+    float: left;
+    width: 46px;
+    padding: 5px;
+}
+
+table.indicator_summary_report td {
+    text-align: center;
+}
+
+table.indicator_summary_report td.tal {
+    text-align: left;
+}
+
+table.indicator_summary_report td.tar {
+    text-align: right;
+}
+
+tr.project_goal {
+    background: #44aaff !important;
+}
+
+tr.project_outcome {
+    background: #ccc1da !important;
+}
+
+tr.project_output {
+    background: #c2d69b !important;
+}
+
+table.project_progress_report tr.spacer {
+    background: #ccc !important;
+    height: 0.875rem;
+}

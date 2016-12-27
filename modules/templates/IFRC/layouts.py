@@ -285,6 +285,8 @@ class S3OrgMenuLayout(S3NavigationItem):
             if l10n:
                 if l10n.acronym_l10n:
                     name = _name = l10n.acronym_l10n
+                elif record and record.acronym:
+                    name = _name = record.acronym
                 else:
                     _name = l10n.name_l10n
                     names = _name.split(" ")

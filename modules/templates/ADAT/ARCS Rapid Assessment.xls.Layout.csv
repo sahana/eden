@@ -1,0 +1,13 @@
+Template,Section,Posn,Method,Rules
+ARCS Rapid Assessment Form,1.0 Form Specification and Identification,1,1,[['STD-DATE', 'STD-TIME', 'STD-WHO'], ['STD-P-Code']]
+ARCS Rapid Assessment Form,2.0 Type of emergency and date(s) it/they occurred,2,1,"[[{'heading': '2.0 Type of emergency and date(s) it/they occurred'}], ['ARCS-1'], ['ARCS-2']]"
+ARCS Rapid Assessment Form,3.0 Affected Population (where applicable),3,1,"[[{'heading': '3.0 Affected Population (where applicable)'}], ['ARCS-3'], ['ARCS-4'], ['ARCS-5'], ['ARCS-6'], ['ARCS-7'], ['ARCS-8'], ['ARCS-9'], ['ARCS-10'], ['ARCS-11'], ['ARCS-11'], [{'heading': '3.3 Damage caused to Property'}], ['ARCS-26'], ['ARCS-27'], ['ARCS-28'], [[{'labelLeft': 'True'}, 'ARCS-29']], ['ARCS-30'], [{'heading': '3.4 Damage to Infrastructure'}], ['ARCS-31'], ['ARCS-32'], ['ARCS-33']]"
+ARCS Rapid Assessment Form,4.0 Health,4,1,"[[{'heading': '4.0 Health'}], ['ARCS-34'], ['ARCS-35'], ['ARCS-36']]"
+ARCS Rapid Assessment Form,"5.0 Water, Sanitation and Hygiene",5,1,"[[{'heading': '5.0 Water, Sanitation and Hygiene'}], ['ARCS-37'], ['ARCS-38'], ['ARCS-39'], ['ARCS-40']]"
+ARCS Rapid Assessment Form,6.0 Food Accessibility,6,1,"[[{'heading': '6.0 Food Accessibility'}], ['ARCS-41'], ['ARCS-42'], ['ARCS-43'], ['ARCS-44'], ['ARCS-45'], ['ARCS-46']]"
+ARCS Rapid Assessment Form,7.0 Shelter,7,1,"[[{'heading': '7.0 Shelter'}], ['ARCS-47'], ['ARCS-48']]"
+ARCS Rapid Assessment Form,8.0 Livelihoods,8,1,"[[{'heading': '8.0 Livelihoods'}], ['ARCS-49'], ['ARCS-50'], ['ARCS-51']]"
+ARCS Rapid Assessment Form,9.0. Overview of RCRC Movement and non-RCRC actors in the country during the assessment,9,1,"[[{'heading': '9.0. Overview of RCRC movement and non-RCRC actors in the country during the assessment'}], ['ARCS-52']]"
+ARCS Rapid Assessment Form,10.0 Security,10,1,"[[{'heading': '10.0 Security'}], ['ARCS-108'], ['ARCS-109, 'ARCS-110'], ['ARCS-111'], ['ARCS-112'], ['ARCS-113']]"
+ARCS Rapid Assessment Form,11.0 Sources of Information,11,1,"[[{'heading': '11.0 Sources of Information'}], [{'heading': 'Please provide as many contact details as possible, particularly for the community'}], ['ARCS-114']]"
+ARCS Rapid Assessment Form,12.0 Recommendations and Conclusions,12,1,"[[{'heading': '12.0 Recommendations and Conclusions'}], [{'heading': '12.1 For the Assessor'}], ['ARCS-115'], ['ARCS-116'], ['ARCS-117'], [{'heading': '12.2 For ARCS/IFRC/ICRC Management'}], ['ARCS-118'], ['ARCS-119'], ['ARCS-120'], ['ARCS-121']]"

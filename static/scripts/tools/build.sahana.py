@@ -352,6 +352,7 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ("add_person",
                      "cap",
+                     "dvr",
                      "gis",
                      "gis.feature_crud",
                      "gis.fullscreen",
@@ -363,10 +364,14 @@ def dojs(dogis = False, warnings = True):
                      "popup",
                      "register_validation",
                      "select_person",
+                     "sync",
                      "timeline",
                      "ui.contacts",
+                     "ui.dashboard",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
+                     "ui.sitecheckin",
+                     "work",
                      ):
         print "Compressing s3.%s.js" % filename
         inputFilename = os.path.join("..", "S3", "s3.%s.js" % filename)
@@ -609,9 +614,12 @@ def docss():
 
     # Theme
     theme = settings.get_theme()
-    location = settings.get_template_location()
+    location = current.response.s3.theme_location
     print "Using theme %s" % theme
-    css_cfg = os.path.join("..", "..", "..", location, "templates", theme, "css.cfg")
+    if location:
+        css_cfg = os.path.join("..", "..", "..", "modules", "templates", location[:-1], theme, "css.cfg")
+    else:
+        css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme, "css.cfg")
     f = open(css_cfg, "r")
     files = f.readlines()
     f.close()
@@ -652,11 +660,27 @@ def docss():
     # Move files to correct locations
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
+        if location:
+            os.remove("../../themes/%s%s/%s" % (location, theme, outputFilenameCSS))
+        else:
+            os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
+    if location:
+        print "Adjusting url in %s." % outputFilenameCSS
+        new_path = "../../themes/%s%s/%s" % (location, theme, outputFilenameCSS)
+        shutil.move(outputFilenameCSS, new_path)
+
+        # Adjust location of url
+        f = open(new_path, "r+")
+        files = f.readline()
+        new_min_css = files.replace("../../", "../../../")
+        f.seek(0)
+        f.write(new_min_css)
+        f.close()
+    else:
+        shutil.move(outputFilenameCSS, "../../themes/%s/%s" % (theme, outputFilenameCSS))
 
     # Enable when needed
     full = False

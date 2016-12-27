@@ -1,7 +1,7 @@
 /**
  * jQuery UI PersonContacts Widget
  *
- * @copyright 2015 (c) Sahana Software Foundation
+ * @copyright 2015-2016 (c) Sahana Software Foundation
  * @license MIT
  */
 (function($, undefined) {
@@ -40,7 +40,7 @@
             personcontactsID += 1;
 
             // Namespace for events
-            this.namespace = '.personcontacts';
+            this.eventNamespace = '.personcontacts';
         },
 
         /**
@@ -78,12 +78,12 @@
 
             var $button = $(button);
 
-            // Hide add-button and show throbber
-            $button.hide().siblings('.throbber').removeClass('hide').show();
-
             // Remove any previous popup
             $('.iframe-container').remove();
             this._showAll();
+
+            // Hide add-button and show throbber
+            $button.hide().siblings('.throbber').removeClass('hide').show();
 
             var opts = this.options;
             var access = opts.access,
@@ -124,12 +124,12 @@
 
             var $button = $(button);
 
-            // Hide add-button and show throbber
-            $button.hide().siblings('.throbber').removeClass('hide').show();
-
             // Remove any previous popup
             $('.iframe-container').remove();
             this._showAll();
+
+            // Hide add-button and show throbber
+            $button.hide().siblings('.throbber').removeClass('hide').show();
 
             var opts = this.options;
             var access = opts.access,
@@ -354,7 +354,7 @@
         },
 
         /**
-         * Show all read-rows and hide all throbbers
+         * Show all read-rows and add buttons, hide all throbbers
          */
         _showAll: function() {
 
@@ -365,6 +365,7 @@
                 $this.find('.throbber, .inline-throbber').hide();
                 $this.show();
             });
+            el.find('.contact-add-btn').show();
         },
 
         /**
@@ -374,7 +375,7 @@
 
             var self = this,
                 element = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             element.find('.pr-contacts .contact-add-btn').bind('click' + ns, function() {
                 // Add new contact
@@ -516,7 +517,7 @@
         _unbindEvents: function() {
 
             var element = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             element.undelegate(ns);
             element.find('.pr-contact-add, .pr-emergency-add, .pr-contact-form').unbind(ns);

@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - IRS001 Create Incident Report
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateIncidentReport(SeleniumUnitTest):
         """
             @case:IRS001
             @description: Create an incident report
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -40,7 +40,7 @@ class CreateIncidentReport(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="irs/ireport/create")
 
-        self.create("irs_ireport", 
+        self.create("irs_ireport",
                     [( "name",
                        "Test Incident Report"),
                      ( "message",

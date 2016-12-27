@@ -55,7 +55,7 @@ def message():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [dict(label=str(T("Mark Sender")),
+            s3.actions += [dict(label=s3base.s3_str(T("Mark Sender")),
                                 _class="action-btn",
                                 url=URL(f="mark_sender",
                                         args="[id]")),
@@ -473,8 +473,7 @@ def rss():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_rss"
     table = s3db.msg_rss
@@ -705,8 +704,7 @@ def email_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_email_channel"
     table = s3db[tablename]
@@ -729,7 +727,7 @@ def email_channel():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Email Settings"),
         title_list = T("Email Accounts"),
-        label_create = T("Add Email Account"),
+        label_create = T("Create Email Account"),
         title_update = T("Edit Email Settings"),
         label_list_button = T("View Email Accounts"),
         msg_record_created = T("Account added"),
@@ -751,18 +749,19 @@ def email_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Poll")),
+                s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
@@ -780,8 +779,7 @@ def facebook_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_facebook_channel"
     table = s3db[tablename]
@@ -812,18 +810,19 @@ def facebook_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             #if not s3task._is_alive():
             #    # No Scheduler Running
-            #    s3.actions += [dict(label=str(T("Poll")),
+            #    s3.actions += [dict(label=s3_str(T("Poll")),
             #                        _class="action-btn",
             #                        url = URL(args = ["[id]", "poll"]),
             #                        restrict = restrict_d)
@@ -841,8 +840,7 @@ def mcommons_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_mcommons_channel"
     table = s3db[tablename]
@@ -890,22 +888,91 @@ def mcommons_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Poll")),
+                s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
                                ]
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def gcm_channel():
+    """
+        RESTful CRUD controller for Google Cloud Messaging Channels
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        auth.permission.fail()
+
+    tablename = "msg_gcm_channel"
+    table = s3db[tablename]
+
+    table.name.label = T("Account Name")
+    table.name.comment = DIV(_class="tooltip",
+                             _title="%s|%s" % (T("Account Label"),
+                                               T("Label for GCM Account")))
+
+    table.api_key.label = T("API KEY")
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Google Cloud Messaging Setting Details"),
+        title_list = T("Google Cloud Messaging Settings"),
+        label_create = T("Add Google Cloud Messaging Settings"),
+        title_update = T("Edit Google Cloud Messaging Settings"),
+        label_list_button = T("View Google Cloud Messaging Settings"),
+        msg_record_created = T("Google Cloud Messaging Setting added"),
+        msg_record_deleted = T("Google Cloud Messaging Setting deleted"),
+        msg_list_empty = T("No Google Cloud Messaging Settings currently defined"),
+        msg_record_modified = T("Google Cloud Messaging settings updated")
+        )
+
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted != True)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
+
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=s3_str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
+            #if not s3task._is_alive():
+                # No Scheduler Running
+            #    s3.actions += [dict(label=s3_str(T("Poll")),
+            #                        _class="action-btn",
+            #                        url = URL(args = ["[id]", "poll"]),
+            #                        restrict = restrict_d)
+            #                   ]
         return output
     s3.postp = postp
 
@@ -919,9 +986,7 @@ def rss_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_rss_channel"
     table = s3db[tablename]
@@ -971,18 +1036,19 @@ def rss_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Subscribe")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Subscribe")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Unsubscribe")),
+                           dict(label=s3_str(T("Unsubscribe")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Poll")),
+                s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
@@ -1000,8 +1066,7 @@ def twilio_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     tablename = "msg_twilio_channel"
     table = s3db[tablename]
@@ -1044,18 +1109,19 @@ def twilio_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Poll")),
+                s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
@@ -1259,9 +1325,15 @@ def twitter_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
+        title_display = T("Twitter account Details"),
+        title_list = T("Twitter accounts"),
+        label_create = T("Add Twitter account"),
         title_update = T("Edit Twitter account"),
+        label_list_button = T("View Twitter accounts"),
+        msg_record_created = T("Twitter account added"),
+        msg_record_deleted = T("Twitter account deleted"),
         msg_record_modified = T("Twitter account updated"),
-    )
+        msg_list_empty = T("No Twitter accounts currently defined"))
 
     def prep(r):
         oauth_consumer_key = settings.msg.twitter_oauth_consumer_key
@@ -1310,18 +1382,19 @@ def twitter_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Poll")),
+                s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
@@ -1509,11 +1582,12 @@ def twitter_search():
             restrict_k = [str(record.id) for record in records]
 
             # @ToDo: Make these S3Methods rather than additional controllers
-            s3.actions += [dict(label=str(T("Search")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Search")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "poll"]),
                                         restrict = restrict_s),
-                           dict(label=str(T("Analyze with KeyGraph")),
+                           dict(label=s3_str(T("Analyze with KeyGraph")),
                                 _class="action-btn",
                                 url = URL(args=["[id]", "keygraph"]),
                                           restrict = restrict_k),
@@ -1546,13 +1620,13 @@ def twitter_result():
 
     filter_widgets = [
         S3DateFilter("date",
-                     label=T("Tweeted On"),
+                     label=T("Tweeted on"),
                      hide_time=True,
                      _class="date-filter-class",
                      comment=T("Filter Tweets by the date they were tweeted on"),
                      ),
         S3TextFilter("from_address",
-                     label=T("Tweeted By"),
+                     label=T("Tweeted by"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
                      )
@@ -1669,8 +1743,7 @@ def parser():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = ERROR.UNAUTHORISED
-        redirect(URL(f="index"))
+        auth.permission.fail()
 
     def prep(r):
         if r.interactive:
@@ -1731,18 +1804,19 @@ def parser():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            s3.actions += [dict(label=str(T("Enable")),
+            from s3 import s3_str
+            s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
                                 restrict = restrict_e),
-                           dict(label=str(T("Disable")),
+                           dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=str(T("Parse")),
+                s3.actions += [dict(label=s3_str(T("Parse")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "parse"]),
                                     restrict = restrict_d)

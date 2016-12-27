@@ -2,7 +2,7 @@
 
 """ OCR Utility Functions
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -76,9 +76,13 @@ class OCRDataModel(S3Model):
                      Field("resource_name",
                            notnull=True),
                      Field("s3ocrxml_file", "upload",
-                           uploadfolder=metadata_folder),
+                           length = current.MAX_FILENAME_LENGTH,
+                           uploadfolder = metadata_folder,
+                           ),
                      Field("layout_file", "upload",
-                           uploadfolder=metadata_folder),
+                           length = current.MAX_FILENAME_LENGTH,
+                           uploadfolder = metadata_folder,
+                           ),
                      Field("revision",
                            notnull=True,
                            length=128,
@@ -95,8 +99,10 @@ class OCRDataModel(S3Model):
                      Field("image_set_uuid",
                            notnull=True),
                      Field("image_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
+                           length = current.MAX_FILENAME_LENGTH,
+                           notnull = True,
+                           uploadfolder = payload_folder,
+                           ),
                      Field("page_number", "integer",
                            notnull=True),
                      *s3_meta_fields())
@@ -133,8 +139,10 @@ class OCRDataModel(S3Model):
                      Field("field_name",
                            notnull=True),
                      Field("image_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
+                           length = current.MAX_FILENAME_LENGTH,
+                           notnull = True,
+                           uploadfolder = payload_folder,
+                           ),
                      Field("value"),
                      Field("sequence", "integer"),
                      *s3_meta_fields())
@@ -149,8 +157,10 @@ class OCRDataModel(S3Model):
                            unique=True,
                            notnull=True),
                      Field("data_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
+                           length = current.MAX_FILENAME_LENGTH,
+                           notnull = True,
+                           uploadfolder = payload_folder,
+                           ),
                      Field("form_uuid",
                            notnull=True,
                            default=""),

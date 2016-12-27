@@ -318,7 +318,46 @@ def req_controller(template = False):
             else:
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
-                    
+
+                keyvalue = settings.get_ui_auto_keyvalue()
+                if keyvalue:
+                    # What Keys do we have?
+                    kvtable = s3db.req_req_tag
+                    keys = db(kvtable.deleted == False).select(kvtable.tag,
+                                                               distinct=True)
+                    if keys:
+                        tablename = "req_req"
+                        crud_fields = [f for f in table.fields if table[f].readable]
+                        cappend = crud_fields.append
+                        add_component = s3db.add_components
+                        list_fields = s3db.get_config(tablename,
+                                                      "list_fields")
+                        lappend = list_fields.append
+                        for key in keys:
+                            tag = key.tag
+                            label = T(tag.title())
+                            cappend(S3SQLInlineComponent("tag",
+                                                         label = label,
+                                                         name = tag,
+                                                         multiple = False,
+                                                         fields = [("", "value")],
+                                                         filterby = dict(field = "tag",
+                                                                         options = tag,
+                                                                         )
+                                                         ))
+                            add_component(tablename,
+                                          org_organisation_tag = {"name": tag,
+                                                                  "joinby": "req_id",
+                                                                  "filterby": "tag",
+                                                                  "filterfor": (tag,),
+                                                                  },
+                                          )
+                            lappend((label, "%s.value" % tag))
+                        crud_form = S3SQLCustomForm(*crud_fields)
+                        s3db.configure(tablename,
+                                       crud_form = crud_form,
+                                       )
+
                 method = r.method
                 if method in (None, "create"):
                     # Hide fields which don't make sense in a Create form
@@ -370,28 +409,41 @@ def req_controller(template = False):
 
         if r.component:
             if r.component.name == "req_item":
-                # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
-                # @ToDo: deployment_setting to determine which exact rule to apply?
                 record = r.record
-                if record.fulfil_status == REQ_STATUS_COMPLETE or \
-                   record.transit_status == REQ_STATUS_COMPLETE or \
-                   record.req_status == REQ_STATUS_COMPLETE or \
-                   record.fulfil_status == REQ_STATUS_PARTIAL or \
-                   record.transit_status == REQ_STATUS_PARTIAL or \
-                   record.req_status == REQ_STATUS_PARTIAL or \
-                   record.closed or \
-                   record.cancel:
-                    s3db.configure("req_req_item",
-                                   deletable = False,
-                                   insertable = False,
-                                   )
+                if record: # Check as options.s3json checks the component without a record
+                    # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
+                    # @ToDo: deployment_setting to determine which exact rule to apply?
+                    if record.fulfil_status == REQ_STATUS_COMPLETE or \
+                       record.transit_status == REQ_STATUS_COMPLETE or \
+                       record.req_status == REQ_STATUS_COMPLETE or \
+                       record.fulfil_status == REQ_STATUS_PARTIAL or \
+                       record.transit_status == REQ_STATUS_PARTIAL or \
+                       record.req_status == REQ_STATUS_PARTIAL or \
+                       record.closed or \
+                       record.cancel:
+                        s3db.configure("req_req_item",
+                                       deletable = False,
+                                       insertable = False,
+                                       )
 
             elif r.component.name == "commit":
                 table = r.component.table
                 record = r.record
                 record_id = record.id
                 stable = s3db.org_site
-                commit_status = record.commit_status
+                rtype = record.type
+
+                if (rtype == 3) and settings.get_req_commit_people():
+                    # Don't allow people commits to happen in this view
+                    insertable = False
+                else:
+                    commit_status = record.commit_status
+                    if (commit_status == 2) and settings.get_req_restrict_on_complete():
+                        # Restrict from committing to completed requests
+                        insertable = False
+                    else:
+                        # Allow commitments to be added when doing so as a component
+                        insertable = True
 
                 # Commits belonging to this request
                 rsites = []
@@ -409,19 +461,12 @@ def req_controller(template = False):
                 for site in commit_sites:
                     if (site.id not in site_opts) and (site.id not in rsites):
                         site_opts[site.id] = site.code
-
                 table.site_id.requires = IS_IN_SET(site_opts)
-                if (commit_status == 2) and settings.get_req_restrict_on_complete():
-                    # Restrict from committing to completed requests
-                    listadd = False
-                else:
-                    # Allow commitments to be added when doing so as a component
-                    listadd = True
 
                 s3db.configure(table,
                                # Don't want filter_widgets in the component view
                                filter_widgets = None,
-                               listadd = listadd,
+                               insertable = insertable,
                                )
 
                 if req_type == 1: # Items
@@ -644,7 +689,7 @@ $.filterOptionsS3({
                         # Create form
                         # @ToDo: DRY
                         if not settings.get_req_inline_forms():
-                            form_vars = output["form"].vars 
+                            form_vars = output["form"].vars
                             type = form_vars.type
                             if type == "1":
                                 # Stock: Open Tab for Items
@@ -786,7 +831,7 @@ $.filterOptionsS3({
                 # Create form
                 # @ToDo: DRY
                 if not settings.get_req_inline_forms():
-                    form_vars = output["form"].vars 
+                    form_vars = output["form"].vars
                     req_type = form_vars.type
                     if req_type == "1":
                         # Stock: Open Tab for Items
@@ -1858,6 +1903,22 @@ def organisation_needs():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def organisation_needs_skill():
+    """ RESTful controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def organisation_needs_item():
+    """ RESTful controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def site_needs():
     """
         RESTful CRUD Controller for Site Needs
@@ -1878,5 +1939,15 @@ def site_needs():
     s3.prep = prep
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def facility():
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="req", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
 
 # END =========================================================================

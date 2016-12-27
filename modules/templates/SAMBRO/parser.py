@@ -5,7 +5,7 @@
 
     Template-specific Message Parsers are defined here.
 
-    @copyright: 2014-15 (c) Sahana Software Foundation
+    @copyright: 2014-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -79,7 +79,7 @@ class S3Parser(object):
                                                                    table.author,
                                                                    limitby=(0, 1)
                                                                    ).first()
-        if not record:
+        if not record or not record.body:
             return
 
         post_table = s3db.cms_post
@@ -192,7 +192,7 @@ class S3Parser(object):
             try:
                 series_id = series.id
             except:
-                raise "News Series not present in CMS module"
+                raise KeyError("News Series not present in CMS module")
 
             post_id = post_table.insert(title = record.title,
                                         body = body,
@@ -241,19 +241,30 @@ class S3Parser(object):
         db = current.db
         s3db = current.s3db
         table = s3db.msg_rss
-        record = db(table.message_id == message.message_id).select(table.channel_id,
-                                                                   table.title,
-                                                                   table.from_address,
-                                                                   table.body,
-                                                                   table.date,
-                                                                   table.location_id,
-                                                                   table.author,
-                                                                   limitby=(0, 1)
-                                                                   ).first()
+        message_id = message.message_id
+        record = db(table.message_id == message_id).select(table.id,
+                                                           table.channel_id,
+                                                           table.title,
+                                                           table.from_address,
+                                                           table.body,
+                                                           table.date,
+                                                           table.location_id,
+                                                           table.author,
+                                                           limitby=(0, 1)
+                                                           ).first()
         if not record:
             return
 
-        channel_id = record.channel_id
+        pstable = s3db.msg_parsing_status
+        # not adding (pstable.channel_id == record.channel_id) to query
+        # because two channels (http://host.domain/eden/cap/public.rss and
+        # (http://host.domain/eden/cap/alert.rss) may contain common url
+        # eg. http://host.domain/eden/cap/public/xx.cap
+        pquery = (pstable.message_id == message_id)
+        prows = db(pquery).select(pstable.id, pstable.is_parsed)
+        for prow in prows:
+            if prow.is_parsed:
+                return
 
         alert_table = s3db.cap_alert
         info_table = s3db.cap_info
@@ -305,20 +316,65 @@ class S3Parser(object):
         else:
             # Embedded link
             url = record.from_address
+            import_xml = s3db.resource("cap_alert").import_xml
+            stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
             try:
                 file = fetch(url)
-            except urllib2.URLError:
-                response.error = str(sys.exc_info()[1])
-                return output
-            except urllib2.HTTPError:
-                response.error = str(sys.exc_info()[1])
-                return output
-            File = StringIO(file)
+            except urllib2.HTTPError, e:
+                import base64
+                rss_table = s3db.msg_rss_channel
+                query = (rss_table.channel_id == record.channel_id)
+                channel = db(query).select(rss_table.date,
+                                           rss_table.etag,
+                                           rss_table.url,
+                                           rss_table.username,
+                                           rss_table.password,
+                                           limitby=(0, 1)).first()
+                username = channel.username
+                password = channel.password
+                if e.code == 401 and username and password:
+                    request = urllib2.Request(url)
+                    base64string = base64.encodestring("%s:%s" % (username, password))
+                    request.add_header("Authorization", "Basic %s" % base64string)
+                else:
+                    request = None
 
-            # Import via XSLT
-            resource = s3db.resource("cap_alert")
-            stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
-            success = resource.import_xml(File, stylesheet=stylesheet)
+                try:
+                    file = urllib2.urlopen(request).read() if request else fetch(url)
+                except urllib2.HTTPError, e:
+                    # Check if there are links to look into
+                    from urlparse import urlparse
+                    ltable = s3db.msg_rss_link
+                    query_ = (ltable.rss_id == record.id) & (ltable.deleted != True)
+                    rows_ = db(query_).select(ltable.type,
+                                              ltable.url)
+                    url_format = "{uri.scheme}://{uri.netloc}/".format
+                    url_domain = url_format(uri=urlparse(url))
+                    for row_ in rows_:
+                        url = row_.url
+                        if url and row_.type == "application/cap+xml" and \
+                           url_domain == url_format(uri=urlparse(url)):
+                            # Same domain, so okey to use same username/pwd combination
+                            if e.code == 401 and username and password:
+                                request = urllib2.Request(url)
+                                request.add_header("Authorization", "Basic %s" % base64string)
+                            else:
+                                request = None
+                            try:
+                                file = urllib2.urlopen(request).read() if request else fetch(url)
+                            except urllib2.HTTPError, e:
+                                current.log.error("Getting content from link failed: %s" % e)
+                            else:
+                                # Import via XSLT
+                                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
+                else:
+                    # Import via XSLT
+                    import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
+            else:
+                # Public Alerts
+                # eg. http://host.domain/eden/cap/public/xx.cap
+                # Import via XSLT
+                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
 
         # No Reply
         return
@@ -374,7 +430,7 @@ class S3Parser(object):
             try:
                 series_id = series.id
             except:
-                raise "News Series not present in CMS module"
+                raise KeyError("News Series not present in CMS module")
 
             post_id = post_table.insert(#title = record.title,
                                         body = body,

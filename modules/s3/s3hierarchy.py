@@ -2,7 +2,7 @@
 
 """ S3 Hierarchy Toolkit
 
-    @copyright: 2013-15 (c) Sahana Software Foundation
+    @copyright: 2013-2016 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -31,13 +31,7 @@
 
 __all__ = ("S3Hierarchy", "S3HierarchyCRUD")
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 from gluon import *
 from gluon.storage import Storage
@@ -69,7 +63,7 @@ class S3HierarchyCRUD(S3Method):
             elif r.representation == "xls":
                 output = self.export_xls(r, **attr)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
@@ -828,8 +822,14 @@ class S3Hierarchy(object):
                 self.__lkey = None
                 self.__left = None
             else:
-                alias = rfield.tname.split("_", 1)[1]
-                link = resource.links.get(alias)
+                # Try to find the link table resource from parent selector
+                links = resource.links
+                alias = parent.split(".%s" % rfield.fname)[0]
+                link = links.get(alias)
+                if not link:
+                    # Fall back to table name of parent field
+                    alias = rfield.tname.split("_", 1)[1]
+                    link = links.get(alias)
                 if link:
                     fkey = rfield.field
                     self.__link = rfield.tname

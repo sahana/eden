@@ -2,7 +2,7 @@
 
 """ Sahana Eden Member Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -42,7 +42,7 @@ class CreateMember(SeleniumUnitTest):
         today = self.today()
 
         self.login(account="admin", nexturl="member/membership/create")
-        self.create("member_membership", 
+        self.create("member_membership",
                     [( "organisation_id",
                        "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"),
                      ( "first_name",
@@ -61,7 +61,7 @@ class CreateMember(SeleniumUnitTest):
                      ( "membership_paid",
                        today)]
                      )
-        
+
 #===============================================================================
 
     def test_mem001_create_member_registry(self):
@@ -70,8 +70,8 @@ class CreateMember(SeleniumUnitTest):
             @description: Create Member from registery
 
         """
-        print "\n"   
-                    
+        print "\n"
+
         today = self.today()
 
         self.login(account="admin", nexturl="member/membership/create")
@@ -86,8 +86,8 @@ class CreateMember(SeleniumUnitTest):
             pass
 
         self.browser.find_element_by_id("select_from_registry").click()
-        
-        self.create("member_membership", 
+
+        self.create("member_membership",
                     [( "person_id",
                        "Beatriz Albuquequer"),
                      ( "organisation_id",

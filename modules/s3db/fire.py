@@ -2,7 +2,7 @@
 
 """ Sahana Eden Fire Models
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -35,7 +35,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3FireModel(S3Model):
@@ -87,7 +87,7 @@ class S3FireModel(S3Model):
         zone_type_represent = S3Represent(lookup=tablename)
 
         self.configure(tablename,
-                       deduplicate = self.fire_zone_type_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # -----------------------------------------------------------
@@ -104,10 +104,11 @@ class S3FireModel(S3Model):
                                                    zone_type_represent,
                                                    sort=True)),
                            represent = zone_type_represent,
-                           comment = S3AddResourceLink(c="fire",
-                                                       f="zone_type",
-                                                       label=ADD_ZONE_TYPE,
-                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           comment = S3PopupLink(c = "fire",
+                                                 f = "zone_type",
+                                                 label = ADD_ZONE_TYPE,
+                                                 tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
+                                                 ),
                            label=T("Type")),
                      self.gis_location_id(
                        widget = S3LocationSelector(catalog_layers = True,
@@ -137,23 +138,6 @@ class S3FireModel(S3Model):
         #
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def fire_zone_type_duplicate(item):
-        """
-            Zone Type record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        table = item.table
-        query = (table.name == item.data.name)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
-
 # =============================================================================
 class S3FireStationModel(S3Model):
     """
@@ -173,16 +157,13 @@ class S3FireStationModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
 
-        person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
-        human_resource_id = self.hrm_human_resource_id
 
-        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # =====================================================================
         # Fire Station
@@ -191,16 +172,29 @@ class S3FireStationModel(S3Model):
                               9: T("Unknown type of facility"),
                               }
 
+        if current.deployment_settings.get_fire_station_code_unique():
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "fire_station.code"),
+                                         ])
+        else:
+            code_requires = IS_LENGTH(10)
+
         tablename = "fire_station"
         define_table(tablename,
-                     self.super_link("site_id", "org_site"),
-                     Field("name", notnull=True, length=64,
+                     super_link("pe_id", "pr_pentity"),
+                     super_link("site_id", "org_site"),
+                     super_link("doc_id", "doc_entity"),
+                     Field("name", notnull=True,
+                           length=64,           # Mayon compatibility
                            label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ],
                            ),
-                     Field("code", length=10,
-                           # @ToDo: code_requires based on deployment_setting
-                           unique=True,
+                     Field("code", length=10,   # Mayon compatibility
                            label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           requires = code_requires,
                            ),
                      Field("facility_type", "integer",
                            default = 1,
@@ -215,19 +209,19 @@ class S3FireStationModel(S3Model):
                            label = T("Phone"),
                            requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
+                     Field("email",
+                           label = T("Email"),
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
+                           ),
                      Field("website",
                            label = T("Website"),
                            represent = lambda url: s3_url_represent(url),
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
-                     Field("email",
-                           label = T("Email"),
-                           requires = IS_EMPTY_OR(IS_EMAIL()),
-                           ),
-                     Field("fax",
-                           label = T("Fax"),
-                           requires = IS_EMPTY_OR(s3_phone_requires),
-                           ),
+                     #Field("fax",
+                     #      label = T("Fax"),
+                     #      requires = IS_EMPTY_OR(s3_phone_requires),
+                     #      ),
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
@@ -268,16 +262,76 @@ class S3FireStationModel(S3Model):
             msg_no_match = T("No Fire Stations could be found"),
             msg_list_empty = T("No Fire Stations currently registered"))
 
-        # Components
-        add_components(tablename,
-                       vehicle_vehicle = {"link": "fire_station_vehicle",
-                                          "joinby": "station_id",
-                                          "key": "vehicle_id",
-                                          "actuate": "replace",
-                                          },
-                       fire_shift = "station_id",
-                       fire_shift_staff = "station_id",
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+
+        list_fields = ["name",
+                       #"organisation_id",   # Filtered in Component views
+                       #"station_type_id",
+                       ]
+
+        text_fields = ["name",
+                       "code",
+                       "comments",
+                       #"organisation_id$name",
+                       #"organisation_id$acronym",
+                       ]
+
+        #report_fields = ["name",
+        #                 "organisation_id",
+        #                 ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            list_fields.append(lfield)
+            #report_fields.append(lfield)
+            text_fields.append(lfield)
+
+        list_fields += [(T("Address"), "location_id$addr_street"),
+                        "phone",
+                        #"email",
+                        ]
+
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         #_class="filter-search",
+                         ),
+            #S3OptionsFilter("organisation_id",
+            #                #hidden=True,
+            #                #label=T("Organization"),
+            #                # Doesn't support l10n
+            #                #represent="%(name)s",
+            #                ),
+            S3LocationFilter("location_id",
+                             #hidden=True,
+                             #label=T("Location"),
+                             levels=levels,
+                             ),
+            ]
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("organisation_id",),
+                                                 ),
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       #onaccept = self.fire_station_onaccept,
+                       super_entity = ("pr_pentity", "org_site", "doc_entity"),
+                       update_realm = True,
                        )
+
+        # Components
+        self.add_components(tablename,
+                            vehicle_vehicle = {"link": "fire_station_vehicle",
+                                               "joinby": "station_id",
+                                               "key": "vehicle_id",
+                                               "actuate": "replace",
+                                               },
+                            fire_shift = "station_id",
+                            fire_shift_staff = "station_id",
+                            )
 
         # =====================================================================
         # Vehicles of Fire stations
@@ -360,6 +414,22 @@ class S3FireStationModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Water Source"),
+            title_display = T("Water Source Details"),
+            title_list = T("Water Sources"),
+            title_map = T("Map of Water Sources"),
+            title_update = T("Edit Water Source"),
+            title_upload = T("Import Water Sources"),
+            label_list_button = T("List Water Sources"),
+            label_delete_button = T("Delete Water Source"),
+            msg_record_created = T("Water Source added"),
+            msg_record_modified = T("Water Source updated"),
+            msg_record_deleted = T("Water Source deleted"),
+            msg_no_match = T("No Water Sources could be found"),
+            msg_list_empty = T("No Water Sources currently registered"))
+
         # =====================================================================
         # Hazards
         # - this is long-term hazards, not incidents
@@ -373,9 +443,24 @@ class S3FireStationModel(S3Model):
                            ),
                      # What are the Org & Person for? Contacts?
                      organisation_id(),
-                     person_id(),
+                     self.pr_person_id(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Hazard Point"),
+            title_display = T("Hazard Point Details"),
+            title_list = T("Hazard Points"),
+            title_update = T("Edit Hazard Point"),
+            title_upload = T("Import Hazard Points"),
+            label_list_button = T("List Hazard Points"),
+            label_delete_button = T("Delete Hazard Point"),
+            msg_record_created = T("Hazard Point added"),
+            msg_record_modified = T("Hazard Point updated"),
+            msg_record_deleted = T("Hazard Point deleted"),
+            msg_no_match = T("No Hazard Points could be found"),
+            msg_list_empty = T("No Hazard Points currently registered"))
 
         # =====================================================================
         # Shifts
@@ -408,8 +493,8 @@ class S3FireStationModel(S3Model):
         define_table(tablename,
                      station_id(),
                      #shift_id(),
-                     human_resource_id(empty = False,
-                                       ),
+                     self.hrm_human_resource_id(empty = False,
+                                                ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

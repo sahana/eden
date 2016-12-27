@@ -3,7 +3,7 @@
 """
     S3 Adobe PDF codec
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -76,7 +76,7 @@ try:
     from reportlab.lib.units import inch
     from reportlab.lib.units import cm
     from reportlab.lib import colors
-    from reportlab.lib.colors import Color
+    from reportlab.lib.colors import Color, HexColor
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus.flowables import Flowable
     from reportlab.pdfbase.ttfonts import TTFont
@@ -95,8 +95,7 @@ try:
     biDiImported = True
 except ImportError:
     biDiImported = False
-    from s3 import s3_debug
-    s3_debug("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
+    current.log.warning("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
 
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
@@ -503,6 +502,7 @@ class EdenDocTemplate(BaseDocTemplate):
         """
             Function to return the size a flowable will require
         """
+
         if not flowable:
             return (0, 0)
         if not isinstance(flowable, list):
@@ -520,6 +520,7 @@ class EdenDocTemplate(BaseDocTemplate):
 
     # -------------------------------------------------------------------------
     def _calc(self):
+
         if self.defaultPage == "Landscape":
             self.pagesize = landscape(self.paper_size)
         else:
@@ -543,6 +544,7 @@ class EdenDocTemplate(BaseDocTemplate):
         """
             Helper function to calculate the various sizes of the page
         """
+
         self._calc()    # in case we changed margins sizes etc
         self.height = self.pagesize[PDF_HEIGHT]
         self.width = self.pagesize[PDF_WIDTH]
@@ -572,12 +574,13 @@ class EdenDocTemplate(BaseDocTemplate):
 
             Set up the page templates that the document can use
         """
+
         self.header_flowable = header_flowable
         self.body_flowable = body_flowable
         self.footer_flowable = footer_flowable
         self.calc_body_size(header_flowable,
                             footer_flowable,
-                           )
+                            )
         showBoundary = 0 # for debugging set to 1, otherwise 0
 
         body_frame = Frame(self.leftMargin,
@@ -1288,7 +1291,8 @@ class S3html2pdf():
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
-        self.style_lookup = {"pdf_title": self.titlestyle}
+        self.style_lookup = {"pdf_title": self.titlestyle,
+                             }
 
         # Additional styles from the caller
         self.styles = styles
@@ -1398,9 +1402,9 @@ class S3html2pdf():
         from reportlab.platypus import Image
 
         I = None
-        sep = os.path.sep
         if "_src" in html.attributes:
             src = html.attributes["_src"]
+            sep = os.path.sep
             root_dir = "%s%s%s" % (sep, current.request.application, sep)
             if uploadfolder:
                 src = src.rsplit("/", 1) # Don't use os.sep here
@@ -1469,6 +1473,7 @@ class S3html2pdf():
         if font_size:
             default_font_size = style.fontSize
             style.fontSize = font_size
+            style.spaceAfter = 8
 
         content = []
         select_tag = self.select_tag
@@ -1644,39 +1649,47 @@ class S3html2pdf():
             @param styles: the pdf_html_styles dict
         """
 
-        styles = self.styles
         element_styles = {}
 
-        tag = element.tag
-        classes = element["_class"]
+        styles = self.styles
+        if styles:
 
-        if classes:
-            classes = set(classes.split(" "))
-            for k, v in styles.items():
-                t, c = k.split(".", 1)
-                if t != tag:
-                    continue
-                keys = set(c.split("."))
-                if keys <= classes:
-                    element_styles.update(v)
+            classes = element["_class"]
+            if classes:
+                tag = element.tag
+                classes = set(classes.split(" "))
+                for k, v in styles.items():
+                    t, c = k.split(".", 1)
+                    if t != tag:
+                        continue
+                    keys = set(c.split("."))
+                    if keys <= classes:
+                        element_styles.update(v)
+
         return element_styles
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _color(name):
+    def _color(val):
         """
-            Get the Color instance from colors for a given name
+            Get the Color instance from colors for:
+              a given name (e.g. 'white')
+                or
+              Hex string (e.g. '#FFFFFF')
 
-            @param name: the name
+            @param val: the name or hex string
         """
 
-        if not name:
+        if not val:
             color = None
         else:
-            try:
-                color = object.__getattribute__(colors, name)
-            except AttributeError:
-                color = None
+            if val[:1] == '#':
+                color = HexColor(val)
+            else:
+                try:
+                    color = object.__getattribute__(colors, val)
+                except AttributeError:
+                    color = None
         return color
 
 # END =========================================================================

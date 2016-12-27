@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - Test Roles
 
-    @copyright: 2012 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -88,7 +88,7 @@ def create_role_test_data(orgs, branches):
             else:
                 orgx = org
             #print orgx
-            
+
             # Create Org & get id
             org_string = org_template_string % dict( org = orgx )
             xmltree = etree.ElementTree( etree.fromstring(org_string) )
@@ -114,7 +114,7 @@ def create_role_test_data(orgs, branches):
                                                stylesheet=user_stylesheet)
             user_file = StringIO.StringIO(user_string)
             hr_resource.import_xml(user_file, format="csv", stylesheet=hr_stylesheet)
-            
+
             if branch:
                 # Link Branch to Org
                 org_branch_string = org_branch_template_string % dict( org = org,
@@ -132,7 +132,7 @@ def create_role_test_data(orgs, branches):
                                        stylesheet=user_stylesheet)
     test_user_file = open(os.path.join(test_dir, "test_users.csv"), "rb")
     hr_resource.import_xml(test_user_file, format="csv", stylesheet=hr_stylesheet)
-        
+
     db.commit()
     auth.override = False
 

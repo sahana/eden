@@ -2,7 +2,7 @@
 
 """ S3 Notifications
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,6 +28,7 @@
 """
 
 import datetime
+import json
 import os
 import sys
 import urlparse
@@ -41,29 +42,19 @@ try:
 except:
     from StringIO import StringIO
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import fetch
 
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3utils import s3_truncate, s3_unicode
+from s3utils import S3ModuleDebug, s3_str, s3_truncate, s3_unicode
 
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3NOTIFY: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Notifications(object):
@@ -79,7 +70,7 @@ class S3Notifications(object):
 
         now = datetime.datetime.utcnow()
 
-        _debug("S3Notifications.check_subscriptions(now=%s)" % now)
+        _debug("S3Notifications.check_subscriptions(now=%s)", now)
 
         subscriptions = cls._subscriptions(now)
         if subscriptions:
@@ -108,7 +99,7 @@ class S3Notifications(object):
             @param resource_id: the pr_subscription_resource record ID
         """
 
-        _debug("S3Notifications.notify(resource_id=%s)" % resource_id)
+        _debug("S3Notifications.notify(resource_id=%s)", resource_id)
 
         db = current.db
         s3db = current.s3db
@@ -128,6 +119,7 @@ class S3Notifications(object):
                                                   stable.notify_on,
                                                   stable.method,
                                                   stable.email_format,
+                                                  stable.attachment,
                                                   rtable.id,
                                                   rtable.resource,
                                                   rtable.url,
@@ -204,6 +196,7 @@ class S3Notifications(object):
                            "notify_on": s.notify_on,
                            "method": s.method,
                            "email_format": s.email_format,
+                           "attachment": s.attachment,
                            "resource": r.resource,
                            "last_check_time": last_check_time,
                            "filter_query": query_nice,
@@ -212,7 +205,7 @@ class S3Notifications(object):
                            })
 
         # Send the request
-        _debug("Requesting %s" % page_url)
+        _debug("Requesting %s", page_url)
         req = urllib2.Request(page_url, data=data)
         req.add_header("Content-Type", "application/json")
         success = False
@@ -268,12 +261,13 @@ class S3Notifications(object):
         data = source.read()
         subscription = json.loads(data)
 
-        #_debug("Notify PE #%s by %s on %s of %s since %s" % (
-                    #subscription["pe_id"],
-                    #str(subscription["method"]),
-                    #str(subscription["notify_on"]),
-                    #subscription["resource"],
-                    #subscription["last_check_time"]))
+        #_debug("Notify PE #%s by %s on %s of %s since %s",
+        #       subscription["pe_id"],
+        #       str(subscription["method"]),
+        #       str(subscription["notify_on"]),
+        #       subscription["resource"],
+        #       subscription["last_check_time"],
+        #       )
 
         # Check notification settings
         notify_on = subscription["notify_on"]
@@ -282,10 +276,10 @@ class S3Notifications(object):
             return json_message(message="No notifications configured "
                                         "for this subscription")
 
-        # Authorization (subscriber must be logged in)
-        auth = current.auth
+        # Authorization (pe_id must not be None)
         pe_id = subscription["pe_id"]
-        if not auth.s3_logged_in() or auth.user.pe_id != pe_id:
+
+        if not pe_id:
             r.unauthorised()
 
         # Fields to extract
@@ -304,7 +298,7 @@ class S3Notifications(object):
         if not numrows:
             return json_message(message="No records found")
 
-        #_debug("%s rows:" % numrows)
+        #_debug("%s rows:", numrows)
 
         # Prepare meta-data
         get_config = resource.get_config
@@ -334,7 +328,7 @@ class S3Notifications(object):
                      "last_check_time": last_check_time,
                      "filter_query": filter_query,
                      "total_rows": numrows,
-                    }
+                     }
 
         # Render contents for the message template(s)
         renderer = get_config("notify_renderer")
@@ -355,12 +349,22 @@ class S3Notifications(object):
         subject = get_config("notify_subject")
         if not subject:
             subject = settings.get_msg_notify_subject()
+        if callable(subject):
+            subject = subject(resource, data, meta_data)
 
         from string import Template
         subject = Template(subject).safe_substitute(S="%(systemname)s",
                                                     s="%(systemname_short)s",
                                                     r="%(resource)s")
         subject = subject % meta_data
+
+        # Attachment
+        attachment = subscription.get("attachment", False)
+        document_ids = None
+        if attachment:
+            attachment_fnc = settings.get_msg_notify_attachment()
+            if attachment_fnc:
+                document_ids = attachment_fnc(resource, data, meta_data)
 
         # Helper function to find templates from a priority list
         join = lambda *f: os.path.join(current.request.folder, *f)
@@ -375,7 +379,7 @@ class S3Notifications(object):
             return None
 
         # Render and send the message(s)
-        theme = settings.get_template()
+        themes = settings.get_template()
         prefix = resource.get_config("notify_template", "notify")
 
         send = current.msg.send_by_pe_id
@@ -392,15 +396,20 @@ class S3Notifications(object):
             filenames = ["%s_%s.html" % (prefix, method.lower())]
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
-            if theme != "default":
+            if themes != "default":
                 location = settings.get_template_location()
-                path = join(location, "templates", theme, "views", "msg")
-                template = get_template(path, filenames)
+                if not isinstance(themes, (tuple, list)):
+                    themes = (themes,)
+                for theme in themes[::-1]:
+                    path = join(location, "templates", theme, "views", "msg")
+                    template = get_template(path, filenames)
+                    if template is not None:
+                        break
             if template is None:
                 path = join("views", "msg")
                 template = get_template(path, filenames)
             if template is None:
-                template = StringIO(T("New updates are available."))
+                template = StringIO(s3_str(current.T("New updates are available.")))
 
             # Select contents format
             if method == "EMAIL" and email_format == "html":
@@ -417,15 +426,19 @@ class S3Notifications(object):
                 errors.append(error)
                 continue
 
+            if not message:
+                continue
+
             # Send the message
-            #_debug("Sending message per %s" % method)
+            #_debug("Sending message per %s", method)
             #_debug(message)
             try:
                 sent = send(pe_id,
                             subject=s3_truncate(subject, 78),
                             message=message,
                             contact_method=method,
-                            system_generated=True)
+                            system_generated=True,
+                            document_ids=document_ids)
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
@@ -470,7 +483,6 @@ class S3Notifications(object):
 
         stable = s3db.pr_subscription
         rtable = db.pr_subscription_resource
-        ftable = s3db.pr_filter
 
         # Find all resources with due suscriptions
         query = ((rtable.next_check_time == None) |
@@ -570,7 +582,7 @@ class S3Notifications(object):
                 if created_on_colname:
                     try:
                         created_on = row["_row"][created_on_colname]
-                    except KeyError, AttributeError:
+                    except (KeyError, AttributeError):
                         pass
                     else:
                         if s3_utc(created_on) >= last_check_time:
@@ -604,7 +616,7 @@ class S3Notifications(object):
                 if created_on_colname:
                     try:
                         created_on = row["_row"][created_on_colname]
-                    except KeyError, AttributeError:
+                    except (KeyError, AttributeError):
                         pass
                     else:
                         if s3_utc(created_on) >= last_check_time:

@@ -1,0 +1,4 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Visible,Enabled
+Offices,All Active Offices,org,office,office,Building,{name} (T('Office'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,False,
+Warehouses,All Active Warehouses,inv,warehouse,office,Building,{name} (T('Warehouse'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,False,
+Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,False,False

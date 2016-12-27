@@ -1,41 +1,44 @@
-@import "settings";
-// Import all foundation styles
-// @import "foundation";
+// Foundation by ZURB
+// foundation.zurb.com
+// Licensed under MIT Open Source
 
-// Or selectively include components
-@import
-//   "../../foundation/scss/components/accordion",
-   "../../foundation/scss/components/alert-boxes",
-   "../../foundation/scss/components/block-grid",
-   "../../foundation/scss/components/breadcrumbs",
-   "../../foundation/scss/components/button-groups",
-   "../../foundation/scss/components/buttons",
-   "../../foundation/scss/components/clearing",
-   "../../foundation/scss/components/dropdown",
-   "../../foundation/scss/components/dropdown-buttons",
-//   "../../foundation/scss/components/flex-video",
-   "../../foundation/scss/components/forms",
-   "../../foundation/scss/components/grid",
-//   "../../foundation/scss/components/inline-lists",
-//   "../../foundation/scss/components/joyride",
-//   "../../foundation/scss/components/keystrokes",
-//   "../../foundation/scss/components/labels",
-//   "../../foundation/scss/components/magellan",
-   "../../foundation/scss/components/orbit",
-   "../../foundation/scss/components/pagination",
-//   "../../foundation/scss/components/panels",
-//   "../../foundation/scss/components/pricing-tables",
-//   "../../foundation/scss/components/progress-bars",
-//   "../../foundation/scss/components/reveal",
-//   "../../foundation/scss/components/side-nav",
-//   "../../foundation/scss/components/split-buttons",
-//   "../../foundation/scss/components/sub-nav",
-//   "../../foundation/scss/components/switches",
-   "../../foundation/scss/components/tables",
-   "../../foundation/scss/components/tabs",
-//   "../../foundation/scss/components/thumbs",
-   "../../foundation/scss/components/tooltips",
-   "../../foundation/scss/components/top-bar",
-   "../../foundation/scss/components/type",
-//   "../../foundation/scss/components/offcanvas",
-   "../../foundation/scss/components/visibility";
+@import 'settings';
+
+// Behold, here are all the Foundation components.
+@import '../../foundation/scss/components/grid';
+//@import '../../foundation/scss/components/accordion';
+@import '../../foundation/scss/components/alert-boxes';
+@import '../../foundation/scss/components/block-grid';
+@import '../../foundation/scss/components/breadcrumbs';
+@import '../../foundation/scss/components/button-groups';
+@import '../../foundation/scss/components/buttons';
+@import '../../foundation/scss/components/clearing';
+@import '../../foundation/scss/components/dropdown';
+@import '../../foundation/scss/components/dropdown-buttons';
+//@import '../../foundation/scss/components/flex-video';
+@import '../../foundation/scss/components/forms';
+@import '../../foundation/scss/components/icon-bar';
+//@import '../../foundation/scss/components/inline-lists';
+//@import '../../foundation/scss/components/joyride';
+//@import '../../foundation/scss/components/keystrokes';
+//@import '../../foundation/scss/components/labels';
+//@import '../../foundation/scss/components/magellan';
+@import '../../foundation/scss/components/orbit';
+@import '../../foundation/scss/components/pagination';
+//@import '../../foundation/scss/components/panels';
+//@import '../../foundation/scss/components/pricing-tables';
+//@import '../../foundation/scss/components/progress-bars';
+//@import '../../foundation/scss/components/range-slider';
+//@import '../../foundation/scss/components/reveal';
+//@import '../../foundation/scss/components/side-nav';
+//@import '../../foundation/scss/components/split-buttons';
+//@import '../../foundation/scss/components/sub-nav';
+//@import '../../foundation/scss/components/switches';
+@import '../../foundation/scss/components/tables';
+@import '../../foundation/scss/components/tabs';
+//@import '../../foundation/scss/components/thumbs';
+@import '../../foundation/scss/components/tooltips';
+@import '../../foundation/scss/components/top-bar';
+@import '../../foundation/scss/components/type';
+@import '../../foundation/scss/components/offcanvas';
+@import '../../foundation/scss/components/visibility';

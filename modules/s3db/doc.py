@@ -2,7 +2,7 @@
 
 """ Sahana Eden Document Library
 
-    @copyright: 2011-2015 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,6 +29,7 @@
 
 __all__ = ("S3DocumentLibrary",
            "S3DocSitRepModel",
+           "S3CKEditorModel",
            "doc_image_represent",
            "doc_document_list_layout",
            )
@@ -73,33 +74,39 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
-                               cms_post=T("Post"),
-                               cr_shelter=T("Shelter"),
-                               deploy_mission=T("Mission"),
-                               doc_sitrep=T("Situation Report"),
-                               event_incident=T("Incident"),
-                               event_incident_report=T("Incident Report"),
-                               hms_hospital=T("Hospital"),
-                               hrm_human_resource=T("Human Resource"),
-                               inv_adj=T("Stock Adjustment"),
-                               inv_warehouse=T("Warehouse"),
+        entity_types = Storage(asset_asset = T("Asset"),
+                               cap_resource = T("CAP Resource"),
+                               cms_post = T("Post"),
+                               cr_shelter = T("Shelter"),
+                               deploy_mission = T("Mission"),
+                               doc_sitrep = T("Situation Report"),
+                               dvr_case_activity = T("Case Activity"),
+                               event_event = T("Event"),
+                               event_incident = T("Incident"),
+                               event_incident_report = T("Incident Report"),
+                               fire_station = T("Fire Station"),
+                               hms_hospital = T("Hospital"),
+                               hrm_human_resource = T("Human Resource"),
+                               inv_adj = T("Stock Adjustment"),
+                               inv_warehouse = T("Warehouse"),
                                # @ToDo: Deprecate
-                               irs_ireport=T("Incident Report"),
-                               pr_group=T("Team"),
-                               project_project=T("Project"),
-                               project_activity=T("Project Activity"),
-                               project_framework=T("Project Framework"),
-                               project_task=T("Task"),
-                               org_office=T("Office"),
-                               org_facility=T("Facility"),
-                               org_group=T("Organization Group"),
-                               req_req=T("Request"),
+                               irs_ireport = T("Incident Report"),
+                               police_station = T("Police Station"),
+                               pr_group = T("Team"),
+                               project_project = T("Project"),
+                               project_activity = T("Project Activity"),
+                               project_framework = T("Project Framework"),
+                               project_programme = T("Project Programme"),
+                               project_task = T("Task"),
+                               org_office = T("Office"),
+                               org_facility = T("Facility"),
+                               org_group = T("Organization Group"),
+                               req_req = T("Request"),
                                # @ToDo: Deprecate
-                               stats_people=T("People"),
-                               vulnerability_document=T("Vulnerability Document"),
-                               vulnerability_risk=T("Risk"),
-                               vulnerability_evac_route=T("Evacuation Route"),
+                               #stats_people = T("People"),
+                               vulnerability_document = T("Vulnerability Document"),
+                               vulnerability_risk = T("Risk"),
+                               vulnerability_evac_route = T("Evacuation Route"),
                                )
 
         tablename = "doc_entity"
@@ -125,6 +132,7 @@ class S3DocumentLibrary(S3Model):
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
                            autodelete = True,
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_file_represent,
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
@@ -136,7 +144,7 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            label = T("Name")
                            ),
                      Field("url",
@@ -190,7 +198,8 @@ class S3DocumentLibrary(S3Model):
             msg_list_empty = T("No Documents found")
         )
 
-        # Search Method
+        # Filter Widgets
+        # - define in-template if-required
 
         # Resource Configuration
         if current.deployment_settings.get_base_solr_url():
@@ -249,6 +258,7 @@ class S3DocumentLibrary(S3Model):
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload",
                            autodelete = True,
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
                                         IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
@@ -268,7 +278,7 @@ class S3DocumentLibrary(S3Model):
                      Field("name", length=128,
                            label = T("Name"),
                            # Allow Name to be added onvalidation
-                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
+                           requires = IS_LENGTH(128),
                            ),
                      Field("url",
                            label = T("URL"),
@@ -373,8 +383,6 @@ class S3DocumentLibrary(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -687,6 +695,7 @@ class S3DocSitRepModel(S3Model):
                           self.super_link("doc_id", "doc_entity"),
                           Field("name", length=128,
                                label = T("Name"),
+                               requires = IS_LENGTH(128),
                                ),
                           Field("description", "text",
                                 label = T("Description"),
@@ -763,6 +772,11 @@ class S3DocSitRepModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            event_event = {"link": "event_sitrep",
+                                           "joinby": "sitrep_id",
+                                           "key": "event_id",
+                                           #"actuate": "replace",
+                                           },
                             event_sitrep = {"name": "event_sitrep",
                                             "joinby": "sitrep_id",
                                             },
@@ -809,5 +823,79 @@ class S3DocSitRepModel(S3Model):
 
         return dict(doc_sitrep_id = lambda **attr: dummy("sitrep_id"),
                     )
+
+# =============================================================================
+class S3CKEditorModel(S3Model):
+    """
+        Storage for Images used by CKEditor
+        - and hence the s3_richtext_widget
+
+        Based on https://github.com/timrichardson/web2py_ckeditor4
+    """
+
+    names = ("doc_ckeditor",
+             "doc_filetype",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Images
+        #
+        tablename = "doc_ckeditor"
+        self.define_table(tablename,
+                          Field("title", length=255),
+                          Field("filename", length=255),
+                          Field("flength", "integer"),
+                          Field("mime_type", length=128),
+                          Field("upload", "upload",
+                                #uploadfs = self.settings.uploadfs,
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(maxsize=10485760, # 10 Mb
+                                                      minsize=0)],
+                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict(doc_filetype = self.doc_filetype,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def doc_filetype(filename):
+        """
+            Takes a filename and returns a category based on the file type.
+            Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
+        """
+
+        parts = os.path.splitext(filename)
+        if len(parts) < 2:
+            return "other"
+        else:
+            ext = parts[1][1:].lower()
+            if ext in ("png", "jpg", "jpeg", "gif"):
+                return "image"
+            elif ext in ("avi", "mp4", "m4v", "ogv", "wmv", "mpg", "mpeg"):
+                return "video"
+            elif ext in ("mp3", "m4a", "wav", "ogg", "aiff"):
+                return "audio"
+            elif ext in ("zip", "7z", "tar", "gz", "tgz", "bz2", "rar"):
+                return "archive"
+            elif ext in ("doc", "docx", "dot", "dotx", "rtf"):
+                return "word"
+            elif ext in ("xls", "xlsx", "xlt", "xltx", "csv"):
+                return "excel"
+            elif ext in ("ppt", "pptx"):
+                return "powerpoint"
+            elif ext in ("flv", "swf"):
+                return "flash"
+            elif ext == "pdf":
+                return "pdf"
+            else:
+                return "other"
 
 # END =========================================================================

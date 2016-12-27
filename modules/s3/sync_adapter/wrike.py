@@ -2,7 +2,7 @@
 
 """ S3 Synchronization: Peer Repository Adapter
 
-    @copyright: 2014 (c) Sahana Software Foundation
+    @copyright: 2014-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import json
 import sys
 import urllib, urllib2
 
@@ -35,14 +36,6 @@ try:
 except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 

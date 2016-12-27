@@ -1,0 +1,25 @@
+Name,Title,Body
+RIT,"RIT Online Manual","<div class=""online-documentation"">
+<h3>Missions</h3>
+<ul>
+  <li><a href=""{{name:RDRTMissionsSummary}}"">Navigating Missions</a></li>
+</ul>
+<h3>Alerts</h3>
+<ul>
+  <li><a href=""{{name:RDRTSendAlert}}"">Creating and Sending Alerts</a></li>
+</ul>
+<h3>Responses</h3>
+<ul>
+  <li><a href=""{{name:RDRTResponses}}"">Reviewing Responses to Alerts</a></li>
+  <li><a href=""{{name:RDRTInbox}}"">Managing Messages in the Inbox</a></li>
+</ul>
+<h3>Deployments</h3>
+<ul>
+  <li><a href=""{{name:RDRTDeployMember}}"">Deploying a Member</a></li>
+  <li><a href=""{{name:RDRTUploadAppraisal}}"">Uploading Appraisals</a></li>
+</ul>
+<h3>Roster</h3>
+<ul>
+  <li><a href=""{{name:RDRTMembersSummary}}"">Navigating the Roster</a></li>
+</ul>
+</div>"

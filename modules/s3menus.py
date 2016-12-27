@@ -2,7 +2,7 @@
 
 """ Sahana Eden Menu Structure and Layout
 
-    @copyright: 2011-2015 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -59,6 +59,7 @@ class S3MainMenu(object):
             cls.menu_auth(right=True),
             cls.menu_admin(right=True),
         )
+
         return main_menu
 
     # -------------------------------------------------------------------------
@@ -73,10 +74,9 @@ class S3MainMenu(object):
         menu_modules = []
         all_modules = current.deployment_settings.modules
 
-        # Home always 1st
-        module = all_modules["default"]
-
-        menu_modules.append(MM(module.name_nice, c="default", f="index"))
+        # Home always 1st (commented because redundant/unnecessary)
+        #module = all_modules["default"]
+        #menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
         # Modules to hide due to insufficient permissions
         hidden_modules = current.auth.permission.hidden_modules()
@@ -192,6 +192,7 @@ class S3MainMenu(object):
 
         auth = current.auth
         logged_in = auth.is_logged_in()
+        settings = current.deployment_settings
 
         if not logged_in:
             request = current.request
@@ -201,7 +202,7 @@ class S3MainMenu(object):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = current.deployment_settings.get_security_registration_visible()
+            self_registration = settings.get_security_registration_visible()
             if self_registration == "index":
                 register = MM("Register", c="default", f="index", m="register",
                                vars=dict(_next=login_next),
@@ -211,16 +212,27 @@ class S3MainMenu(object):
                                vars=dict(_next=login_next),
                                check=self_registration)
 
+            if settings.get_auth_password_changes():
+                lost_pw = MM("Lost Password", m="retrieve_password")
+            else:
+                lost_pw = None
+
             menu_auth = MM("Login", c="default", f="user", m="login",
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
-                            MM("Login", m="login",
-                               vars=dict(_next=login_next)),
-                            register,
-                            MM("Lost Password", m="retrieve_password")
-                        )
+                                MM("Login", m="login",
+                                   vars=dict(_next=login_next)),
+                                register,
+                                lost_pw,
+                                )
         else:
             # Logged-in
+
+            if settings.get_auth_password_changes():
+                change_pw = MM("Change Password", m="change_password")
+            else:
+                change_pw = None
+
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
@@ -233,7 +245,7 @@ class S3MainMenu(object):
                             #MM("Subscriptions", c="pr", f="person",
                             #    args="pe_subscription",
                             #    vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Change Password", m="change_password"),
+                            change_pw,
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
                                "id": "rapid_toggle",
@@ -358,6 +370,38 @@ class S3MainMenu(object):
                 )
         return gis_menu
 
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_oauth(cls, **attr):
+        """
+            Menu for authentication with external services
+            - used in default/user controller
+        """
+
+        T = current.T
+        settings = current.deployment_settings
+
+        return MOA(c="default")(
+                MOA("Login with Facebook", f="facebook",
+                    args=["login"],
+                    api = "facebook",
+                    check = lambda item: current.s3db.msg_facebook_login(),
+                    title = T("Login using Facebook account"),
+                    ),
+                MOA("Login with Google", f="google",
+                    args=["login"],
+                    api = "google",
+                    check = lambda item: settings.get_auth_google(),
+                    title = T("Login using Google account"),
+                    ),
+                MOA("Login with Humanitarian.ID", f="humanitarian_id",
+                    args=["login"],
+                    api = "humanitarianid",
+                    check = lambda item: settings.get_auth_humanitarian_id(),
+                    title = T("Login using Humanitarian.ID account"),
+                    ),
+                )
+
 # =============================================================================
 class S3OptionsMenu(object):
     """
@@ -380,7 +424,10 @@ class S3OptionsMenu(object):
 
         try:
             self.menu = getattr(self, name)()
-        except:
+        except AttributeError:
+            if hasattr(self, name):
+                # Error inside the menu function, don't obscure it
+                raise
             self.menu = None
 
     # -------------------------------------------------------------------------
@@ -573,9 +620,6 @@ class S3OptionsMenu(object):
                     M("Templates", f="template")(
                         M("Create", m="create"),
                     ),
-                    M("RSS Channels", c="msg", f="rss_channel")(
-                        M("Create", m="create"),
-                    ),
                     #M("CAP Profile", f="profile")(
                     #    M("Edit profile", f="profile")
                     #)
@@ -629,7 +673,7 @@ class S3OptionsMenu(object):
     def dc():
         """ Data Collection Tool """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="dc")(
                     M("Templates", f="template")(
@@ -670,6 +714,9 @@ class S3OptionsMenu(object):
     def deploy():
         """ Deployments """
 
+        deploy_team = current.deployment_settings.get_deploy_team_label()
+        team_menu = "%(team)s Members" % dict(team=deploy_team)
+
         return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
                         M("Create", m="create"),
@@ -693,13 +740,13 @@ class S3OptionsMenu(object):
                    M("Job Titles",
                      c="deploy", f="job_title"
                    ),
-                   M("Human Resources",
+                   M(team_menu,
                      c="deploy", f="human_resource", m="summary")(
-                        M("Add Deployables",
+                        M("Add Member",
                           c="deploy", f="application", m="select",
                           p="create", t="deploy_application",
                           ),
-                        M("Import Human Resources",
+                        M("Import Members",
                           c="deploy", f="person", m="import"),
                    ),
                   )
@@ -788,9 +835,52 @@ class S3OptionsMenu(object):
     def dvr():
         """ DVR Menu """
 
+        if current.deployment_settings.get_dvr_label(): # == "Beneficiary"
+            return M(c="dvr")(
+                        M("Beneficiaries", f="person")(
+                            M("Create", m="create"),
+                        ),
+                    )
+
         return M(c="dvr")(
-                    M("Cases", f="case")(
+                    M("Cases", f="person")(
                         M("Create", m="create"),
+                        M("Archived Cases", vars={"archived": "1"}),
+                    ),
+                    #M("Activities", f="case_activity")(
+                    #    M("Emergencies", vars = {"~.emergency": "True"}),
+                    #    M("All Activities"),
+                    #    M("Report", m="report"),
+                    #),
+                    M("Case Types", f="case_type")(
+                       M("Create", m="create"),
+                    ),
+                    M("Need Types", f="need")(
+                      M("Create", m="create"),
+                    ),
+                    M("Housing Types", f="housing_type")(
+                      M("Create", m="create"),
+                    ),
+                    M("Income Sources", f="income_source")(
+                      M("Create", m="create"),
+                    ),
+                    M("Beneficiary Types", f="beneficiary_type")(
+                      M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def edu():
+        """ Education Module """
+
+        return M()(
+                    M("Schools", c="edu", f="school")(
+                        M("Create", m="create"),
+                    ),
+                    M("School Types", c="edu", f="school_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
                 )
 
@@ -799,15 +889,22 @@ class S3OptionsMenu(object):
     def event():
         """ EVENT / Event Module """
 
+        if current.deployment_settings.get_event_label(): # == "Disaster"
+            EVENTS = "Disasters"
+            EVENT_TYPES = "Disaster Types"
+        else:
+            EVENTS = "Events"
+            EVENT_TYPES = "Event Types"
+
         return M()(
                     M("Scenarios", c="scenario", f="scenario")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Events", c="event", f="event")(
+                    M(EVENTS, c="event", f="event")(
                         M("Create", m="create"),
                     ),
-                    M("Event Types", c="event", f="event_type")(
+                    M(EVENT_TYPES, c="event", f="event_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
@@ -1376,13 +1473,15 @@ class S3OptionsMenu(object):
     def member():
         """ Membership Management """
 
+        types = lambda i: current.deployment_settings.get_member_membership_types()
+
         return M(c="member")(
                     M("Members", f="membership", m="summary")(
                         M("Create", m="create"),
                         #M("Report", m="report"),
                         M("Import", f="person", m="import"),
                     ),
-                    M("Membership Types", f="membership_type")(
+                    M("Membership Types", f="membership_type", check=types)(
                         M("Create", m="create"),
                         #M("Import", m="import"),
                     ),
@@ -1444,15 +1543,16 @@ class S3OptionsMenu(object):
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )
 
-
     # -------------------------------------------------------------------------
     @staticmethod
     def org():
         """ ORG / Organization Registry """
 
+        settings = current.deployment_settings
         ADMIN = current.session.s3.system_roles.ADMIN
-        SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
+        SECTORS = "Clusters" if settings.get_ui_label_cluster() \
                              else "Sectors"
+        stats = lambda i: settings.has_module("stats")
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
@@ -1468,11 +1568,8 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),
-                    M("Resource Inventory", f="resource")(
-                        M("Create", m="create"),
-                        M("Import", m="import")
-                    ),
-                    M("Resources", f="resource", m="summary")(
+                    M("Resources", f="resource", m="summary",
+                      check=stats)(
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
@@ -1501,7 +1598,7 @@ class S3OptionsMenu(object):
         return M(c="patient")(
                     M("Patients", f="patient")(
                         M("Create", m="create"),
-                    )
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1531,6 +1628,20 @@ class S3OptionsMenu(object):
                     M("Referral Agencies", f="organisation")(
                         M("Create", m="create"),
                     ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def police():
+        """ Police """
+
+        return M(c="police")(
+                    M("Police Stations", f="station")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Station Types", f="station_type")(
+                    #    M("Create", m="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------
@@ -1569,7 +1680,7 @@ class S3OptionsMenu(object):
         """ PROJECT / Project Tracking & Management """
 
         settings = current.deployment_settings
-        #activities = lambda i: settings.get_project_activities()
+        activities = lambda i: settings.get_project_activities()
         activity_types = lambda i: settings.get_project_activity_types()
         community = settings.get_project_community()
         if community:
@@ -1577,6 +1688,7 @@ class S3OptionsMenu(object):
         else:
             IMPORT = "Import Project Locations"
         community_volunteers = lambda i: settings.get_project_community_volunteers()
+        demographics = lambda i: settings.get_project_demographics()
         hazards = lambda i: settings.get_project_hazards()
         #indicators = lambda i: settings.get_project_indicators()
         programmes = lambda i: settings.get_project_programmes()
@@ -1636,6 +1748,10 @@ class S3OptionsMenu(object):
                       m="import", p="create"),
                     M(IMPORT, f="location",
                       m="import", p="create"),
+                    M("Import Activities", f="activity",
+                      m="import", p="create",
+                      check=activities,
+                      ),
                  ),
                  M("Partner Organizations",  f="partners")(
                     M("Create", m="create"),
@@ -1650,7 +1766,7 @@ class S3OptionsMenu(object):
                     M("Create", m="create"),
                  ),
                  M("Demographics", f="demographic",
-                   check=stats)(
+                   check=demographics)(
                     M("Create", m="create"),
                  ),
                  M("Hazards", f="hazard",
@@ -1730,7 +1846,7 @@ class S3OptionsMenu(object):
             if t == "Stock":
                 create_menu = M("Create", m="create", vars={"type": 1})
             elif t == "People":
-                create_menu = M("Create", m="create", vars={"type": 2})
+                create_menu = M("Create", m="create", vars={"type": 3})
             else:
                 create_menu = M("Create", m="create")
         else:
@@ -1825,6 +1941,12 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Import", m="import", restrict=[ADMIN]),
                     ),
+                    M("Border Crossings", f="border_crossing")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        M("Control Points", f="border_control_point"),
+                    ),
                     M("Heliports", f="heliport")(
                         M("Create", m="create"),
                         M("Map", m="map"),
@@ -1893,6 +2015,29 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def work():
+        """ WORK: Simple Volunteer Jobs Management """
+
+        return M(c="work")(
+                    # @todo: my jobs
+                    M("Joblist", f="job", m="datalist"),
+                    M("Jobs", f="job")(
+                        M("Create", m="create"),
+                    ),
+                    M("Assignments", f="assignment")(
+                        M("Create", m="create"),
+                    ),
+                    # Hide until implemented:
+                    #M("Contexts", f="context")(
+                    #    M("Create", m="create"),
+                    #),
+                    M("Job Types", f="job_type")(
+                        M("Create", m="create"),
                     ),
                 )
 

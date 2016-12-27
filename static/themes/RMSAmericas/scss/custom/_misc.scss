@@ -58,7 +58,7 @@
     padding: 0.5rem 0;
     padding-right: 0.5rem;
     font-size: 0.7rem;
-    i.icon {
+    i.icon, i.fa {
         padding-left: 0.2rem;
         padding-right: 0;
     }
@@ -76,7 +76,7 @@ body.rtl {
     .username {
         padding-left: 0.5rem;
         padding-right: 0;
-        i.icon {
+        i.icon, i.fa {
             padding-left: 0;
             padding-right: 0.2rem;
         }

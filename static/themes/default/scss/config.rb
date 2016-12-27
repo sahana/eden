@@ -14,7 +14,7 @@ add_import_path "../../foundation/scss/components"
 
 # Paths:
 http_path = "/"
-css_dir = (environment == :production) ? "../../../styles/foundation/prod" : "../../../styles/foundation"
+css_dir = (environment == :production) ? "../foundation/prod" : "../foundation"
 sass_dir = "."
 images_dir = "images"
 javascripts_dir = "js"

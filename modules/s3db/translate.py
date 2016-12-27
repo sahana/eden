@@ -2,7 +2,7 @@
 
 """ Sahana Eden Translate Model
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -61,6 +61,7 @@ class S3TranslateModel(S3Model):
                            ),
                      Field("file", "upload", notnull=True,
                            label = T("Translated File"),
+                           length = current.MAX_FILENAME_LENGTH,
                            requires = IS_UPLOAD_FILENAME(
                                           extension = "csv",
                                           error_message = T("CSV file required")),

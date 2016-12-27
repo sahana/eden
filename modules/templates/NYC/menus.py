@@ -60,7 +60,7 @@ class S3MainMenu(default.S3MainMenu):
                restrict=[AUTHENTICATED])(
             ),
             MM("Services", c="cms", f="page", vars={"name": "Services"}),
-            MM("News", c="cms", f="newsfeed", args="datalist",
+            MM("News", c="cms", f="newsfeed", m="datalist",
                icon="icon-news",
                restrict=[AUTHENTICATED],
                ),

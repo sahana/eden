@@ -1,0 +1,12 @@
+<div class='row'>
+ <div class='small-12 columns'>
+  <div class='dashboard-title'>
+   {{=H2(title, switch)}}
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div id='{{=dashboard_id}}' class='small-12 columns'>
+  {{try:}}{{=contents}}{{except:}}{{pass}}
+ </div>
+</div>

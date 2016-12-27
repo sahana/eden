@@ -32,6 +32,7 @@
 import collections
 import copy
 import datetime
+import json
 import os
 import re
 import sys
@@ -39,41 +40,36 @@ import time
 import urlparse
 import HTMLParser
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
 
-from s3dal import Expression, Row
+from s3dal import Expression, Row, S3DAL
 from s3datetime import ISOFORMAT, s3_decode_iso_datetime
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3Utils: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
 
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
 
 RCVARS = "rcvars"
+
+class S3ModuleDebug(object):
+    """ Helper class to debug modules """
+
+    @staticmethod
+    def on(msg, *args):
+        print >> sys.stderr, msg % args if args else msg
+
+    off = staticmethod(lambda msg, *args: None)
+
+DEBUG = False
+if DEBUG:
+    print >> sys.stderr, "S3UTILS: DEBUG MODE"
+    _debug = S3ModuleDebug.on
+else:
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 def s3_debug(message, value=None):
@@ -334,28 +330,6 @@ def s3_represent_value(field,
     return text
 
 # =============================================================================
-def s3_set_default_filter(selector, value, tablename=None):
-    """
-        Set a default filter for selector.
-
-        @param selector: the field selector
-        @param value: the value, can be a dict {operator: value},
-                      a list of values, or a single value, or a
-                      callable that returns any of these
-        @param tablename: the tablename
-    """
-
-    s3 = current.response.s3
-
-    filter_defaults = s3
-    for level in ("filter_defaults", tablename):
-        if level not in filter_defaults:
-            filter_defaults[level] = {}
-        filter_defaults = filter_defaults[level]
-    filter_defaults[selector] = value
-    return
-
-# =============================================================================
 def s3_dev_toolbar():
     """
         Developer Toolbar - ported from gluon.Response.toolbar()
@@ -439,7 +413,7 @@ def s3_mark_required(fields,
         mark_required = ()
 
     if label_html is None:
-        # @ToDo: DRY this setting with s3.locationselector.widget2.js
+        # @ToDo: DRY this setting with s3.ui.locationselector.js
         label_html = s3_required_label
 
     labels = dict()
@@ -541,12 +515,13 @@ def s3_truncate(text, length=48, nice=True):
         @param nice: do not truncate words
     """
 
+    # Make sure text is multi-byte-aware before truncating it
     text = s3_unicode(text)
     if len(text) > length:
         if nice:
-            return "%s..." % text[:length].rsplit(" ", 1)[0][:45]
+            return "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
         else:
-            return "%s..." % text[:45]
+            return "%s..." % text[:length-3]
     else:
         return text
 
@@ -566,6 +541,7 @@ def s3_datatable_truncate(string, maxlength=40):
         @note: the JS click-event will be attached by S3.datatables.js
     """
 
+    # Make sure text is multi-byte-aware before truncating it
     string = s3_unicode(string)
     if string and len(string) > maxlength:
         _class = "dt-truncate"
@@ -631,6 +607,33 @@ $(document).on('click','.s3-truncate-less',function(event){
     return
 
 # =============================================================================
+def s3_text_represent(text, truncate=True, lines=5, _class=None):
+    """
+        Representation function for text fields with intelligent
+        truncation and preserving whitespace.
+
+        @param text: the text
+        @param truncate: whether to truncate or not
+        @param lines: maximum number of lines to show
+        @param _class: CSS class to use for truncation (otherwise usign
+                       the text-body class itself)
+    """
+
+    if not text:
+        text = current.messages["NONE"]
+    if _class is None:
+        selector = ".text-body"
+        _class = "text-body"
+    else:
+        selector = ".%s" % _class
+        _class = "text-body %s" % _class
+
+    if truncate:
+        s3_trunk8(selector = selector, lines = lines)
+
+    return DIV(text, _class="text-body")
+
+# =============================================================================
 def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
     """
         Formats the full name of a person
@@ -652,7 +655,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
         if truncate:
             fname = "%s" % s3_truncate(fname, 24)
             mname = "%s" % s3_truncate(mname, 24)
-            lname = "%s" % s3_truncate(lname, 24, nice = False)
+            lname = "%s" % s3_truncate(lname, 24, nice=False)
         name_format = current.deployment_settings.get_pr_name_format()
         name = name_format % dict(first_name=fname,
                                   middle_name=mname,
@@ -660,7 +663,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
                                   )
         name = name.replace("  ", " ").rstrip()
         if truncate:
-            name = s3_truncate(name, 24, nice = False)
+            name = s3_truncate(name, 24, nice=False)
     return name
 
 # =============================================================================
@@ -673,17 +676,19 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         @param truncate: truncate the name to max 24 characters
     """
 
-    db = current.db
-    ptable = db.pr_person
-
     record = None
     query = None
+
     if isinstance(person, (int, long)) or str(person).isdigit():
-        query = (ptable.id == person)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.id == person)
     elif person is not None:
         record = person
     elif pe_id is not None:
-        query = (ptable.pe_id == pe_id)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.pe_id == pe_id)
 
     if not record and query is not None:
         record = db(query).select(ptable.first_name,
@@ -762,6 +767,17 @@ def s3_comments_represent(text, show_link=True):
                  ),
                 )
         return represent
+
+# =============================================================================
+def s3_phone_represent(value):
+    """
+        Ensure that Phone numbers always show as LTR
+        - otherwise + appears at the end which looks wrong even in RTL
+    """
+
+    if not value:
+        return current.messages["NONE"]
+    return "%s%s" % (unichr(8206), s3_unicode(value))
 
 # =============================================================================
 def s3_url_represent(url):
@@ -851,9 +867,9 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
             # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
             import hashlib
             hash = hashlib.md5(email).hexdigest()
-            url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+            url = "//www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
         else:
-            url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
+            url = "//www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
     else:
         url = URL(c="static", f="img", args="blank-user.gif")
 
@@ -959,13 +975,13 @@ def s3_include_debug_css():
 
     settings = current.deployment_settings
     theme = settings.get_theme()
-    location = settings.get_template_location()
+    location = current.response.s3.theme_location
 
-    css_cfg = "%s/%s/templates/%s/css.cfg" % (folder, location, theme)
+    css_cfg = "%s/modules/templates/%s%s/css.cfg" % (folder, location, theme)
     try:
         f = open(css_cfg, "r")
     except:
-        raise HTTP(500, "Theme configuration file missing: %s/templates/%s/css.cfg" % (location, theme))
+        raise HTTP(500, "Theme configuration file missing: modules/templates/%s%s/css.cfg" % (location, theme))
     files = f.readlines()
     files = files[:-1]
     include = ""
@@ -1034,7 +1050,7 @@ def s3_include_ext():
 
     if s3.cdn:
         # For Sites Hosted on the Public Internet, using a CDN may provide better performance
-        PATH = "http://cdn.sencha.com/ext/gpl/3.4.1.1"
+        PATH = "//cdn.sencha.com/ext/gpl/3.4.1.1"
     else:
         PATH = "/%s/static/scripts/ext" % appname
 
@@ -1205,7 +1221,7 @@ def s3_has_foreign_key(field, m2m=True):
         @param field: the field (Field instance)
         @param m2m: also detect many-to-many links
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
@@ -1215,10 +1231,12 @@ def s3_has_foreign_key(field, m2m=True):
     except:
         # Virtual Field
         return False
-    if ftype[:9] == "reference":
+
+    if ftype[:9] == "reference" or \
+       m2m and ftype[:14] == "list:reference" or \
+       current.s3db.virtual_reference(field):
         return True
-    if m2m and ftype[:14] == "list:reference":
-        return True
+
     return False
 
 # =============================================================================
@@ -1231,25 +1249,27 @@ def s3_get_foreign_key(field, m2m=True):
         @param m2m: also detect many-to-many references
 
         @return: tuple (tablename, key, multiple), where tablename is
-                  the name of the referenced table (or None if this field
-                  has no foreign key constraint), key is the field name of
-                  the referenced key, and multiple indicates whether this is
-                  a many-to-many reference (list:reference) or not.
+                 the name of the referenced table (or None if this field
+                 has no foreign key constraint), key is the field name of
+                 the referenced key, and multiple indicates whether this is
+                 a many-to-many reference (list:reference) or not.
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
 
     ftype = str(field.type)
+    multiple = False
     if ftype[:9] == "reference":
         key = ftype[10:]
-        multiple = False
     elif m2m and ftype[:14] == "list:reference":
         key = ftype[15:]
         multiple = True
     else:
-        return (None, None, None)
+        key = current.s3db.virtual_reference(field)
+        if not key:
+            return (None, None, None)
     if "." in key:
         rtablename, key = key.split(".")
     else:
@@ -1265,7 +1285,7 @@ def s3_get_foreign_key(field, m2m=True):
 def s3_unicode(s, encoding="utf-8"):
     """
         Convert an object into an unicode instance, to be used instead of
-        unicode(s) (Note: user data should never be converted into str).
+        unicode(s)
 
         @param s: the object
         @param encoding: the character encoding
@@ -1289,9 +1309,25 @@ def s3_unicode(s, encoding="utf-8"):
     except UnicodeDecodeError:
         if not isinstance(s, Exception):
             raise
-        else:
-            s = " ".join([s3_unicode(arg, encoding) for arg in s])
+        s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
+
+def s3_str(s):
+    """
+        Unicode-safe conversion of an object s into a utf-8 encoded str,
+        to be used instead of str(s)
+
+        @param s: the object
+
+        @note: assumes utf-8, for other character encodings use explicit:
+
+                - s3_unicode(s, encoding=<in>).encode(<out>)
+    """
+
+    if type(s) is str:
+        return s
+    else:
+        return s3_unicode(s).encode("utf-8", "strict")
 
 # =============================================================================
 def s3_flatlist(nested):
@@ -1320,8 +1356,10 @@ def s3_orderby_fields(table, orderby, expr=False):
         return
 
     db = current.db
-    COMMA = db._adapter.COMMA
-    INVERT = db._adapter.INVERT
+
+    adapter = S3DAL()
+    COMMA = adapter.COMMA
+    INVERT = adapter.INVERT
 
     if isinstance(orderby, str):
         items = orderby.split(",")
@@ -1807,6 +1845,9 @@ class S3CustomController(object):
     """
         Base class for custom controllers (template/controllers.py),
         implements common helper functions
+
+        @ToDo: Add Helper Function for dataTables
+        @ToDo: Add Helper Function for dataLists
     """
 
     @classmethod
@@ -1814,13 +1855,19 @@ class S3CustomController(object):
         """
             Use a custom view template
 
-            @param template: the name of template (determines the path)
-            @param filename: the name of the view template file
+            @param template: name of the template (determines the path)
+            @param filename: name of the view template file
         """
 
-        view = os.path.join(current.request.folder,
-                            current.deployment_settings.get_template_location(),
-                            "templates", template, "views", filename)
+        if "." in template:
+            subfolder, template = template.split(".", 1)
+            view = os.path.join(current.request.folder,
+                                current.deployment_settings.get_template_location(),
+                                "templates", subfolder, template, "views", filename)
+        else:
+            view = os.path.join(current.request.folder,
+                                current.deployment_settings.get_template_location(),
+                                "templates", template, "views", filename)
         try:
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")
@@ -2514,6 +2561,38 @@ class S3MultiPath:
                 return True
             else:
                 return False
+
+# =============================================================================
+def s3_fieldmethod(name, f, represent=None):
+    """
+        Helper to attach a representation method to a Field.Method.
+
+        @param name: the field name
+        @param f: the field method
+        @param represent: the representation function
+    """
+
+    from gluon import Field
+
+    if represent is not None:
+
+        class Handler(object):
+            def __init__(self, method, row):
+                self.method=method
+                self.row=row
+            def __call__(self, *args, **kwargs):
+                return self.method(self.row, *args, **kwargs)
+        if hasattr(represent, "bulk"):
+            Handler.represent = represent
+        else:
+            Handler.represent = staticmethod(represent)
+
+        fieldmethod = Field.Method(name, f, handler=Handler)
+
+    else:
+        fieldmethod = Field.Method(name, f)
+
+    return fieldmethod
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):

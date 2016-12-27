@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -22,7 +17,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("Turkey", "default/users", "Turkey/Demo")
+    settings.base.prepopulate += ("Turkey", "default/users", "Turkey/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "Turkey"
@@ -78,10 +73,10 @@ def config(settings):
     settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-        "EUR" : T("Euros"),
-        #"GBP" : T("Great British Pounds"),
-        "TRY" : T("Turkish Lira"),
-        "USD" : T("United States Dollars"),
+        "EUR" : "Euros",
+        #"GBP" : "Great British Pounds",
+        "TRY" : "Turkish Lira",
+        "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "TRY"
 

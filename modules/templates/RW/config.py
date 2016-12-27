@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
-from gluon.html import A, URL, TR, TD
+from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3Represent, S3SQLInlineLink, S3SQLSubFormLayout
+from s3 import s3_fullname, S3Represent, S3SQLInlineLink
 
 def config(settings):
     """ RefugeesWelcome Template """
@@ -22,10 +17,10 @@ def config(settings):
     settings.base.system_name_short = "#RefugeesWelcome"
 
     # PrePopulate data
-    settings.base.prepopulate = ("RW", "default/users")
+    settings.base.prepopulate += ("RW", "default/users")
 
     # Theme (folder to use for views/layout.html)
-    settings.base.theme = "RW"
+    #settings.base.theme = "RW"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -43,7 +38,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    settings.gis.countries = ("DE",)
+    #settings.gis.countries = ("DE",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -51,6 +46,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    # Show Lat/Lon fields in Location Selector
+    settings.gis.latlon_selector = True
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -68,7 +65,7 @@ def config(settings):
        ("tr", "Türkçe"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    settings.L10n.default_language = "de"
+    #settings.L10n.default_language = "de"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
@@ -81,15 +78,17 @@ def config(settings):
     # Uncomment this to Translate Layer Names
     #settings.L10n.translate_gis_layer = True
     # Uncomment this to Translate Location Names
-    #settings.L10n.translate_gis_location = True
+    settings.L10n.translate_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
-    #settings.L10n.translate_org_organisation = True
+    settings.L10n.translate_org_organisation = True
+    # Uncomment this to Translate Site Names
+    settings.L10n.translate_org_site = True
     # Finance settings
-    settings.fin.currencies = {
-       "EUR" : T("Euros"),
-       "GBP" : T("Great British Pounds"),
-       "USD" : T("United States Dollars"),
-    }
+    #settings.fin.currencies = {
+    #   "EUR" : "Euros",
+    #   "GBP" : "Great British Pounds",
+    #   "USD" : "United States Dollars",
+    #}
     settings.fin.currency_default = "EUR"
 
     # Security Policy
@@ -105,12 +104,15 @@ def config(settings):
     #
     settings.security.policy = 7 # Organisation-ACLs
 
+    # Represent user IDs by names rather than email
+    settings.ui.auth_user_represent = "name"
+
     # -------------------------------------------------------------------------
     # Custom icon classes
     settings.ui.custom_icons = {
-        "news": "icon-info",
-        "needs": "icon-list",
-        "organisations": "icon-group",
+        "news": "fa fa-info",
+        "needs": "fa fa-list",
+        "organisations": "fa fa-group",
     }
 
     # -------------------------------------------------------------------------
@@ -137,6 +139,16 @@ def config(settings):
     settings.cms.show_titles = True
 
     # -------------------------------------------------------------------------
+    # Organisations
+    settings.org.tags = True
+    settings.org.service_locations = True
+
+    # -------------------------------------------------------------------------
+    # Human Resources
+    settings.hrm.skill_types = True
+    settings.hrm.org_required = False
+
+    # -------------------------------------------------------------------------
     # Project Module
     settings.project.projects = True
     settings.project.mode_3w = True
@@ -159,6 +171,10 @@ def config(settings):
     settings.req.use_commit = False
     settings.req.ask_transport = True
     settings.req.req_type = ("Stock",)
+
+    # -------------------------------------------------------------------------
+    # Shelters
+    settings.cr.tags = True
 
     # -------------------------------------------------------------------------
     def customise_cms_post_controller(**attr):
@@ -201,23 +217,21 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
-    def customise_org_organisation_resource(r, tablename):
+    def customise_hrm_human_resource_resource(r, tablename):
 
         s3db = current.s3db
-
-        # List fields
-        list_fields = ["name",
-                       "acronym",
-                       "organisation_organisation_type.organisation_type_id",
-                       "website",
-                       "comments",
-                       ]
-
-        s3db.configure("org_organisation",
-                       list_fields = list_fields,
+        # Load Model
+        s3db.hrm_human_resource
+        # Retrieve CRUD fields
+        crud_fields = current.response.s3.hrm.crud_fields
+        crud_fields.append("comments")
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm(*crud_fields)
+        s3db.configure("hrm_human_resource",
+                       crud_form = crud_form,
                        )
 
-    settings.customise_org_organisation_resource = customise_org_organisation_resource
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
@@ -248,7 +262,7 @@ def config(settings):
                         ]
 
         # CRUD Form
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm("project_id",
                                     "name",
                                     "location_id",
@@ -284,7 +298,6 @@ def config(settings):
             S3OptionsFilter("organisation_id",
                             ),
             S3LocationFilter("location_id",
-                             levels = ("L2", "L3", "L4"),
                              ),
             ]
 
@@ -305,7 +318,11 @@ def config(settings):
 
         # "Obsolete" labeled as "inactive"
         field = table.obsolete
-        field.label = T("inactive")
+        field.label = T("Inactive")
+
+        # Show Last Updated field in list view
+        list_fields = s3db.get_config(tablename, "list_fields")
+        list_fields.append((T("Last Updated"), "modified_on"))
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
@@ -317,18 +334,19 @@ def config(settings):
                        S3LocationSelector, \
                        S3MultiSelectWidget, \
                        S3SQLCustomForm, \
-                       S3SQLInlineLink, \
                        S3SQLInlineComponent, \
-                       S3SQLInlineComponentMultiSelectWidget
+                       S3SQLInlineComponentMultiSelectWidget, \
+                       S3SQLVerticalSubFormLayout
 
         s3db = current.s3db
 
         # Filtered component to access phone number and email
-        s3db.add_components("org_organisation",
+        s3db.add_components(tablename,
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
-                                            "filterby": "main_facility",
-                                            "filterfor": True,
+                                            "filterby": {
+                                                "main_facility": True,
+                                                },
                                             },
                             )
 
@@ -344,6 +362,11 @@ def config(settings):
                                        label = T("Type"),
                                        multiple = False,
                                        ),
+                       S3SQLInlineLink(
+                            "service",
+                            label = T("Services"),
+                            field = "service_id",
+                            ),
                        S3SQLInlineComponent(
                             "facility",
                             label = T("Main Facility"),
@@ -353,7 +376,7 @@ def config(settings):
                                       "email",
                                       "location_id",
                                       ],
-                            layout = FacilitySubFormLayout,
+                            layout = S3SQLVerticalSubFormLayout,
                             filterby = {"field": "main_facility",
                                         "options": True,
                                         },
@@ -394,21 +417,29 @@ def config(settings):
                          ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
-                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
+            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                            label = T("Type"),
+                            #hidden = True,
+                            ),
+            S3OptionsFilter("service_organisation.service_id",
+                            #hidden = True,
+                            ),
             ]
 
         list_fields = ["name",
                        (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                       (T("Services"), "service.name"),
                        (T("Adresse"), "main_facility.location_id"),
                        (T("Phone #"), "main_facility.phone1"),
                        (T("Email"), "main_facility.email"),
-                       (T("Facebook"), "main_facility.facebook"),
+                       (T("Facebook"), "facebook.value"),
                        "website",
+                       (T("Last Updated"), "modified_on"),
                        ]
 
-        s3db.configure("org_organisation",
+        s3db.configure(tablename,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
@@ -420,11 +451,12 @@ def config(settings):
     def customise_org_organisation_controller(**attr):
 
         tabs = [(T("Basic Details"), None),
+                (T("Service Locations"), "service_location"),
+                (T("Needs"), "needs"),
                 (T("Facilities"), "facility"),
                 (T("Warehouses"), "warehouse"),
                 (T("Offices"), "office"),
                 (T("Staff & Volunteers"), "human_resource"),
-                (T("Needs"), "needs"),
                 #(T("Assets"), "asset"),
                 #(T("Projects"), "project"),
                 #(T("User Roles"), "roles"),
@@ -437,6 +469,119 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_req_organisation_needs_resource(r, tablename):
+
+        s3db = current.s3db
+        table = current.s3db.req_organisation_needs
+
+        CASH = T("Cash Donations needed")
+
+        if r.tablename == "req_organisation_needs":
+
+            from s3 import IS_ONE_OF, S3DateTime
+
+            # Allow only organisations which do not have a needs record
+            # yet (single component):
+            field = table.organisation_id
+            dbset = current.db(table.id == None)
+            left = table.on(table.organisation_id == current.s3db.org_organisation.id)
+            field.requires = IS_ONE_OF(dbset, "org_organisation.id",
+                                       field.represent,
+                                       left = left,
+                                       orderby = "org_organisation.name",
+                                       sort = True,
+                                       )
+
+            # Format modified_on as date
+            field = table.modified_on
+            field.represent = lambda d: S3DateTime.date_represent(d, utc=True)
+
+        if r.representation in ("html", "aadata", "iframe"):
+
+            # Structured lists for interactive views
+            from gluon import Field
+            table.needs_skills = Field.Method(lambda row: \
+                                    organisation_needs(row, need_type="skills"))
+            table.needs_items = Field.Method(lambda row: \
+                                    organisation_needs(row, need_type="items"))
+            current.response.s3.stylesheets.append("../themes/RW/needs.css")
+
+            needs_skills = (T("Volunteers needed"), "needs_skills")
+            needs_items = (T("Supplies needed"), "needs_items")
+
+            # Filter widgets
+            from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+            filter_widgets = [#S3TextFilter(["organisation_id$name",
+                              #              ],
+                              #              label = T("Search"),
+                              #             ),
+                              S3OptionsFilter("organisation_id"),
+                              S3OptionsFilter("organisation_needs_skill.skill_id",
+                                              label = T("Skills sought"),
+                                              ),
+                              S3OptionsFilter("organisation_needs_item.item_id",
+                                              label = T("Supplies sought"),
+                                              ),
+                              S3LocationFilter("organisation_id$active_service_location.site_id$location_id",
+                                               ),
+                              ]
+
+            # CRUD form
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+            crud_form = S3SQLCustomForm(
+                            "organisation_id",
+                            S3SQLInlineComponent("organisation_needs_skill",
+                                                label = T("Volunteers needed"),
+                                                fields = ["skill_id",
+                                                        "demand",
+                                                        "comments",
+                                                        ],
+                                                ),
+                            S3SQLInlineComponent("organisation_needs_item",
+                                                label = T("Supplies needed"),
+                                                fields = ["item_id",
+                                                        "demand",
+                                                        "comments",
+                                                        ],
+                                                ),
+                            (CASH, "money"),
+                            "money_details",
+                            #"vol",
+                            #"vol_details",
+                            )
+
+            next_page = r.url(method="") \
+                        if r.tablename == "req_organisation_needs" else None
+
+            s3db.configure("req_organisation_needs",
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           create_next = next_page,
+                           update_next = next_page,
+                           )
+        else:
+            # Simple fields for exports
+            needs_skills = (T("Volunteers needed"),
+                            "organisation_needs_skill.skill_id")
+            needs_items = (T("Supplies needed"),
+                           "organisation_needs_item.item_id")
+
+        # List fields (all formats)
+        list_fields = ["organisation_id",
+                       needs_skills,
+                       needs_items,
+                       (CASH, "money"),
+                       (T("Cash Donation Details"), "money_details"),
+                       (T("Last Update"), "modified_on"),
+                       ]
+
+        s3db.configure("req_organisation_needs",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_req_organisation_needs_resource = customise_req_organisation_needs_resource
+
+    # -------------------------------------------------------------------------
     def customise_req_site_needs_resource(r, tablename):
 
         if r.tablename == "req_site_needs":
@@ -445,8 +590,32 @@ def config(settings):
             field.label = current.T("Facility")
             field.readable = field.writable = True
 
-            # @todo: allow only facilities which do not have a req_site_needs yet
-            # @todo: if there aren't any, set insertable=False
+            # Allow only facilities which do not have a req_site_needs
+            # yet (single component), and filter out obsolete facilities
+            from s3 import IS_ONE_OF, FS
+            dbset = current.db(table.id == None)
+            left = table.on(table.site_id == current.s3db.org_site.id)
+            field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+                                       field.represent,
+                                       left = left,
+                                       not_filterby = "obsolete",
+                                       not_filter_opts = (True,),
+                                       orderby = "org_site.name",
+                                       sort = True,
+                                       )
+            if not r.record:
+                query = FS("site_id$obsolete") != True
+                r.resource.add_filter(query)
+
+            # Allow adding of facilities in popup
+            from s3layouts import S3PopupLink
+            field.comment = S3PopupLink(c = "org",
+                                        f = "facility",
+                                        vars = {"child": "site_id",
+                                                "parent": "site_needs",
+                                                },
+                                        title = T("Add New Facility"),
+                                        )
 
         # Filters
         from s3 import S3LocationFilter, S3TextFilter
@@ -610,12 +779,12 @@ def config(settings):
            restricted = True,
            module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 10
+        )),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",
@@ -640,11 +809,11 @@ def config(settings):
            restricted = True,
            module_type = 10,
         )),
-        #("transport", Storage(
-        #   name_nice = T("Transport"),
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("transport", Storage(
+           name_nice = T("Transport"),
+           restricted = True,
+           module_type = 10,
+        )),
         ("stats", Storage(
            name_nice = T("Statistics"),
            #description = "Manages statistics",
@@ -654,63 +823,66 @@ def config(settings):
     ])
 
 # =============================================================================
-class FacilitySubFormLayout(S3SQLSubFormLayout):
+demand_options = {1: "Low Demand",
+                  2: "Moderate Demand",
+                  3: "High Demand",
+                  4: "Urgently needed",
+                  }
+
+# =============================================================================
+def organisation_needs(row, need_type=None):
     """
-        Custom layout for facility inline-component in org/organisation
+        Field.Method to render structured organisation needs (list views)
 
-        - allows embedding of multiple fields besides the location selector
-        - renders an vertical layout for edit-rows
-        - standard horizontal layout for read-rows
-        - hiding header row if there are no visible read-rows
+        @param row: the row (passed from Field.Method)
+        @param need_type: the need type (skills|items)
     """
 
-    # -------------------------------------------------------------------------
-    def headers(self, data, readonly=False):
-        """
-            Header-row layout: same as default, but non-static (i.e. hiding
-            if there are no visible read-rows, because edit-rows have their
-            own labels)
-        """
+    NONE = current.messages["NONE"]
 
-        headers = super(FacilitySubFormLayout, self).headers
+    try:
+        needs = getattr(row, "req_organisation_needs")
+    except AttributeError:
+        return NONE
+    needs_id = needs.id
 
-        header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr');
-        if hasattr(element, "remove_class"):
-            element.remove_class("static")
-        return header_row
+    s3db = current.s3db
+    if need_type == "skills":
+        ltable = s3db.req_organisation_needs_skill
+        stable = s3db.hrm_skill
+        left = stable.on(stable.id == ltable.skill_id)
+    elif need_type == "items":
+        ltable = s3db.req_organisation_needs_item
+        stable = s3db.supply_item
+        left = stable.on(stable.id == ltable.item_id)
 
-    # -------------------------------------------------------------------------
-    def rowstyle_read(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform read-rows, same as standard
-            horizontal layout.
-        """
+    query = (ltable.organisation_needs_id == needs_id)
+    rows = current.db(query).select(ltable.demand,
+                                    stable.name,
+                                    left = left,
+                                    )
+    if not rows:
+        return NONE
 
-        rowstyle = super(FacilitySubFormLayout, self).rowstyle
-        return rowstyle(form, fields, *args, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def rowstyle(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform edit-rows, using a vertical
-            formstyle because multiple fields combined with
-            location-selector are too complex for horizontal
-            layout.
-        """
-
-        # Use standard foundation formstyle
-        from s3theme import formstyle_foundation as formstyle
-        if args:
-            col_id = form
-            label = fields
-            widget, comment = args
-            hidden = kwargs.get("hidden", False)
-            return formstyle(col_id, label, widget, comment, hidden)
+    needs = {}
+    dfield = str(ltable.demand)
+    nfield = str(stable.name)
+    for row in rows:
+        demand = row[dfield]
+        if demand not in needs:
+            needs[demand] = [row[nfield]]
         else:
-            parent = TD(_colspan = len(fields))
-            for col_id, label, widget, comment in fields:
-                parent.append(formstyle(col_id, label, widget, comment))
-            return TR(parent)
+            needs[demand].append(row[nfield])
+
+    T = current.T
+    output = DIV(_class="org-needs")
+    for demand in (4, 3, 2, 1):
+        if demand not in needs:
+            continue
+        title = "%s:" % T(demand_options[demand])
+        items = UL([LI(T(need))
+                    for need in needs[demand] if need is not None])
+        output.append(TAG[""](title, items))
+    return output
 
 # END =========================================================================

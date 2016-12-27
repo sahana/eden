@@ -1,0 +1,35 @@
+/* Project Outreach */
+.po-summary {
+    display: table;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #a0a0a0;
+}
+.po-summary-info {
+    display: table-row;
+}
+.po-summary-info label,
+.po-summary-info > span {
+    display: table-cell;
+    font-size: 0.9rem;
+    padding-right: 0.8rem;
+}
+.po-summary-info label {
+    font-weight: bold;
+}
+
+/* These form rows will only be revealed when follow-up checkbox is checked */
+#po_household_sub_defaultcontact__row,
+#po_household_sub_defaultcontact__row1,
+#po_household_sub_household_social_language__row,
+#po_household_sub_household_social_language__row1,
+#po_household_sub_household_social_community__row,
+#po_household_sub_household_social_community__row1,
+#po_household_sub_household_dwelling_dwelling_type__row,
+#po_household_sub_household_dwelling_dwelling_type__row1,
+#po_household_sub_household_dwelling_type_of_use__row,
+#po_household_sub_household_dwelling_type_of_use__row1,
+#po_household_sub_household_dwelling_repair_status__row,
+#po_household_sub_household_dwelling_repair_status__row1 {
+    display: none;
+}

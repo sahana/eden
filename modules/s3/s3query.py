@@ -2,7 +2,7 @@
 
 """ S3 Query Construction
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -40,7 +40,7 @@ import datetime
 import re
 import sys
 
-from gluon import current
+from gluon import current, IS_EMPTY_OR, IS_IN_SET
 from gluon.storage import Storage
 
 from s3dal import Field, Row
@@ -223,7 +223,8 @@ class S3FieldSelector(object):
             try:
                 value = value()
             except:
-                current.log.error(sys.exc_info()[1])
+                t, m = sys.exc_info()[:2]
+                current.log.error("%s.%s: %s" % (tname, fname, str(m) or t.__name__))
                 value = None
 
         if hasattr(field, "expr"):
@@ -333,9 +334,10 @@ class S3FieldPath(object):
 
         # Initialize
         self.original = None
-        self.tname = table._tablename
+        tname = self.tname = table._tablename
         self.fname = None
         self.field = None
+        self.method = None
         self.ftype = None
         self.virtual = False
         self.colname = None
@@ -396,22 +398,25 @@ class S3FieldPath(object):
             # End of the expression
             if self.ftype != "context":
                 # Expression is resolved, head is a field name:
-                self.field = self._resolve_field(table, head)
-                if not self.field:
+                field, method = self._resolve_field(table, head)
+                if not field:
                     self.virtual = True
+                    self.field = None
+                    self.method = method
                     self.ftype = "virtual"
                 else:
                     self.virtual = False
-                    self.ftype = str(self.field.type)
+                    self.field = field
+                    self.method = None
+                    self.ftype = str(field.type)
                 self.fname = head
-                self.colname = "%s.%s" % (self.tname, self.fname)
-
+                self.colname = "%s.%s" % (tname, head)
         else:
-
             # Read field data from tail
             self.tname = tail.tname
             self.fname = tail.fname
             self.field = tail.field
+            self.method = tail.method
             self.ftype = tail.ftype
             self.virtual = tail.virtual
             self.colname = tail.colname
@@ -431,18 +436,28 @@ class S3FieldPath(object):
             @param table: the Table
             @param fieldname: the field name
 
-            @return: the Field
+            @return: tuple (Field, Field.Method)
         """
+
+        method = None
 
         if fieldname == "uid":
             fieldname = current.xml.UID
+
         if fieldname == "id":
             field = table._id
         elif fieldname in table.fields:
             field = ogetattr(table, fieldname)
         else:
+            # Virtual Field
             field = None
-        return field
+            try:
+                method = ogetattr(table, fieldname)
+            except AttributeError:
+                # not yet defined, skip
+                pass
+
+        return field, method
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -670,6 +685,13 @@ class S3ResourceField(object):
         elif self.colname:
             self.virtual = True
             self.ftype = "virtual"
+            # Check whether the fieldmethod handler has a
+            # representation method (s3_fieldmethod)
+            method = lf.method
+            if hasattr(method, "handler"):
+                handler = method.handler
+                if hasattr(handler, "represent"):
+                    self.represent = handler.represent
         else:
             self.ftype = "context"
 
@@ -695,6 +717,14 @@ class S3ResourceField(object):
 
         self.label = label
         self.show = True
+
+        # Field type category flags
+        self._is_numeric = None
+        self._is_lookup = None
+        self._is_string = None
+        self._is_datetime = None
+        self._is_reference = None
+        self._is_list = None
 
     # -------------------------------------------------------------------------
     def __repr__(self):
@@ -795,6 +825,123 @@ class S3ResourceField(object):
         else:
             return value
 
+    # -------------------------------------------------------------------------
+    @property
+    def is_lookup(self):
+        """
+            Check whether the field type is a fixed set lookup (IS_IN_SET)
+
+            @return: True if field type is a fixed set lookup, else False
+        """
+
+        is_lookup = self._is_lookup
+        if is_lookup is None:
+
+            is_lookup = False
+
+            ftype = self.ftype
+            field = self.field
+
+            if field:
+                requires = field.requires
+                if requires:
+                    if not isinstance(requires, (list, tuple)):
+                        requires = [requires]
+                    requires = requires[0]
+                    if isinstance(requires, IS_EMPTY_OR):
+                        requires = requires.other
+                    if isinstance(requires, IS_IN_SET):
+                        is_lookup = True
+                if is_lookup and requires and self.ftype == "integer":
+                    # Discrete numeric values?
+                    options = requires.options(zero=False)
+                    if all(k == v for k, v in options):
+                        is_lookup = False
+            self._is_lookup = is_lookup
+        return is_lookup
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_numeric(self):
+        """
+            Check whether the field type is numeric (lazy property)
+
+            @return: True if field type is integer or double, else False
+        """
+
+        is_numeric = self._is_numeric
+        if is_numeric is None:
+
+            ftype = self.ftype
+            field = self.field
+
+            if ftype == "integer" and self.is_lookup:
+                is_numeric = False
+            else:
+                is_numeric = ftype in ("integer", "double")
+            self._is_numeric = is_numeric
+        return is_numeric
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_string(self):
+        """
+            Check whether the field type is a string type (lazy property)
+
+            @return: True if field type is string or text, else False
+        """
+
+        is_string = self._is_string
+        if is_string is None:
+            is_string = self.ftype in ("string", "text")
+            self._is_string = is_string
+        return is_string
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_datetime(self):
+        """
+            Check whether the field type is date/time (lazy property)
+
+            @return: True if field type is datetime, date or time, else False
+        """
+
+        is_datetime = self._is_datetime
+        if is_datetime is None:
+            is_datetime = self.ftype in ("datetime", "date", "time")
+            self._is_datetime = is_datetime
+        return is_datetime
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_reference(self):
+        """
+            Check whether the field type is a reference (lazy property)
+
+            @return: True if field type is a reference, else False
+        """
+
+        is_reference = self._is_reference
+        if is_reference is None:
+            is_reference = self.ftype[:9] == "reference"
+            self._is_reference = is_reference
+        return is_reference
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_list(self):
+        """
+            Check whether the field type is a list (lazy property)
+
+            @return: True if field type is a list, else False
+        """
+
+        is_list = self._is_list
+        if is_list is None:
+            is_list = self.ftype[:5] == "list:"
+            self._is_list = is_list
+        return is_list
+
 # =============================================================================
 class S3Joins(object):
     """ A collection of joins """
@@ -857,6 +1004,15 @@ class S3Joins(object):
                     joins_dict[tname] = [join]
         self.tables.add(tablename)
         return
+
+    # -------------------------------------------------------------------------
+    def __len__(self):
+        """
+            Return the number of tables in the join, for boolean
+            test of this instance ("if joins:")
+        """
+
+        return len(self.tables)
 
     # -------------------------------------------------------------------------
     def keys(self):
@@ -2023,7 +2179,10 @@ class S3URLQuery(object):
 
         for key, value in vars.iteritems():
 
-            if key == "$filter":
+            if not key:
+                continue
+
+            elif key == "$filter":
                 # Instantiate the advanced filter parser
                 parser = S3URLQueryParser()
                 if parser.parser is None:
@@ -2050,7 +2209,8 @@ class S3URLQuery(object):
                 # Stop here
                 continue
 
-            elif not("." in key or key[0] == "(" and ")" in key):
+            elif key[0] == "_" or \
+                 not("." in key or key[0] == "(" and ")" in key):
                 # Not a filter expression
                 continue
 
@@ -2208,16 +2368,29 @@ class S3URLQuery(object):
 
         v = cls.parse_value(value)
 
+        # Auto-lowercase, escape, and replace wildcards
+        like = lambda s: s3_unicode(s).lower() \
+                                      .replace("%", "\\%") \
+                                      .replace("_", "\\_") \
+                                      .replace("?", "_") \
+                                      .replace("*", "%") \
+                                      .encode("utf-8")
+
         q = None
+
+        # Don't repeat LIKE-escaping for multiple selectors
+        escaped = False
+
         for fs in selectors:
 
             if op == S3ResourceQuery.LIKE:
-                # Auto-lowercase and replace wildcard
                 f = S3FieldSelector(fs).lower()
-                if isinstance(v, basestring):
-                    v = v.replace("*", "%").lower()
-                elif isinstance(v, list):
-                    v = [x.replace("*", "%").lower() for x in v if x is not None]
+                if not escaped:
+                    if isinstance(v, basestring):
+                        v = like(v)
+                    elif isinstance(v, list):
+                        v = [like(s) for s in v if s is not None]
+                    escaped = True
             else:
                 f = S3FieldSelector(fs)
 
@@ -2296,7 +2469,7 @@ class S3AIRegex(object):
 
         string = cls.translate(r)
         if string:
-            return l.lower().regexp("^%s$" % string.replace("%", ".*"))
+            return l.lower().regexp("^%s$" % string)
         else:
             return l.like(r)
 
@@ -2319,18 +2492,40 @@ class S3AIRegex(object):
 
         GROUPS = cls.GROUPS
         ESCAPE = cls.ESCAPE
+
+        escaped = False
         for character in s3_unicode(string).lower():
 
-            if character in ESCAPE:
-                result = "\%s" % character
-            else:
-                result = character
-                for group in GROUPS:
-                    if character in group:
-                        match = True
-                        result = "[%s%s]{1}" % (group, group.upper())
-                        break
+            result = None
+
+            # Translate any unescaped wildcard characters
+            if not escaped:
+                if character == "\\":
+                    escaped = True
+                    continue
+                elif character == "%":
+                    result = ".*"
+                elif character == "_":
+                    result = "."
+
+            if result is None:
+                if character in ESCAPE:
+                    result = "\\%s" % character
+                else:
+                    result = character
+                    for group in GROUPS:
+                        if character in group:
+                            match = True
+                            result = "[%s%s]{1}" % (group, group.upper())
+                            break
+
+            # Don't swallow backslashes that do not escape wildcards
+            if escaped and character not in ("%", "_"):
+                result = "\\%s" % result
+
+            escaped = False
             append(result)
+
         return "".join(output) if match else None
 
 # =============================================================================

@@ -23,10 +23,13 @@ def download():
         session.error("Need to specify the file to download!")
         redirect(URL(f="index"))
 
-    # Load the Model
+    # Check Permissions
     tablename = filename.split(".", 1)[0]
     if "_" in tablename:
+        # Load the Model
         table = s3db.table(tablename)
+        if table and not auth.s3_has_permission("read", tablename):
+            auth.permission.fail()
 
     return response.download(request, db)
 
@@ -68,6 +71,8 @@ def index():
     auth.settings.register_onvalidation = register_validation
     auth.configure_user_fields()
 
+    current.menu.oauth = S3MainMenu.menu_oauth()
+
     page = None
     if len(request.args):
         # Use the first non-numeric argument as page name
@@ -79,56 +84,66 @@ def index():
                 break
 
     custom = None
+    templates = settings.get_template()
     if page:
         # Go to a custom page,
         # - args[0] = name of the class in /modules/templates/<template>/controllers.py
         # - other args & vars passed through
-        template = settings.get_template()
-        location = settings.get_template_location()
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname, location, template)
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, continue with the default
-            page = "%s/templates/%s/controllers.py" % (location, template)
-            current.log.warning("File not loadable",
-                                "%s, %s" % (page, sys.exc_info()[1]))
-        else:
-            if hasattr(custom, page):
-                controller = getattr(custom, page)()
-            elif page != "login":
-                raise(HTTP(404, "Function not found: %s()" % page))
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname, template_location, template)
+            name = "controllers"
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, continue with the default
+                #page = "%s/templates/%s/controllers.py" % (location, template)
+                #current.log.warning("File not loadable",
+                #                    "%s, %s" % (page, sys.exc_info()[1]))
+                continue
             else:
-                controller = custom.index()
-            output = controller()
-            return output
-
-    elif settings.get_template() != "default":
-        # Try a Custom Homepage
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname,
-                     settings.get_template_location(),
-                     settings.get_template())
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, continue with the default
-            # @ToDo: cache this result in session
-            import sys
-            current.log.warning("Custom homepage cannot be loaded",
-                                sys.exc_info()[1])
-        else:
-            if hasattr(custom, "index"):
-                output = custom.index()()
+                if hasattr(custom, page):
+                    controller = getattr(custom, page)()
+                elif page != "login":
+                    raise(HTTP(404, "Function not found: %s()" % page))
+                else:
+                    controller = custom.index()
+                output = controller()
                 return output
+
+    elif templates != "default":
+        # Try a Custom Homepage
+        name = "controllers"
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname,
+                         template_location,
+                         template)
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, continue with the next option, or default
+                # @ToDo: cache this result in session
+                #import sys
+                #current.log.warning("Custom homepage cannot be loaded",
+                                    #sys.exc_info()[1])
+                continue
+            else:
+                if hasattr(custom, "index"):
+                    output = custom.index()()
+                    return output
 
     # Default Homepage
     title = settings.get_system_name()
     response.title = title
 
+    # CMS Contents for homepage
     item = ""
     has_module = settings.has_module
     if has_module("cms"):
@@ -138,116 +153,128 @@ def index():
                 ((ltable.resource == None) | (ltable.resource == "index")) & \
                 (ltable.post_id == table.id) & \
                 (table.deleted != True)
-        item = db(query).select(table.body,
-                                limitby=(0, 1)).first()
+        item = db(query).select(table.body, limitby=(0, 1)).first()
         if item:
             item = DIV(XML(item.body))
         else:
             item = ""
 
-    if has_module("cr"):
-        table = s3db.cr_shelter
-        SHELTERS = s3.crud_strings["cr_shelter"].title_list
-    else:
-        SHELTERS = ""
-
     # Menu boxes
     from s3layouts import S3HomepageMenuLayout as HM
 
-    sit_dec_res_box = HM(_class="fleft swidth", arrows=True)(
-        HM("Situation")(
-            HM("Staff", c="hrm", f="staff", t="hrm_human_resource"),
-            HM("Volunteers", c="vol", f="volunteer", t="hrm_human_resource"),
-            HM("Incidents", c="event", f="incident_report"),
-            HM("Assessments", c="survey", f="series"),
-            HM("Assets", c="asset", f="asset"),
-            HM("Inventory Items", c="inv", f="inv_item"),
-        ),
-        HM("Decision")(
-            #HM("Gap Map", c="project", f="gap_map"),
-            #HM("Gap Report", c="project", f="gap_report"),
-            HM("Requests", c="req", f="req"),
-        ),
-        HM("Response")(
-            HM("Projects", c="project", f="project"),
-            HM("Commitments", c="req", f="commit"),
-            HM("Sent Shipments", c="inv", f="send"),
-            HM("Received Shipments", c="inv", f="recv"),
-        ),
+    sit_menu = HM("Situation Awareness")(
+        HM("Map", c="gis", f="index", icon="map-marker"),
+        HM("Incidents", c="event", f="incident_report", icon="incident"),
+        HM("Alerts", c="cap", f="alert", icon="alert"),
+        HM("Assessments", c="survey", f="series", icon="assessment"),
+    )
+    org_menu = HM("Who is doing What and Where")(
+        HM("Organisations", c="org", f="organisation", icon="organisation"),
+        HM("Facilities", c="org", f="facility", icon="facility"),
+        HM("Activities", c="project", f="activity", icon="activity"),
+        HM("Projects", c="project", f="project", icon="project"),
+    )
+    res_menu = HM("Manage Resources")(
+        HM("Staff", c="hrm", f="staff", t="hrm_human_resource", icon="staff"),
+        HM("Volunteers", c="vol", f="volunteer", t="hrm_human_resource", icon="volunteer"),
+        HM("Relief Goods", c="inv", f="inv_item", icon="goods"),
+        HM("Assets", c="asset", f="asset", icon="asset"),
+    )
+    aid_menu = HM("Manage Aid")(
+        HM("Requests", c="req", f="req", icon="request"),
+        HM("Commitments", c="req", f="commit", icon="commit"),
+        HM("Sent Shipments", c="inv", f="send", icon="shipment"),
+        HM("Received Shipments", c="inv", f="recv", icon="delivery"),
     )
 
-    facility_box = HM("Facilities", _id="facility_box")(
-        HM("Facilities", c="org", f="facility"),
-        HM("Hospitals", c="hms", f="hospital"),
-        HM("Offices", c="org", f="office"),
-        HM(SHELTERS, c="cr", f="shelter"),
-        HM("Warehouses", c="inv", f="warehouse"),
-        HM("Map", c="gis", f="index",
-           icon="/%s/static/img/map_icon_128.png" % appname,
-           ),
-    )
+    # @todo: re-integrate or deprecate (?)
+    #if has_module("cr"):
+    #    table = s3db.cr_shelter
+    #    SHELTERS = s3.crud_strings["cr_shelter"].title_list
+    #else:
+    #    SHELTERS = ""
+    #facility_box = HM("Facilities", _id="facility_box")(
+    #    HM("Facilities", c="org", f="facility"),
+    #    HM("Hospitals", c="hms", f="hospital"),
+    #    HM("Offices", c="org", f="office"),
+    #    HM(SHELTERS, c="cr", f="shelter"),
+    #    HM("Warehouses", c="inv", f="warehouse"),
+    #    HM("Map", c="gis", f="index",
+    #       icon="/%s/static/img/map_icon_128.png" % appname,
+    #       ),
+    #)
 
     # Check logged in AND permissions
     roles = session.s3.roles
     table = s3db.org_organisation
     has_permission = auth.s3_has_permission
-    if AUTHENTICATED in roles and \
-       has_permission("read", table):
+    if AUTHENTICATED in roles and has_permission("read", table):
+
         org_items = organisation()
         datatable_ajax_source = "/%s/default/organisation.aadata" % appname
+
+        # List of Organisations
+        if has_permission("create", table):
+            create = A(T("Create Organization"),
+                       _href = URL(c = "org",
+                                   f = "organisation",
+                                   args = ["create"],
+                                   ),
+                       _id = "add-org-btn",
+                       _class = "action-btn",
+                       )
+        else:
+            create = ""
+        org_box = DIV(create,
+                      H3(T("Organizations")),
+                      org_items,
+                      _id = "org-box",
+                      _class = "menu-box"
+                      )
+
         s3.actions = None
         response.view = "default/index.html"
+
+        # Quick Access Box for Sites
         permission = auth.permission
         permission.controller = "org"
         permission.function = "site"
         permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
+
         if permitted_facilities:
             facilities = s3db.org_SiteRepresent().bulk(permitted_facilities,
-                                                       include_blank=False)
+                                                       include_blank=False,
+                                                       )
             facility_list = [(fac, facilities[fac]) for fac in facilities]
             facility_list = sorted(facility_list, key=lambda fac: fac[1])
             facility_opts = [OPTION(fac[1], _value=fac[0])
                              for fac in facility_list]
+
             manage_facility_box = DIV(H3(T("Manage Your Facilities")),
-                                      SELECT(_id = "manage_facility_select",
-                                             _style = "max-width:360px",
+                                      SELECT(_id = "manage-facility-select",
                                              *facility_opts
                                              ),
                                       A(T("Go"),
                                         _href = URL(c="default", f="site",
-                                                    args=[facility_list[0][0]]),
-                                        #_disabled = "disabled",
-                                        _id = "manage_facility_btn",
+                                                    args=[facility_list[0][0]],
+                                                    ),
+                                        _id = "manage-facility-btn",
                                         _class = "action-btn"
                                         ),
-                                      _id = "manage_facility_box",
-                                      _class = "menu_box fleft"
+                                      _id = "manage-facility-box",
+                                      _class = "menu-box"
                                       )
-            s3.jquery_ready.append(
-'''$('#manage_facility_select').change(function(){
- $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))})
-$('#manage_facility_btn').click(function(){
-if ( ($('#manage_facility_btn').attr('href').toString())===S3.Ap.concat('/default/site/None') )
-{$("#manage_facility_box").append("<div class='alert alert-error'>%s</div>")
+
+            s3.jquery_ready.append('''$('#manage-facility-select').change(function(){
+ $('#manage-facility-btn').attr('href',S3.Ap.concat('/default/site/',$('#manage-facility-select').val()))})
+$('#manage-facility-btn').click(function(){
+if (($('#manage-facility-btn').attr('href').toString())===S3.Ap.concat('/default/site/None'))
+{$("#manage-facility-box").append("<div class='alert alert-error'>%s</div>")
 return false}})''' % (T("Please Select a Facility")))
+
         else:
             manage_facility_box = ""
 
-        if has_permission("create", table):
-            create = A(T("Create Organization"),
-                       _href = URL(c="org", f="organisation",
-                                   args=["create"]),
-                       _id = "add-btn",
-                       _class = "action-btn",
-                       _style = "margin-right: 10px;")
-        else:
-            create = ""
-        org_box = DIV(H3(T("Organizations")),
-                      create,
-                      org_items,
-                      _id = "org_box",
-                      _class = "menu_box fleft"
-                      )
     else:
         datatable_ajax_source = ""
         manage_facility_box = ""
@@ -304,20 +331,18 @@ $('#login-btn').click(function(){
 })''' % post_script
             s3.jquery_ready.append(register_script)
 
-    if settings.frontpage.rss:
-        s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
-        s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
-        s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
-        counter = 0
-        feeds = ""
-        for feed in settings.frontpage.rss:
-            counter += 1
-            feeds = "".join((feeds,
-                             "{title:'%s',\n" % feed["title"],
-                             "url:'%s'}" % feed["url"]))
-            # Don't add a trailing comma for old IEs
-            if counter != len(settings.frontpage.rss):
-                feeds += ",\n"
+    # Feed Control
+    rss = settings.frontpage.rss
+    if rss:
+        s3.external_stylesheets.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+        s3.scripts.append("//www.google.com/jsapi?key=notsupplied-wizard")
+        s3.scripts.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
+
+        feeds = ["{title:'%s',url:'%s'}" % (feed["title"], feed["url"])
+                 for feed in rss
+                 ]
+        feeds = ",".join(feeds)
+
         # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
         feed_control = "".join(('''
 function LoadDynamicFeedControl(){
@@ -335,28 +360,47 @@ function LoadDynamicFeedControl(){
 }
 google.load('feeds','1')
 google.setOnLoadCallback(LoadDynamicFeedControl)'''))
+
         s3.js_global.append(feed_control)
 
-    output = dict(title = title,
-                  item = item,
-                  sit_dec_res_box = sit_dec_res_box,
-                  facility_box = facility_box,
-                  manage_facility_box = manage_facility_box,
-                  org_box = org_box,
-                  r = None, # Required for dataTable to work
-                  datatable_ajax_source = datatable_ajax_source,
-                  self_registration=self_registration,
-                  registered=registered,
-                  login_form=login_form,
-                  login_div=login_div,
-                  register_form=register_form,
-                  register_div=register_div
-                  )
+    # Output dict for the view
+    output = {"title": title,
+
+              # CMS Contents
+              "item": item,
+
+              # Menus
+              "sit_menu": sit_menu,
+              "org_menu": org_menu,
+              "res_menu": res_menu,
+              "aid_menu": aid_menu,
+              #"facility_box": facility_box,
+
+              # Quick Access Boxes
+              "manage_facility_box": manage_facility_box,
+              "org_box": org_box,
+
+              # Login Form
+              "login_div": login_div,
+              "login_form": login_form,
+
+              # Registration Form
+              "register_div": register_div,
+              "register_form": register_form,
+
+              # Control Data
+              "self_registration": self_registration,
+              "registered": registered,
+              "r": None, # Required for dataTable to work
+              "datatable_ajax_source": datatable_ajax_source,
+
+              }
 
     if get_vars.tour:
         output = s3db.tour_builder(output)
 
     return output
+
 # -----------------------------------------------------------------------------
 def organisation():
     """
@@ -416,7 +460,7 @@ def organisation():
                         draw)
     else:
         from gluon.http import HTTP
-        raise HTTP(501, ERROR.BAD_FORMAT)
+        raise HTTP(415, ERROR.BAD_FORMAT)
     return items
 
 # -----------------------------------------------------------------------------
@@ -500,6 +544,14 @@ def user():
     self_registration = settings.get_security_self_registration()
     login_form = register_form = None
 
+    current.menu.oauth = S3MainMenu.menu_oauth()
+
+    if not settings.get_auth_password_changes():
+        # Block Password changes as these are managed externally (OpenID / SMTP / LDAP)
+        auth_settings.actions_disabled = ("change_password",
+                                          "retrieve_password",
+                                          )
+
     # Check for template-specific customisations
     customise = settings.customise_auth_user_controller
     if customise:
@@ -552,27 +604,36 @@ def user():
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
 
-    if settings.get_template() != "default":
+    templates = settings.get_template()
+    if templates != "default":
         # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "user.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+        folder = request.folder
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            view = os.path.join(folder,
+                                template_location,
+                                "templates",
+                                template,
+                                "views",
+                                "user.html")
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
+                else:
+                    break
 
-    return dict(title=title,
-                form=form,
-                login_form=login_form,
-                register_form=register_form,
-                self_registration=self_registration)
+    return dict(title = title,
+                form = form,
+                login_form = login_form,
+                register_form = register_form,
+                self_registration = self_registration,
+                )
 
 # -----------------------------------------------------------------------------
 def person():
@@ -873,7 +934,7 @@ def skill():
     """
         RESTful CRUD controller
         - needed when skill add form embedded in default/person
-        - only create method is allowed, when opened in a inline form.
+        - only create method is allowed, when opened in an inline form.
     """
 
     # Check if it is called from a inline form
@@ -904,7 +965,7 @@ def facebook():
     auth.settings.login_form = FaceBookAccount(channel)
     form = auth()
 
-    return dict(form=form)
+    return {"form": form}
 
 # -----------------------------------------------------------------------------
 def google():
@@ -919,7 +980,22 @@ def google():
     auth.settings.login_form = GooglePlusAccount(channel)
     form = auth()
 
-    return dict(form=form)
+    return {"form": form}
+
+# -----------------------------------------------------------------------------
+def humanitarian_id():
+    """ Login using Humanitarian.ID """
+
+    channel = settings.get_auth_humanitarian_id()
+
+    if not channel:
+        redirect(URL(f="user", args=request.args, vars=get_vars))
+
+    from s3oauth import HumanitarianIDAccount
+    auth.settings.login_form = HumanitarianIDAccount(channel)
+    form = auth()
+
+    return {"form": form}
 
 # -----------------------------------------------------------------------------
 # About Sahana
@@ -938,21 +1014,7 @@ def about():
         versions available to this instance of Sahana Eden.
     """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "about.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("about")
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
@@ -973,8 +1035,10 @@ def about():
         get_vars = {"module": module, "resource": resource}
 
         if item:
+            from s3 import S3XMLContents
+            contents = S3XMLContents(item.body)
             if ADMIN:
-                item = DIV(XML(item.body),
+                item = DIV(contents,
                            BR(),
                            A(T("Edit"),
                              _href=URL(c="cms", f="post",
@@ -983,7 +1047,7 @@ def about():
                                        ),
                              _class="action-btn"))
             else:
-                item = DIV(XML(item.body))
+                item = DIV(contents)
         elif ADMIN:
             if s3.crud.formstyle == "bootstrap":
                 _class = "btn"
@@ -1000,7 +1064,17 @@ def about():
     else:
         item = H2(T("About"))
 
+    response.title = T("About")
+
     # Technical Support Details
+    if not settings.get_security_version_info() or \
+       settings.get_security_version_info_requires_login() and \
+       not auth.s3_logged_in():
+
+        return dict(details = "",
+                    item = item,
+                    )
+
     import platform
     import string
     import subprocess
@@ -1170,21 +1244,7 @@ def about():
 def help():
     """ CMS page or Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "help.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("help")
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
@@ -1248,21 +1308,7 @@ def help():
 def privacy():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "privacy.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("privacy")
 
     response.title = T("Privacy")
     return dict()
@@ -1271,21 +1317,7 @@ def privacy():
 def tos():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "tos.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("tos")
 
     response.title = T("Terms of Service")
     return dict()
@@ -1294,21 +1326,7 @@ def tos():
 def video():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "video.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("video")
 
     response.title = T("Video Tutorials")
     return dict()
@@ -1350,40 +1368,44 @@ def contact():
         output = s3_rest_controller(prefix, resourcename)
         return output
 
-    template = settings.get_template()
-    if template != "default":
+    templates = settings.get_template()
+    if templates != "default":
         # Try a Custom Controller
         location = settings.get_template_location()
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname, location, template)
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, try a custom view
-            pass
-        else:
-            if hasattr(custom, "contact"):
-                controller = getattr(custom, "contact")()
-                return controller()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname, location, template)
+            name = "controllers"
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, try a custom view
+                pass
+            else:
+                if hasattr(custom, "contact"):
+                    controller = getattr(custom, "contact")()
+                    return controller()
 
         # Try a Custom View
-        view = os.path.join(request.folder,
-                            location,
-                            "templates",
-                            template,
-                            "views",
-                            "contact.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+        for template in templates:
+            view = os.path.join(request.folder,
+                                location,
+                                "templates",
+                                template,
+                                "views",
+                                "contact.html")
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-            response.title = T("Contact us")
-            return dict()
+                response.title = T("Contact us")
+                return dict()
 
     if settings.has_module("cms"):
         # Use CMS
@@ -1447,5 +1469,35 @@ def get_settings():
             return response.json(return_settings)
 
         raise(HTTP("400", "Invalid/Missing argument"))
+
+# -----------------------------------------------------------------------------
+def _custom_view(filename):
+    """
+        See if there is a custom view for a page &, if so, use that
+    """
+
+    templates = settings.get_template()
+    if templates != "default":
+        folder = request.folder
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            # Try a Custom View
+            view = os.path.join(folder,
+                                template_location,
+                                "templates",
+                                template,
+                                "views",
+                                "%s.html" % filename)
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
+                else:
+                    break
 
 # END =========================================================================

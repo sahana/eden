@@ -48,12 +48,58 @@ def shelter_service():
 
 # -----------------------------------------------------------------------------
 def shelter_unit():
-    """ REST controller to retrieve options for shelter unit selection """
+    """
+        REST controller to
+            retrieve options for shelter unit selection
+            show layer on Map
+            imports
+    """
 
-    # JSON only
-    s3.prep = lambda r: r.representation == "json"
+    # [Geo]JSON & Map Popups or Imports only
+    def prep(r):
+        if r.representation == "plain":
+            # Have the 'Open' button open in the context of the Shelter
+            record_id = r.id
+            table = s3db.cr_shelter_unit
+            row = db(table.id == record_id).select(table.shelter_id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+            shelter_id = row.shelter_id
+            s3db.configure("cr_shelter_unit",
+                           popup_url = URL(c="cr", f="shelter",
+                                           args=[shelter_id, "shelter_unit",
+                                                 record_id]),
+                        )
+            return True
+        elif r.representation in ("json", "geojson", "plain") or \
+             r.method == "import":
+            return True
+        return False
+
+    s3.prep = prep
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def shelter_registration():
+    """
+        RESTful CRUD controller
+    """
+
+    s3.crud_strings.cr_shelter_registration = Storage(
+        label_create = T("Register Person"),
+        title_display = T("Registration Details"),
+        title_list = T("Registered People"),
+        title_update = T("Edit Registration"),
+        label_list_button = T("List Registrations"),
+        msg_record_created = T("Registration added"),
+        msg_record_modified = T("Registration updated"),
+        msg_record_deleted = T("Registration entry deleted"),
+        msg_list_empty = T("No people currently registered in this shelter")
+        )
+
+    output = s3_rest_controller()
+    return output
 
 # =============================================================================
 def shelter():
@@ -61,22 +107,64 @@ def shelter():
         RESTful CRUD controller
     """
 
+    tablename = "cr_shelter"
     table = s3db.cr_shelter
 
     # Filter to just Open shelters (status=2)
-    s3base.s3_set_default_filter("~.status", [2, None], tablename="cr_shelter")
+    s3base.s3_set_default_filter("~.status", [2, None], tablename=tablename)
 
     # Pre-processor
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
 
-        if r.method == "create":
+        method = r.method
+        if method == "create":
             table.population_day.readable = False
             table.population_night.readable = False
 
-        if r.method == "import":
+        elif method == "import":
             table.organisation_id.default = None
+
+        elif method == "profile":
+            shelter_id = r.id
+            name = r.record.name
+
+            profile_header = settings.get_ui_profile_header(r)
+
+            map_widget = dict(label = T("Housing Units"),
+                              type = "map",
+                              icon = "globe",
+                              colspan = 2,
+                              height = 500,
+                              #bbox = bbox,
+                              )
+            ftable = s3db.gis_layer_feature
+            query = (ftable.controller == "cr") & \
+                    (ftable.function == "shelter_unit")
+            layer = db(query).select(ftable.layer_id,
+                                     limitby=(0, 1)
+                                     ).first()
+            try:
+                layer = dict(active = True,
+                             layer_id = layer.layer_id,
+                             filter = "~.shelter_id=%s" % shelter_id,
+                             name = T("Housing Units"),
+                             id = "profile-header-%s-%s" % (tablename, shelter_id),
+                             )
+            except:
+                # No suitable prepop found
+                layer = None
+
+            profile_widgets = [map_widget,
+                               ]
+            s3db.configure(tablename,
+                           profile_header = profile_header,
+                           profile_layers = (layer,),
+                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["cr_shelter"].title_display),
+                                                        name),
+                           profile_widgets = profile_widgets,
+                           )
 
         if r.interactive:
             if r.id:
@@ -106,10 +194,10 @@ def shelter():
                         # Filter housing units to units of this shelter
                         field = s3db.cr_shelter_registration.shelter_unit_id
                         dbset = db(s3db.cr_shelter_unit.shelter_id == r.id)
-                        field.requires = IS_NULL_OR(IS_ONE_OF(dbset, "cr_shelter_unit.id",
-                                                              field.represent,
-                                                              sort=True,
-                                                              ))
+                        field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "cr_shelter_unit.id",
+                                                               field.represent,
+                                                               sort=True,
+                                                               ))
                     s3.crud_strings.cr_shelter_registration = Storage(
                         label_create = T("Register Person"),
                         title_display = T("Registration Details"),

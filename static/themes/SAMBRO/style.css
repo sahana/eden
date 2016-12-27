@@ -6,3 +6,25 @@
 legend button {
     margin: 0;
 }
+#cap_alert_datalist {
+    overflow-x: auto;
+}
+.subscribe-button {
+    margin-top: -2.8rem;
+    margin-left: 1rem;
+}
+.tiny.button {
+    font-size: 1rem;
+}
+#home h1 {
+    text-align: center;
+}
+#newsfeed {
+    margin-top: 1.7rem;
+}
+.large-6.columns {
+    margin-top: 2.5rem;
+}
+.fa-rss {
+    font-size: xx-large !important;
+}

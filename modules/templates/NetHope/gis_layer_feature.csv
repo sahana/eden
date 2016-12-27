@@ -1,4 +1,0 @@
-Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
-BGANs,,asset,asset,BGAN,Telephone,"{site_id}, {organisation_id}","site_id,organisation_id",,,True,True,,,,False,,,
-Requests,All Open Requests,req,req,request,"Navaid, Red",{req_ref} (T('Request'))<br />{site_id},"req_ref,site_id",~.fulfil_status__ne=2,True,True,,,,,False,,,
-VSATs,,asset,asset,VSAT,Radio Beacon,"{site_id}, {organisation_id}","site_id,organisation_id",,,True,True,,,,False,,,

@@ -5,11 +5,13 @@
 //    dt.fnReloadAjax(<new URL>);
 //
 $.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
+
     if ( sNewSource != 'undefined' && sNewSource != null ) {
         // sNewSource is a string containing the new Ajax-URL for
         // this instance, so override the previous setting
         oSettings.sAjaxSource = sNewSource;
     }
+
     // Show the "Processing..." box
     this.oApi._fnProcessingDisplay( oSettings, true );
 
@@ -18,13 +20,13 @@ $.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
     // callback:
     var that = this;
     oSettings.ajax({}, function(json) {
+
         // Clear the table
         that.oApi._fnClearTable(oSettings);
+
         // Trigger the pipeline script again (this time without callback),
         // in  order to re-load the table data from the server:
         that.fnDraw();
-        // Remove the "Processing..." box
-        that.oApi._fnProcessingDisplay(oSettings, false);
 
     }, oSettings );
 };

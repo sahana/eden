@@ -27,6 +27,7 @@ import s3db.disease
 import s3db.doc
 import s3db.dvi
 import s3db.dvr
+import s3db.edu
 import s3db.evr
 import s3db.event
 import s3db.fire
@@ -41,6 +42,7 @@ import s3db.ocr
 import s3db.org
 import s3db.patient
 import s3db.po
+import s3db.police
 import s3db.pr
 import s3db.sit
 import s3db.proc
@@ -63,8 +65,34 @@ import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
 import s3db.water
+import s3db.work
 
 current.s3db = s3db = S3Model()
+
+# =============================================================================
+# Configure the auth models
+# - needed for admin/user, sync/sync & 1st_run, so could move to a fn called
+#   from those 3 if overhead grows
+s3db.configure("auth_user",
+               # We don't want this for Sync, just in admin/user & 1st_run
+               #create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+               # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
+               references = {"organisation_id": "org_organisation",
+                             "site_id": "org_site",
+                             "org_group_id": "org_group",
+                             },
+               )
+
+s3db.add_components("auth_user",
+                    auth_membership = "user_id",
+                    pr_person_user = "user_id",
+                    )
+
+s3db.configure("auth_membership",
+               # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
+               references = {"pe_id": "pr_pentity",
+                             },
+               )
 
 # =============================================================================
 # Make available for S3Models

@@ -2,7 +2,7 @@
 
 """ S3 Data Views
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,17 +38,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3dal import Expression
-from s3utils import s3_orderby_fields, s3_unicode, s3_set_extension
-
-DEBUG = False
-if DEBUG:
-    import sys
-    print >> sys.stderr, "S3 Data Representations: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
+from s3dal import Expression, S3DAL
+from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
 # =============================================================================
 class S3DataTable(object):
@@ -114,26 +105,81 @@ class S3DataTable(object):
 
         if orderby:
 
-            _orderby = []
+            # Resolve orderby expression into column names
+            orderby_dirs = {}
+            orderby_cols = []
 
-            INVERT = current.db._adapter.INVERT
+            adapter = S3DAL()
+            INVERT = adapter.INVERT
+
+            append = orderby_cols.append
             for f in s3_orderby_fields(None, orderby, expr=True):
                 if type(f) is Expression:
                     colname = str(f.first)
-                    direction = "desc" \
-                                if f.op == INVERT else "asc"
+                    direction = "desc" if f.op == INVERT else "asc"
                 else:
                     colname = str(f)
                     direction = "asc"
-                for idx, rfield in enumerate(rfields):
+                orderby_dirs[colname] = direction
+                append(colname)
+            pos = 0
+
+            # Helper function to resolve a reference's "sortby" into
+            # a list of column names
+            ftuples = {}
+            def resolve_sortby(rfield):
+                colname = rfield.colname
+                if colname in ftuples:
+                    return ftuples[colname]
+                ftype = rfield.ftype
+                sortby = None
+                if ftype[:9] == "reference":
+                    field = rfield.field
+                    if hasattr(field, "sortby") and field.sortby:
+                        sortby = field.sortby
+                        if not isinstance(sortby, (tuple, list)):
+                            sortby = [sortby]
+                        p = "%s.%%s" % ftype[10:].split(".")[0]
+                        sortby = [p % fname for fname in sortby]
+                ftuples[colname] = sortby
+                return sortby
+
+            dt_ordering = [] # order expression for datatable
+            append = dt_ordering.append
+
+            # Match orderby-fields against table columns (=rfields)
+            seen = set()
+            skip = seen.add
+            for i, colname in enumerate(orderby_cols):
+                if i < pos:
+                    # Already consumed by sortby-tuple
+                    continue
+                direction = orderby_dirs[colname]
+                for col_idx, rfield in enumerate(rfields):
+                    if col_idx in seen:
+                        # Column already in dt_ordering
+                        continue
+                    sortby = None
                     if rfield.colname == colname:
-                        _orderby.append([idx, direction])
+                        # Match a single orderby-field
+                        sortby = (colname,)
+                    else:
+                        # Match between sortby and the orderby-field tuple
+                        # (must appear in same order and sorting direction)
+                        sortby = resolve_sortby(rfield)
+                        if not sortby or \
+                           sortby != orderby_cols[i:i + len(sortby)] or \
+                           any(orderby_dirs[c] != direction for c in sortby):
+                            sortby = None
+                    if sortby:
+                        append([col_idx, direction])
+                        pos += len(sortby)
+                        skip(col_idx)
                         break
-
         else:
-            _orderby = [[1, "asc"]]
+            dt_ordering = [[1, "asc"]]
 
-        self.orderby = _orderby
+        self.orderby = dt_ordering
 
     # -------------------------------------------------------------------------
     def html(self,
@@ -625,7 +671,7 @@ class S3DataTable(object):
         config.dom = _aget("dt_dom", settings.get_ui_datatables_dom())
         config.lengthMenu = _aget("dt_lengthMenu",
                                   [[25, 50, -1],
-                                   [25, 50, str(current.T("All"))]
+                                   [25, 50, s3_str(current.T("All"))]
                                    ]
                                   )
         config.pageLength = _aget("dt_pageLength", s3.ROWSPERPAGE)
@@ -690,10 +736,7 @@ class S3DataTable(object):
 
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
-        if not s3.no_formats and len(html) > 0:
-            # @todo: always *render* both export options and permalink,
-            #        even if the initial table is empty, so that
-            #        Ajax-update can unhide them once there are results
+        if not s3.no_formats:
             # @todo: move export-format update into drawCallback()
             # @todo: poor UX with onclick-JS, better to render real
             #        links which can be bookmarked, and then update them
@@ -940,7 +983,7 @@ class S3DataList(object):
             Render list data as HTML (nested DIVs)
 
             @param start: index of the first item (in this page)
-            @param limit: (actual) number of items (in this page)
+            @param limit: total number of available items
             @param pagesize: maximum number of items per page
             @param rowsize: number of items per row
             @param ajaxurl: the URL to Ajax-update the datalist
@@ -1042,22 +1085,22 @@ class S3DataList(object):
                    }
         if popup_url:
             input_class = "dl-pagination"
-            a_class = "s3_modal"
+            a_class = "s3_modal dl-more"
             #dl_data["popup_url"] = popup_url
             #dl_data["popup_title"] = popup_title
         else:
             input_class = "dl-pagination dl-scroll"
-            a_class = ""
+            a_class = "dl-more"
         from gluon.serializers import json as jsons
         dl_data = jsons(dl_data)
-        dl.append(DIV(FORM(INPUT(_type="hidden",
-                                 _class=input_class,
-                                 _value=dl_data)
-                           ),
+        dl.append(DIV(INPUT(_type="hidden",
+                            _class=input_class,
+                            _value=dl_data,
+                            ),
                       A(T("more..."),
-                        _href=popup_url or ajaxurl,
-                        _class=a_class,
-                        _title=popup_title,
+                        _href = popup_url or ajaxurl,
+                        _class = a_class,
+                        _title = popup_title,
                         ),
                       _class="dl-navigation",
                       ))

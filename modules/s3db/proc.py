@@ -2,7 +2,7 @@
 
 """ Sahana Eden Procurement Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,7 +34,6 @@ __all__ = ("S3ProcurementModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3ProcurementModel(S3Model):

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Project Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -35,11 +35,11 @@ class Project Report(SeleniumUnitTest):
         """
             @case: proj009
             @description: Project Report
-            
+
             * DOES NOT WORK
         """
         print "\n"
-        
+
         import datetime
         from dateutil.relativedelta import relativedelta
 
@@ -48,16 +48,16 @@ class Project Report(SeleniumUnitTest):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Login, if not-already done so
         self.login(account="normal", nexturl="project/location/report")
-        
+
         # PROJ009
 		# Project Report - Using Filter Options
 		# Report by Name
 		self.search( "project_location_search_text",
 					 "Lori")
-					 					 
+
 		# Report by State/Province
 		self.create( "location_search_select_project_id$multi_theme_id_filter",
 					[( "theme_id_filter",
@@ -92,4 +92,3 @@ class Project Report(SeleniumUnitTest):
 					 ( "totals",
 					   "checked")]
 					 )
-					 

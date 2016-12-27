@@ -9,7 +9,7 @@ The simplest way to use this is to invoke its main method. E.g.
 
     ... define your tests ...
 
-    if __name__ == '__main__':
+    if __name__ == "__main__":
         HTMLTestRunner.main()
 
 
@@ -17,11 +17,11 @@ For more customization options, instantiates a HTMLTestRunner object.
 HTMLTestRunner is a counterpart to unittest's TextTestRunner. E.g.
 
     # output to a file
-    fp = file('my_report.html', 'wb')
+    fp = file("my_report.html", "wb")
     runner = HTMLTestRunner.HTMLTestRunner(
                 stream=fp,
-                title='My unit test',
-                description='This demonstrates the report output by HTMLTestRunner.'
+                title="My unit test",
+                description="This demonstrates the report output by HTMLTestRunner."
                 )
 
     # Use an external stylesheet.
@@ -665,40 +665,40 @@ class HTMLTestRunner(Template_mixin):
 
     def getReportAttributes(self, result):
         """
-        Return report attributes as a list of (name, value).
-        Override this to add custom attributes.
+            Return report attributes as a list of (name, value).
+            Override this to add custom attributes.
         """
-        # Get the current template
-        settings = current.deployment_settings
-        template = settings.get_template()
+
+        # Get the current template(s)
+        template = current.deployment_settings.get_template()
 
         startTime = str(self.startTime)[:19]
         duration = str(self.stopTime - self.startTime)
         status = []
         # change counts if smoke test has run
-        if 'smoke_results' in current.data:
+        if "smoke_results" in current.data:
             sc, fc = self._get_smoke_results()
             result.success_count = sc
             result.failure_count = fc
 
-        if result.success_count: status.append('Pass %s'    % result.success_count)
-        if result.failure_count: status.append('Failure %s' % result.failure_count)
-        if result.error_count:   status.append('Error %s'   % result.error_count  )
+        if result.success_count: status.append("Pass %s"    % result.success_count)
+        if result.failure_count: status.append("Failure %s" % result.failure_count)
+        if result.error_count:   status.append("Error %s"   % result.error_count  )
         if status:
-            status = ' '.join(status)
+            status = " ".join(status)
         else:
-            status = 'none'
+            status = "none"
         return [
-            ('Start Time', startTime),
-            ('Duration', duration),
-            ('Status', status),
-            ('Template', template)
+            ("Start Time", startTime),
+            ("Duration", duration),
+            ("Status", status),
+            ("Template", template)
         ]
 
 
     def generateReport(self, test, result):
         report_attrs = self.getReportAttributes(result)
-        generator = 'HTMLTestRunner %s' % __version__
+        generator = "HTMLTestRunner %s" % __version__
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(report_attrs)
         report = self._generate_report(result)
@@ -712,7 +712,7 @@ class HTMLTestRunner(Template_mixin):
             ending = ending,
         )
         self.tearDown()
-        self.stream.write(output.encode('utf8'))
+        self.stream.write(output.encode("utf8"))
 
 
     def _generate_stylesheet(self):
@@ -729,14 +729,14 @@ class HTMLTestRunner(Template_mixin):
             a_lines.append(line)
         heading = self.HEADING_TMPL % dict(
             title = saxutils.escape(self.title),
-            parameters = ''.join(a_lines),
+            parameters = "".join(a_lines),
             description = saxutils.escape(self.description),
         )
         return heading
 
     def _get_smoke_results(self):
-        sc = current.data['smoke_results']['working_links']
-        fc = current.data['smoke_results']['broken_links_count']
+        sc = current.data["smoke_results"]["working_links"]
+        fc = current.data["smoke_results"]["broken_links_count"]
         return sc, fc
 
     def _generate_report(self, result):
@@ -750,7 +750,7 @@ class HTMLTestRunner(Template_mixin):
                 elif n == 1: nf += 1
                 else: ne += 1
             # change counts if smoke test is run
-            if 'smoke_results' in current.data:
+            if "smoke_results" in current.data:
                 np, nf = self._get_smoke_results()
 
             # format class description
@@ -759,25 +759,25 @@ class HTMLTestRunner(Template_mixin):
             else:
                 name = "%s.%s" % (cls.__module__, cls.__name__)
             doc = cls.__doc__ and cls.__doc__.split("\n")[0] or ""
-            desc = doc and '%s: %s' % (name, doc) or name
+            desc = doc and "%s: %s" % (name, doc) or name
 
             row = self.REPORT_CLASS_TMPL % dict(
-                style = ne > 0 and 'errorClass' or nf > 0 and 'failClass' or 'passClass',
+                style = ne > 0 and "errorClass" or nf > 0 and "failClass" or "passClass",
                 desc = desc,
                 count = np+nf+ne,
                 Pass = np,
                 fail = nf,
                 error = ne,
-                cid = 'c%s' % (cid+1),
+                cid = "c%s" % (cid+1),
             )
             # Only one row is generated in smoke tests
-            if 'smoke_results' in current.data:
+            if "smoke_results" in current.data:
                 total_count = 1
             else:
                 total_count = np+nf+ne
             row = row + self.REPORT_CLASS_TMPL_ADD_LINK % dict(
                 count = total_count,
-                cid = 'c%s' % (cid+1),
+                cid = "c%s" % (cid+1),
             )
 
             rows.append(row)
@@ -786,7 +786,7 @@ class HTMLTestRunner(Template_mixin):
                 self._generate_report_test(rows, cid, tid, n, t, o, e)
 
         report = self.REPORT_TMPL % dict(
-            test_list = ''.join(rows),
+            test_list = "".join(rows),
             count = str(result.success_count+result.failure_count+result.error_count),
             Pass = str(result.success_count),
             fail = str(result.failure_count),
@@ -798,23 +798,23 @@ class HTMLTestRunner(Template_mixin):
     def _generate_report_test(self, rows, cid, tid, n, t, o, e):
         # e.g. 'pt1.1', 'ft1.1', etc
         has_output = bool(o or e)
-        tid = (n == 0 and 'p' or 'f') + 't%s.%s' % (cid+1,tid+1)
-        name = t.id().split('.')[-1]
+        tid = (n == 0 and "p" or "f") + "t%s.%s" % (cid+1,tid+1)
+        name = t.id().split(".")[-1]
         doc = t.shortDescription() or ""
-        desc = doc and ('%s: %s' % (name, doc)) or name
+        desc = doc and ("%s: %s" % (name, doc)) or name
         tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or self.REPORT_TEST_NO_OUTPUT_TMPL
 
         # o and e should be byte string because they are collected from stdout and stderr?
         if isinstance(o,str):
             # TODO: some problem with 'string_escape': it escape \n and mess up formating
-            # uo = unicode(o.encode('string_escape'))
-            uo = o.decode('latin-1')
+            # uo = unicode(o.encode("string_escape"))
+            uo = o.decode("latin-1")
         else:
             uo = o
         if isinstance(e,str):
             # TODO: some problem with 'string_escape': it escape \n and mess up formating
-            # ue = unicode(e.encode('string_escape'))
-            ue = e.decode('latin-1')
+            # ue = unicode(e.encode("string_escape"))
+            ue = e.decode("latin-1")
         else:
             ue = e
 
@@ -825,8 +825,8 @@ class HTMLTestRunner(Template_mixin):
 
         row = tmpl % dict(
             tid = tid,
-            Class = (n == 0 and 'hiddenRow' or 'none'),
-            style = n == 2 and 'errorCase' or (n == 1 and 'failCase' or 'none'),
+            Class = (n == 0 and "hiddenRow" or "none"),
+            style = n == 2 and "errorCase" or (n == 1 and "failCase" or "none"),
             desc = desc,
             script = script,
             status = self.STATUS[n],
@@ -839,8 +839,8 @@ class HTMLTestRunner(Template_mixin):
         return self.ENDING_TMPL
 
     def tearDown(self):
-        if 'smoke_results' in current.data:
-            del current.data['smoke_results']
+        if "smoke_results" in current.data:
+            del current.data["smoke_results"]
 
 
 ##############################################################################

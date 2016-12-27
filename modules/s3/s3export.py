@@ -6,7 +6,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -98,9 +98,13 @@ class S3Exporter(object):
         """
 
         if fields is None:
-            # json_fields falls back to list_fields if not-defined.
-            # If that's not defined either, it falls back to all readable fields in the table
-            fields = resource.list_fields("json_fields", id_column=True)
+            # Use json_fields setting, or fall back to list_fields if
+            # not defined, or to all readable fields if list_fields is
+            # not defined either.
+            # Always include the ID field regardless whether it is
+            # configured or not => required for S3FilterOptions and
+            # similar Ajax lookups.
+            fields = resource.list_fields("json_fields", id_column=0)
 
         if orderby is None:
             orderby = resource.get_config("orderby", None)

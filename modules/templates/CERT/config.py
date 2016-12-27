@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -22,7 +17,7 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("CERT", "default/users")
+    settings.base.prepopulate += ("CERT", "default/users")
 
     # Theme
     #settings.base.theme = "CERT"
@@ -55,7 +50,7 @@ def config(settings):
     settings.hrm.multiple_orgs = False
 
     settings.hrm.vol_experience = False
-    settings.hrm.use_description = False
+    settings.hrm.use_description = None
     settings.hrm.use_skills = False
     settings.hrm.use_awards = False
     settings.hrm.use_credentials = False

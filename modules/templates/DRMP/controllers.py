@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from os import path
+import json
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from os import path
 
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
-from s3.s3utils import S3CustomController
+from s3 import S3CRUD, S3CustomController, S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
 
 THEME = "DRMP"
 
@@ -314,8 +307,6 @@ def _newsfeed():
 def latest_records(resource, layout, list_id, limit, list_fields, orderby):
     """
         Display a dataList of the latest records for a resource
-
-        @todo: remove this wrapper
     """
 
     #orderby = resource.table[orderby]
@@ -327,12 +318,11 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
                                                layout=layout)
     if numrows == 0:
         # Empty table or just no match?
-        from s3.s3crud import S3CRUD
         table = resource.table
-        if "deleted" in table:
-            available_records = current.db(table.deleted != True)
-        else:
-            available_records = current.db(table._id > 0)
+        #if "deleted" in table:
+        available_records = current.db(table.deleted != True)
+        #else:
+        #    available_records = current.db(table._id > 0)
         if available_records.select(table._id,
                                     limitby=(0, 1)).first():
             msg = DIV(S3CRUD.crud_string(resource.tablename,

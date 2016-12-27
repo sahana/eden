@@ -15,6 +15,21 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu_help(cls, **attr):
+        """ Help Menu """
+
+        return MM("About", link=False, right=True)(
+                    MM("About this Site", f="about", right=True),
+                    MM("User Manual", c="default", f="index",
+                        args=["docs"],
+                        vars={"name": "UserManual"},
+                        ),
+                    MM("Contact us", f="contact", right=True),
+                    )
+
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
 
@@ -22,9 +37,9 @@ class S3MainMenu(default.S3MainMenu):
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
                ),
-            MM("Current Needs", c="req", f="site_needs"),
-            MM("Facilities", c="org", f="facility"),
+            MM("Current Needs", c="req", f="organisation_needs"),
             MM("Organizations", c="org", f="organisation"),
+            MM("Facilities", c="org", f="facility", m="summary"),
             homepage("gis"),
             MM("More", link=False)(
                 MM("Requests", c="req", f="req", vars = {"type": "1"}),
@@ -32,6 +47,7 @@ class S3MainMenu(default.S3MainMenu):
                 homepage("hrm"),
                 homepage("vol"),
                 homepage("project"),
+                homepage("event"),
                 #MM("Missing Persons", c="mpr", f="person"),
             ),
         ]
@@ -54,7 +70,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
-                    M("Facilities", f="facility")(
+                    M("Facilities", f="facility", m="summary")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import"),
@@ -69,6 +85,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", m="import")
                     ),
                     M("Organization Types", f="organisation_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                    M("Service Types", f="service",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
@@ -161,7 +181,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
         req_skills = lambda i: "People" in types
 
         return M(c="req")(
-                    M("Current Needs", f="site_needs")(
+                    M("Current Needs", f="organisation_needs")(
+                        M("Create", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                    ),
+                    M("Needs at Facilities", f="site_needs", m="summary")(
                         M("Create", m="create"),
                     ),
                     M("Requests", f="req", vars=get_vars)(

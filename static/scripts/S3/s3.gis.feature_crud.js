@@ -48,12 +48,13 @@
     /**
      * Check that Map JS is Loaded
      */
-    var jsLoaded = function() {
+    var jsLoaded = function(map_id) {
         var dfd = new jQuery.Deferred();
+        var gis = S3.gis;
 
         // Test every half-second
         setTimeout(function working() {
-            if (S3.gis.maps != undefined) {
+            if ((gis.maps != undefined) && (gis.maps[map_id] != undefined)) {
                 dfd.resolve('loaded');
             } else if (dfd.state() === 'pending') {
                 // Notify progress
@@ -121,7 +122,8 @@
         });
 
         // Check if Maps JS is Loaded
-        $.when(jsLoaded()).then(
+        var map_id = 'default_map';
+        $.when(jsLoaded(map_id)).then(
             function(status) {
                 // Success
                 var map = S3.gis.maps['default_map'];

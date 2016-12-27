@@ -2,7 +2,7 @@
 
 """ S3 Encoder/Decoder Base Class
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,13 +29,7 @@
 
 __all__ = ("S3Codec",)
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 from xml.sax.saxutils import escape, unescape
 

@@ -15,7 +15,7 @@
     process being removed at a later stage.
     ######################################################################
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -42,12 +42,14 @@
 
 __all__ = ("S3PDF",)
 
-import os
-import sys
+import json
 import math
+import os
 import re
+import sys
 import subprocess
 import unicodedata
+
 from copy import deepcopy
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -58,14 +60,6 @@ from datetime import datetime, timedelta, date
 # to the dependency list for just one utility
 #from lxml.html.soupparser import unescape
 from htmlentitydefs import name2codepoint
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.storage import Storage
@@ -119,14 +113,6 @@ try:
 except ImportError:
     print >> sys.stderr, "S3 Debug: S3PDF: Reportlab not installed"
     reportLabImported = False
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3PDF: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, "S3PDF: %s" % m
-else:
-    _debug = lambda m: None
 
 # Maximum number of options a field can have
 MAX_FORM_OPTIONS_LIMIT = 12
@@ -3931,8 +3917,6 @@ class S3OCRImageParser(object):
 
         # Transform each image
         for each_img_index in raw_images.keys():
-            _debug("Transforming Page %s/%s" % (each_img_index,
-                                                pages))
             images[each_img_index] = {}
             images[each_img_index]["image"] =\
                 self.__convertImage2binary(raw_images[each_img_index])
@@ -4592,7 +4576,6 @@ class S3OCRImageParser(object):
         markers.extend(l2)
         markers.extend(l3)
         #markers.sort(key=lambda x: (x[0], x[1]))
-        #_debug(markers)
         return markers
 
     # =========================================================================

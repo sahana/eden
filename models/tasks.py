@@ -16,16 +16,22 @@ def maintenance(period="daily"):
     maintenance = None
     result = "NotImplementedError"
 
-    template = settings.get_template()
-    if template != "default":
-        # Try import maintenance routine from template
-        package = "applications.%s.%s.templates.%s" % \
-                  (appname, settings.get_template_location(), template)
-        name = "maintenance"
-        try:
-            maintenance = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            pass
+    templates = settings.get_template()
+    if templates != "default":
+        # Try to import maintenance routine from template
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
+            package = "applications.%s.%s.templates.%s" % \
+                      (appname, template_location, template)
+            name = "maintenance"
+            try:
+                maintenance = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                pass
+            else:
+                break
     if maintenance is None:
         try:
             # Fallback to default maintenance routine
@@ -40,6 +46,42 @@ def maintenance(period="daily"):
     return result
 
 tasks["maintenance"] = maintenance
+
+# -----------------------------------------------------------------------------
+def org_site_check(site_id, user_id=None):
+    """ Check the Status for Sites """
+
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+
+    # Check for Template-specific processing
+    customise = settings.get_org_site_check()
+    if customise:
+        customise(site_id)
+        db.commit()
+
+tasks["org_site_check"] = org_site_check
+
+# -----------------------------------------------------------------------------
+if settings.has_module("cap"):
+
+    # -------------------------------------------------------------------------
+    def cap_ftp_sync(user_id=None):
+        """ Get all the FTP repositories and synchronize them """
+
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        rows = db(s3db.sync_repository.apitype == "ftp").select()
+
+        if rows:
+            sync = current.sync
+            for row in rows:
+                sync.synchronize(row)
+
+    tasks["cap_ftp_sync"] = cap_ftp_sync
 
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
@@ -277,6 +319,18 @@ if settings.has_module("msg"):
         return result
 
     tasks["msg_parse"] = msg_parse
+
+    # -------------------------------------------------------------------------
+    def msg_gcm(title, uri, message, registration_ids, user_id=None):
+        """ Push the data relating to google cloud messaging server """
+
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        msg.gcm_push(title, uri, message, eval(registration_ids))
+
+    tasks["msg_gcm"] = msg_gcm
 
     # -------------------------------------------------------------------------
     def notify_check_subscriptions(user_id=None):

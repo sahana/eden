@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import *
@@ -24,7 +19,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("CRMT", "default/users", "CRMT/Demo")
+    settings.base.prepopulate += ("CRMT", "default/users", "CRMT/Demo")
 
     settings.base.system_name = T("Sahana LA Community Resilience Mapping Tool")
     settings.base.system_name_short = T("CRMT")
@@ -92,8 +87,14 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "CRMT"
+
+    # Formstyles
     settings.ui.formstyle = "foundation_2col"
     #settings.ui.report_formstyle = "foundation_inline"
+
+    # Icons
+    settings.ui.icons = "foundation"
+
     settings.ui.hide_report_options = False
     settings.ui.inline_component_layout = CRMTSubFormLayout
     settings.ui.read_label = "" # replaced with icon
@@ -282,7 +283,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "USD" : T("United States Dollars"),
+        "USD" : "United States Dollars",
     }
 
     # =============================================================================
@@ -371,8 +372,9 @@ def config(settings):
                     s3db.add_components("pr_pentity",
                                         pr_contact = ({"name": "home",
                                                        "joinby": "pe_id",
-                                                       "filterby": "contact_method",
-                                                       "filterfor": ["HOME_PHONE"],
+                                                       "filterby": {
+                                                           "contact_method": "HOME_PHONE",
+                                                           },
                                                        }),
                                         )
                     list_fields.extend(((T("Email"), "email.value"),
@@ -418,7 +420,7 @@ def config(settings):
 
                 if widgets:
                     from s3 import IS_ONE_OF, S3MultiSelectWidget
-                    from s3layouts import S3AddResourceLink
+                    #from s3layouts import S3PopupLink
 
                     htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
@@ -426,11 +428,13 @@ def config(settings):
                     #site_field.requires = IS_ONE_OF(db, "org_site.site_id",
                     #                                represent,
                     #                                orderby = "org_site.name")
-                    #site_field.comment = S3AddResourceLink(c="org", f="office",
-                    #                                       vars={"child": "site_id"},
-                    #                                       label=T("Add New Place"),
-                    #                                       title=T("Place"),
-                    #                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
+                    #site_field.comment = S3PopupLink(c = "org",
+                    #                                 f = "office",
+                    #                                 vars = {"child": "site_id"},
+                    #                                 label = T("Add New Place"),
+                    #                                 title = T("Place"),
+                    #                                 tooltip = T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."),
+                    #                                 )
 
                     table = s3db[tablename]
                     table.first_name.widget = S3StringWidget(placeholder=T("Text"))
@@ -1167,11 +1171,12 @@ def config(settings):
                     mtable = s3db.org_group_membership
                     mtable.group_id.default = auth.user.org_group_id
                     mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
-                    #from s3layouts import S3AddResourceLink
-                    #mtable.status_id.comment = S3AddResourceLink(c="org",
-                    #                                             f="group_membership_status",
-                    #                                             vars={"child": "status_id"},
-                    #                                             title=T("Add New Status"))
+                    #from s3layouts import S3PopupLink
+                    #mtable.status_id.comment = S3PopupLink(c = "org",
+                    #                                       f = "group_membership_status",
+                    #                                       vars = {"child": "status_id"},
+                    #                                       title = T("Add New Status"),
+                    #                                       )
                     mtable.status_id.comment = T("Status of the Organization in the Coalition")
                     mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
                                                                   create=dict(c="org",

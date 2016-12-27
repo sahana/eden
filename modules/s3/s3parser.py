@@ -5,7 +5,7 @@
    This file parses messages using functions defined in in the template's
    parser.py
 
-   @copyright: 2012-15 (c) Sahana Software Foundation
+   @copyright: 2012-2016 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -110,7 +110,7 @@ class S3Parsing(object):
             Authenticate a login request
         """
 
-        if not message:
+        if not message or not message.body:
             return None, None
 
         words = message.body.split(" ")

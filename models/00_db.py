@@ -16,14 +16,7 @@ get_vars = request.get_vars
 settings.check_debug()
 
 import datetime
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 ########################
 # Database Configuration
@@ -32,13 +25,12 @@ except ImportError:
 migrate = settings.get_base_migrate()
 fake_migrate = settings.get_base_fake_migrate()
 
-if migrate:
-    check_reserved = ("mysql", "postgres")
-else:
-    check_reserved = []
-
 (db_string, pool_size) = settings.get_database_string()
 if db_string.find("sqlite") != -1:
+    if migrate:
+        check_reserved = ("mysql", "postgres")
+    else:
+        check_reserved = []
     db = DAL(db_string,
              check_reserved=check_reserved,
              migrate_enabled = migrate,
@@ -58,21 +50,27 @@ else:
             #except ImportError:
             #    # Fallback to pymysql
             #    pass
-            if check_reserved:
+            if migrate:
                 check_reserved = ["postgres"]
+            else:
+                check_reserved = []
             db = DAL(db_string,
                      check_reserved = check_reserved,
                      pool_size = pool_size,
                      migrate_enabled = migrate,
+                     fake_migrate_all = fake_migrate,
                      lazy_tables = not migrate)
         else:
             # PostgreSQL
-            if check_reserved:
+            if migrate:
                 check_reserved = ["mysql"]
+            else:
+                check_reserved = []
             db = DAL(db_string,
                      check_reserved = check_reserved,
                      pool_size = pool_size,
                      migrate_enabled = migrate,
+                     fake_migrate_all = fake_migrate,
                      lazy_tables = not migrate)
     except:
         db_type = db_string.split(":", 1)[0]
@@ -83,13 +81,19 @@ current.db = db
 db.set_folder("upload")
 
 # Sessions Storage
-if settings.get_base_session_memcache():
+if settings.get_base_session_db():
+    # Store sessions in the database to avoid a locked session
+    session.connect(request, response, db)
+elif settings.get_base_session_memcache():
     # Store sessions in Memcache
     from gluon.contrib.memcache import MemcacheClient
     cache.memcache = MemcacheClient(request,
                                     [settings.get_base_session_memcache()])
     from gluon.contrib.memdb import MEMDB
     session.connect(request, response, db=MEMDB(cache.memcache))
+#else:
+    ## Default to filesystem
+    # pass
 
 ####################################################################
 # Instantiate Classes from Modules                                 #

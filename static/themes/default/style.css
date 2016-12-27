@@ -79,6 +79,10 @@
   font-size: 1.1em;
   padding-bottom: 5px;
 }
+#component {
+    float: none;
+    width: auto;
+}
 
 /* General forms */
 form {
@@ -93,6 +97,10 @@ form .form-row > .columns:first-child {
 form .form-row > .columns > label {
   font-weight: bold;
 }
+form .form-row .controls > .s3-hierarchy-widget {
+    display: inline-block;
+    vertical-align: middle;
+}
 form label.inline {
   padding: 0;
 }
@@ -102,6 +110,9 @@ form .gis_loc_select_btn {
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
+}
+form .jstree-anchor {
+    font-size: 0.9rem;
 }
 form .error {
   display: block;
@@ -223,6 +234,9 @@ textarea {
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
+.req_key {
+    font-size: 0.9rem;
+}
 
 .item-container .controls {
   background: #fafafa;
@@ -252,7 +266,7 @@ textarea {
 /* Help Popup */
 .inline-tooltip {
   display: inline-block;
-  vertical-align: top;
+  vertical-align: middle;
   padding-left: 0.75rem;
 }
 .inline-tooltip .tooltip,
@@ -287,7 +301,7 @@ textarea {
 div.tabs {
   border-bottom: 1px solid #2ba6cb;
   clear: left;
-  height: 2.125em;
+  height: 2.15em;
   margin: 5px 0 0;
   padding: 0.5em 0;
   text-align: left;
@@ -454,8 +468,8 @@ div.tabs span.tab_other a:hover {
   background: #a0a0a0;
 }
 
-/* Menu Logo */
-.S3menulogo {
+/* Utility for in-text logo */
+.sahana-logo {
   background: url(../../img/S3menu_logo.png) left top no-repeat;
   text-shadow: none;
   padding: none;
@@ -472,10 +486,19 @@ div.tabs span.tab_other a:hover {
   background-color: #333333;
   z-index: 1000;
 }
+/* Menu logo */
+.top-bar .logo {
+  color: white;
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  height: 35px;
+  padding: 0.625rem 0.5rem 0 0.7rem;
+  text-transform: uppercase;
+}
 .top-bar .menu-toggle input {
   margin-right: 5px;
 }
-
 .top-bar-section ul li:not(.has-form) a:not(.button) {
   color: #ffffff;
   background-color: #333333;
@@ -522,7 +545,6 @@ div.tabs span.tab_other a:hover {
   background: none repeat scroll 0 0 #d7d8d9;
   margin-top: 10px;
 }
-
 .side-nav li {
   line-height: 1.2;
   list-style-type: none;
@@ -562,7 +584,7 @@ div.tabs span.tab_other a:hover {
   background-color: #2ba6cb;
 }
 .side-nav li.divider {
-  border-top: 1px solid #ffffff;
+  border-top: 0.5rem solid transparent;
   height: 0;
   list-style: none;
 }
@@ -614,6 +636,10 @@ table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
 
+.dt-wrapper {
+  margin-bottom: 1.5rem;
+}
+
 .dataTables_processing {
   padding: 14px 0 28px;
 }
@@ -643,9 +669,10 @@ body.rtl .list_formats div {
 }
 
 /* Empty-sections */
-.empty {
+.empty,
+.dl-empty {
   font-style: italic;
-  font-size: 0.8em;
+  font-size: 0.825rem;
 }
 
 /* jQuery UI widgets */
@@ -676,12 +703,12 @@ body.rtl .list_formats div {
 
 #list-btn-add {
   float: right;
-  margin-right: 1.0rem;
+  margin-right: 0.7rem;
 }
 
 body.rtl #list-btn-add {
   float: left;
-  margin-left: 1.0rem;
+  margin-left: 0.7rem;
   margin-right: 0;
 }
 
@@ -745,6 +772,19 @@ input.date.hasDatepicker {
   margin-top: 0.5em;
 }
 
+/* GroupedOptionsWidget */
+.s3-groupedopts-label,
+.s3-groupedopts-label.expanded {
+  margin: 0.25rem 0 0.675rem 0;
+  float: none;
+}
+
+table.s3-groupedopts-widget {
+  margin-left: 0;
+  margin-top: 0.375rem;
+  border: 0;
+}
+
 /* ImageCropWidget */
 .imagecrop-btn {
   font-size: 1em;
@@ -793,6 +833,11 @@ input.date.hasDatepicker {
   font-size: 0.8rem;
 }
 
+/* Checkboxes Widget */
+.controls .checkboxes-widget-s3 {
+  display: inline-flex;
+}
+
 /* Data Lists (including profile) */
 .dl .dl-header {
   float: none;
@@ -835,6 +880,11 @@ h4.profile-sub-header {
 /* Comment feeds */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
+}
+
+/* Text representation */
+.text-body {
+  white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) */

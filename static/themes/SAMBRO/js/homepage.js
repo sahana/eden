@@ -6,6 +6,9 @@ $(document).ready(function(){
         S3.gis.refreshLayer('search_results', [['~.id', alert_id]]);
     });
 
+    // Set the maximum height of the datalist to the size of screen
+    $('#cap_alert_datalist').css('max-height', $(window).height());
+
     // Show/Hide Filter options
     $('#alert-filter-form-show').click(function() {
         $('#alert-filter-form-show').hide();

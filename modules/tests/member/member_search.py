@@ -2,7 +2,7 @@
 
 """ Sahana Eden Member Search Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -45,7 +45,7 @@ class SearchMember(SeleniumUnitTest):
         self.browser.find_element_by_xpath("//form[@class='advanced-form']"
                                            "//input[@type='submit']").click()
         time.sleep(1)
-        
+
         # click label again to reset to original status
         self.clickLabel(ids)
 
@@ -56,8 +56,8 @@ class SearchMember(SeleniumUnitTest):
             time.sleep(1)
         except:
             pass
-     
-        for id in ids: 
+
+        for id in ids:
             self.browser.find_element_by_xpath("//label[text()='" + id + "']").click()
             time.sleep(1)
 
@@ -68,7 +68,7 @@ class SearchMember(SeleniumUnitTest):
         """
 
         browser = self.browser
-        
+
         # Wait for datatables script to complete
         elem = WebDriverWait(browser, 30).until(
                     lambda driver: \
@@ -83,13 +83,13 @@ class SearchMember(SeleniumUnitTest):
         failMsg = "DB row count (%s)" \
                   " does not match the HTML table row count (%s)." % \
                    (dbRowCount, htmlRowCount)
-        
+
         self.assertTrue(dbRowCount == htmlRowCount, failMsg)
         self.reporter(successMsg)
 
 
     def test_mem004_01_member_search_simple(self):
-        #return 
+        #return
         """
             @case: mem004-01
             @description: Search Members - Simple Search
@@ -107,10 +107,10 @@ class SearchMember(SeleniumUnitTest):
                                  (person.middle_name.like('%mar%')) | \
                                  (person.last_name.like('%mar%')))).count()
         self.compareRowCount(dbRowCount)
-        
-        
+
+
     def test_mem004_02_member_search_advance_by_Paid(self):
-        #return 
+        #return
         """
             @case: mem004-03
             @description: Search Members - Advanced Search by paid/expired/overdue
@@ -127,7 +127,7 @@ class SearchMember(SeleniumUnitTest):
 
 
     def test_mem004_03_member_search_advance_by_Organisation(self):
-        #return 
+        #return
         """
             @case: mem004-03
             @description: Search Members - Advanced Search by Organisation
@@ -142,7 +142,7 @@ class SearchMember(SeleniumUnitTest):
 
 
     def test_mem004_04_member_search_advance_by_Country(self):
-        #return 
+        #return
         """
             @case: mem004-04
             @description: Search Members - Advanced Search by Country
@@ -153,10 +153,10 @@ class SearchMember(SeleniumUnitTest):
         loc = current.s3db["gis_location"]
         dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & (loc.L0 == 'Timor-Leste')).count()
         self.compareRowCount(dbRowCount)
-        
-        
+
+
     def test_mem004_05_member_search_advance_by_State_Province(self):
-        #return 
+        #return
         """
             @case: mem004-05
             @description: Search Members - Advanced Search by State / Province
@@ -170,7 +170,7 @@ class SearchMember(SeleniumUnitTest):
 
 
     def test_mem004_06_member_search_advance_by_County_District(self):
-        #return 
+        #return
         """
             @case: mem004-06
             @description: Search Members - Advanced Search by County / District
@@ -184,7 +184,7 @@ class SearchMember(SeleniumUnitTest):
 
 
     def test_mem004_07_member_search_advance_by_City_Town_Village(self):
-        #return 
+        #return
         """
             @case: mem004-07
             @description: Search Members - Advanced Search by City / Town / Village
@@ -195,4 +195,4 @@ class SearchMember(SeleniumUnitTest):
         loc = current.s3db["gis_location"]
         dbRowCount = current.db((member.deleted != 'T') & (member.location_id == loc.id) & ( (loc.L3 == 'Lour') | (loc.L3 == 'Tequino Mata') )).count()
         self.compareRowCount(dbRowCount)
-        
+

@@ -32,11 +32,11 @@
 # OF THIS SOFTWARE.
 # --------------------------------------------------------------------
 
-import urllib
-import httplib
 import base64
-import gluon.contrib.simplejson
+import httplib
+import json
 import types
+import urllib
 
 __version__ = "0.0.1"
 
@@ -54,33 +54,33 @@ def getparser():
     return par, un
 
 def dumps(params, methodname=None, methodresponse=None, encoding=None,
-          allow_none=0):    
+          allow_none=0):
     if methodname:
         request = {}
         request["method"] = methodname
         request["params"] = params
         request["id"] = _gen_id()
-        return simplejson.dumps(request)
+        return json.dumps(request)
 
 class Unmarshaller(object):
     def __init__(self):
         self.data = None
-        
+
     def feed(self, data):
         if self.data is None:
             self.data = data
         else:
             self.data = self.data + data
-    
+
     def close(self):
         #try to convert string to json
-        return simplejson.loads(self.data)
+        return json.loads(self.data)
 
 class Parser(object):
     def __init__(self, unmarshaller):
         self._target = unmarshaller
         self.data = None
-        
+
     def feed(self, data):
         if self.data is None:
             self.data = data
@@ -89,7 +89,7 @@ class Parser(object):
 
     def close(self):
         self._target.feed(self.data)
-            
+
 class _Method(object):
     # some magic to bind an JSON-RPC method to an RPC server.
     # supports "nested" methods (e.g. examples.getStateName)

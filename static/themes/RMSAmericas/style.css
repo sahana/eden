@@ -1,39 +1,63 @@
-/* line 347, ../../foundation/scss/components/_global.scss */
+/* line 429, ../../foundation/scss/components/_global.scss */
 meta.foundation-version {
-  font-family: "/5.4.5/";
+  font-family: "/{{VERSION}}/";
 }
 
-/* line 351, ../../foundation/scss/components/_global.scss */
+/* line 433, ../../foundation/scss/components/_global.scss */
 meta.foundation-mq-small {
   font-family: "/only screen/";
-  width: 0em;
+  width: 0;
 }
 
-/* line 356, ../../foundation/scss/components/_global.scss */
+/* line 438, ../../foundation/scss/components/_global.scss */
+meta.foundation-mq-small-only {
+  font-family: "/only screen and (max-width: 40em)/";
+  width: 0;
+}
+
+/* line 443, ../../foundation/scss/components/_global.scss */
 meta.foundation-mq-medium {
-  font-family: "/only screen and (min-width:40.063em)/";
-  width: 40.063em;
+  font-family: "/only screen and (min-width:40.0625em)/";
+  width: 40.0625em;
 }
 
-/* line 361, ../../foundation/scss/components/_global.scss */
+/* line 448, ../../foundation/scss/components/_global.scss */
+meta.foundation-mq-medium-only {
+  font-family: "/only screen and (min-width:40.0625em) and (max-width:64em)/";
+  width: 40.0625em;
+}
+
+/* line 453, ../../foundation/scss/components/_global.scss */
 meta.foundation-mq-large {
-  font-family: "/only screen and (min-width:64.063em)/";
-  width: 64.063em;
+  font-family: "/only screen and (min-width:64.0625em)/";
+  width: 64.0625em;
 }
 
-/* line 366, ../../foundation/scss/components/_global.scss */
+/* line 458, ../../foundation/scss/components/_global.scss */
+meta.foundation-mq-large-only {
+  font-family: "/only screen and (min-width:64.0625em) and (max-width:90em)/";
+  width: 64.0625em;
+}
+
+/* line 463, ../../foundation/scss/components/_global.scss */
 meta.foundation-mq-xlarge {
-  font-family: "/only screen and (min-width:90.063em)/";
-  width: 90.063em;
+  font-family: "/only screen and (min-width:90.0625em)/";
+  width: 90.0625em;
 }
 
-/* line 371, ../../foundation/scss/components/_global.scss */
+/* line 468, ../../foundation/scss/components/_global.scss */
+meta.foundation-mq-xlarge-only {
+  font-family: "/only screen and (min-width:90.0625em) and (max-width:120em)/";
+  width: 90.0625em;
+}
+
+/* line 473, ../../foundation/scss/components/_global.scss */
 meta.foundation-mq-xxlarge {
-  font-family: "/only screen and (min-width:120.063em)/";
-  width: 120.063em;
+  font-family: "/only screen and (min-width:120.0625em)/";
+  width: 120.0625em;
 }
 
-/* line 376, ../../foundation/scss/components/_global.scss */
+/* line 478, ../../foundation/scss/components/_global.scss */
 meta.foundation-data-attribute-namespace {
   font-family: false;
 }
@@ -1118,7 +1142,7 @@ h4.profile-sub-header {
   float: right;
 }
 /* line 61, ../scss/custom/_misc.scss */
-.username i.icon {
+.username i.icon, .username i.fa {
   padding-left: 0.2rem;
   padding-right: 0;
 }
@@ -1139,7 +1163,7 @@ body.rtl .username {
   float: left;
 }
 /* line 79, ../scss/custom/_misc.scss */
-body.rtl .username i.icon {
+body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }

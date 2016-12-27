@@ -2,7 +2,7 @@
 
 """ S3 Synchronization
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import json
 import sys
 import datetime
 
@@ -42,15 +43,14 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
+from s3utils import S3ModuleDebug
 
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3SYNC: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -67,15 +67,22 @@ class S3Sync(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            RESTful method handler (repository/sync, repository/register)
+            RESTful method handler, responds to:
+                - GET [prefix]/[name]/sync.xml          - incoming pull
+                - PUT|POST [prefix]/[name]/sync.xml     - incoming push
+                - POST sync/repository/register.json    - remote registration
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            NB incoming pull/push reponse normally by local sync/sync
+               controller as resource proxy => back-end generated S3Request
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
         """
 
-        output = dict()
+        output = {}
 
-        if r.method == "sync":
+        method = r.method
+        if method == "sync":
 
             if r.http == "GET":
                 # Incoming pull
@@ -88,11 +95,14 @@ class S3Sync(S3Method):
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
-        elif r.name == "repository" and r.method == "register":
+        elif method == "register":
 
-            if r.http == "GET":
+            if r.http in ("PUT", "POST"):
                 # Incoming registration request
-                output = self.__register(r, **attr)
+                if r.representation == "json":
+                    output = self.__register(r, **attr)
+                else:
+                    r.error(415, current.ERROR.BAD_FORMAT)
 
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
@@ -110,57 +120,96 @@ class S3Sync(S3Method):
             Respond to an incoming registration request
 
             @param r: the S3Request
-            @param attr: the controller attributes
+            @param attr: controller parameters for the request
         """
 
+        # Parse the request parameters
+        from s3validators import JSONERRORS
+        source = r.read_body()
+        if not source:
+            r.error(400, "Missing parameters")
+        try:
+            parameters = json.load(source[0])
+        except JSONERRORS:
+            r.error(400, "Invalid parameters: %s" % (sys.exc_info()[1]))
+
         log = self.log
+
         result = log.SUCCESS
-        message = "registration successful"
         repository_id = None
 
-        if "repository" in r.vars:
-            ruid = r.vars["repository"]
+        ruid = parameters.get("uuid")
+        if ruid:
+
+            # New repository or update?
             db = current.db
             rtable = current.s3db.sync_repository
-            row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            row = db(rtable.uuid == ruid).select(rtable.id,
+                                                 limitby=(0, 1),
+                                                 ).first()
+
+            # Check permissions
+            permitted = current.auth.s3_has_permission
             if row:
                 repository_id = row.id
-                if not row.accept_push and current.auth.s3_has_role("ADMIN"):
-                    row.update_record(accept_push=True)
+                if not permitted("update", rtable, record_id = repository_id):
+                    r.unauthorised()
+                data = {"deleted": False}
             else:
-                if current.auth.s3_has_role("ADMIN"):
-                    accept_push = True
+                if not permitted("create", rtable):
+                    r.unauthorised()
+                data = {"uuid": ruid}
+
+            # Add repository parameters
+            apitype = parameters.get("apitype")
+            if apitype:
+                data["apitype"] = apitype
+
+            name = parameters.get("name")
+            if name:
+                data["name"] = name
+
+            # Update or insert repository record
+            if row:
+                success = row.update_record(**data)
+                if success:
+                    message = "Registration update successful"
                 else:
-                    accept_push = False
-                repository_id = rtable.insert(name=ruid,
-                                              uuid=ruid,
-                                              accept_push=accept_push)
-                if not repository_id:
                     result = log.ERROR
-                    message = "registration failed"
+                    message = "Registration update failed"
+            else:
+                repository_id = rtable.insert(**data)
+                if repository_id:
+                    message = "Registration successful"
+                else:
+                    result = log.ERROR
+                    message = "Registration failed"
         else:
             result = log.ERROR
-            message = "no repository identifier specified"
+            message = "No repository identifier specified"
 
+        # Response message (JSON)
         if result == log.SUCCESS:
-            output = current.xml.json_message(message=message,
-                                              sender="%s" % self.config.uuid)
+            output = current.xml.json_message(message = message,
+                                              sender = "%s" % self.config.uuid,
+                                              )
         else:
             output = current.xml.json_message(False, 400,
-                                              message=message,
-                                              sender="%s" % self.config.uuid)
+                                              message = message,
+                                              sender = "%s" % self.config.uuid,
+                                              )
 
-        # Set content type header
-        headers = current.response.headers
-        headers["Content-Type"] = "application/json"
+        # Set Content-Type response header
+        current.response.headers["Content-Type"] = "application/json"
 
         # Log the operation
-        log.write(repository_id=repository_id,
-                  resource_name=log.NONE,
-                  transmission=log.IN,
-                  mode=log.REGISTER,
-                  result=result,
-                  message=message)
+        log.write(repository_id = repository_id,
+                  resource_name = log.NONE,
+                  transmission = log.IN,
+                  mode = log.REGISTER,
+                  result = result,
+                  message = message,
+                  )
 
         return output
 
@@ -287,12 +336,14 @@ class S3Sync(S3Method):
             if row:
                 connector = S3SyncRepository(row)
 
-        # Check that the repository is registered and allowed to push
-        if connector is None or not connector.accept_push:
-            r.error(403, current.ERROR.NOT_PERMITTED)
+        if connector is None:
+            # Repositories must be registered to push, so that we
+            # can track sync times and log operations properly
+            r.error(403, "Registration required")
 
         current.log.debug("S3Sync PUSH from %s (%s)" % (connector.name,
-                                                        connector.apitype))
+                                                        connector.apitype,
+                                                        ))
 
         # Get strategy and policy
         default_update_policy = S3ImportItem.POLICY.NEWER
@@ -397,7 +448,14 @@ class S3Sync(S3Method):
 
         log = self.log
 
-        if not repository.url:
+        error = None
+        if repository.apitype == "filesync":
+            if not repository.path:
+                error = "No path set for repository"
+        else:
+            if not repository.url:
+                error = "No URL set for repository"
+        if error:
             log.write(repository_id = repository.id,
                       resource_name = None,
                       transmission = None,
@@ -405,7 +463,7 @@ class S3Sync(S3Method):
                       action = "connect",
                       remote = False,
                       result = self.log.FATAL,
-                      message = "No URL set for repository",
+                      message = error,
                       )
             return False
 
@@ -483,10 +541,10 @@ class S3Sync(S3Method):
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s" % resource.tablename)
-        _debug("Repository: %s" % repository.name)
-        _debug("Conflicting item: %s" % item)
-        _debug("Method: %s" % item.method)
+        _debug("Resolving conflict in %s", resource.tablename)
+        _debug("Repository: %s", repository.name)
+        _debug("Conflicting item: %s", item)
+        _debug("Method: %s", item.method)
 
         if resolver:
             _debug("Applying custom rule")
@@ -677,7 +735,7 @@ class S3SyncLog(S3Method):
                 output = r(subtitle=None,
                            rheader=self.rheader)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -746,7 +804,7 @@ class S3SyncLog(S3Method):
 
 # =============================================================================
 class S3SyncRepository(object):
-    """ Class representation a peer repository """
+    """ Class representation of a peer repository """
 
     def __init__(self, repository):
         """
@@ -755,27 +813,38 @@ class S3SyncRepository(object):
             @param repository: the repository record (Row)
         """
 
+        # Logger and Config
         self.log = S3SyncLog
         self._config = None
 
+        # Identifier and name
         self.id = repository.id
         self.name = repository.name
 
-        self.accept_push = repository.accept_push
-        self.synchronise_uuids = repository.synchronise_uuids
+        # API type and import/export backend
+        self.apitype = repository.apitype
+        self.backend = repository.backend
 
+        # URL / Path
         self.url = repository.url
+        self.path = repository.path
+
+        # Authentication
         self.username = repository.username
         self.password = repository.password
-
         self.client_id = repository.client_id
         self.client_secret = repository.client_secret
         self.site_key = repository.site_key
         self.refresh_token = repository.refresh_token
+
+        # Network
         self.proxy = repository.proxy
 
-        self.apitype = repository.apitype
+        # Processing Options
+        self.synchronise_uuids = repository.synchronise_uuids
+        self.keep_source = repository.keep_source
 
+        # Instantiate Adapter
         import sync_adapter
         api = sync_adapter.__dict__.get(self.apitype)
         if api:

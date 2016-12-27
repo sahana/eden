@@ -7,7 +7,6 @@
     <cap:msgType>Alert</cap:msgType>
     <cap:source>sambro-serv@ndmc.gov.mv</cap:source>
     <cap:scope>Public</cap:scope>
-    <cap:addresses>"National Disaster Management Centre"</cap:addresses>
     <cap:note>This template is intended for CAP on Map projects 'Exercise' The template is Tsunami alerts and warnings. </cap:note>
     <cap:incidents>Tsunami</cap:incidents>
     <cap:info>

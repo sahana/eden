@@ -1,0 +1,20 @@
+Name,Type,Start Date,End Date,Closed,Description,Country,L1,Impact:Individuals Dead,Impact:Individuals Injured,Impact:Individuals Missing
+Typhoon Haiyan,Tropical Cyclone,2013-11-08,,Yes,Yolanda,PH,Region VI [Western Visayas],294,2068,27
+Typhoon Haiyan,Tropical Cyclone,2013-11-08,,Yes,Yolanda,PH,Region VII [Central Visayas],74,348,5
+Typhoon Haiyan,Tropical Cyclone,2013-11-08,,Yes,Yolanda,PH,Region VIII [Eastern Visayas],5877,26186,1005
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,ARMM [Autonomous Region in Muslim Mindanao],,,
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,Region IX [Zamboanga Peninsula],,,
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,Region X [Northern Mindanao],,,
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,Region XI [Davao Region],,,
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,Region XII [SOCCSKSARGEN],,,
+Tropical Storm Washi,Tropical Cyclone,2011-12-16,,Yes,Sendong,PH,Region XIII [Caraga],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,ARMM [Autonomous Region in Muslim Mindanao],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,Region IX [Zamboanga Peninsula],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,Region X [Northern Mindanao],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,Region XI [Davao Region],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,Region XII [SOCCSKSARGEN],,,
+Typhoon Bopha,Tropical Cyclone,2012-12-03,,Yes,Pablo,PH,Region XIII [Caraga],,,
+Typhoon Hagupit,Tropical Cyclone,2012-12-06,,Yes,Ruby,PH,Region VIII [Eastern Visayas],15,855,
+Typhoon Koppu,Tropical Cyclone,2015-10-17,,Yes,Lando,PH,Region III [Central Luzon],,
+Typhoon Haima,Tropical Cyclone,2016-10-19,,No,Lawin,PH,CAR [Cordillera Administrative Region],,
+Typhoon Haima,Tropical Cyclone,2016-10-19,,No,Lawin,PH,Region II [Cagayan Valley],,

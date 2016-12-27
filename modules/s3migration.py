@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-2015 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,14 +33,24 @@ __all__ = ("S3Migration",)
 
 import datetime
 import os
+import shutil
 
 from uuid import uuid4
 
 from gluon import current, DAL, Field
 from gluon.cfs import getcfs
-from gluon.compileapp import build_environment
+from gluon.compileapp import build_environment,compile_application,remove_compiled_application,run_models_in
 from gluon.restricted import restricted
 from gluon.storage import Storage
+
+#try:
+#    # http://gitpython.readthedocs.org
+#    from git import Repo
+#except:
+#    GITPYTHON = False
+import subprocess
+#else:
+#    GITPYTHON = True
 
 class S3Migration(object):
     """
@@ -55,15 +65,18 @@ class S3Migration(object):
         Where script looks like:
         m = local_import("s3migration")
         migrate = m.S3Migration()
-        migrate.prep(foreigns=[],
-                     moves=[],
+        #migrate.pull()
+        migrate.prep(moves=[],
                      news=[],
                      ondeletes=[],
                      strbools=[],
                      strints=[],
-                     uniques=[],
+                     add_notnulls=[],
+                     remove_foreigns=[],
+                     remove_uniques=[],
                      )
-        #migrate.migrate()
+        migrate.migrate()
+        migrate.compile()
         migrate.post(moves=[],
                      news=[],
                      strbools=[],
@@ -89,17 +102,7 @@ class S3Migration(object):
 
     def __init__(self):
 
-        request = current.request
-
-        # Load s3cfg => but why do this so complicated?
-        #name = "applications.%s.modules.s3cfg" % request.application
-        #s3cfg = __import__(name)
-        #for item in name.split(".")[1:]:
-            ## Remove the dot
-            #s3cfg = getattr(s3cfg, item)
-        #settings = s3cfg.S3Config()
-
-        # Can use normal import here since executed in web2py environment:
+        # Load s3cfg
         import s3cfg
         settings = s3cfg.S3Config()
 
@@ -107,6 +110,7 @@ class S3Migration(object):
         current.deployment_settings = settings
 
         # Read settings
+        request = current.request
         model = "%s/models/000_config.py" % request.folder
         code = getcfs(model, model, None)
         response = current.response
@@ -120,19 +124,21 @@ class S3Migration(object):
         # Some (older) 000_config.py also use "deployment_settings":
         environment["deployment_settings"] = settings
         # For backwards-compatibility with older 000_config.py:
-        def template_path():
-            # When you see this warning, you should update 000_config.py
-            # See: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates/Migration#Changesin000_config.py
-            print "template_path() is deprecated, please update 000_config.py"
-            # Return just any valid path to make sure the path-check succeeds,
-            # => modern S3Config will find the template itself
-            return request.folder
-        environment["template_path"] = template_path
+        #def template_path():
+        #    # When you see this warning, you should update 000_config.py
+        #    # See: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates/Migration#Changesin000_config.py
+        #    print "template_path() is deprecated, please update 000_config.py"
+        #    # Return just any valid path to make sure the path-check succeeds,
+        #    # => modern S3Config will find the template itself
+        #    return request.folder
+        #environment["template_path"] = template_path
         environment["os"] = os
         environment["Storage"] = Storage
 
         # Execute 000_config.py
         restricted(code, environment, layer=model)
+
+        self.environment = environment
 
         self.db_engine = settings.get_database_type()
         (db_string, pool_size) = settings.get_database_string()
@@ -146,19 +152,18 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=None,
-                   moves=None,
+    def prep(self, moves=None,
                    news=None,
                    ondeletes=None,
                    strbools=None,
                    strints=None,
-                   uniques=None,
+                   add_notnulls=None,
+                   remove_foreigns=None,
+                   remove_uniques=None,
                    ):
         """
             Preparation before migration
 
-            @param foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
-                              - if tablename == "all" then all tables are checked
             @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
                               - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
             @param news      : List of dicts {new_tablename: {'lookup_field': '',
@@ -169,7 +174,10 @@ class S3Migration(object):
             @param ondeletes : List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
             @param strbools  : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
             @param strints   : List of tuples [(tablename, fieldname)] to convert from string to integer
-            @param uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
+            @param add_notnulls     : List of tuples [(tablename, fieldname)] to add notnull to
+            @param remove_foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
+                                      - if tablename == "all" then all tables are checked
+            @param remove_uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
         """
 
         # Backup current database
@@ -179,14 +187,19 @@ class S3Migration(object):
         self.strints = strints
         self.backup()
 
-        if foreigns:
+        if add_notnulls:
+            # Add notnull option to fields which need it
+            for tablename, fieldname in add_notnulls:
+                self.add_notnull(tablename, fieldname)
+
+        if remove_foreigns:
             # Remove Foreign Key constraints which need to go in next code
-            for tablename, fieldname in foreigns:
+            for tablename, fieldname in remove_foreigns:
                 self.remove_foreign(tablename, fieldname)
 
-        if uniques:
+        if remove_uniques:
             # Remove Unique indices which need to go in next code
-            for tablename, fieldname in uniques:
+            for tablename, fieldname in remove_uniques:
                 self.remove_unique(tablename, fieldname)
 
         if ondeletes:
@@ -197,10 +210,10 @@ class S3Migration(object):
         # Remove fields which need to be altered in next code
         if strbools:
             for tablename, fieldname in strbools:
-                self.drop(tablename, fieldname)
+                self.drop_field(tablename, fieldname)
         if strints:
             for tablename, fieldname in strints:
-                self.drop(tablename, fieldname)
+                self.drop_field(tablename, fieldname)
 
         self.db.commit()
 
@@ -228,7 +241,6 @@ class S3Migration(object):
 
         # Create clean folder for the backup
         if os.path.exists(folder):
-            import shutil
             shutil.rmtree(folder)
             import time
             time.sleep(1)
@@ -336,19 +348,148 @@ class S3Migration(object):
         self.db_bak = db_bak
 
     # -------------------------------------------------------------------------
-    def migrate(self):
+    def pull(self, version=None):
         """
-            Perform the migration
-            @ToDo
+            Update the Eden code
         """
 
-        # Update code: git pull
-        # run_models_in(environment)
-        # or
-        # Set migrate=True in models/000_config.py
-        # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
-        # Set migrate=False in models/000_config.py
-        pass
+        #if GITPYTHON:
+        #else:
+        #import s3log
+        #s3log.S3Log.setup()
+        #current.log.warning("GitPython not installed, will need to call out to Git via CLI")
+
+        # Copy the current working directory to revert back to later
+        cwd = os.getcwd()
+
+        # Change to the Eden folder
+        folder = current.request.folder
+        os.chdir(os.path.join(cwd, folder))
+
+        # Remove old compiled code
+        remove_compiled_application(folder)
+
+        # Reset to remove any hotfixes
+        subprocess.call(["git", "reset", "--hard", "HEAD"])
+
+        # Store the current version
+        old_version = subprocess.check_output(["git", "describe", "--always", "HEAD"])
+        self.old_version = old_version.strip()
+
+        # Pull
+        subprocess.call(["git", "pull"])
+
+        if version:
+            # Checkout this version
+            subprocess.call(["git", "checkout", version])
+
+        # Change back
+        os.chdir(cwd)
+
+    # -------------------------------------------------------------------------
+    def find_script(self):
+        """
+            Find the upgrade script(s) to run
+        """
+
+        old_version = self.old_version
+        if not old_version:
+            # Nothing we can do
+            return
+
+        # Find the current version
+        new_version = subprocess.check_output(["git", "describe", "--always", "HEAD"])
+        new_version = new_version.strip()
+
+        # Look for a script to the current version
+        path = os.path.join(request.folder, "static", "scripts", "upgrade")
+
+    # -------------------------------------------------------------------------
+    def run_model(self):
+        """
+            Execute all the models/
+        """
+
+        if not hasattr(current, "db"):
+            run_models_in(self.environment)
+
+    # -------------------------------------------------------------------------
+    def compile(self):
+        """
+            Compile the Eden code
+        """
+
+        # Load the base Model
+        self.run_model()
+
+        from gluon.fileutils import up
+
+        request = current.request
+        os_path = os.path
+        join = os_path.join
+
+        # Pass View Templates to Compiler
+        settings = current.deployment_settings
+        s3 = current.response.s3
+        s3.views = views = {}
+        s3.theme = theme = settings.get_theme()
+        if theme != "default":
+            folder = request.folder
+            location = settings.get_template_location()
+            exists = os_path.exists
+            for view in ["create.html",
+                         "dashboard.html",
+                         #"delete.html",
+                         "display.html",
+                         "iframe.html",
+                         "list.html",
+                         "list_filter.html",
+                         "map.html",
+                         #"merge.html",
+                         "plain.html",
+                         "popup.html",
+                         "profile.html",
+                         "report.html",
+                         #"review.html",
+                         "summary.html",
+                         #"timeplot.html",
+                         "update.html",
+                         ]:
+                if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
+                    views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
+
+        def apath(path="", r=None):
+            """
+            Builds a path inside an application folder
+
+            Parameters
+            ----------
+            path:
+                path within the application folder
+            r:
+                the global request object
+
+            """
+
+            opath = up(r.folder)
+            while path[:3] == "../":
+                (opath, path) = (up(opath), path[3:])
+            return join(opath, path).replace("\\", "/")
+
+        folder = apath(request.application, request)
+        compile_application(folder)
+
+    # -------------------------------------------------------------------------
+    def migrate(self):
+        """
+            Perform an automatic database migration
+        """
+
+        # Load the base model
+        self.run_model()
+
+        # Load all conditional models
+        current.s3db.load_all_models()
 
     # -------------------------------------------------------------------------
     def post(self, moves=None,
@@ -534,7 +675,51 @@ class S3Migration(object):
             return None
 
     # -------------------------------------------------------------------------
-    def drop(self, tablename, fieldname):
+    def add_notnull(self, tablename, fieldname):
+        """
+            Add a notnull constraint to a field
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # @ToDo: http://www.sqlite.org/lang_altertable.html
+            raise NotImplementedError
+
+        elif db_engine == "mysql":
+            # http://dev.mysql.com/doc/refman/5.7/en/alter-table.html
+            raise NotImplementedError
+
+        elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
+            sql = "ALTER TABLE %(tablename)s ALTER COLUMN %(fieldname)s SET NOT NULL;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            field = table[fn]
+            if fn == fieldname:
+                field.notnull = True
+            fields.append(field)
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
+
+    # -------------------------------------------------------------------------
+    def drop_field(self, tablename, fieldname):
         """
             Drop a field from a table
             e.g. for when changing type
@@ -670,6 +855,50 @@ class S3Migration(object):
                 import sys
                 e = sys.exc_info()[1]
                 print >> sys.stderr, e
+
+    # -------------------------------------------------------------------------
+    def remove_notnull(self, tablename, fieldname):
+        """
+            Remove a notnull constraint from a field
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+
+        # Modify the database
+        if db_engine == "sqlite":
+            # @ToDo: http://www.sqlite.org/lang_altertable.html
+            raise NotImplementedError
+
+        elif db_engine == "mysql":
+            # http://dev.mysql.com/doc/refman/5.7/en/alter-table.html
+            raise NotImplementedError
+
+        elif db_engine == "postgres":
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
+            sql = "ALTER TABLE %(tablename)s ALTER COLUMN %(fieldname)s DROP NOT NULL;" % \
+                dict(tablename=tablename, fieldname=fieldname)
+
+        try:
+            db.executesql(sql)
+        except:
+            import sys
+            e = sys.exc_info()[1]
+            print >> sys.stderr, e
+
+        # Modify the .table file
+        table = db[tablename]
+        fields = []
+        for fn in table.fields:
+            field = table[fn]
+            if fn == fieldname:
+                field.notnull = False
+            fields.append(field)
+        db.__delattr__(tablename)
+        db.tables.remove(tablename)
+        db.define_table(tablename, *fields,
+                        # Rebuild the .table file from this definition
+                        fake_migrate=True)
 
     # -------------------------------------------------------------------------
     def remove_unique(self, tablename, fieldname):

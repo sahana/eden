@@ -224,26 +224,24 @@
             <xsl:if test="$Row">
                 <!-- Use the data in this row -->
 
-                <xsl:variable name="Groups" select="col[@field='Groups']/text()"/>
-                <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
                 <xsl:variable name="Services" select="col[@field='Services']/text()"/>
                 <xsl:variable name="Service">
-                    <xsl:value-of select="col[@field='Service']"/>
+                    <xsl:value-of select="col[@field='Service']/text()"/>
                 </xsl:variable>
                 <xsl:variable name="SubService">
-                    <xsl:value-of select="col[@field='SubService']"/>
+                    <xsl:value-of select="col[@field='SubService']/text()"/>
                 </xsl:variable>
                 <xsl:variable name="SubSubService">
-                    <xsl:value-of select="col[@field='SubSubService']"/>
+                    <xsl:value-of select="col[@field='SubSubService']/text()"/>
                 </xsl:variable>
                 <xsl:variable name="Type">
-                    <xsl:value-of select="col[@field='Type']"/>
+                    <xsl:value-of select="col[@field='Type']/text()"/>
                 </xsl:variable>
                 <xsl:variable name="SubType">
-                    <xsl:value-of select="col[@field='SubType']"/>
+                    <xsl:value-of select="col[@field='SubType']/text()"/>
                 </xsl:variable>
                 <xsl:variable name="SubSubType">
-                    <xsl:value-of select="col[@field='SubSubType']"/>
+                    <xsl:value-of select="col[@field='SubSubType']/text()"/>
                 </xsl:variable>
 
                 <xsl:if test="col[@field='Approved']!=''">
@@ -327,56 +325,75 @@
                     </data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Region']!=''">
+                <!-- Link to Region -->
+                <xsl:variable name="Region" select="col[@field='Region']/text()"/>
+                <xsl:if test="$Region!=''">
                     <reference field="region_id" resource="org_region">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
+                            <xsl:value-of select="concat('Region:', $Region)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Website']!=''">
+                <!-- Website -->
+                <xsl:variable name="Website" select="col[@field='Website']/text()"/>
+                <xsl:if test="$Website!=''">
                     <data field="website">
-                        <xsl:value-of select="col[@field='Website']"/>
+                        <xsl:value-of select="$Website"/>
                     </data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Phone']!=''">
+                <!-- Email Addresses -->
+                <xsl:call-template name="Email">
+                    <xsl:with-param name="EmailAddress" select="col[@field='Email']/text()"/>
+                </xsl:call-template>
+
+                <!-- Main Phone Number -->
+                <xsl:variable name="Phone" select="col[@field='Phone']/text()"/>
+                <xsl:if test="$Phone!=''">
                     <data field="phone">
-                        <xsl:value-of select="col[@field='Phone']"/>
+                        <xsl:value-of select="$Phone"/>
                     </data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Phone2']!=''">
+                <!-- Alternative Phone Number -->
+                <xsl:variable name="Phone2" select="col[@field='Phone2']/text()"/>
+                <xsl:if test="$Phone2!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">WORK_PHONE</data>
                         <data field="value">
-                            <xsl:value-of select="col[@field='Phone2']"/>
+                            <xsl:value-of select="$Phone2"/>
                         </data>
                     </resource>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Facebook']!=''">
+                <!-- Facebook -->
+                <xsl:variable name="Facebook" select="col[@field='Facebook']/text()"/>
+                <xsl:if test="$Facebook!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">FACEBOOK</data>
                         <data field="value">
-                            <xsl:value-of select="col[@field='Facebook']"/>
+                            <xsl:value-of select="$Facebook"/>
                         </data>
                     </resource>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Twitter']!=''">
+                <!-- Twitter -->
+                <xsl:variable name="Twitter" select="col[@field='Twitter']/text()"/>
+                <xsl:if test="$Twitter!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">TWITTER</data>
                         <data field="value">
-                            <xsl:value-of select="col[@field='Twitter']"/>
+                            <xsl:value-of select="$Twitter"/>
                         </data>
                     </resource>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Comments']!=''">
+                <!-- Comments -->
+                <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
+                <xsl:if test="$Comments!=''">
                     <data field="comments">
-                        <xsl:value-of select="col[@field='Comments']"/>
+                        <xsl:value-of select="$Comments"/>
                     </data>
                 </xsl:if>
 
@@ -398,6 +415,7 @@
                 </xsl:for-each>
 
                 <!-- Org Groups -->
+                <xsl:variable name="Groups" select="col[@field='Groups']/text()"/>
                 <xsl:if test="$Groups!=''">
                     <xsl:call-template name="splitList">
                         <xsl:with-param name="list" select="$Groups"/>
@@ -405,6 +423,8 @@
                     </xsl:call-template>
                 </xsl:if>
 
+                <!-- Sectors -->
+                <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
                 <xsl:if test="$Sectors!=''">
                     <xsl:call-template name="splitList">
                         <xsl:with-param name="list" select="$Sectors"/>
@@ -455,6 +475,11 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
+            <!-- @ToDo
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$Value"/>
+                <xsl:with-param name="arg">tag</xsl:with-param>
+            </xsl:call-template> -->
             <resource name="org_organisation_tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
@@ -580,13 +605,49 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Email">
+
+        <xsl:param name="EmailAddress"/>
+
+        <xsl:variable name="head" select="substring-before($EmailAddress, ',')"/>
+        <xsl:variable name="tail" select="substring-after($EmailAddress, ',')"/>
+
+        <xsl:variable name="value">
+            <xsl:choose>
+                <xsl:when test="contains($EmailAddress, ',')">
+                    <xsl:value-of select="normalize-space($head)"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="normalize-space($EmailAddress)"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:if test="$value!=''">
+            <resource name="pr_contact">
+                <data field="contact_method">EMAIL</data>
+                <data field="value">
+                    <xsl:value-of select="$value"/>
+                </data>
+            </resource>
+        </xsl:if>
+
+        <xsl:if test="$tail!=''">
+            <xsl:call-template name="Email">
+                <xsl:with-param name="EmailAddress" select="$tail"/>
+            </xsl:call-template>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
 
         <xsl:choose>
             <!-- Org Groups -->
-            <xsl:when test="$arg='grop'">
+            <xsl:when test="$arg='group'">
                 <resource name="org_group_membership">
                     <reference field="group_id" resource="org_group">
                         <resource name="org_group">

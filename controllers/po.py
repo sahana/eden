@@ -20,55 +20,54 @@ def index():
     output = {"module_name": module_name}
 
     # Extract summary information
-    atable = s3db.po_area
-    htable = s3db.po_household
-    rtable = s3db.po_organisation_household
-    ftable = s3db.po_household_followup
-    otable = s3db.po_referral_organisation
+    from s3 import FS
+    define_resource = s3db.resource
 
     # => Number of households
-    query = (htable.deleted != True)
-    count = htable.id.count()
-    row = db(query).select(count).first()
-    total_households = row[count]
+    total_households = define_resource("po_household").count()
 
     # => Number of referrals
-    query = (rtable.deleted != True) & \
-            (rtable.household_id == htable.id) & \
-            (htable.deleted != True)
-    count = rtable.id.count()
-    row = db(query).select(count).first()
-    total_referrals = row[count]
+    total_referrals = define_resource("po_organisation_household").count()
 
     # => Number of agencies involved
-    query = (otable.deleted != True) & \
-            (rtable.deleted != True) & \
-            (rtable.organisation_id == otable.organisation_id)
-    count = otable.id.count()
-    rows = db(query).select(otable.id, groupby=otable.id)
-    total_agencies = len(rows)
+    filter = (FS("organisation_id") == s3db.po_organisation_household.organisation_id)
+    total_agencies = define_resource("po_referral_organisation",
+                                     filter=filter).count(distinct=True)
 
     # => Number of follow ups (broken down into pending/completed)
-    query = (ftable.deleted != True) & \
-            (ftable.household_id == htable.id) & \
-            (htable.deleted != True) & \
-            (htable.followup == True)
-    count = ftable.id.count()
-    completed = ftable.completed
-    rows = db(query).select(completed, count, groupby=completed)
-    follow_ups_pending, follow_ups_completed = 0, 0
-    for row in rows:
-        if row[completed]:
-            follow_ups_completed += row[count]
-        else:
-            follow_ups_pending += row[count]
+    # Option 1
+    #  Minimum Time: 0.042s
+    #  Maximum Time: 0.103s
+    #  Mean Time: 0.047s
+    # Option 2
+    #  Minimum Time: 0.002s
+    #  Maximum Time: 0.03s
+    #  Mean Time: 0.002s
+    #rows = define_resource("po_household_followup").select(fields=["completed"],
+    #                                                       as_rows=True)
+    #follow_ups_pending, follow_ups_completed = 0, 0
+    #for row in rows:
+    #    if row.completed:
+    #        follow_ups_completed += 1
+    #    else:
+    #        follow_ups_pending += 1
+    filter = (FS("completed") == False)
+    follow_ups_pending = define_resource("po_household_followup",
+                                         filter=filter).count()
+    filter = (FS("completed") == True)
+    follow_ups_completed = define_resource("po_household_followup",
+                                           filter=filter).count()
     total_follow_ups = follow_ups_pending + follow_ups_completed
 
     # => Number of attempted visits
-    query = (atable.deleted != True)
-    total = atable.attempted_visits.sum()
-    result = db(query).select(total).first()
-    total_attempted_visits = result[total] or 0
+    # @ToDo: Support sum() in S3Resource
+    areas = define_resource("po_area").select(fields=["attempted_visits"],
+                                              as_rows=True)
+    total_attempted_visits = 0
+    for row in areas:
+        attempted_visits = row.attempted_visits
+        if attempted_visits:
+            total_attempted_visits += attempted_visits
 
     # Summary
     output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),

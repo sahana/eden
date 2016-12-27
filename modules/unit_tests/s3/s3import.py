@@ -5,20 +5,16 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3import.py
 #
+import datetime
+import json
 import unittest
 
 from gluon import *
 from gluon.storage import Storage
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from s3 import S3Duplicate, S3ImportItem, S3ImportJob, s3_meta_fields
+
+from unit_tests import run_suite
 
 # =============================================================================
 class ListStringImportTests(unittest.TestCase):
@@ -576,18 +572,61 @@ class DuplicateDetectionTests(unittest.TestCase):
             deduplicate = S3Duplicate(secondary=17)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
+class MtimeImportTests(unittest.TestCase):
 
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
+    def setUp(self):
 
+        current.auth.override = True
+
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def testMtimeImport(self):
+        """
+            Verify that create-postprocess does not overwrite
+            imported modified_on
+        """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+
+        # Fixed modified_on date in the past
+        mtime = datetime.datetime(1988, 8, 13, 10, 0, 0)
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_facility" modified_on="%(mtime)s" uuid="MTFAC">
+        <data field="name">MtimeTestOffice</data>
+        <reference field="organisation_id">
+            <resource name="org_organisation" modified_on="%(mtime)s" uuid="MTORG">
+                <data field="name">MtimeTestOrg</data>
+            </resource>
+        </reference>
+    </resource>
+</s3xml>""" % {"mtime": mtime.isoformat()}
+
+        from lxml import etree
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        # Import the data
+        resource = s3db.resource("org_facility")
+        result = resource.import_xml(tree)
+
+        # Verify outer resource
+        resource = s3db.resource("org_facility", uid="MTFAC")
+        row = resource.select(["id", "modified_on"], as_rows=True)[0]
+        assertEqual(row.modified_on, mtime)
+
+        # Verify inner resource
+        resource = s3db.resource("org_organisation", uid="MTORG")
+        row = resource.select(["id", "modified_on"], as_rows=True)[0]
+        assertEqual(row.modified_on, mtime)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -597,6 +636,7 @@ if __name__ == "__main__":
         PostParseTests,
         FailedReferenceTests,
         DuplicateDetectionTests,
+        MtimeImportTests,
     )
 
 # END ========================================================================

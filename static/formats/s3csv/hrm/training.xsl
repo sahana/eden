@@ -8,12 +8,16 @@
 
          Column headers defined in this stylesheet:
          Training Event (just used for setting defaults) @ToDo: Complete this
+         Training Organisation
          Course
-         Organisation
-         Facility
+         Venue
+         Venue Type
          Start
          End
          Hours
+         Grade
+         Trainee Organisation
+         Certificate Number
          First Name
          Middle Name
          Last Name
@@ -26,8 +30,6 @@
 
          PersonGender...................optional.....person gender
 
-         @ToDo: Support Facilities other than Offices
-
     *********************************************************************** -->
     <xsl:import href="person.xsl"/>
     <xsl:import href="../commons.xsl"/>
@@ -37,15 +39,17 @@
     <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
     <xsl:key name="courses" match="row" use="col[@field='Course']"/>
-    <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
-    <xsl:key name="sites" match="row" use="col[@field='Facility']"/>
+    <xsl:key name="organisations" match="row" use="col[@field='Trainee Organisation']"/>
+    <xsl:key name="organisers" match="row" use="col[@field='Training Organisation']"/>
+    <xsl:key name="sites" match="row" use="concat(col[@field='Venue'], '/',
+                                                  col[@field='Facility Type'])"/>
     <xsl:key name="persons" match="row" use="concat(col[@field='First Name'], '/',
                                                     col[@field='Middle Name'], '/',
                                                     col[@field='Last Name'], '/',
                                                     col[@field='DoB'], '/',
                                                     col[@field='National ID'], '/',
                                                     col[@field='Email'])"/>
-    <xsl:key name="events" match="row" use="concat(col[@field='Facility'], '/',
+    <xsl:key name="events" match="row" use="concat(col[@field='Venue'], '/',
                                                    col[@field='Course'], '/',
                                                    col[@field='Start'])"/>
     <xsl:key name="trainingevents" match="row" use="col[@field='Training Event']"/>
@@ -62,13 +66,23 @@
 
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations',
-                                                                   col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation"/>
+                                                                   col[@field='Trainee Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="Field">Trainee Organisation</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisers',
+                                                                   col[@field='Training Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="Field">Training Organisation</xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Sites -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('sites',
-                                                                   col[@field='Facility'])[1])]">
+                                                                   concat(col[@field='Venue'], '/',
+                                                                          col[@field='Facility Type']))[1])]">
                 <xsl:call-template name="Site"/>
             </xsl:for-each>
 
@@ -76,12 +90,13 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('courses',
                                                                    col[@field='Course'])[1])]">
                 <xsl:call-template name="Course"/>
+                <xsl:call-template name="Certificate"/>
             </xsl:for-each>
 
             <!-- Events -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('events',
-                                                        concat(col[@field='Facility'], '/',
+                                                        concat(col[@field='Venue'], '/',
                                                                col[@field='Course'], '/',
                                                                col[@field='Start']))[1])]">
                 <xsl:call-template name="Event"/>
@@ -107,9 +122,23 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Event">
-        <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="Organisation" select="col[@field='Training Organisation']/text()"/>
+        <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
         <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
         <xsl:variable name="StartDate" select="col[@field='Start']/text()"/>
+        <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
+
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
 
         <xsl:if test="$SiteName!=''">
             <resource name="hrm_training_event">
@@ -120,7 +149,15 @@
                 </xsl:attribute>
                 <data field="start_date"><xsl:value-of select="$StartDate"/></data>
                 <data field="end_date"><xsl:value-of select="col[@field='End']"/></data>
-                <data field="hours"><xsl:value-of select="col[@field='Hours']"/></data>
+                <xsl:if test="$Hours!=''">
+                    <data field="hours"><xsl:value-of select="$Hours"/></data>
+                </xsl:if>
+                <!-- Link to Organisation -->
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Organisation"/>
+                    </xsl:attribute>
+                </reference>
                 <!-- Link to Course -->
                 <reference field="course_id" resource="hrm_course">
                     <xsl:attribute name="tuid">
@@ -128,7 +165,10 @@
                     </xsl:attribute>
                 </reference>
                 <!-- Link to Site -->
-                <reference field="site_id" resource="org_office">
+                <reference field="site_id">
+                    <xsl:attribute name="resource">
+                        <xsl:value-of select="$resourcename"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$SiteName"/>
                     </xsl:attribute>
@@ -151,7 +191,7 @@
             <xsl:variable name="tail">
                 <xsl:value-of select="substring-after($TrainingEvent, '--')"/>
             </xsl:variable>
-            <xsl:variable name="OfficeName">
+            <xsl:variable name="SiteName">
                 <!-- enclosed in curly brackets -->
                 <xsl:value-of select="substring-before(substring-after($tail, '{'), '}')"/>
             </xsl:variable>
@@ -167,7 +207,7 @@
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$CourseName"/></data>
                 </resource>
-                <xsl:if test="$OfficeName!=''">
+                <xsl:if test="$SiteName!=''">
                     <resource name="org_office">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$OfficeName"/>
@@ -207,6 +247,8 @@
         <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
         <xsl:variable name="DoB" select="col[@field='DoB']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
+        <xsl:variable name="Organisation" select="col[@field='Trainee Organisation']/text()"/>
+        <xsl:variable name="Certification" select="col[@field='Certificate Number']/text()"/>
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
@@ -244,7 +286,38 @@
                     <data field="value"><xsl:value-of select="$NationalID"/></data>
                 </resource>
             </xsl:if>
+
             <xsl:call-template name="ContactInformation"/>
+
+            <xsl:if test="$Organisation!=''">
+                <!-- HR record -->
+                <resource name="hrm_human_resource">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Organisation"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
+            <!-- @ToDo: Allow multiple Certifications for the same person! -->
+            <xsl:if test="$Certification!=''">
+                <!-- Certification -->
+                <resource name="hrm_certification">
+                    <reference field="certificate_id" resource="hrm_certificate">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Course']"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="number"><xsl:value-of select="$Certification"/></data>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Training Organisation']"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>
@@ -252,10 +325,14 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
         <xsl:variable name="StartDate" select="col[@field='Start']/text()"/>
         <xsl:variable name="EndDate" select="col[@field='End']/text()"/>
         <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
+        <xsl:variable name="Grade" select="col[@field='Grade']/text()"/>
+        <xsl:variable name="GradeDetails">
+            <xsl:value-of select="substring-after($Grade, '.')"/>
+        </xsl:variable>
         <xsl:variable name="TrainingEvent" select="col[@field='Training Event']/text()"/>
         <xsl:variable name="CourseName">
             <xsl:choose>
@@ -313,6 +390,29 @@
             <xsl:if test="$Hours!=''">
                 <data field="hours"><xsl:value-of select="$Hours"/></data>
             </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$GradeDetails!=''">
+                    <!-- Fractional Data, so this is a specific test result -->
+                    <data field="grade_details">
+                        <xsl:value-of select="$Grade"/>
+                    </data>
+                </xsl:when>
+                <xsl:when test="$Grade!=''">
+                    <data field="grade">
+                        <xsl:choose>
+                            <xsl:when test="$Grade='Pass'">8</xsl:when>
+                            <xsl:when test="$Grade='Aprobado'">8</xsl:when>
+                            <xsl:when test="$Grade='Fail'">9</xsl:when>
+                            <xsl:when test="$Grade='Reprobado'">9</xsl:when>
+                            <xsl:otherwise><xsl:value-of select="$Grade"/></xsl:otherwise>
+                        </xsl:choose>
+                    </data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Assume a Pass -->
+                    <data field="grade">8</data>
+                </xsl:otherwise>
+            </xsl:choose>
         </resource>
 
     </xsl:template>
@@ -331,20 +431,56 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Site">
-        <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
+    <xsl:template name="Certificate">
+        <!-- @ToDo: Add Support for Certs with diff names to Courses -->
+        <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
 
-        <resource name="org_office">
+        <xsl:if test="col[@field='Certificate Number']!=''">
+            <resource name="hrm_certificate">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$CourseName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$CourseName"/></data>
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Training Organisation']"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Site">
+        <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <resource>
+            <xsl:attribute name="name">
+                <xsl:value-of select="$resourcename"/>
+            </xsl:attribute>
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$SiteName"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$SiteName"/></data>
-            <!-- Link to Organisation -->
+            <!-- Link to Organisation. No: Leave this to deduplicator
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Organisation']"/>
                 </xsl:attribute>
-            </reference>
+            </reference> -->
         </resource>
 
     </xsl:template>

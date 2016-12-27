@@ -2,7 +2,7 @@
 
 """ Sahana Eden Hospital Management System Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,7 +38,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class HospitalDataModel(S3Model):
@@ -120,10 +120,11 @@ class HospitalDataModel(S3Model):
                      # @ToDo: Move to a KV in hms_hospital_tag table?
                      Field("gov_uuid", unique=True, length=128,
                            label = T("Government UID"),
-                           requires = IS_EMPTY_OR(
+                           requires = IS_EMPTY_OR([
+                                       IS_LENGTH(128),
                                        IS_NOT_ONE_OF(db,
-                                           "%s.gov_uuid" % tablename)
-                                       ),
+                                           "%s.gov_uuid" % tablename),
+                                       ]),
                            readable = False,
                            writable = False,
                            ),
@@ -131,6 +132,9 @@ class HospitalDataModel(S3Model):
                      Field("name", notnull=True,
                            length=64, # Mayon compatibility
                            label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       ]
                            ),
                      # Alternate name, or name in local language
                      Field("aka1",
@@ -146,6 +150,7 @@ class HospitalDataModel(S3Model):
                            #notnull=True, unique=True,
                            # @ToDo: code_requires
                            label = T("Code"),
+                           requires = IS_LENGTH(120),
                            ),
                      Field("facility_type", "integer",
                            default = 1,
@@ -310,7 +315,9 @@ class HospitalDataModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = self.hms_hospital_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("address",),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  #"gov_uuid",
@@ -340,11 +347,12 @@ class HospitalDataModel(S3Model):
                   )
 
         # Reusable field
-        hms_hospital_id_comment = S3AddResourceLink(c="hms",
-                                                    f="hospital",
-                                                    label=ADD_HOSPITAL,
-                                                    title=T("Hospital"),
-                                                    tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Create Hospital'."))
+        hms_hospital_id_comment = S3PopupLink(c = "hms",
+                                              f = "hospital",
+                                              label = ADD_HOSPITAL,
+                                              title = T("Hospital"),
+                                              tooltip = T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Create Hospital'."),
+                                              )
 
         represent = S3Represent(lookup=tablename)
         hospital_id = S3ReusableField("hospital_id", "reference %s" % tablename,
@@ -409,7 +417,10 @@ class HospitalDataModel(S3Model):
                           *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.hms_hospital_tag_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("hospital_id",
+                                                       "tag",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -600,6 +611,7 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("ems_reason", length=128,
                            label = T("ER Status Reason"),
+                           requires = IS_LENGTH(128),
                            ),
 
                      # Operating Room Status
@@ -614,6 +626,7 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("or_reason", length=128,
                            label = T("OR Status Reason"),
+                           requires = IS_LENGTH(128),
                            ),
 
                      # Morgue status and capacity
@@ -740,8 +753,10 @@ class HospitalDataModel(S3Model):
         define_table(tablename,
                      hospital_id(ondelete = "CASCADE"),
                      Field("unit_id", length=128, unique=True,
+                           requires = IS_LENGTH(128),
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      Field("bed_type", "integer",
                            default = 6,
                            label = T("Bed Type"),
@@ -949,61 +964,12 @@ class HospitalDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hms_hospital_duplicate(item):
-        """
-            Hospital record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        data = item.data
-        #org = data.get("organisation_id")
-        address = data.get("address")
-
-        table = item.table
-        query = (table.name == data.name)
-        #if org:
-        #    query = query & (table.organisation_id == org)
-        if address:
-            query = query & (table.address == address)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def hms_hospital_onaccept(form):
         """
             Update Affiliation, record ownership and component ownership
         """
 
         current.s3db.org_update_affiliations("hms_hospital", form.vars)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hms_hospital_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method to update
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        hospital_id = data.get("hospital_id", None)
-
-        if not tag or not hospital_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.hospital_id == hospital_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1257,7 +1223,9 @@ class HospitalActivityReportModel(S3Model):
                                 represent = represent_int_amount,
                                 requires = is_number_of_patients,
                                 ),
-                          Field("comment", length=128),
+                          Field("comment", length=128,
+                                requires = IS_LENGTH(128),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings

@@ -12,17 +12,18 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3OutboxTests(unittest.TestCase):
     """ Outbox processing tests """
 
     # -------------------------------------------------------------------------
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
 
         current.auth.override = True
 
-        # Backup normal method
-        self.save_email = current.msg.send_email
         xmlstr = """
 <s3xml>
     <resource name="pr_person" uuid="MsgTestPerson1">
@@ -67,17 +68,50 @@ class S3OutboxTests(unittest.TestCase):
         # Import the test entities
         resource = s3db.resource("pr_person")
         resource.import_xml(xmltree)
-        self.assertTrue(resource.error is None)
+        if resource.error is not None:
+            raise AssertionError("Test data import failed: %s" % resource.error)
 
         resource = s3db.resource("org_organisation")
         resource.import_xml(xmltree)
-        self.assertTrue(resource.error is None)
+        if resource.error is not None:
+            raise AssertionError("Test data import failed: %s" % resource.error)
 
         resource = s3db.resource("pr_group")
         resource.import_xml(xmltree)
-        self.assertTrue(resource.error is None)
+        if resource.error is not None:
+            raise AssertionError("Test data import failed: %s" % resource.error)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        s3db = current.s3db
+
+        resource = s3db.resource("pr_person", uid=["MsgTestPerson1", "MsgTestPerson2"])
+        result = resource.delete()
+        if result != 2:
+            raise AssertionError("Test data deletion failed")
+
+        resource = s3db.resource("org_organisation", uid="MsgTestOrg")
+        result = resource.delete()
+        if result != 1:
+            raise AssertionError("Test data deletion failed")
+
+        resource = s3db.resource("pr_group", uid="MsgTestGroup")
+        result = resource.delete()
+        if result != 1:
+            raise AssertionError("Test data deletion failed")
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
 
         db = current.db
+        s3db = current.s3db
+
+        # Backup normal method
+        self.save_email = current.msg.send_email
 
         # Temporarily disable any pending messages, so they
         # don't interfere with this test
@@ -95,6 +129,14 @@ class S3OutboxTests(unittest.TestCase):
         self.assertTrue(self.message_id > 0)
 
         self.sent = []
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.db.rollback()
+
+        # Restore normal method
+        current.msg.send_email = self.save_email
 
     # -------------------------------------------------------------------------
     def testProcessEmailToPerson(self):
@@ -327,26 +369,7 @@ class S3OutboxTests(unittest.TestCase):
         else:
             return False
 
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-        current.auth.override = False
-        current.db.rollback()
-        # Restore normal method
-        current.msg.send_email = self.save_email
-
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Disaster Victim Identification Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ __all__ = ("S3DVIModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3DVIModel(S3Model):
@@ -85,15 +85,17 @@ class S3DVIModel(S3Model):
         tablename = "dvi_recreq"
         define_table(tablename,
                      s3_datetime(label = T("Date/Time of Find"),
-                                 empty=False,
+                                 empty = False,
                                  default = "now",
-                                 future=0
+                                 future = 0,
                                  ),
                      Field("marker", length=64,
                            label = T("Marker"),
+                           requires = IS_LENGTH(64),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Marker"),
-                                                           T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)")))),
+                                                           T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)"))),
+                           ),
                      person_id(label = T("Finder")),
                      Field("bodies_found", "integer",
                            label = T("Bodies found"),
@@ -160,22 +162,28 @@ class S3DVIModel(S3Model):
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
-                     Field("name",
-                           length=255,
-                           unique=True,
-                           notnull=True,
-                           label = T("Morgue")),
+                     Field("name", length=64, unique=True, notnull=True,
+                           label = T("Morgue"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       IS_NOT_ONE_OF(db,
+                                                     "dvi_morgue.name",
+                                                     ),
+                                       ],
+                           ),
                      self.org_organisation_id(),
                      Field("description",
-                           label = T("Description")),
+                           label = T("Description"),
+                           ),
                      location_id(),
                      Field("obsolete", "boolean",
-                     label = T("Obsolete"),
-                     represent = lambda opt: \
-                                 (opt and [T("Obsolete")] or [messages["NONE"]])[0],
-                     default = False,
-                     readable = False,
-                     writable = False),
+                           label = T("Obsolete"),
+                           represent = lambda opt: \
+                             (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # Reusable Field
@@ -462,12 +470,13 @@ class S3DVIModel(S3Model):
         c_comment = T("Type the first few characters of one of the Person's names.")
 
         ADD_PERSON = T("Add Person")
-        return S3AddResourceLink(c="pr",
-                                 f="person",
-                                 vars=dict(child=fieldname),
-                                 label=ADD_PERSON,
-                                 title=c_title,
-                                 tooltip=c_comment)
+        return S3PopupLink(c = "pr",
+                           f = "person",
+                           vars = {"child": fieldname},
+                           label = ADD_PERSON,
+                           title = c_title,
+                           tooltip = c_comment,
+                           )
 
     # -------------------------------------------------------------------------
     @staticmethod

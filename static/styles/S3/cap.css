@@ -1,5 +1,12 @@
 .cap_alert_form tr {display:none;}
 .cap_alert_form.template_loaded tr {display:block;}
+.cap_alert_form #cap_alert_note__row #cap_alert_note {height: 4em;}
+.cap_template_form #cap_alert_restriction__row #cap_alert_restriction,
+.cap_alert_form #cap_alert_restriction__row #cap_alert_restriction,
+.cap_alert_form.template_loaded #cap_alert_restriction__row #cap_alert_restriction {height: 4em;}
+#cap_info_audience__row #cap_info_audience,
+#cap_info_contact__row #cap_info_contact {height: 4em;}
+.cap_template_form #cap_alert_note__row #cap_alert_note {height: 4em;}
 #cap_alert_template_id__row1,
 #cap_alert_template_id__row {display:block;}
 .cap_template_form #cap_alert_template_id__row1,
@@ -15,6 +22,15 @@
 #cap_alert_is_template__row1,
 #cap_alert_is_template__row,
 #cap_alert_sent__row1,
-#cap_alert_sent__row{display:none}
+#cap_alert_sent__row {display:none;}
 .cap_template_form #cap_alert_template_title__row1,
-.cap_template_form #cap_alert_template_title__row{display:block}
+.cap_template_form #cap_alert_template_title__row {display:block;}
+input#assign-selected-action.selected-action {
+    width: 7.5em;
+    height: 3.5em;
+    border-radius: 3em;
+}
+#cap_info_event_type_id__row {display:none;}
+.embeddedComponent .map_wrapper {
+    min-width: 650px !important;
+}

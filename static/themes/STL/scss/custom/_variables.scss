@@ -1,0 +1,12 @@
+// Tiny button style
+@mixin tiny_button_style() {
+    font-size: 0.6875rem;
+    border: 0;
+    line-height: 1;
+    margin-bottom: inherit;
+    padding: 0.25rem 0.5rem 0.375rem;
+    cursor: pointer;
+    text-decoration: none !important;
+    display: inline-block;
+    border-radius: 0;
+}

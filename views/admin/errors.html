@@ -36,7 +36,7 @@ function uncheck(){
 <tr>
 <td><input type='checkbox' name='delete_{{=ticket}}'/></td>
 <td><a href='{{=URL(f="ticket", args=[app, ticket])}}'>{{=ticket}}</a></td>
-<td>{{=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.stat(os.path.join(request.folder, "../%s/errors/%s" % (app, ticket)))[stat.ST_CTIME]))}}</td>
+<td>{{=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.stat(os.path.join(request.folder, "../%s/errors/%s" % (app, ticket))).st_mtime))}}</td>
 </tr>
 {{pass}}
 </tbody>

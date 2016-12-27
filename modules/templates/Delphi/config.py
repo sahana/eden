@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -23,7 +18,10 @@ def config(settings):
     settings.base.system_name_short = T("Decision Support 2.0")
 
     # Pre-Populate
-    settings.base.prepopulate = ("Delphi", "default/users")
+    settings.base.prepopulate += ("Delphi",
+                                  #"Delphi/Demo",
+                                  "default/users",
+                                  )
 
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False

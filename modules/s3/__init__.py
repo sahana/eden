@@ -11,7 +11,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -102,12 +102,14 @@ from s3profile import *
 # Summary
 from s3summary import *
 
+# Dashboards
+from s3dashboard import *
+
 # Synchronization
 from s3sync import *
 
 # Import
 from s3import import *
-from s3xforms import *
 
 # De-duplication
 from s3merge import S3Merge
@@ -131,5 +133,9 @@ from s3notify import *
 
 # GUI Navigation Framework
 from s3navigation import *
+
+# Mobile APIs
+from s3xforms import *
+from s3mobile import *
 
 # END =========================================================================

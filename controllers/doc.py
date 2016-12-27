@@ -35,7 +35,8 @@ def document():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=document_rheader)
+    output = s3_rest_controller(rheader = document_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -47,12 +48,12 @@ def document_rheader(r):
             table = db.doc_document
             rheader = DIV(B("%s: " % T("Name")), doc_document.name,
                         TABLE(TR(
-                                TH("%s: " % T("File")), table.file.represent( doc_document.file ),
-                                TH("%s: " % T("URL")), table.url.represent( doc_document.url ),
+                                TH("%s: " % T("File")), table.file.represent(doc_document.file),
+                                TH("%s: " % T("URL")), table.url.represent(doc_document.url),
                                 ),
                                 TR(
-                                TH("%s: " % ORGANISATION), table.organisation_id.represent( doc_document.organisation_id ),
-                                TH("%s: " % T("Person")), table.person_id.represent( doc_document.organisation_id ),
+                                TH("%s: " % ORGANISATION), table.organisation_id.represent(doc_document.organisation_id),
+                                TH("%s: " % T("Person")), table.person_id.represent(doc_document.organisation_id),
                                 ),
                             ),
                         #rheader_tabs
@@ -212,5 +213,108 @@ def sitrep():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
+
+# =============================================================================
+def ck_upload():
+    """
+        Controller to handle uploads to CKEditor
+
+        Based on https://github.com/timrichardson/web2py_ckeditor4
+    """
+
+    upload = request.vars.upload
+
+    if upload is None:
+        raise HTTP(401, "Missing required upload.")
+
+    if not hasattr(upload, "file"):
+        raise HTTP(401, "Upload is not proper type.")
+
+    path = os.path.join(request.folder, "uploads")
+
+    # Load Model
+    table = s3db.doc_ckeditor
+
+    form = SQLFORM.factory(Field("upload", "upload",
+                                 requires = IS_NOT_EMPTY(),
+                                 #uploadfs = self.settings.uploadfs,
+                                 uploadfolder = path,
+                                 ),
+                           table_name = "doc_ckeditor",
+                           )
+
+    old_filename = upload.filename
+    new_filename = table.upload.store(upload.file,
+                                      upload.filename)
+    #if self.settings.uploadfs:
+    #    length = self.settings.uploadfs.getsize(new_filename)
+    #else:
+    length = os.path.getsize(os.path.join(path, new_filename))
+
+    mime_type = upload.headers["content-type"]
+
+    title = os.path.splitext(old_filename)[0]
+
+    result = table.validate_and_insert(
+        title=title,
+        filename=old_filename,
+        upload=new_filename,
+        flength=length,
+        mime_type=mime_type
+    )
+
+    if result.id:
+        text = ""
+    else:
+        text = result.errors
+
+    url = URL(c="default", f="download",
+              args=[new_filename])
+
+    return dict(text=text, cknum=request.vars.CKEditorFuncNum, url=url)
+
+# -----------------------------------------------------------------------------
+def ck_browse():
+    """
+        Controller to handle uploads to CKEditor
+    """
+
+    table = s3db.doc_ckeditor
+    #browse_filter = {}
+    set = db(table.id > 0)
+    #for key, val in browse_filter.items():
+    #    if value[0] == "<":
+    #        set = set(table[key] < value[1:])
+    #    elif value[0] == ">":
+    #        set = set(table[key] > value[1:])
+    #    elif value[0] == "!":
+    #        set = set(table[key] != value[1:])
+    #    else:
+    #        set = set(table[key] == value)
+
+    rows = set.select(orderby=table.title)
+
+    return dict(rows=rows, cknum=request.vars.CKEditorFuncNum)
+
+# -----------------------------------------------------------------------------
+def ck_delete():
+    """
+        Controller to handle deletes in CKEditor
+    """
+
+    try:
+        filename = request.args[0]
+    except:
+        raise HTTP(401, "Required argument filename missing.")
+
+    table = s3db.doc_ckeditor
+    db(table.upload == filename).delete()
+
+    # Delete the file from storage
+    #if self.settings.uploadfs:
+    #    self.settings.uploadfs.remove(filename)
+    #else:
+    filepath = os.path.join(request.folder, "uploads", filename)
+    os.unlink(filepath)
 
 # END =========================================================================

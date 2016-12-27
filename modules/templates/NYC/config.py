@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import A, URL, TR, TD
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3Represent, S3SQLInlineLink, S3SQLSubFormLayout
+from s3 import s3_fullname, S3Represent, S3SQLInlineLink
 
 def config(settings):
     """
@@ -23,7 +18,7 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("NYC",)
+    settings.base.prepopulate.append("NYC")
 
     settings.base.system_name = T("NYC Prepared")
     settings.base.system_name_short = T("NYC Prepared")
@@ -55,7 +50,9 @@ def config(settings):
     settings.gis.postcode_selector = False
     # Enable this to change the label for 'Postcode'
     #settings.ui.label_postcode = "ZIP Code"
-    # Custom icon classes
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "alert": "icon-alert",
         "event": "icon-event",
@@ -72,7 +69,7 @@ def config(settings):
     settings.gis.countries = ("US",)
 
     settings.fin.currencies = {
-        "USD" : T("United States Dollars"),
+        "USD" : "United States Dollars",
     }
 
     settings.L10n.languages = OrderedDict([
@@ -498,8 +495,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def org_organisation_postprocess(form):
         """
-            If the user selects the City (L2), or Borough (L3) for Area Served,
-            then add all Zipcodes in instead
+            * If the user selects the City (L2), or Borough (L3) for Area Served,
+            then add all Zipcodes in instead.
+            * RSS Subscriptions handling
         """
 
         db = current.db
@@ -580,9 +578,9 @@ def config(settings):
                        S3LocationSelector, \
                        S3MultiSelectWidget, \
                        S3SQLCustomForm, \
-                       S3SQLInlineLink, \
                        S3SQLInlineComponent, \
-                       S3SQLInlineComponentMultiSelectWidget
+                       S3SQLInlineComponentMultiSelectWidget, \
+                       S3SQLVerticalSubFormLayout
 
         s3db = current.s3db
 
@@ -590,8 +588,9 @@ def config(settings):
         s3db.add_components("org_organisation",
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
-                                            "filterby": "main_facility",
-                                            "filterfor": True,
+                                            "filterby": {
+                                                "main_facility": True,
+                                                },
                                             },
                             )
 
@@ -710,7 +709,7 @@ def config(settings):
                                       "email",
                                       "location_id",
                                       ],
-                            layout = FacilitySubFormLayout,
+                            layout = S3SQLVerticalSubFormLayout,
                             filterby = {"field": "main_facility",
                                         "options": True,
                                         },
@@ -785,7 +784,7 @@ def config(settings):
                                       "email",
                                       "location_id",
                                       ],
-                            layout = FacilitySubFormLayout,
+                            layout = S3SQLVerticalSubFormLayout,
                             filterby = {"field": "main_facility",
                                         "options": False,
                                         },
@@ -1222,16 +1221,16 @@ def config(settings):
                     # Site ID uses drop-down not autocomplete
                     site_id = htable.site_id
                     site_id.widget = None
-                    from s3layouts import S3AddResourceLink
-                    site_id.comment = S3AddResourceLink(T("Create Facility"),
-                                                        c="org",
-                                                        f="facility",
-                                                        t="org_facility",
-                                                        vars={"prefix": "hrm",
-                                                              "parent": "human_resource",
-                                                              "child": "site_id",
-                                                              },
-                                                        )
+                    from s3layouts import S3PopupLink
+                    site_id.comment = S3PopupLink(T("Create Facility"),
+                                                  c = "org",
+                                                  f = "facility",
+                                                  t = "org_facility",
+                                                  vars = {"prefix": "hrm",
+                                                          "parent": "human_resource",
+                                                          "child": "site_id",
+                                                          },
+                                                  )
 
                     # Fields for embedded HR record
                     hr_fields = ["organisation_id",
@@ -1536,11 +1535,13 @@ $.filterOptionsS3({
 
             s3db.pr_group_membership.group_head.label = T("Group Chairperson")
             if r.component_name == "group_membership":
-                from s3layouts import S3AddResourceLink
+                from s3layouts import S3PopupLink
                 s3db.pr_group_membership.person_id.comment = \
-                    S3AddResourceLink(c="pr", f="person",
-                                      title=T("Create Person"),
-                                      tooltip=current.messages.AUTOCOMPLETE_HELP)
+                    S3PopupLink(c = "pr",
+                                f = "person",
+                                title = T("Create Person"),
+                                tooltip = current.messages.AUTOCOMPLETE_HELP,
+                                )
             #else:
             #    # RHeader wants a simplified version, but don't want inconsistent across tabs
             #    s3db.pr_group_membership.group_head.label = T("Chairperson")
@@ -1617,7 +1618,7 @@ $.filterOptionsS3({
     # Uncomment to disable the use of HR Trainings
     settings.hrm.use_trainings = False
     # Uncomment to disable the use of HR Description
-    settings.hrm.use_description = False
+    settings.hrm.use_description = None
     # Change the label of "Teams" to "Groups"
     settings.hrm.teams = "Groups"
     # Custom label for Organisations in HR module
@@ -2092,12 +2093,14 @@ $.filterOptionsS3({
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
-        from s3layouts import S3AddResourceLink
+        from s3layouts import S3PopupLink
         current.s3db.req_req.site_id.comment = \
-            S3AddResourceLink(c="org", f="facility",
-                              vars = dict(child="site_id"),
-                              title=T("Create Facility"),
-                              tooltip=current.messages.AUTOCOMPLETE_HELP)
+            S3PopupLink(c = "org",
+                        f = "facility",
+                        vars = {"child": "site_id"},
+                        title = T("Create Facility"),
+                        tooltip = current.messages.AUTOCOMPLETE_HELP,
+                        )
 
         current.response.s3.req_req_postprocess = req_req_postprocess
 
@@ -2550,65 +2553,5 @@ class S3SQLHRPersonLink(S3SQLInlineLink):
                                                      master_id = person_id,
                                                      format = format,
                                                      )
-
-# =============================================================================
-class FacilitySubFormLayout(S3SQLSubFormLayout):
-    """
-        Custom layout for facility inline-component in org/organisation
-
-        - allows embedding of multiple fields besides the location selector
-        - renders an vertical layout for edit-rows
-        - standard horizontal layout for read-rows
-        - hiding header row if there are no visible read-rows
-    """
-
-    # -------------------------------------------------------------------------
-    def headers(self, data, readonly=False):
-        """
-            Header-row layout: same as default, but non-static (i.e. hiding
-            if there are no visible read-rows, because edit-rows have their
-            own labels)
-        """
-
-        headers = super(FacilitySubFormLayout, self).headers
-
-        header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr');
-        if hasattr(element, "remove_class"):
-            element.remove_class("static")
-        return header_row
-
-    # -------------------------------------------------------------------------
-    def rowstyle_read(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform read-rows, same as standard
-            horizontal layout.
-        """
-
-        rowstyle = super(FacilitySubFormLayout, self).rowstyle
-        return rowstyle(form, fields, *args, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def rowstyle(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform edit-rows, using a vertical
-            formstyle because multiple fields combined with
-            location-selector are too complex for horizontal
-            layout.
-        """
-
-        # Use standard foundation formstyle
-        from s3theme import formstyle_foundation as formstyle
-        if args:
-            col_id = form
-            label = fields
-            widget, comment = args
-            hidden = kwargs.get("hidden", False)
-            return formstyle(col_id, label, widget, comment, hidden)
-        else:
-            parent = TD(_colspan = len(fields))
-            for col_id, label, widget, comment in fields:
-                parent.append(formstyle(col_id, label, widget, comment))
-            return TR(parent)
 
 # END =========================================================================

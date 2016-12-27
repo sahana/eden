@@ -1,0 +1,122 @@
+/* Rheader */
+#rheader {
+    // Profile pictures in rheaders
+    a.th {
+        img {
+            height: 60px;
+        }
+        margin-right: 10px;
+    }
+    table {
+        margin-bottom: 10px;
+        border: none;
+        tr {
+            background: none;
+        }
+    }
+    .rheader-details {
+        text-align: center;
+        padding-top: 1.0rem;
+        padding-bottom: 1.0rem;
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.1rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: $iron;
+            margin-top: 0.1rem;
+        }
+        a {
+            font-size: 85%;
+        }
+    }
+}
+
+/* RHeader Tabs */
+div.tabs {
+    // Tabs section
+    border-bottom: 1px solid $iron;
+    clear: left;
+    height: 2.125em;
+    margin: 5px 0 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+    line-height: 0.875rem;
+    // General tabs
+    span {
+        float: left;
+        //border-radius: 3px 3px 0 0;
+        padding: 0.5rem 1.5rem;
+    }
+    span a {
+        color: $rheader_tabs_fgcolor_inactive !important;
+        text-decoration: none !important;
+        background: transparent !important;
+    }
+    span:hover {
+        background: $rheader_tabs_bgcolor_active_hover !important;
+    }
+    // Active tab
+    span.tab_here {
+        background: $rheader_tabs_bgcolor_active;
+        border: {
+            color: $rheader_tabs_bgcolor_inactive;
+            style: solid;
+            width: 0px 0px 2px 0px;
+            bottom: {
+                width: 3px;
+                style: solid;
+                color: $amber;
+            }
+        }
+        //bottom: 0;
+        display: inline;
+        font-weight: bold;
+        //margin-right: 5px;
+        padding: 0.5rem 1.5rem;
+        //position: relative;
+    }
+    span.tab_here:hover {
+        background: $rheader_tabs_bgcolor_active_hover;
+    }
+    span.tab_here a {
+        color: $rheader_tabs_fgcolor_active !important;
+    }
+    span.tab_here:hover a {
+        color: $rheader_tabs_fgcolor_active_hover !important;
+    }
+    // Inactive tabs
+    span.tab_last,
+    span.tab_other {
+        font-size: 90%;
+        background: $rheader_tabs_bgcolor_inactive;
+        border: {
+            color: $rheader_tabs_bgcolor_inactive;
+            width: 0 0 2px 0;
+            style: solid;
+            bottom: {
+                width: 1px;
+                style: solid;
+                color: $rheader_tabs_bgcolor_active;
+            }
+        }
+        font-weight: bold;
+        //margin-right: 3px;
+    }
+    span.tab_last:hover,
+    span.tab_other:hover {
+        background: $rheader_tabs_bgcolor_inactive_hover;
+        border-color: $rheader_tabs_bgcolor_inactive_hover;
+    }
+    span.tab_last a,
+    span.tab_other a {
+        color: $rheader_tabs_fgcolor_inactive !important;
+    }
+    span.tab_last a:hover,
+    span.tab_other a:hover {
+        color: $rheader_tabs_fgcolor_inactive_hover !important;
+    }
+}

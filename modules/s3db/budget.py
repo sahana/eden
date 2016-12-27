@@ -2,7 +2,7 @@
 
 """ Sahana Eden Budget Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -42,7 +42,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3BudgetModel(S3Model):
@@ -127,9 +127,10 @@ class S3BudgetModel(S3Model):
                      super_link("budget_entity_id", "budget_entity"),
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db, "%s.name" % tablename),
+                                       ],
                            ),
                      Field("description",
                            label = T("Description"),
@@ -193,7 +194,7 @@ class S3BudgetModel(S3Model):
         #    requires = IS_ONE_OF(db, "budget_budget.id",
         #                         budget_budget_represent,
         #                         ),
-        #    comment = S3AddResourceLink(
+        #    comment = S3PopupLink(
         #        c = "budget",
         #        f = "budget",
         #        label = ADD_BUDGET,
@@ -249,9 +250,10 @@ class S3BudgetModel(S3Model):
         define_table(tablename,
                      Field("code", length=3, notnull=True, unique=True,
                            label = T("Code"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(3),
+                                       IS_NOT_ONE_OF(db, "%s.code" % tablename),
+                                       ],
                            ),
                      Field("description",
                            label = T("Description"),
@@ -296,7 +298,7 @@ class S3BudgetModel(S3Model):
             requires = IS_ONE_OF(db, "budget_location.id",
                                  budget_location_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "location",
                 label = ADD_LOCATION,
@@ -317,9 +319,10 @@ class S3BudgetModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db, "%s.name" % tablename),
+                                       ],
                            ),
                      Field("grade", notnull=True,
                            label = T("Grade"),
@@ -373,7 +376,7 @@ class S3BudgetModel(S3Model):
             requires = IS_ONE_OF(db, "budget_staff.id",
                                  budget_staff_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "staff",
                 label = ADD_STAFF_TYPE,
@@ -565,9 +568,10 @@ class S3BudgetKitModel(S3Model):
         define_table(tablename,
                      Field("code", length=128, notnull=True, unique=True,
                            label = T("Code"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db, "%s.code" % tablename),
+                                       ],
                            ),
                      Field("description",
                            label = T("Description"),
@@ -621,7 +625,7 @@ class S3BudgetKitModel(S3Model):
             requires = IS_ONE_OF(db, "budget_kit.id",
                                  budget_kit_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "kit",
                 label = ADD_KIT,
@@ -684,9 +688,10 @@ class S3BudgetKitModel(S3Model):
                            ),
                      Field("code", length=128, notnull=True, unique=True,
                            label = T("Code"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db, "%s.code" % tablename),
+                                       ],
                            ),
                      Field("description", notnull=True,
                            label = T("Description"),
@@ -747,7 +752,7 @@ class S3BudgetKitModel(S3Model):
             requires = IS_ONE_OF(db, "budget_item.id",
                                  budget_item_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "item",
                 label = ADD_ITEM,
@@ -933,9 +938,10 @@ class S3BudgetBundleModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
-                           #requires = [IS_NOT_EMPTY(),
-                           #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
-                           #            ],
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       IS_NOT_ONE_OF(db, "%s.name" % tablename),
+                                       ],
                            ),
                      Field("description",
                            label = T("Description"),
@@ -1001,7 +1007,7 @@ class S3BudgetBundleModel(S3Model):
             requires = IS_ONE_OF(db, "budget_bundle.id",
                                  budget_bundle_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "bundle",
                 label = ADD_BUNDLE,
@@ -1629,7 +1635,7 @@ class S3BudgetMonitoringModel(S3Model):
 
         if hasattr(row, "id"):
             # Reload the record
-            s3_debug("Reload")
+            #s3_debug("Reloading budget_monitoring record")
             table = current.s3db.budget_monitoring
             r = current.db(table.id == row.id).select(table.planned,
                                                       table.value,

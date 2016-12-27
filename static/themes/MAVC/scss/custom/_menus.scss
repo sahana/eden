@@ -1,0 +1,79 @@
+/* Top bar */
+.top-bar {
+    z-index: 99;
+    .menu-toggle input {
+        margin-right: 5px;
+    }
+    li.name {
+        padding-top: 0.2rem;
+    }
+    .home-link {
+        font-size: 1.375rem;
+        color: white;
+        padding: 0.5rem;
+    }
+}
+
+.top-bar-section {
+    .row.login-menu {
+        padding-top: 0.725rem;
+    }
+    & > ul {
+        li.menu-home {
+            a {
+                &:before {
+                    content: url(img/logo-mtp-header-beta.png);
+                }
+                font-size: 0 !important;
+                height: 71px;
+                padding-top: 10px!important;
+            }
+        }
+    }
+    form.language-selector {
+        display: block;
+        padding-top: 1.25rem;
+        padding-right: 0.625rem;
+        padding-left: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+    li.has-dropdown.not-click.label-icon i.fa {
+        line-height: inherit;
+    }
+}
+
+.row.main-navigation {
+    background-color: $darkblue;
+}
+#menu-options {
+    background-color: $iron;
+    padding-bottom: 1.75rem;
+}
+
+/* Side Menu */
+.sidebar {
+  background: none repeat scroll 0 0 $iron;
+  margin-top: 10px;
+  padding-top: 0.25rem;
+}
+
+.side-nav li {
+  line-height: 1.2;
+  list-style-type: none;
+  list-style-position: inside;
+  padding: 0;
+}
+.side-nav li.heading {
+  margin-top: 0.125rem;
+}
+.side-nav li > a:first-child:not(.button) {
+  color: $steel;
+}
+.side-nav li:hover > a:first-child:not(.button) {
+  color: $steel;
+}
+.side-nav li.active > a:first-child:not(.button) {
+  color: $darksteel;
+  background-color: $yellow;
+  font-weight: bold;
+}

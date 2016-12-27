@@ -14,6 +14,7 @@ church,33,44,"ersSymbolsV0202/Infrastructures_S1/Public_Venue_Church_S1.png"
 earthquake,50,50,"ersSymbolsV0202/Natural_Events/Geo_Earth_Quake_Epicenter.png"
 elderly,33,44,"ersSymbolsV0202/Infrastructures_S1/Special_Needs_Elder_Care_S1.png"
 fire,50,50,"ersSymbolsV0202/Incidents/Fire_Theme.png"
+fire_station,40,40,"ersSymbolsV0202/Operations_S1/Fire_Station_S1.png"
 flood,50,50,"ersSymbolsV0202/Natural_Events/Hydro_Meteor_Flood.png"
 food,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Food_Distribution_Centers_S1.png"
 food_green,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Food_Distribution_Centers_S1_green.png"
@@ -39,6 +40,7 @@ office_red,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Operations_Center_S1_r
 office_yellow,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Operations_Center_S1_yellow.png"
 orphanage,33,44,"ersSymbolsV0202/Infrastructures_S1/Special_Needs_Child_Day_Care_S1.png"
 phone,10,5,SMS_Message_Phone.png
+police_station,40,40,"ersSymbolsV0202/Operations_S1/Law_Enforcement_Theme_S1.png"
 port,33,44,"ersSymbolsV0202/Infrastructures_S1/Trans_Port_S1.png"
 project,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Teams_S1.png"
 rail_station,33,44,"ersSymbolsV0202/Infrastructures_S1/Trans_Rail_Station_S1.png"
@@ -61,6 +63,7 @@ special_needs_yellow,33,44,"ersSymbolsV0202/Infrastructures_S1/Special_Needs_Adu
 staff,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staff_S1.png"
 staff_red,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staff_S1_red.png"
 staff_yellow,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staff_S1_yellow.png"
+team,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Teams_S1.png"
 temple,33,44,"ersSymbolsV0202/Infrastructures_S1/Public_Venue_Temple_S1.png"
 tsunami,50,50,"ersSymbolsV0202/Natural_Events/Hydro_Meteor_Tsunami_ch.png"
 twitter,32,32,Twitter.png

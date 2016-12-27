@@ -143,12 +143,19 @@
          @param sep: the list separator
          @param arg: argument to be passed on to the "resource" template
                      to allow differentiation
+         @param arg2: argument to be passed on to the "resource" template
+                      to allow passing in extra data
+                      (Cols are not accessible here)
+         @param org: argument to be passed on to the "resource" template
+                     to pass an Organisation
     -->
     <xsl:template name="splitList">
 
         <xsl:param name="list"/>
         <xsl:param name="listsep" select="','"/>
         <xsl:param name="arg"/>
+        <xsl:param name="arg2"/>
+        <xsl:param name="org"/>
 
         <xsl:if test="$listsep">
             <xsl:choose>
@@ -162,11 +169,15 @@
                     <xsl:call-template name="resource">
                         <xsl:with-param name="item" select="normalize-space($head)"/>
                         <xsl:with-param name="arg" select="$arg"/>
+                        <xsl:with-param name="arg2" select="$arg2"/>
+                        <xsl:with-param name="org" select="$org"/>
                     </xsl:call-template>
                     <xsl:call-template name="splitList">
                         <xsl:with-param name="list" select="$tail"/>
                         <xsl:with-param name="listsep" select="$listsep"/>
                         <xsl:with-param name="arg" select="$arg"/>
+                        <xsl:with-param name="arg2" select="$arg2"/>
+                        <xsl:with-param name="org" select="$org"/>
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
@@ -174,6 +185,8 @@
                         <xsl:call-template name="resource">
                             <xsl:with-param name="item" select="normalize-space($list)"/>
                             <xsl:with-param name="arg" select="$arg"/>
+                            <xsl:with-param name="arg2" select="$arg2"/>
+                            <xsl:with-param name="org" select="$org"/>
                             <xsl:with-param name="last">true</xsl:with-param>
                         </xsl:call-template>
                     </xsl:if>

@@ -5,10 +5,10 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3xml.py
 #
+import json
 import unittest
-from gluon import *
-from gluon.contrib import simplejson as json
 
+from gluon import *
 try:
     from cStringIO import StringIO
 except:
@@ -17,6 +17,8 @@ except:
 from lxml import etree
 
 from s3 import S3Hierarchy, s3_meta_fields, S3Represent, S3XMLFormat, IS_ONE_OF
+
+from unit_tests import run_suite
 
 # =============================================================================
 class TreeBuilderTests(unittest.TestCase):
@@ -858,18 +860,58 @@ class GetFieldOptionsTests(unittest.TestCase):
         assertEqual(opt["@parent"], str(options[value]["parent"]))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
+class S3JSONParsingTests(unittest.TestCase):
+    """ Tests for S3JSON Parsing """
 
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
+    # -------------------------------------------------------------------------
+    def testValueParsing(self):
+        """ Test handling of S3JSON @value attribute """
 
+        assertEqual = self.assertEqual
+
+        json_str = """{
+"$_test_resource": [
+    {
+        "valuelist": {
+            "@value": ["value1", "value2"]
+        },
+        "jsonlist": {
+            "@value": "[\\"value1\\", \\"value2\\"]"
+        },
+        "valuestring": {
+            "@value": "value1"
+        },
+        "valueinteger": {
+            "@value": 2
+        }
+    }
+]}"""
+        tree = current.xml.json2tree(StringIO(json_str))
+        root = tree.getroot()
+
+        # A value list gives a JSON string with a list
+        value_list = root.findall('resource/data[@field="valuelist"]')[0]
+        v = value_list.get("value")
+        assertEqual(v, '["value1", "value2"]')
+        assertEqual(json.loads(v), ["value1", "value2"])
+
+        # A JSON list gives the same JSON string
+        value_list = root.findall('resource/data[@field="jsonlist"]')[0]
+        v = value_list.get("value")
+        assertEqual(v, '["value1", "value2"]')
+        assertEqual(json.loads(v), ["value1", "value2"])
+
+        # A string gives the same string
+        value_list = root.findall('resource/data[@field="valuestring"]')[0]
+        v = value_list.get("value")
+        assertEqual(v, "value1")
+
+        # A numeric value gives its string representation
+        value_list = root.findall('resource/data[@field="valueinteger"]')[0]
+        v = value_list.get("value")
+        assertEqual(v, "2")
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -877,6 +919,7 @@ if __name__ == "__main__":
         JSONMessageTests,
         XMLFormatTests,
         GetFieldOptionsTests,
+        S3JSONParsingTests,
     )
 
 # END ========================================================================

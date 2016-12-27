@@ -13,6 +13,7 @@ from gluon.storage import Storage
 from s3dal import Row
 from eden.project import S3ProjectActivityModel
 
+from unit_tests import run_suite
 
 # =============================================================================
 class ProjectTests(unittest.TestCase):
@@ -80,18 +81,6 @@ class ProjectTests(unittest.TestCase):
 
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner().run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

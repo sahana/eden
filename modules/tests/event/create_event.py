@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - EVN001 Create Event
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateEvent(SeleniumUnitTest):
         """
             @case:EVN001
             @description: Create a Event
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -40,7 +40,7 @@ class CreateEvent(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="event/event/create")
 
-        self.create("event_event", 
+        self.create("event_event",
                     [( "name",
                        "Test Event"),
                      ( "comments",

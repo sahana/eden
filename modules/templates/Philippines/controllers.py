@@ -410,14 +410,7 @@ class subscriptions(S3CustomController):
                                     rtable.next_check_time)
 
             if f.query:
-                try:
-                    import json # try stdlib (Python 2.6)
-                except ImportError:
-                    try:
-                        import simplejson as json # try external module
-                    except:
-                        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
+                import json
                 filters = json.loads(f.query)
                 for k, v in filters:
                     if v is None:

@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ S3XML Toolkit
 
@@ -7,7 +7,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,18 +33,11 @@
 """
 
 import datetime
+import json
 import os
 import re
 import sys
 import urllib2
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from lxml import etree
@@ -234,14 +227,16 @@ class S3XML(S3Codec):
             try:
                 source = urllib2.urlopen(source)
             except:
-                pass
+                self.error = "XML Source error: %s" % sys.exc_info()[1]
+                return None
         try:
-            parser = etree.XMLParser(no_network=False)
+            parser = etree.XMLParser(no_network = False,
+                                     remove_blank_text = True,
+                                     )
             result = etree.parse(source, parser)
             return result
         except:
-            e = sys.exc_info()[1]
-            self.error = e
+            self.error = "XML Parse error: %s" % sys.exc_info()[1]
             return None
 
     # -------------------------------------------------------------------------
@@ -1009,6 +1004,7 @@ class S3XML(S3Codec):
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
                     # @ToDo: Support records with multiple locations
+                    #        via making these also use the map element
                     lat = LatLon[0]
                     lon = LatLon[1]
                     if lat is not None and lon is not None:
@@ -1216,10 +1212,9 @@ class S3XML(S3Codec):
             represent = dbfield.represent
             value = None
 
-            if fieldtype == "datetime":
+            if fieldtype in ("datetime", "date", "time"):
                 value = s3_encode_iso_datetime(v).decode("utf-8")
-            elif fieldtype in ("date", "time") or \
-                 fieldtype[:7] == "decimal":
+            elif fieldtype[:7] == "decimal":
                 value = str(formatter(v)).decode("utf-8")
 
             # Get the representation
@@ -1406,6 +1401,7 @@ class S3XML(S3Codec):
 
         # Extract the UUID
         UID = cls.UID
+        uid = None
         if UID in table.fields and UID not in skip:
             uid = current.xml.import_uid(element.get(UID, None))
             if uid:
@@ -1493,7 +1489,9 @@ class S3XML(S3Codec):
                         continue
                     record[f] = value
 
-        if deleted:
+        if deleted and uid:
+            # UUID is enough to identify the record,
+            # so can skip parsing field data
             return record
 
         # Fields
@@ -1558,13 +1556,14 @@ class S3XML(S3Codec):
             is_text = field_type in ("string", "text")
 
             if value is None:
-                decode_value = not is_text
                 if field_type == "password":
                     value = child.text
                     # Do not re-encrypt the password if it already
                     # comes encrypted:
                     skip_validation = True
+                    decode_value = False
                 else:
+                    decode_value = not is_text
                     value = xml_decode(child.text)
             else:
                 decode_value = True
@@ -1594,7 +1593,7 @@ class S3XML(S3Codec):
                         error = sys.exc_info()[1]
 
                 if not skip_validation:
-                    if not isinstance(value, (basestring, list, tuple)):
+                    if not isinstance(value, (basestring, list, tuple, bool)):
                         v = str(value)
                     elif isinstance(value, basestring):
                         v = value.encode("utf-8")
@@ -1632,7 +1631,7 @@ class S3XML(S3Codec):
 
                 child.set(VALUE, s3_unicode(v))
                 if error:
-                    child.set(ERROR, "%s: %s" % (f, error))
+                    child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
                     valid = False
                     continue
 
@@ -1669,7 +1668,7 @@ class S3XML(S3Codec):
         options = None
         try:
             field = table[fieldname]
-        except AttributeError:
+        except (KeyError, AttributeError):
             pass
         else:
             requires = field.requires
@@ -1939,29 +1938,38 @@ class S3XML(S3Codec):
         """
 
         if isinstance(value, dict):
-            return cls.__obj2element(key, value, native=native)
+            # Value contains an object, so recurse
+            element = cls.__obj2element(key, value, native=native)
 
         elif isinstance(value, (list, tuple)):
-            if not key == cls.TAG.item:
-                _list = etree.Element(key)
+            # Produce an element with one child element per list item
+            if key != cls.TAG.item:
+                element = etree.Element(key)
             else:
-                _list = etree.Element(cls.TAG.list)
+                # Nested list
+                element = etree.Element(cls.TAG.list)
+
+            json2element = cls.__json2element
+            item_tag = cls.TAG.item
+
             for obj in value:
-                item = cls.__json2element(cls.TAG.item, obj,
-                                           native=native)
-                _list.append(item)
-            return _list
+                item = json2element(item_tag, obj, native=native)
+                element.append(item)
 
         else:
+            # Produce a child element
             if native:
+                # always <data field="key">value</data>
                 element = etree.Element(cls.TAG.data)
                 element.set(cls.ATTRIBUTE.field, key)
             else:
+                # always <key>value</key>
                 element = etree.Element(key)
-            if not isinstance(value, (str, unicode)):
+            if not isinstance(value, basestring):
                 value = str(value)
             element.text = value
-            return element
+
+        return element
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1978,8 +1986,8 @@ class S3XML(S3Codec):
 
         if not tag:
             tag = cls.TAG.object
-
         elif native:
+            # Check for S3JSON prefix, convert object name to name attribute
             if tag.startswith(cls.PREFIX.reference):
                 field = tag[len(cls.PREFIX.reference) + 1:]
                 tag = cls.TAG.reference
@@ -2004,24 +2012,45 @@ class S3XML(S3Codec):
             if field:
                 element.set(cls.ATTRIBUTE.field, field)
 
+        attribute_prefix = cls.PREFIX.attribute
+        text_prefix = cls.PREFIX.text
+
+        obj2element = cls.__obj2element
+        json2element = cls.__json2element
+
         for k in obj:
             m = obj[k]
+
             if isinstance(m, dict):
-                child = cls.__obj2element(k, m, native=native)
+                # Node contains subelements of its own
+                child = obj2element(k, m, native=native)
                 element.append(child)
+
             elif isinstance(m, (list, tuple)):
-                #l = etree.SubElement(element, k)
-                for _obj in m:
-                    child = cls.__json2element(k, _obj, native=native)
+                # Node is a value list
+                if native and k.startswith(attribute_prefix):
+                    # S3JSON: convert value lists for attributes to JSON
+                    a = k[len(attribute_prefix):]
+                    element.set(a, json.dumps(m))
+                    continue
+                for obj_ in m:
+                    child = json2element(k, obj_, native=native)
                     element.append(child)
+
             else:
-                if k == cls.PREFIX.text:
+                # Node is a single value
+                if k == text_prefix:
+                    # ...is a text node
                     element.text = m
-                elif k.startswith(cls.PREFIX.attribute):
-                    a = k[len(cls.PREFIX.attribute):]
+                elif k.startswith(attribute_prefix):
+                    a = k[len(attribute_prefix):]
+                    # ...is an attribute
+                    if not isinstance(m, basestring):
+                        m = str(m)
                     element.set(a, m)
                 else:
-                    child = cls.__json2element(k, m, native=native)
+                    # ...is a subelement
+                    child = json2element(k, m, native=native)
                     element.append(child)
 
         return element
@@ -2120,7 +2149,7 @@ class S3XML(S3Codec):
                         else:
                             single = True
                 child_obj = element2json(child, native=native)
-                if child_obj:
+                if child_obj is not None and child_obj != "":
                     if tag not in obj:
                         if single and collapse:
                             obj[tag] = child_obj
@@ -2208,7 +2237,10 @@ class S3XML(S3Codec):
         root_dict = cls.__element2json(root, native=native)
         if "s3" in root_dict:
             # Don't double JSON-encode
-            root_dict["s3"] = json.loads(root_dict["s3"])
+            if root_dict["s3"] == {}:
+                del root_dict["s3"]
+            else:
+                root_dict["s3"] = json.loads(root_dict["s3"])
 
         if pretty_print:
             js = json.dumps(root_dict, indent=4)
@@ -2392,9 +2424,8 @@ class S3XML(S3Codec):
                 # Use header row in the work sheet
                 headers = {}
 
-            # Lambda to decode XLS dates into an ISO datetime-string
-            decode_date = lambda v: datetime.datetime(
-                                    *xlrd.xldate_as_tuple(v, wb.datemode))
+            # Lambda to decode XLS dates into a datetime.datetime
+            decode_date = lambda v: xlrd.xldate.xldate_as_datetime(v, wb.datemode)
 
             def decode(t, v):
                 """
@@ -2413,6 +2444,7 @@ class S3XML(S3Codec):
                     elif t == xlrd.XL_CELL_NUMBER:
                         text = str(long(v)) if long(v) == v else str(v)
                     elif t == xlrd.XL_CELL_DATE:
+                        # Convert into an ISO datetime string
                         text = s3_encode_iso_datetime(decode_date(v))
                     elif t == xlrd.XL_CELL_BOOLEAN:
                         text = str(value).lower()

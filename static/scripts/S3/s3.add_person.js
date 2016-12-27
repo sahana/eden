@@ -28,6 +28,9 @@
             // Move the user-visible rows underneath the real (hidden) one
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
+            var first_name_row = $(selector + '_first_name__row');
+            var middle_name_row = $(selector + '_middle_name__row');
+            var last_name_row = $(selector + '_last_name__row');
             var father_name_row = $(selector + '_father_name__row');
             var grandfather_name_row = $(selector + '_grandfather_name__row');
             var date_of_birth_row = $(selector + '_date_of_birth__row');
@@ -38,25 +41,74 @@
             var home_phone_row = $(selector + '_home_phone__row');
             var email_row = $(selector + '_email__row');
             var box_bottom = $(selector + '_box_bottom');
-            real_row.hide()
-                    .after(box_bottom)
-                    .after(email_row)
-                    .after(home_phone_row)
-                    .after(mobile_phone_row)
-                    .after(occupation_row)
-                    .after(gender_row)
-                    .after(date_of_birth_row)
-                    .after(year_of_birth_row)
-                    .after(grandfather_name_row)
-                    .after(father_name_row)
-                    .after(name_row)
-                    .after(org_row)
-                    .after(error_row)
-                    .after(title_row);
+            if (first_name_row.length) {
+                // separate_name_fields
+                if ($(selector + '_first_name').attr('data-c') == undefined) {
+                    // Last Name field must be the activator & should be showed first
+                    real_row.hide()
+                            .after(box_bottom)
+                            .after(email_row)
+                            .after(home_phone_row)
+                            .after(mobile_phone_row)
+                            .after(occupation_row)
+                            .after(gender_row)
+                            .after(date_of_birth_row)
+                            .after(year_of_birth_row)
+                            .after(grandfather_name_row)
+                            .after(father_name_row)
+                            .after(first_name_row)
+                            .after(middle_name_row)
+                            .after(last_name_row)
+                            .after(org_row)
+                            .after(error_row)
+                            .after(title_row);
+                } else {
+                    real_row.hide()
+                            .after(box_bottom)
+                            .after(email_row)
+                            .after(home_phone_row)
+                            .after(mobile_phone_row)
+                            .after(occupation_row)
+                            .after(gender_row)
+                            .after(date_of_birth_row)
+                            .after(year_of_birth_row)
+                            .after(grandfather_name_row)
+                            .after(father_name_row)
+                            .after(last_name_row)
+                            .after(middle_name_row)
+                            .after(first_name_row)
+                            .after(org_row)
+                            .after(error_row)
+                            .after(title_row);
+                }
+            } else {
+                // Unified name field
+                real_row.hide()
+                        .after(box_bottom)
+                        .after(email_row)
+                        .after(home_phone_row)
+                        .after(mobile_phone_row)
+                        .after(occupation_row)
+                        .after(gender_row)
+                        .after(date_of_birth_row)
+                        .after(year_of_birth_row)
+                        .after(grandfather_name_row)
+                        .after(father_name_row)
+                        .after(last_name_row)
+                        .after(middle_name_row)
+                        .after(first_name_row)
+                        .after(name_row)
+                        .after(org_row)
+                        .after(error_row)
+                        .after(title_row);
+            }
 
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
             name_row.removeClass('hide').show();
+            first_name_row.removeClass('hide').show();
+            middle_name_row.removeClass('hide').show();
+            last_name_row.removeClass('hide').show();
             father_name_row.removeClass('hide').show();
             grandfather_name_row.removeClass('hide').show();
             date_of_birth_row.removeClass('hide').show();
@@ -122,6 +174,9 @@
             });
             // Check for Duplicates whenever any of the person fields are changed
             $(selector + '_full_name' + ',' +
+              selector + '_first_name' + ',' +
+              selector + '_middle_name' + ',' +
+              selector + '_last_name' + ',' +
               selector + '_date_of_birth' + ',' +
               selector + '_gender' + ',' +
               selector + '_father_name' + ',' +
@@ -220,6 +275,9 @@
         var selector = '#' + fieldname;
         $(selector + '_organisation_id').prop('disabled', false);
         $(selector + '_full_name').prop('disabled', false);
+        $(selector + '_first_name').prop('disabled', false);
+        $(selector + '_middle_name').prop('disabled', false);
+        $(selector + '_last_name').prop('disabled', false);
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
         $(selector + '_year_of_birth').prop('disabled', false);
@@ -235,6 +293,9 @@
         var selector = '#' + fieldname;
         $(selector + '_organisation_id').prop('disabled', true);
         $(selector + '_full_name').prop('disabled', true);
+        $(selector + '_first_name').prop('disabled', true);
+        $(selector + '_middle_name').prop('disabled', true);
+        $(selector + '_last_name').prop('disabled', true);
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_date_of_birth__row .ui-datepicker-trigger').hide();
@@ -257,6 +318,9 @@
         enable_autocomplete(fieldname);
         // Enable all the fields & clear their values
         $(selector + '_full_name').prop('disabled', false).val('');
+        $(selector + '_first_name').prop('disabled', false).val('');
+        $(selector + '_middle_name').prop('disabled', false).val('');
+        $(selector + '_last_name').prop('disabled', false).val('');
         clear_person_fields(fieldname);
         // Hide the edit button
         $(selector + '_edit_bar .icon-edit').hide();
@@ -273,6 +337,9 @@
             $(selector).val(existing.value);
             $(selector + '_organisation_id').prop('disabled', true).val(existing.organisation_id);
             $(selector + '_full_name').prop('disabled', true).val(existing.full_name);
+            $(selector + '_first_name').prop('disabled', true).val(existing.first_name);
+            $(selector + '_middle_name').prop('disabled', true).val(existing.middle_name);
+            $(selector + '_last_name').prop('disabled', true).val(existing.last_name);
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
             $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
@@ -291,13 +358,16 @@
             // Nothing should come here?
             // Clear all values
             $(selector + '_full_name').prop('disabled', false).val('');
+            $(selector + '_first_name').prop('disabled', false).val('');
+            $(selector + '_middle_name').prop('disabled', false).val('');
+            $(selector + '_last_name').prop('disabled', false).val('');
             clear_person_fields(fieldname);
         }
     };
 
     var clear_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
-        // Clear values & Enable Fields except for full name, as select_person
+        // Clear values & Enable Fields except for name, as select_person
         // should retain the name that the user selected via autocomplete.
         $(selector).val('');
         $(selector + '_organisation_id').prop('disabled', false).val('');
@@ -320,7 +390,10 @@
             // No Match
             return item.label;
         }
-        var name = item.name;
+        if (fullname) {
+            var name = item.name;
+        } else {
+        }
         return name;
     };
 
@@ -349,6 +422,23 @@
     var enable_autocomplete = function(fieldname) {
         var selector = '#' + fieldname;
         var dummy_input = $(selector + '_full_name');
+        if (dummy_input.length == 0) {
+            // separate_name_fields
+            fullname = false;
+            dummy_input = $(selector + '_first_name');
+            var controller = dummy_input.attr('data-c');
+            if (controller == undefined) {
+                // Last Name field must be the activator
+                firstname = false;
+                dummy_input = $(selector + '_last_name');
+                var controller = dummy_input.attr('data-c');
+            } else {
+                firstname = true;
+            }
+        } else {
+            fullname = true;
+            var controller = dummy_input.attr('data-c');
+        }
         if (dummy_input.attr('autocomplete')) {
             // Already setup
             return;
@@ -360,7 +450,6 @@
             // Store existing data in case of cancel
             var existing = {
                 value: value,
-                full_name: dummy_input.val(),
                 organisation_id: $(selector + '_organisation_id').val(),
                 gender: $(selector + '_gender').val(),
                 date_of_birth: $(selector + '_date_of_birth').val(),
@@ -372,16 +461,22 @@
                 home_phone: $(selector + '_home_phone').val(),
                 email: $(selector + '_email').val()
             };
+            if (fullname) {
+                existing['full_name'] = dummy_input.val();
+            } else {
+                existing['first_name'] = $(selector + '_first_name').val();
+                existing['middle_name'] = $(selector + '_middle_name').val();
+                existing['last_name'] = $(selector + '_last_name').val();
+            }
         } else {
             var existing = {};
         }
         real_input.data('existing', existing);
 
         // Add a Throbber
-        $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber input_throbber hide"></div>');
+        dummy_input.after('<div id="' + fieldname + '_throbber" class="throbber input_throbber hide"></div>');
         var throbber = $(selector + '_throbber');
 
-        var controller = dummy_input.attr('data-c');
         var fn = dummy_input.attr('data-f');
         var url = S3.Ap.concat('/' + controller + '/' + fn + '/search_ac');
         // Have this URL editable after setup (e.g. to Filter by Organisation)
@@ -444,9 +539,22 @@
                             .appendTo(ul);
         };
         dummy_input.blur(function() {
-            if (existing.hasOwnProperty('full_name') && existing.full_name != dummy_input.val()) {
-                // New Entry - without letting AC complete (e.g. tab out)
-                real_input.val('').change();
+            if (fullname) {
+                if (existing.hasOwnProperty('full_name') && existing.full_name != dummy_input.val()) {
+                    // New Entry - without letting AC complete (e.g. tab out)
+                    real_input.val('').change();
+                }
+            } else if (firstname) {
+                if (existing.hasOwnProperty('first_name') && existing.first_name != dummy_input.val()) {
+                    // New Entry - without letting AC complete (e.g. tab out)
+                    real_input.val('').change();
+                }
+            } else {
+                // lastname
+                if (existing.hasOwnProperty('last_name') && existing.last_name != dummy_input.val()) {
+                    // New Entry - without letting AC complete (e.g. tab out)
+                    real_input.val('').change();
+                }
             }
         });
     };
@@ -455,10 +563,28 @@
     var select_person = function(fieldname, id) {
         var selector = '#' + fieldname;
         var name_input = $(selector + '_full_name');
-        name_input.prop('disabled', false);
+        if (name_input.length == 0) {
+            // separate_name_fields
+            fullname = false;
+            name_input = $(selector + '_first_name');
+            name_input.prop('disabled', false);
+            var controller = name_input.attr('data-c');
+            if (controller == undefined) {
+                // Last Name field must be the activator
+                name_input = $(selector + '_last_name');
+                name_input.prop('disabled', false);
+                var controller = name_input.attr('data-c');
+            } else {
+                $(selector + '_last_name').prop('disabled', false).val('');
+            }
+            $(selector + '_middle_name').prop('disabled', false);
+        } else {
+            fullname = true;
+            var controller = name_input.attr('data-c');
+            name_input.prop('disabled', false);
+        }
         clear_person_fields(fieldname);
         var real_input = $(selector);
-        var controller = name_input.attr('data-c');
         var fn = name_input.attr('data-f');
         var url = S3.Ap.concat('/' + controller + '/' + fn + '/' + id + '/lookup');
         $.getJSONS3(url, function(data) {
@@ -466,10 +592,10 @@
                 // Already done by ac, yet gets lost due to {} returning True
                 real_input.val(id);
 
-                var full_name = name_input.val();
-                var existing = {
-                    value: id,
-                    full_name: full_name
+                var existing = {value: id}
+                if (fullname) {
+                    var full_name = name_input.val();
+                    existing['full_name'] = full_name;
                 }
                 real_input.data('existing', existing);
                 process_reponse(data, fieldname);
@@ -487,27 +613,63 @@
     var lookup_contact = function(fieldname, site_id) {
         var selector = '#' + fieldname;
         var name_input = $(selector + '_full_name');
-        name_input.prop('disabled', false).val('');
+        if (name_input.length == 0) {
+            // separate_name_fields
+            fullname = false;
+            name_input = $(selector + '_first_name');
+            name_input.prop('disabled', false).val('');
+            if (name_input.attr('data-c') == undefined) {
+                // Last Name field must be the activator
+                name_input = $(selector + '_last_name');
+                name_input.prop('disabled', false).val('');
+            } else {
+                $(selector + '_last_name').prop('disabled', false).val('');
+            }
+            $(selector + '_middle_name').prop('disabled', false).val('');
+        } else {
+            fullname = true;
+            name_input.prop('disabled', false).val('');
+        }
         clear_person_fields(fieldname);
         var real_input = $(selector);
         var url = S3.Ap.concat('/org/site/' + site_id + '/site_contact_person');
         $.getJSONS3(url, function(data) {
             try {
-                var full_name = data['name'];
-                name_input.val(full_name);
-
                 var id = data['id'];
                 real_input.val(id);
 
-                var existing = {
-                    value: id,
-                    full_name: full_name
+                var existing = {value: id}
+
+                if (fullname) {
+                    var full_name = data['name'];
+                    name_input.val(full_name);
+                    existing['full_name'] = full_name;
+                } else {
+                    var first_name = data['first_name'];
+                    $(selector + '_first_name').val(first_name);
+                    existing['first_name'] = first_name;
+                    var last_name = data['last_name'];
+                    $(selector + '_last_name').val(last_name);
+                    existing['last_name'] = last_name;
+                    var middle_name_field = $(selector + '_middle_name');
+                    if (middle_name_field.length) {
+                        var middle_name = data['middle_name'];
+                        middle_name_field.val(middle_name);
+                        existing['middle_name'] = middle_name;
+                    }
                 }
+
                 real_input.data('existing', existing);
                 process_reponse(data, fieldname, id);
             } catch(e) {
                 real_input.val('');
-                $(selector + '_full_name').prop('disabled', false).val('');
+                if (fullname) {
+                    name_input.prop('disabled', false).val('');
+                } else {
+                    $(selector + '_first_name').prop('disabled', false).val('');
+                    $(selector + '_middle_name').prop('disabled', false).val('');
+                    $(selector + '_last_name').prop('disabled', false).val('');
+                }
                 clear_person_fields(fieldname);
             }
         });
@@ -570,6 +732,19 @@
             $(selector + '_organisation_id').val(organisation_id);
             existing['organisation_id'] = organisation_id;
         }
+        if (data.hasOwnProperty('first_name')) {
+            var first_name = data['first_name'];
+            $(selector + '_first_name').val(first_name);
+            existing['first_name'] = first_name;
+            var last_name = data['last_name'];
+            $(selector + '_last_name').val(last_name);
+            existing['last_name'] = last_name;
+            if (data.hasOwnProperty('middle_name')) {
+                var middle_name = data['middle_name'];
+                $(selector + '_middle_name').val(middle_name);
+                existing['middle_name'] = middle_name;
+            }
+        }
 
         disable_person_fields(fieldname);
     };
@@ -585,12 +760,34 @@
             // User has selected an entry, so no need for additional deduplication checks
             return;
         }
-        var name = $(selector + '_full_name').val();
-        if (!name) {
-            // Nothing we can lookup yet
-            return;
+        var name_field = $(selector + '_full_name');
+        if (name_field.length == 0) {
+            // separate_name_fields
+            var first_name = $(selector + '_first_name').val();
+            if (!first_name) {
+                // Nothing we can lookup yet
+                return;
+            }
+            var data = {first_name: first_name};
+            var last_name = $(selector + '_last_name').val();
+            if (last_name) {
+                data['last_name'] = last_name;
+            }
+            var middle_name_field = $(selector + '_middle_name');
+            if (middle_name_field.length) {
+                var middle_name = $(selector + '_middle_name').val();
+                if (middle_name) {
+                    data['middle_name'] = middle_name;
+                }
+            }
+        } else {
+            var name = name_field.val();
+            if (!name) {
+                // Nothing we can lookup yet
+                return;
+            }
+            var data = {name: name};
         }
-        var data = {name: name};
         var dob = $(selector + '_date_of_birth').val();
         if (dob) {
             data['dob'] = dob;
@@ -623,6 +820,7 @@
         if (email) {
             data['email'] = email;
         }
+        // @ToDo: Allow controller to be configurable
         var url = S3.Ap.concat('/pr/person/check_duplicates');
         $.ajaxS3({
             url: url,

@@ -55,6 +55,7 @@ __all__ = ("single_phone_number_pattern",
            "IS_NOT_ONE_OF",
            "IS_PERSON_GENDER",
            "IS_PHONE_NUMBER",
+           "IS_PHONE_NUMBER_MULTI",
            "IS_PROCESSED_IMAGE",
            "IS_SITE_SELECTOR",
            "IS_UTC_DATETIME",
@@ -64,19 +65,9 @@ __all__ = ("single_phone_number_pattern",
            )
 
 import datetime
+import json
 import re
 import time
-
-JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-        from gluon.contrib.simplejson.decoder import JSONDecodeError
-        JSONErrors += (JSONDecodeError,)
 
 from gluon import *
 #from gluon import current
@@ -85,7 +76,11 @@ from gluon.storage import Storage
 from gluon.validators import Validator
 
 from s3datetime import S3DateTime
-from s3utils import s3_orderby_fields, s3_unicode, s3_validate
+from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
+
+DEFAULT = lambda: None
+JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
+SEPARATORS = (",", ":")
 
 def translate(text):
     if text is None:
@@ -98,7 +93,6 @@ def translate(text):
 def options_sorter(x, y):
     return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
 
-DEFAULT = lambda: None
 # -----------------------------------------------------------------------------
 # Phone number requires
 # Multiple phone numbers can be separated by comma, slash, semi-colon.
@@ -121,49 +115,80 @@ s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
 # =============================================================================
 class IS_JSONS3(Validator):
     """
-    Web2Py IS_JSON validator extended for CSV imports
-    Example:
-        Used as::
+        Similar to web2py's IS_JSON validator, but extended to handle
+        single quotes in dict keys (=invalid JSON) from CSV imports.
 
-            INPUT(_type='text', _name='name',
-                requires=IS_JSON(error_message="This is not a valid json input")
+        Example:
 
-            >>> IS_JSON()('{"a": 100}')
+            INPUT(_type='text', _name='name', requires=IS_JSONS3())
+
+            >>> IS_JSONS3()('{"a": 100}')
             ({u'a': 100}, None)
 
-            >>> IS_JSON()('spam1234')
+            >>> IS_JSONS3()('spam1234')
             ('spam1234', 'invalid json')
     """
 
-    def __init__(self, error_message="Invalid JSON"):
-        try:
-            self.driver_auto_json = current.db._adapter.driver_auto_json
-        except:
-            current.log.warning("Update Web2Py to 2.9.11 to get native JSON support")
-            self.driver_auto_json = []
+    def __init__(self,
+                 native_json=False,
+                 error_message="Invalid JSON"):
+        """
+            Constructor
+
+            @param native_json: return the JSON string rather than
+                                a Python object (e.g. when the field
+                                is "string" type rather than "json")
+            @param error_message: the error message
+        """
+
+        self.native_json = native_json
         self.error_message = error_message
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
-        # Convert CSV import format to valid JSON
-        value = value.replace("'", "\"")
-        try:
-            if "dumps" in self.driver_auto_json:
-                json.loads(value) # raises error in case of malformed JSON
-                return (value, None) #  the serialized value is not passed
+        """
+            Validator, validates a string and converts it into db format
+        """
+
+        error = lambda v, e: (v, "%s: %s" % (current.T(self.error_message), e))
+
+        if current.response.s3.bulk:
+            # CSV import produces invalid JSON (single quotes),
+            # which would still be valid Python though, so try
+            # using ast to decode, then re-dumps as valid JSON:
+            import ast
+            try:
+                value_ = json.dumps(ast.literal_eval(value),
+                                    separators = SEPARATORS,
+                                    )
+            except JSONERRORS + (SyntaxError,), e:
+                return error(value, e)
+            if self.native_json:
+                return (value_, None)
             else:
-                return (json.loads(value), None)
-        except JSONErrors, e:
-            return (value, "%s: %s" % (current.T(self.error_message), e))
+                return (json.loads(value_), None)
+        else:
+            # Coming from UI, so expect valid JSON
+            try:
+                if self.native_json:
+                    json.loads(value) # raises error in case of malformed JSON
+                    return (value, None) #  the serialized value is not passed
+                else:
+                    return (json.loads(value), None)
+            except JSONERRORS, e:
+                return error(value, e)
 
     # -------------------------------------------------------------------------
     def formatter(self, value):
-        if value is None:
-            return None
-        if "loads" in self.driver_auto_json:
+        """
+            Formatter, converts the db format into a string
+        """
+
+        if value is None or \
+           self.native_json and isinstance(value, basestring):
             return value
         else:
-            return json.dumps(value)
+            return json.dumps(value, separators = SEPARATORS)
 
 # =============================================================================
 class IS_LAT(Validator):
@@ -399,7 +424,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
     def __call__(self, value):
 
         thousands_sep = ","
-        value = str(value).replace(thousands_sep, "")
+        value = s3_str(value).replace(thousands_sep, "")
         return IS_INT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
@@ -476,15 +501,19 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
     def __call__(self, value):
 
         thousands_sep = ","
-        value = str(value).replace(thousands_sep, "")
+        value = s3_str(value).replace(thousands_sep, "")
         return IS_FLOAT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def represent(number, precision=None):
+    def represent(number, precision=None, fixed=False):
         """
             Change the format of the number depending on the language
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
+
+            @param number: the number
+            @param precision: the number of decimal places to show
+            @param fixed: show decimal places even if the decimal part is 0
         """
 
         if number is None:
@@ -500,10 +529,12 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
                 dec_part = dec_part[:precision]
         else:
             int_part, dec_part = str_number, ""
-        if int(dec_part) == 0:
+
+        if dec_part and int(dec_part) == 0 and not fixed:
             dec_part = ""
         elif precision is not None:
             dec_part = dec_part + ("0" * (precision - len(dec_part)))
+
         if dec_part:
             dec_part = DECIMAL_SEPARATOR + dec_part
 
@@ -2076,6 +2107,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                  error_message = None,
                  allow_empty = False,
                  first_name_only = None,
+                 separate_name_fields = None,
                  ):
         """
             Constructor
@@ -2096,6 +2128,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
         self.error_message = error_message
         self.allow_empty = allow_empty
         self.first_name_only = first_name_only
+        self.separate_name_fields = separate_name_fields
 
         # Tell s3_mark_required that this validator doesn't accept NULL values
         self.mark_required = not allow_empty
@@ -2129,6 +2162,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             db = current.db
             s3db = current.s3db
             settings = current.deployment_settings
+
+            separate_name_fields = self.separate_name_fields
+            if separate_name_fields is None:
+                separate_name_fields = settings.get_pr_separate_name_fields()
 
             ptable = db.pr_person
             ctable = s3db.pr_contact
@@ -2224,6 +2261,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 mobile, error = validator(mobile)
                 if error:
                     return (person_id, error)
+
+            dob = post_vars["date_of_birth"]
+            if not dob and settings.get_pr_dob_required():
+                return (person_id, T("Date of Birth is Required"))
 
             #if person_id:
             #    # Filter out location_id (location selector form values
@@ -2324,39 +2365,44 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             post_vars = Storage([(k, post_vars[k])
                                  for k in post_vars if k != "location_id"])
 
-            fullname = post_vars["full_name"]
-            if not fullname and self.allow_empty:
-                return None, None
+            if not separate_name_fields:
+                fullname = post_vars["full_name"]
+                if not fullname and self.allow_empty:
+                    return None, None
 
             # Validate the email
             email, error = email_validate(post_vars.email, None)
             if error:
                 return (None, error)
 
-            # Separate the Name into components
-            if self.first_name_only is None:
-                # Activate if using RTL
-                if s3.rtl:
-                    first_name_only = True
+            if not separate_name_fields:
+                # Separate the Name into components
+                if self.first_name_only is None:
+                    # Activate if using RTL
+                    if s3.rtl:
+                        first_name_only = True
+                    else:
+                        first_name_only = False
                 else:
-                    first_name_only = False
-            else:
-                first_name_only = self.first_name_only
-            if first_name_only:
-                first_name = fullname
-                middle_name = last_name = None
-            else:
-                name_format = settings.get_pr_name_format()
-                if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
-                    # Viet Nam style
-                    last_name, middle_name, first_name = name_split(fullname)
+                    first_name_only = self.first_name_only
+                if first_name_only:
+                    first_name = fullname
+                    middle_name = last_name = None
                 else:
-                    # Assume default: "%(first_name)s %(middle_name)s %(last_name)s"
-                    # @ToDo: Actually parse the format string
-                    first_name, middle_name, last_name = name_split(fullname)
-            post_vars["first_name"] = first_name
-            post_vars["middle_name"] = middle_name
-            post_vars["last_name"] = last_name
+                    name_format = settings.get_pr_name_format()
+                    if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
+                        # Viet Nam style
+                        last_name, middle_name, first_name = name_split(fullname)
+                    #elif name_format == "%(last_name)s, %(first_name)s":
+                    #    # DRK style (deprecated once we complete separation of widget fields)
+                    #    last_name, middle_name, first_name = name_split(fullname)
+                    else:
+                        # Assume default: "%(first_name)s %(middle_name)s %(last_name)s"
+                        # @ToDo: Actually parse the format string
+                        first_name, middle_name, last_name = name_split(fullname)
+                post_vars["first_name"] = first_name
+                post_vars["middle_name"] = middle_name
+                post_vars["last_name"] = last_name
 
             # Validate and add the person record
             for f in ptable._filter_fields(post_vars):
@@ -3216,29 +3262,80 @@ class IS_PHONE_NUMBER(Validator):
                      is converted into E.123 international notation.
         """
 
-        T = current.T
-        error_message = self.error_message
+        if isinstance(value, basestring):
+            value = value.strip()
+            if value and value[0] == unichr(8206):
+                # Strip the LRM character
+                value = value[1:]
+            number = s3_str(value)
+            number, error = s3_single_phone_requires(number)
+        else:
+            error = True
 
-        number = str(value).strip()
-        number, error = s3_single_phone_requires(number)
         if not error:
             if self.international and \
                current.deployment_settings \
                       .get_msg_require_international_phone_numbers():
+
+                # Configure alternative error message
+                error_message = self.error_message
                 if not error_message:
-                    error_message = T("Enter phone number in international format like +46783754957")
+                    error_message = current.T("Enter phone number in international format like +46783754957")
+
                 # Require E.123 international format
                 number = "".join(re.findall("[\d+]+", number))
                 match = re.match("(\+)([1-9]\d+)$", number)
                 #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
+
                 if match:
                     number = "+%s" % match.groups()[1]
                     return (number, None)
             else:
                 return (number, None)
 
+        error_message = self.error_message
         if not error_message:
-            error_message = T("Enter a valid phone number")
+            error_message = current.T("Enter a valid phone number")
+
+        return (value, error_message)
+
+# =============================================================================
+class IS_PHONE_NUMBER_MULTI(Validator):
+    """
+        Validator for multiple phone numbers.
+    """
+
+    def __init__(self,
+                 error_message = None):
+        """
+            Constructor
+
+            @param error_message: alternative error message
+        """
+
+        self.error_message = error_message
+
+    def __call__(self, value):
+        """
+            Validation of a value
+
+            @param value: the value
+            @return: tuple (value, error), where error is None if value
+                     is valid.
+        """
+
+        value = value.strip()
+        if value[0] == unichr(8206):
+            # Strip the LRM character
+            value = value[1:]
+        number = s3_str(value)
+        number, error = s3_phone_requires(number)
+        if not error:
+            return (number, None)
+
+        error_message = self.error_message
+        if not error_message:
+            error_message = current.T("Enter a valid phone number")
 
         return (value, error_message)
 
@@ -3253,7 +3350,9 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                  multiple = False,
                  select = DEFAULT,
                  sort = False,
-                 zero = ""):
+                 translate = False,
+                 zero = "",
+                 ):
         """
             Constructor
 
@@ -3263,8 +3362,12 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                            defaults to settings.L10n.languages,
                            set explicitly to None to allow all languages
             @param sort: sort options in selector
+            @param translate: translate the language options into
+                              the current UI language (only with
+                              explicit select=None)
             @param zero: use this label for the empty-option (default="")
         """
+
         super(IS_ISO639_2_LANGUAGE_CODE, self).__init__(
                                                 self.language_codes(),
                                                 error_message = error_message,
@@ -3277,6 +3380,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             self._select = current.deployment_settings.get_L10n_languages()
         else:
             self._select = select
+        self.translate = translate
 
     # -------------------------------------------------------------------------
     def options(self, zero=True):
@@ -3292,7 +3396,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             items = [(k, v) for k, v in self._select.items()
                             if k in language_codes_dict]
         else:
-            items = self.language_codes()
+            if self.translate:
+                T = current.T
+                items = [(k, T(v)) for k, v in self.language_codes()]
+            else:
+                items = self.language_codes()
         if self.sort:
             items.sort(options_sorter)
         if zero and not self.zero is None and not self.multiple:
@@ -3303,7 +3411,9 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
     @classmethod
     def represent(cls, code):
         """
-            Represent a language code by language name
+            Represent a language code by language name, uses the
+            representation from deployment_settings if available
+            rather than translation into current UI language.
 
             @param code: the language code
         """
@@ -3312,10 +3422,24 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         if code in l10n_languages:
             name = l10n_languages[code]
         else:
-            all_languages = dict(cls.language_codes())
-            name = all_languages.get(code)
-            if name is None:
-                name = current.messages.UNKNOWN_OPT
+            name = cls.represent_local(code)
+        return name
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def represent_local(cls, code):
+        """
+            Represent a language code by language name, translated
+            into current UI language (preferrable for database fields).
+
+            @param code: the language code
+        """
+
+        name = dict(cls.language_codes()).get(code)
+        if name is None:
+            name = current.messages.UNKNOWN_OPT
+        else:
+            name = current.T(name)
         return name
 
     # -------------------------------------------------------------------------
@@ -3330,7 +3454,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
               no 'families' or Old
         """
 
-        return [#("aar", "Afar"),
+        lang = [#("aar", "Afar"),
                 ("aa", "Afar"),
                 #("abk", "Abkhazian"),
                 ("ab", "Abkhazian"),
@@ -4001,6 +4125,12 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("zun", "Zuni"),
                 #("zxx", "No linguistic content; Not applicable"),
                 ("zza", "Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki"),
-                 ]
+                ]
+
+        extra_codes = current.deployment_settings.get_L10n_extra_codes()
+        if extra_codes:
+            lang += extra_codes
+
+        return lang
 
 # END =========================================================================

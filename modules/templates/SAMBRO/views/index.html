@@ -1,5 +1,10 @@
 {{extend "layout.html"}}
+<div id='home'>
 <h1>{{=title}}</h1>
+<div class='subscribe-button'>
+{{fn = "alert" if current.auth.s3_logged_in() else "public"}}
+  <a href='/{{=appname}}/cap/{{=fn}}.rss' target='_blank'><i class='fa fa-rss'></i>{{=T("RSS Feeds")}}</a>
+</div>
 <div class='large-3 columns'>
 <fieldset>
  <legend>
@@ -16,9 +21,10 @@
 <div class='large-6 columns'>
 {{=_map}}
 </div>
-<div class='large-3 columns'>
+<div class='large-3 columns' id='newsfeed'>
 <h3>{{=T("News Feeds")}}</h3>
 {{#=news_filter_form}}
 {{=cms_post_datalist}}
+</div>
 </div>
 {{include "dataLists.html"}}

@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -21,7 +16,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("HROpen", "default/users")
+    settings.base.prepopulate += ("HROpen", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "HROpen"
@@ -108,10 +103,10 @@ def config(settings):
     #settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-       "HRK" : T("Kuna"),
-       "EUR" : T("Euros"),
-       #"GBP" : T("Great British Pounds"),
-       "USD" : T("United States Dollars"),
+       "HRK" : "Kuna",
+       "EUR" : "Euros",
+       #"GBP" : "Great British Pounds",
+       "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "HRK"
 

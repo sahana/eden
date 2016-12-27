@@ -797,7 +797,15 @@
                     }
                 }
 
-                settings.jqXHR = $.ajaxS3({
+                // Use $.searchS3 if filter framework is available,
+                // otherwise (e.g. custom page without s3.filter.js)
+                // fall back to $.ajaxS3
+                var ajaxMethod = $.ajaxS3;
+                if ($.searchS3 !== undefined) {
+                    ajaxMethod = $.searchS3;
+                }
+
+                settings.jqXHR = ajaxMethod({
                     'type':     conf.method,
                     //'url':      conf.url,
                     'url':      ajax_urls[id], // Needs to be dynamic to be able to be altered by reloadAjax()
@@ -1203,7 +1211,12 @@
                 $('.dt-truncate .ui-icon-zoomin, .dt-truncate .ui-icon-zoomout').bind('click.dtToggleCell', toggleCell);
                 bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
+                    // Hide the export options (table is empty)
+                    $(selector).closest('.dt-wrapper').find('.dt-export-options').hide();
                     return;
+                } else {
+                    // Show the export options (table has data)
+                    $(selector).closest('.dt-wrapper').find('.dt-export-options').show();
                 }
                 if (tableConfig['group'].length) {
                     var groupList = tableConfig['group'];
@@ -1329,9 +1342,10 @@
 
             if (oSetting) {
                 var arguments = 'id=' + tableid,
-                    serverFilterArgs = $('#' + tableid + '_dataTable_filter');
-                if (serverFilterArgs.val() !== '') {
-                    arguments += '&sFilter=' + serverFilterArgs.val();
+                    serverFilterArgs = $('#' + tableid + '_dataTable_filter'),
+                    sFilter = serverFilterArgs.val();
+                if (sFilter !== undefined && sFilter !== '') {
+                    arguments += '&sFilter=' + sFilter;
                 }
                 arguments += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
                 columns = oSetting.aoColumns;
@@ -1353,7 +1367,13 @@
             } else {
                 url = appendUrlQuery(url, extension, '');
             }
-            window.open(url);
+            // Use $.searchS3Download if available, otherwise (e.g. custom
+            // page without s3.filter.js) fall back to window.open:
+            if ($.searchDownloadS3 !== undefined) {
+                $.searchDownloadS3(url, '_blank');
+            } else {
+                window.open(url);
+            }
         });
 
         if (S3.dataTables.Resize) {

@@ -29,6 +29,7 @@ try:
 except:
     print "Copy geos.dll and geos_c.dll from Python27\DLLs into the web2py directory"
 
+shutil.copy(os.path.join('applications', 'eden', 'static', 'favicon.ico'), '.')
 
 base = None
 
@@ -45,27 +46,27 @@ buildOptions = dict(
             #'ABOUT',
             'LICENSE',
             'VERSION',
-            'logging.example.conf',
-            'options_std.py',
-            'app.example.yaml',
-            'queue.example.yaml',
+            #'logging.example.conf',
+            #'options_std.py',
+            #'app.example.yaml',
+            #'queue.example.yaml',
             'geos.dll',
             'geos_c.dll'
             ],
-        packages = contributed_modules + ['PIL', 'pytz', 'lxml', 'dateutil', 'reportlab', 'xlwt', 'shapely'], # 'tweepy', 'serial'
+        packages = contributed_modules + ['PIL', 'lxml', 'dateutil', 'reportlab', 'xlrd', 'xlwt', 'shapely'], #, 'pytz', 'tweepy', 'serial'
         )
 
 setup(
-        name = "Web2py",
-        version=web2py_version,
-        author="Massimo DiPierro",
-        description="web2py web framework",
-        license = "LGPL v3",
+        name = "Sahana",
+        version=web2py_version, # @ToDo: Use Eden version
+        author="Sahana Software Foundation",
+        description="Sahana Eden Humanitarian Management Platform",
+        license = "MIT",
         options = dict(build_exe = buildOptions),
         executables = [Executable("web2py.py",
                                     base=base,
                                     compress = True,
-                                    icon = "web2py.ico",
-                                    targetName="web2py.exe",
+                                    icon = "favicon.ico",
+                                    targetName="sahana.exe",
                                     copyDependentFiles = True)],
         )

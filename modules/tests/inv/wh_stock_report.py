@@ -2,7 +2,7 @@
 
 """ Sahana Eden Warehouses Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -35,11 +35,11 @@ class Warehouse Stock Report(SeleniumUnitTest):
         """
             @case: inv006
             @description: Warehouse Stock Report
-            
+
             * DOES NOT WORK
         """
         print "\n"
-        
+
         import datetime
         from dateutil.relativedelta import relativedelta
 
@@ -48,10 +48,10 @@ class Warehouse Stock Report(SeleniumUnitTest):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Login, if not-already done so
         self.login(account="normal", nexturl="inv/inv_item/report")
-        
+
         # INV006
 		# Warehouse Stock Report - Using Filter Options
 		# Report by Item
@@ -59,7 +59,7 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					 "text",
 					 "cans")]
 					 )
-					 					 
+
 		# Report by Facility
 		self.create( "inv_item_search",
 					[( "select_site_id",
@@ -86,7 +86,7 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					   "Australian Red Cross",
 					   "checked")]
 					 )
-	 			   
+
 		# Report by Expiry Date (min)
 		self.create( "inv_item_search",
 					[( "select_supply_org_id",
@@ -95,13 +95,13 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					 ( "expiry_date_min",
 					   "2012-01-01")]
 					 )
-	 	
+
 		# Report by Expiry Date (max)
 		self.create( "inv_item_search",
 				     ( "expiry_date_max",
 					    "2012-06-30")]
 					 )
-					 
+
 	 	# Report by Keyword and Owning Organisation
 		self.create( "inv_item_search",
 					[( "text",
@@ -123,7 +123,7 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					   "Acme Suppliers",
 					   "checked")]
 					 )
-	 			   
+
 		# Staff Report - Using Report Options
 		# Default Options = Item/Warehouse/Quantity/Sum
 		# Report by Organization/Facility/Person/Count
@@ -144,7 +144,7 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					 ( "totals",
 					   "checked")]
 					 )
-					 	
+
 		# Report by Organization/Facility/Person/Count
 		self.browser.find_element_by_class("toggle-text").click()
 		self.create( "report",
@@ -162,6 +162,6 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					   "option"),
 					 ( "totals",
 					   "checked")]
-					 )			 
-		
-		
+					 )
+
+

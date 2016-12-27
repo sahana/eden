@@ -1066,7 +1066,7 @@
 	$.calendarsPicker.regionalOptions['nl-BE'] = {
 		renderer: $.calendarsPicker.defaultRenderer,
 		prevText: '←', prevStatus: 'Bekijk de vorige maand',
-		prevJumpText: '«', nextJumpStatus: 'Bekijk het vorige jaar',
+		prevJumpText: '«', prevJumpStatus: 'Bekijk het vorige jaar',
 		nextText: '→', nextStatus: 'Bekijk de volgende maand',
 		nextJumpText: '»', nextJumpStatus: 'Bekijk het volgende jaar',
 		currentText: 'Vandaag', currentStatus: 'Bekijk de huidige maand',
@@ -1087,7 +1087,7 @@
 	$.calendarsPicker.regionalOptions['nl'] = {
 		renderer: $.calendarsPicker.defaultRenderer,
 		prevText: '←', prevStatus: 'Bekijk de vorige maand',
-		prevJumpText: '«', nextJumpStatus: 'Bekijk het vorige jaar',
+		prevJumpText: '«', prevJumpStatus: 'Bekijk het vorige jaar',
 		nextText: '→', nextStatus: 'Bekijk de volgende maand',
 		nextJumpText: '»', nextJumpStatus: 'Bekijk het volgende jaar',
 		currentText: 'Vandaag', currentStatus: 'Bekijk de huidige maand',

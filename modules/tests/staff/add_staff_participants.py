@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - HRM007 Add Staff Participants
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -33,7 +33,7 @@ class AddStaffParticipants(SeleniumUnitTest):
         """
             @case: HRM007
             @description: Add a premade made staff participant
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -49,15 +49,15 @@ class AddStaffParticipants(SeleniumUnitTest):
         except:
             org_id = int(url_parts[-1])
         browser.get("%s/hrm/training_event/%s/participant" % (config.url, org_id))
-	
+
         # Check if add button is present on the page. Click it if found.
         add_btn = self.browser.find_elements_by_id("show-add-btn")
         if len(add_btn) > 0:
             add_btn[0].click()
-        
-        self.create("hrm_training", 
-                    [   
+
+        self.create("hrm_training",
+                    [
                     ( "person_id",
                       "Goku Gohan")
-                    ]   
+                    ]
                    )

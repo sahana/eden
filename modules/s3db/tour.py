@@ -2,7 +2,7 @@
 
 """ Sahana Eden Guided Tour Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -37,7 +37,6 @@ __all__ = ("S3GuidedTourModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3GuidedTourModel(S3Model):
@@ -78,6 +77,7 @@ class S3GuidedTourModel(S3Model):
                            notnull=True,
                            unique=True,
                            represent=lambda v: v or NONE,
+                           requires = IS_NOT_EMPTY(),
                            label=T("Unique code")),
                      Field("controller",
                            represent=lambda v: v or NONE,

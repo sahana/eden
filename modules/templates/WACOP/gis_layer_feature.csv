@@ -1,0 +1,18 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airport')),name,~.obsolete=False,,True,,,,,False,,,0
+Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,False,0,0
+Fire Stations,All Active Fire Stations,fire,station,fire_station,Water Hydrant,{name} (T('Fire Station')),name,~.obsolete=False,,True,,,,,False,,,0
+Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,0
+Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,0
+Incidents,All Open Incidents,event,incident,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",~.closed=0,,True,,,,,False,,,
+Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,False,0,0
+Offices,All Active Offices,org,office,office,Building,{name} (T('Office'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,False,,0
+PoIs,Points of Interest,gis,poi,,,{name} ({poi_type_id}),"name,poi_type_id",,,True,,,,,,False,,
+Police Beats,All Police Beats,police,site_location,,,"Beat {location_id}, (T('Police Station') {site_id})","location_id,site_id",,,,,,,,False,,0,0
+Police Stations,All Active Police Stations,police,station,police_station,Police Station,{name} (T('Police Station')),name,~.obsolete=False,,True,,,,,False,,,0
+Resources,All Active Resources,pr,group,team,"Contact, Dreadlocks",{name} (T('Resource')),name,,,True,True,,,,False,,,
+Seaports,All Active Seaports,transport,seaport,port,Marina,{name} (T('Seaport')),name,~.obsolete=False,,True,,,,,False,,,0
+Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Staff'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,False,,
+Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False,,
+Vehicles,,vehicle,vehicle,vehicle,Car,{number} (T('Vehicle'))<br />{person_id},"number,person_id",,,True,True,,,,False,,,
+Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,{name} (T('Warehouse'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,,,0

@@ -1,0 +1,24 @@
+/* RDRT Custom Form in deploy_response_select_mission */
+form.select-member-form .tooltip {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+form.select-member-form {
+    margin-bottom: 0.5rem;
+}
+form.select-member-form label {
+    font-weight: bold;
+    padding-right: 0.3rem;
+}
+
+/* Online Documentation (@todo: move into separate CSS file?) */
+.online-documentation {
+    font-size: 0.9rem;
+    line-height: 1.2rem;
+}
+.online-documentation > img {
+    border: 1px solid silver;
+    margin-bottom: 20px;
+    margin-left: 40px;
+    max-width: 720px;
+}

@@ -228,7 +228,7 @@
 
             <!-- Link to Location -->
             <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
-                 S3LocationSelectorWidget2 doesn't have this limitation -->
+                 S3LocationSelector doesn't have this limitation -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat($OrgName, $officename)"/>

@@ -1,0 +1,38 @@
+{{extend "layout.html"}}
+<div class='row'>
+<div class='medium-6 columns'>
+{{=XML(map)}}
+</div>
+<div id='homepage' class='medium-6 columns'>
+{{if internal:}}
+<div>
+<h3 align='center'>Ongoing Responses</h3>
+{{=event_event_datatable}}
+</div>
+<div>
+<h3 align='center'>Pending Activities</h3>
+{{=project_activity_datatable}}
+</div>
+<div>
+{{=cms}}
+</div>
+<div>
+<a class="twitter-timeline" data-height='400' href="https://twitter.com/SaveChildrenPH">Tweets by ‎@SaveChildrenPH</a>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+{{else:}}
+<div>
+<a class="twitter-timeline" data-height='400' href="https://twitter.com/SaveChildrenPH">Tweets by ‎@SaveChildrenPH</a>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<div>
+<h3 align='center'>Active SCP Humanitarian Programs</h3>
+{{=event_event_datatable}}
+</div>
+<div>
+{{=cms}}
+</div>
+{{pass}}
+</div>
+</div>
+{{include "dataTables.html"}}

@@ -5,11 +5,15 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3query.py
 #
-import unittest
 import datetime
+import json
+import unittest
+
 from lxml import etree
+
 from gluon import *
 from gluon.storage import Storage
+
 from s3 import *
 
 try:
@@ -19,9 +23,126 @@ except ImportError:
 else:
     PYPARSING = True
 
+from unit_tests import run_suite
+
 # =============================================================================
 class FieldSelectorResolutionTests(unittest.TestCase):
     """ Test field selector resolution """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        # Create a master and a link table for self-reference
+        s3db.define_table("test_master",
+                          Field("name"),
+                          )
+        s3db.define_table("test_link",
+                          Field("parent", "reference test_master"),
+                          Field("child", "reference test_master"),
+                          )
+        current.db.commit()
+
+        # Add both self-references as components (=ambiguous link)
+        s3db.add_components("test_master",
+                            test_master = ({"name": "parent",
+                                            "link": "test_link",
+                                            "joinby": "child",
+                                            "key": "parent",
+                                            },
+                                            {"name": "child",
+                                             "link": "test_link",
+                                             "joinby": "parent",
+                                             "key": "child",
+                                             },
+                                            )
+                            )
+
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Drop test tables
+        s3db = current.s3db
+        s3db.test_link.drop()
+        s3db.test_master.drop()
+
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
+    def testLinkTableRegistration(self):
+        """ Verify alias registration of link tables """
+
+        s3db = current.s3db
+        resource = s3db.resource("test_master")
+
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+
+        links = resource.links
+
+        # Ambigious "link" entry retained for backwards-compatiblity
+        assertIn("link", links)
+
+        # Verify that the parent link is joined using "child" field
+        assertIn("parent__link", links)
+        parent_link = links["parent__link"]
+        assertEqual(parent_link.fkey, "child")
+
+        # Verify that the child link is joined using "parent" field
+        assertIn("child__link", links)
+        child_link = links["child__link"]
+        assertEqual(child_link.fkey, "parent")
+
+    # -------------------------------------------------------------------------
+    def testLinkTableSelectorResolution(self):
+        """ Verify correct resolution of link table selectors """
+
+        s3db = current.s3db
+        resource = s3db.resource("test_master")
+
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+
+        # Verify resolution of parent link selector
+        rfield = resource.resolve_selector("parent__link.parent")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "parent")
+
+        # Verify joins of parent link
+        joins = rfield.left.get("test_link")
+        assertNotEqual(joins, None)
+        actual = [str(j) for j in joins]
+        expected = ("test_link ON (test_master.id = test_link.child)",
+                    "test_master AS test_parent_master ON (test_link.parent = test_parent_master.id)",
+                    )
+        for expression in expected:
+            assertIn(expression, actual)
+
+        # Verify resolution of child link selector
+        rfield = resource.resolve_selector("child__link.child")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "child")
+
+        # Verify joins of child link
+        joins = rfield.left.get("test_link")
+        assertNotEqual(joins, None)
+        actual = [str(j) for j in joins]
+        expected = ("test_link ON (test_master.id = test_link.parent)",
+                    "test_master AS test_child_master ON (test_link.child = test_child_master.id)",
+                    )
+        for expression in expected:
+            assertIn(expression, actual)
+
+        # Link table name in selectors can still be resolved
+        # (although join would be unreliable in this case)
+        rfield = resource.resolve_selector("link.parent")
+        assertEqual(rfield.tname, "test_link")
+        assertEqual(rfield.fname, "parent")
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -30,13 +151,18 @@ class FieldSelectorResolutionTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         selectors = ["id",
                      "name",
                      "organisation_id$name",
-                     "task.description"]
+                     "task.description",
+                     ]
         fields, joins, left, distinct = resource.resolve_selectors(selectors,
-                                                                   skip_components=True)
+                                                                   skip_components=True,
+                                                                   )
 
         project_project = resource.table
         org_organisation = s3db.org_organisation
@@ -44,19 +170,19 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
 
-        self.assertEqual(len(fields), 3)
-        self.assertEqual(fields[0].colname, "project_project.id")
-        self.assertEqual(fields[1].colname, "project_project.name")
-        self.assertEqual(fields[2].colname, "org_organisation.name")
+        assertEqual(len(fields), 3)
+        assertEqual(fields[0].colname, "project_project.id")
+        assertEqual(fields[1].colname, "project_project.name")
+        assertEqual(fields[2].colname, "org_organisation.name")
 
-        self.assertEqual(joins, {})
+        assertEqual(joins, {})
 
-        self.assertTrue(isinstance(left, dict))
-        self.assertEqual(left.keys(), ["org_organisation"])
-        self.assertEqual(len(left["org_organisation"]), 1)
-        self.assertEqual(str(left["org_organisation"][0]), str(expected))
+        assertTrue(isinstance(left, dict))
+        assertEqual(left.keys(), ["org_organisation"])
+        assertEqual(len(left["org_organisation"]), 1)
+        assertEqual(str(left["org_organisation"][0]), str(expected))
 
-        self.assertTrue(distinct)
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -65,11 +191,15 @@ class FieldSelectorResolutionTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         selectors = ["id",
                      "name",
                      "organisation_id$name",
-                     "task.description"]
+                     "task.description",
+                     ]
         fields, joins, left, distinct = resource.resolve_selectors(selectors)
 
         project_project = resource.table
@@ -87,23 +217,132 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        self.assertEqual(len(fields), 4)
-        self.assertEqual(fields[0].colname, "project_project.id")
-        self.assertEqual(fields[1].colname, "project_project.name")
-        self.assertEqual(fields[2].colname, "org_organisation.name")
-        self.assertEqual(fields[3].colname, "project_task.description")
+        assertEqual(len(fields), 4)
+        assertEqual(fields[0].colname, "project_project.id")
+        assertEqual(fields[1].colname, "project_project.name")
+        assertEqual(fields[2].colname, "org_organisation.name")
+        assertEqual(fields[3].colname, "project_task.description")
 
-        self.assertEqual(joins, {})
+        assertEqual(joins, {})
 
-        self.assertTrue(isinstance(left, dict))
-        self.assertEqual(left.keys(), [ "org_organisation", "project_task"])
-        self.assertEqual(len(left["org_organisation"]), 1)
-        self.assertEqual(str(left["org_organisation"][0]), str(expected))
-        self.assertEqual(len(left["project_task"]), 2)
-        self.assertEqual(str(left["project_task"][0]), str(expected_l))
-        self.assertEqual(str(left["project_task"][1]), str(expected_r))
+        assertTrue(isinstance(left, dict))
+        assertEqual(left.keys(), [ "org_organisation", "project_task"])
+        assertEqual(len(left["org_organisation"]), 1)
+        assertEqual(str(left["org_organisation"][0]), str(expected))
+        assertEqual(len(left["project_task"]), 2)
+        assertEqual(str(left["project_task"][0]), str(expected_l))
+        assertEqual(str(left["project_task"][1]), str(expected_r))
 
-        self.assertTrue(distinct)
+        assertTrue(distinct)
+
+# =============================================================================
+class FieldCategoryFlagsTests(unittest.TestCase):
+    """ Test S3ResourceField type category properties """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        string_categories = {"A": "TestA",
+                             "B": "TestB",
+                             }
+        int_categories = {1: "Example1",
+                          2: "Example2",
+                          3: "Example3",
+                          }
+
+        db = current.db
+        db.define_table("test_ftypes",
+                        Field("name"),
+                        Field("category1",
+                              requires = IS_IN_SET(string_categories),
+                              ),
+                        Field("category2", "integer",
+                              requires = IS_EMPTY_OR(IS_IN_SET(int_categories)),
+                              ),
+                        Field("discrete", "integer",
+                              requires = IS_IN_SET((1, 2, 3, 4)),
+                              ),
+                        Field("value", "double"),
+                        )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        current.db.test_ftypes.drop()
+
+    # -------------------------------------------------------------------------
+    def testNumeric(self):
+        """ Verify detection of numeric types """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertTrue(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "value")
+        assertTrue(rfield.is_numeric)
+
+    # -------------------------------------------------------------------------
+    def testString(self):
+        """ Verify detection of string types """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertTrue(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertTrue(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertFalse(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertFalse(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "value")
+        assertFalse(rfield.is_string)
+
+    # -------------------------------------------------------------------------
+    def testLookup(self):
+        """ Verify detection of fixed set lookup fields """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertFalse(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertTrue(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertTrue(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertFalse(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "value")
+        assertFalse(rfield.is_lookup)
 
 # =============================================================================
 class ResourceFilterJoinTests(unittest.TestCase):
@@ -118,18 +357,21 @@ class ResourceFilterJoinTests(unittest.TestCase):
     def testGetQueryJoinsInnerField(self):
         """ Inner field queries don't contain joins """
 
+        assertEqual = self.assertEqual
+        assertFalse = self.assertFalse
+
         resource = current.s3db.resource("pr_person")
         q = FS("first_name") == "test"
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
-        self.assertFalse(distinct)
+        assertEqual(joins, {})
+        assertFalse(distinct)
 
         # Test left joins
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins, {})
-        self.assertFalse(distinct)
+        assertEqual(joins, {})
+        assertFalse(distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -138,13 +380,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         q = FS("organisation_id$name") == "test"
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
-        self.assertTrue(distinct)
+        assertEqual(joins, {})
+        assertTrue(distinct)
 
         # Test left joins
         project_project = resource.table
@@ -153,12 +398,12 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_project.organisation_id == org_organisation.id)
 
         joins, distinct = q._joins(resource, left=True)
-        self.assertTrue(isinstance(joins, dict))
-        self.assertEqual(joins.keys(), ["org_organisation"])
-        self.assertTrue(isinstance(joins["org_organisation"], list))
-        self.assertEqual(len(joins["org_organisation"]), 1)
-        self.assertEqual(str(joins["org_organisation"][0]), str(expected))
-        self.assertTrue(distinct)
+        assertTrue(isinstance(joins, dict))
+        assertEqual(joins.keys(), ["org_organisation"])
+        assertTrue(isinstance(joins["org_organisation"], list))
+        assertEqual(len(joins["org_organisation"]), 1)
+        assertEqual(str(joins["org_organisation"][0]), str(expected))
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     def testGetQueryJoinsComponentField(self):
@@ -166,13 +411,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("pr_person")
         q = FS("identity.value") == "test"
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
-        self.assertTrue(distinct)
+        assertEqual(joins, {})
+        assertTrue(distinct)
 
         pr_person = resource.table
         pr_identity = s3db.pr_identity
@@ -182,10 +430,10 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         # Test left joins
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins.keys(), ["pr_identity"])
-        self.assertTrue(isinstance(joins["pr_identity"], list))
-        self.assertEqual(str(joins["pr_identity"][0]), str(expected))
-        self.assertTrue(distinct)
+        assertEqual(joins.keys(), ["pr_identity"])
+        assertTrue(isinstance(joins["pr_identity"], list))
+        assertEqual(str(joins["pr_identity"][0]), str(expected))
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     def testGetQueryJoinsSuperComponentField(self):
@@ -193,13 +441,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("pr_person")
         q = FS("contact.value") == "test"
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
-        self.assertTrue(distinct)
+        assertEqual(joins, {})
+        assertTrue(distinct)
 
         # Test left joins
         pr_person = resource.table
@@ -209,10 +460,10 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         (pr_contact.deleted != True))
 
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins.keys(), ["pr_contact"])
-        self.assertTrue(isinstance(joins["pr_contact"], list))
-        self.assertEqual(str(joins["pr_contact"][0]), str(expected))
-        self.assertTrue(distinct)
+        assertEqual(joins.keys(), ["pr_contact"])
+        assertTrue(isinstance(joins["pr_contact"], list))
+        assertEqual(str(joins["pr_contact"][0]), str(expected))
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -224,13 +475,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         q = FS("task.description") == "test"
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
-        self.assertTrue(distinct)
+        assertEqual(joins, {})
+        assertTrue(distinct)
 
         # Test left joins
         project_project = resource.table
@@ -245,12 +499,12 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins.keys(), ["project_task"])
-        self.assertTrue(isinstance(joins["project_task"], list))
-        self.assertEqual(len(joins["project_task"]), 2)
-        self.assertEqual(str(joins["project_task"][0]), str(expected_l))
-        self.assertEqual(str(joins["project_task"][1]), str(expected_r))
-        self.assertTrue(distinct)
+        assertEqual(joins.keys(), ["project_task"])
+        assertTrue(isinstance(joins["project_task"], list))
+        assertEqual(len(joins["project_task"]), 2)
+        assertEqual(str(joins["project_task"][0]), str(expected_l))
+        assertEqual(str(joins["project_task"][1]), str(expected_r))
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -259,13 +513,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         q = (FS("organisation_id$name") == "test") & \
             (FS("task.description") == "test")
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins.keys(), [])
+        assertEqual(joins.keys(), [])
 
         # Test left joins
         project_project = resource.table
@@ -284,16 +541,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins.keys(), ["org_organisation", "project_task"])
+        assertEqual(joins.keys(), ["org_organisation", "project_task"])
 
-        self.assertTrue(isinstance(joins["org_organisation"], list))
-        self.assertEqual(len(joins["org_organisation"]), 1)
-        self.assertEqual(str(joins["org_organisation"][0]), str(expected))
-        self.assertTrue(isinstance(joins["project_task"], list))
-        self.assertEqual(len(joins["project_task"]), 2)
-        self.assertEqual(str(joins["project_task"][0]), str(expected_l))
-        self.assertEqual(str(joins["project_task"][1]), str(expected_r))
-        self.assertTrue(distinct)
+        assertTrue(isinstance(joins["org_organisation"], list))
+        assertEqual(len(joins["org_organisation"]), 1)
+        assertEqual(str(joins["org_organisation"][0]), str(expected))
+        assertTrue(isinstance(joins["project_task"], list))
+        assertEqual(len(joins["project_task"]), 2)
+        assertEqual(str(joins["project_task"][0]), str(expected_l))
+        assertEqual(str(joins["project_task"][1]), str(expected_r))
+        assertTrue(distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -302,13 +559,16 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         resource = s3db.resource("project_project")
         q = (FS("organisation_id$name") == "test") & \
             (resource.table.name == "test")
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins.keys(), [])
+        assertEqual(joins.keys(), [])
 
         # Test left joins
         project_project = resource.table
@@ -320,20 +580,20 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_project.organisation_id == org_organisation.id)
 
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins.keys(), ["org_organisation"])
+        assertEqual(joins.keys(), ["org_organisation"])
 
-        self.assertTrue(isinstance(joins["org_organisation"], list))
-        self.assertEqual(len(joins["org_organisation"]), 1)
-        self.assertEqual(str(joins["org_organisation"][0]), str(expected))
-        self.assertTrue(distinct)
+        assertTrue(isinstance(joins["org_organisation"], list))
+        assertEqual(len(joins["org_organisation"]), 1)
+        assertEqual(str(joins["org_organisation"][0]), str(expected))
+        assertTrue(distinct)
 
         # Test split and query
         qq, qf = q.split(resource)
-        self.assertEqual(qf, None)
+        assertEqual(qf, None)
         query = qq.query(resource)
         expected = ((org_organisation.name == "test") & \
                     (project_project.name == "test"))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         # Test get_query
         resource.add_filter(q)
@@ -342,7 +602,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                      (project_project.id > 0)) & \
                     ((org_organisation.name == "test") & \
                      (project_project.name == "test")))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -350,6 +610,9 @@ class ResourceFilterJoinTests(unittest.TestCase):
         """ Test combinations of web2py Queries with virtual field filter """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         resource = s3db.resource("project_project")
         q = (FS("virtualfield") == "test") & \
@@ -359,17 +622,17 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         # Test joins
         joins, distinct = q._joins(resource)
-        self.assertEqual(joins, {})
+        assertEqual(joins, {})
 
         # Test left joins
         joins, distinct = q._joins(resource, left=True)
-        self.assertEqual(joins, {})
+        assertEqual(joins, {})
 
         # Test split and query
         qq, qf = q.split(resource)
         expected = (project_project.name == "test")
-        self.assertEqual(str(qq), str(expected))
-        self.assertTrue(isinstance(qf, S3ResourceQuery))
+        assertEqual(str(qq), str(expected))
+        assertTrue(isinstance(qf, S3ResourceQuery))
 
         # Test get_query
         resource.add_filter(q)
@@ -377,7 +640,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         expected =  (((project_project.deleted != True) & \
                     (project_project.id > 0)) & \
                     (project_project.name == "test"))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -385,6 +648,9 @@ class ResourceFilterJoinTests(unittest.TestCase):
         """ Check list of left joins in resource filters """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         q = (FS("organisation_id$name") == "test") & \
             (FS("task.description") == "test")
@@ -406,12 +672,12 @@ class ResourceFilterJoinTests(unittest.TestCase):
         expected3 = project_task.on(project_task_project.task_id == project_task.id)
 
         joins = resource.rfilter.get_joins(left=True)
-        self.assertTrue(isinstance(joins, list))
-        self.assertEqual(len(joins), 3)
+        assertTrue(isinstance(joins, list))
+        assertEqual(len(joins), 3)
 
-        self.assertEqual(str(joins[0]), str(expected1))
-        self.assertEqual(str(joins[1]), str(expected2))
-        self.assertEqual(str(joins[2]), str(expected3))
+        assertEqual(str(joins[0]), str(expected1))
+        assertEqual(str(joins[1]), str(expected2))
+        assertEqual(str(joins[2]), str(expected3))
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -434,6 +700,9 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         q = (FS("id").lower().like("%123%"))
         resource = s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
@@ -441,7 +710,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected = (((org_organisation.deleted != True) &
                      (org_organisation.id > 0)) &
                     (org_organisation.id.like("%123%")))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         q = (FS("id").lower().like("%12%3%"))
         resource = s3db.resource("org_organisation", filter=q)
@@ -450,7 +719,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected = (((org_organisation.deleted != True) &
                      (org_organisation.id > 0)) &
                     (org_organisation.id.like("%12%3%")))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         q = (FS("id").lower().like("%abc%"))
         resource = s3db.resource("org_organisation", filter=q)
@@ -459,7 +728,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected = (((org_organisation.deleted != True) &
                      (org_organisation.id > 0)) &
                     (org_organisation.id.like("%abc%")))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -467,6 +736,11 @@ class ResourceFilterQueryTests(unittest.TestCase):
         """ Test master resource filter construction """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -478,12 +752,12 @@ class ResourceFilterQueryTests(unittest.TestCase):
         resource = current.s3db.resource("project_project", filter=q)
 
         rfilter = resource.rfilter
-        self.assertNotEqual(rfilter, None)
+        assertNotEqual(rfilter, None)
 
         # Check master query
         expected = ((project_project.deleted != True) &
                     (project_project.id > 0))
-        self.assertEqual(str(rfilter.mquery), str(expected))
+        assertEqual(str(rfilter.mquery), str(expected))
 
         # Check effective query
         expected = (((project_project.deleted != True) &
@@ -491,11 +765,11 @@ class ResourceFilterQueryTests(unittest.TestCase):
                      ((org_organisation.name == "test") &
                       (project_task.description == "test")))
         query = rfilter.get_query()
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         # Check joins
         join = rfilter.get_joins(left=False, as_list=False)
-        self.assertEqual(join, {})
+        assertEqual(join, {})
 
         # Check left joins
         expected = org_organisation.on(
@@ -509,14 +783,14 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         left = rfilter.get_joins(left=True, as_list=False)
-        self.assertEqual(left.keys(), ["org_organisation", "project_task"])
-        self.assertTrue(isinstance(left["org_organisation"], list))
-        self.assertEqual(len(left["org_organisation"]), 1)
-        self.assertEqual(str(left["org_organisation"][0]), str(expected))
-        self.assertTrue(isinstance(left["project_task"], list))
-        self.assertEqual(len(left["project_task"]), 2)
-        self.assertEqual(str(left["project_task"][0]), str(expected_l))
-        self.assertEqual(str(left["project_task"][1]), str(expected_r))
+        assertEqual(left.keys(), ["org_organisation", "project_task"])
+        assertTrue(isinstance(left["org_organisation"], list))
+        assertEqual(len(left["org_organisation"]), 1)
+        assertEqual(str(left["org_organisation"][0]), str(expected))
+        assertTrue(isinstance(left["project_task"], list))
+        assertEqual(len(left["project_task"]), 2)
+        assertEqual(str(left["project_task"][0]), str(expected_l))
+        assertEqual(str(left["project_task"][1]), str(expected_r))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -524,6 +798,9 @@ class ResourceFilterQueryTests(unittest.TestCase):
         """ Test cross-component effect of master resource filter """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -547,32 +824,32 @@ class ResourceFilterQueryTests(unittest.TestCase):
                    ((org_organisation.name == "test") &
                    (project_task.description == "test"))))
 
-        self.assertEqual(query, expected)
+        assertEqual(query, expected)
 
         # No inner joins
         join = rfilter.get_joins(left=False, as_list=False)
-        self.assertEqual(join, {})
+        assertEqual(join, {})
 
         # Left joins for cross-component filters
         left = rfilter.get_joins(left=True, as_list=False)
         tablenames = left.keys()
-        self.assertEqual(len(tablenames), 2)
-        self.assertTrue("org_organisation" in tablenames)
-        self.assertTrue("project_project" in tablenames)
+        assertEqual(len(tablenames), 2)
+        assertTrue("org_organisation" in tablenames)
+        assertTrue("project_project" in tablenames)
 
-        self.assertTrue(isinstance(left["org_organisation"], list))
-        self.assertEqual(len(left["org_organisation"]), 1)
+        assertTrue(isinstance(left["org_organisation"], list))
+        assertEqual(len(left["org_organisation"]), 1)
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(str(left["org_organisation"][0]), str(expected))
+        assertEqual(str(left["org_organisation"][0]), str(expected))
 
-        self.assertTrue(isinstance(left["project_project"], list))
-        self.assertEqual(len(left["project_project"]), 2)
+        assertTrue(isinstance(left["project_project"], list))
+        assertEqual(len(left["project_project"]), 2)
         expected = project_task_project.on(project_task_project.task_id == project_task.id)
-        self.assertEqual(str(left["project_project"][0]), str(expected))
+        assertEqual(str(left["project_project"][0]), str(expected))
         expected = project_project.on((project_task_project.project_id == project_project.id) &
                                       (project_task_project.deleted != True))
-        self.assertEqual(str(left["project_project"][1]), str(expected))
+        assertEqual(str(left["project_project"][1]), str(expected))
 
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
@@ -583,6 +860,9 @@ class ResourceFilterQueryTests(unittest.TestCase):
         """ Test cross-component effect of master resource filter """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         pr_identity = s3db.pr_identity
         pr_person = s3db.pr_person
@@ -607,11 +887,11 @@ class ResourceFilterQueryTests(unittest.TestCase):
                    ((org_organisation.name == "test") &
                    (pr_identity.value == "test"))))
 
-        self.assertEqual(query, expected)
+        assertEqual(query, expected)
 
         # No inner joins
         join = rfilter.get_joins(left=False, as_list=False)
-        self.assertEqual(join, {})
+        assertEqual(join, {})
 
         # Left joins for cross-component filters
         expected_h = hrm_human_resource.on(
@@ -623,19 +903,19 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         left = rfilter.get_joins(left=True, as_list=False)
         tablenames = left.keys()
-        self.assertEqual(len(tablenames), 3)
-        self.assertTrue("hrm_human_resource" in tablenames)
-        self.assertTrue("org_organisation" in tablenames)
-        self.assertTrue("pr_person" in tablenames)
+        assertEqual(len(tablenames), 3)
+        assertTrue("hrm_human_resource" in tablenames)
+        assertTrue("org_organisation" in tablenames)
+        assertTrue("pr_person" in tablenames)
 
-        self.assertTrue(isinstance(left["hrm_human_resource"], list))
-        self.assertEqual(len(left["hrm_human_resource"]), 1)
-        self.assertEqual(str(left["hrm_human_resource"][0]), str(expected_h))
-        self.assertTrue(isinstance(left["org_organisation"], list))
-        self.assertEqual(len(left["org_organisation"]), 1)
-        self.assertEqual(str(left["org_organisation"][0]), str(expected_o))
-        self.assertEqual(len(left["pr_person"]), 1)
-        self.assertEqual(str(left["pr_person"][0]), str(expected_p))
+        assertTrue(isinstance(left["hrm_human_resource"], list))
+        assertEqual(len(left["hrm_human_resource"]), 1)
+        assertEqual(str(left["hrm_human_resource"][0]), str(expected_h))
+        assertTrue(isinstance(left["org_organisation"], list))
+        assertEqual(len(left["org_organisation"]), 1)
+        assertEqual(str(left["org_organisation"][0]), str(expected_o))
+        assertEqual(len(left["pr_person"]), 1)
+        assertEqual(str(left["pr_person"][0]), str(expected_p))
 
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
@@ -646,6 +926,9 @@ class ResourceFilterQueryTests(unittest.TestCase):
         """ Test simple component filter construction (check query in filter) """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         project_activity = s3db.project_activity
@@ -665,7 +948,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                       (project_project.id > 0)) &
                      (project_project.id == 1)))
 
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         join = rfilter.get_joins(left=False, as_list=False)
 
@@ -673,16 +956,16 @@ class ResourceFilterQueryTests(unittest.TestCase):
                     project_activity.project_id == project_project.id)
 
         tablenames = join.keys()
-        self.assertEqual(len(tablenames), 1)
-        self.assertTrue("project_project" in tablenames)
+        assertEqual(len(tablenames), 1)
+        assertTrue("project_project" in tablenames)
 
 
-        self.assertTrue(isinstance(join["project_project"], list))
-        self.assertEqual(len(join["project_project"]), 1)
-        self.assertEqual(str(join["project_project"][0]), str(expected))
+        assertTrue(isinstance(join["project_project"], list))
+        assertEqual(len(join["project_project"]), 1)
+        assertEqual(str(join["project_project"][0]), str(expected))
 
         left = rfilter.get_joins(left=True, as_list=False)
-        self.assertEqual(left, {})
+        assertEqual(left, {})
 
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
@@ -693,6 +976,9 @@ class ResourceFilterQueryTests(unittest.TestCase):
         """ Test simple component filter construction (check query in resource) """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         pr_person = s3db.pr_person
         hrm_competency = s3db.hrm_competency
@@ -712,29 +998,30 @@ class ResourceFilterQueryTests(unittest.TestCase):
                       (pr_person.id == 1)) &
                     (hrm_competency.id == 1)))
 
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         rfilter = component.rfilter
 
         # No inner joins
         join = rfilter.get_joins(left=False, as_list=False)
-        self.assertEqual(join, {})
+        assertEqual(join, {})
 
         # Reverse left join for the filter of the master table
         left = rfilter.get_joins(left=True, as_list=False)
         tablenames = left.keys()
-        self.assertEqual(len(tablenames), 1)
-        self.assertTrue("pr_person" in tablenames)
+        assertEqual(len(tablenames), 1)
+        assertTrue("pr_person" in tablenames)
         expected = pr_person.on(
                     (pr_person.id == hrm_competency.person_id))
-        self.assertTrue(isinstance(left["pr_person"], list))
-        self.assertEqual(len(left["pr_person"]), 1)
-        self.assertEqual(str(left["pr_person"][0]), str(expected))
-
+        assertTrue(isinstance(left["pr_person"], list))
+        assertEqual(len(left["pr_person"]), 1)
+        assertEqual(str(left["pr_person"][0]), str(expected))
 
     # -------------------------------------------------------------------------
     def testAnyOf(self):
         """ Test filter construction with containment methods (contains vs anyof) """
+
+        assertEqual = self.assertEqual
 
         resource = current.s3db.resource("req_req_skill")
         req_req_skill = resource.table
@@ -742,12 +1029,12 @@ class ResourceFilterQueryTests(unittest.TestCase):
         q = FS("skill_id").contains([1, 2])
         query = q.query(resource)
         expected = (req_req_skill.skill_id.contains([1, 2], all=True))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
         q = FS("skill_id").anyof([1, 2])
         query = q.query(resource)
         expected = (req_req_skill.skill_id.contains([1, 2], all=False))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     def testDateTimeComparison(self):
@@ -867,6 +1154,10 @@ class ResourceContextFilterTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
         # Configure contexts
         s3db.configure("org_office",
                        context = {"organisation":
@@ -885,11 +1176,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 3)
+        assertEqual(len(items), 3)
         names = [item.values()[0] for item in items]
-        self.assertTrue("Context1Office1" in names)
-        self.assertTrue("Context1Office2" in names)
-        self.assertTrue("Context2Office1" in names)
+        assertTrue("Context1Office1" in names)
+        assertTrue("Context1Office2" in names)
+        assertTrue("Context2Office1" in names)
 
         resource = s3db.resource("pr_person",
                                  uid=["CONTEXT1PERSON",
@@ -898,11 +1189,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 3)
+        assertEqual(len(items), 3)
         names = [item.values()[0] for item in items]
-        self.assertTrue("Context1" in names)
-        self.assertTrue("Context2" in names)
-        self.assertTrue("Context12" in names)
+        assertTrue("Context1" in names)
+        assertTrue("Context2" in names)
+        assertTrue("Context12" in names)
 
         # Global context filter 1
         s3db.context = FS("(organisation)$uuid").belongs(["CONTEXTORG1"])
@@ -914,11 +1205,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 2)
+        assertEqual(len(items), 2)
         names = [item.values()[0] for item in items]
-        self.assertTrue("Context1Office1" in names)
-        self.assertTrue("Context1Office2" in names)
-        self.assertFalse("Context2Office1" in names)
+        assertTrue("Context1Office1" in names)
+        assertTrue("Context1Office2" in names)
+        assertFalse("Context2Office1" in names)
 
         resource = s3db.resource("pr_person",
                                  uid=["CONTEXT1PERSON",
@@ -927,11 +1218,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 2)
+        assertEqual(len(items), 2)
         names = [item.values()[0] for item in items]
-        self.assertTrue("Context1" in names)
-        self.assertFalse("Context2" in names)
-        self.assertTrue("Context12" in names)
+        assertTrue("Context1" in names)
+        assertFalse("Context2" in names)
+        assertTrue("Context12" in names)
 
         # Global context filter 2
         s3db.context = FS("(organisation)$uuid").belongs(["CONTEXTORG2"])
@@ -943,11 +1234,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 1)
+        assertEqual(len(items), 1)
         names = [item.values()[0] for item in items]
-        self.assertFalse("Context1Office1" in names)
-        self.assertFalse("Context1Office2" in names)
-        self.assertTrue("Context2Office1" in names)
+        assertFalse("Context1Office1" in names)
+        assertFalse("Context1Office2" in names)
+        assertTrue("Context2Office1" in names)
 
         resource = s3db.resource("pr_person",
                                  uid=["CONTEXT1PERSON",
@@ -956,11 +1247,11 @@ class ResourceContextFilterTests(unittest.TestCase):
                                  context=True)
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
-        self.assertEqual(len(items), 2)
+        assertEqual(len(items), 2)
         names = [item.values()[0] for item in items]
-        self.assertFalse("Context1" in names)
-        self.assertTrue("Context2" in names)
-        self.assertTrue("Context12" in names)
+        assertFalse("Context1" in names)
+        assertTrue("Context2" in names)
+        assertTrue("Context12" in names)
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -977,104 +1268,136 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQuerySimpleString(self):
         """ Simple string comparison serialization """
 
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
         q = FS("person.first_name") == "Test"
 
         u = q.serialize_url()
         k = "person.first_name"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryWildcardString(self):
         """ Wildcard string comparison serialization """
 
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
         q = FS("person.first_name").lower().like("Test%")
 
         u = q.serialize_url()
         k = "person.first_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryMultiSelectorMatch(self):
         """ Wildcard string comparison serialization, multiple selectors """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.last_name").lower().like("Test%"))
 
         u = q.serialize_url()
         k = "person.first_name|person.last_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryMultiSelectorValueMismatch(self):
         """ Wildcard string comparison serialization, multiple selectors, value mismatch """
+
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.last_name").lower().like("Other%"))
 
         u = q.serialize_url()
         k = "person.first_name|person.last_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertFalse(k in u)
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertFalse(k in u)
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryMultiSelectorOperatorMismatch(self):
         """ Wildcard string comparison serialization, multiple selectors, operator mismatch """
+
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
         q = (FS("person.first_name").lower().like("Test%")) | \
             (~(FS("person.last_name").lower().like("Test%")))
 
         u = q.serialize_url()
         k = "person.first_name|person.last_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertFalse(k in u)
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertFalse(k in u)
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryMultiSelectorMatchNegated(self):
         """ Wildcard string comparison serialization, multiple selectors, negation """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         q = (~(FS("person.first_name").lower().like("Test%"))) | \
             (~(FS("person.last_name").lower().like("Test%")))
 
         u = q.serialize_url()
         k = "person.first_name|person.last_name__like!"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryAlternativeValues(self):
         """ Wildcard string comparison serialization, alternative values, OR """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.first_name").lower().like("Other%"))
 
         u = q.serialize_url()
         k = "person.first_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*,Other*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*,Other*")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryAlternativeValuesSingleOperator(self):
         """ Wildcard string comparison serialization, alternative values, single operator """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         q = FS("first_name").like(["Test%", "Other%"])
 
@@ -1083,25 +1406,29 @@ class URLQuerySerializerTests(unittest.TestCase):
         # Field selector does not use a prefix, but master resource
         # is known, so should be using ~ wildcard here
         k = "~.first_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*,Other*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*,Other*")
 
     # -------------------------------------------------------------------------
     def testSerializeURLQueryListContainmentOperator(self):
         """ Wildcard string comparison serialization, alternative values, containment operator """
 
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
         q = FS("person.first_name").belongs(["Test", "Other"])
 
         u = q.serialize_url()
         k = "person.first_name__belongs"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test,Other")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test,Other")
 
 # =============================================================================
 class URLFilterSerializerTests(unittest.TestCase):
@@ -1111,6 +1438,9 @@ class URLFilterSerializerTests(unittest.TestCase):
     def testSerializeURLFilterEcho(self):
         """ Check that parse->serialize echoes the original URL filter """
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         url_query = {"project.organisation_id$name__like": "*test*",
                      "task.description__like!": "*test*"}
 
@@ -1118,14 +1448,18 @@ class URLFilterSerializerTests(unittest.TestCase):
 
         rfilter = resource.rfilter
         url_vars = rfilter.serialize_url()
-        self.assertEqual(len(url_vars), len(url_query))
+        assertEqual(len(url_vars), len(url_query))
         for k in url_query:
-            self.assertTrue(k in url_vars)
-            self.assertEqual(url_vars[k], url_query[k])
+            assertTrue(k in url_vars)
+            assertEqual(url_vars[k], url_query[k])
 
     # -------------------------------------------------------------------------
     def testSerializeURLFilter(self):
         """ Check serialization of a back-end-constructed resource filter """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         resource = current.s3db.resource("pr_person")
 
@@ -1138,11 +1472,11 @@ class URLFilterSerializerTests(unittest.TestCase):
         # Field selector does not use a prefix, but master resource
         # is known (from rfilter), so should be using ~ wildcard here
         k = "~.first_name__like"
-        self.assertNotEqual(u, None)
-        self.assertTrue(isinstance(u, Storage))
-        self.assertTrue(k in u)
-        self.assertEqual(len(u.keys()), 1)
-        self.assertEqual(u[k], "Test*,Other*")
+        assertNotEqual(u, None)
+        assertTrue(isinstance(u, Storage))
+        assertTrue(k in u)
+        assertEqual(len(u.keys()), 1)
+        assertEqual(u[k], "Test*,Other*")
 
 # =============================================================================
 class ResourceFieldTests(unittest.TestCase):
@@ -1150,6 +1484,9 @@ class ResourceFieldTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testResolveContextSimple(self):
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         s3db = current.s3db
 
@@ -1164,36 +1501,39 @@ class ResourceFieldTests(unittest.TestCase):
         f = S3ResourceField(resource, selector)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "org_organisation.name")
-        self.assertEqual(f.tname, "org_organisation")
-        self.assertEqual(f.fname, "name")
-        self.assertEqual(f.colname, "org_organisation.name")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "org_organisation.name")
+        assertEqual(f.tname, "org_organisation")
+        assertEqual(f.fname, "name")
+        assertEqual(f.colname, "org_organisation.name")
 
         tname = f.tname
 
         # Check join
         join = f.join
-        self.assertTrue(isinstance(join, dict))
-        self.assertTrue(tname in join)
+        assertTrue(isinstance(join, dict))
+        assertTrue(tname in join)
         expected = (org_office.organisation_id == org_organisation.id)
-        self.assertEqual(str(join[tname]), str(expected))
+        assertEqual(str(join[tname]), str(expected))
 
         # Check left join
         left = f.left
-        self.assertTrue(isinstance(left, dict))
-        self.assertTrue(tname in left)
-        self.assertTrue(isinstance(left[tname], list))
+        assertTrue(isinstance(left, dict))
+        assertTrue(tname in left)
+        assertTrue(isinstance(left[tname], list))
 
         expected = org_organisation.on(org_office.organisation_id == org_organisation.id)
-        self.assertEqual(len(f.left[tname]), 1)
-        self.assertEqual(str(f.left[tname][0]), str(expected))
+        assertEqual(len(f.left[tname]), 1)
+        assertEqual(str(f.left[tname][0]), str(expected))
 
         # Check distinct
-        self.assertTrue(f.distinct)
+        assertTrue(f.distinct)
 
     # -------------------------------------------------------------------------
     def testResolveContextComplex(self):
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         s3db = current.s3db
 
@@ -1208,38 +1548,41 @@ class ResourceFieldTests(unittest.TestCase):
         f = S3ResourceField(resource, selector)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "org_organisation.name")
-        self.assertEqual(f.tname, "org_organisation")
-        self.assertEqual(f.fname, "name")
-        self.assertEqual(f.colname, "org_organisation.name")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "org_organisation.name")
+        assertEqual(f.tname, "org_organisation")
+        assertEqual(f.fname, "name")
+        assertEqual(f.colname, "org_organisation.name")
 
         tname = f.tname
 
         # Check join
         join = f.join
-        self.assertTrue(isinstance(join, dict))
-        self.assertTrue(tname in join)
+        assertTrue(isinstance(join, dict))
+        assertTrue(tname in join)
         expected = (hrm_human_resource.organisation_id == org_organisation.id)
-        self.assertEqual(str(join[tname]), str(expected))
+        assertEqual(str(join[tname]), str(expected))
 
         # Check left join
         left = f.left
-        self.assertTrue(isinstance(left, dict))
-        self.assertTrue(tname in left)
-        self.assertTrue(isinstance(left[tname], list))
+        assertTrue(isinstance(left, dict))
+        assertTrue(tname in left)
+        assertTrue(isinstance(left[tname], list))
 
         expected = org_organisation.on(hrm_human_resource.organisation_id == org_organisation.id)
-        self.assertEqual(len(f.left[tname]), 1)
-        self.assertEqual(str(f.left[tname][0]), str(expected))
+        assertEqual(len(f.left[tname]), 1)
+        assertEqual(str(f.left[tname][0]), str(expected))
 
         # Check distinct
-        self.assertTrue(f.distinct)
+        assertTrue(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorInnerField(self):
         """ Resolution of a selector for a field in master table """
+
+        assertEqual = self.assertEqual
+        assertFalse = self.assertFalse
 
         resource = current.s3db.resource("project_project")
         selector = "name"
@@ -1247,72 +1590,84 @@ class ResourceFieldTests(unittest.TestCase):
         f = S3ResourceField(resource, selector)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "project_project.name")
-        self.assertEqual(str(f.tname), "project_project")
-        self.assertEqual(str(f.fname), "name")
-        self.assertEqual(str(f.colname), "project_project.name")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "project_project.name")
+        assertEqual(str(f.tname), "project_project")
+        assertEqual(str(f.fname), "name")
+        assertEqual(str(f.colname), "project_project.name")
 
         # Check join (no join)
-        self.assertEqual(f.join, Storage())
-        self.assertEqual(f.left, Storage())
+        assertEqual(f.join, Storage())
+        assertEqual(f.left, Storage())
 
         # Check distinct (no join - no distinct)
-        self.assertFalse(f.distinct)
+        assertFalse(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
     def testResolveMasterWildcard(self):
         """ Resolution of a selector with a master wildcard """
 
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertFalse = self.assertFalse
+
         resource = current.s3db.resource("org_organisation")
         selector = "~.name"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
+        assertNotEqual(f, None)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "org_organisation.name")
-        self.assertEqual(str(f.tname), "org_organisation")
-        self.assertEqual(str(f.fname), "name")
-        self.assertEqual(str(f.colname), "org_organisation.name")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "org_organisation.name")
+        assertEqual(str(f.tname), "org_organisation")
+        assertEqual(str(f.fname), "name")
+        assertEqual(str(f.colname), "org_organisation.name")
 
         # Check join (no join)
-        self.assertEqual(f.join, Storage())
-        self.assertEqual(f.left, Storage())
+        assertEqual(f.join, Storage())
+        assertEqual(f.left, Storage())
 
         # Check distinct (no join - no distinct)
-        self.assertFalse(f.distinct)
+        assertFalse(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorVirtualField(self):
         """ Resolution of a selector for a virtual field in master table """
 
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertFalse = self.assertFalse
+
         resource = current.s3db.resource("project_project")
         selector = "virtual"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
+        assertNotEqual(f, None)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(f.field, None)
-        self.assertEqual(str(f.tname), "project_project")
-        self.assertEqual(str(f.fname), "virtual")
-        self.assertEqual(str(f.colname), "project_project.virtual")
+        assertEqual(f.selector, selector)
+        assertEqual(f.field, None)
+        assertEqual(str(f.tname), "project_project")
+        assertEqual(str(f.fname), "virtual")
+        assertEqual(str(f.colname), "project_project.virtual")
 
         # Check join (no join)
-        self.assertEqual(f.join, Storage())
-        self.assertEqual(f.left, Storage())
+        assertEqual(f.join, Storage())
+        assertEqual(f.left, Storage())
 
         # No join - no distinct
-        self.assertFalse(f.distinct)
+        assertFalse(f.distinct)
 
     # -------------------------------------------------------------------------
     def testResolveSelectorComponentField(self):
         """ Resolution of a selector for a field in a component """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         s3db = current.s3db
 
@@ -1323,34 +1678,38 @@ class ResourceFieldTests(unittest.TestCase):
         selector = "identity.value"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
+        assertNotEqual(f, None)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "pr_identity.value")
-        self.assertEqual(str(f.tname), "pr_identity")
-        self.assertEqual(str(f.fname), "value")
-        self.assertEqual(str(f.colname), "pr_identity.value")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "pr_identity.value")
+        assertEqual(str(f.tname), "pr_identity")
+        assertEqual(str(f.fname), "value")
+        assertEqual(str(f.colname), "pr_identity.value")
 
         # Check join
-        self.assertTrue(isinstance(f.left["pr_identity"], list))
-        self.assertEqual(len(f.left["pr_identity"]), 1)
+        assertTrue(isinstance(f.left["pr_identity"], list))
+        assertEqual(len(f.left["pr_identity"]), 1)
         expected = pr_identity.on(
                         (pr_identity.person_id == pr_person.id) &
                         (pr_identity.deleted != True))
-        self.assertEqual(str(f.left["pr_identity"][0]), str(expected))
+        assertEqual(str(f.left["pr_identity"][0]), str(expected))
 
         expected = (pr_identity.person_id == pr_person.id) & \
                    (pr_identity.deleted != True)
-        self.assertEqual(str(f.join["pr_identity"]), str(expected))
+        assertEqual(str(f.join["pr_identity"]), str(expected))
 
         # Check distinct
-        self.assertTrue(f.distinct)
+        assertTrue(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorLinkedTableField(self):
         """ Resolution of a selector for a field in a link-table component """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         s3db = current.s3db
 
@@ -1362,18 +1721,18 @@ class ResourceFieldTests(unittest.TestCase):
         selector = "task.description"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
+        assertNotEqual(f, None)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "project_task.description")
-        self.assertEqual(str(f.tname), "project_task")
-        self.assertEqual(str(f.fname), "description")
-        self.assertEqual(str(f.colname), "project_task.description")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "project_task.description")
+        assertEqual(str(f.tname), "project_task")
+        assertEqual(str(f.fname), "description")
+        assertEqual(str(f.colname), "project_task.description")
 
         # Check join
-        self.assertTrue(isinstance(f.left["project_task"], list))
-        self.assertEqual(len(f.left["project_task"]), 2)
+        assertTrue(isinstance(f.left["project_task"], list))
+        assertEqual(len(f.left["project_task"]), 2)
 
         expected_l = project_task_project.on(
                         (project_task_project.project_id == project_project.id) &
@@ -1382,22 +1741,26 @@ class ResourceFieldTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        self.assertEqual(str(f.left["project_task"][0]), str(expected_l))
-        self.assertEqual(str(f.left["project_task"][1]), str(expected_r))
+        assertEqual(str(f.left["project_task"][0]), str(expected_l))
+        assertEqual(str(f.left["project_task"][1]), str(expected_r))
 
         expected = (((project_task_project.project_id == project_project.id) &
                      (project_task_project.deleted != True)) &
                     (project_task_project.task_id == project_task.id))
 
-        self.assertEqual(str(f.join["project_task"]), str(expected))
+        assertEqual(str(f.join["project_task"]), str(expected))
 
         # Check distinct
-        self.assertTrue(f.distinct)
+        assertTrue(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testResolveSelectorReferencedTableField(self):
         """ Resolution of a selector for a field in a referenced table """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         s3db = current.s3db
 
@@ -1408,27 +1771,27 @@ class ResourceFieldTests(unittest.TestCase):
         selector = "organisation_id$name"
 
         f = S3ResourceField(resource, selector)
-        self.assertNotEqual(f, None)
+        assertNotEqual(f, None)
 
         # Check field
-        self.assertEqual(f.selector, selector)
-        self.assertEqual(str(f.field), "org_organisation.name")
-        self.assertEqual(str(f.tname), "org_organisation")
-        self.assertEqual(str(f.fname), "name")
-        self.assertEqual(str(f.colname), "org_organisation.name")
+        assertEqual(f.selector, selector)
+        assertEqual(str(f.field), "org_organisation.name")
+        assertEqual(str(f.tname), "org_organisation")
+        assertEqual(str(f.fname), "name")
+        assertEqual(str(f.colname), "org_organisation.name")
 
         # Check join
-        self.assertTrue(isinstance(f.left["org_organisation"], list))
-        self.assertEqual(len(f.left["org_organisation"]), 1)
+        assertTrue(isinstance(f.left["org_organisation"], list))
+        assertEqual(len(f.left["org_organisation"]), 1)
         expected = org_organisation.on(
                     project_project.organisation_id == org_organisation.id)
-        self.assertEqual(str(f.left["org_organisation"][0]), str(expected))
+        assertEqual(str(f.left["org_organisation"][0]), str(expected))
 
         expected = (project_project.organisation_id == org_organisation.id)
-        self.assertEqual(str(f.join["org_organisation"]), str(expected))
+        assertEqual(str(f.join["org_organisation"]), str(expected))
 
         # Check distinct
-        self.assertTrue(f.distinct)
+        assertTrue(f.distinct)
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -1471,6 +1834,8 @@ class ResourceDataAccessTests(unittest.TestCase):
     def testResourceFieldExtract(self):
         """ Test value extraction from rows by S3ResourceFields """
 
+        assertEqual = self.assertEqual
+
         s3db = current.s3db
 
         resource = s3db.resource("org_organisation",
@@ -1478,43 +1843,51 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         rows = resource.select(["name", "office.name"],
                                limit=1, as_rows=True)
-        self.assertEqual(len(rows), 2)
+        assertEqual(len(rows), 2)
         row = rows[0]
 
         rf = S3ResourceField(resource, "name")
         value = rf.extract(row)
-        self.assertEqual(value, "DATestOrg")
+        assertEqual(value, "DATestOrg")
 
         rf = S3ResourceField(resource, "office.name")
         value = rf.extract(row)
-        self.assertEqual(value[:-1], "DATestOffice")
+        assertEqual(value[:-1], "DATestOffice")
 
     # -------------------------------------------------------------------------
     def testResourceJSON(self):
         """ Test simple JSON export of a resource """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertIn = self.assertIn
+
         resource = s3db.resource("org_organisation", uid="DATESTORG")
         jstr = resource.json(["name", "office.name"])
 
-        from gluon.contrib import simplejson as json
         data = json.loads(jstr)
-        self.assertTrue(isinstance(data, list))
-        self.assertEqual(len(data), 1)
+        assertTrue(isinstance(data, list))
+        assertEqual(len(data), 1)
+
         record = data[0]
-        self.assertTrue("org_organisation.name" in record)
-        self.assertTrue("org_office.name" in record)
-        self.assertTrue(isinstance(record["org_office.name"], list))
-        self.assertEqual(len(record["org_office.name"]), 2)
-        self.assertTrue("DATestOffice1" in record["org_office.name"])
-        self.assertTrue("DATestOffice2" in record["org_office.name"])
-        self.assertEqual(record["org_organisation.name"], "DATestOrg")
+        assertIn("org_organisation.name", record)
+        assertIn("org_office.name", record)
+        assertTrue(isinstance(record["org_office.name"], list))
+        assertEqual(len(record["org_office.name"]), 2)
+        assertIn("DATestOffice1", record["org_office.name"])
+        assertIn("DATestOffice2", record["org_office.name"])
+        assertEqual(record["org_organisation.name"], "DATestOrg")
 
     # -------------------------------------------------------------------------
     def testCollapseRows(self):
         """ Test correct handling of ambiguous rows in select """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         otable = s3db.org_organisation
         ftable = s3db.org_office
@@ -1525,30 +1898,36 @@ class ResourceDataAccessTests(unittest.TestCase):
                                         otable.name,
                                         ftable.id,
                                         ftable.name)
-        self.assertEqual(len(rows), 2)
+        assertEqual(len(rows), 2)
 
         resource = s3db.resource("org_organisation", uid="DATESTORG")
         list_fields = ["name", "office.name"]
 
-        rows = resource.select(list_fields)["rows"]
-        self.assertEqual(len(rows), 1)
+        data = resource.select(list_fields, count=True, getids=True)
+        assertEqual(data.numrows, 1)
+        assertEqual(len(data.ids), 1)
+
+        rows = data.rows
+        assertEqual(len(rows), 1)
 
         office_names = rows[0]["org_office.name"]
-        self.assertTrue(isinstance(office_names, list))
-        self.assertEqual(len(office_names), 2)
-        self.assertTrue("DATestOffice1" in office_names)
-        self.assertTrue("DATestOffice2" in office_names)
+        assertTrue(isinstance(office_names, list))
+        assertEqual(len(office_names), 2)
+        assertTrue("DATestOffice1" in office_names)
+        assertTrue("DATestOffice2" in office_names)
 
-        rows = resource.select(list_fields,
-                                    represent=True)["rows"]
-        self.assertEqual(len(rows), 1)
+        data = resource.select(list_fields, represent=True)
+
+        rows = data.rows
+        assertEqual(len(rows), 1)
 
         office_names = rows[0]["org_office.name"]
-        self.assertTrue(isinstance(office_names, basestring))
+        assertTrue(isinstance(office_names, basestring))
+
         office_names = [s.strip() for s in office_names.split(",")]
-        self.assertEqual(len(office_names), 2)
-        self.assertTrue("DATestOffice1" in office_names)
-        self.assertTrue("DATestOffice2" in office_names)
+        assertEqual(len(office_names), 2)
+        assertTrue("DATestOffice1" in office_names)
+        assertTrue("DATestOffice2" in office_names)
 
     # -------------------------------------------------------------------------
     def testLoadRows(self):
@@ -1556,6 +1935,8 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
         query = (FS("office.name").like("DATestOffice%"))
@@ -1564,9 +1945,9 @@ class ResourceDataAccessTests(unittest.TestCase):
         resource = s3db.resource("org_organisation")
         resource.add_filter(query)
         resource.load()
-        self.assertEqual(len(resource), 1)
-        self.assertEqual(len(resource._rows), 1)
-        self.assertEqual(resource._length, 1)
+        assertEqual(len(resource), 1)
+        assertEqual(len(resource._rows), 1)
+        assertEqual(resource._length, 1)
 
         # Try the same with an additional virtual field filter:
         query = query & (FS("testfield") == "TEST")
@@ -1579,9 +1960,9 @@ class ResourceDataAccessTests(unittest.TestCase):
         resource.table.virtualfields.append(FakeVirtualFields())
         resource.add_filter(query)
         resource.load()
-        self.assertEqual(len(resource), 1)
-        self.assertEqual(len(resource._rows), 1)
-        self.assertEqual(resource._length, 1)
+        assertEqual(len(resource), 1)
+        assertEqual(len(resource._rows), 1)
+        assertEqual(resource._length, 1)
 
     # -------------------------------------------------------------------------
     def testLoadIds(self):
@@ -1589,6 +1970,9 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
         query = (FS("office.name").like("DATestOffice%"))
@@ -1597,8 +1981,8 @@ class ResourceDataAccessTests(unittest.TestCase):
         resource = s3db.resource("org_organisation")
         resource.add_filter(query)
         uid = resource.get_uid()
-        self.assertTrue(isinstance(uid, str))
-        self.assertEqual(uid, "DATESTORG")
+        assertTrue(isinstance(uid, str))
+        assertEqual(uid, "DATESTORG")
 
         # Try the same with an additional virtual field filter:
         query = query & (FS("testfield") == "TEST")
@@ -1611,35 +1995,43 @@ class ResourceDataAccessTests(unittest.TestCase):
         resource.table.virtualfields.append(FakeVirtualFields())
         resource.add_filter(query)
         uid = resource.get_uid()
-        self.assertTrue(isinstance(uid, str))
-        self.assertEqual(uid, "DATESTORG")
+        assertTrue(isinstance(uid, str))
+        assertEqual(uid, "DATESTORG")
 
     # -------------------------------------------------------------------------
     def testCountRows(self):
         """ Test counting rows with ambiguous query """
 
         s3db = current.s3db
+        assertEqual = self.assertEqual
+
+        # Confirm we have just one organisation row
+        # (using select instead of count to enforce S3Resource.select
+        # to count)
+        query = (FS("name") == "DATestOrg")
+        resource = s3db.resource("org_organisation", filter=query)
+        resource.add_filter(query)
+        assertEqual(resource.select(["id"], count=True).numrows, 1)
 
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
         query = (FS("office.name").like("DATestOffice%"))
 
         # count() should properly deduplicate the rows before counting them
-        resource = s3db.resource("org_organisation")
-        resource.add_filter(query)
-        self.assertEqual(resource.count(), 1)
+        resource = s3db.resource("org_organisation", filter=query)
+        assertEqual(resource.count(), 1)
 
         # Try the same with an additional virtual field filter:
-        query = query & (FS("testfield") == "TEST")
-
-        # Should still not give any duplicates:
         resource = s3db.resource("org_organisation")
         class FakeVirtualFields(object):
             def testfield(self):
                 return "TEST"
         resource.table.virtualfields.append(FakeVirtualFields())
+        query = query & (FS("testfield") == "TEST")
         resource.add_filter(query)
-        self.assertEqual(resource.count(), 1)
+
+        # Should still not give any duplicates:
+        assertEqual(resource.count(), 1)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1659,6 +2051,8 @@ class URLQueryTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testParseExpression(self):
         """ Test URL Expression parsing """
+
+        assertEqual = self.assertEqual
 
         parse = S3URLQuery.parse_expression
 
@@ -1688,11 +2082,13 @@ class URLQueryTests(unittest.TestCase):
 
         for key, selectors, op, invert in items:
             s, o, i = parse(key)
-            self.assertEqual((key, s, o, i), (key, selectors, op, invert))
+            assertEqual((key, s, o, i), (key, selectors, op, invert))
 
     # -------------------------------------------------------------------------
     def testParseValue(self):
         """ Test URL value parsing """
+
+        assertEqual = self.assertEqual
 
         parse = S3URLQuery.parse_value
 
@@ -1713,11 +2109,13 @@ class URLQueryTests(unittest.TestCase):
             (['"NONE",NONE,1','"Test\\"",None'], ['NONE', None, "1", 'Test"', None])
         ]
         for v, r in items:
-            self.assertEqual((v, parse(v)), (v, r))
+            assertEqual((v, parse(v)), (v, r))
 
     # -------------------------------------------------------------------------
     def testParseURL(self):
         """ Test URL get_vars parsing """
+
+        assertEqual = self.assertEqual
 
         parse = S3URLQuery.parse_url
 
@@ -1733,7 +2131,7 @@ class URLQueryTests(unittest.TestCase):
             ("a=b,c&a=d", Storage(a=["b,c", "d"])),
         ]
         for v, r in items:
-            self.assertEqual((v, parse(v)), (v, r))
+            assertEqual((v, parse(v)), (v, r))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -1741,6 +2139,10 @@ class URLQueryTests(unittest.TestCase):
         """ Test standard URL query parsing """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -1755,20 +2157,20 @@ class URLQueryTests(unittest.TestCase):
 
         # Check joins
         joins = rfilter.get_joins(left=True)
-        self.assertNotEqual(joins, None)
-        self.assertTrue(isinstance(joins, list))
+        assertNotEqual(joins, None)
+        assertTrue(isinstance(joins, list))
 
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(joins[0], str(expected))
+        assertEqual(joins[0], str(expected))
 
         expected_l = project_task_project.on(
                         (project_task_project.project_id == project_project.id) &
                         (project_task_project.deleted != True))
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
-        self.assertEqual(joins[1], str(expected_l))
-        self.assertEqual(joins[2], str(expected_r))
+        assertEqual(joins[1], str(expected_l))
+        assertEqual(joins[2], str(expected_r))
 
         # Check query
         query = rfilter.get_query()
@@ -1777,7 +2179,7 @@ class URLQueryTests(unittest.TestCase):
                     ((org_organisation.name.lower().like("%test%")) &
                     (~(project_task.description.lower().like("%test%")))))
 
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -1785,6 +2187,9 @@ class URLQueryTests(unittest.TestCase):
         """ Test URL query parsing with alternative values (OR) """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -1798,10 +2203,10 @@ class URLQueryTests(unittest.TestCase):
 
         # Check joins
         joins = rfilter.get_joins(left=True)
-        self.assertTrue(isinstance(joins, list))
+        assertTrue(isinstance(joins, list))
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(joins[0], str(expected))
+        assertEqual(joins[0], str(expected))
 
         # Check query
         query = rfilter.get_query()
@@ -1809,7 +2214,7 @@ class URLQueryTests(unittest.TestCase):
                      (project_project.id > 0)) &
                     ((org_organisation.name.lower().like("test%")) |
                      (org_organisation.name.lower().like("other%"))))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -1817,6 +2222,9 @@ class URLQueryTests(unittest.TestCase):
         """ Test URL query parsing with multiple values (AND) """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -1830,10 +2238,10 @@ class URLQueryTests(unittest.TestCase):
 
         # Check joins
         joins = rfilter.get_joins(left=True)
-        self.assertTrue(isinstance(joins, list))
+        assertTrue(isinstance(joins, list))
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(joins[0], str(expected))
+        assertEqual(joins[0], str(expected))
 
         # Check query
         query = rfilter.get_query()
@@ -1841,7 +2249,7 @@ class URLQueryTests(unittest.TestCase):
                      (project_project.id > 0)) &
                     ((org_organisation.name.lower().like("other%")) &
                      (org_organisation.name.lower().like("test%"))))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -1849,6 +2257,9 @@ class URLQueryTests(unittest.TestCase):
         """ Test alternative selectors (OR) in a URL query """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         project_project = s3db.project_project
         org_organisation = s3db.org_organisation
@@ -1862,19 +2273,19 @@ class URLQueryTests(unittest.TestCase):
 
         # Check joins
         joins = rfilter.get_joins(left=True)
-        self.assertTrue(isinstance(joins, list))
+        assertTrue(isinstance(joins, list))
 
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(joins[0], str(expected))
+        assertEqual(joins[0], str(expected))
 
         expected_l = project_task_project.on(
                         (project_task_project.project_id == project_project.id) &
                         (project_task_project.deleted != True))
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
-        self.assertEqual(joins[1], str(expected_l))
-        self.assertEqual(joins[2], str(expected_r))
+        assertEqual(joins[1], str(expected_l))
+        assertEqual(joins[2], str(expected_r))
 
         # Check the query
         query = rfilter.get_query()
@@ -1882,7 +2293,7 @@ class URLQueryTests(unittest.TestCase):
                      (project_project.id > 0)) &
                     ((org_organisation.name.lower().like("test%")) |
                      (project_task.description.lower().like("test%"))))
-        self.assertEqual(str(query), str(expected))
+        assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     def testBBOXFilterDirectLink(self):
@@ -2039,6 +2450,9 @@ class JoinResolutionTests(unittest.TestCase):
         """ Test resolution of duplicate inner/left joins """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+
         ptable = s3db.project_project
         ltable = s3db.project_task_project
         ttable = s3db.project_task
@@ -2060,11 +2474,11 @@ class JoinResolutionTests(unittest.TestCase):
         left = ljoins.as_list(tablenames=tablenames)
 
         # Joins should be moved to the left joins set
-        self.assertEqual(join, [])
-        self.assertEqual(len(left), 2)
+        assertEqual(join, [])
+        assertEqual(len(left), 2)
         # Mind the order! (must be ordered by dependency)
-        self.assertEqual(str(left[0]), str(ltable_join))
-        self.assertEqual(str(left[1]), str(ptable_join))
+        assertEqual(str(left[0]), str(ltable_join))
+        assertEqual(str(left[1]), str(ptable_join))
 
 # =============================================================================
 class URLQueryParserTests(unittest.TestCase):
@@ -2086,6 +2500,11 @@ class URLQueryParserTests(unittest.TestCase):
     def testParser(self):
         """ Test parser response and error logging """
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertIn = self.assertIn
+        assertNotIn = self.assertNotIn
+
         # Turn on logging (otherwise no point in recording)
         settings = current.deployment_settings
         debug = settings.base.debug
@@ -2104,12 +2523,12 @@ class URLQueryParserTests(unittest.TestCase):
             q = p.parse(expr)
             log_messages = log_recorder.read()
 
-            self.assertTrue(isinstance(q, dict))
+            assertTrue(isinstance(q, dict))
             if PYPARSING:
-                self.assertTrue(None in q)
-                self.assertNotIn("Invalid URL Filter Expression", log_messages)
+                assertTrue(None in q)
+                assertNotIn("Invalid URL Filter Expression", log_messages)
             else:
-                self.assertEqual(q, {})
+                assertEqual(q, {})
 
             # Test with invalid expression
             # => should succeed, but not return any query
@@ -2119,9 +2538,9 @@ class URLQueryParserTests(unittest.TestCase):
             q = p.parse(expr)
             log_messages = log_recorder.read()
 
-            self.assertEqual(q, {})
+            assertEqual(q, {})
             if PYPARSING:
-                self.assertIn("Invalid URL Filter Expression", log_messages)
+                assertIn("Invalid URL Filter Expression", log_messages)
 
             # Test with empty expression
             # => should succeed, but not return any query
@@ -2131,9 +2550,9 @@ class URLQueryParserTests(unittest.TestCase):
             q = p.parse(expr)
             log_messages = log_recorder.read()
 
-            self.assertEqual(q, {})
+            assertEqual(q, {})
             if PYPARSING:
-                self.assertNotIn("Invalid URL Filter Expression", log_messages)
+                assertNotIn("Invalid URL Filter Expression", log_messages)
 
             # Test without expression
             # => should succeed, but not return any query
@@ -2143,9 +2562,9 @@ class URLQueryParserTests(unittest.TestCase):
             q = p.parse(expr)
             log_messages = log_recorder.stop()
 
-            self.assertEqual(q, {})
+            assertEqual(q, {})
             if PYPARSING:
-                self.assertNotIn("Invalid URL Filter Expression", log_messages)
+                assertNotIn("Invalid URL Filter Expression", log_messages)
 
         finally:
             settings.base.debug = debug
@@ -2614,22 +3033,11 @@ class AIRegexTests(unittest.TestCase):
         current.deployment_settings.database.airegex = switch
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(
         FieldSelectorResolutionTests,
+        FieldCategoryFlagsTests,
 
         ResourceFilterJoinTests,
         ResourceFilterQueryTests,

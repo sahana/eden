@@ -2,7 +2,7 @@
 
 """ Sahana Eden Automated Tests - INV007 Create Category
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,14 +34,14 @@ class CreateCategory(SeleniumUnitTest):
         """
             @case: INV007
             @description: Create a Category
-            
-            
+
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         # Login, if not-already done so
         self.login(account="admin", nexturl="supply/item_category/create")
-        self.create("supply_item_category", 
+        self.create("supply_item_category",
                     [( "catalog_id",
                        "Default",),
                      ( "parent_item_category_id",
@@ -54,4 +54,3 @@ class CreateCategory(SeleniumUnitTest):
                        "This is a Test Item Category"),
                      ]
                      )
-        

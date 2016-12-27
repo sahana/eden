@@ -96,8 +96,10 @@ def user():
 
     auth.configure_user_fields(pe_ids)
 
-    s3db.add_components("auth_user",
-                        auth_membership = "user_id")
+    # Now done in 00_tables.py
+    #s3db.add_components("auth_user",
+    #                    auth_membership = "user_id",
+    #                    )
 
     list_fields = ["first_name",
                    "last_name",
@@ -392,9 +394,10 @@ def group():
 
     if not auth.s3_has_role(ADMIN):
         s3db.configure(tablename,
-                       editable=False,
-                       insertable=False,
-                       deletable=False)
+                       deletable = False,
+                       editable = False,
+                       insertable = False,
+                       )
 
     # CRUD Strings
     ADD_ROLE = T("Create Role")
@@ -1089,78 +1092,71 @@ def translate():
 # =============================================================================
 def result():
     """
-        Selenium Test Result Reports list
+        Selenium Test Result Reports
     """
 
-    file_list = UL()
-    static_path = os.path.join(request.folder, "static", "test")
-    for filename in os.listdir(static_path):
-        link = A(filename,
-                 _href = URL(c = "static",
-                             f = "test",
-                             args = [filename]
-                             )
-                 )
-        file_list.append(link)
-    return dict(file_list=file_list)
+    args = request.args
+    result_type = args[0] if len(args) else None
 
-# -----------------------------------------------------------------------------
-def result_automated():
-    """
-        Selenium Test Result Reports list
-    """
-    file_list_automated = UL()
-    static_path = os.path.join(request.folder, "static", "test_automated")
-    filenames = os.listdir(static_path)
-    filenames.reverse()
-    for filename in filenames:
-        link = A(filename,
-                 _href = URL(c = "static",
-                             f = "test_automated",
-                             args = [filename]
-                             )
-                 )
-        file_list_automated.append(link)
-    return dict(file_list_automated=file_list_automated)
+    result_types = {"automated": "Automated Tests",
+                    "roles": "Roles Test",
+                    "smoke": "Smoke Test",
+                    }
 
-# -----------------------------------------------------------------------------
-def result_smoke():
+    if result_type in result_types:
+
+        title = T(result_types[result_type])
+        overview = False
+
+        foldername = "test_%s" % result_type
+        path = os.path.join(request.folder, "static", foldername)
+        try:
+            filenames = os.listdir(path)
+        except OSError:
+            links = UL(LI(T("No test results found"), _class="error"))
+        else:
+            links = UL()
+            for filename in filenames:
+                link = LI(A(filename,
+                            _href = URL(c = "static",
+                                        f = foldername,
+                                        args = [filename]
+                                        ),
+                            _target = "_blank",
+                            )
+                          )
+                links.append(link)
+    else:
+
+        title = T("Test Results Overview")
+        overview = True
+
+        links = UL()
+        for name, label in result_types.items():
+            link = LI(A(label,
+                        _href = URL(c = "admin",
+                                    f = "result",
+                                    args = [name]
+                                    )
+                        )
+                      )
+            links.append(link)
+
+    output = {"title": title,
+              "links": links,
+              "overview": overview,
+              }
+
+    return output
+
+# =============================================================================
+# Configurations
+# =============================================================================
+def dashboard():
     """
-        Selenium Test Result Reports list
+        Dashboard Configurations
     """
 
-    file_list_smoke = UL()
-    static_path = os.path.join(request.folder, "static", "test_smoke")
-    filenames = os.listdir(static_path)
-    filenames.reverse()
-    for filename in filenames:
-        link = A(filename,
-                 _href = URL(c = "static",
-                             f = "test_smoke",
-                             args = [filename]
-                             )
-                 )
-        file_list_smoke.append(link)
-    return dict(file_list_smoke=file_list_smoke)
-
-# -----------------------------------------------------------------------------
-def result_roles():
-    """
-        Selenium Test Result Reports list
-    """
-
-    file_list_roles = UL()
-    static_path = os.path.join(request.folder, "static", "test_roles")
-    filenames = os.listdir(static_path)
-    filenames.reverse()
-    for filename in filenames:
-        link = A(filename,
-                 _href = URL(c = "static",
-                             f = "test_roles",
-                             args = [filename]
-                             )
-                 )
-        file_list_roles.append(link)
-    return dict(file_list_roles=file_list_roles)
+    return s3_rest_controller("s3", "dashboard")
 
 # END =========================================================================

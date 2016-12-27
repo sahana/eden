@@ -362,6 +362,14 @@ def warehouse():
         if r.method in [None, "list"] and \
             not r.vars.get("show_obsolete", False):
             r.resource.add_filter(db.inv_warehouse.obsolete != True)
+
+        if r.representation == "xls":
+            list_fields = r.resource.get_config("list_fields")
+            list_fields += ["location_id$lat",
+                            "location_id$lon",
+                            "location_id$inherited",
+                            ]
+
         return True
     s3.prep = prep
 
@@ -435,7 +443,7 @@ def supplier():
 
     get_vars["organisation_type.name"] = "Supplier"
 
-    # Load model
+    # Load model (including normal CRUD strings)
     table = s3db.org_organisation
 
     # Modify CRUD Strings
@@ -623,6 +631,7 @@ def track_movement():
                                 )
     if "add_btn" in output:
         del output["add_btn"]
+
     return output
 
 # -----------------------------------------------------------------------------
@@ -1093,13 +1102,14 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader = s3db.inv_recv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_recv_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
     """
-        used by recv_process & send_process
+        Used by recv_process & send_process
         returns a dict of unique req items (with min  db.req_req.date_required | db.req_req.date)
         key = item_id
         @param site_id: The inventory to find the req_items from
@@ -1192,8 +1202,9 @@ def recv_process():
     """ Receive a Shipment """
 
     try:
-        recv_id = request.args[0]
-    except:
+        recv_id = long(request.args[0])
+    except (IndexError, ValueError):
+        # recv_id missing from URL or invalid
         redirect(URL(f="recv"))
 
     rtable = s3db.inv_recv
@@ -1205,9 +1216,11 @@ def recv_process():
     recv_record = db(rtable.id == recv_id).select(rtable.date,
                                                   rtable.status,
                                                   rtable.site_id,
-                                                  limitby=(0, 1)
+                                                  rtable.recv_ref,
+                                                  limitby=(0, 1),
                                                   ).first()
 
+    # Check status
     status = recv_record.status
     inv_ship_status = s3db.inv_ship_status
     if status == inv_ship_status["RECEIVED"]:
@@ -1219,21 +1232,28 @@ def recv_process():
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     # Update Receive record & lock for editing
-    code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
-                                         recv_record.site_id,
-                                         s3db.inv_recv.recv_ref)
-    data = dict(recv_ref = code,
-                status = inv_ship_status["RECEIVED"],
-                owned_by_user = None,
-                owned_by_group = ADMIN,
-                )
+    data = {"status": inv_ship_status["RECEIVED"],
+            "owned_by_user": None,
+            "owned_by_group": ADMIN,
+            }
+
+    if not recv_record.recv_ref:
+        # No recv_ref yet? => add one now
+        code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
+                                             recv_record.site_id,
+                                             s3db.inv_recv.recv_ref,
+                                             )
+        data["recv_ref"] = code
+
     if not recv_record.date:
+        # Date not set? => set to now
         data["date"] = request.utcnow
+
     db(rtable.id == recv_id).update(**data)
 
+    # Update the Send record & lock for editing
     stable = db.inv_send
     tracktable = db.inv_track_item
-
     send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
                                                         limitby=(0, 1)).first()
     if send_row:
@@ -1242,21 +1262,23 @@ def recv_process():
                                         owned_by_user = None,
                                         owned_by_group = ADMIN,
                                         )
+
     # Change the status for all track items in this shipment to Unloading
-    # the onaccept will then move the values into the site update any request
+    # the onaccept will then move the values into the site, update any request
     # record, create any adjustment if needed and change the status to Arrived
     db(tracktable.recv_id == recv_id).update(status = 3)
+
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
         row = Storage(track_item)
-        s3db.inv_track_item_onaccept(Storage(vars=Storage(id=row.id),
+        s3db.inv_track_item_onaccept(Storage(vars = Storage(id=row.id),
                                              record = row,
                                              ))
 
+    # Done => confirmation message, open the record
     session.confirmation = T("Shipment Items Received")
-    redirect(URL(c="inv", f="recv",
-                 args=[recv_id]))
+    redirect(URL(c="inv", f="recv", args=[recv_id]))
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
@@ -1462,7 +1484,8 @@ def track_item():
                        )
         s3.filter = (FS("expiry_date") != None)
 
-    output = s3_rest_controller(rheader = s3db.inv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_rheader,
+                                )
     return output
 
 # =============================================================================
@@ -1562,7 +1585,8 @@ def adj():
                        listadd = False,
                        )
 
-    output = s3_rest_controller(rheader = s3db.inv_adj_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_adj_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -1704,6 +1728,7 @@ def send_item_json():
 
 # -----------------------------------------------------------------------------
 def kitting():
+
     return s3_rest_controller(rheader = s3db.inv_rheader,
                               )
 

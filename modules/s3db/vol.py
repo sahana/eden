@@ -3,7 +3,7 @@
     Sahana Eden Volunteers Management
     (Extends modules/eden/hrm.py)
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,6 +29,7 @@
 """
 
 __all__ = ("S3VolunteerModel",
+           "S3VolunteerActivityModel",
            "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
            "vol_service_record",
@@ -36,18 +37,18 @@ __all__ = ("S3VolunteerModel",
            "vol_volunteer_controller",
            )
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+import json
+
+from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 # =============================================================================
 class S3VolunteerModel(S3Model):
@@ -58,11 +59,6 @@ class S3VolunteerModel(S3Model):
 
         T = current.T
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
-        availability_opts = {1: T("No Restrictions"),
-                             2: T("Weekends only"),
-                             3: T("School Holidays only"),
-                             }
 
         # ---------------------------------------------------------------------
         # Volunteer Details
@@ -80,15 +76,6 @@ class S3VolunteerModel(S3Model):
                                 label = T("Active"),
                                 represent = self.vol_active_represent,
                                 ),
-                          Field("availability", "integer",
-                                label = T("Availability"),
-                                represent = lambda opt: \
-                                            availability_opts.get(opt,
-                                                          UNKNOWN_OPT),
-                                requires = IS_EMPTY_OR(
-                                             IS_IN_SET(availability_opts)
-                                           ),
-                                ),
                           Field("card", "boolean",
                                 default = False,
                                 label = T("Card holder"),
@@ -99,7 +86,7 @@ class S3VolunteerModel(S3Model):
                                 ),
                           *s3_meta_fields())
 
-    # =========================================================================
+    # -------------------------------------------------------------------------
     @staticmethod
     def vol_active_represent(opt):
         """ Represent the Active status of a Volunteer """
@@ -114,6 +101,499 @@ class S3VolunteerModel(S3Model):
         else:
             output = DIV(current.T("No"), _style="color:red")
         return output
+
+# =============================================================================
+class S3VolunteerActivityModel(S3Model):
+    """
+        Currently used by CRMADA
+    """
+
+    names = ("vol_activity_type",
+             "vol_activity_type_sector",
+             "vol_activity",
+             "vol_activity_activity_type",
+             "vol_activity_hours",
+             "vol_activity_hours_activity_type",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        #auth = current.auth
+
+        add_components = self.add_components
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        #ADMIN = current.session.s3.system_roles.ADMIN
+        #is_admin = auth.s3_has_role(ADMIN)
+
+        #root_org = auth.root_org()
+        #if is_admin:
+        #    filter_opts = ()
+        #elif root_org:
+        #    filter_opts = (root_org, None)
+        #else:
+        #    filter_opts = (None,)
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Type
+        #
+        tablename = "vol_activity_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     #self.org_organisation_id(default = root_org,
+                     #                         readable = is_admin,
+                     #                         writable = is_admin,
+                     #                         ),
+                     s3_comments(label = T("Description"),
+                                 comment = None,
+                                 ),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Type"),
+            title_display = T("Activity Type"),
+            title_list = T("Activity Types"),
+            title_update = T("Edit Activity Type"),
+            title_upload = T("Import Activity Types"),
+            label_list_button = T("List Activity Types"),
+            label_delete_button = T("Delete Activity Type"),
+            msg_record_created = T("Activity Type added"),
+            msg_record_modified = T("Activity Type updated"),
+            msg_record_deleted = T("Activity Type deleted"),
+            msg_list_empty = T("No Activity Types found"))
+
+        comment = S3PopupLink(c = "vol",
+                              f = "activity_type",
+                              label = crud_strings[tablename].label_create,
+                              title = T("Activity Type"),
+                              )
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
+                                           label = T("Activity Type"),
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "vol_activity_type.id",
+                                                                  represent,
+                                                                  #filterby="organisation_id",
+                                                                  #filter_opts=filter_opts,
+                                                                  )),
+                                           ondelete = "CASCADE",
+                                           represent = represent,
+                                           comment = comment
+                                           )
+
+        # Components
+        add_components(tablename,
+                       # Sectors
+                       org_sector = {"link": "vol_activity_type_sector",
+                                     "joinby": "activity_type_id",
+                                     "key": "sector_id",
+                                     "actuate": "link",
+                                     },
+                       )
+
+        crud_form = S3SQLCustomForm("name",
+                                    S3SQLInlineComponentCheckbox("sector",
+                                                                 label = T("Sectors"),
+                                                                 field = "sector_id",
+                                                                 option_help = "comments",
+                                                                 cols = 4,
+                                                                 ),
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Types <> Sectors
+        # Choice of Sector filters the list of Activity Types
+        #
+        tablename = "vol_activity_type_sector"
+        define_table(tablename,
+                     activity_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.org_sector_id(empty = False,
+                                        ondelete = "CASCADE",
+                                        ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities
+        #
+        tablename = "vol_activity"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     self.org_organisation_id(),
+                     self.org_sector_id(empty = False,
+                                        ),
+                     self.gis_location_id(),
+                     s3_date(future=0),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Activity"),
+            title_display = T("Activity"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            title_upload = T("Import Activities"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities found"))
+
+        represent = S3Represent(lookup=tablename, show_link=True)
+        activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
+                                      label = T("Activity"),
+                                      requires = IS_ONE_OF(db,
+                                                           "vol_activity.id",
+                                                           represent,
+                                                           #filterby="organisation_id",
+                                                           #filter_opts=filter_opts,
+                                                           ),
+                                      represent = represent,
+                                      #comment = comment
+                                      )
+
+        # Components
+        add_components(tablename,
+                       # Activity Types
+                       vol_activity_type = {"link": "vol_activity_activity_type",
+                                            "joinby": "activity_id",
+                                            "key": "activity_type_id",
+                                            "actuate": "link",
+                                            },
+                       # Hours
+                       vol_activity_hours = {"name": "hours",
+                                             "joinby": "activity_id",
+                                             },
+                       )
+
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    "sector_id",
+                                    # @ToDo: Filter list based on Sector
+                                    #S3SQLInlineComponentCheckbox("activity_type",
+                                    #                             label = T("Activity Types"),
+                                    #                             field = "activity_type_id",
+                                    #                             option_help = "comments",
+                                    #                             cols = 4,
+                                    #                             ),
+                                    S3SQLInlineLink("activity_type",
+                                                    label = T("Activity Types"),
+                                                    field = "activity_type_id",
+                                                    #help_field = s3db.project_theme_help_fields,
+                                                    cols = 4,
+                                                    translate = True,
+                                                    # Filter Activity Type by Sector
+                                                    filterby = "activity_type_id:vol_activity_type_sector.sector_id",
+                                                    match = "sector_id",
+                                                    script = '''
+$.filterOptionsS3({
+ 'trigger':'sector_id',
+ 'target':{'alias':'activity_type','name':'activity_type_id','inlineType':'link'},
+ 'lookupPrefix':'vol',
+ 'lookupResource':'activity_type',
+ 'lookupKey':'activity_type_id:vol_activity_type_sector.sector_id',
+ 'showEmptyField':false,
+ //'tooltip':'project_theme_help_fields(id,name)'
+})'''
+                                                    ),
+                                    (T("Activity Name"), "name"),
+                                    "location_id",
+                                    "date",
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  list_fields = ["name",
+                                 "organisation_id",
+                                 "sector_id",
+                                 "activity_activity_type.activity_type_id",
+                                 "location_id",
+                                 "date",
+                                 ],
+                  )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities <> Activity Types link Table
+        #
+        tablename = "vol_activity_activity_type"
+        define_table(tablename,
+                     activity_id(ondelete = "CASCADE",
+                                 ),
+                     activity_type_id(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities <> People link table
+        #
+        #vol_roles = current.deployment_settings.get_hrm_vol_roles()
+
+        tablename = "vol_activity_hours"
+        define_table(tablename,
+                     activity_id(ondelete = "RESTRICT",
+                                 ),
+                     self.pr_person_id(empty = False,
+                                       # Don't create here
+                                       comment = None,
+                                       ),
+                     self.hrm_job_title_id(#readable = vol_roles,
+                                           #writable = vol_roles,
+                                           ),
+                     s3_date(future=0),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
+                     Field("hours", "double",
+                           label = T("Hours"),
+                           ),
+                     # Training records are auto-populated
+                     #Field("training", "boolean",
+                     #      default = False,
+                     #      label = T("Type"),
+                     #      represent = lambda opt: \
+                     #                  T("Training") if opt else T("Work"),
+                     #      writable = False,
+                     #      ),
+                     #Field("training_id", self.hrm_training,
+                     #      label = T("Course"),
+                     #      represent = self.hrm_TrainingRepresent(),
+                     #      writable = False,
+                     #      ),
+                     Field.Method("month", vol_activity_hours_month),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Hours"),
+            title_display = T("Hours Details"),
+            title_list = T("Hours"),
+            title_update = T("Edit Hours"),
+            title_upload = T("Import Hours"),
+            label_list_button = T("List Hours"),
+            label_delete_button = T("Delete Hours"),
+            msg_record_created = T("Hours added"),
+            msg_record_modified = T("Hours updated"),
+            msg_record_deleted = T("Hours deleted"),
+            msg_list_empty = T("Currently no hours recorded for this volunteer"))
+
+        filter_widgets = [
+            S3OptionsFilter("person_id$human_resource.organisation_id",
+                            # Doesn't support translations
+                            #represent="%(name)s",
+                            ),
+            S3OptionsFilter("activity_hours_activity_type.activity_type_id",
+                            # Doesn't support translation
+                            #represent = "%(name)s",
+                            ),
+            S3OptionsFilter("job_title_id",
+                            #label = T("Volunteer Role"),
+                            # Doesn't support translation
+                            #represent = "%(name)s",
+                            ),
+            S3DateFilter("date",
+                         hide_time = True,
+                         ),
+            ]
+
+        report_fields = [#"training",
+                         #"activity_id",
+                         "activity_hours_activity_type.activity_type_id",
+                         "job_title_id",
+                         #"training_id",
+                         (T("Month"), "month"),
+                         "hours",
+                         "person_id$gender",
+                         ]
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 defaults = Storage(rows = "activity_hours_activity_type.activity_type_id",
+                                                    cols = "month",
+                                                    fact = "sum(hours)",
+                                                    totals = True,
+                                                    )
+                                 )
+
+        # Components
+        add_components(tablename,
+                       # Format for Filter/Report
+                       vol_activity_hours_activity_type = "activity_hours_id",
+                       # Format for S3SQLInlineComponentCheckbox
+                       vol_activity_type = {"link": "vol_activity_hours_activity_type",
+                                            "joinby": "activity_hours_id",
+                                            "key": "activity_type_id",
+                                            "actuate": "link",
+                                            },
+                       )
+
+        # Done in the controller in order to limit options
+        #crud_form = S3SQLCustomForm("activity_id",
+        #                            "person_id",
+        #                            "date",
+        #                            #"end_date",
+        #                            "job_title_id",
+        #                            "hours",
+        #                            # @ToDo: Filter to just those in the parent Activity
+        #                            S3SQLInlineComponentCheckbox("activity_type",
+        #                                                         label = T("Activity Types"),
+        #                                                         field = "activity_type_id",
+        #                                                         option_help = "comments",
+        #                                                         cols = 4,
+        #                                                         ),
+        #                            "comments",
+        #                            )
+
+        configure(tablename,
+                  context = {"person": "person_id",
+                             },
+                  #crud_form = crud_form,
+                  extra_fields = ["date"],
+                  filter_widgets = filter_widgets,
+                  list_fields = ["activity_id",
+                                 "person_id",
+                                 "activity_hours_activity_type.activity_type_id",
+                                 "date",
+                                 "job_title_id",
+                                 "hours",
+                                 ],
+                  onaccept = vol_activity_hours_onaccept,
+                  ondelete = vol_activity_hours_onaccept,
+                  orderby = "vol_activity_hours.date desc",
+                  report_options = report_options,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Hours <> Activity Type link table
+        #
+
+        # Filter Activity Type List to just those for the Activity
+        # We will only add hours on Tab of Activity
+        #options = {"trigger": "activity_id",
+        #           "target": {"alias": "activity_hours_activity_type",
+        #                      "name": "activity_type_id",
+        #                      },
+        #           "scope": "form",
+        #           "lookupPrefix": "vol",
+        #           "lookupResource": "activity_type",
+        #           "optional": True,
+        #           }
+        #script = '''$.filterOptionsS3(%s)''' % \
+        #                    json.dumps(options, separators=SEPARATORS)
+
+        tablename = "vol_activity_hours_activity_type"
+        define_table(tablename,
+                     Field("activity_hours_id", "reference vol_activity_hours"),
+                     activity_type_id(#script = script,
+                                      ),
+                     *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+def vol_activity_hours_month(row):
+    """
+        Virtual field for vol_activity_hours - returns the date of the first
+        day of the month of this entry, used for activity hours report.
+
+        Requires "date" to be in the additional report_fields
+
+        @param row: the Row
+    """
+
+    try:
+        thisdate = row["vol_activity_hours.date"]
+    except AttributeError:
+        return current.messages["NONE"]
+    if not thisdate:
+        return current.messages["NONE"]
+
+    #thisdate = thisdate.date()
+    month = thisdate.month
+    year = thisdate.year
+    first = datetime.date(year, month, 1)
+
+    return first.strftime("%y-%m")
+
+# =============================================================================
+def vol_activity_hours_onaccept(form):
+    """
+        Update the Active Status for the volunteer
+        - called both onaccept & ondelete
+    """
+
+    vol_active = current.deployment_settings.get_hrm_vol_active()
+    if not callable(vol_active):
+        # Nothing to do (either field is disabled or else set manually)
+        return
+
+    # Deletion and update have a different format
+    try:
+        id = form.vars.id
+        delete = False
+    except:
+        id = form.id
+        delete = True
+
+    # Get the full record
+    db = current.db
+    table = db.vol_activity_hours
+    record = db(table.id == id).select(table.person_id,
+                                       table.deleted_fk,
+                                       limitby=(0, 1)).first()
+
+    if delete:
+        deleted_fks = json.loads(record.deleted_fk)
+        person_id = deleted_fks["person_id"]
+    else:
+        person_id = record.person_id
+
+    # Recalculate the Active Status for this Volunteer
+    active = vol_active(person_id)
+
+    # Read the current value
+    s3db = current.s3db
+    dtable = s3db.vol_details
+    htable = s3db.hrm_human_resource
+    query = (htable.person_id == person_id) & \
+            (dtable.human_resource_id == htable.id)
+    row = db(query).select(dtable.id,
+                           dtable.active,
+                           limitby=(0, 1)).first()
+    if row:
+        if row.active != active:
+            # Update
+            db(dtable.id == row.id).update(active=active)
+    else:
+        # Create record
+        row = db(htable.person_id == person_id).select(htable.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+        if row:
+            dtable.insert(human_resource_id = row.id,
+                          active = active)
 
 # =============================================================================
 class S3VolunteerAwardModel(S3Model):
@@ -174,11 +654,11 @@ class S3VolunteerAwardModel(S3Model):
             msg_record_deleted = T("Award deleted"),
             msg_list_empty = T("No Awards found"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "award",
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Award"),
-                                    )
+        comment = S3PopupLink(c = "vol",
+                              f = "award",
+                              label = crud_strings[tablename].label_create,
+                              title = T("Award"),
+                              )
 
         represent = S3Represent(lookup=tablename)
         award_id = S3ReusableField("award_id", "reference %s" % tablename,
@@ -200,7 +680,8 @@ class S3VolunteerAwardModel(S3Model):
         define_table(tablename,
                      self.pr_person_id(empty=False),
                      award_id(),
-                     s3_date(),
+                     s3_date(future = 0,
+                             ),
                      Field("number",
                            label = T("Number"),
                            # Enable in templates as-required
@@ -210,7 +691,9 @@ class S3VolunteerAwardModel(S3Model):
                      Field("file", "upload",
                            autodelete = True,
                            label = T("Attachment"),
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.vol_award_file_represent,
+                           requires = IS_LENGTH(current.MAX_FILENAME_LENGTH),
                            # Enable in templates as-required
                            readable = False,
                            writable = False,
@@ -279,8 +762,12 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         define_table(tablename,
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True, 
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -296,13 +783,14 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster Type deleted"),
             msg_list_empty = T("No Volunteer Cluster Types"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster_type",
-                                    vars = dict(child = "vol_cluster_type_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster Type"),
-                                    )
+        comment = S3PopupLink(c = "vol",
+                              f = "cluster_type",
+                              vars = {"child": "vol_cluster_type_id",
+                                      "parent": "volunteer_cluster",
+                                      },
+                              label = crud_strings[tablename].label_create,
+                              title = T("Volunteer Cluster Type"),
+                              )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", "reference %s" % tablename,
@@ -320,8 +808,12 @@ class S3VolunteerClusterModel(S3Model):
         tablename = "vol_cluster"
         define_table(tablename,
                      vol_cluster_type_id(),
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -337,13 +829,14 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster deleted"),
             msg_list_empty = T("No Volunteer Clusters"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster",
-                                    vars = dict(child = "vol_cluster_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster"),
-                                    )
+        comment = S3PopupLink(c = "vol",
+                              f = "cluster",
+                              vars = {"child": "vol_cluster_id",
+                                      "parent": "volunteer_cluster",
+                                      },
+                              label = crud_strings[tablename].label_create,
+                              title = T("Volunteer Cluster"),
+                              )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_id = S3ReusableField("vol_cluster_id", "reference %s" % tablename,
@@ -361,8 +854,12 @@ class S3VolunteerClusterModel(S3Model):
         #
         tablename = "vol_cluster_position"
         define_table(tablename,
-                     Field("name", length=255, unique=True,
-                           label = T("Name")),
+                     Field("name", length=255, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(255),
+                                       ],
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -378,13 +875,14 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster Position deleted"),
             msg_list_empty = T("No Volunteer Cluster Positions"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster_position",
-                                    vars = dict(child = "vol_cluster_position_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster Position"),
-                                    )
+        comment = S3PopupLink(c = "vol",
+                              f = "cluster_position",
+                              vars = {"child": "vol_cluster_position_id",
+                                      "parent": "volunteer_cluster",
+                                      },
+                              label = crud_strings[tablename].label_create,
+                              title = T("Volunteer Cluster Position"),
+                              )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", "reference %s" % tablename,
@@ -643,68 +1141,134 @@ def vol_service_record(r, **attr):
         if total > 0:
             courses.append(TR(TD(""), TD("Total"), TD("%d" % total)))
 
-        # Programme Hours
-        # - grouped by Programme/Role
-        programmes = OrderedDict()
-        hrstable = s3db.hrm_programme_hours
-        ptable = db.hrm_programme
-        jtable = db.hrm_job_title
-        query = (hrstable.deleted == False) & \
-                (hrstable.training == False) & \
-                (hrstable.person_id == person_id) & \
-                (hrstable.programme_id == ptable.id)
-        left = jtable.on(hrstable.job_title_id == jtable.id)
-        rows = db(query).select(hrstable.date,
-                                hrstable.hours,
-                                jtable.name,
-                                ptable.name,
-                                ptable.name_long,
-                                left=left,
-                                orderby = ~hrstable.date)
-        NONE = current.messages["NONE"]
-        for row in rows:
-            _row = row["hrm_programme_hours"]
-            _date = _row.date
-            hours = _row.hours or 0
-            role = row["hrm_job_title"]["name"] or NONE
-            prow = row["hrm_programme"]
-            if prow.name_long:
-                programme = prow.name_long
-            else:
-                programme = prow.name
-            if programme not in programmes:
-                programmes[programme] = OrderedDict()
-            p = programmes[programme]
-            if role in p:
-                p[role]["end_date"] = _date
-                p[role]["hours"] += hours
-            else:
-                p[role] = dict(start_date = _date,
-                               end_date = _date,
-                               hours = hours,
-                               )
-        date_represent = hrstable.date.represent
-        programme = TABLE(TR(TH(T("Start Date")),
-                             TH(T("End Date")),
-                             TH(T("Work on Program")),
-                             TH(T("Role")),
-                             TH(T("Hours"))))
-        total = 0
-        for p in programmes:
-            _p = programmes[p]
-            for r in _p:
-                role = _p[r]
-                hours = role["hours"]
-                total += hours
-                programme.append(TR(date_represent(role["start_date"]),
-                                    date_represent(role["end_date"]),
-                                    p,
-                                    r,
-                                    str(hours)
-                                    ))
+        vol_experience = settings.get_hrm_vol_experience()
+        if vol_experience == "activity":
+            # Activity Hours
+            # - grouped by Activity Type/Role
+            activity_types = OrderedDict()
+            hrstable = s3db.vol_activity_hours
+            attable = db.vol_activity_type
+            ltable = db.vol_activity_hours_activity_type
+            jtable = db.hrm_job_title
+            query = (hrstable.deleted == False) & \
+                    (hrstable.person_id == person_id)
+            left = [jtable.on(hrstable.job_title_id == jtable.id),
+                    attable.on((hrstable.id == ltable.activity_hours_id) & \
+                               (ltable.activity_type_id == attable.id)),
+                    ]
+            rows = db(query).select(hrstable.date,
+                                    hrstable.hours,
+                                    jtable.name,
+                                    attable.name,
+                                    left=left,
+                                    orderby = ~hrstable.date)
+            NONE = current.messages["NONE"]
+            for row in rows:
+                _row = row["vol_activity_hours"]
+                _date = _row.date
+                hours = _row.hours or 0
+                role = row["hrm_job_title"]["name"] or NONE
+                atrow = row["vol_activity_type"]
+                atype = atrow.name
+                if atype not in activity_types:
+                    activity_types[atype] = OrderedDict()
+                a = activity_types[atype]
+                if role in a:
+                    a[role]["end_date"] = _date
+                    a[role]["hours"] += hours
+                else:
+                    a[role] = dict(start_date = _date,
+                                   end_date = _date,
+                                   hours = hours,
+                                   )
+            date_represent = hrstable.date.represent
+            programme = TABLE(TR(TH(T("Start Date")),
+                                 TH(T("End Date")),
+                                 TH(T("Activity Type")),
+                                 TH(T("Role")),
+                                 TH(T("Hours"))))
+            total = 0
+            for a in activity_types:
+                _a = activity_types[a]
+                for r in _a:
+                    role = _a[r]
+                    hours = role["hours"]
+                    total += hours
+                    programme.append(TR(date_represent(role["start_date"]),
+                                        date_represent(role["end_date"]),
+                                        a,
+                                        r,
+                                        str(hours)
+                                        ))
 
-        if total > 0:
-            programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+            if total > 0:
+                programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+
+        elif vol_experience in ("programme", "both"):
+            # Programme Hours
+            # - grouped by Programme/Role
+            programmes = OrderedDict()
+            hrstable = s3db.hrm_programme_hours
+            ptable = db.hrm_programme
+            jtable = db.hrm_job_title
+            query = (hrstable.deleted == False) & \
+                    (hrstable.training == False) & \
+                    (hrstable.person_id == person_id) & \
+                    (hrstable.programme_id == ptable.id)
+            left = jtable.on(hrstable.job_title_id == jtable.id)
+            rows = db(query).select(hrstable.date,
+                                    hrstable.hours,
+                                    jtable.name,
+                                    ptable.name,
+                                    ptable.name_long,
+                                    left=left,
+                                    orderby = ~hrstable.date)
+            NONE = current.messages["NONE"]
+            for row in rows:
+                _row = row["hrm_programme_hours"]
+                _date = _row.date
+                hours = _row.hours or 0
+                role = row["hrm_job_title"]["name"] or NONE
+                prow = row["hrm_programme"]
+                if prow.name_long:
+                    programme = prow.name_long
+                else:
+                    programme = prow.name
+                if programme not in programmes:
+                    programmes[programme] = OrderedDict()
+                p = programmes[programme]
+                if role in p:
+                    p[role]["end_date"] = _date
+                    p[role]["hours"] += hours
+                else:
+                    p[role] = dict(start_date = _date,
+                                   end_date = _date,
+                                   hours = hours,
+                                   )
+            date_represent = hrstable.date.represent
+            programme = TABLE(TR(TH(T("Start Date")),
+                                 TH(T("End Date")),
+                                 TH(T("Work on Program")),
+                                 TH(T("Role")),
+                                 TH(T("Hours"))))
+            total = 0
+            for p in programmes:
+                _p = programmes[p]
+                for r in _p:
+                    role = _p[r]
+                    hours = role["hours"]
+                    total += hours
+                    programme.append(TR(date_represent(role["start_date"]),
+                                        date_represent(role["end_date"]),
+                                        p,
+                                        r,
+                                        str(hours)
+                                        ))
+
+            if total > 0:
+                programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+        else:
+            programme = ""
 
         # Space for the printed document to be signed
         datestamp = S3DateTime.date_represent(current.request.now)
@@ -755,7 +1319,6 @@ def vol_volunteer_controller():
 
     def prep(r):
         resource = r.resource
-        get_config = resource.get_config
 
         # CRUD String
         s3.crud_strings[resource.tablename] = s3.crud_strings["hrm_volunteer"]
@@ -764,71 +1327,74 @@ def vol_volunteer_controller():
         table = r.table
         table.type.default = 2
 
-        # Volunteers use home address
-        location_id = table.location_id
-        location_id.label = T("Home Address")
-
         # Configure list_fields
         if r.representation == "xls":
-            # Split person_id into first/middle/last to
-            # make it match Import sheets
-            list_fields = ["person_id$first_name",
-                           "person_id$middle_name",
-                           "person_id$last_name",
-                           ]
+            s3db.hrm_xls_list_fields(r, staff=False)
         else:
             list_fields = ["person_id",
+                           "person_id$gender",
                            ]
-        if settings.get_hrm_use_code() is True:
-            list_fields.append("code")
-        list_fields.append("job_title_id")
-        if settings.get_hrm_multiple_orgs():
-            list_fields.append("organisation_id")
-        list_fields.extend(((settings.get_ui_label_mobile_phone(), "phone.value"),
-                            (T("Email"), "email.value"),
-                            "location_id",
-                            ))
-        if settings.get_hrm_use_trainings():
-            list_fields.append((T("Trainings"),"person_id$training.course_id"))
-        if settings.get_hrm_use_certificates():
-            list_fields.append((T("Certificates"),"person_id$certification.certificate_id"))
+            if settings.get_hrm_use_code() is True:
+                list_fields.append("code")
+            if settings.get_hrm_vol_roles():
+                list_fields.append("job_title_id")
+            if settings.get_hrm_vol_departments():
+                list_fields.append("department_id")
+            if settings.get_hrm_multiple_orgs():
+                list_fields.append("organisation_id")
+            list_fields.extend(((settings.get_ui_label_mobile_phone(), "phone.value"),
+                                (T("Email"), "email.value"),
+                                ))
+            # Volunteers use home address
+            location_id = table.location_id
+            location_id.label = T("Home Address")
+            list_fields.append("location_id")
+            if settings.get_hrm_use_trainings():
+                list_fields.append((T("Trainings"), "person_id$training.course_id"))
+            if settings.get_hrm_use_certificates():
+                list_fields.append((T("Certificates"), "person_id$certification.certificate_id"))
 
-        # Volunteer Programme and Active-status
-        report_options = get_config("report_options")
-        if vol_experience in ("programme", "both"):
-            # Don't use status field
-            table.status.readable = table.status.writable = False
-            # Use active field?
-            vol_active = settings.get_hrm_vol_active()
-            if vol_active:
-                list_fields.insert(3, (T("Active?"), "details.active"))
-            # Add Programme to List Fields
-            list_fields.insert(6, "person_id$hours.programme_id")
+            # Volunteer Programme and Active-status
+            report_options = resource.get_config("report_options")
+            if vol_experience in ("programme", "both"):
+                # Don't use status field
+                table.status.readable = table.status.writable = False
+                # Use active field?
+                vol_active = settings.get_hrm_vol_active()
+                if vol_active:
+                    list_fields.insert(3, (T("Active?"), "details.active"))
+                # Add Programme to List Fields
+                list_fields.insert(6, "person_id$hours.programme_id")
 
-            # Add active and programme to Report Options
-            report_fields = report_options.rows
-            report_fields.append("person_id$hours.programme_id")
-            if vol_active:
-                report_fields.append((T("Active?"), "details.active"))
-            report_options.rows = report_fields
-            report_options.cols = report_fields
-            report_options.fact = report_fields
-        else:
-            # Use status field
-            list_fields.append("status")
+                # Add active and programme to Report Options
+                report_fields = report_options.rows
+                report_fields.append("person_id$hours.programme_id")
+                if vol_active:
+                    report_fields.append((T("Active?"), "details.active"))
+                report_options.rows = report_fields
+                report_options.cols = report_fields
+                report_options.fact = report_fields
+            else:
+                # Use status field
+                list_fields.append("status")
 
-        # Update filter widgets
-        filter_widgets = \
-            s3db.hrm_human_resource_filters(resource_type="volunteer",
-                                            hrm_type_opts=s3db.hrm_type_opts)
+            # Update filter widgets
+            filter_widgets = \
+                s3db.hrm_human_resource_filters(resource_type="volunteer",
+                                                hrm_type_opts=s3db.hrm_type_opts)
 
-        # Reconfigure
-        resource.configure(list_fields = list_fields,
-                           filter_widgets = filter_widgets,
-                           report_options = report_options,
-                           )
+            # Reconfigure
+            resource.configure(list_fields = list_fields,
+                               filter_widgets = filter_widgets,
+                               )
 
         if r.interactive:
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
@@ -865,13 +1431,12 @@ def vol_volunteer_controller():
                     if settings.get_hrm_use_code() is not True:
                         table.code.readable = table.code.writable = False
                     # Organisation Dependent Fields
-                    # @ToDo: Move these to the IFRC Template
+                    # @ToDo: Move these to the IFRC Template & make Lazy settings
                     set_org_dependent_field = settings.set_org_dependent_field
                     set_org_dependent_field("pr_person_details", "father_name")
                     set_org_dependent_field("pr_person_details", "mother_name")
                     set_org_dependent_field("pr_person_details", "affiliations")
                     set_org_dependent_field("pr_person_details", "company")
-                    set_org_dependent_field("vol_details", "availability")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
@@ -916,15 +1481,15 @@ def vol_person_controller():
         - includes components relevant to HRM
     """
 
+    T = current.T
     db = current.db
+    s3db = current.s3db
     get_vars = current.request.get_vars
-    resourcename = "person"
     response = current.response
     s3 = response.s3
-    s3db = current.s3db
     session = current.session
     settings = current.deployment_settings
-    T = current.T
+    resourcename = "person"
 
     configure = s3db.configure
     set_method = s3db.set_method
@@ -1071,9 +1636,16 @@ def vol_person_controller():
         # Plug-in role matrix for Admins/OrgAdmins
         S3PersonRoleManager.set_method(r, entity="pr_person")
 
+        method = r.method
         if r.representation == "s3json":
             current.xml.show_ids = True
-        elif r.interactive and r.method != "import":
+        elif r.interactive and method != "import":
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if not r.component:
                 table = r.table
                 # Assume volunteers only between 12-81
@@ -1088,6 +1660,7 @@ def vol_person_controller():
                 s3db.pr_person_details.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
+                # @ToDo: Move these to the IFRC Template & make Lazy settings
                 set_org_dependent_field = settings.set_org_dependent_field
                 set_org_dependent_field("pr_person", "middle_name")
                 set_org_dependent_field("pr_person_details", "father_name")
@@ -1098,7 +1671,20 @@ def vol_person_controller():
                 set_org_dependent_field("pr_person_details", "company")
 
             else:
-                if r.component_name == "hours":
+                component_name = r.component_name
+                if component_name == "asset":
+                    # Edits should always happen via the Asset Log
+                    # @ToDo: Allow this method too, if we can do so safely
+                    configure("asset_asset",
+                              insertable = False,
+                              editable = False,
+                              deletable = False,
+                              )
+
+                elif component_name == "group_membership":
+                    s3db.hrm_configure_pr_group_membership()
+
+                elif component_name == "hours":
                     # Exclude records which are just to link to Programme
                     component_table = r.component.table
                     filter = (r.component.table.hours != None)
@@ -1106,7 +1692,7 @@ def vol_person_controller():
                     component_table.training.readable = False
                     component_table.training_id.readable = False
 
-                elif r.component_name == "physical_description":
+                elif component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
                     table = r.component.table
@@ -1118,18 +1704,30 @@ def vol_person_controller():
                     table.medical_conditions.writable = table.medical_conditions.readable = True
                     table.other_details.writable = table.other_details.readable = True
 
-                elif r.component_name == "asset":
-                    # Edits should always happen via the Asset Log
-                    # @ToDo: Allow this method too, if we can do so safely
-                    configure("asset_asset",
-                              insertable = False,
-                              editable = False,
-                              deletable = False)
+                elif component_name == "training":
+                    external = get_vars.get("~.course_id$external")
+                    if external is not None:
+                        table = s3db.hrm_course
+                        query = (table.deleted == False)
+                        ADMIN = session.s3.system_roles.ADMIN
+                        auth = current.auth
+                        if not auth.s3_has_role(ADMIN):
+                            query &= ((table.organisation_id == auth.root_org()) | \
+                                      (table.organisation_id == None))
+                        if external == "True":
+                            query &= (table.external == True)
+                        else:
+                            query &= (table.external == False)
+                        rows = db(query).select(table.id)
+                        filter_opts = [row.id for row in rows]
+                        field = s3db.hrm_training.course_id
+                        field.requires = IS_ONE_OF(db, "hrm_course.id",
+                                                   field.represent,
+                                                   filterby="id",
+                                                   filter_opts=filter_opts,
+                                                   )
 
-                elif r.component_name == "group_membership":
-                    s3db.hrm_configure_pr_group_membership()
-
-            if r.method == "record" or r.component_name == "human_resource":
+            if method == "record" or r.component_name == "human_resource":
                 table = s3db.hrm_human_resource
                 table.code.writable = table.code.readable = False
                 table.department_id.writable = table.department_id.readable = False
@@ -1147,16 +1745,26 @@ def vol_person_controller():
                     field.readable = field.writable = False
 
                 # Organisation Dependent Fields
+                # @ToDo: Move these to the IFRC Template & make Lazy settings
                 set_org_dependent_field = settings.set_org_dependent_field
-                set_org_dependent_field("vol_details", "availability")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
+            elif method == "cv" or r.component_name == "training":
+                list_fields = ["course_id",
+                               "grade",
+                               ]
+                if settings.get_hrm_course_pass_marks:
+                    list_fields.append("grade_details")
+                list_fields.append("date")
+                s3db.configure("hrm_training",
+                               list_fields = list_fields,
+                               )
 
             resource = r.resource
             if mode is not None:
-                r.resource.build_query(id=s3_logged_in_person())
-            elif r.method not in ("deduplicate", "search_ac"):
+                r.resource.build_query(id=current.auth.s3_logged_in_person())
+            elif method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
@@ -1172,10 +1780,22 @@ def vol_person_controller():
                     redirect(URL(f="volunteer"))
                 if hr_id and r.component_name == "human_resource":
                     r.component_id = hr_id
-                configure("hrm_human_resource", insertable = False)
+                configure("hrm_human_resource",
+                          insertable = False)
 
-        elif r.component_name == "group_membership" and r.representation == "aadata":
-            s3db.hrm_configure_pr_group_membership()
+        elif r.representation == "aadata":
+            if r.component_name == "group_membership":
+                s3db.hrm_configure_pr_group_membership()
+            elif method == "cv" or r.component_name == "training":
+                list_fields = ["course_id",
+                               "grade",
+                               ]
+                if settings.get_hrm_course_pass_marks:
+                    list_fields.append("grade_details")
+                list_fields.append("date")
+                s3db.configure("hrm_training",
+                               list_fields = list_fields,
+                               )
 
         return True
     s3.prep = prep

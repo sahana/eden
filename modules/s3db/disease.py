@@ -2,7 +2,7 @@
 
 """ Sahana Eden Disease Tracking Models
 
-    @copyright: 2014-2015 (c) Sahana Software Foundation
+    @copyright: 2014-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -35,23 +35,13 @@ __all__ = ("DiseaseDataModel",
            )
 
 import datetime
-
-try:
-    # try stdlib (Python 2.6)
-    import json
-except ImportError:
-    try:
-        # try external module
-        import simplejson as json
-    except:
-        # fallback to pure-Python module
-        import gluon.contrib.simplejson as json
+import json
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # Monitoring upgrades {new_level:previous_levels}
 MONITORING_UPGRADE = {"OBSERVATION": ("NONE",
@@ -83,7 +73,6 @@ class DiseaseDataModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
         # =====================================================================
@@ -92,6 +81,7 @@ class DiseaseDataModel(S3Model):
         tablename = "disease_disease"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
+                     # @ToDo: Labels for i18n
                      Field("name",
                            requires = IS_NOT_EMPTY()
                            ),
@@ -118,9 +108,9 @@ class DiseaseDataModel(S3Model):
                                                           represent,
                                                           ),
                                      sortby = "name",
-                                     comment = S3AddResourceLink(f="disease",
-                                                                 tooltip=T("Add a new disease to the catalog"),
-                                                                 ),
+                                     comment = S3PopupLink(f = "disease",
+                                                           tooltip = T("Add a new disease to the catalog"),
+                                                           ),
                                      )
 
         self.add_components(tablename,
@@ -311,8 +301,10 @@ class CaseTrackingModel(S3Model):
         tablename = "disease_case"
         define_table(tablename,
                      Field("case_number", length=64,
-                           requires = IS_EMPTY_OR(
-                                        IS_NOT_IN_DB(db, "disease_case.case_number")),
+                           requires = IS_EMPTY_OR([
+                                IS_LENGTH(64),
+                                IS_NOT_IN_DB(db, "disease_case.case_number"),
+                                ]),
                            ),
                      person_id(empty = False,
                                ondelete = "CASCADE",
@@ -365,9 +357,9 @@ class CaseTrackingModel(S3Model):
                                   requires = IS_ONE_OF(db, "disease_case.id",
                                                        represent,
                                                        ),
-                                  comment = S3AddResourceLink(f="case",
-                                                              tooltip=T("Add a new case"),
-                                                              ),
+                                  comment = S3PopupLink(f = "case",
+                                                        tooltip = T("Add a new case"),
+                                                        ),
                                   )
 
         # Components
@@ -465,9 +457,9 @@ class CaseTrackingModel(S3Model):
                                     requires = IS_ONE_OF(db, "disease_case.id",
                                                          represent,
                                                          ),
-                                    comment = S3AddResourceLink(f="case",
-                                                                tooltip=T("Add a new case"),
-                                                                ),
+                                    comment = S3PopupLink(f = "case",
+                                                          tooltip = T("Add a new case"),
+                                                          ),
                                     )
 
         # Components
@@ -539,7 +531,8 @@ class CaseTrackingModel(S3Model):
                      case_id(),
                      # @todo: make a lookup table in DiseaseDataModel:
                      Field("probe_type"),
-                     Field("probe_number", length = 64, unique = True,
+                     Field("probe_number", length=64, unique=True,
+                           requires = IS_LENGTH(64),
                            ),
                      s3_date("probe_date",
                              default = "now",
@@ -832,7 +825,6 @@ class ContactTracingModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
         case_id = self.disease_case_id
@@ -881,9 +873,9 @@ class ContactTracingModel(S3Model):
                                                               represent,
                                                               )),
                                      sortby = "date",
-                                     comment = S3AddResourceLink(f="tracing",
-                                                                 tooltip=T("Add a new contact tracing information"),
-                                                                 ),
+                                     comment = S3PopupLink(f = "tracing",
+                                                           tooltip = T("Add a new contact tracing information"),
+                                                           ),
                                      )
 
         self.add_components(tablename,
@@ -1217,7 +1209,7 @@ class DiseaseStatsModel(S3Model):
             msg_list_empty = T("No statistics currently defined"))
 
         configure(tablename,
-                  deduplicate = self.disease_statistic_duplicate,
+                  deduplicate = S3Duplicate(),
                   super_entity = "stats_parameter",
                   )
 
@@ -1237,11 +1229,11 @@ class DiseaseStatsModel(S3Model):
                                 readable = True,
                                 writable = True,
                                 empty = False,
-                                comment = S3AddResourceLink(c="disease",
-                                                            f="statistic",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_STATISTIC,
-                                                            ),
+                                comment = S3PopupLink(c = "disease",
+                                                      f = "statistic",
+                                                      vars = {"child": "parameter_id"},
+                                                      title = ADD_STATISTIC,
+                                                      ),
                                 ),
                      location_id(
                          requires = IS_LOCATION(),
@@ -1320,7 +1312,11 @@ class DiseaseStatsModel(S3Model):
                                  )
 
         configure(tablename,
-                  deduplicate = self.disease_stats_data_duplicate,
+                  deduplicate = S3Duplicate(primary = ("parameter_id",
+                                                       "location_id",
+                                                       "date",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   report_options = report_options,
@@ -1396,39 +1392,6 @@ class DiseaseStatsModel(S3Model):
             disease_stats_update_aggregates = self.disease_stats_update_aggregates,
             disease_stats_update_location_aggregates = self.disease_stats_update_location_aggregates,
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def disease_statistic_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def disease_stats_data_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        parameter_id = data.get("parameter_id")
-        location_id = data.get("location_id")
-        date = data.get("date")
-        table = item.table
-        query = (table.date == date) & \
-                (table.location_id == location_id) & \
-                (table.parameter_id == parameter_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

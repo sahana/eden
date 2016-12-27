@@ -5,7 +5,7 @@
 
     Template-specific Message Parsers are defined here.
 
-    @copyright: 2013-15 (c) Sahana Software Foundation
+    @copyright: 2013-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -118,7 +118,9 @@ class S3Parser(object):
             post_id = exists.id
             db(post_table.id == post_id).update(title = record.title,
                                                 body = body,
+                                                # @ToDo: Remove created_on when we know not used in rendering
                                                 created_on = record.date,
+                                                date = record.date,
                                                 location_id = record.location_id,
                                                 person_id = person_id,
                                                 )
@@ -175,7 +177,9 @@ class S3Parser(object):
 
             post_id = post_table.insert(title = record.title,
                                         body = body,
+                                        # @ToDo: Remove created_on when we know not used in rendering
                                         created_on = record.date,
+                                        date = record.date,
                                         location_id = record.location_id,
                                         person_id = person_id,
                                         series_id = series_id,

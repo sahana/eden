@@ -3,7 +3,7 @@
 """
     S3 SVG codec
 
-    @copyright: 2013-14 (c) Sahana Software Foundation
+    @copyright: 2013-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -125,7 +125,8 @@ class S3SVG(S3Codec):
         if resource.prefix == "gis" and resource.name == "location":
             #list_fields.append("wkt")
             list_fields = ["wkt"]
-        elif "location_id$wkt" not in list_fields:
+        #elif "location_id$wkt" not in list_fields:
+        else:
             #list_fields.append("location_id$wkt")
             list_fields = ["location_id$wkt"]
 

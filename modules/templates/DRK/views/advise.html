@@ -1,0 +1,9 @@
+{{extend "layout.html"}}
+<div class='row home-top' style='margin-top:20px'>
+  <div class='medium-8 medium-centered small-12 columns'>
+    <h2>{{=T("Checkpoint Advice")}}</h3>
+    {{=person}}
+    {{=info}}
+    {{=A(T("Back to Check-in/Check-out"), _href=URL(args=request.args), _class="tiny primary button")}}
+  </div>
+</div>

@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM003 Create Staff Training
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,18 +34,18 @@ class CreateStaffTraining(SeleniumUnitTest):
             @description: Create a Staff Training
             * Create Course
             * Create Training Event
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
-            
-            @ToDo: 
+
+            @ToDo:
             * Add Staff Participants
         """
-        
+
         browser = self.browser
         self.login(account="admin", nexturl="hrm/course/create")
 
-        self.create("hrm_course", 
+        self.create("hrm_course",
                     [( "code",
                        "32329408",),
                      ( "name",
@@ -53,7 +53,7 @@ class CreateStaffTraining(SeleniumUnitTest):
                      ]
                      )
         self.login(account="admin", nexturl="hrm/training_event/create")
-        self.create("hrm_training_event", 
+        self.create("hrm_training_event",
                     [( "course_id",
                        "Emergency First Aid"),
                      ( "start_date",

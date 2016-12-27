@@ -3,7 +3,7 @@
 """
     S3 Microsoft Excel codec
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,7 +28,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3XLS",)
+__all__ = ("S3XLS",
+           )
 
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -40,7 +41,7 @@ from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_unicode, s3_strip_markup
+from ..s3utils import s3_str, s3_strip_markup, s3_unicode
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -48,28 +49,29 @@ class S3XLS(S3Codec):
         Simple Microsoft Excel format codec
     """
 
+    # The xlwt library supports a maximum of 182 characters in a single cell
+    MAX_CELL_SIZE = 182
+
     # Customizable styles
     COL_WIDTH_MULTIPLIER = 310
-    LARGE_HEADER_COLOUR = 0x2C
-    HEADER_COLOUR = 0x2C
-    SUB_HEADER_COLOUR = 0x18
-    ROW_ALTERNATING_COLOURS = [0x2A, 0x2B]
+    # Python xlwt Colours
+    # https://docs.google.com/spreadsheets/d/1ihNaZcUh7961yU7db1-Db0lbws4NT24B7koY8v8GHNQ/pubhtml?gid=1072579560&single=true
+    LARGE_HEADER_COLOUR = 0x2C # pale_blue
+    HEADER_COLOUR = 0x2C # pale_blue
+    SUB_HEADER_COLOUR = 0x18 # periwinkle
+    SUB_TOTALS_COLOUR = 0x96
+    TOTALS_COLOUR = 0x00
+    ROW_ALTERNATING_COLOURS = [0x2A, # light_green
+                               0x2B, # light_yellow
+                               ]
+
+    ERROR = Storage(
+        XLRD_ERROR = "XLS export requires python-xlrd module to be installed on server",
+        XLWT_ERROR = "XLS export requires python-xlwt module to be installed on server",
+    )
 
     # -------------------------------------------------------------------------
-    def __init__(self):
-        """
-            Constructor
-        """
-
-        # Error codes
-        T = current.T
-        self.ERROR = Storage(
-            XLRD_ERROR = "Python needs the xlrd module installed for XLS export",
-            XLWT_ERROR = "Python needs the xlwt module installed for XLS export"
-        )
-
-    # -------------------------------------------------------------------------
-    def extractResource(self, resource, list_fields):
+    def extract(self, resource, list_fields):
         """
             Extract the rows from the resource
 
@@ -79,25 +81,28 @@ class S3XLS(S3Codec):
 
         title = self.crud_string(resource.tablename, "title_list")
 
-        vars = Storage(current.request.vars)
-        vars["iColumns"] = len(list_fields)
-        filter, orderby, left = resource.datatable_filter(list_fields, vars)
-        resource.add_filter(filter)
+        get_vars = dict(current.request.vars)
+        get_vars["iColumns"] = len(list_fields)
+        query, orderby, left = resource.datatable_filter(list_fields,
+                                                         get_vars,
+                                                         )
+        resource.add_filter(query)
 
         if orderby is None:
-            orderby = resource.get_config("orderby", None)
+            orderby = resource.get_config("orderby")
 
-        result = resource.select(list_fields,
-                                 left=left,
-                                 limit=None,
-                                 count=True,
-                                 getids=True,
-                                 orderby=orderby,
-                                 represent=True,
-                                 show_links=False)
+        data = resource.select(list_fields,
+                               left = left,
+                               limit = None,
+                               count = True,
+                               getids = True,
+                               orderby = orderby,
+                               represent = True,
+                               show_links = False,
+                               )
 
-        rfields = result["rfields"]
-        rows = result["rows"]
+        rfields = data.rfields
+        rows = data.rows
 
         types = []
         lfields = []
@@ -105,7 +110,8 @@ class S3XLS(S3Codec):
         for rfield in rfields:
             if rfield.show:
                 lfields.append(rfield.colname)
-                heading[rfield.colname] = rfield.label
+                heading[rfield.colname] = rfield.label or \
+                            rfield.field.name.capitalize().replace("_", " ")
                 if rfield.ftype == "virtual":
                     types.append("string")
                 else:
@@ -114,254 +120,317 @@ class S3XLS(S3Codec):
         return (title, types, lfields, heading, rows)
 
     # -------------------------------------------------------------------------
-    def encode(self, data_source, **attr):
+    def encode(self, data_source, title=None, as_stream=False, **attr):
         """
             Export data as a Microsoft Excel spreadsheet
 
             @param data_source: the source of the data that is to be encoded
-                                as a spreadsheet. This may be:
-                                resource: the resource
-                                item:     a list of pre-fetched values
-                                          the headings are in the first row
-                                          the data types are in the second row
-            @param attr: dictionary of parameters:
-                 * title:          The main title of the report
-                 * list_fields:    Fields to include in list views
-                 * report_groupby: Used to create a grouping of the result:
-                                   either a Field object of the resource
-                                   or a string which matches a value in the heading
-                 * use_colour:     True to add colour to the cells. default False
+                                as a spreadsheet, can be either of:
+                                1) an S3Resource
+                                2) an array of value dicts (dict of
+                                   column labels as first item, list of
+                                   field types as second item)
+                                3) a dict like:
+                                   {columns: [key, ...],
+                                    headers: {key: label},
+                                    types: {key: type},
+                                    rows: [{key:value}],
+                                    }
+            @param title: the title for the output document
+            @param as_stream: return the buffer (StringIO) rather than
+                              its contents (str), useful when the output
+                              is supposed to be stored locally
+            @param attr: keyword parameters
+
+            @keyword title: the main title of the report
+            @keyword list_fields: fields to include in list views
+            @keyword report_groupby: used to create a grouping of the result:
+                                     either a Field object of the resource
+                                     or a string which matches a value in
+                                     the heading
+            @keyword use_colour: True to add colour to the cells, default False
+            @keyword evenodd: render different background colours
+                              for even/odd rows ("stripes")
         """
 
+        # Do not redirect from here!
+        # ...but raise proper status code, which can be caught by caller
         try:
             import xlwt
         except ImportError:
-            from ..s3rest import S3Request
-            if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
-                current.session.error = self.ERROR.XLWT_ERROR
-                redirect(URL(extension=""))
-            else:
-                error = self.ERROR.XLWT_ERROR
-                current.log.error(error)
-                return error
-
+            error = self.ERROR.XLWT_ERROR
+            current.log.error(error)
+            raise HTTP(503, body=error)
         try:
             from xlrd.xldate import xldate_from_date_tuple, \
                                     xldate_from_time_tuple, \
                                     xldate_from_datetime_tuple
         except ImportError:
-            from ..s3rest import S3Request
-            if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
-                current.session.error = self.ERROR.XLRD_ERROR
-                redirect(URL(extension=""))
-            else:
-                error = self.ERROR.XLRD_ERROR
-                current.log.error(error)
-                return error
+            error = self.ERROR.XLRD_ERROR
+            current.log.error(error)
+            raise HTTP(503, body=error)
 
         import datetime
 
-        request = current.request
-
-        # The xlwt library supports a maximum of 182 characters in a single cell
-        max_cell_size = 182
-
-        COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+        MAX_CELL_SIZE = self.MAX_CELL_SIZE
+        COL_WIDTH_MULTIPLIER = self.COL_WIDTH_MULTIPLIER
 
         # Get the attributes
         title = attr.get("title")
+        if title is None:
+            title = current.T("Report")
         list_fields = attr.get("list_fields")
-        if not list_fields:
-            list_fields = data_source.list_fields()
         group = attr.get("dt_group")
         use_colour = attr.get("use_colour", False)
+        evenodd = attr.get("evenodd", True)
 
         # Extract the data from the data_source
-        if isinstance(data_source, (list, tuple)):
+        if isinstance(data_source, dict):
+            headers = data_source.get("headers", {})
+            lfields = data_source.get("columns", list_fields)
+            column_types = data_source.get("types")
+            types = [column_types[col] for col in lfields]
+            rows = data_source.get("rows")
+        elif isinstance(data_source, (list, tuple)):
             headers = data_source[0]
             types = data_source[1]
             rows = data_source[2:]
             lfields = list_fields
         else:
-            (title, types, lfields, headers, rows) = self.extractResource(data_source,
-                                                                          list_fields)
-        report_groupby = lfields[group] if group else None
-        if len(rows) > 0 and len(headers) != len(rows[0]):
-            msg = """modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
+            if not list_fields:
+                list_fields = data_source.list_fields()
+            (title, types, lfields, headers, rows) = self.extract(data_source,
+                                                                  list_fields,
+                                                                  )
+
+        # Verify columns in items
+        request = current.request
+        if len(rows) > 0 and len(lfields) > len(rows[0]):
+            msg = """modules/s3/codecs/xls: There is an error in the list items, a field doesn't exist
 requesting url %s
 Headers = %d, Data Items = %d
 Headers     %s
-List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fields)
+List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             current.log.error(msg)
+
+        # Grouping
+        report_groupby = lfields[group] if group else None
         groupby_label = headers[report_groupby] if report_groupby else None
 
         # Date/Time formats from L10N deployment settings
         settings = current.deployment_settings
         date_format = settings.get_L10n_date_format()
         date_format_str = str(date_format)
-        date_format = S3XLS.dt_format_translate(date_format)
-        time_format = S3XLS.dt_format_translate(settings.get_L10n_time_format())
-        datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
+
+        dt_format_translate = self.dt_format_translate
+        date_format = dt_format_translate(date_format)
+        time_format = dt_format_translate(settings.get_L10n_time_format())
+        datetime_format = dt_format_translate(settings.get_L10n_datetime_format())
+
+        title_row = settings.get_xls_title_row()
+
+        # Get styles
+        styles = self._styles(use_colour = use_colour,
+                              evenodd = evenodd,
+                              datetime_format = datetime_format,
+                              )
 
         # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
 
-
-
-        # Add a sheet
+        # Add sheets
+        sheets = []
+        # XLS exports are limited to 65536 rows per sheet, we bypass
+        # this by creating multiple sheets
+        row_limit = 65536
+        sheetnum = len(rows) / row_limit
         # Can't have a / in the sheet_name, so replace any with a space
         sheet_name = str(title.replace("/", " "))
-        # sheet_name cannot be over 31 chars
         if len(sheet_name) > 31:
-            sheet_name = sheet_name[:31]
-        sheets = []
-        rowLimit = 65536 #.xls exports are limited to 65536 rows per sheet, we bypass this by creating multiple sheets
-        sheetnum = len(rows) / rowLimit
+            # Sheet name cannot be over 31 chars
+            # (take sheet number suffix into account)
+            sheet_name = sheet_name[:31] if sheetnum == 1 else sheet_name[:28]
         count = 1
         while len(sheets) <= sheetnum:
-            sheets.append(book.add_sheet('%s-%s' % (sheet_name, count)))
+            sheets.append(book.add_sheet("%s-%s" % (sheet_name, count)))
             count += 1
 
+        if callable(title_row):
+            # Calling with sheet None to get the number of title rows
+            title_row_length = title_row(None)
+        else:
+            title_row_length = 2
 
-
-        # Styles
-        styleLargeHeader = xlwt.XFStyle()
-        styleLargeHeader.font.bold = True
-        styleLargeHeader.font.height = 400
-        if use_colour:
-            styleLargeHeader.alignment.horz = styleLargeHeader.alignment.HORZ_CENTER
-            styleLargeHeader.pattern.pattern = styleLargeHeader.pattern.SOLID_PATTERN
-            styleLargeHeader.pattern.pattern_fore_colour = S3XLS.LARGE_HEADER_COLOUR
-
-        styleNotes = xlwt.XFStyle()
-        styleNotes.font.italic = True
-        styleNotes.font.height = 160 # 160 Twips = 8 point
-        styleNotes.num_format_str = datetime_format
-
-        styleHeader = xlwt.XFStyle()
-        styleHeader.font.bold = True
-        styleHeader.num_format_str = datetime_format
-        if use_colour:
-            styleHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
-            styleHeader.pattern.pattern_fore_colour = S3XLS.HEADER_COLOUR
-
-        styleSubHeader = xlwt.XFStyle()
-        styleSubHeader.font.bold = True
-        if use_colour:
-            styleSubHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
-            styleSubHeader.pattern.pattern_fore_colour = S3XLS.SUB_HEADER_COLOUR
-
-        styleOdd = xlwt.XFStyle()
-        if use_colour:
-            styleOdd.pattern.pattern = styleOdd.pattern.SOLID_PATTERN
-            styleOdd.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[0]
-
-        styleEven = xlwt.XFStyle()
-        if use_colour:
-            styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
-            styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
+        # Add header row to all sheets, determine columns widths
+        header_style = styles["header"]
         for sheet in sheets:
-            # Header row
-            colCnt = 0
             # Move this down if a title row will be added
-            if settings.get_xls_title_row():
-                headerRow = sheet.row(2)
+            if title_row:
+                header_row = sheet.row(title_row_length)
             else:
-                headerRow = sheet.row(0)
-            fieldWidths = []
-            id = False
+                header_row = sheet.row(0)
+            column_widths = []
+            has_id = False
+            col_index = 0
             for selector in lfields:
                 if selector == report_groupby:
                     continue
                 label = headers[selector]
                 if label == "Id":
-                    # Indicate to adjust colCnt when writing out
-                    id = True
-                    fieldWidths.append(0)
-                    colCnt += 1
+                    # Indicate to adjust col_index when writing out
+                    has_id = True
+                    column_widths.append(0)
+                    col_index += 1
                     continue
                 if label == "Sort":
                     continue
-                if id:
+                if has_id:
                     # Adjust for the skipped column
-                    writeCol = colCnt - 1
-
+                    write_col_index = col_index - 1
                 else:
-                        writeCol = colCnt
-                headerRow.write(writeCol, str(label), styleHeader)
+                    write_col_index = col_index
+                header_row.write(write_col_index, str(label), header_style)
                 width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
                 width = min(width, 65535) # USHRT_MAX
-                fieldWidths.append(width)
-                sheet.col(writeCol).width = width
-                colCnt += 1
+                column_widths.append(width)
+                sheet.col(write_col_index).width = width
+                col_index += 1
+
+        title = s3_str(title)
 
         # Title row (optional, deployment setting)
-        if settings.get_xls_title_row():
+        if title_row:
+            T = current.T
+            large_header_style = styles["large_header"]
+            notes_style = styles["notes"]
             for sheet in sheets:
-                # First row => Title (standard = "title_list" CRUD string)
-                currentRow = sheet.row(0)
-                if colCnt > 0:
-                    sheet.write_merge(0, 0, 0, colCnt, str(title),
-                                      styleLargeHeader)
-                currentRow.height = 500
-                # Second row => Export date/time
-                currentRow = sheet.row(1)
-                currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
-                currentRow.write(1, request.now, styleNotes)
-                # Fix the size of the last column to display the date
-                if 16 * COL_WIDTH_MULTIPLIER > width:
-                    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
+                if callable(title_row):
+                    # Custom title rows
+                    title_row(sheet)
+                else:
+                    # First row => Title (standard = "title_list" CRUD string)
+                    current_row = sheet.row(0)
+                    if col_index > 0:
+                        sheet.write_merge(0, 0, 0, col_index,
+                                          title,
+                                          large_header_style,
+                                          )
+                    current_row.height = 500
+                    # Second row => Export date/time
+                    current_row = sheet.row(1)
+                    current_row.write(0, "%s:" % T("Date Exported"), notes_style)
+                    current_row.write(1, request.now, notes_style)
+                    # Fix the size of the last column to display the date
+                    if 16 * COL_WIDTH_MULTIPLIER > width:
+                        sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
-        totalCols = colCnt
+        totalCols = col_index
         # Move the rows down if a title row is included
-        if settings.get_xls_title_row():
-            rowCnt = 2
+        if title_row:
+            row_index = title_row_length
         else:
-            rowCnt = 0
+            row_index = 0
 
+        # Helper function to get the current row
+        def get_current_row(row_count, row_limit):
+
+            sheet_count = int(row_count / row_limit)
+            row_number = row_count - (sheet_count * row_limit)
+            if sheet_count > 0:
+                row_number += 1
+            return sheets[sheet_count], sheets[sheet_count].row(row_number)
+
+        # Write the table contents
         subheading = None
+        odd_style = styles["odd"]
+        even_style = styles["even"]
+        subheader_style = styles["subheader"]
         for row in rows:
-            # Item details
-            rowCnt += 1
-            sheetCnt = (rowCnt / rowLimit)
-            if sheetCnt == 0:
-                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit))
-            else:
-                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit) + 1)
+            # Current row
+            row_index += 1
+            current_sheet, current_row = get_current_row(row_index, row_limit)
+            style = even_style if row_index % 2 == 0 else odd_style
 
-            colCnt = 0
-            if rowCnt % 2 == 0:
-                style = styleEven
-            else:
-                style = styleOdd
+            # Group headers
             if report_groupby:
                 represent = s3_strip_markup(s3_unicode(row[report_groupby]))
                 if subheading != represent:
+                    # Start of new group - write group header
                     subheading = represent
-                    sheets[sheetCnt].write_merge(rowCnt, rowCnt, 0, totalCols,
-                                                 subheading, styleSubHeader)
-                    rowCnt += 1
-                    currentRow = sheets[sheetCnt].row(rowCnt)
-                    if rowCnt % 2 == 0:
-                        style = styleEven
-                    else:
-                        style = styleOdd
+                    current_sheet.write_merge(row_index, row_index, 0, totalCols,
+                                             subheading,
+                                             subheader_style,
+                                             )
+                    # Move on to next row
+                    row_index += 1
+                    current_sheet, current_row = get_current_row(row_index, row_limit)
+                    style = even_style if row_index % 2 == 0 else odd_style
 
-            for field in lfields:
+            col_index = 0
+            remaining_fields = lfields
+
+            # Custom row style?
+            row_style = None
+            if "_style" in row:
+                stylename = row["_style"]
+                if stylename in styles:
+                    row_style = styles[stylename]
+
+            # Group header/footer row?
+            if "_group" in row:
+                group_info = row["_group"]
+                label = group_info.get("label")
+                totals = group_info.get("totals")
+                if label:
+                    label = s3_strip_markup(s3_unicode(label))
+                    style = row_style or subheader_style
+                    span = group_info.get("span")
+                    if span == 0:
+                        current_sheet.write_merge(row_index,
+                                                  row_index,
+                                                  0,
+                                                  totalCols - 1,
+                                                  label,
+                                                  style,
+                                                  )
+                        if totals:
+                            # Write totals into the next row
+                            row_index += 1
+                            current_sheet, current_row = \
+                                get_current_row(row_index, row_limit)
+                    else:
+                        current_sheet.write_merge(row_index,
+                                                  row_index,
+                                                  0,
+                                                  span - 1,
+                                                  label,
+                                                  style,
+                                                  )
+                        col_index = span
+                        remaining_fields = lfields[span:]
+                if not totals:
+                    continue
+
+            for field in remaining_fields:
                 label = headers[field]
                 if label == groupby_label:
                     continue
                 if label == "Id":
                     # Skip the ID column from XLS exports
-                    colCnt += 1
+                    col_index += 1
                     continue
-                represent = s3_strip_markup(s3_unicode(row[field]))
-                coltype = types[colCnt]
+
+                if field not in row:
+                    represent = ""
+                else:
+                    represent = s3_strip_markup(s3_unicode(row[field]))
+
+                coltype = types[col_index]
                 if coltype == "sort":
                     continue
-                if len(represent) > max_cell_size:
-                    represent = represent[:max_cell_size]
+                if len(represent) > MAX_CELL_SIZE:
+                    represent = represent[:MAX_CELL_SIZE]
                 value = represent
                 if coltype == "date":
                     try:
@@ -411,32 +480,39 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                         style.num_format_str = "0.00"
                     except:
                         pass
-                if id:
+                if has_id:
                     # Adjust for the skipped column
-                    writeCol = colCnt - 1
+                    write_col_index = col_index - 1
                 else:
-                    writeCol = colCnt
-                currentRow.write(writeCol, value, style)
+                    write_col_index = col_index
+
+                current_row.write(write_col_index, value, style)
                 width = len(represent) * COL_WIDTH_MULTIPLIER
-                if width > fieldWidths[colCnt]:
-                    fieldWidths[colCnt] = width
-                    sheets[sheetCnt].col(writeCol).width = width
-                colCnt += 1
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    current_sheet.col(write_col_index).width = width
+                col_index += 1
+
+        # Additional sheet settings
         for sheet in sheets:
             sheet.panes_frozen = True
             sheet.horz_split_pos = 1
 
+        # Write output
         output = StringIO()
         book.save(output)
+        output.seek(0)
+
+        if as_stream:
+            return output
 
         # Response headers
-        filename = "%s_%s.xls" % (request.env.server_name, str(title))
+        filename = "%s_%s.xls" % (request.env.server_name, title)
         disposition = "attachment; filename=\"%s\"" % filename
         response = current.response
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition
 
-        output.seek(0)
         return output.read()
 
     # -------------------------------------------------------------------------
@@ -472,40 +548,123 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                      "%Y": "yyyy",
                      "%z": "",
                      "%Z": "",
-                     "%%": "%",
                      }
 
-        xlfmt = str(pyfmt)
+        PERCENT = "__percent__"
+        xlfmt = str(pyfmt).replace("%%", PERCENT)
 
-        for item in translate:
-            if item in xlfmt:
-                xlfmt = xlfmt.replace(item, translate[item])
-        return xlfmt
+        for tag, translation in translate.items():
+            xlfmt = xlfmt.replace(tag, translation)
 
-# =============================================================================
-class S3HTML2XLS():
-    """
-        Class that takes HTML in the form of web2py helper objects
-        and converts it to XLS
-
-        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
-        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
-        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
-
-        Places  to use this:
-            org_CapacityReport()
-    """
-
-    def __init__(self):
-
-        pass
+        return xlfmt.replace(PERCENT, "%")
 
     # -------------------------------------------------------------------------
-    def parse(self, html):
+    @classmethod
+    def _styles(cls,
+                use_colour=False,
+                evenodd=True,
+                datetime_format=None,
+                ):
         """
-            Entry point for class
+            XLS encoder standard cell styles
+
+            @param use_colour: use background colour in cells
+            @param evenodd: render different background colours
+                            for even/odd rows ("stripes")
+            @param datetime_format: the date/time format
         """
 
-        return None
+        import xlwt
 
+        if datetime_format is None:
+            # Support easier usage from external functions
+            datetime_format = cls.dt_format_translate(current.deployment_settings.get_L10n_datetime_format())
+
+
+        # Styles
+        large_header = xlwt.XFStyle()
+        large_header.font.bold = True
+        large_header.font.height = 400
+        if use_colour:
+            SOLID_PATTERN = large_header.pattern.SOLID_PATTERN
+            large_header.alignment.horz = large_header.alignment.HORZ_CENTER
+            large_header.pattern.pattern = SOLID_PATTERN
+            large_header.pattern.pattern_fore_colour = cls.LARGE_HEADER_COLOUR
+
+        notes = xlwt.XFStyle()
+        notes.font.italic = True
+        notes.font.height = 160 # 160 Twips = 8 point
+        notes.num_format_str = datetime_format
+
+        header = xlwt.XFStyle()
+        header.font.bold = True
+        header.num_format_str = datetime_format
+        if use_colour:
+            header.pattern.pattern = SOLID_PATTERN
+            header.pattern.pattern_fore_colour = cls.HEADER_COLOUR
+
+        subheader = xlwt.XFStyle()
+        subheader.font.bold = True
+        if use_colour:
+            subheader.pattern.pattern = SOLID_PATTERN
+            subheader.pattern.pattern_fore_colour = cls.SUB_HEADER_COLOUR
+
+        subtotals = xlwt.XFStyle()
+        subtotals.font.bold = True
+        if use_colour:
+            subtotals.pattern.pattern = SOLID_PATTERN
+            subtotals.pattern.pattern_fore_colour = cls.SUB_TOTALS_COLOUR
+
+        totals = xlwt.XFStyle()
+        totals.font.bold = True
+        if use_colour:
+            totals.pattern.pattern = SOLID_PATTERN
+            totals.pattern.pattern_fore_colour = cls.TOTALS_COLOUR
+
+        odd = xlwt.XFStyle()
+        if use_colour and evenodd:
+            odd.pattern.pattern = SOLID_PATTERN
+            odd.pattern.pattern_fore_colour = cls.ROW_ALTERNATING_COLOURS[0]
+
+        even = xlwt.XFStyle()
+        if use_colour and evenodd:
+            even.pattern.pattern = SOLID_PATTERN
+            even.pattern.pattern_fore_colour = cls.ROW_ALTERNATING_COLOURS[1]
+
+        return {"large_header": large_header,
+                "notes": notes,
+                "header": header,
+                "subheader": subheader,
+                "subtotals": subtotals,
+                "totals": totals,
+                "odd": odd,
+                "even": even,
+                }
+
+# =============================================================================
+#class S3HTML2XLS():
+#    """
+#        Class that takes HTML in the form of web2py helper objects
+#        and converts it to XLS
+#
+#        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
+#        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
+#        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
+#
+#        Places  to use this:
+#            org_CapacityReport()
+#    """
+#
+#    def __init__(self):
+#
+#        pass
+#
+#    # -------------------------------------------------------------------------
+#    def parse(self, html):
+#        """
+#            Entry point for class
+#        """
+#
+#        return None
+#
 # END =========================================================================

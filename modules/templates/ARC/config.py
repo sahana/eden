@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -23,7 +18,7 @@ def config(settings):
     # System Settings
     # -------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("ARC", "ARC/Demo", "default/users")
+    settings.base.prepopulate += ("ARC", "ARC/Demo", "default/users")
 
     settings.base.system_name = T("Resource Management System")
     settings.base.system_name_short = T("ARC Demo")
@@ -187,6 +182,9 @@ def config(settings):
     settings.ui.formstyle = "table"
     settings.ui.filter_formstyle = "table_inline"
 
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
     settings.gis.map_height = 600
     settings.gis.map_width = 869
     # Display Resources recorded to Admin-Level Locations on the map
@@ -262,13 +260,11 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        #"AUD" : T("Australian Dollars"),
-        "CAD" : T("Canadian Dollars"),
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        #"PHP" : T("Philippine Pesos"),
-        "CHF" : T("Swiss Francs"),
-        "USD" : T("United States Dollars"),
+        "CAD" : "Canadian Dollars",
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "CHF" : "Swiss Francs",
+        "USD" : "United States Dollars",
     }
 
     # -------------------------------------------------------------------------
@@ -698,15 +694,16 @@ def config(settings):
         # Comment
         if (Admin or s3_has_role("ORG_ADMIN")):
             # Need to do import after setting Theme
-            from s3layouts import S3AddResourceLink
+            from s3layouts import S3PopupLink
             from s3 import S3ScriptItem
-            add_link = S3AddResourceLink(c="org", f="organisation",
-                                         vars={"organisation_type.name":"Red Cross / Red Crescent"},
-                                         label=T("Create ARC Branch"),
-                                         title=T("ARC Branch"),
-                                         )
+            add_link = S3PopupLink(c = "org",
+                                   f = "organisation",
+                                   vars = {"organisation_type.name":"Red Cross / Red Crescent"},
+                                   label = T("Create ARC Branch"),
+                                   title = T("ARC Branch"),
+                                   )
             comment = f.comment
-            if not comment or isinstance(comment, S3AddResourceLink):
+            if not comment or isinstance(comment, S3PopupLink):
                 f.comment = add_link
             elif isinstance(comment[1], S3ScriptItem):
                 # Don't overwrite scripts

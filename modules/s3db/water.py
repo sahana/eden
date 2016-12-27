@@ -2,7 +2,7 @@
 
 """ Sahana Eden Water Model
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ __all__ = ("S3WaterModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3WaterModel(S3Model):
@@ -86,7 +86,7 @@ class S3WaterModel(S3Model):
         zone_type_represent = S3Represent(lookup=tablename)
 
         self.configure(tablename,
-                       deduplicate = self.water_zone_type_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # -----------------------------------------------------------
@@ -105,10 +105,11 @@ class S3WaterModel(S3Model):
                                        IS_ONE_OF(db, "water_zone_type.id",
                                                  zone_type_represent,
                                                  sort=True)),
-                           comment = S3AddResourceLink(c="water",
-                                                       f="zone_type",
-                                                       label=ADD_ZONE_TYPE,
-                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           comment = S3PopupLink(c = "water",
+                                                 f = "zone_type",
+                                                 label = ADD_ZONE_TYPE,
+                                                 tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
+                                                 ),
                            ),
                      location_id(
                         widget = S3LocationSelector(catalog_layers = True,
@@ -171,9 +172,10 @@ class S3WaterModel(S3Model):
         #                           ondelete = "RESTRICT",
         #                           represent = represent,
         #                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "water_river.id", represent)),
-        #                           comment = S3AddResourceLink(c="water",
-        #                                                       f="river",
-        #                                                       title=ADD_RIVER),
+        #                           comment = S3PopupLink(c = "water",
+        #                                                 f = "river",
+        #                                                 title = ADD_RIVER,
+        #                                                 ),
         #                           )
 
         # -----------------------------------------------------------------------------
@@ -284,23 +286,5 @@ class S3WaterModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def water_zone_type_duplicate(item):
-        """
-            Zone Type record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        if item.tablename == "water_zone_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
 
 # END =========================================================================

@@ -6,7 +6,7 @@
     <!-- **********************************************************************
          GeoJSON Export Templates for Sahana Eden
 
-         Copyright (c) 2012-15 Sahana Software Foundation
+         Copyright (c) 2012-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -46,11 +46,12 @@
     <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
     <s3:fields tables="event_post_incident_type" select="incident_type_id,post_id"/>
     <s3:fields tables="event_task" select="task_id"/>
+    <s3:fields tables="gis_location_tag" select="location_id,tag,value"/>
     <s3:fields tables="gis_poi" select="poi_type_id"/>
     <s3:fields tables="hms_status" select="hospital_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
-    <s3:fields tables="project_activity_organisation" select="activity_id"/>
+    <s3:fields tables="project_activity_organisation" select="activity_id,organisation_id"/>
     <s3:fields tables="project_beneficiary_activity" select="activity_id"/>
     <s3:fields tables="project_sector_activity" select="activity_id"/>
     <s3:fields tables="stats_people_group" select="people_id"/>
@@ -88,7 +89,7 @@
                 <xsl:when test="$resource='gis_layer_shapefile'">
                     <xsl:apply-templates select="./resource[@name='gis_layer_shapefile']"/>
                 </xsl:when>
-                <xsl:when test="count(./resource[@name=$resource])=1 and count(./resource[@name=$resource]/map[1]/geometry)=1">
+                <xsl:when test="count(./resource[@name=$resource])=1 and (count(./resource[@name=$resource]/map[1]/geometry)=1 or count(./resource[@name=$resource]/map[1]/geometry)=0)">
                     <!-- A single Feature not a Collection -->
                     <xsl:apply-templates select="./resource[@name=$resource]"/>
                 </xsl:when>
@@ -220,15 +221,15 @@
                     <xsl:value-of select="data[@field='popup_url']"/>
                 </url>
                 <xsl:choose>
-                    <xsl:when test="data[@field='marker_url']">
+                    <xsl:when test="data[@field='marker_url']/text()!=''">
                         <marker_url>
-                            <xsl:value-of select="data[@field='marker_url']"/>
+                            <xsl:value-of select="data[@field='marker_url']/text()"/>
                         </marker_url>
                         <marker_height>
-                            <xsl:value-of select="data[@field='marker_height']"/>
+                            <xsl:value-of select="data[@field='marker_height']/text()"/>
                         </marker_height>
                         <marker_width>
-                            <xsl:value-of select="data[@field='marker_width']"/>
+                            <xsl:value-of select="data[@field='marker_width']/text()"/>
                         </marker_width>
                     </xsl:when>
                     <xsl:otherwise>
@@ -280,7 +281,7 @@
                 </properties>
             </features>
         </xsl:for-each>
-        
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -326,15 +327,19 @@
         <xsl:variable name="marker_height" select="./map[1]/@marker_height"/>
         <xsl:variable name="marker_width" select="./map[1]/@marker_width"/>
         <xsl:variable name="style" select="./map[1]/style/@value"/>
+
+        <xsl:variable name="resource" select="@name"/>
+        <xsl:variable name="NumberOfFeatures" select="count(//resource[@name=$resource])"/>
+
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
                 <!-- Use pre-prepared GeoJSON -->
-                <xsl:for-each select="./map[1]/geometry">
-                    <features>
+                <xsl:choose>
+                    <xsl:when test="$NumberOfFeatures=1 and count(./map[1]/geometry)=1">
                         <type>Feature</type>
                         <geometry>
                             <xsl:attribute name="value">
-                                <xsl:value-of select="./@value"/>
+                                <xsl:value-of select="./map[1]/geometry/@value"/>
                             </xsl:attribute>
                         </geometry>
                         <properties>
@@ -362,8 +367,45 @@
                                 </xsl:with-param>
                             </xsl:call-template>
                         </properties>
-                    </features>
-                </xsl:for-each>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:for-each select="./map[1]/geometry">
+                            <features>
+                                <type>Feature</type>
+                                <geometry>
+                                    <xsl:attribute name="value">
+                                        <xsl:value-of select="./@value"/>
+                                    </xsl:attribute>
+                                </geometry>
+                                <properties>
+                                    <xsl:call-template name="Properties">
+                                        <xsl:with-param name="attributes">
+                                            <xsl:value-of select="$attributes"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="id">
+                                            <xsl:value-of select="$id"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker">
+                                            <xsl:value-of select="$marker"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_url">
+                                            <xsl:value-of select="$marker_url"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_height">
+                                            <xsl:value-of select="$marker_height"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_width">
+                                            <xsl:value-of select="$marker_width"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="style">
+                                            <xsl:value-of select="$style"/>
+                                        </xsl:with-param>
+                                    </xsl:call-template>
+                                </properties>
+                            </features>
+                        </xsl:for-each>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:when>
             <!--
             <xsl:when test="./map[1]/@wkt!='null'">
@@ -377,31 +419,67 @@
                 </xsl:call-template>
             </xsl:when> -->
             <xsl:when test="./map[1]/@lon!='null'">
-                <!-- @ToDo: Support records with multiple locations -->
-                <features>
-                    <type>Feature</type>
-                    <geometry>
-                        <type>
-                            <xsl:text>Point</xsl:text>
-                        </type>
-                        <coordinates>
-                            <xsl:value-of select="./map[1]/@lon"/>
-                        </coordinates>
-                        <coordinates>
-                            <xsl:value-of select="./map[1]/@lat"/>
-                        </coordinates>
-                    </geometry>
-                    <properties>
-                        <xsl:call-template name="Properties">
-                            <xsl:with-param name="attributes">
-                                <xsl:value-of select="$attributes"/>
-                            </xsl:with-param>
-                            <xsl:with-param name="style">
-                                <xsl:value-of select="$style"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                    </properties>
-                </features>
+                <!-- @ToDo: Support records with multiple locations
+                            via making these also use the map element
+                -->
+                <xsl:choose>
+                    <xsl:when test="$NumberOfFeatures=1">
+                        <type>Feature</type>
+                        <geometry>
+                            <type>
+                                <xsl:text>Point</xsl:text>
+                            </type>
+                            <coordinates>
+                                <xsl:value-of select="./map[1]/@lon"/>
+                            </coordinates>
+                            <coordinates>
+                                <xsl:value-of select="./map[1]/@lat"/>
+                            </coordinates>
+                        </geometry>
+                        <properties>
+                            <xsl:call-template name="Properties">
+                                <xsl:with-param name="attributes">
+                                    <xsl:value-of select="$attributes"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="id">
+                                    <xsl:value-of select="$id"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="style">
+                                    <xsl:value-of select="$style"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </properties>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <features>
+                            <type>Feature</type>
+                            <geometry>
+                                <type>
+                                    <xsl:text>Point</xsl:text>
+                                </type>
+                                <coordinates>
+                                    <xsl:value-of select="./map[1]/@lon"/>
+                                </coordinates>
+                                <coordinates>
+                                    <xsl:value-of select="./map[1]/@lat"/>
+                                </coordinates>
+                            </geometry>
+                            <properties>
+                                <xsl:call-template name="Properties">
+                                    <xsl:with-param name="attributes">
+                                        <xsl:value-of select="$attributes"/>
+                                    </xsl:with-param>
+                                    <xsl:with-param name="id">
+                                        <xsl:value-of select="$id"/>
+                                    </xsl:with-param>
+                                    <xsl:with-param name="style">
+                                        <xsl:value-of select="$style"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </properties>
+                        </features>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:when>
             <!-- xsl:otherwise skip -->
         </xsl:choose>
@@ -423,7 +501,7 @@
             </marker>
         </xsl:if>
 
-        <xsl:if test="$marker_url">
+        <xsl:if test="$marker_url!=''">
             <!-- Per-feature Marker -->
             <marker_url>
                 <xsl:value-of select="$marker_url"/>
@@ -526,7 +604,7 @@
                 </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
-        
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

@@ -2,7 +2,7 @@
 
 """ S3 XForms API
 
-    @copyright: 2014-15 (c) Sahana Software Foundation
+    @copyright: 2014-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -213,7 +213,7 @@ class S3XFormsWidget(object):
         comment = field.comment
         if comment and isinstance(comment, basestring):
             # @todo: support LazyT, and extract hints from
-            #        S3AddResourceLinks or other tooltip DIVs
+            #        S3PopupLinks or other tooltip DIVs
             self.setstr("hint", comment)
 
         return self.widget(field, attr), self._strings

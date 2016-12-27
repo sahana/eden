@@ -3,6 +3,7 @@ marker_red,34,20,marker_red.png
 marker_yellow,34,20,marker_yellow.png
 marker_amber,34,20,marker_amber.png
 marker_green,34,20,marker_green.png
+marker_white,34,20,marker_white.png
 assessment,27,16,IFRC/Assessment.png
 asset,27,16,IFRC/Asset.png
 incident,27,16,IFRC/Incident.png

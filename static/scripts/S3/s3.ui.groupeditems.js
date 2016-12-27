@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for S3GroupedItemsReport
  *
- * @copyright 2015 (c) Sahana Software Foundation
+ * @copyright 2015-2016 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -44,7 +44,7 @@
             groupedItemsID += 1;
 
             // Namespace for events
-            this.namespace = '.groupeditems';
+            this.eventNamespace = '.groupeditems';
         },
 
         /**
@@ -307,7 +307,10 @@
                             continue;
                         }
                         if (titleSpan > 1) {
-                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">').html(value);
+                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">');
+                            if (!opts.renderGroupHeaders) {
+                                footerLabel.html(value);
+                            }
                             $('<span class="gi-group-footer-inline-label"> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
@@ -465,6 +468,7 @@
 
             var update = {},
                 remove = {},
+                subquery,
                 i, len, k, v, q;
 
             // Check filters to update/remove
@@ -481,10 +485,11 @@
                         if (remove[k]) {
                             remove[k] = false;
                         }
+                        subquery = k + '=' + encodeURIComponent(v);
                         if (update[k]) {
-                            update[k].push(k + '=' + v);
+                            update[k].push(subquery);
                         } else {
-                            update[k] = [k + '=' + v];
+                            update[k] = [subquery];
                         }
                     }
                 }
@@ -573,7 +578,7 @@
         _bindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             el.delegate('.gi-export', 'click' + ns, function() {
@@ -584,7 +589,7 @@
                 if (queries) {
                     url = S3.search.filterURL(url, queries);
                 }
-                window.location = url;
+                window.open(url);
             });
         },
 
@@ -594,7 +599,7 @@
         _unbindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             el.undelegate(ns);
         }

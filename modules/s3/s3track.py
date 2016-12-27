@@ -2,7 +2,7 @@
 
 """ Simple Generic Location Tracking System
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -88,7 +88,7 @@ class S3Trackable(object):
                 # tablename = trackable
             # fields = self.__get_fields(table)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # query = (table._id > 0)
             # if uid is None:
                 # if record_id is not None:
@@ -149,7 +149,7 @@ class S3Trackable(object):
             # self.rtable = s3db[tablename]
             # fields = self.__get_fields(self.rtable)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # query = trackable
             # fields = [self.rtable[f] for f in fields]
             # rows = db(query).select(*fields)
@@ -158,7 +158,7 @@ class S3Trackable(object):
             self.rtable = s3db[tablename]
             fields = self.__get_fields(self.rtable)
             if not fields:
-                raise SyntaxError("Not a trackable type: %s" % tablename)
+                raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             fields = [self.rtable[f] for f in fields]
             rows = db(query).select(*fields)
 
@@ -168,7 +168,7 @@ class S3Trackable(object):
             # table = s3db[tablename]
             # fields = self.__get_fields(table)
             # if not fields:
-                # raise SyntaxError("Not a trackable type: %s" % tablename)
+                # raise SyntaxError("Table %s is not a trackable type" % table._tablename)
             # fields = [table[f] for f in fields]
             # rows = trackable.select(*fields)
 
@@ -181,10 +181,10 @@ class S3Trackable(object):
                 table = s3db[r.instance_type]
                 fields = self.__get_fields(table, super_entity=False)
                 if not fields:
-                    raise SyntaxError("No trackable type: %s" % table._tablename)
+                    raise SyntaxError("Table %s is not a trackable type" % table._tablename)
                 fields = [table[f] for f in fields]
-                query = table[UID] == r[UID]
-                row = db(query).select(limitby=(0, 1), *fields).first()
+                row = db(table[UID] == r[UID]).select(limitby=(0, 1),
+                                                      *fields).first()
                 if row:
                     records.append(row)
             else:
@@ -246,7 +246,8 @@ class S3Trackable(object):
                      _fields=None,
                      _filter=None,
                      as_rows=False,
-                     exclude=[]):
+                     exclude=[],
+                     empty = True):
         """
             Get the current location of the instance(s) (at the given time)
 
@@ -255,6 +256,7 @@ class S3Trackable(object):
             @param _filter: filter for the locations
             @param as_rows: return the result as Rows object
             @param exclude: interlocks to break at (avoids circular check-ins)
+            @param empty: return None if no locations (set to False by gis.get_location_data())
 
             @return: a location record, or a list of location records (if multiple)
 
@@ -311,8 +313,8 @@ class S3Trackable(object):
 
             if location:
                 locations.append(location)
-            else:
-                # Ensure we return an entry so that indexes match
+            elif not empty:
+                # Ensure we return an entry for gis.get_location_data() so that indexes match
                 locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:
@@ -331,7 +333,7 @@ class S3Trackable(object):
             @param location: the location (as Row or record ID)
             @param timestmp: the datetime of the presence (defaults to current time)
 
-            @return: nothing
+            @return: location
         """
 
         ptable = current.s3db[PRESENCE]
@@ -349,10 +351,11 @@ class S3Trackable(object):
             else:
                 location = location.id
 
-        if not location:
-            return
-        else:
-            data = dict(location_id=location, timestmp=timestmp)
+        # Log even a set of no location
+        #if not location:
+        #    return
+        #else:
+        data = dict(location_id=location, timestmp=timestmp)
 
         for r in self.records:
             if TRACK_ID not in r:
@@ -514,13 +517,15 @@ class S3Trackable(object):
     def get_base_location(self,
                           _fields=None,
                           _filter=None,
-                          as_rows=False):
+                          as_rows=False,
+                          empty=True):
         """
             Get the base location of the instance(s)
 
             @param _fields: fields to retrieve from the location records (None for ALL)
             @param _filter: filter for the locations
             @param as_rows: return the result as Rows object
+            @param empty: return None if no locations (set to False by gis.get_location_data())
 
             @return: the base location(s) of the current instance
         """
@@ -559,8 +564,8 @@ class S3Trackable(object):
                                                 *_fields).first()
             if location:
                 locations.append(location)
-            else:
-                # Ensure we return an entry so that indexes match
+            elif not empty:
+                # Ensure we return an entry for gis.get_location_data() so that indexes match
                 locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:
@@ -655,8 +660,8 @@ class S3Trackable(object):
             timestamp = datetime.utcnow()
         if track_id:
             trackable = self.table[track_id]
-        if trackable:
-            trackable.update_record(track_timestmp=timestamp)
+            if trackable:
+                trackable.update_record(track_timestmp=timestamp)
 
 # =============================================================================
 class S3Tracker(object):
@@ -829,7 +834,7 @@ class S3CheckInMethod(S3Method):
 
         # @ToDo: JSON representation for check-in from mobile devices
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 class S3CheckOutMethod(S3Method):
@@ -908,6 +913,6 @@ class S3CheckOutMethod(S3Method):
 
         # @ToDo: JSON representation for check-out from mobile devices
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(415, current.ERROR.BAD_FORMAT)
 
 # END =========================================================================

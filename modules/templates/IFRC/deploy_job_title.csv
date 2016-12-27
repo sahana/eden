@@ -1,11 +1,19 @@
-Name,Type
-Communication,deploy
-DM / Relief,deploy
-DRR,deploy
-Finance / Admin,deploy
-Health,deploy
-IT Telecom,deploy
-Livelihood / CTP,deploy
-PMER,deploy
-Shelter,deploy
-Watsan,deploy
+Name,Type,Region
+Communication,deploy,Africa
+DM / Relief,deploy,Africa
+DRR,deploy,Africa
+Finance / Admin,deploy,Africa
+Health,deploy,Africa
+IT Telecom,deploy,Africa
+Livelihood / CTP,deploy,Africa
+Logistics,deploy,Africa
+PMER,deploy,Africa
+Shelter,deploy,Africa
+Watsan,deploy,Africa
+Finance,deploy,Asia Pacific
+Health,deploy,Asia Pacific
+IT & Telecom,deploy,Asia Pacific
+Logistics,deploy,Asia Pacific
+Relief,deploy,Asia Pacific
+Shelter,deploy,Asia Pacific
+WatSan,deploy,Asia Pacific

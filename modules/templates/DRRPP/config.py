@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#try:
-#    # Python 2.7
-#    from collections import OrderedDict
-#except:
-#    # Python 2.6
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from collections import OrderedDict
 
 from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
@@ -22,7 +17,7 @@ def config(settings):
     # Base Settings
 
     # Pre-Populate
-    settings.base.prepopulate = ("DRRPP", "default/users")
+    settings.base.prepopulate += ("DRRPP", "default/users")
 
     settings.base.system_name = T("DRR Project Portal")
     settings.base.system_name_short = T("DRRPP")
@@ -74,14 +69,11 @@ def config(settings):
     # =============================================================================
     # Finance Settings
     settings.fin.currencies = {
-        #"AUD" : T("Australian Dollars"),
-        #"CAD" : T("Canadian Dollars"),
-        "EUR" : T("Euros"),             # Needed for IFRC RMS interop
-        #"GBP" : T("Great British Pounds"),
-        "PHP" : T("Philippine Pesos"),  # Needed for IFRC RMS interop
-        "CHF" : T("Swiss Francs"),      # Needed for IFRC RMS interop
-        "USD" : T("United States Dollars"),
-        "NZD" : T("New Zealand Dollars"),
+        "EUR" : "Euros",             # Needed for IFRC RMS interop
+        "PHP" : "Philippine Pesos",  # Needed for IFRC RMS interop
+        "CHF" : "Swiss Francs",      # Needed for IFRC RMS interop
+        "USD" : "United States Dollars",
+        "NZD" : "New Zealand Dollars",
     }
 
     # =============================================================================
@@ -140,6 +132,9 @@ def config(settings):
 
     # =============================================================================
     # UI Settings
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
     # Enable this for a UN-style deployment
     settings.ui.cluster = True
 
@@ -216,14 +211,16 @@ def config(settings):
                             doc_document=(# Files
                                           {"name": "file",
                                            "joinby": "doc_id",
-                                           "filterby": "url",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "url": ("", None),
+                                               },
                                           },
                                           # Links
                                           {"name": "url",
                                            "joinby": "doc_id",
-                                           "filterby": "file",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "file": ("", None),
+                                               },
                                           },
                                          ),
                            )
@@ -434,7 +431,7 @@ def config(settings):
                 #jnap_options[None] = NONE # to search NO JNAP
 
                 # Filter widgets
-                from s3 import S3TextFilter, S3OptionsFilter, get_s3_filter_opts
+                from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
                 filter_widgets = [
                     S3TextFilter(["name",
                                   "code",
@@ -463,7 +460,7 @@ def config(settings):
                     S3OptionsFilter("hazard.id",
                                     label = T("Hazard"),
                                     options = lambda: \
-                                        get_s3_filter_opts("project_hazard",
+                                        s3_get_filter_opts("project_hazard",
                                                            translate=True),
                                     help_field = s3db.project_hazard_help_fields,
                                     cols = 4,
@@ -472,7 +469,7 @@ def config(settings):
                     S3OptionsFilter("theme.id",
                                     label = T("Theme"),
                                     options = lambda: \
-                                        get_s3_filter_opts("project_theme",
+                                        s3_get_filter_opts("project_theme",
                                                            translate=True),
                                     help_field = s3db.project_theme_help_fields,
                                     cols = 4,

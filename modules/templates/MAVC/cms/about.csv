@@ -1,0 +1,46 @@
+Name,Title,Module,Resource,Country,Body
+About Page,About,default,about,PH,"
+<h1>About Map the Philippines</h1>
+<p>
+Map the Philippines (MapPH) is an international community
+working together with free mapping tools to help citizens,
+NGOs, business, schools, and government work better together
+to strengthen the resilience of our cities.
+</p>
+<p>
+MapPH is a free and open source, open data platform that maps
+real time community needs, tracks public and private programs
+and services, and layers risk data to help achieve the
+<a href=""http://www.un.org/sustainabledevelopment/sustainable-development-goals/"" target=""_blank"">UN Sustainable Development Goals</a>.
+</p>
+<p>
+We teach communities how to map with free mapping tools and
+how to report public and private sector needs. By layering
+data, we help visualize priorities, overlaps and gaps, to help
+stakeholders make more informed decisions about our communities.
+</p>
+<p>
+Our goal is to map all 81 provinces to December 2017.
+</p>
+<p>
+Map the Philippines is supported by
+<a href=""http://www.makingallvoicescount.org/who/"" target=""_blank"">Making All Voices Count (MAVC)</a>,
+an international initiative that supports effective and accountable
+governance and disaster resilience in 12 countries in Africa and Asia.
+They bring together actors from government, civil society, academia
+and the technology sector to find, support and learn from innovative
+ideas on how to improve the relationship between government and citizens.
+MAVC is funded by four donors:
+<a href=""https://www.gov.uk/government/organisations/department-for-international-development"" target=""_blank"">U.K Department for International Development (DFID)</a>,
+<a href=""http://www.usaid.gov/"" target=""_blank"">U.S. Agency for International Development (USAID)</a>,
+<a href=""http://www.sida.se/english/"" target=""_blank"">Swedish International Development Cooperation Agency (SIDA)</a>, and the
+<a href=""http://www.omidyar.com/"" target=""_blank"">Omidyar Network (ON)</a>.
+The MAVC program is a partnership between
+<a href=""http://www.hivos.org/"" target=""_blank"">Hivos</a>, the
+<a href=""http://www.ids.ac.uk/"" target=""_blank"">Institute of Development Studies (IDS)</a> and
+<a href=""http://www.ushahidi.com/"" target=""_blank"">Ushahidi</a>.
+</p>
+<p>
+<img src=""{{c:static,f:themes,noargs}}/MAVC/img/sustainable_development_goals.jpg""></img>
+</p>
+"

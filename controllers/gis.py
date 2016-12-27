@@ -401,9 +401,9 @@ def location():
                 table.parent.comment = parent_comment
             else:
                 # Include 'Create Location' button
-                table.parent.comment = DIV(S3AddResourceLink(c="gis",
-                                                             f="location",
-                                                             vars=dict(child="parent")),
+                table.parent.comment = DIV(S3PopupLink(c="gis",
+                                                       f="location",
+                                                       vars=dict(child="parent")),
                                            parent_comment)
 
             table.inherited.comment = DIV(_class="tooltip",
@@ -507,11 +507,13 @@ def location():
 
                 # Pass the map back to the main controller
                 prep_vars.update(_map=_map)
+
         elif r.representation == "json":
             # Path field should be visible
             table.path.readable = True
+
         elif r.representation == "geojson":
-            # Don't represent the feature_type
+            # Don't represent the feature_type, so we can use it for styling
             table.gis_feature_type.represent = None
 
         return True
@@ -545,6 +547,35 @@ def location():
         if "gis_location_parent" in caller:
             # Hide unnecessary rows
             table.addr_street.readable = table.addr_street.writable = False
+            table.addr_postcode.readable = table.addr_postcode.writable = False
+            table.start_date.readable = table.start_date.writable = False
+            table.end_date.readable = table.end_date.writable = False
+        elif "project_location_location_id" in caller:
+            # Hide unnecessary rows
+            table.addr_street.readable = table.addr_street.writable = False
+            table.addr_postcode.readable = table.addr_postcode.writable = False
+            table.start_date.readable = table.start_date.writable = False
+            table.end_date.readable = table.end_date.writable = False
+            # Show the options for the currently-active gis_config
+            levels = gis.get_relevant_hierarchy_levels(as_dict=True)
+            level_keys = levels.keys()
+            if "L0" in level_keys:
+                # Don't add Countries
+                levels.popitem(last=False)
+            else:
+                # Parent can be a Country
+                level_keys.insert(0, "L0")
+            table.level.requires = IS_IN_SET(levels)
+            # Parent is Required & must be above lowest level
+            # @ToDo: Don't allow users to add locked Lx levels unless they are MAP_ADMIN
+            # @ToDo: Dynamic filtering based on selected level (taking into account strict or not)
+            level_keys.pop()
+            table.parent.requires = IS_ONE_OF(db, "gis_location.id",
+                                              s3db.gis_location_represent,
+                                              filterby="level",
+                                              filter_opts=level_keys,
+                                              orderby="gis_location.name",
+                                              )
         else:
             parent = _vars.get("parent_")
             # Don't use 'parent' as the var name as otherwise it conflicts with the form's var of the same name & hence this will be triggered during form submission
@@ -790,7 +821,7 @@ def s3_gis_location_parents(r, **attr):
             raise HTTP(404, ERROR.BAD_RECORD)
 
     else:
-        raise HTTP(501, ERROR.BAD_FORMAT)
+        raise HTTP(415, ERROR.BAD_FORMAT)
 
 # -----------------------------------------------------------------------------
 def l0():
@@ -1304,6 +1335,12 @@ def hierarchy():
     """ RESTful CRUD controller """
 
     s3db.gis_hierarchy_form_setup()
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def location_tag():
+    """ RESTful CRUD controller """
 
     return s3_rest_controller()
 
@@ -3127,6 +3164,7 @@ def geocode():
             if id:
                 append(id)
         # Send request to external geocoders to get a Point
+        gis.google_geocode_retry = False
         results = gis.geocode(street, postcode, Lx_ids)
 
     else:

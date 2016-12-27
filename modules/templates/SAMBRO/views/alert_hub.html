@@ -1,0 +1,24 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h1>{{=title}}</h1>
+<div class='datalist-btn'>
+ {{=datalist_btn}}
+</div>
+<div class='large-4 columns'>
+<fieldset>
+ <legend>
+  {{=T("Filter Options")}}
+  <button id='alert-filter-form-show' class='toggle-text btn' type='button' style='display:inline-block'>{{=T("Show")}}</button>
+  <button id='alert-filter-form-hide' class='toggle-text btn' type='button' style='display:none'>{{=T("Hide")}}</button>
+ </legend>
+ <div id='alert-filter-form' style='display:none'>
+  {{=alert_filter_form}}
+ <div>
+</fieldset>
+{{=cap_alert_datalist}}
+</div>
+<div class='large-8 columns'>
+{{=_map}}
+</div>
+</div>
+{{include "dataLists.html"}}

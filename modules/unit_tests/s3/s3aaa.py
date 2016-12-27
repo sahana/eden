@@ -12,6 +12,8 @@ from gluon.storage import Storage
 from s3.s3aaa import S3EntityRoleManager, S3Permission
 from s3.s3fields import s3_meta_fields
 
+from unit_tests import run_suite
+
 # =============================================================================
 class AuthUtilsTests(unittest.TestCase):
     """ S3Auth Utility Methods Tests """
@@ -3094,8 +3096,20 @@ class RecordApprovalTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
+        # With record_approval off, and not logged in, default approver is 0
+        acl.set_default_approver(otable, force=True)
+        assertEqual(otable.approved_by.default, 0)
+
         auth.s3_impersonate("normaluser@example.com")
-        acl.set_default_approver(otable)
+
+        # With record approval off, current user is default approver
+        acl.set_default_approver(otable, force=True)
+        assertEqual(otable.approved_by.default, auth.user.id)
+
+        current.deployment_settings.auth.record_approval = True
+
+        # With record approval on, default approver depends on permission
+        acl.set_default_approver(otable, force=True)
         assertEqual(otable.approved_by.default, None)
 
         # Give user review and approve permissions on this table
@@ -3109,15 +3123,15 @@ class RecordApprovalTests(unittest.TestCase):
                        oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
 
         auth.s3_impersonate("normaluser@example.com")
-        acl.set_default_approver(otable)
+        acl.set_default_approver(otable, force=True)
         assertEqual(otable.approved_by.default, auth.user.id)
 
         auth.s3_impersonate("admin@example.com")
-        acl.set_default_approver(otable)
+        acl.set_default_approver(otable, force=True)
         assertEqual(otable.approved_by.default, auth.user.id)
 
         auth.s3_impersonate(None)
-        acl.set_default_approver(otable)
+        acl.set_default_approver(otable, force=True)
         assertEqual(otable.approved_by.default, None)
 
     # -------------------------------------------------------------------------
@@ -4420,18 +4434,6 @@ class EntityRoleManagerTests(unittest.TestCase):
         pass
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(
