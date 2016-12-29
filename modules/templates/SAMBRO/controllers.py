@@ -1610,9 +1610,9 @@ class alert_hub_cop(S3CustomController):
             s3_debug("Cannot find Layer for Map")
             layer_id = None
 
-        last_month = request.utcnow + timedelta(-30)
+        time_filter = request.utcnow + timedelta(-15)
 
-        map_filter = "~.external=True&~.status=Actual&~.info.expires__gt=%s" % last_month
+        map_filter = "~.external=True&~.status=Actual&~.info.expires__gt=%s" % time_filter
 
         feature_resources = [{"name"      : T("Alerts"),
                               "id"        : "search_results",
@@ -1641,7 +1641,7 @@ class alert_hub_cop(S3CustomController):
             # Only show Public Alerts
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts from the past 30 days
-        resource.add_filter(FS("info.expires") >= last_month)
+        resource.add_filter(FS("info.expires") >= time_filter)
         # Show External Alerts
         resource.add_filter(FS("external") == True)
         # Show only Actual alert
@@ -1677,7 +1677,7 @@ class alert_hub_cop(S3CustomController):
 
         ajax_url = URL(c="cap", f=fn, args="datalist.dl",
                        vars={"list_id": list_id,
-                             "info.expires__gt": last_month,
+                             "info.expires__gt": time_filter,
                              "~.external": True,
                              "~.status": "Actual"})
         #@ToDo: Implement pagination properly

@@ -189,7 +189,7 @@ Please go to %(url)s to approve this user."""
 %(first_name)s %(last_name)s
 %(email)s
 No action is required."""
-        messages.password_reset_button='Request password reset'
+        messages.password_reset_button = "Request password reset"
         messages.profile_save_button = "Apply changes"
         messages.registration_disabled = "Registration Disabled!"
         messages.registration_verifying = "You haven't yet Verified your account - please check your email"
