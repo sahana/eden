@@ -1857,7 +1857,6 @@ $.filterOptionsS3({
         looked_up = dict(org_organisation = {})
         for element in elements:
             pe_string = element.text
-
             if pe_string and "=" in pe_string:
                 pe_type, pe_value =  pe_string.split("=")
                 pe_tablename, pe_field =  pe_type.split(".")
@@ -1902,18 +1901,24 @@ $.filterOptionsS3({
             TRANSLATE = current.deployment_settings.get_L10n_translate_org_organisation()
             if TRANSLATE:
                 ltable = s3db.org_organisation_name
+
             def add_org(name, parent=None):
                 """ Helper to add a New Organisation """
-                id = otable.insert(name=name)
-                update_super(otable, Storage(id=id))
-                set_record_owner(otable, id)
+
+                # Create the organisation
+                org_id = otable.insert(name=name)
+                update_super(otable, Storage(id=org_id))
+                set_record_owner(otable, org_id)
                 # @ToDo: Call onaccept?
+
+                # Link to parent
                 if parent:
                     records = db(otable.name == parent).select(otable.id)
                     if len(records) == 1:
                         # Add branch link
                         link_id = btable.insert(organisation_id = records.first().id,
-                                                branch_id = id)
+                                                branch_id = org_id,
+                                                )
                         onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                         callback(onaccept, Storage(vars=Storage(id=link_id)))
                     elif len(records) > 1:
@@ -1923,13 +1928,17 @@ $.filterOptionsS3({
                         # Create Parent
                         parent_id = otable.insert(name=parent)
                         update_super(otable, Storage(id=parent_id))
-                        set_record_owner(otable, id)
+                        set_record_owner(otable, org_id)
                         # @ToDo: Call onaccept?
+
                         # Create link
-                        link_id = btable.insert(organisation_id == parent_id,
-                                                branch_id == id)
+                        link_id = btable.insert(organisation_id = parent_id,
+                                                branch_id = org_id,
+                                                )
                         onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                         callback(onaccept, Storage(vars=Storage(id=link_id)))
+
+                return org_id
 
             orgs = looked_up["org_organisation"]
             for element in elements:
@@ -1984,7 +1993,7 @@ $.filterOptionsS3({
                             id = ""
                         else:
                             # Add a new record
-                            add_org(org, parent)
+                            id = add_org(org, parent)
 
                     elif ORG_ADMIN:
                         # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
@@ -1992,7 +2001,7 @@ $.filterOptionsS3({
                         id = ""
                     else:
                         # Add a new record
-                        add_org(org, parent)
+                        id = add_org(org, parent)
 
                     # Replace string with id
                     id = str(id)

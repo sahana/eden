@@ -1,2 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Case,Administrator,case_admin@example.com,eden,CASE_ADMIN,
+Staff,Member,staff@example.com,eden,STAFF/0,
+Case Management,Staff,case_management@example.com,eden,"STAFF/0,CASE_MANAGEMENT/0",
+Group Activities,Staff,group_activities@example.com,eden,"STAFF/0,GROUP_ACTIVITIES/0",
+Mental Health,Staff,mental_health@example.com,eden,"STAFF/0,MENTAL_HEALTH/0",
