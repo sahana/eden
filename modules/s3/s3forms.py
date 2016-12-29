@@ -50,7 +50,7 @@ from gluon.validators import Validator
 
 from s3query import FS
 from s3utils import s3_debug, s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_strip_markup, s3_unicode, s3_validate
-from s3widgets import S3Selector
+from s3widgets import S3Selector, S3UploadWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -3043,6 +3043,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Custom label and widget
             label = f.get("label", DEFAULT)
             widget = widgets.get(fname, DEFAULT)
+
+            # Use S3UploadWidget for upload fields
+            if widget is DEFAULT and str(table[fname].type) == "upload":
+                widget = S3UploadWidget.widget
 
             # Get a Field instance for SQLFORM.factory
             formfield = self._rename_field(table[fname],

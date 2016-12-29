@@ -811,7 +811,13 @@ class S3Config(Storage):
         """
             The Public URL for the site - for use in email links, etc
         """
-        return self.base.get("public_url", "http://127.0.0.1:8000")
+        public_url = self.base.get("public_url")
+        if not public_url:
+            env = current.request.env
+            scheme = env.get("wsgi_url_scheme", "http").lower()
+            host = env.get("http_host") or "127.0.0.1:8000"
+            self.base.public_url = public_url = "%s://%s" % (scheme, host)
+        return public_url
 
     def get_base_cdn(self):
         """
@@ -2289,10 +2295,10 @@ class S3Config(Storage):
         """
             Custom function that returns the list of document_ids to be sent
             as attachment in email
-            
+
             The function may be of the form:
             custom_msg_notify_attachment(resource, data, meta_data), where
-            resource is the S3Resource, data: the data returned from 
+            resource is the S3Resource, data: the data returned from
             S3Resource.select and meta_data: the meta data for the notification
             (see s3notify for the metadata)
         """
