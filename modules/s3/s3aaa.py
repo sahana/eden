@@ -4638,6 +4638,7 @@ $.filterOptionsS3({
             if key in ownership_fields:
                 data[key] = fields[key]
         if data:
+
             s3db = current.s3db
             db = current.db
 
@@ -4659,6 +4660,10 @@ $.filterOptionsS3({
                     rows = db(query).select(ctable._id)
                     ids = list(set([row[ctable._id] for row in rows]))
                     if ids:
+                        if ctable._ot:
+                            # Component with table alias => switch to
+                            # original table for update:
+                            ctable = db[ctable._ot]
                         db(ctable._id.belongs(ids)).update(**realm)
 
             # Update super-entity

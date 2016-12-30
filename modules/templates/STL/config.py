@@ -50,6 +50,74 @@ def config(settings):
     settings.security.policy = 7 # Hierarchical realms
 
     # =========================================================================
+    def stl_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        tablename = table._ot or table._tablename
+
+        realm_entity = 0
+
+        if tablename == "pr_person":
+
+            # Beneficiary records are owned by the organisation
+            # the case is assigned to
+            ctable = s3db.dvr_case
+            query = (ctable.person_id == row.id) & \
+                    (ctable.deleted == False)
+            case = db(query).select(ctable.organisation_id,
+                                    limitby = (0, 1),
+                                    ).first()
+
+            if case and case.organisation_id:
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 case.organisation_id,
+                                                 )
+
+        elif tablename in ("pr_person_details",
+                           "dvr_case_activity",
+                           "dvr_case_details",
+                           "dvr_economy",
+                           "dvr_evaluation",
+                           "dvr_household",
+                           ):
+
+            # Inherit from person via person_id
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.id == table.person_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename in ("pr_address",
+                           "pr_contact",
+                           "pr_contact_emergency",
+                           ):
+
+            # Inherit from person via PE
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.pe_id == table.pe_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        return realm_entity
+
+    settings.auth.realm_entity = stl_realm_entity
+
+    # =========================================================================
     # GIS Settings
     #
     # Restrict the Location Selector to just certain countries
@@ -299,6 +367,91 @@ def config(settings):
         return attr
 
     settings.customise_dvr_activity_controller = customise_dvr_activity_controller
+
+    # -------------------------------------------------------------------------
+    def dvr_case_onaccept(form):
+        """
+            Additional custom-onaccept for dvr_case to force-update the
+            realm entity of the person record:
+            - the organisation managing the case is the realm-owner,
+              but the person record is written first, so we need to
+              update it after writing the case
+            - the case can be transferred to another organisation/branch,
+              and then the person record needs to be transferred to that
+              same realm as well
+        """
+
+        form_vars = form.vars
+        record_id = form_vars.id
+
+        s3db = current.s3db
+
+        # Get the person ID for this case
+        person_id = form_vars.person_id
+        if not person_id:
+            table = s3db.dvr_case
+            query = (table.id == record_id)
+            row = current.db(query).select(table.person_id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                person_id = row.person_id
+
+        if person_id:
+            # Configure components to inherit realm_entity
+            # from the person record
+            s3db.configure("pr_person",
+                           realm_components = ("case_activity",
+                                               "case_details",
+                                               "economy",
+                                               "evaluation",
+                                               "household",
+                                               "person_details",
+                                               "address",
+                                               "contact",
+                                               "contact_emergency",
+                                               "presence",
+                                               ),
+                           )
+
+            # Force-update the realm entity for the person
+            current.auth.s3_set_record_owner("pr_person",
+                                             person_id,
+                                             force_update = True,
+                                             )
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Update the realm-entity when the case gets updated
+        # (because the assigned organisation/branch can change)
+        config = {"update_realm": True,
+                  }
+
+        # Extend case-onaccept with custom routine
+        get_config = s3db.get_config
+        for method in ("create", "update", None):
+
+            setting = "%s_onaccept" % method if method else "onaccept"
+            default = get_config(tablename, setting)
+            if not default:
+                if method is None and len(config) < 2:
+                    onaccept = dvr_case_onaccept
+                else:
+                    continue
+            elif not isinstance(default, list):
+                onaccept = [default, dvr_case_onaccept]
+            else:
+                onaccept = default
+                if all(cb != dvr_case_onaccept for cb in onaccept):
+                    onaccept.append(dvr_case_onaccept)
+            config[setting] = onaccept
+
+        s3db.configure(tablename, **config)
+
+    settings.customise_dvr_case_resource = customise_dvr_case_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
@@ -896,6 +1049,21 @@ def config(settings):
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
+
+        # Configure components to inherit realm_entity from the person record
+        s3db.configure("pr_person",
+                       realm_components = ("case_activity",
+                                           "case_details",
+                                           "economy",
+                                           "evaluation",
+                                           "household",
+                                           "person_details",
+                                           "address",
+                                           "contact",
+                                           "contact_emergency",
+                                           "presence",
+                                           ),
+                       )
 
         # Person tag for Family ID Number
         s3db.add_components("pr_person",
