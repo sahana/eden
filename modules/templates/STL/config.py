@@ -1228,6 +1228,9 @@ def config(settings):
                     requires = field.requires
                     if isinstance(requires, IS_EMPTY_OR):
                         field.requires = requires.other
+                    #field.requires = s3db.org_organisation_requires(required=True,
+                    #                                                updateable=True,
+                    #                                                )
                     represent = s3db.org_OrganisationRepresent(parent=False)
                     field.widget = S3HierarchyWidget(lookup="org_organisation",
                                                      represent=represent,
