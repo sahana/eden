@@ -5,6 +5,10 @@ from collections import OrderedDict
 from gluon import current, DIV, H3, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
 from gluon.storage import Storage
 
+# Service type names
+INDIVIDUAL_SUPPORT = "Individual Support"
+MENTAL_HEALTH = "Mental Health"
+
 def config(settings):
     """
         Settings for the SupportToLife deployment in Turkey
@@ -116,10 +120,6 @@ def config(settings):
     # Needs differentiated by service type, and hierarchical
     settings.dvr.needs_use_service_type = True
     settings.dvr.needs_hierarchical = True
-
-    # Service type names
-    INDIVIDUAL_SUPPORT = "Individual Support"
-    MENTAL_HEALTH = "Mental Health"
 
     # Set DVR Default Label
     settings.dvr.label = "Beneficiary"
@@ -709,6 +709,7 @@ def config(settings):
         s3db.configure("dvr_case_activity",
                        crud_form = crud_form,
                        list_fields = list_fields,
+                       owner_group = stl_case_activity_owner_group,
                        )
 
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
@@ -1683,11 +1684,17 @@ def stl_dvr_rheader(r, tabs=[]):
                         (T("Contact"), "contacts"),
                         (T("Household"), "household"),
                         (T("Economy"), "economy"),
-                        (T("Individual Case Management"), "case_activity"),
-                        (T("Group Activities"), "pss_activity"),
-                        (T("Mental Health"), "mh_activity"),
-                        (T("Evaluation"), "evaluation"),
                         ]
+
+                has_role = current.auth.s3_has_role
+                if has_role("CASE_MANAGEMENT"):
+                    tabs.append((T("Individual Case Management"), "case_activity"))
+                if has_role("GROUP_ACTIVITIES"):
+                    tabs.append((T("Group Activities"), "pss_activity"))
+                if has_role("MENTAL_HEALTH"):
+                    tabs.append((T("Mental Health"), "mh_activity"))
+
+                tabs.append((T("Evaluation"), "evaluation"))
 
                 case = resource.select(["family_id.value",
                                         "dvr_case.status_id",
@@ -1841,5 +1848,53 @@ def stl_org_rheader(r, tabs=[]):
                                                          )
 
     return rheader
+
+# =============================================================================
+def stl_case_activity_owner_group(table, row):
+    """
+        Determine the owner group (auth_group.id) for dvr_case_activity
+        records from the service type
+
+        @param table: the table (dvr_case_activity)
+        @param row: the case activity record
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Get the root service name
+    stable = s3db.org_service
+    rtable = stable.with_alias("root_service")
+    left = [stable.on(stable.id == table.service_id),
+            rtable.on(rtable.id == stable.root_service),
+            ]
+    query = (table.id == row[table._id])
+    row = db(query).select(rtable.name,
+                           left = left,
+                           limitby = (0, 1),
+                           ).first()
+    if not row:
+        return None
+
+    root_service_name = row.name
+    if not root_service_name:
+        return None
+
+    # Determine the owner group
+    if root_service_name == INDIVIDUAL_SUPPORT:
+        owner_group_uuid = "CASE_MANAGEMENT"
+    elif root_service_name == MENTAL_HEALTH:
+        owner_group_uuid = "MENTAL_HEALTH"
+    else:
+        owner_group_uuid = "GROUP_ACTIVITIES"
+
+    gtable = current.auth.settings.table_group
+    query = (gtable.uuid == owner_group_uuid) & \
+            (gtable.deleted != True)
+    group = db(query).select(gtable.id,
+                             limitby = (0, 1),
+                             ).first()
+
+    return group.id if group else None
 
 # END =========================================================================

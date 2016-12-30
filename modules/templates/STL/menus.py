@@ -149,12 +149,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("All Beneficiaries", vars = {}),
                         M(follow_up_label, f="due_followups"),
                         ),
-                    M("Activities", link=False)(
+                    M("Activities", link=False,
+                      restrict = ("GROUP_ACTIVITIES", "MENTAL_HEALTH"))(
                         M("Group Activities", f="activity",
-                          vars={"service_type": "PSS"},
+                          vars = {"service_type": "PSS"},
+                          restrict = ("GROUP_ACTIVITIES",),
                           ),
                         M("Mental Health Support", f="activity",
                           vars={"service_type": "MH"},
+                          restrict = ("MENTAL_HEALTH",),
                           ),
                         ),
                     M("Archive", link=False)(
