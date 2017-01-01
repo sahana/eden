@@ -34,7 +34,7 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
     # Uncomment to have Person records owned by the Org they are an HR for
     settings.auth.person_realm_human_resource_site_then_org = True
 
@@ -1865,7 +1865,7 @@ def stl_dvr_rheader(r, tabs=[]):
                 if has_role("MENTAL_HEALTH"):
                     tabs.append((T("Mental Health"), "mh_activity"))
 
-                tabs.append((T("Evaluation"), "evaluation"))
+                #tabs.append((T("Evaluation"), "evaluation"))
 
                 case = resource.select(["family_id.value",
                                         "dvr_case.status_id",
