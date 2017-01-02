@@ -118,7 +118,7 @@ def config(settings):
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
                                 org_capacity_assessment_data = "assessment_id",
-                                po_area = EID,
+                                po_area = OID,
                                 po_household = "area_id",
                                 po_organisation_area = "area_id",
                                 req_req_item = "req_id",
@@ -184,26 +184,32 @@ def config(settings):
             # Continue to loop through the rest of the default_fks
             # Fall back to default get_realm_entity function
 
+        auth = current.auth
         use_user_organisation = False
         #use_user_root_organisation = False
 
         if realm_entity == 0 and tablename == "org_organisation":
-            # Suppliers & Partners are owned by the user's organisation
-            # @note: when the organisation record is first written, no
-            #        type-link would exist yet, so this needs to be
-            #        called again every time the type-links for an
-            #        organisation change in order to be effective
-            ottable = s3db.org_organisation_type
-            ltable = db.org_organisation_organisation_type
-            query = (ltable.organisation_id == row.id) & \
-                    (ottable.id == ltable.organisation_type_id) & \
-                    (ottable.name == "Red Cross / Red Crescent")
-            rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
-            if not rclink:
-                use_user_organisation = True
+            if current.request.controller == "po":
+                # Referral Agencies to be in the root_org realm
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 auth.root_org())
+            else:
+                # Suppliers & Partners are in the user organisation's realm
+                # @note: when the organisation record is first written, no
+                #        type-link would exist yet, so this needs to be
+                #        called again every time the type-links for an
+                #        organisation change in order to be effective
+                ottable = s3db.org_organisation_type
+                ltable = db.org_organisation_organisation_type
+                query = (ltable.organisation_id == row.id) & \
+                        (ottable.id == ltable.organisation_type_id) & \
+                        (ottable.name == "Red Cross / Red Crescent")
+                rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
+                if not rclink:
+                    use_user_organisation = True
 
         elif tablename in ("org_facility", "req_req"):
-            # Facilities & Requisitions are owned by the user's organisation
+            # Facilities & Requisitions are in the user organisation's realm
             use_user_organisation = True
 
         elif tablename == "hrm_training":
@@ -229,10 +235,9 @@ def config(settings):
                 # otherwise: inherit from the person record
 
         elif realm_entity == 0 and tablename == "pr_group":
-            # Groups are owned by the user's organisation if not linked to an Organisation directly
+            # Groups are in the user organisation's realm if not linked to an Organisation directly
             use_user_organisation = True
 
-        auth = current.auth
         user = auth.user
         if user:
             if use_user_organisation:
@@ -4409,12 +4414,6 @@ def config(settings):
                                            )
                     elif r.controller == "po":
                         # Referral Agencies in PO module
-                        list_fields = ("name",
-                                       "acronym",
-                                       "organisation_organisation_type.organisation_type_id",
-                                       "website",
-                                       )
-                        resource.configure(list_fields=list_fields)
 
                         # Default country
                         root_org = current.auth.root_org_name()
@@ -5822,9 +5821,6 @@ def config(settings):
                     if records:
                         record = records[0]
                 household_inject_form_script(r, record)
-            else:
-                f = r.table.organisation_id
-                f.readable = f.writable = False
             return result
         s3.prep = custom_prep
 

@@ -1852,6 +1852,107 @@ $.filterOptionsS3({
 
         resource, tree = data
 
+        ORG_ADMIN = not self.s3_has_role("ADMIN")
+        TRANSLATE = current.deployment_settings.get_L10n_translate_org_organisation()
+        if TRANSLATE:
+            ltable = s3db.org_organisation_name
+        def add_org(name, parent=None):
+            """ Helper to add a New Organisation """
+            id = otable.insert(name=name)
+            record = Storage(id=id)
+            update_super(otable, record)
+            set_record_owner(otable, id)
+            # @ToDo: Call onaccept?
+            if parent:
+                records = db(otable.name == parent).select(otable.id)
+                if len(records) == 1:
+                    # Add branch link
+                    link_id = btable.insert(organisation_id = records.first().id,
+                                            branch_id = id)
+                    onaccept = s3db.get_config("org_organisation_branch", "onaccept")
+                    callback(onaccept, Storage(vars=Storage(id=link_id)))
+                elif len(records) > 1:
+                    # Ambiguous
+                    s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (org, parent))
+                else:
+                    # Create Parent
+                    parent_id = otable.insert(name=parent)
+                    update_super(otable, Storage(id=parent_id))
+                    set_record_owner(otable, id)
+                    # @ToDo: Call onaccept?
+                    # Create link
+                    link_id = btable.insert(organisation_id == parent_id,
+                                            branch_id == id)
+                    onaccept = s3db.get_config("org_organisation_branch", "onaccept")
+                    callback(onaccept, Storage(vars=Storage(id=link_id)))
+            return (id, record.pe_id)
+
+        def org_lookup(org_full):
+            """ Helper to lookup an Organisation """
+            if "+BRANCH+" in org_full:
+                parent, org = org_full.split("+BRANCH+")
+            else:
+                parent = None
+                org = org_full
+
+            query = (otable.name.lower() == org.lower()) & \
+                    (otable.deleted != True)
+            if parent:
+                btable = s3db.org_organisation_branch
+                ptable = db.org_organisation.with_alias("org_parent_organisation")
+                query &= (ptable.name == parent) & \
+                         (btable.organisation_id == ptable.id) & \
+                         (btable.branch_id == otable.id)
+
+            records = db(query).select(otable.id,
+                                       otable.pe_id,
+                                       limitby = (0, 2))
+            if len(records) == 1:
+                record = records.first()
+                id = record.id
+                pe_id = record.pe_id
+            elif len(records) > 1:
+                # Ambiguous
+                s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                id = ""
+                pe_id = ""
+            elif TRANSLATE:
+                # Search by local name
+                query = (ltable.name_l10n.lower() == org.lower()) & \
+                        (ltable.organisation_id == otable.id) & \
+                        (ltable.deleted != True)
+                records = db(query).select(otable.id,
+                                           otable.pe_id,
+                                           limitby = (0, 2))
+                if len(records) == 1:
+                    record = records.first()
+                    id = record.id
+                    pe_id = record.pe_id
+                elif len(records) > 1:
+                    # Ambiguous
+                    s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                    id = ""
+                    pe_id = ""
+                elif ORG_ADMIN:
+                    # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
+                    s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
+                    id = ""
+                    pe_id = ""
+                else:
+                    # Add a new record
+                    (id, pe_id) = add_org(org, parent)
+
+            elif ORG_ADMIN:
+                # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
+                s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
+                id = ""
+                pe_id = ""
+            else:
+                # Add a new record
+                (id, pe_id) = add_org(org, parent)
+
+            return (id, pe_id)
+
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
         looked_up = dict(org_organisation = {})
@@ -1869,68 +1970,38 @@ $.filterOptionsS3({
                     continue
 
                 if pe_tablename == "org_organisation":
-                    # @ToDo: Add support for Organisation+BRANCH+Branch
-                    table = otable
+                    # This is a non-integer, so must be 1st or only phase
+                    (id, pe_id) = org_lookup(pe_value)
                 else:
                     table = s3db[pe_tablename]
                     if pe_tablename not in looked_up:
                         looked_up[pe_tablename] = {}
-                record = db(table[pe_field] == pe_value).select(table.id, # Stored for Org/Groups later
-                                                                table.pe_id,
-                                                                limitby=(0, 1)
-                                                                ).first()
-                if not record:
-                    # Add a new record
-                    id = table.insert(**{pe_field: pe_value})
-                    update_super(table, Storage(id=id))
-                    set_record_owner(table, id)
-                    record = db(table.id == id).select(table.id,
-                                                       table.pe_id,
-                                                       limitby=(0, 1)).first()
-                new_value = str(record.pe_id)
+                    record = db(table[pe_field] == pe_value).select(table.id, # Stored for Org/Groups later
+                                                                    table.pe_id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+                    if not record:
+                        # Add a new record
+                        id = table.insert(**{pe_field: pe_value})
+                        update_super(table, Storage(id=id))
+                        set_record_owner(table, id)
+                        record = db(table.id == id).select(table.id,
+                                                           table.pe_id,
+                                                           limitby=(0, 1)).first()
+                    id = record.id
+                    pe_id = record.pe_id
+
+                new_value = str(pe_id)
                 # Replace string with pe_id
                 element.text = new_value
                 # Store in case we get called again with same value
                 looked_up[pe_tablename][pe_value] = dict(pe_id=new_value,
-                                                         id=str(record.id),
+                                                         id=str(id),
                                                          )
 
         # Organisations
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
         if elements:
-            ORG_ADMIN = not self.s3_has_role("ADMIN")
-            TRANSLATE = current.deployment_settings.get_L10n_translate_org_organisation()
-            if TRANSLATE:
-                ltable = s3db.org_organisation_name
-            def add_org(name, parent=None):
-                """ Helper to add a New Organisation """
-                id = otable.insert(name=name)
-                update_super(otable, Storage(id=id))
-                set_record_owner(otable, id)
-                # @ToDo: Call onaccept?
-                if parent:
-                    records = db(otable.name == parent).select(otable.id)
-                    if len(records) == 1:
-                        # Add branch link
-                        link_id = btable.insert(organisation_id = records.first().id,
-                                                branch_id = id)
-                        onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                        callback(onaccept, Storage(vars=Storage(id=link_id)))
-                    elif len(records) > 1:
-                        # Ambiguous
-                        s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (org, parent))
-                    else:
-                        # Create Parent
-                        parent_id = otable.insert(name=parent)
-                        update_super(otable, Storage(id=parent_id))
-                        set_record_owner(otable, id)
-                        # @ToDo: Call onaccept?
-                        # Create link
-                        link_id = btable.insert(organisation_id == parent_id,
-                                                branch_id == id)
-                        onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                        callback(onaccept, Storage(vars=Storage(id=link_id)))
-
             orgs = looked_up["org_organisation"]
             for element in elements:
                 org_full = element.text
@@ -1944,55 +2015,7 @@ $.filterOptionsS3({
                     int(org_full)
                 except ValueError:
                     # This is a non-integer, so must be 1st or only phase
-                    if "+BRANCH+" in org_full:
-                        parent, org = org_full.split("+BRANCH+")
-                    else:
-                        parent = None
-                        org = org_full
-
-                    query = (otable.name.lower() == org.lower()) & \
-                            (otable.deleted != True)
-                    if parent:
-                        btable = s3db.org_organisation_branch
-                        ptable = db.org_organisation.with_alias("org_parent_organisation")
-                        query &= (ptable.name == parent) & \
-                                 (btable.organisation_id == ptable.id) & \
-                                 (btable.branch_id == otable.id)
-
-                    records = db(query).select(otable.id, limitby = (0, 2))
-                    if len(records) == 1:
-                        id = records.first().id
-                    elif len(records) > 1:
-                        # Ambiguous
-                        s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
-                        id = ""
-                    elif TRANSLATE:
-                        # Search by local name
-                        query = (ltable.name_l10n.lower() == org.lower()) & \
-                                (ltable.organisation_id == otable.id) & \
-                                (ltable.deleted != True)
-                        records = db(query).select(otable.id, limitby = (0, 2))
-                        if len(records) == 1:
-                            id = records.first().id
-                        elif len(records) > 1:
-                            # Ambiguous
-                            s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
-                            id = ""
-                        elif ORG_ADMIN:
-                            # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
-                            s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
-                            id = ""
-                        else:
-                            # Add a new record
-                            add_org(org, parent)
-
-                    elif ORG_ADMIN:
-                        # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
-                        s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
-                        id = ""
-                    else:
-                        # Add a new record
-                        add_org(org, parent)
+                    (id, pe_id) = org_lookup(org_full)
 
                     # Replace string with id
                     id = str(id)
@@ -8615,7 +8638,7 @@ class S3EntityRoleManager(S3Method):
                     "org_office",
                     "inv_warehouse",
                     "hms_hospital",
-                    "po_area",
+                    #"po_area",
                     "pr_group",
                     ]
 

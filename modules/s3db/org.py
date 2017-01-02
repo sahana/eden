@@ -778,6 +778,7 @@ class S3OrganisationModel(S3Model):
                                   "joinby": "organisation_id",
                                   "key": "area_id",
                                   },
+                       po_organisation_area = "organisation_id",
                        po_organisation_household = "organisation_id",
                        po_referral_organisation = "organisation_id",
                        )

@@ -63,7 +63,9 @@ class OutreachAreaModel(S3Model):
         tablename = "po_area"
         self.define_table(tablename,
                      super_link("doc_id", "doc_entity"),
-                     super_link("pe_id", "pr_pentity"),
+                     # This was included to allow Areas to be realm entities but this is currently not used
+                     # Re-enable onaccept/ondelete & S3EntityRoleManager if this becomes required in future
+                     #super_link("pe_id", "pr_pentity"),
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -73,6 +75,7 @@ class OutreachAreaModel(S3Model):
                                                     feature_required = True,
                                                     ),
                      ),
+                     # Included primarily to set realm
                      self.org_organisation_id(default = auth.user and auth.user.organisation_id,
                                               #default = root_org,
                                               #readable = is_admin,
@@ -140,8 +143,8 @@ class OutreachAreaModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(ignore_deleted=True),
                        filter_widgets = filter_widgets,
-                       onaccept = self.area_onaccept,
-                       ondelete = self.area_ondelete,
+                       #onaccept = self.area_onaccept,
+                       #ondelete = self.area_ondelete,
                        realm_components = ("household",
                                            ),
                        summary = ({"common": True,
@@ -158,7 +161,8 @@ class OutreachAreaModel(S3Model):
                                                 "ajax_init": True}],
                                    },
                                   ),
-                       super_entity = ("doc_entity", "pr_pentity"),
+                       #super_entity = ("doc_entity", "pr_pentity"),
+                       super_entity = "doc_entity",
                        )
 
         # ---------------------------------------------------------------------
@@ -961,17 +965,17 @@ def po_organisation_onaccept(form):
                                                      ).first()
     if record:
         gtable = db.auth_group
-        role = db(gtable.uuid == "PO_ADMIN").select(gtable.id,
-                                                    limitby = (0, 1)
-                                                    ).first()
+        role = db(gtable.uuid == "PO_AGENCIES").select(gtable.id,
+                                                       limitby = (0, 1)
+                                                       ).first()
         try:
-            PO_ADMIN = role.id
-        except:
-            # No PO_ADMIN role prepopped
+            PO_AGENCIES = role.id
+        except AttributeError:
+            # No PO_AGENCIES role prepopped
             pass
         else:
-            if record.owned_by_group != PO_ADMIN:
-                record.update(owned_by_group = PO_ADMIN)
+            if record.owned_by_group != PO_AGENCIES:
+                record.update_record(owned_by_group = PO_AGENCIES)
 
     rtable = s3db.po_referral_organisation
     query = (rtable.organisation_id == organisation_id) & \
