@@ -893,7 +893,7 @@ def config(settings):
                 table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
 
                 # Custom list fields
-                list_fields = [(T("ID"), "person_id$pe_label"),
+                list_fields = [(T("Ref.No."), "person_id$pe_label"),
                                "person_id",
                                (T("Sector for DS/IS"), "need_id"),
                                "service_id",
@@ -1067,13 +1067,21 @@ def config(settings):
 
         # Person tag for Family ID Number
         s3db.add_components("pr_person",
-                            pr_person_tag = {"name": "family_id",
-                                             "joinby": "person_id",
-                                             "filterby": {
-                                                 "tag": "FAMILY_ID",
-                                                 },
-                                             "multiple": False,
-                                             },
+                            pr_person_tag = ({"name": "family_id",
+                                              "joinby": "person_id",
+                                              "filterby": {
+                                                  "tag": "FAMILY_ID",
+                                                  },
+                                              "multiple": False,
+                                              },
+                                             {"name": "individual_id",
+                                              "joinby": "person_id",
+                                              "filterby": {
+                                                  "tag": "INDIVIDUAL_ID",
+                                                  },
+                                              "multiple": False,
+                                              },
+                                             ),
                             )
 
         # Add contacts-method
@@ -1091,7 +1099,11 @@ def config(settings):
 
             # ID label is required, remove tooltip
             field = table.pe_label
-            field.comment = None
+            field.comment = DIV(_class = "tooltip",
+                                _title = "%s|%s" % (T("Reference Number"),
+                                                    T("The STL Individual Reference Number for this Beneficiary"),
+                                                    ),
+                                )
             requires = field.requires
             if isinstance(requires, IS_EMPTY_OR):
                 field.requires = requires.other
@@ -1273,7 +1285,7 @@ def config(settings):
                         field.requires = requires.other
                     field.comment = DIV(_class="tooltip",
                                         _title="%s|%s" % (T("Consenting to Data Disclosure"),
-                                                          T("Is the client consenting to disclosure of their data towards partner organisations and authorities?"),
+                                                          T("Is the beneficiary consenting to disclosure of their data towards partner organisations and authorities?"),
                                                           ),
                                         )
 
@@ -1285,7 +1297,7 @@ def config(settings):
                     field.label = T("Registered with Turkish Authorities")
                     field.comment = DIV(_class="tooltip",
                                         _title="%s|%s" % (T("Registered with Turkish Authorities"),
-                                                          T("Is the client officially registered with AFAD/DGMM?"),
+                                                          T("Is the beneficiary officially registered with AFAD/DGMM?"),
                                                           ),
                                         )
 
@@ -1300,6 +1312,7 @@ def config(settings):
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
+                                        (T("Reference Number"), "pe_label"),
                                         "dvr_case.status_id",
                                         "dvr_case.date",
                                         "dvr_case.organisation_id",
@@ -1313,7 +1326,18 @@ def config(settings):
                                         "gender",
                                         "person_details.marital_status",
                                         "case_details.registered",
-                                        (T("Individual ID Number"), "pe_label"),
+                                        S3SQLInlineComponent(
+                                                "individual_id",
+                                                fields = [("", "value"),
+                                                          ],
+                                                filterby = {"field": "tag",
+                                                            "options": "INDIVIDUAL_ID",
+                                                            },
+                                                label = T("Individual ID Number"),
+                                                multiple = False,
+                                                name = "individual_id",
+                                                #required = True,
+                                                ),
                                         S3SQLInlineComponent(
                                                 "family_id",
                                                 fields = [("", "value"),
@@ -1324,7 +1348,7 @@ def config(settings):
                                                 label = T("Family ID Number"),
                                                 multiple = False,
                                                 name = "family_id",
-                                                required = True,
+                                                #required = True,
                                                 ),
                                         S3SQLInlineComponent(
                                                 "address",
@@ -1365,10 +1389,11 @@ def config(settings):
                                     fw.opts.default = None
                                     fw.opts.hidden = True
                             if extend_text_filter and isinstance(fw, S3TextFilter):
-                                fw.field.extend(("family_id.value",
+                                fw.field.extend(("individual_id.value",
+                                                 "family_id.value",
                                                  "dvr_case.comments",
                                                  ))
-                                fw.opts.comment = T("You can search by name, ID, family ID and comments")
+                                fw.opts.comment = T("You can search by name, ID numbers and comments")
                                 extend_text_filter = False
 
                         # Add filter for date of birth
@@ -1384,14 +1409,15 @@ def config(settings):
                         filter_widgets.append(reg_filter)
 
                     # Custom list fields (must be outside of r.interactive)
-                    list_fields = [(T("ID"), "pe_label"),
-                                   (T("Family ID"), "family_id.value"),
+                    list_fields = [(T("Ref.No."), "pe_label"),
                                    "first_name",
                                    #"middle_name",
                                    "last_name",
                                    "date_of_birth",
                                    "gender",
                                    "person_details.nationality",
+                                   (T("ID"), "individual_id.value"),
+                                   (T("Family ID"), "family_id.value"),
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
@@ -1867,7 +1893,8 @@ def stl_dvr_rheader(r, tabs=[]):
 
                 #tabs.append((T("Evaluation"), "evaluation"))
 
-                case = resource.select(["family_id.value",
+                case = resource.select(["individual_id.value",
+                                        "family_id.value",
                                         "dvr_case.status_id",
                                         "dvr_case.archived",
                                         "dvr_case.organisation_id",
@@ -1884,6 +1911,7 @@ def stl_dvr_rheader(r, tabs=[]):
 
                 case_status = lambda row: case["dvr_case.status_id"]
                 archived = case["_row"]["dvr_case.archived"]
+                individual_id = lambda row: case["pr_individual_id_person_tag.value"]
                 family_id = lambda row: case["pr_family_id_person_tag.value"]
                 organisation_id = lambda row: case["dvr_case.organisation_id"]
                 name = lambda row: s3_fullname(row)
@@ -1899,14 +1927,14 @@ def stl_dvr_rheader(r, tabs=[]):
                                 _class = "%s label" % _class,
                                 )
 
-                rheader_fields = [[(T("ID"), "pe_label"),
-                                   (T("Case Status"), case_status),
+                rheader_fields = [[(T("Ref.No."), "pe_label"),
+                                   (T("ID"), individual_id),
+                                   (T("Organisation"), organisation_id),
                                    (T("Data Disclosure"), disclosure),
                                    ],
-                                  [(T("Family ID"), family_id),
-                                   (T("Organisation"), organisation_id),
-                                   ],
                                   [(T("Name"), name),
+                                   (T("Family ID"), family_id),
+                                   (T("Case Status"), case_status),
                                    ],
                                   ["date_of_birth",
                                    ],
