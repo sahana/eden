@@ -755,6 +755,7 @@ def config(settings):
 
     settings.project.activities = True
     settings.project.activity_sectors = True
+    settings.project.activity_types = True
     settings.project.codes = True
     settings.project.event_activities = True
     settings.project.event_projects = True
@@ -787,6 +788,10 @@ def config(settings):
                                             label = T("Sectors"),
                                             fields = [("", "sector_id")],
                                             ),
+                       S3SQLInlineComponent("activity_activity_type",
+                                            label = T("Activity Types"),
+                                            fields = [("", "activity_type_id")],
+                                            ),
                        "location_id",
                        "comments",
                        ]
@@ -800,6 +805,7 @@ def config(settings):
                        "date",
                        "status_id",
                        (T("Sectors"), "sector_activity.sector_id"),
+                       (T("Activity Types"), "activity_activity_type.activity_type_id"),
                        (T("Items"), "distribution.parameter_id"),
                        "location_id$L1",
                        "location_id$L2",

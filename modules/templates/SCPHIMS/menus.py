@@ -338,6 +338,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                      ),
+                     M("Activity Types", f="activity_type")(
+                        M("Create", m="create"),
+                     ),
                      M("Beneficiary Types", f="beneficiary_type")(
                         M("Create", m="create"),
                      ),
