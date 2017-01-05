@@ -3460,6 +3460,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "multiple",
                                   "leafonly",
                                   "columns",
+                                  "filter",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)

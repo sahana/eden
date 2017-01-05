@@ -2823,6 +2823,20 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_transferability", False)
 
+    def get_dvr_case_activity_needs_multiple(self):
+        """
+            Whether Case Activities link to Multiple Needs
+            - e.g. DRK: False
+            - e.g. STL: True
+        """
+        return self.dvr.get("case_activity_needs_multiple", False)
+
+    def get_dvr_case_events_close_appointments(self):
+        """
+            Whether case events automatically close appointments
+        """
+        return self.dvr.get("case_events_close_appointments", False)
+
     def get_dvr_case_flags(self):
         """
             Enable features to manage case flags
@@ -2859,12 +2873,6 @@ class S3Config(Storage):
             status when set to "completed"
         """
         return self.dvr.get("appointments_update_case_status", False)
-
-    def get_dvr_case_events_close_appointments(self):
-        """
-            Whether case events automatically close appointments
-        """
-        return self.dvr.get("case_events_close_appointments", False)
 
     def get_dvr_payments_update_last_seen_on(self):
         """

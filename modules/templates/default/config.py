@@ -513,6 +513,8 @@ def config(settings):
     #settings.dvr.activity_types = True
     # Uncomment this to use hierarchical case activity types
     #settings.dvr.activity_types_hierarchical = True
+    # Uncomment this if Case activities use multiple Needs
+    #settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to use service types for needs
     #settings.dvr_needs_use_service_type = True
     # Uncomment this to use hierarchical need types

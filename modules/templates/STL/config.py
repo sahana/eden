@@ -184,6 +184,8 @@ def config(settings):
     #
     # Case activities use service types
     settings.dvr.activity_use_service_type = True
+    # Case activities use multiple Needs
+    settings.dvr.case_activity_needs_multiple = True
 
     # Needs differentiated by service type, and hierarchical
     settings.dvr.needs_use_service_type = True
@@ -462,6 +464,7 @@ def config(settings):
                        S3Represent, \
                        S3SQLCustomForm, \
                        S3SQLInlineComponent, \
+                       S3SQLInlineLink, \
                        s3_comments_widget
 
         db = current.db
@@ -508,14 +511,18 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id$pe_label",
                            "person_id",
-                           "need_id",
+                           "case_activity_need.need_id",
                            "project_id",
                            "followup",
                            "followup_date",
                            ]
 
             crud_form = S3SQLCustomForm("person_id",
-                                        "need_id",
+                                        S3SQLInlineLink("need",
+                                                        label = T("Needs"),
+                                                        field = "need_id",
+                                                        widget = "hierarchy",
+                                                        ),
                                         "need_details",
                                         "project_id",
                                         "followup",
@@ -583,16 +590,18 @@ def config(settings):
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
 
-            field = table.need_id
+            #field = table.need_id
+            field = s3db.dvr_case_activity_need.need_id
             field.label = T("Sector for DS/IS")
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
                                        left = left,
                                        )
+            FILTER = (FS("service_id$root_service") == root_service_id)
             field.widget = S3HierarchyWidget(multiple = False,
                                              leafonly = False,
-                                             filter = (FS("service_id$root_service") == root_service_id),
+                                             filter = FILTER,
                                              )
 
             # Customise Need Details
@@ -639,7 +648,12 @@ def config(settings):
                                         "service_id",
                                         "human_resource_id",
                                         "project_id",
-                                        "need_id",
+                                        S3SQLInlineLink("need",
+                                                        label = T("Sectors for DS/IS"),
+                                                        field = "need_id",
+                                                        widget = "hierarchy",
+                                                        filter = FILTER,
+                                                        ),
                                         "need_details",
                                         "start_date",
                                         "followup",
@@ -665,7 +679,7 @@ def config(settings):
                            "service_id",
                            "human_resource_id",
                            "project_id",
-                           "need_id",
+                           "case_activity_need.need_id",
                            "start_date",
                            "followup",
                            "followup_date",
@@ -778,16 +792,18 @@ def config(settings):
             left = stable.on(stable.id == ntable.service_id)
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
-            field = table.need_id
+            #field = table.need_id
+            field = s3db.dvr_case_activity_need.need_id
             field.label = T("MH Complaint Type")
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
                                        left = left,
                                        )
+            FILTER = (FS("service_id$root_service") == root_service_id)
             field.widget = S3HierarchyWidget(multiple = False,
                                              leafonly = False,
-                                             filter = (FS("service_id$root_service") == root_service_id),
+                                             filter = FILTER,
                                              )
 
             # Filter activities
@@ -819,7 +835,12 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
-                                        "need_id",
+                                        S3SQLInlineLink("need",
+                                                        label = T("MH Complaint Types"),
+                                                        field = "need_id",
+                                                        widget = "hierarchy",
+                                                        filter = FILTER,
+                                                        ),
                                         "service_id",
                                         "human_resource_id",
                                         "project_id",
@@ -829,7 +850,7 @@ def config(settings):
 
             # Custom list fields
             list_fields = ["person_id",
-                           "need_id",
+                           "case_activity_need.need_id",
                            "service_id",
                            "human_resource_id",
                            "project_id",
@@ -895,7 +916,7 @@ def config(settings):
                 # Custom list fields
                 list_fields = [(T("Ref.No."), "person_id$pe_label"),
                                "person_id",
-                               (T("Sector for DS/IS"), "need_id"),
+                               (T("Sectors for DS/IS"), "case_activity_need.need_id"),
                                "service_id",
                                "followup_date",
                                ]
@@ -905,7 +926,7 @@ def config(settings):
                 filter_widgets = [S3TextFilter(["person_id$pe_label",
                                                 "person_id$first_name",
                                                 "person_id$last_name",
-                                                "need_id$name",
+                                                "case_activity_need.need_id$name",
                                                 "service_id$name",
                                                 ],
                                                 label = T("Search"),

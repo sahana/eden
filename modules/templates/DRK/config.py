@@ -806,6 +806,8 @@ def config(settings):
     settings.dvr.household_size = "auto"
     # Uncomment this to enable features to manage case flags
     settings.dvr.case_flags = True
+    # Case activities use single Needs
+    #settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = True
     # Uncomment this to have appointments with personal presence update last_seen_on

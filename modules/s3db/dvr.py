@@ -1276,6 +1276,7 @@ class DVRCaseActivityModel(S3Model):
     names = ("dvr_activity",
              "dvr_case_activity",
              "dvr_case_activity_id",
+             "dvr_case_activity_need",
              "dvr_case_service_contact",
              )
 
@@ -1501,6 +1502,7 @@ class DVRCaseActivityModel(S3Model):
         # Case Activity (case-specific)
         #
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+        multiple_needs = settings.get_dvr_case_activity_needs_multiple()
 
         tablename = "dvr_case_activity"
         define_table(tablename,
@@ -1527,7 +1529,9 @@ class DVRCaseActivityModel(S3Model):
                              readable = False,
                              writable = False,
                              ),
-                     self.dvr_need_id(),
+                     self.dvr_need_id(readable = not multiple_needs,
+                                      writable = not multiple_needs,
+                                      ),
                      Field("need_details", "text",
                            label = T("Need Details"),
                            represent = s3_text_represent,
@@ -1590,11 +1594,23 @@ class DVRCaseActivityModel(S3Model):
                             dvr_activity_funding = {"joinby": "case_activity_id",
                                                     "multiple": False,
                                                     },
+                            # Format for InlineComponent/List_fields
+                            dvr_case_activity_need = "case_activity_id",
+                            # Format for InlineLink
+                            dvr_need = {"link": "dvr_case_activity_need",
+                                        "joinby": "case_activity_id",
+                                        "key": "need_id",
+                                        },
                             )
 
         # List fields
+        if multiple_needs:
+            need_field = "case_activity_need.need_id"
+        else:
+            need_field = "need_id"
+
         list_fields = ["start_date",
-                       "need_id",
+                       need_field,
                        "need_details",
                        "emergency",
                        "referral_details",
@@ -1619,7 +1635,7 @@ class DVRCaseActivityModel(S3Model):
                                                      },
                                           cols = 2,
                                           ),
-                          S3OptionsFilter("need_id",
+                          S3OptionsFilter(need_field,
                                           options = lambda: s3_get_filter_opts("dvr_need",
                                                                                translate = True,
                                                                                ),
@@ -1650,7 +1666,7 @@ class DVRCaseActivityModel(S3Model):
                                                      ))
 
         # Report options
-        axes = ["need_id",
+        axes = [need_field,
                 (T("Case Status"), "case_id$status_id"),
                 "emergency",
                 "followup",
@@ -1665,7 +1681,7 @@ class DVRCaseActivityModel(S3Model):
         report_options = {"rows": axes,
                           "cols": axes,
                           "fact": facts,
-                          "defaults": {"rows": "need_id",
+                          "defaults": {"rows": need_field,
                                        "cols": "completed",
                                        "fact": facts[0],
                                        "totals": True,
@@ -1705,6 +1721,23 @@ class DVRCaseActivityModel(S3Model):
                                                 IS_ONE_OF(db, "%s.id" % tablename,
                                                           )),
                                            )
+
+        # ---------------------------------------------------------------------
+        # Case Activity <> Needs
+        #
+        # - use this when there is a need to libnk Case Activities to
+        #   multiple Needs (e.g. STL)
+        #
+
+        tablename = "dvr_case_activity_need"
+        define_table(tablename,
+                     case_activity_id(empty = False,
+                                      # default
+                                      #ondelete = "CASCADE",
+                                      ),
+                     self.dvr_need_id(empty = False,
+                                      ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Case Service Contacts (other than case activities)
