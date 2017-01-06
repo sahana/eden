@@ -1594,7 +1594,6 @@ class DVRCaseActivityModel(S3Model):
                             dvr_activity_funding = {"joinby": "case_activity_id",
                                                     "multiple": False,
                                                     },
-                            # Format for InlineLink
                             dvr_need = {"link": "dvr_case_activity_need",
                                         "joinby": "case_activity_id",
                                         "key": "need_id",

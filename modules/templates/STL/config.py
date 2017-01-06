@@ -592,7 +592,7 @@ def config(settings):
 
             #field = table.need_id
             field = s3db.dvr_case_activity_need.need_id
-            field.label = T("Sector for DS/IS")
+            field.label = T("Sectors for DS/IS")
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
@@ -794,7 +794,7 @@ def config(settings):
                     (stable.deleted != True)
             #field = table.need_id
             field = s3db.dvr_case_activity_need.need_id
-            field.label = T("MH Complaint Type")
+            field.label = T("MH Complaint Types")
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
@@ -1170,36 +1170,35 @@ def config(settings):
         query = (stable.deleted != True)
         rows = db(query).select(stable.id,
                                 stable.name,
-                                stable.parent,
+                                #stable.parent,
                                 stable.root_service,
                                 cache = s3db.cache,
-                                orderby = stable.root_service,
+                                #orderby = stable.root_service,
                                 )
 
-        # Group service IDs by root service
-        mh_service_ids = []
-        is_service_ids = []
-        pss_service_ids = []
-        service_ids = pss_service_ids
-        group = set()
-        root_service = None
+        mh_service_id = None
+        is_service_id = None
         for row in rows:
-            if row.parent is None:
-                name = row.name
-                if name == INDIVIDUAL_SUPPORT:
-                    service_ids = is_service_ids
-                elif name == MENTAL_HEALTH:
-                    service_ids = mh_service_ids
-                else:
-                    # Everything else is PSS
-                    service_ids = pss_service_ids
-            if row.root_service != root_service:
-                if group:
-                    service_ids.extend(group)
-                group = set()
-                root_service = row.root_service
-            group.add(row.id)
-        service_ids.extend(group)
+            name = row.name
+            if name == "Mental Health":
+                mh_service_id = row.id
+            elif name == "Individual Support":
+                is_service_id = row.id
+
+        mh_service_ids = []
+        mappend = mh_service_ids.append
+        is_service_ids = []
+        iappend = is_service_ids.append
+        pss_service_ids = []
+        pappend = pss_service_ids.append
+        for row in rows:
+            root_service = row.root_service
+            if root_service == mh_service_id:
+                mappend(row.id)
+            elif root_service == is_service_id:
+                iappend(row.id)
+            else:
+              pappend(row.id)
 
         # Custom activity components (differentiated by service type)
         s3db.add_components("pr_person",
