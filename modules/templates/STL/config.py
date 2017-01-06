@@ -609,6 +609,11 @@ def config(settings):
             field.label = T("DS/IS Case Explanation")
             field.readable = field.writable = True
 
+            # Customise Priority
+            field = table.priority
+            field.label = T("Priority for DS")
+            field.readable = field.writable = True
+
             # Customise date fields
             field = table.start_date
             field.label = T("Opened on")
@@ -655,6 +660,7 @@ def config(settings):
                                                         filter = FILTER,
                                                         ),
                                         "need_details",
+                                        "priority",
                                         "start_date",
                                         "followup",
                                         "followup_date",
@@ -681,6 +687,7 @@ def config(settings):
                            "project_id",
                            "need__link.need_id",
                            "start_date",
+                           "priority",
                            "followup",
                            "followup_date",
                            "completed",
@@ -1170,35 +1177,48 @@ def config(settings):
         query = (stable.deleted != True)
         rows = db(query).select(stable.id,
                                 stable.name,
-                                #stable.parent,
+                                stable.parent,
                                 stable.root_service,
                                 cache = s3db.cache,
-                                #orderby = stable.root_service,
+                                orderby = stable.root_service,
                                 )
 
-        mh_service_id = None
-        is_service_id = None
-        for row in rows:
-            name = row.name
-            if name == "Mental Health":
-                mh_service_id = row.id
-            elif name == "Individual Support":
-                is_service_id = row.id
-
+        # Group service IDs by root service
         mh_service_ids = []
-        mappend = mh_service_ids.append
         is_service_ids = []
-        iappend = is_service_ids.append
         pss_service_ids = []
-        pappend = pss_service_ids.append
+        service_ids = pss_service_ids
+        group = set()
+        root_service = None
         for row in rows:
-            root_service = row.root_service
-            if root_service == mh_service_id:
-                mappend(row.id)
-            elif root_service == is_service_id:
-                iappend(row.id)
-            else:
-              pappend(row.id)
+            # Rows are ordered by root service, so they come in
+            # groups each of which contains one root service
+
+            if row.root_service != root_service:
+                # Different root service => new group
+                if group:
+                    # Add previous group to its service_ids array
+                    service_ids.extend(group)
+                # Start new group
+                group = set()
+                root_service = row.root_service
+
+            if row.parent is None:
+                # This is the root service of the current group
+                # => choose the right service_ids array for the group
+                name = row.name
+                if name == INDIVIDUAL_SUPPORT:
+                    service_ids = is_service_ids
+                elif name == MENTAL_HEALTH:
+                    service_ids = mh_service_ids
+                else:
+                    # Everything else is PSS
+                    service_ids = pss_service_ids
+
+            group.add(row.id)
+
+        # Add the last group to its service_ids array
+        service_ids.extend(group)
 
         # Custom activity components (differentiated by service type)
         s3db.add_components("pr_person",

@@ -1504,6 +1504,13 @@ class DVRCaseActivityModel(S3Model):
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
         multiple_needs = settings.get_dvr_case_activity_needs_multiple()
 
+        # Priority options
+        priority_opts = [#(0, T("Urgent")),
+                         (1, T("High")),
+                         (2, T("Normal")),
+                         (3, T("Low")),
+                         ]
+
         tablename = "dvr_case_activity"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
@@ -1541,6 +1548,14 @@ class DVRCaseActivityModel(S3Model):
                            default = False,
                            label = T("Emergency"),
                            represent = s3_yes_no_represent,
+                           ),
+                     Field("priority", "integer",
+                           label = T("Priority"),
+                           represent = S3Represent(options=dict(priority_opts)),
+                           requires = IS_IN_SET(priority_opts, sort = False),
+                           default = 2, # normal
+                           readable = False,
+                           writable = False,
                            ),
                      # Activate in template as needed:
                      self.org_organisation_id(label = T("Referral Agency"),
