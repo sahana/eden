@@ -679,7 +679,7 @@ def config(settings):
                            "service_id",
                            "human_resource_id",
                            "project_id",
-                           "case_activity_need.need_id",
+                           "need__link.need_id",
                            "start_date",
                            "followup",
                            "followup_date",
@@ -850,7 +850,7 @@ def config(settings):
 
             # Custom list fields
             list_fields = ["person_id",
-                           "case_activity_need.need_id",
+                           "need__link.need_id",
                            "service_id",
                            "human_resource_id",
                            "project_id",
