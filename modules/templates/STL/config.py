@@ -865,7 +865,7 @@ def config(settings):
                            ]
 
         else:
-            # Activity list
+            # Activity list (or counting due follow-ups)
             expose_project_id(s3db.dvr_case_activity)
 
             crud_form = S3SQLCustomForm("person_id",
