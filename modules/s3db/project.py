@@ -32,7 +32,7 @@ from __future__ import division
 __all__ = ("S3ProjectModel",
            "S3ProjectActivityModel",
            "S3ProjectActivityTypeModel",
-           "S3ProjectActivityCaseModel",
+           "S3ProjectActivityPersonModel",
            "S3ProjectActivityOrganisationModel",
            "S3ProjectActivitySectorModel",
            "S3ProjectAnnualBudgetModel",
@@ -1309,11 +1309,13 @@ class S3ProjectActivityModel(S3Model):
                   update_realm = True,
                   )
 
-        if settings.has_module("dvr"):
-            # Custom Method to Assign HRs
-            self.set_method("project", "activity",
-                            method = "assign",
-                            action = self.dvr_AssignMethod(component="case_activity"))
+        # This component no longer has a case_id in it
+        #if settings.has_module("dvr"):
+        #    # Custom Method to Assign Cases
+        #    self.set_method("project", "activity",
+        #                    method = "assign",
+        #                    action = self.dvr_AssignMethod(component="case_activity"),
+        #                    )
 
         # Reusable Field
         represent = project_ActivityRepresent()
@@ -1350,7 +1352,7 @@ class S3ProjectActivityModel(S3Model):
                                                 },
                        # Format for InlineComponent/filter_widget
                        project_activity_activity_type = "activity_id",
-                       # Beneficiaries
+                       # Beneficiaries (Un-named Stats)
                        project_beneficiary = {"link": "project_beneficiary_activity",
                                               "joinby": "activity_id",
                                               "key": "beneficiary_id",
@@ -1358,14 +1360,13 @@ class S3ProjectActivityModel(S3Model):
                                               },
                        # Format for InlineComponent/filter_widget
                        project_beneficiary_activity = "activity_id",
-                       # Cases
-                       dvr_case = {"link": "project_case_activity",
-                                   "joinby": "activity_id",
-                                   "key": "case_id",
-                                   "actuate": "hide",
-                                   },
-                       # Format for InlineComponent/filter_widget
-                       project_case_activity = "activity_id",
+                       # Beneficiaries (Named Cases)
+                       pr_person = {"link": "project_activity_person",
+                                    "joinby": "activity_id",
+                                    "key": "person_id",
+                                    #"actuate": "hide",
+                                    "actuate": "replace",
+                                    },
                        # Distributions
                        supply_distribution = "activity_id",
                        # Events
@@ -1656,7 +1657,8 @@ class S3ProjectActivityTypeModel(S3Model):
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "project_activity_type.id",
                                                                   represent,
-                                                                  sort=True)),
+                                                                  sort=True)
+                                                        ),
                                            sortby = "name",
                                            comment = S3PopupLink(title = ADD_ACTIVITY_TYPE,
                                                                  c = "project",
@@ -1749,39 +1751,54 @@ class S3ProjectActivityTypeModel(S3Model):
                     )
 
 # =============================================================================
-class S3ProjectActivityCaseModel(S3Model):
+class S3ProjectActivityPersonModel(S3Model):
     """
-        Project Activity Case Model
+        Project Activity Person Model
 
-        An Activity can have multiple beneficiaries
+        An Activity can have multiple named beneficiaries
     """
 
-    names = ("project_case_activity",)
+    names = ("project_activity_person",)
 
     def model(self):
 
         T = current.T
+        uploadfolder = os.path.join(current.request.folder, "uploads")
 
         # ---------------------------------------------------------------------
-        # Project Activities <> Cases Link Table
+        # Project Activities <> Named Beneficiaries Link Table
         #
         # @ToDo: When Activity is linked to a Project, ensure these stay in sync
         #
-        tablename = "project_case_activity"
+        tablename = "project_activity_person"
         self.define_table(tablename,
                           self.project_activity_id(empty = False,
                                                    ondelete = "CASCADE",
                                                    ),
-                          self.dvr_case_id(empty = False,
-                                           ondelete = "CASCADE",
-                                           ),
-                          # @ToDo: This needs to be set per Line Item (default to all On, but allow manual deselection)
-                          Field("received", "boolean",
-                                default = False,
-                                label = T("Received?"),
-                                represent = s3_yes_no_represent,
+                          #self.dvr_case_id(empty = False,
+                          #                 ondelete = "CASCADE",
+                          #                 ),
+                          self.pr_person_id(empty = False,
+                                            label = T("Head of Household"),
+                                            ondelete = "CASCADE",
+                                            ),
+                          # @ToDo: Option to scan this in easily (mobile-only)
+                          Field("identity", "upload",
+                                label = T("Identity"),
+                                length = current.MAX_FILENAME_LENGTH,
+                                represent = self.doc_image_represent,
+                                requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
+                                                                 error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
+                                            IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                                            ],
+                                uploadfolder = uploadfolder,
                                 ),
-                          # @ToDo: Option to scan this in easily
+                          Field("relationship",
+                                label = T("Relationship"),
+                                represent = lambda v: v or current.messages["NONE"],
+                                comment = T("If not the Head of Household"),
+                                ),
+                          # @ToDo: Option to draw this easily (mobile-only)
                           Field("signature", "upload",
                                 label = T("Signature"),
                                 length = current.MAX_FILENAME_LENGTH,
@@ -1790,20 +1807,9 @@ class S3ProjectActivityCaseModel(S3Model):
                                                                  error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
                                             IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
                                             ],
-                                uploadfolder = os.path.join(
-                                                current.request.folder, "uploads"),
+                                uploadfolder = uploadfolder,
                                 ),
                           *s3_meta_fields())
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("activity_id",
-                                                            "case_id",
-                                                            ),
-                                                 ),
-                       list_fields = ["case_id$person_id",
-                                      "received",
-                                      ],
-                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -9980,8 +9986,8 @@ def project_rheader(r):
         if settings.has_module("supply"):
             tabs.append((T("Distribution Items"), "distribution"))
         if settings.has_module("dvr"):
-            tabs.append((T("Beneficiaries"), "case"))
-            tabs.append((T("Assign Beneficiaries"), "assign"))
+            tabs.append((T("Beneficiaries"), "person"))
+            #tabs.append((T("Assign Beneficiaries"), "assign"))
         if settings.get_project_mode_task():
             tabs.append((T("Tasks"), "task"))
             tabs.append((attachments_label, "document"))

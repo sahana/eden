@@ -33,6 +33,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseAllowanceModel",
            "DVRCaseAppointmentModel",
            "DVRHouseholdModel",
+           "DVRHouseholdMembersModel",
            "DVRCaseEconomyInformationModel",
            "DVRCaseEventModel",
            "DVRCaseEvaluationModel",
@@ -2235,6 +2236,7 @@ class DVRCaseAppointmentModel(S3Model):
 class DVRHouseholdModel(S3Model):
     """
         Model to document the household situation of a case
+        - used by STL (DRK use pr_group_membership, SCPHIMS use DVRHouseholdMemberModel)
     """
 
     names = ("dvr_household",
@@ -2445,6 +2447,60 @@ class DVRHouseholdModel(S3Model):
                                            dummy(name, **attr),
                 }
 
+
+# =============================================================================
+class DVRHouseholdMembersModel(S3Model):
+    """
+        Model to document the household situation of a case
+        - used by SCPHIMS (DRK use pr_group_membership, STL use DVRHouseholdModel)
+    """
+
+    names = ("dvr_household_member",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        tablename = "dvr_household_member"
+        self.define_table(tablename,
+                          self.pr_person_id(empty = False,
+                                            label = T("Head of Household"),
+                                            ondelete = "CASCADE",
+                                            ),
+                          Field("age", "integer",
+                                label = T("Age"),
+                                requires = IS_INT_IN_RANGE(0, 150),
+                                ),
+                          self.pr_gender("gender",
+                                         #label = T("Gender"),
+                                         ),
+                          Field("disabled", "boolean",
+                                label = T("Disabled"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Household Member"),
+            title_display = T("Household Member"),
+            title_list = T("Household Members"),
+            title_update = T("Edit Household Member"),
+            label_list_button = T("List Household Members"),
+            label_delete_button = T("Delete Household Member"),
+            msg_record_created = T("Household Member added"),
+            msg_record_modified = T("Household Member updated"),
+            msg_record_deleted = T("Household Member deleted"),
+            msg_list_empty = T("No Household Members currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class DVRCaseEconomyInformationModel(S3Model):
@@ -6036,7 +6092,7 @@ class dvr_AssignMethod(S3Method):
         T = current.T
         db = current.db
         s3db = current.s3db
-        settings = current.deployment_settings
+        #settings = current.deployment_settings
 
         table = s3db[tablename]
         fkey = component.fkey
@@ -6469,6 +6525,7 @@ def dvr_rheader(r, tabs=[]):
         if tablename == "pr_person":
 
             if not tabs:
+                # Defaults used by? (Not used by DRK, STL or SCPHIMS)
                 tabs = [(T("Basic Details"), None),
                         (T("Activities"), "case_activity"),
                         (T("Beneficiaries"), "beneficiary_data"),

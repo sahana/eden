@@ -192,7 +192,6 @@ class S3ContentModel(S3Model):
                            widget = body_widget,
                            ),
                      # @ToDo: Move this to link table?
-                     # - although this makes widget hard!
                      self.gis_location_id(),
                      # @ToDo: Move this to link table?
                      # - although this makes widget hard!
@@ -430,7 +429,7 @@ class S3ContentModel(S3Model):
         #
         tablename = "cms_post_module"
         define_table(tablename,
-                     post_id(empty=False),
+                     post_id(empty = False),
                      Field("module",
                            comment = T("If you specify a module, but no resource, then this will be used as the text in that module's index page"),
                            label = T("Module"),
@@ -1841,6 +1840,9 @@ class cms_Calendar(S3Method):
             if r.representation == "html":
                 output = self.html(r, **attr)
                 return output
+            #elif r.representation == "pdf":
+            #    output = self.pdf(r, **attr)
+            #    return output
             #elif r.representation == "xls":
             #    output = self.xls(r, **attr)
             #    return output
@@ -1852,8 +1854,6 @@ class cms_Calendar(S3Method):
             Extract the Data
         """
 
-        rows = 0
-
         # Respect any filters present
         resource = r.resource
 
@@ -1861,16 +1861,21 @@ class cms_Calendar(S3Method):
         resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
                             (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
 
+        # @ToDo: Configurable fields (location_id not always relevant, but e.g. Author maybe)
         fields = ["name",
                   "date",
                   "location_id",
                   ]
 
-        posts = resource.select(fields)
+        data = resource.select(fields)
 
         # @ToDo: Reformat posts into Array by day & return the maximum number of Posts in a day
+        posts = []
+        pappend = posts.append
+        for day in days:
+            pappend()
 
-        return rows, posts
+        return posts
 
     # -------------------------------------------------------------------------
     def html(self, r, **attr):
@@ -1893,7 +1898,7 @@ class cms_Calendar(S3Method):
                 now + timedelta(days = 5),
                 )
 
-        rows, posts = self._extract(days, r, **attr)
+        posts = self._extract(days, r, **attr)
 
         item = TABLE()
         title_row = TR()
@@ -1901,6 +1906,16 @@ class cms_Calendar(S3Method):
         for day in days:
             rappend(TD(day.strftime("%A")))
         item.append(title_row)
+
+        # @ToDo: Represent Posts as Cards
+        # - e.g. using cms_post_list_layout?
+        data_row = TR()
+        rappend = data_row.append
+        i = 0
+        for day in days:
+            rappend(TD(posts[i].body))
+            i += 1
+        item.append(data_row)
 
         output = dict(item=item)
         output["title"] = T("Weekly Schedule")

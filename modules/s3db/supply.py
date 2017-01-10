@@ -1211,6 +1211,7 @@ class S3SupplyDistributionModel(S3Model):
 
     names = ("supply_distribution_item",
              "supply_distribution",
+             "supply_distribution_person",
              )
 
     def model(self):
@@ -1520,6 +1521,32 @@ class S3SupplyDistributionModel(S3Model):
                   report_options = report_options,
                   super_entity = "stats_data",
                   )
+
+        # ---------------------------------------------------------------------
+        # Supply Distributions <> Named Beneficiaries Link Table
+        #
+        tablename = "supply_distribution_person"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       label = T("Head of Household"),
+                                       ondelete = "CASCADE",
+                                       ),
+                     Field("supply_distribution_id", "reference supply_distribution",
+                           label = T("Item"),
+                           ondelete = "CASCADE",
+                           #represent = represent,
+                           #requires = IS_ONE_OF(current.db, "supply_distribution.id",
+                           #                     #represent,
+                           #                     sort=True)),
+                           requires = IS_IN_DB(db, "supply_distribution.id"),
+                           ),
+                     Field("received", "boolean",
+                           default = True,
+                           label = T("Received?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}

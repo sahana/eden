@@ -67,7 +67,7 @@ __all__ = ("single_phone_number_pattern",
 import datetime
 import json
 import re
-import time
+#import time
 
 from gluon import *
 #from gluon import current
@@ -2627,9 +2627,9 @@ class IS_UTC_DATETIME(Validator):
         """
 
         if format is None:
-            self.format = dtfmt = str(current.deployment_settings.get_L10n_datetime_format())
+            self.format = str(current.deployment_settings.get_L10n_datetime_format())
         else:
-            self.format = dtfmt = str(format)
+            self.format = str(format)
 
         if isinstance(calendar, basestring):
             # Instantiate calendar by name
@@ -2686,7 +2686,7 @@ class IS_UTC_DATETIME(Validator):
         if error:
             offset = 0 # fallback to UTC
 
-        return S3DateTime.get_offset_value(utc_offset)
+        return S3DateTime.get_offset_value(offset)
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -2754,7 +2754,7 @@ class IS_UTC_DATETIME(Validator):
         """
 
         if not value:
-            result = current.messages["NONE"]
+            return current.messages["NONE"]
 
         offset = self.delta()
         if offset:
@@ -2804,9 +2804,9 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         """
 
         if format is None:
-            self.format = dtfmt = str(current.deployment_settings.get_L10n_date_format())
+            self.format = str(current.deployment_settings.get_L10n_date_format())
         else:
-            self.format = dtfmt = str(format)
+            self.format = str(format)
 
         if isinstance(calendar, basestring):
             # Instantiate calendar by name
@@ -2865,12 +2865,12 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                 return(value, self.error_message)
         elif isinstance(value, datetime.datetime):
             dt = value
-            utc_offset = None
+            #utc_offset = None
             is_datetime = True
         elif isinstance(value, datetime.date):
             # Default to 0:00 hours in the current timezone
             dt = value
-            utc_offset = None
+            #utc_offset = None
         else:
             # Invalid type
             return (value, self.error_message)
@@ -2883,7 +2883,7 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
             offset = self.delta()
             # Offset must be in range -2359 to +2359
             if not -86340 < offset < 86340:
-                return (val, self.offset_error)
+                return (value, self.offset_error)
             offset = datetime.timedelta(seconds=offset)
 
         if not is_datetime:
@@ -2907,7 +2907,7 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         """
 
         if not value:
-            result = current.messages["NONE"]
+            return current.messages["NONE"]
 
         offset = self.delta()
         if offset:
@@ -3032,8 +3032,9 @@ class QUANTITY_INV_ITEM(Validator):
         track_quantity = 0
         if args[1] == "track_item" and len(args) > 2:
             # look to see if we already have a quantity stored in the track item
-            id = args[2]
-            track_record = current.s3db.inv_track_item[id]
+            track_item_id = args[2]
+            # @ToDo: Optimise with limitby=(0,1)
+            track_record = current.s3db.inv_track_item[track_item_id]
             track_quantity = track_record.quantity
             if track_quantity >= float(value):
                 # value reduced or unchanged
@@ -3124,6 +3125,7 @@ class IS_IN_SET_LAZY(Validator):
         self.theset_fn = theset_fn
         self.theset = None
         self.labels = None
+        self.represent = represent
         self.error_message = error_message
         self.zero = zero
         self.sort = sort
@@ -3141,6 +3143,7 @@ class IS_IN_SET_LAZY(Validator):
                     self.labels = [str(label) for item,label in theset]
                 else:
                     self.theset = [str(item) for item in theset]
+                    represent = self.represent
                     if represent:
                         self.labels = [represent(item) for item in theset]
             else:

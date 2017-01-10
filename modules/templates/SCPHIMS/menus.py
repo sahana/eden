@@ -137,8 +137,8 @@ class S3MainMenu(default.S3MainMenu):
             # Manage Distributions inc Beneficiary Registration
             return [
                 homepage(),
-                M("Distributions", c="project", f="distribution"),
                 M("Beneficiaries", c="dvr", f="person"),
+                M("Distributions", c="project", f="distribution"),
                 homepage("gis"),
             ]
         elif has_role("ERT_LEADER"):
@@ -146,7 +146,8 @@ class S3MainMenu(default.S3MainMenu):
             return [
                 homepage(),
                 MM("Assessments", c="dc", f="target"),
-                MM("Activities", c="project", f="project"), # Activities are accessed via Projects
+                MM("Projects", c="project", f="project"),
+                MM("Activities", c="project", f="activity"),
                 MM("SitReps", c="doc", f="sitrep"),
                 MM("Documents", c="doc", f="document"),
                 homepage("gis"),
@@ -243,7 +244,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="dvr")(
                     M("Beneficiaries", f="person")(
-                        M("Create", m="create"),
+                        # Do this from the Distribution
+                        #M("Create", m="create"),
                      ),
                 )
 

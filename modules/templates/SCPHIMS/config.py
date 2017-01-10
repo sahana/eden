@@ -92,7 +92,7 @@ def config(settings):
     #settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-    #    "EUR" : "Euros",
+        "EUR" : "Euros",
     #    "GBP" : "Great British Pounds",
         "PHP" : "Philippine Pesos",
         "USD" : "United States Dollars",
@@ -142,6 +142,61 @@ def config(settings):
     # Data Collection
     #
 
+    def dc_target_onaccept(form):
+        """
+            Add/Update entry to calendar
+        """
+
+        # Deletion and update have a different format
+        try:
+            target_id = form.vars.id
+            delete = False
+        except:
+            target_id = form.id
+            delete = True
+
+        # Add/Update Calendar entry
+        db = current.db
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        query = (ltable.module == "dc") & \
+                (ltable.resource == "target") & \
+                (ltable.record == target_id)
+        link = db(query).select(ltable.post_id,
+                                limitby = (0, 1),
+                                ).first()
+        if delete:
+            if link:
+                db(table.id == link.post_id).delete()
+        else:
+            # Retrieve the full record
+            ttable = db.dc_target
+            record = db(ttable.id == target_id).select(ttable.template_id,
+                                                       ttable.location_id,
+                                                       ttable.date,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            body = ttable.template_id.represent(record.template_id)
+            if link:
+                # Update it
+                db(table.id == link.post_id).update(body = body,
+                                                    location_id = record.location_id,
+                                                    date = record.date,
+                                                    )
+            else:
+                # Create it
+                post_id = table.insert(body = body,
+                                       location_id = record.location_id,
+                                       date = record.date,
+                                       )
+                ltable.insert(post_id = post_id,
+                              module = "dc",
+                              resource = "target",
+                              record = target_id,
+                              )
+
+    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
         s3db = current.s3db
@@ -166,8 +221,19 @@ def config(settings):
                 # Prepop not done
                 current.log.warning("Cannot default Targets to Rapid Assessment form")
 
+        # If we have default ones defined then need to add them in a cascade:
+        #onaccept = s3db.get_config("dc_target", "onaccept")
+        #ondelete = s3db.get_config("dc_target", "ondelete")
+        onaccept = dc_target_onaccept
+        
+        s3db.configure("dc_target",
+                       onaccept = onaccept,
+                       ondelete = onaccept,
+                       )
+
     settings.customise_dc_target_resource = customise_dc_target_resource
 
+    # -------------------------------------------------------------------------
     def customise_dc_collection_resource(r, tablename):
 
         # @ToDo: Filters inc 'Assigned to me'
@@ -285,6 +351,7 @@ def config(settings):
 
     settings.customise_doc_document_resource = customise_doc_document_resource
 
+    # -------------------------------------------------------------------------
     def customise_doc_image_resource(r, tablename):
 
         from s3 import S3LocationSelector, S3SQLCustomForm#, S3SQLInlineComponent
@@ -349,6 +416,7 @@ def config(settings):
 
     settings.customise_doc_image_resource = customise_doc_image_resource
 
+    # -------------------------------------------------------------------------
     def customise_doc_sitrep_resource(r, tablename):
         """
             All SitReps are SAVE
@@ -427,6 +495,7 @@ def config(settings):
 
     settings.customise_doc_sitrep_resource = customise_doc_sitrep_resource
 
+    # -------------------------------------------------------------------------
     def customise_doc_sitrep_controller(**attr):
 
         # Default Filter: Only open Events
@@ -459,25 +528,52 @@ def config(settings):
     settings.dvr.label = "Beneficiary"
     settings.hrm.email_required = False
 
-    def customise_beneficiary_form():
-        
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        org = current.db(otable.name == SAVE).select(otable.id,
-                                                     cache = s3db.cache,
-                                                     limitby = (0, 1),
-                                                     ).first()
-        try:
-            SCI = org.id
-        except:
-            current.log.error("Cannot find org %s - prepop not done?" % SAVE)
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_resource(r, tablename):
+
+        current.s3db.configure("dvr_case",
+                               list_fields = ["person_id",
+                                              "reference",
+                                              "person_id$location_id",
+                                              (T("Phone"), "person_id$phone.value"),
+                                              "comments",
+                                              ],
+                               )
+
+    settings.customise_dvr_case_resource = customise_dvr_case_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        if r.function != "distribution":
+            return
+
+        # Beneficiaries
+        if r.tablename == "project_activity":
+            activity_id = r.id
         else:
-            s3db.dvr_case.organisation_id.default = SCI
+            activity_id = None
+
+        # CRUD Strings
+        current.response.s3.crud_strings["pr_person"] = Storage(
+            label_create = T("Add Beneficiary"),
+            title_display = T("Beneficiary Details"),
+            title_list = T("Beneficiaries"),
+            title_update = T("Edit Beneficiary"),
+            title_report = T("Beneficiary Report"),
+            label_list_button = T("List Beneficiaries"),
+            msg_record_created = T("Beneficiary Added"),
+            msg_record_modified = T("Beneficiary Updated"),
+            msg_record_deleted = T("Beneficiary Deleted"),
+            msg_list_empty = T("No Beneficiaries Found")
+        )
+
+        s3db = current.s3db
 
         mobile_list_fields = [# No need for Mobile client to know which Activity a Case is linked to
-                              #"project_case_activity.activity_id$name",
-                              "dvr_case.reference",
-                              "dvr_case.date",
+                              #"activity_person.activity_id$name",
+                              #"dvr_case.reference", # Will always be empty in download
+                              #"dvr_case.date", # We don't need this in the mobile form
                               "first_name",
                               "middle_name",
                               "last_name",
@@ -485,36 +581,26 @@ def config(settings):
                               "gender",
                               "person_details.disabled",
                               "phone.value",
-                              "email.value",
+                              #"email.value",
                               # @ToDo: Use just parent in Mobile LocationSelector
                               #"address.location_id$L1",
                               #"address.location_id$L2",
                               #"address.location_id$L3",
                               #"address.location_id$L4",
                               "address.location_id$parent",
-                              # Restore once list_fields working
+                              # @ToDo: Workaround needed to avoid double-join of gis_location (e.g. VF?)
                               #"address.location_id$parent$uuid",
                               "address.location_id$addr_street",
+                              "household_member.age",
+                              "household_member.gender",
+                              "household_member.disabled",
+                              "household_member.comments",
                               "dvr_case.comments",
                               ]
 
-        s3db.configure("pr_person",
-                       # TESTING - remove when done
-                       #list_fields = [#"address.location_id",
-                       #               #"address.location_id$id",
-                       #               #"address.location_id$uuid",
-                       #               #"address.location_id$parent",
-                       #               #"address.location_id$parent$id",
-                       #               "address.location_id$parent$name",
-                       #               #"address.location_id$parent$uuid",
-                       #               ],
-                       mobile_list_fields = mobile_list_fields,
-                       )
-
-        from s3 import S3SQLInlineComponent
-        crud_fields = [# @ToDo: Scan this in from barcode on preprinted card
-                       "dvr_case.reference",
-                       "dvr_case.date",
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        crud_fields = [#"dvr_case.reference",
+                       #"dvr_case.date",
                        "first_name",
                        "middle_name",
                        "last_name",
@@ -529,20 +615,20 @@ def config(settings):
                             #            "options": "SMS",
                             #            },
                             label = T("Mobile Phone"),
-                            multiple = False,
+                            multiple = True, # Commonly have up to 3!
                             #name = "phone",
                             ),
-                       S3SQLInlineComponent(
-                            "email",
-                            fields = [("", "value"),
-                                      ],
-                            #filterby = {"field": "contact_method",
-                            #            "options": "EMAIL",
-                            #            },
-                            label = T("Email"),
-                            multiple = False,
-                            #name = "email",
-                            ),
+                       #S3SQLInlineComponent(
+                       #     "email",
+                       #     fields = [("", "value"),
+                       #               ],
+                       #     #filterby = {"field": "contact_method",
+                       #     #            "options": "EMAIL",
+                       #     #            },
+                       #     label = T("Email"),
+                       #     multiple = False,
+                       #     #name = "email",
+                       #     ),
                        S3SQLInlineComponent(
                             "address",
                             label = T("Current Address"),
@@ -554,37 +640,158 @@ def config(settings):
                             link = False,
                             multiple = False,
                             ),
+                       S3SQLInlineComponent(
+                            "household_member",
+                            fields = ["age",
+                                      "gender",
+                                      "disabled",
+                                      "comments",
+                                      ],
+                            label = T("Household Members"),
+                            ),
                        "dvr_case.comments",
                        ]
 
-        return crud_fields
+        if r.representation == "mdata":
+            # @ToDo: Scan this in from barcode on preprinted card
+            crud_fields.insert(0, "dvr_case.reference")
+        else:
+            db = current.db
+            atable = s3db.pr_address
+            ctable = s3db.dvr_case
+            otable = s3db.org_organisation
+            org = db(otable.name == SAVE).select(otable.id,
+                                                 cache = s3db.cache,
+                                                 limitby = (0, 1),
+                                                 ).first()
+            try:
+                SCI = org.id
+            except:
+                current.log.error("Cannot find org %s - prepop not done?" % SAVE)
+            else:
+                ctable.organisation_id.default = SCI
 
-    def customise_pr_person_resource(r, tablename):
+            if activity_id:
+                patable = s3db.project_activity
+                gtable = s3db.gis_location
+                query = (patable.id == activity_id) & \
+                        (patable.location_id == gtable.id)
+                activity = db(query).select(gtable.parent,
+                                            cache = s3db.cache,
+                                            limitby = (0, 1),
+                                            ).first()
+                try:
+                    atable.location_id.default = activity.parent
+                except AttributeError:
+                    current.log.error("Cannot find Activity %s" % activity_id)
+            from s3 import S3LocationSelector
+            atable.location_id.widget = S3LocationSelector(show_address = True,
+                                                           show_map = False,
+                                                           )
+            ctable.reference.label = T("Barcode")
 
-        if r.function == "distribution":
-            # Beneficiaries
-            from s3 import S3SQLCustomForm
-            s3db = current.s3db
-            crud_fields = customise_beneficiary_form()
-            s3db.configure("pr_person",
-                           crud_form = S3SQLCustomForm(*crud_fields),
-                           )
+            #crud_fields.insert(0, "dvr_case.date")
+            if r.method in ("read", "update"):
+                crud_fields.insert(0, "dvr_case.reference")
+                # @ToDo: Add InlineComponents for Distribution Items to be able to mark as received
 
-            s3db.pr_address.location_id.default = r.record.location_id
+        s3db.configure("pr_person",
+                       crud_form = S3SQLCustomForm(*crud_fields,
+                                                   postprocess = lambda form: pr_person_postprocess(form, activity_id)),
+                       list_fields = ["first_name",
+                                      "middle_name",
+                                      "last_name",
+                                      "age",
+                                      "gender",
+                                      (T("Phone"), "phone.value"),
+                                      "address.location_id",
+                                      "dvr_case.reference",
+                                      "dvr_case.comments",
+                                      ],
+                       mobile_list_fields = mobile_list_fields,
+                       )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
-    def customise_pr_person_controller(**attr):
+    # -------------------------------------------------------------------------
+    def pr_person_postprocess(form, activity_id):
+        """
+            onaccept for the Custom Form:
+            - link Beneficiaries to the Distribution
+        """
 
-        s3db = current.s3db
-        s3db.add_components("pr_person",
-                            project_case_activity = {"name": "project_case_activity", # Avoid conflict with dvr_case_activity
-                                                     "link": "dvr_case",
-                                                     "joinby": "person_id",
-                                                     "key": "id",
-                                                     "fkey": "case_id",
-                                                     },
-                            )
+        person_id = form.vars.get("id")
+        current.s3db.project_activity_person.insert(activity_id = activity_id,
+                                                    person_id = person_id,
+                                                    )
+
+    # -------------------------------------------------------------------------
+    def dvr_rheader(r, tabs=[]):
+
+        if r.representation != "html":
+            # Resource headers only used in interactive views
+            return None
+
+        from s3 import s3_rheader_resource, s3_rheader_tabs
+
+        tablename, record = s3_rheader_resource(r)
+
+        if not record:
+            return None
+
+        rheader = None
+
+        if tablename == "pr_person":
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Household Members"), "household_member"),
+                        (T("Activities"), "activity_person"),
+                        ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            record_id = record.id
+            ctable = s3db.dvr_case
+            case = db(ctable.person_id == record_id).select(ctable.reference,
+                                                            limitby=(0, 1)
+                                                            ).first()
+            if case:
+                reference = case.reference or current.messages["NONE"]
+            else:
+                reference = None
+
+            from gluon import A, DIV, TABLE, TR, TH, URL
+            from s3 import s3_fullname, s3_avatar_represent
+
+            rheader = DIV(
+                        A(s3_avatar_represent(record_id,
+                                              "pr_person",
+                                              _class="rheader-avatar"),
+                          _href=URL(f="person", args=[record_id, "image"],
+                                    vars = r.get_vars),
+                          ),
+                        TABLE(
+                            TR(TH("%s: " % T("Name")),
+                               s3_fullname(record),
+                               TH("%s: " % T("Barcode")),
+                               reference,
+                               ),
+                            TR(TH("%s: " % T("Date of Birth")),
+                               "%s" % (record.date_of_birth or T("unknown")),
+                               TH("%s: " % T("Gender")),
+                               "%s" % s3db.pr_gender_opts.get(record.gender,
+                                                              T("unknown"))
+                               ),
+                            ), rheader_tabs)
+
+        return rheader
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
 
         s3 = current.response.s3
         standard_prep = s3.prep
@@ -595,26 +802,16 @@ def config(settings):
                     return False
 
             if r.controller == "dvr":
-                # Beneficiaries
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent
-                crud_fields = customise_beneficiary_form()
-                crud_fields.insert(0,
-                                   # @ToDo: Create isn't refreshing the dropdown
-                                   S3SQLInlineComponent(
-                                    "project_case_activity",
-                                    fields = [("", "activity_id"),
-                                              ],
-                                    label = T("Activity"),
-                                    link = False,
-                                    multiple = False,
-                                    )
-                                   )
-                s3db.configure("pr_person",
-                               crud_form = S3SQLCustomForm(*crud_fields),
-                               )
+                # Beneficiaries are added via their Distributions
+                # @ToDo: Exception for Mobile?
+                r.resource.configure(insertable = False)
 
             return True
         s3.prep = custom_prep
+
+        if current.request.controller == "dvr":
+            # Custom rheader
+            attr["rheader"] = dvr_rheader
 
         return attr
 
@@ -681,6 +878,7 @@ def config(settings):
                           value = ", ".join(set(L3s[L3])),
                           )
 
+    # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
 
         # Default Filter: Only open Events
@@ -693,6 +891,7 @@ def config(settings):
 
     settings.customise_event_event_controller = customise_event_event_controller
 
+    # -------------------------------------------------------------------------
     def customise_event_event_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_INT_IN_RANGE
@@ -774,6 +973,65 @@ def config(settings):
                                            3: T("Donor"),
                                            }
 
+    # -------------------------------------------------------------------------
+    def project_activity_onaccept(form):
+        """
+            Add/Update entry to calendar
+            Update response_locations
+        """
+
+        # Deletion and update have a different format
+        try:
+            activity_id = form.vars.id
+            delete = False
+        except:
+            activity_id = form.id
+            delete = True
+
+        # Add/Update Calendar entry
+        db = current.db
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        query = (ltable.module == "project") & \
+                (ltable.resource == "activity") & \
+                (ltable.record == activity_id)
+        link = db(query).select(ltable.post_id,
+                                limitby = (0, 1),
+                                ).first()
+        if delete:
+            if link:
+                db(table.id == link.post_id).delete()
+        else:
+            # Retrieve the full record
+            atable = db.project_activity
+            record = db(atable.id == activity_id).select(atable.name,
+                                                         atable.location_id,
+                                                         atable.date,
+                                                         limitby = (0, 1),
+                                                         ).first()
+            if link:
+                # Update it
+                db(table.id == link.post_id).update(body = record.name,
+                                                    location_id = record.location_id,
+                                                    date = record.date,
+                                                    )
+            else:
+                # Create it
+                post_id = table.insert(body = record.name,
+                                       location_id = record.location_id,
+                                       date = record.date,
+                                       )
+                ltable.insert(post_id = post_id,
+                              module = "project",
+                              resource = "activity",
+                              record = activity_id,
+                              )
+
+        # Calculate which L3 locations have SC activities linked to open events & set their Sectors tag
+        response_locations()
+
+    # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
 
         s3db = current.s3db
@@ -817,7 +1075,7 @@ def config(settings):
         # If we have default ones defined then need to add them in a cascade:
         #onaccept = s3db.get_config("project_activity", "onaccept")
         #ondelete = s3db.get_config("project_activity", "ondelete")
-        onaccept = lambda form: response_locations()
+        onaccept = project_activity_onaccept
         
         s3db.configure("project_activity",
                        crud_form = crud_form,
@@ -828,6 +1086,46 @@ def config(settings):
 
     settings.customise_project_activity_resource = customise_project_activity_resource
 
+    # -------------------------------------------------------------------------
+    def customise_project_activity_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and r.component_name == "case":
+                if "showadd_btn" in output:
+                    # Replace add button with one for the Person perspective
+                    from gluon import URL
+                    from s3 import S3CRUD
+                    output["form"] = None
+                    output["showadd_btn"] = None
+                    url = URL(c="dvr", f="person",
+                              args = "create",
+                              vars = {"activity_id": r.id}
+                              )
+                    add_btn = S3CRUD.crud_button(tablename="dvr_case",
+                                                 name="label_create",
+                                                 icon="add",
+                                                 _id="add-btn",
+                                                 _href=url,
+                                                 )
+                    output["buttons"] = {"add_btn": add_btn}
+
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    # No longer required as we switched case_activity to use person_id not case_id
+    #settings.customise_project_activity_controller = customise_project_activity_controller
+
+    # -------------------------------------------------------------------------
     def customise_project_programme_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -856,6 +1154,7 @@ def config(settings):
 
     settings.customise_project_programme_resource = customise_project_programme_resource
 
+    # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
         from s3 import S3LocationSelector, S3Represent, S3TextFilter, S3OptionsFilter, S3LocationFilter
@@ -985,6 +1284,7 @@ def config(settings):
 
     settings.customise_project_project_resource = customise_project_project_resource
 
+    # -------------------------------------------------------------------------
     def project_rheader(r, ert=False):
 
         if ert:
@@ -1003,6 +1303,7 @@ def config(settings):
             # @ToDo: Remove Implementing Org, Add Donors
             return current.s3db.project_rheader(r)
 
+    # -------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
         # Default Filter: Only open Projects

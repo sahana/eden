@@ -298,7 +298,7 @@ class DataCollectionModel(S3Model):
                        )
 
         # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Create Data Collection Target"),
             title_display = T("Data Collection Target Details"),
             title_list = T("Data Collection Targets"),

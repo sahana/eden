@@ -1557,10 +1557,10 @@ def config(settings):
                     field.comment = None
                     field.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "pr_group_member_role.id",
-                                                field.represent,
-                                                filterby = "group_type",
-                                                filter_opts = (7,),
-                                                ))
+                                                  field.represent,
+                                                  filterby = "group_type",
+                                                  filter_opts = (7,),
+                                                  ))
 
                     field = table.group_head
                     field.label = T("Head of Family")
