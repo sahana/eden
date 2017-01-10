@@ -1245,9 +1245,11 @@ class DVRNotesModel(S3Model):
                                        ondelete = "CASCADE",
                                        ),
                      note_type_id(empty = False),
-                     s3_date(),
+                     s3_date(default = "now",
+                             ),
                      s3_comments("note",
-                                 comment=None,
+                                 label = T("Note"),
+                                 comment = None,
                                  ),
                      *s3_meta_fields())
 
@@ -3884,11 +3886,17 @@ def dvr_case_household_size(group_id):
 def dvr_due_followups():
     """ Number of due follow-ups """
 
+    # Generate a request for case activities and customise it
+    r = S3Request("dvr", "case_activity", args=[], get_vars={})
+    r.customise_resource()
+    resource = r.resource
+
+    # Filter for due follow-ups
     query = (FS("followup") == True) & \
             (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
             (FS("completed") != True) & \
             (FS("person_id$dvr_case.archived") == False)
-    resource = current.s3db.resource("dvr_case_activity", filter=query)
+    resource.add_filter(query)
 
     return resource.count()
 

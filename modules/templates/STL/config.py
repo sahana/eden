@@ -269,6 +269,8 @@ def config(settings):
                 # Custom list fields
                 list_fields = ["name",
                                "service_id",
+                               "start_date",
+                               "end_date",
                                (T("Type of Group"), "group_type_id"),
                                "gender",
                                "age_group_id",
@@ -280,6 +282,8 @@ def config(settings):
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
                                             "service_id",
+                                            "start_date",
+                                            "end_date",
                                             (T("Type of Group"), "group_type_id"),
                                             "gender",
                                             "age_group_id",
@@ -865,7 +869,7 @@ def config(settings):
                            ]
 
         else:
-            # Activity list
+            # Activity list (or counting due follow-ups)
             expose_project_id(s3db.dvr_case_activity)
 
             crud_form = S3SQLCustomForm("person_id",
