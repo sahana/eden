@@ -175,7 +175,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Housing Types", f="housing_type"),
                         M("Income Sources", f="income_source"),
                         M("Need Types", f="need"),
-                        M("SNF Justifications", f="activity_funding_reason"),
+                        M("Vulnerability Types", f="Vulnerability_type"),
                         M("Activity Group Types", f="activity_group_type"),
                         M("Activity Age Groups", f="activity_age_group"),
                         ),

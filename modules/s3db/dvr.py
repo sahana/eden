@@ -41,6 +41,7 @@ __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRNotesModel",
            "DVRSiteActivityModel",
+           "DVRVulnerabilityModel",
            "dvr_ActivityRepresent",
            "dvr_AssignMethod",
            "dvr_case_default_status",
@@ -1616,6 +1617,11 @@ class DVRCaseActivityModel(S3Model):
                                         "joinby": "case_activity_id",
                                         "key": "need_id",
                                         },
+                            dvr_vulnerability_type = {
+                                "link": "dvr_vulnerability_type_case_activity",
+                                "joinby": "case_activity_id",
+                                "key": "vulnerability_type_id",
+                                },
                             )
 
         # List fields
@@ -3529,11 +3535,11 @@ class DVRCaseEvaluationModel(S3Model):
         return {}
 
 # =============================================================================
-class DVRActivityFundingModel(S3Model):
-    """ Model to manage funding needs for cases """
+class DVRVulnerabilityModel(S3Model):
+    """ Targeted vulnerabilities for activities """
 
-    names = ("dvr_activity_funding_reason",
-             "dvr_activity_funding",
+    names = ("dvr_vulnerability_type",
+             "dvr_vulnerability_type_case_activity",
              )
 
     def model(self):
@@ -3547,49 +3553,86 @@ class DVRActivityFundingModel(S3Model):
         crud_strings = s3.crud_strings
 
         # ---------------------------------------------------------------------
-        # Reasons for case funding
+        # Types of vulnerability
         #
-        tablename = "dvr_activity_funding_reason"
+        tablename = "dvr_vulnerability_type"
         define_table(tablename,
                      Field("name",
-                           label = T("Reason"),
+                           label = T("Type of Vulnerability"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Funding Reason"),
-            title_display = T("Funding Reason"),
-            title_list = T("Funding Reasons"),
-            title_update = T("Edit Funding Reason"),
-            label_list_button = T("List Funding Reasons"),
-            label_delete_button = T("Delete Funding Reason"),
-            msg_record_created = T("Funding Reason created"),
-            msg_record_modified = T("Funding Reason updated"),
-            msg_record_deleted = T("Funding Reason deleted"),
-            msg_list_empty = T("No Funding Reasons currently defined"),
+            label_create = T("Create Vulnerability Type"),
+            title_display = T("Vulnerability Type"),
+            title_list = T("Vulnerability Types"),
+            title_update = T("Edit Vulnerability Type"),
+            label_list_button = T("List Vulnerability Types"),
+            label_delete_button = T("Delete Vulnerability Type"),
+            msg_record_created = T("Vulnerability Type created"),
+            msg_record_modified = T("Vulnerability Type updated"),
+            msg_record_deleted = T("Vulnerability Type deleted"),
+            msg_list_empty = T("No Vulnerability Types currently defined"),
         )
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
-        reason_id = S3ReusableField("reason_id", "reference %s" % tablename,
-                                    label = T("Reason"),
-                                    represent = represent,
-                                    requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "%s.id" % tablename,
-                                                          represent,
-                                                          )),
-                                    sortby = "name",
-                                    comment = S3PopupLink(c="dvr",
-                                                          f="activity_funding_reason",
-                                                          tooltip=T("Create a new activity funding reason"),
-                                                          ),
-                                    )
+        vulnerability_type_id = S3ReusableField("vulnerability_type_id",
+                                                "reference %s" % tablename,
+                                                label = T("Type of Vulnerability"),
+                                                represent = represent,
+                                                requires = IS_EMPTY_OR(
+                                                                IS_ONE_OF(db,
+                                                                    "%s.id" % tablename,
+                                                                    represent,
+                                                                    )),
+                                                sortby = "name",
+                                                comment = S3PopupLink(c="dvr",
+                                                                      f="vulnerability_type",
+                                                                      tooltip=T("Create a new vulnerability type"),
+                                                                      ),
+                                                )
 
         # ---------------------------------------------------------------------
-        # Case funding proposal
+        # Link table vulnerability type <=> case activity
+        #
+        tablename = "dvr_vulnerability_type_case_activity"
+        define_table(tablename,
+                     vulnerability_type_id(),
+                     self.dvr_case_activity_id(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DVRActivityFundingModel(S3Model):
+    """ Model to manage funding needs for cases """
+
+    names = ("dvr_activity_funding",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Case activity funding
         #
         tablename = "dvr_activity_funding"
         define_table(tablename,
@@ -3599,7 +3642,9 @@ class DVRActivityFundingModel(S3Model):
                            label = T("Funding Required"),
                            represent = s3_yes_no_represent,
                            ),
-                     reason_id(ondelete = "SET NULL"),
+                     Field("reason", "text",
+                           label = T("Reason"),
+                           ),
                      Field("proposal", "text",
                            label = T("Proposed Assistance"),
                            ),

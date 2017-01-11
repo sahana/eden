@@ -757,8 +757,8 @@ def case_event():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def activity_funding_reason():
-    """ Activity Funding Reasons: RESTful CRUD Controller """
+def vulnerability_type():
+    """ Vulnerability Types: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

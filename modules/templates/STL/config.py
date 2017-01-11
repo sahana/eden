@@ -645,11 +645,8 @@ def config(settings):
             ftable = s3db.dvr_activity_funding
             field = ftable.funding_required
             field.label = T("Need for SNF")
-            field = ftable.reason_id
+            field = ftable.reason
             field.label = T("Justification for SNF")
-            field.comment = None
-            field = ftable.proposal
-            field.label = T("Proposed Assistance for SNF")
             field.widget = s3_comments_widget
 
             # Custom CRUD form
@@ -657,6 +654,10 @@ def config(settings):
                                         "service_id",
                                         "human_resource_id",
                                         "project_id",
+                                        S3SQLInlineLink("vulnerability_type",
+                                                        label = T("Types of Vulnerability"),
+                                                        field = "vulnerability_type_id",
+                                                        ),
                                         S3SQLInlineLink("need",
                                                         label = T("Sectors for DS/IS"),
                                                         field = "need_id",
@@ -671,8 +672,7 @@ def config(settings):
                                         "completed",
                                         "end_date",
                                         "activity_funding.funding_required",
-                                        "activity_funding.reason_id",
-                                        "activity_funding.proposal",
+                                        "activity_funding.reason",
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "file",
@@ -879,8 +879,7 @@ def config(settings):
                                         "followup",
                                         "followup_date",
                                         "activity_funding.funding_required",
-                                        "activity_funding.reason_id",
-                                        "activity_funding.proposal",
+                                        "activity_funding.reason",
                                         "comments",
                                         )
             # Custom list fields
@@ -961,35 +960,6 @@ def config(settings):
     settings.customise_dvr_case_activity_controller = customise_dvr_case_activity_controller
 
     # -------------------------------------------------------------------------
-    def customise_dvr_activity_funding_reason_resource(r, tablename):
-
-        T = current.T
-
-        table = current.s3db.dvr_activity_funding_reason
-
-        field = table.name
-        field.label = T("SNF Justification")
-
-        crud_strings = current.response.s3.crud_strings
-
-        # CRUD Strings
-        crud_strings["dvr_activity_funding_reason"] = Storage(
-            label_create = T("Create SNF Justification"),
-            title_display = T("SNF Justification"),
-            title_list = T("SNF Justifications"),
-            title_update = T("Edit SNF Justification"),
-            label_list_button = T("List SNF Justifications"),
-            label_delete_button = T("Delete SNF Justification"),
-            msg_record_created = T("SNF Justification created"),
-            msg_record_modified = T("SNF Justification updated"),
-            msg_record_deleted = T("SNF Justification deleted"),
-            msg_list_empty = T("No SNF Justifications currently defined"),
-        )
-
-
-    settings.customise_dvr_activity_funding_reason_resource = customise_dvr_activity_funding_reason_resource
-
-    # -------------------------------------------------------------------------
     def customise_dvr_activity_funding_resource(r, tablename):
 
         T = current.T
@@ -997,10 +967,8 @@ def config(settings):
         table = current.s3db.dvr_activity_funding
         field = table.funding_required
         field.label = T("Need for SNF")
-        field = table.reason_id
+        field = table.reason
         field.label = T("Justification for SNF")
-        field = table.proposal
-        field.label = T("Proposed Assistance for SNF")
 
     settings.customise_dvr_activity_funding_resource = customise_dvr_activity_funding_resource
 
