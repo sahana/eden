@@ -508,7 +508,8 @@ class S3DataTable(object):
                      _href=permalink,
                      _class="permalink")
             export_options.append(link)
-            export_options.append(" | ")
+            if len(icons):
+                export_options.append(" | ")
 
         # Append the icons
         export_options.append(icons)

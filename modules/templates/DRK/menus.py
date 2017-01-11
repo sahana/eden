@@ -45,6 +45,10 @@ class S3MainMenu(default.S3MainMenu):
         if not_admin and has_role("SECURITY"):
             return [
                 MM("Residents", c="security", f="person"),
+                MM("Dashboard", c="cr", f="shelter",
+                   args = [shelter_id, "profile"],
+                   check = shelter_id is not None,
+                   ),
                 #MM("ToDo", c="project", f="task"),
                 MM("Check-In / Check-Out", c="cr", f="shelter",
                    args = [shelter_id, "check-in"],

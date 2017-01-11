@@ -648,13 +648,9 @@ def config(settings):
                                        site_check_out = site_check_out,
                                        check_in_status = check_in_status,
                                        )
-            else:
-                has_role = current.auth.s3_has_role
-                if has_role("SECURITY") and not has_role("ADMIN"):
-                    # Security can't do anything else but check-in
-                    current.auth.permission.fail()
 
-                if r.method == "profile":
+            else:
+                if r.record and r.method == "profile":
                     # Add PoI layer to the Map
                     s3db = current.s3db
                     ftable = s3db.gis_layer_feature
@@ -679,6 +675,12 @@ def config(settings):
                         s3db.configure("cr_shelter",
                                        profile_layers = profile_layers,
                                        )
+                else:
+                    has_role = current.auth.s3_has_role
+                    if has_role("SECURITY") and not has_role("ADMIN"):
+                        # Security can access nothing in cr/shelter except
+                        # Dashboard and Check-in/out UI
+                        current.auth.permission.fail()
 
             if r.component_name == "shelter_unit":
                 # Expose "transitory" flag for housing units
@@ -933,10 +935,25 @@ def config(settings):
                 if r.component:
                     redirect(r.url(method=""))
 
-                # Filter to persons who have a case registered
-                resource.add_filter(FS("dvr_case.id") != None)
+                current.deployment_settings.ui.export_formats = None
 
+                # Filter to valid and open cases
+                query = (FS("dvr_case.id") != None) & \
+                        ((FS("dvr_case.archived") == False) | \
+                         (FS("dvr_case.archived") == None)) & \
+                        (FS("dvr_case.status_id$is_closed") == False)
+                resource.add_filter(query)
+
+                # Adjust CRUD strings
+                s3.crud_strings["pr_person"].update(
+                    {"title_list": T("Current Residents"),
+                     "label_list_button": T("List Residents"),
+                     }
+                    )
+
+                # No side menu
                 current.menu.options = None
+
                 # Only Show Security Notes
                 ntable = s3db.dvr_note_type
                 note_type = db(ntable.name == "Security").select(ntable.id,
@@ -950,6 +967,8 @@ def config(settings):
                     atable = s3db.dvr_note
                     atable.date.readable = atable.date.writable = False
                     atable.note.readable = atable.note.writable = False
+
+                # Custom CRUD form
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm(
                                 (T("ID"), "pe_label"),
@@ -971,6 +990,7 @@ def config(settings):
                                         ),
                                 )
 
+                # Custom list fields
                 list_fields = [(T("ID"), "pe_label"),
                                "last_name",
                                "first_name",
@@ -980,7 +1000,7 @@ def config(settings):
                                "shelter_registration.shelter_unit_id",
                                ]
 
-
+                # Profile page (currently unused)
                 if r.method == "profile":
                     from gluon.html import DIV, H2, P, TABLE, TR, TD, A
                     from s3 import s3_fullname

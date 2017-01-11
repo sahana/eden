@@ -121,6 +121,7 @@ SECURITY,Security,,dvr,case_event,,CREATE|READ,,,,,Security can create and read 
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
+SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
 SECURITY,Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
 SECURITY,Security,,,,pr_image,READ,,,,,Security can see profile pictures
@@ -128,8 +129,6 @@ SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
 SECURITY_HEAD,Head of Security,,cr,,,READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,case_event,,CREATE|READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,,,READ,,,,,
-SECURITY_HEAD,Head of Security,,inv,,,READ,,,,,
-SECURITY_HEAD,Head of Security,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_allowance,NONE,,,,,
