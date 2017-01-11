@@ -2618,7 +2618,7 @@ class IS_UTC_DATETIME(Validator):
                            directives refer to your strptime implementation
             @param error_message: error message for invalid date/times
             @param offset_error: error message for invalid UTC offset
-            @param utc_offset: offset to UTC in seconds, defaults to the
+            @param utc_offset: offset to UTC in hours, defaults to the
                                current session's UTC offset
             @param calendar: calendar to use for string evaluation, defaults
                              to current.calendar
@@ -2678,15 +2678,13 @@ class IS_UTC_DATETIME(Validator):
         if utc_offset is None:
             # Fall back to validator default
             utc_offset = self.utc_offset
+
         if utc_offset is None:
             # Fall back to session default
             utc_offset = current.session.s3.utc_offset
 
-        offset, error = IS_UTC_OFFSET()(utc_offset)
-        if error:
-            offset = 0 # fallback to UTC
-
-        return S3DateTime.get_offset_value(offset)
+        # Convert into offset seconds
+        return S3DateTime.get_offset_value(utc_offset)
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
