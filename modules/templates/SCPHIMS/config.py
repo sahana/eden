@@ -125,18 +125,41 @@ def config(settings):
     #settings.mail.login = "username:password"
 
     # =========================================================================
-    # CMS
-    #
-
-    settings.cms.richtext = True
-
-    # =========================================================================
     # Mobile
     #
 
     settings.mobile.forms = [("Beneficiaries", "pr_person", {"c": "dvr",
                                                              }),
                              ]
+
+    # =========================================================================
+    # CMS
+    #
+
+    settings.cms.richtext = True
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.method == "calendar":
+                # Only show entries related to Activities & Assessments
+                from s3 import FS
+                r.resource.add_filter(FS("post_module.module").belongs(("project", "dc")))
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
 
     # =========================================================================
     # Data Collection
@@ -204,7 +227,8 @@ def config(settings):
 
         # Always at L3
         from s3 import S3LocationSelector
-        table.location_id.widget = S3LocationSelector(levels=("L1", "L2", "L3"))
+        table.location_id.widget = S3LocationSelector(levels=("L1", "L2", "L3"),
+                                                      show_map=False)
 
         has_role = current.auth.s3_has_role
         if has_role("ERT_LEADER") or has_role("HUM_MANAGER"):

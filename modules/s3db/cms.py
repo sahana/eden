@@ -38,6 +38,7 @@ __all__ = ("S3ContentModel",
            "cms_customise_post_fields",
            "cms_post_list_layout",
            "S3CMS",
+           #"cms_Calendar",
            )
 
 import datetime
@@ -1861,21 +1862,55 @@ class cms_Calendar(S3Method):
         resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
                             (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
 
-        # @ToDo: Configurable fields (location_id not always relevant, but e.g. Author maybe)
-        fields = ["name",
+        # @ToDo: Configurable fields (location_id not always relevant, but e.g. Author may be)
+        fields = ["body",
                   "date",
                   "location_id",
+                  "post_module.module",
+                  "post_module.resource",
+                  "post_module.record",
                   ]
 
-        data = resource.select(fields)
+        data = resource.select(fields, represent=True, raw_data=True)
 
-        # @ToDo: Reformat posts into Array by day & return the maximum number of Posts in a day
-        posts = []
-        pappend = posts.append
+        # Reformat posts into Array of rows and columns (days)
+        # Need to start with the columns as we don't yet know how many rows we need
+        cols = []
+        cappend = cols.append
+        max_rows = []
+        mappend = max_rows.append
+        # Initialise arrays
         for day in days:
-            pappend()
+            cappend([])
+            mappend(0)
 
-        return posts
+        # Place each record into the correct day's column
+        len_days = len(days)
+        for record in data.rows:
+            date = record._row["cms_post.date"]
+            for i in range(len_days):
+                if date < days[i + 1]:
+                    cols[i].append(record)
+                    max_rows[i] += 1
+                    break
+
+        # Now convert to rows
+        rows = []
+        rappend = rows.append
+        len_rows = max(max_rows)
+        # Initialise array
+        for i in range(len_rows):
+            rappend([])
+
+        for row in rows:
+            rappend = row.append
+            for col in cols:
+                if len(col):
+                    rappend(col.pop())
+                else:
+                    rappend(Storage())
+
+        return rows
 
     # -------------------------------------------------------------------------
     def html(self, r, **attr):
@@ -1907,15 +1942,17 @@ class cms_Calendar(S3Method):
             rappend(TD(day.strftime("%A")))
         item.append(title_row)
 
-        # @ToDo: Represent Posts as Cards
-        # - e.g. using cms_post_list_layout?
-        data_row = TR()
-        rappend = data_row.append
-        i = 0
-        for day in days:
-            rappend(TD(posts[i].body))
-            i += 1
-        item.append(data_row)
+        for row in posts:
+            data_row = TR()
+            rappend = data_row.append
+            row.reverse()
+            for day in days:
+                post = row.pop()
+                if post:
+                    rappend(TD(self.post_layout(post)))
+                else:
+                    rappend(TD())
+            item.append(data_row)
 
         output = dict(item=item)
         output["title"] = T("Weekly Schedule")
@@ -1928,5 +1965,30 @@ class cms_Calendar(S3Method):
 
         current.response.view = "simple.html"
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def post_layout(post):
+        """
+            Format a calendar entry
+        """
+
+        title = post["cms_post.body"]
+        record_id = post["cms_post_module.record"]
+        if record_id:
+            title = A(title,
+                      _href = URL(c = str(post["cms_post_module.module"]),
+                                  f = str(post["cms_post_module.resource"]),
+                                  args = record_id,
+                                  ),
+                      _target = "_blank",
+                      )
+
+        location = post["cms_post.location_id"]
+
+        return DIV(title,
+                   BR(),
+                   location,
+                   )
 
 # END =========================================================================
