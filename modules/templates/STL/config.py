@@ -760,6 +760,16 @@ def config(settings):
                                         "project_id",
                                         "service_id",
                                         "activity_id",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Attachments"),
+                                            fields = ["file", "comments"],
+                                            filterby = {"field": "file",
+                                                        "options": "",
+                                                        "invert": True,
+                                                        },
+                                            ),
                                         "comments",
                                         )
             # Custom list fields
@@ -856,6 +866,16 @@ def config(settings):
                                         "human_resource_id",
                                         "project_id",
                                         "activity_id",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Attachments"),
+                                            fields = ["file", "comments"],
+                                            filterby = {"field": "file",
+                                                        "options": "",
+                                                        "invert": True,
+                                                        },
+                                            ),
                                         "comments",
                                         )
 
