@@ -1597,8 +1597,10 @@ class DVRCaseActivityModel(S3Model):
                              past = 0,
                              ),
                      # @todo: provide options lookup?
-                     Field("outcome",
+                     Field("outcome", "text",
                            label = T("Outcome"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
                            ),
                      Field("completed", "boolean",
                            default = False,
@@ -2642,6 +2644,10 @@ class DVRCaseEconomyInformationModel(S3Model):
                            label = T("Average Weekly Income"),
                            requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
                            ),
+                     Field("monthly_income", "double",
+                           label = T("Average Monthly Income"),
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           ),
                      s3_currency(),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2673,7 +2679,8 @@ class DVRCaseEconomyInformationModel(S3Model):
         # CRUD Form
         crud_form = S3SQLCustomForm("housing_type_id",
                                     "monthly_costs",
-                                    "average_weekly_income",
+                                    #"average_weekly_income",
+                                    "monthly_income",
                                     "currency",
                                     S3SQLInlineLink("income_source",
                                                     field = "income_source_id",
@@ -2687,7 +2694,8 @@ class DVRCaseEconomyInformationModel(S3Model):
         list_fields = ["housing_type_id",
                        "monthly_costs",
                        "income_source_economy.income_source_id",
-                       "average_weekly_income",
+                       #"average_weekly_income",
+                       "monthly_income",
                        "comments",
                        ]
 
@@ -3644,6 +3652,8 @@ class DVRActivityFundingModel(S3Model):
                            ),
                      Field("reason", "text",
                            label = T("Reason"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
                            ),
                      Field("proposal", "text",
                            label = T("Proposed Assistance"),

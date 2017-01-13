@@ -565,12 +565,15 @@ def config(settings):
 
             if r.function == "due_followups":
                 table = r.table
+                component = r.resource
                 # Filter activities by root service
                 query = (FS("service_id$root_service") == root_service_id)
-                r.resource.add_filter(query)
+                component.add_filter(query)
             else:
                 table = r.component.table
                 component = r.component
+
+            component.configure(orderby=~table.start_date)
 
             expose_project_id(table)
             expose_human_resource_id(table)
@@ -671,6 +674,7 @@ def config(settings):
                                         "followup_date",
                                         "completed",
                                         "end_date",
+                                        (T("Outcome for DS"), "outcome"),
                                         "activity_funding.funding_required",
                                         "activity_funding.reason",
                                         S3SQLInlineComponent(
