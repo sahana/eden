@@ -126,6 +126,8 @@ def sites_for_org():
     """
         Used to provide the list of Sites for an Organisation
         - used in User Registration & Assets
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:

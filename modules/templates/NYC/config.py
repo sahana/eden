@@ -1738,7 +1738,7 @@ $.filterOptionsS3({
      'trigger':'organisation_id',
      'target':'site_id',
      'lookupResource':'site',
-     'lookupURL':'/%s/org/sites_for_org/',
+     'lookupURL':'/%s/org/sites_for_org.json/',
      'optional':true
     })''' % r.application
                     s3.jquery_ready.append(script)
