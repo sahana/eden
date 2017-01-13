@@ -1515,6 +1515,13 @@ class DVRCaseActivityModel(S3Model):
                          (3, T("Low")),
                          ]
 
+        # Achievement options
+        achievement_opts = [("INCR", T("Increased in severity")),
+                            ("SAME", T("At same level")),
+                            ("DECR", T("Decreased in severity")),
+                            ("RSLV", T("Completely resolved")),
+                            ]
+
         tablename = "dvr_case_activity"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
@@ -1548,6 +1555,23 @@ class DVRCaseActivityModel(S3Model):
                            represent = s3_text_represent,
                            widget = s3_comments_widget,
                            ),
+                     Field("achievement",
+                           label = T("Change achieved"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Change achieved"),
+                                                           T("What change in the severity of the problem has so far been achieved by this activity?"),
+                                                           ),
+                                         ),
+                           represent = S3Represent(
+                                            options=dict(achievement_opts),
+                                            ),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(achievement_opts,
+                                                  sort = False,
+                                                  )),
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("emergency", "boolean",
                            default = False,
                            label = T("Emergency"),
@@ -1556,7 +1580,7 @@ class DVRCaseActivityModel(S3Model):
                      Field("priority", "integer",
                            label = T("Priority"),
                            represent = S3Represent(options=dict(priority_opts)),
-                           requires = IS_IN_SET(priority_opts, sort = False),
+                           requires = IS_IN_SET(priority_opts, sort=False),
                            default = 2, # normal
                            readable = False,
                            writable = False,
@@ -1885,7 +1909,7 @@ class DVRCaseAppointmentModel(S3Model):
                                 _title="%s|%s" % (T("Mandatory Appointment"),
                                                   T("This appointment is mandatory before transfer"),
                                                   ),
-                                ),
+                                )
 
         tablename = "dvr_case_appointment_type"
         define_table(tablename,

@@ -858,6 +858,10 @@ def config(settings):
             table.followup.default = False
             table.followup_date.default = None
 
+            # Expose achievement field
+            field = table.achievement
+            field.readable = field.writable = True
+
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         S3SQLInlineLink("need",
@@ -870,6 +874,7 @@ def config(settings):
                                         "human_resource_id",
                                         "project_id",
                                         "activity_id",
+                                        (T("Status of main complaint at last visit"), "achievement"),
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "file",
