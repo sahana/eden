@@ -11,6 +11,29 @@
  </div>
 </div>
 {{pass}}
+{{if event:}}
+<div class='row'>
+ <div role='complementary' class="event-callout">
+   <div class='medium-6 small-12 columns'>
+     <h6 class="meta">This incident is part of the event</h6>
+     <h1 class="title left">{{=event.name}}</h1>
+     <a href="{{=event.url}}" class="button">Go to Event</a>
+   </div>
+   <div class="medium-6 small-12 columns meta meta-container medium-text-right">
+     <h6>
+       <span class="meta-key">Zero Hour:</span> {{=event.start_date}} |
+       {{=event.location}}
+     </h6>
+     <p class="meta-data">
+       <a href="{{=event.url}}">{{=event.incidents}} Incidents</a>
+       <a href="{{=event.url}}">{{=event.resources}} Resources</a>
+       <a href="{{=event.url}}">{{=event.posts}} Posts</a>
+     </p>
+     <p class="meta-data"><span class="meta-label {{=event.status}}">{{=event.status}}</span></p>
+   </div>
+ </div>
+</div>
+{{pass}}
 <div class='row panel incident-profile'>
  <div class='large-8 columns'>
   <div class='incident panel'>

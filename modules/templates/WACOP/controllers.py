@@ -2,6 +2,7 @@
 
 from gluon import current, SQLFORM
 from gluon.html import *
+from gluon.storage import Storage
 from gluon.utils import web2py_uuid
 from s3 import s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3OptionsFilter, S3TextFilter, S3URLQuery
 
@@ -878,6 +879,61 @@ class incident_Profile(custom_WACOP):
             bookmark_btn = ""
         output["bookmark_btn"] = bookmark_btn
 
+        # Is this Incident part of an Event?
+        event_id = record.event_id
+        if event_id:
+            # Read Event details
+            event = Storage()
+            etable = s3db.event_event
+            erecord = db(etable.id == event_id).select(etable.name,
+                                                       etable.start_date,
+                                                       etable.end_date,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            event.name = erecord.name
+            event.start_date = date_represent(erecord.start_date)
+            end_date = erecord.end_date
+            if end_date:
+                event.active = False
+                event.end_date = date_represent(end_date)
+            else:
+                event.active = True
+                event.end_date = "n/a"
+
+            eltable = s3db.event_event_location
+            query = (eltable.event_id == event_id) & \
+                    (eltable.deleted == False)
+            event_location = db(query).select(eltable.location_id,
+                                              limitby = (0, 1),
+                                              ).first()
+            if event_location:
+                event.location = eltable.location_id.represent(event_location.location_id)
+            else:
+                event.location = ""
+
+            query = (itable.event_id == event_id) & \
+                    (itable.deleted == False)
+            event.incidents = db(query).count()
+
+            query = (ertable.event_id == event_id) & \
+                    (ertable.deleted == False)
+            event.resources = db(query).count()
+
+            query = (eptable.event_id == event_id) & \
+                    (eptable.deleted == False)
+            event.posts = db(query).count()
+
+            event.url = URL(c="event", f="event",
+                            args = [event_id, "profile"],
+                            )
+
+            # @ToDo:
+            event.status = "Events don't yet have Statuses...so do we need to add them? What are the options?"
+
+            output["event"] = event
+        else:
+            output["event"] = None
+
         # DataTables
         current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
@@ -1357,7 +1413,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     item = TAG["ARTICLE"](TAG["HEADER"](UL(# post priority icon
                                            LI(SPAN(_class="dl-priority dl-icon-alert",
-                                                   )
+                                                   ),
                                               _class="icon",
                                               ),
                                            # post type title
@@ -1365,7 +1421,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                               _class="title",
                                               ),
                                            # post status
-                                           # @ToDo: What are Post Statuses?
+                                           # @ToDo: Add Post Statuses?
                                            LI(T("Active"),
                                               _class="item borders",
                                               ),
