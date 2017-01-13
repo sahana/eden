@@ -1598,7 +1598,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/req/req_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem

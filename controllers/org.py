@@ -470,6 +470,8 @@ def facility_geojson():
         Create GeoJSON[P] of Facilities for use by a high-traffic website
         - controller just for testing
         - function normally run on a schedule
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     s3db.org_facility_geojson()
