@@ -2107,6 +2107,10 @@ def config(settings):
                 field = table.case_id
                 field.readable = field.writable = False
 
+                # Can't change beneficiary
+                field = table.person_id
+                field.writable = False
+
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id",

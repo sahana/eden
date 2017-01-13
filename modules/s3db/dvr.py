@@ -2790,7 +2790,8 @@ class DVRCaseAllowanceModel(S3Model):
         define_table(tablename,
                      # Beneficiary (component link):
                      # @todo: populate from case and hide in case perspective
-                     self.pr_person_id(empty = False,
+                     self.pr_person_id(comment = None,
+                                       empty = False,
                                        ondelete = "CASCADE",
                                        ),
                      self.dvr_case_id(# @ToDo: Populate this onaccept from imports
