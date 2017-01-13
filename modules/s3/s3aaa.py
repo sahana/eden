@@ -1783,7 +1783,7 @@ $.filterOptionsS3({
  'target':'site_id',
  'lookupField':'site_id',
  'lookupResource':'site',
- 'lookupURL':S3.Ap.concat('/org/sites_for_org/')%s
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org.json/')%s
 })''' % site_optional)
                 else:
                     requires = IS_ONE_OF(db, "org_site.site_id",
