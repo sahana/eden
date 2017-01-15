@@ -750,7 +750,7 @@ def config(settings):
 'trigger':'service_id',
 'target':'activity_id',
 'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.service_id='),
-'fncRepresent': function(r){return r.service_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+')'},
+'fncRepresent': function(r){return r.service_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+') ('+(r.facilitator||'..')+')'},
 'optional': true
 })'''
                s3.jquery_ready.append(script)
