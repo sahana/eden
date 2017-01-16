@@ -1978,7 +1978,7 @@ class cms_Calendar(S3Method):
         if record_id:
             title = A(title,
                       _href = URL(c = str(post["cms_post_module.module"]),
-                                  f = str(post["cms_post_module.resource"]),
+                                  f = str(post["cms_post_module.resource"]), # gluon does an isinstance(str)
                                   args = record_id,
                                   ),
                       _target = "_blank",

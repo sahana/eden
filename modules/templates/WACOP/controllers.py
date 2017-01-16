@@ -1337,7 +1337,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                  LI(delete_btn,
                     _class="item",
                     ),
-                 _class="inline-list right",
+                 #_class="inline-list right",
+                 _class="right",
                  )
 
     #if settings.get_cms_show_tags():
@@ -1354,33 +1355,48 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                  ),
                                ))
 
-    item = LI(TAG["HEADER"](P(SPAN(series_title,
-                                   _class="label info",
-                                   ),
-                              TAG["TIME"](date),
-                              " by ",
-                              person,
-                              _class="left update-meta-text",
-                              ),
-                            toolbar,
-                            _class="clearfix",
-                            ),
-              P(body),
-              TAG["FOOTER"](SPAN("Tags:",
-                                 _class="left",
-                                 ),
-                            tag_list,
-                            # @ToDO: Make comments work
-                            P(A("0 Comments",
-                                _href="#update-1-comments",
+    item = TAG["ARTICLE"](TAG["HEADER"](UL(# post priority icon
+                                           LI(SPAN(_class="dl-priority dl-icon-alert",
+                                                   )
+                                              _class="icon",
+                                              ),
+                                           # post type title
+                                           LI(series_title,
+                                              _class="title",
+                                              ),
+                                           # post status
+                                           # @ToDo: What are Post Statuses?
+                                           LI(T("Active"),
+                                              _class="item borders",
+                                              ),
+                                           # post visibility
+                                           # @ToDo: Read the visibility
+                                           LI(T("Public"),
+                                              _class="item borders",
+                                              ),
+                                           ),
+                                        toolbar,
+                                        _class="left",
+                                        ),
+                          DIV(P(TAG["TIME"](date),
+                                " by ",
+                                person,
+                                "&mdash;",
+                                # @ToDo: Make comments work
+                                A("0 Comments",
+                                  #_href="#update-1-comments",
+                                  ),
+                                _class="dl-meta",
                                 ),
-                              _class="right",
+                              P(body),
+                              _class="dl-body",
                               ),
-                            _class="clearfix",
-                            ),
-              _class="panel",
-              _id=item_id,
-              )
+                          TAG["FOOTER"](tag_list,
+                                        _class="clearfix",
+                                        ),
+                          #_class="panel",
+                          _id=item_id,
+                          )
 
     return item
 

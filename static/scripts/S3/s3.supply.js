@@ -45,7 +45,7 @@ $(document).ready(function() {
             return;
         }
 
-        var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
+        var url = S3.Ap.concat('/inv/inv_item_quantity.json/' + id);
         if ($('#inv_quantity_throbber').length === 0) {
             $('[name="quantity"]').after('<div id="inv_quantity_throbber" class="throbber"/>'); 
         }
@@ -120,7 +120,7 @@ $(document).ready(function() {
 		'Field':		'item_pack_id',
 		'FieldResource':'item_pack',
 		'FieldPrefix':	'supply',
-	    'url':		 	S3.Ap.concat('/inv/inv_item_packs/'),
+	    'url':		 	S3.Ap.concat('/inv/inv_item_packs.json/'),
 		'msgNoRecords':	i18n.no_packs,
 		'fncPrep':		S3.supply.fncPrepItem,
 		'fncRepresent':	S3.supply.fncRepresentItem
@@ -132,7 +132,7 @@ $(document).ready(function() {
 		'Field':		'item_pack_id',
 		'FieldResource':'item_pack',
 		'FieldPrefix':	'supply',
-	    'url':		 	S3.Ap.concat('/req/req_item_packs/'),
+	    'url':		 	S3.Ap.concat('/req/req_item_packs.json/'),
 		'msgNoRecords':	i18n.no_packs,
 		'fncPrep':		S3.supply.fncPrepItem,
 		'fncRepresent':	S3.supply.fncRepresentItem
@@ -167,7 +167,7 @@ $(document).ready(function() {
 			var UpdateURL = $('.action-btn', DIV.parent().parent().parent()).attr('href');
 			var re = /req_item\/(\d*).*/i;
 			var req_item_id = re.exec(UpdateURL)[1];
-			var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json/', req_item_id);
+			var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item_json.json/', req_item_id);
 			//var url = S3.Ap.concat('/', App, '/', ShipmentType, '_item.s3json?/',
 			//		   ShipmentType, '_item.req_item_id=', req_item_id);
 			$.ajax( {

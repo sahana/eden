@@ -491,7 +491,7 @@ $.filterOptionsS3({
  'target':{'alias':'commit_item','name':'item_pack_id'},
  'scope':'row',
  'lookupPrefix':'req',
- 'lookupResource':'req_item_packs',
+ 'lookupResource':'req_item_packs.json',
  'lookupKey':'req_item_id',
  'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
@@ -960,6 +960,8 @@ def req_item():
 def req_item_packs():
     """
         Called by S3OptionsFilter to provide the pack options for an Item
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     req_item_id = None
@@ -1248,7 +1250,7 @@ $.filterOptionsS3({
  'target':{'alias':'commit_item','name':'item_pack_id'},
  'scope':'row',
 'lookupPrefix':'req',
-'lookupResource':'req_item_packs',
+'lookupResource':'req_item_packs.json',
 'lookupKey':'req_item_id',
 'lookupField':'id',
 'msgNoRecords':i18n.no_packs,
@@ -1807,7 +1809,9 @@ def send_req():
 # =============================================================================
 def commit_item_json():
     """
-       @ToDo: docstring to explain where this is used
+        Used by s3.supply.js
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     ctable = s3db.req_commit

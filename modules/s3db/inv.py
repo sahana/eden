@@ -557,7 +557,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
@@ -1724,7 +1724,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem

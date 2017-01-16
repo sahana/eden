@@ -199,7 +199,7 @@ class S3AssetModel(S3Model):
  'lookupResource':'site',
  'lookupPrefix':'org',
  'lookupField':'site_id',
- 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org.json/')
 })''',
                                      ),
                      # This is a component, so needs to be a super_link

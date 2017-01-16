@@ -637,6 +637,9 @@ def track_movement():
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
     """
+        
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:
@@ -665,6 +668,8 @@ def inv_item_packs():
     """
         Called by S3OptionsFilter to provide the pack options for a
             particular Item
+
+        Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:
@@ -1659,6 +1664,9 @@ def adj_close():
 # =============================================================================
 def recv_item_json():
     """
+       Used by s3.supply.js
+
+       Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:
@@ -1693,6 +1701,9 @@ def recv_item_json():
 # -----------------------------------------------------------------------------
 def send_item_json():
     """
+       Used by s3.supply.js
+
+       Access via the .json representation to avoid work rendering menus, etc
     """
 
     try:
