@@ -1321,7 +1321,8 @@ def config(settings):
 'lookupResource':'human_resource',
 'lookupKey':'organisation_id',
 'fncRepresent': function(record){return record.person_id},
-'optional': true
+'optional': true,
+'lookupURL': S3.Ap.concat('/hrm/human_resource.json?limit=None&human_resource.organisation_id='),
 })'''
                     s3.jquery_ready.append(script)
 
