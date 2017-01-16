@@ -1690,7 +1690,7 @@ class S3CalendarWidget(FormWidget):
             #    # Urdu uses Arabic
             #    language = "ar"
             if "-" in language:
-                parts = language.split("_", 1)
+                parts = language.split("-", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
 
             # datePicker regional
