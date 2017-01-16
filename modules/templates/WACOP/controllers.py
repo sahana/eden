@@ -900,6 +900,7 @@ class incident_Profile(custom_WACOP):
             event = Storage()
             etable = s3db.event_event
             erecord = db(etable.id == event_id).select(etable.name,
+                                                       etable.exercise,
                                                        etable.start_date,
                                                        etable.end_date,
                                                        limitby = (0, 1),
@@ -927,22 +928,47 @@ class incident_Profile(custom_WACOP):
 
             query = (itable.event_id == event_id) & \
                     (itable.deleted == False)
-            event.incidents = db(query).count()
+            incidents = db(query).count()
+            event.incidents = A("%s %s" % (incidents, T("Incidents")),
+                                _href = URL(c="event", f="event",
+                                            args = "incident.popup",
+                                            ),
+                                _class = "s3_modal",
+                                _title = T("Incidents"),
+                                )
 
             query = (ertable.event_id == event_id) & \
                     (ertable.deleted == False)
-            event.resources = db(query).count()
+            resources = db(query).count()
+            event.resources = A("%s %s" % (resources, T("Resources")),
+                                _href = URL(c="event", f="event",
+                                            args = "team.popup",
+                                            ),
+                                _class = "s3_modal",
+                                _title = T("Resources"),
+                                )
 
             query = (eptable.event_id == event_id) & \
                     (eptable.deleted == False)
-            event.posts = db(query).count()
+            updates = db(query).count()
+            event.updates = A("%s %s" % (updates, T("Updates")),
+                                _href = URL(c="event", f="event",
+                                            args = "post.popup",
+                                            ),
+                                _class = "s3_modal",
+                                _title = T("Updates"),
+                                )
 
             event.url = URL(c="event", f="event",
                             args = [event_id, "profile"],
                             )
 
-            # @ToDo:
-            event.status = "Events don't yet have Statuses...so do we need to add them? What are the options?"
+            if erecord.exercise:
+                event.status = T("Testing")
+            elif not erecord.end_date:
+                event.status = T("Open")
+            else:
+                event.status = T("Closed")
 
             output["event"] = event
         else:

@@ -437,6 +437,11 @@ class S3EventModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            cms_post = {"link": "event_post",
+                                        "joinby": "event_id",
+                                        "key": "post_id",
+                                        "actuate": "replace",
+                                        },
                             event_incident = "event_id",
                             dc_collection = {"link": "event_collection",
                                              "joinby": "event_id",
@@ -475,7 +480,8 @@ class S3EventModel(S3Model):
                                                "actuate": "replace",
                                                },
                             event_event_location = "event_id",
-                            event_post = "event_id",
+                            # Should be able to do everything via the cms_post variant
+                            #event_post = "event_id",
                             event_event_tag = {"name": "tag",
                                                "joinby": "event_id",
                                                },
