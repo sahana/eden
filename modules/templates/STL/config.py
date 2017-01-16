@@ -596,20 +596,21 @@ def config(settings):
             left = stable.on(stable.id == ntable.service_id)
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
+            SECTOR = T("Sector for DS/IS")
+            FILTER = (FS("service_id$root_service") == root_service_id)
 
             #field = table.need_id
             field = s3db.dvr_case_activity_need.need_id
-            field.label = T("Sectors for DS/IS")
+            field.label = SECTOR
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
                                        left = left,
                                        )
-            FILTER = (FS("service_id$root_service") == root_service_id)
-            field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
-                                             filter = FILTER,
-                                             )
+            #field.widget = S3HierarchyWidget(multiple = False,
+            #                                 leafonly = False,
+            #                                 filter = FILTER,
+            #                                 )
 
             # Customise Need Details
             field = table.need_details
@@ -662,9 +663,11 @@ def config(settings):
                                                         field = "vulnerability_type_id",
                                                         ),
                                         S3SQLInlineLink("need",
-                                                        label = T("Sectors for DS/IS"),
+                                                        label = SECTOR,
                                                         field = "need_id",
                                                         widget = "hierarchy",
+                                                        multiple = False,
+                                                        leafonly = True,
                                                         filter = FILTER,
                                                         ),
                                         "need_details",
@@ -817,19 +820,21 @@ def config(settings):
             left = stable.on(stable.id == ntable.service_id)
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
+            COMPLAINT_TYPE = T("MH Complaint Type")
+            FILTER = (FS("service_id$root_service") == root_service_id)
+
             #field = table.need_id
             field = s3db.dvr_case_activity_need.need_id
-            field.label = T("MH Complaint Types")
+            field.label = COMPLAINT_TYPE
             field.comment = None
             field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                        field.represent,
                                        left = left,
                                        )
-            FILTER = (FS("service_id$root_service") == root_service_id)
-            field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
-                                             filter = FILTER,
-                                             )
+            #field.widget = S3HierarchyWidget(multiple = False,
+            #                                 leafonly = False,
+            #                                 filter = FILTER,
+            #                                 )
 
             # Filter activities
             field = table.activity_id
@@ -865,9 +870,11 @@ def config(settings):
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         S3SQLInlineLink("need",
-                                                        label = T("MH Complaint Types"),
+                                                        label = COMPLAINT_TYPE,
                                                         field = "need_id",
                                                         widget = "hierarchy",
+                                                        multiple = False,
+                                                        leafonly = True,
                                                         filter = FILTER,
                                                         ),
                                         "service_id",
@@ -904,7 +911,7 @@ def config(settings):
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
                                         "service_id",
-                                        "need_id",
+                                        #"need_id",
                                         "followup",
                                         "followup_date",
                                         "activity_funding.funding_required",
@@ -955,7 +962,7 @@ def config(settings):
                 # Custom list fields
                 list_fields = [(T("Ref.No."), "person_id$pe_label"),
                                "person_id",
-                               (T("Sectors for DS/IS"), "case_activity_need.need_id"),
+                               (T("Sector for DS/IS"), "case_activity_need.need_id"),
                                "service_id",
                                "followup_date",
                                ]

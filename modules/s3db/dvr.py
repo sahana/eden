@@ -4017,6 +4017,7 @@ class dvr_ActivityRepresent(S3Represent):
                                         table.start_date,
                                         table.end_date,
                                         table.service_id,
+                                        table.facilitator,
                                         limitby = (0, count),
                                         )
         self.queries += 1
@@ -4049,6 +4050,8 @@ class dvr_ActivityRepresent(S3Represent):
 
         template = "%(title)s"
         data = {"title": title,
+                "start": "-",
+                "end": "-",
                 }
 
         start_date = row.start_date
@@ -4060,6 +4063,11 @@ class dvr_ActivityRepresent(S3Represent):
             if end_date:
                 data["end"] = date_represent(end_date)
             template = "%(title)s (%(start)s - %(end)s)"
+
+        facilitator = row.facilitator
+        if facilitator:
+            template = "%s (%%(facilitator)s)" % template
+            data["facilitator"] = facilitator
 
         return template % data
 
