@@ -2,6 +2,7 @@
 
 from gluon import current, SQLFORM
 from gluon.html import *
+from gluon.storage import Storage
 from gluon.utils import web2py_uuid
 from s3 import s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3OptionsFilter, S3TextFilter, S3URLQuery
 
@@ -361,6 +362,8 @@ class custom_WACOP(S3CRUD):
             resource.add_filter(FS("event_post.incident_id") == incident_id)
 
         list_fields = ["series_id",
+                       "priority",
+                       "status_id",
                        "date",
                        "body",
                        "created_by",
@@ -421,6 +424,16 @@ class custom_WACOP(S3CRUD):
                                           noneSelectedText = "Type",
                                           widget = "multiselect",
                                           ),
+                          S3OptionsFilter("priority",
+                                          label = "",
+                                          noneSelectedText = "Priority",
+                                          widget = "multiselect",
+                                          ),
+                          S3OptionsFilter("status_id",
+                                          label = "",
+                                          noneSelectedText = "Status",
+                                          widget = "multiselect",
+                                          ),
                           S3OptionsFilter("created_by$organisation_id",
                                           label = "",
                                           noneSelectedText = "Source",
@@ -442,9 +455,11 @@ class custom_WACOP(S3CRUD):
                                                                 },
                                                      cols = 2,
                                                      multiple = False,
+                                                     table = False,
                                                      ))
 
         filter_form = S3FilterForm(filter_widgets,
+                                   formstyle = filter_formstyle_profile,
                                    submit=True,
                                    ajax=True,
                                    url=URL(args=[incident_id, "custom.dl"],
@@ -878,6 +893,61 @@ class incident_Profile(custom_WACOP):
             bookmark_btn = ""
         output["bookmark_btn"] = bookmark_btn
 
+        # Is this Incident part of an Event?
+        event_id = record.event_id
+        if event_id:
+            # Read Event details
+            event = Storage()
+            etable = s3db.event_event
+            erecord = db(etable.id == event_id).select(etable.name,
+                                                       etable.start_date,
+                                                       etable.end_date,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            event.name = erecord.name
+            event.start_date = date_represent(erecord.start_date)
+            end_date = erecord.end_date
+            if end_date:
+                event.active = False
+                event.end_date = date_represent(end_date)
+            else:
+                event.active = True
+                event.end_date = "n/a"
+
+            eltable = s3db.event_event_location
+            query = (eltable.event_id == event_id) & \
+                    (eltable.deleted == False)
+            event_location = db(query).select(eltable.location_id,
+                                              limitby = (0, 1),
+                                              ).first()
+            if event_location:
+                event.location = eltable.location_id.represent(event_location.location_id)
+            else:
+                event.location = ""
+
+            query = (itable.event_id == event_id) & \
+                    (itable.deleted == False)
+            event.incidents = db(query).count()
+
+            query = (ertable.event_id == event_id) & \
+                    (ertable.deleted == False)
+            event.resources = db(query).count()
+
+            query = (eptable.event_id == event_id) & \
+                    (eptable.deleted == False)
+            event.posts = db(query).count()
+
+            event.url = URL(c="event", f="event",
+                            args = [event_id, "profile"],
+                            )
+
+            # @ToDo:
+            event.status = "Events don't yet have Statuses...so do we need to add them? What are the options?"
+
+            output["event"] = event
+        else:
+            output["event"] = None
+
         # DataTables
         current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
@@ -1207,6 +1277,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         series_title = series = ""
 
+    status = record["cms_post.status_id"]
+
     author_id = raw["cms_post.created_by"]
     person = record["cms_post.created_by"]
 
@@ -1357,7 +1429,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     item = TAG["ARTICLE"](TAG["HEADER"](UL(# post priority icon
                                            LI(SPAN(_class="dl-priority dl-icon-alert",
-                                                   )
+                                                   ),
                                               _class="icon",
                                               ),
                                            # post type title
@@ -1365,8 +1437,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                               _class="title",
                                               ),
                                            # post status
-                                           # @ToDo: What are Post Statuses?
-                                           LI(T("Active"),
+                                           LI(status,
                                               _class="item borders",
                                               ),
                                            # post visibility
@@ -1435,7 +1506,7 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
-def filter_formstyle(form, fields, *args, **kwargs):
+def filter_formstyle_summary(form, fields, *args, **kwargs):
     """
         Custom formstyle for filters on the Incident Summary page
     """
@@ -1446,6 +1517,56 @@ def filter_formstyle(form, fields, *args, **kwargs):
                             widget,
                             )
         return DIV(controls, _id=row_id)
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def filter_formstyle_profile(form, fields, *args, **kwargs):
+    """
+        Custom formstyle for filters on the Incident Profile page
+        - slightly tweaked formstyle_foundation_inline
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
+
+        if isinstance(label, LABEL):
+            label.add_class("left inline")
+
+        controls_col = DIV(widget, _class="small-12 columns controls")
+        if label:
+            label_col = DIV(label, _class="medium-2 columns")
+        else:
+            label_col = ""
+            #controls_col.add_class("medium-offset-2")
+
+        if comment:
+            comment = render_tooltip(label,
+                                     comment,
+                                     _class="inline-tooltip tooltip",
+                                     )
+            if hasattr(comment, "add_class"):
+                comment.add_class("inline-tooltip")
+            controls_col.append(comment)
+
+        _class = "form-row row hide" if hidden else "form-row row"
+        return DIV(label_col,
+                   controls_col,
+                   _class=_class, _id=row_id)
 
     if args:
         row_id = form

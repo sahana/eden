@@ -341,11 +341,11 @@ def config(settings):
                                        )
 
                 from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
-                from templates.WACOP.controllers import filter_formstyle, text_filter_formstyle
+                from templates.WACOP.controllers import filter_formstyle_summary, text_filter_formstyle
 
                 # @ToDo: This should use date/end_date not just date
                 date_filter = S3DateFilter("date",
-                                           #formstyle = filter_formstyle,
+                                           #formstyle = filter_formstyle_summary,
                                            label = "",
                                            #hide_time = True,
                                            )
@@ -364,7 +364,7 @@ def config(settings):
                                                   widget = "multiselect",
                                                   ),
                                   S3OptionsFilter("closed",
-                                                  formstyle = filter_formstyle,
+                                                  formstyle = filter_formstyle_summary,
                                                   options = {"*": T("All"),
                                                              False: T("Open"),
                                                              True: T("Closed"),
@@ -373,7 +373,7 @@ def config(settings):
                                                   multiple = False,
                                                   ),
                                   S3OptionsFilter("incident_type_id",
-                                                  formstyle = filter_formstyle,
+                                                  formstyle = filter_formstyle_summary,
                                                   label = T("Incident Type"),
                                                   noneSelectedText = "All",
                                                   widget = "multiselect",

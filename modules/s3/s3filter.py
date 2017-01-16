@@ -1534,6 +1534,7 @@ class S3OptionsFilter(S3FilterWidget):
                                        help_field = opts_get("help_field"),
                                        sort = opts_get("sort", True),
                                        orientation = opts_get("orientation"),
+                                       table = opts_get("table"),
                                        )
         else:
             # Default widget_type = "multiselect"

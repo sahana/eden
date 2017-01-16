@@ -59,6 +59,7 @@ class S3ContentModel(S3Model):
     """
 
     names = ("cms_series",
+             "cms_status",
              "cms_post",
              "cms_post_id",
              "cms_post_module",
@@ -162,6 +163,54 @@ class S3ContentModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
+        # Post Statuses
+        # - used by WACOP
+        #
+        tablename = "cms_status"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_STATUS = T("Create Status")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_STATUS,
+            title_display = T("Status Details"),
+            title_list = T("Statuses"),
+            title_update = T("Edit Status"),
+            #title_upload = T("Import Statuses"),
+            label_list_button = T("List Statuses"),
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No Statuses currently registered"))
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+                                #none = T("Unknown"))
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                        comment = S3PopupLink(title = ADD_STATUS,
+                                              c = "cms",
+                                              f = "status",
+                                              ),
+                        label = T("Status"),
+                        ondelete = "SET NULL",
+                        represent = represent,
+                        requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "cms_status.id",
+                                              represent,
+                                              sort=True)),
+                        sortby = "name",
+                        )
+
+        # ---------------------------------------------------------------------
         # Posts
         # - single blocks of [rich] text which can be embedded into a page,
         #   be viewed as full pages or as part of a Series
@@ -173,6 +222,13 @@ class S3ContentModel(S3Model):
         else:
             body_represent = lambda body: XML(s3_URLise(body))
             body_widget = None
+
+        # WACOP Priorities
+        # @ToDo: Add deployment_setting if these need to be different in other templates
+        post_priority_opts = {1: T("Informational"),
+                              2: T("Important"),
+                              3: T("Critical"),
+                              }
 
         tablename = "cms_post"
         define_table(tablename,
@@ -192,6 +248,7 @@ class S3ContentModel(S3Model):
                            #requires = IS_NOT_EMPTY(),
                            widget = body_widget,
                            ),
+                     s3_datetime(default = "now"),
                      # @ToDo: Move this to link table?
                      self.gis_location_id(),
                      # @ToDo: Move this to link table?
@@ -211,7 +268,21 @@ class S3ContentModel(S3Model):
                            label = T("Comments permitted?"),
                            represent = s3_yes_no_represent,
                            ),
-                     s3_datetime(default = "now"),
+                     Field("priority", "integer",
+                           default = 1,
+                           label = T("Priority"),
+                           represent = lambda opt: \
+                                       post_priority_opts.get(opt,
+                                                              current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(post_priority_opts,
+                                                zero=None),
+                           # Enable in template if-desired
+                           readable = False,
+                           writable = False,
+                           ),
+                     status_id(readable = False,
+                               writable = False,
+                               ),
                      # @ToDo: Also have a datetime for 'Expires On'
                      Field("expired", "boolean",
                            default = False,

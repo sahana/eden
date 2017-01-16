@@ -33,7 +33,8 @@
             columns: 3,
             emptyText: 'No options available',
             orientation: 'columns',
-            sort: true
+            sort: true,
+            table: true
         },
 
         /**
@@ -101,7 +102,11 @@
                 }
             } else {
                 this.grouped = false;
-                this.menu = $('<table class="s3-groupedopts-widget"/>');
+                if (this.table) {
+                    this.menu = $('<table class="s3-groupedopts-widget"/>');
+                } else {
+                    this.menu = $('<div class="s3-groupedopts-widget"/>');
+                }
                 var items = el.find('option');
                 this._renderRows(items, this.menu);
             }
@@ -146,7 +151,11 @@
             if (items.length) {
                 var group_label = $('<div class="s3-groupedopts-label">' + label + '</div>');
                 this.menu.append(group_label);
-                var group = $('<table class="s3-groupedopts-widget">');
+                if (this.table) {
+                    var group = $('<table class="s3-groupedopts-widget">');
+                } else {
+                    var group = $('<div class="s3-groupedopts-widget">');
+                }
                 this._renderRows(items, group);
                 $(group).hide();
                 this.menu.append(group);
@@ -192,7 +201,7 @@
                 // Order items as rows=>columns
                 while(tail.length) {
                     var row = [];
-                    for (i=0; i<numcols; i++) {
+                    for (i=0; i < numcols; i++) {
                         if (!tail.length) {
                             break;
                         }
@@ -202,10 +211,15 @@
                 }
             }
             // Render the rows
-            for (i = 0; i<rows.length; i++) {
-                var tr = $('<tr/>');
-                for (j = 0; j<rows[i].length; j++) {
-                    this._renderItem(rows[i][j], tr);
+            var table = this.table;
+            for (i = 0; i < rows.length; i++) {
+                if (table) {
+                    var tr = $('<tr/>');
+                } else {
+                    var tr = $('<div/>');
+                }
+                for (j = 0; j < rows[i].length; j++) {
+                    this._renderItem(rows[i][j], tr, table);
                 }
                 group.append(tr);
             }
@@ -215,9 +229,10 @@
          * Render one checkbox/radio item
          *
          * @param {jQuery} item - the option element
-         * @param {jQuery} row - the target tr element
+         * @param {jQuery} row - the target element (e.g. tr)
+         * @param {jQuery} table - whether to render as a table or not
          */
-        _renderItem: function(item, row) {
+        _renderItem: function(item, row, table) {
 
             var multiple = this.multiple;
 
@@ -259,7 +274,11 @@
                 $(oinput).prop('checked', true);
             }
 
-            var widget = $('<td>').append(oinput).append($(olabel));
+            if (table) {
+                var widget = $('<td>').append(oinput).append($(olabel));
+            } else {
+                var widget = $('<div>').append(oinput).append($(olabel));
+            }
             row.append(widget);
         },
 
