@@ -362,6 +362,8 @@ class custom_WACOP(S3CRUD):
             resource.add_filter(FS("event_post.incident_id") == incident_id)
 
         list_fields = ["series_id",
+                       "priority",
+                       "status_id",
                        "date",
                        "body",
                        "created_by",
@@ -420,6 +422,16 @@ class custom_WACOP(S3CRUD):
                           S3OptionsFilter("series_id",
                                           label = "",
                                           noneSelectedText = "Type",
+                                          widget = "multiselect",
+                                          ),
+                          S3OptionsFilter("priority",
+                                          label = "",
+                                          noneSelectedText = "Priority",
+                                          widget = "multiselect",
+                                          ),
+                          S3OptionsFilter("status_id",
+                                          label = "",
+                                          noneSelectedText = "Status",
                                           widget = "multiselect",
                                           ),
                           S3OptionsFilter("created_by$organisation_id",
@@ -1265,6 +1277,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         series_title = series = ""
 
+    status = record["cms_post.status_id"]
+
     author_id = raw["cms_post.created_by"]
     person = record["cms_post.created_by"]
 
@@ -1423,8 +1437,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                               _class="title",
                                               ),
                                            # post status
-                                           # @ToDo: Add Post Statuses?
-                                           LI(T("Active"),
+                                           LI(status,
                                               _class="item borders",
                                               ),
                                            # post visibility
