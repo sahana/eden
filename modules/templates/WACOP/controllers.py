@@ -443,9 +443,11 @@ class custom_WACOP(S3CRUD):
                                                                 },
                                                      cols = 2,
                                                      multiple = False,
+                                                     table = False,
                                                      ))
 
         filter_form = S3FilterForm(filter_widgets,
+                                   formstyle = filter_formstyle_profile,
                                    submit=True,
                                    ajax=True,
                                    url=URL(args=[incident_id, "custom.dl"],
@@ -1491,7 +1493,7 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
-def filter_formstyle(form, fields, *args, **kwargs):
+def filter_formstyle_summary(form, fields, *args, **kwargs):
     """
         Custom formstyle for filters on the Incident Summary page
     """
@@ -1502,6 +1504,56 @@ def filter_formstyle(form, fields, *args, **kwargs):
                             widget,
                             )
         return DIV(controls, _id=row_id)
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def filter_formstyle_profile(form, fields, *args, **kwargs):
+    """
+        Custom formstyle for filters on the Incident Profile page
+        - slightly tweaked formstyle_foundation_inline
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
+
+        if isinstance(label, LABEL):
+            label.add_class("left inline")
+
+        controls_col = DIV(widget, _class="small-12 columns controls")
+        if label:
+            label_col = DIV(label, _class="medium-2 columns")
+        else:
+            label_col = ""
+            #controls_col.add_class("medium-offset-2")
+
+        if comment:
+            comment = render_tooltip(label,
+                                     comment,
+                                     _class="inline-tooltip tooltip",
+                                     )
+            if hasattr(comment, "add_class"):
+                comment.add_class("inline-tooltip")
+            controls_col.append(comment)
+
+        _class = "form-row row hide" if hidden else "form-row row"
+        return DIV(label_col,
+                   controls_col,
+                   _class=_class, _id=row_id)
 
     if args:
         row_id = form
