@@ -1302,8 +1302,8 @@ class S3CRUD(S3Method):
 
             get_vars = self.request.get_vars
 
-            # Start/limit
-            start, limit = self._limits(get_vars)
+            # Start/limit (no default limit)
+            start, limit = self._limits(get_vars, default_limit=None)
 
             # Render extra "_tooltip" field for each row?
             tooltip = get_vars.get("tooltip", None)
@@ -3152,23 +3152,28 @@ class S3CRUD(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _limits(get_vars):
+    def _limits(get_vars, default_limit=0):
         """
             Extract page limits (start and limit) from GET vars
 
             @param get_vars: the GET vars
+            @param default_limit: the default limit, explicit value or:
+                                  0 => response.s3.ROWSPERPAGE
+                                  None => no default limit
         """
 
         start = get_vars.get("start", None)
-        limit = get_vars.get("limit", 0)
+        limit = get_vars.get("limit", default_limit)
+
         # Deal with overrides (pagination limits come last)
         if isinstance(start, list):
             start = start[-1]
         if isinstance(limit, list):
             limit = limit[-1]
+
         if limit:
             # Ability to override default limit to "Show All"
-            if limit.lower() == "none":
+            if isinstance(limit, basestring) and limit.lower() == "none":
                 #start = None # needed?
                 limit = None
             else:
@@ -3177,12 +3182,13 @@ class S3CRUD(S3Method):
                     limit = int(limit)
                 except (ValueError, TypeError):
                     # Fall back to defaults
-                    start, limit = None, 0
+                    start, limit = None, default_limit
+
         else:
             # Use defaults, assume sspag because this is a
             # pagination request by definition
             start = None
-            limit = 0
+            limit = default_limit
 
         return start, limit
 
