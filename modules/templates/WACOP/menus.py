@@ -148,4 +148,62 @@ class S3MainMenu(default.S3MainMenu):
             )
         return menu_lang
 
+# =============================================================================
+class S3OptionsMenu(default.S3OptionsMenu):
+    """ Custom Application Side Menu """
+
+    # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings_messaging = self.settings_messaging()
+        #translate = current.deployment_settings.has_module("translate")
+
+        # NB: Do not specify a controller for the main menu to allow
+        #     re-use of this menu by other controllers
+        return M(restrict=[ADMIN])(
+                    M("Settings", c="admin", f="setting")(
+                        settings_messaging,
+                    ),
+                    M("User Management", c="admin", f="user")(
+                        M("Create User", m="create"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
+                        M("List All Roles", f="role"),
+                        M("List All Organization Approvers & Whitelists", f="organisation"),
+                        #M("Roles", f="group"),
+                        #M("Membership", f="membership"),
+                    ),
+                    M("Database", c="appadmin", f="index")(
+                        M("Raw Database access", c="appadmin", f="index"),
+                    ),
+                    M("Error Tickets", c="admin", f="errors"),
+                    M("Synchronization", c="sync", f="index")(
+                        M("Settings", f="config", args=[1], m="update"),
+                        M("Repositories", f="repository"),
+                        M("Log", f="log"),
+                    ),
+                    M("Taxonomies")(
+                        M("Event Types", c="event", f="event_type"),
+                        M("Incident Types", c="event", f="incident_type"),
+                        M("Organization Types", c="org", f="organisation_type"),
+                        M("Update Statuses", c="cms", f="status"),
+                    ),
+                    #M("Edit Application", a="admin", c="default", f="design",
+                      #args=[request.application]),
+                    #M("Translation", c="admin", f="translate", check=translate)(
+                    #   M("Select Modules for translation", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="1")),
+                    #   M("Upload translated files", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="2")),
+                    #   M("View Translation Percentage", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="3")),
+                    #   M("Add strings manually", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="4"))
+                    #),
+                    #M("View Test Result Reports", c="admin", f="result"),
+                    #M("Portable App", c="admin", f="portable")
+                )
+
 # END =========================================================================

@@ -149,11 +149,11 @@ def config(settings):
            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
            module_type = None  # This item is handled separately for the menu
        )),
-        ("translate", Storage(
-            name_nice = "Translation Functionality",
-            #description = "Selective translation of strings based on module.",
-            module_type = None,
-        )),
+        #("translate", Storage(
+        #    name_nice = "Translation Functionality",
+        #    #description = "Selective translation of strings based on module.",
+        #    module_type = None,
+        #)),
         ("gis", Storage(
             name_nice = "Map",
             #description = "Situation Awareness & Geospatial Analysis",
