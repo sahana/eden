@@ -77,7 +77,8 @@
          */
         refresh: function() {
 
-            var el = this.element;
+            var el = this.element,
+                opts = this.options;
 
             this.index = 0;
             this.name = 's3-groupedopts-' + this.id;
@@ -91,7 +92,7 @@
                 this.grouped = true;
                 this.menu = $('<div class="s3-groupedopts-widget">' +
                               '<span class="no-options-available">' +
-                              this.options.emptyText +
+                              opts.emptyText +
                               '</span></div>');
             } else
             if (groups.length) {
@@ -102,7 +103,7 @@
                 }
             } else {
                 this.grouped = false;
-                if (this.table) {
+                if (opts.table) {
                     this.menu = $('<table class="s3-groupedopts-widget"/>');
                 } else {
                     this.menu = $('<div class="s3-groupedopts-widget"/>');
@@ -151,7 +152,7 @@
             if (items.length) {
                 var group_label = $('<div class="s3-groupedopts-label">' + label + '</div>');
                 this.menu.append(group_label);
-                if (this.table) {
+                if (this.options.table) {
                     var group = $('<table class="s3-groupedopts-widget">');
                 } else {
                     var group = $('<div class="s3-groupedopts-widget">');
@@ -170,10 +171,11 @@
          */
         _renderRows: function(items, group) {
 
-            var numcols = this.options.columns,
+            var opts = this.options,
+                numcols = opts.columns,
                 tail = $.makeArray(items);
 
-            if (this.options.sort) {
+            if (opts.sort) {
                 tail.sort(function(x, y) {
                     if ($(x).text() < $(y).text()) {
                         return -1;
@@ -184,7 +186,7 @@
             }
 
             var rows = [], i, j;
-            if (this.options.orientation == 'columns') {
+            if (opts.orientation == 'columns') {
                 // Order items as columns=>rows
                 var numrows = Math.ceil(tail.length / numcols);
                 for (i = 0; i < numcols; i++) {
@@ -211,7 +213,7 @@
                 }
             }
             // Render the rows
-            var table = this.table;
+            var table = opts.table;
             for (i = 0; i < rows.length; i++) {
                 if (table) {
                     var tr = $('<tr/>');
