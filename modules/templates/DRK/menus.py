@@ -206,9 +206,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Reports", link=False)(
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
                           vars = {"closed": "0", "overdue": "check-in"},
                           ),
                         M("Food Distribution overdue", c=("dvr", "pr"), f="person",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
                           vars = {"closed": "0", "overdue": "food"},
                           ),
                         M("Residents Reports", c="dvr", f="site_activity",
