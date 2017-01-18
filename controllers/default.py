@@ -1434,6 +1434,32 @@ def audit():
     return s3_rest_controller("s3", "audit")
 
 # -----------------------------------------------------------------------------
+def tables():
+    """
+        RESTful CRUD Controller for Dynamic Table Models
+    """
+
+    return s3_rest_controller("s3", "table",
+                              rheader = s3db.s3_table_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def table():
+    """
+        RESTful CRUD Controller for Dynamic Table Contents
+
+        NB: first argument is the resource name, i.e. the name of
+            the dynamic table without prefix, e.g.:
+            default/table/test to access s3dt_test table
+    """
+
+    args = request.args
+    if len(args):
+        return s3_rest_controller(dynamic = args[0].rsplit(".", 1)[0])
+    else:
+        raise HTTP(400, "No resource specified")
+
+# -----------------------------------------------------------------------------
 def get_settings():
     """
        Function to respond to get requests. Requires admin permissions

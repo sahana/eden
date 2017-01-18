@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Model",)
+__all__ = ("S3Model",
+           )
 
 from gluon import *
 # Here are dependencies listed for reference:
@@ -37,11 +38,12 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3dal import Table
+from s3dal import Table, Field
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
 from s3validators import IS_ONE_OF
 
+DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
 
 ogetattr = object.__getattribute__
@@ -201,7 +203,12 @@ class S3Model(object):
             return ogetattr(db, tablename)
         else:
             prefix, name = tablename.split("_", 1)
-            if hasattr(models, prefix):
+            if prefix == DYNAMIC_PREFIX:
+                try:
+                    found = S3DynamicModel(tablename).table
+                except AttributeError:
+                    pass
+            elif hasattr(models, prefix):
                 module = models.__dict__[prefix]
                 loaded = False
                 generic = []
@@ -1347,5 +1354,97 @@ class S3Model(object):
             if record:
                 return (prefix, name, record.id)
         return (None, None, None)
+
+# =============================================================================
+class S3DynamicModel(object):
+    """
+        Class representing a dynamic table model
+    """
+
+    def __init__(self, tablename):
+        """
+            Constructor
+
+            @param tablename: the table name
+        """
+
+        self.tablename = tablename
+        table = self.define_table(tablename)
+        if table:
+            self.table = table
+        else:
+            raise AttributeError("Undefined dynamic model: %s" % tablename)
+
+    # -------------------------------------------------------------------------
+    def define_table(self, tablename):
+        """
+            Instantiate a dynamic Table
+
+            @param tablename: the table name
+
+            @return: a Table instance
+        """
+
+        # @todo: make sure the tablename starts with s3dt_ prefix
+
+        # Is the table already defined?
+        db = current.db
+        redefine = tablename in db
+
+        # Load the table model
+        s3db = current.s3db
+        ttable = s3db.s3_table
+        ftable = s3db.s3_field
+        query = (ttable.name == tablename) & \
+                (ttable.deleted != True) & \
+                (ftable.table_id == ttable.id)
+        rows = db(query).select(ftable.name,
+                                ftable.field_type,
+                                ftable.label,
+                                )
+        if not rows:
+            return None
+
+        # Instantiate the fields
+        fields = []
+        for row in rows:
+            field = self._field(row)
+            if field:
+                fields.append(field)
+
+        # Automatically add standard meta-fields
+        from s3fields import s3_meta_fields
+        fields.extend(s3_meta_fields())
+
+        # Define the table
+        if fields:
+            db.define_table(tablename,
+                            migrate = True,
+                            redefine = redefine,
+                            *fields)
+            return db[tablename]
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _field(self, row):
+        """
+            Convert a s3_field Row into a Field instance
+
+            @param row: the s3_field Row
+
+            @return: a Field instance
+        """
+
+        field = None
+
+        if row:
+            field = Field(row.name, row.field_type)
+
+            label = row.label
+            if label:
+                field.label = current.T(label)
+
+        return field
 
 # END =========================================================================
