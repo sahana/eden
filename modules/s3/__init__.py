@@ -70,7 +70,7 @@ from s3hierarchy import *
 # Core Framework ==============================================================
 
 # Model Extensions
-from s3model import S3Model
+from s3model import DYNAMIC_PREFIX, S3Model
 
 # Resource Framework
 from s3query import *

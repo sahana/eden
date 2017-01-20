@@ -178,13 +178,28 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
         ondelete                Function after record deletion
     """
 
-    # Customise Controller from Template
-    attr = settings.customise_controller("%s_%s" % (prefix or request.controller,
-                                                    resourcename or request.function),
-                                         **attr)
-
     # Parse the request
-    r = s3_request(prefix, resourcename)
+    dynamic = attr.get("dynamic")
+    if dynamic:
+        # Dynamic table controller
+        c = request.controller
+        f = request.function
+        attr = settings.customise_controller("%s_%s" % (c, f), **attr)
+        from s3 import DYNAMIC_PREFIX, s3_get_extension
+        r = s3_request(DYNAMIC_PREFIX,
+                       dynamic,
+                       f = "%s/%s" % (f, dynamic),
+                       args = request.args[1:],
+                       extension = s3_get_extension(request),
+                       )
+    else:
+        # Customise Controller from Template
+        attr = settings.customise_controller(
+                    "%s_%s" % (prefix or request.controller,
+                               resourcename or request.function,
+                               ),
+                    **attr)
+        r = s3_request(prefix, resourcename)
 
     # Customize target resource(s) from Template
     r.customise_resource()
