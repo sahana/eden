@@ -1869,8 +1869,6 @@ class S3ImportItem(object):
             Detect whether this is an update or a new record
         """
 
-        db = current.db
-
         table = self.table
         if table is None or self.id:
             return
@@ -2756,7 +2754,7 @@ class S3ImportItem(object):
             modified_on_update = modified_on.update
             modified_on.update = None
         else:
-            modifed_on_update = None
+            modified_on_update = None
 
         db = current.db
         fieldtype = str(table[field].type)
