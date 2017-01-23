@@ -802,18 +802,30 @@ class S3SQLCustomForm(S3SQLForm):
         self.resource = resource
 
         # Resolve all form elements against the resource
+        subtables = set()
+        subtable_fields = {}
         fields = []
-        subtables = []
         components = []
+
         for element in self.elements:
             alias, name, field = element.resolve(resource)
-            if field is not None:
-                fields.append((alias, name, field))
+
             if isinstance(alias, str):
-                if alias not in subtables:
-                    subtables.append(alias)
+                subtables.add(alias)
+
+                if field is not None:
+                    fields_ = subtable_fields.get(alias)
+                    if fields_ is None:
+                        fields_ = []
+                    fields_.append((name, field))
+                    subtable_fields[alias] = fields_
+
             elif isinstance(alias, S3SQLFormElement):
                 components.append(alias)
+
+            if field is not None:
+                fields.append((alias, name, field))
+
         self.subtables = subtables
         self.components = components
 
@@ -833,16 +845,40 @@ class S3SQLCustomForm(S3SQLForm):
                               )
             else:
                 r = request
+
             customise_resource = current.deployment_settings.customise_resource
             for alias in subtables:
+
                 # Get tablename
                 if alias not in rcomponents:
                     continue
                 tablename = rcomponents[alias].tablename
+
                 # Run customise_resource
                 customise = customise_resource(tablename)
                 if customise:
                     customise(r, tablename)
+
+                # Apply customised attributes to renamed fields
+                # => except label and widget, which can be overridden
+                #    in S3SQLField.resolve instead
+                renamed_fields = subtable_fields.get(alias)
+                if renamed_fields:
+                    table = rcomponents[alias].table
+                    for name, renamed_field in renamed_fields:
+                        original_field = table[name]
+                        for attr in ("comment",
+                                     "default",
+                                     "readable",
+                                     "represent",
+                                     "requires",
+                                     "update",
+                                     "writable",
+                                     ):
+                            setattr(renamed_field,
+                                    attr,
+                                    getattr(original_field, attr),
+                                    )
 
         # Mark required fields with asterisk
         if not readonly:
@@ -1177,6 +1213,9 @@ class S3SQLCustomForm(S3SQLForm):
             return
         else:
             main_data[table._id.name] = master_id
+            # Make sure lastid is set even if master has no data
+            # (otherwise *_next redirection will fail)
+            self.resource.lastid = str(master_id)
 
         # Create or update the subtables
         for alias in self.subtables:
@@ -3447,11 +3486,12 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         if widget == "groupedopts" or not widget and "cols" in options:
             from s3widgets import S3GroupedOptionsWidget
             w_opts = widget_opts(("cols",
-                                  "size",
                                   "help_field",
                                   "multiple",
-                                  "sort",
                                   "orientation",
+                                  "size",
+                                  "sort",
+                                  "table",
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":

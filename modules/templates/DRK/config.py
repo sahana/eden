@@ -892,6 +892,20 @@ def config(settings):
         return set(row.person_id for row in rows)
 
     # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+        has_permission = current.auth.s3_has_permission
+
+        if not has_permission("create", "pr_person"):
+
+            ptable = s3db.pr_person
+            for field in ptable:
+                field.writable = False
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
@@ -1086,13 +1100,6 @@ def config(settings):
                               )
                 else:
                     absence_field = None
-
-                # Expose expiration dates
-                field = ctable.valid_until
-                field.label = T("BÜMA valid until")
-                field.readable = field.writable = True
-                field = ctable.stay_permit_until
-                field.readable = field.writable = True
 
                 # List modes
                 check_overdue = False
@@ -1707,6 +1714,22 @@ def config(settings):
             config[setting] = onaccept
 
         s3db.configure(tablename, **config)
+
+        ctable = s3db.dvr_case
+
+        # Expose expiration dates
+        field = ctable.valid_until
+        field.label = T("BÜMA valid until")
+        field.readable = field.writable = True
+        field = ctable.stay_permit_until
+        field.readable = field.writable = True
+
+        # Set all fields read-only except comments, unless
+        # the user has permission to create cases
+        if not current.auth.s3_has_permission("create", "dvr_case"):
+            for field in ctable:
+                if field.name != "comments":
+                    field.writable = False
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 

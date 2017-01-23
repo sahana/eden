@@ -246,6 +246,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars={"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
                           vars={"archived": "1"},
                           ),
                         ),
