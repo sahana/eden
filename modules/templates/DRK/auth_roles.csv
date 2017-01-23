@@ -115,12 +115,12 @@ MEDICAL,Medical,,cr,,,READ,,,,,
 MEDICAL,Medical,,dvr,case_event,,CREATE|READ,,,,,Medical can create and read in tables required for case event registration
 MEDICAL,Medical,,dvr,site_activity,,NONE,,,,,Medical can not access site activity reports
 MEDICAL,Medical,,dvr,,,CREATE|READ|UPDATE,,,,,
-MEDICAL,Medical,,inv,,,READ,,,,,
-MEDICAL,Medical,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
+MEDICAL,Medical,,inv,,,NONE,,,,,
+MEDICAL,Medical,,project,,,NONE,,,,,
 MEDICAL,Medical,,,,cr_shelter,READ,,,,,Medical can read shelter info
 MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
 MEDICAL,Medical,,,,dvr_allowance,NONE,,,,,Medical can not see allowance details
-MEDICAL,Medical,,,,dvr_case,READ,,,,,
+MEDICAL,Medical,,,,dvr_case,READ|UPDATE,,,,,
 MEDICAL,Medical,,,,dvr_case_activity,READ|UPDATE,,,,,Medical can read and update activities
 MEDICAL,Medical,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Medical can manage appointments
 MEDICAL,Medical,,,,dvr_case_event,CREATE,READ,,,,Medical can register case events and read those they created
