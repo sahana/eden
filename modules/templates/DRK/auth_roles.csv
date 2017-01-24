@@ -101,7 +101,7 @@ INFO_POINT,Info Point,,,,cr_shelter_registration,READ,,,,,Infopoint can read she
 INFO_POINT,Info Point,,,,dvr_allowance,NONE,,,,,Infopoint can not see allowance details
 INFO_POINT,Info Point,,,,dvr_case,READ,,,,,
 INFO_POINT,Info Point,,,,dvr_case_activity,READ,,,,,Infopoint can read case activities
-INFO_POINT,Info Point,,,,dvr_case_appointment,READ,,,,,Infopoint can read case appointments
+INFO_POINT,Info Point,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Infopoint can read case appointments
 INFO_POINT,Info Point,,,,dvr_case_event,CREATE,READ,,,,Infopoint can register case events and read those they created
 INFO_POINT,Info Point,,,,dvr_case_language,READ,,,,,
 INFO_POINT,Info Point,,,,dvr_note,CREATE|READ,UPDATE,,,,Infopoint can create notes and update their own notes
@@ -137,6 +137,7 @@ QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can cr
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not access site activity reports
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
+QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,dvr_case_language,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_contact,READ,,,,,
@@ -168,6 +169,7 @@ SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case,READ,,,,,
+SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
 SECURITY,Security,,,,dvr_case_language,READ,,,,,
 SECURITY,Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
@@ -186,7 +188,7 @@ SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_allowance,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_activity,NONE,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_appointment,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,dvr_case_appointment,READ|CREATE|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_event,CREATE,READ,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_language,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_note,CREATE|READ,UPDATE,,,,

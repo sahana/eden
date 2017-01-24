@@ -230,8 +230,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
-                        M("Import Updates", m="import", p="create"),
-                        M("Bulk Status Update", m="manage", p="update"),
+                        M("Import Updates", m="import", p="create",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
+                          ),
+                        M("Bulk Status Update", m="manage", p="update",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
+                          ),
                         ),
                     M("Allowances", f="allowance")(
                         M("Overview"),

@@ -903,6 +903,8 @@ def config(settings):
             for field in ptable:
                 field.writable = False
 
+            s3db.configure("pr_contact", insertable=False)
+
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
@@ -1500,6 +1502,17 @@ def config(settings):
                                         ]
                     configure(list_fields = list_fields)
 
+                elif r.component_name == "case_appointment":
+
+                    # Make appointments tab read-only even if the user is
+                    # permitted to create or update appointments (via event
+                    # registration), except for ADMINISTRATION/ADMIN_HEAD:
+                    if not has_role("ADMINISTRATION") and \
+                       not has_role("ADMIN_HEAD"):
+                        r.component.configure(insertable = False,
+                                              editable = False,
+                                              deletable = False,
+                                              )
             return result
         s3.prep = custom_prep
 
