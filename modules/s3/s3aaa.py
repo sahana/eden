@@ -912,8 +912,8 @@ Thank you"""
                        )
         form.add_class("auth_reset_password")
         if captcha:
-            addrow(form, captcha.label, captcha,
-                   captcha.comment, settings.formstyle, "captcha__row")
+            s3_addrow(form, captcha.label, captcha,
+                      captcha.comment, settings.formstyle, "captcha__row")
         if form.accepts(request, session if self.csrf_prevention else None,
                         formname="reset_password", dbio=False,
                         onvalidation=onvalidation,
@@ -953,7 +953,7 @@ Thank you"""
         request = current.request
         session = current.session
         settings = self.settings
-        vars = request.vars
+        req_vars = request.vars
 
         # If the user hasn't set a personal UTC offset,
         # then read the UTC offset from the form:
@@ -963,9 +963,9 @@ Thank you"""
         session.auth = Storage(
             user=user,
             last_visit=request.now,
-            expiration = vars.get("remember", False) and \
+            expiration = req_vars.get("remember", False) and \
                 settings.long_expiration or settings.expiration,
-            remember = vars.has_key("remember"),
+            remember = req_vars.has_key("remember"),
             hmac_key = web2py_uuid()
             )
         self.user = user
@@ -988,9 +988,9 @@ Thank you"""
         # Set user's position
         # @ToDo: Per-User settings
         if deployment_settings.get_auth_set_presence_on_login() and \
-           vars.has_key("auth_user_clientlocation") and \
-           vars.get("auth_user_clientlocation"):
-            position = vars.get("auth_user_clientlocation").split("|", 3)
+           req_vars.has_key("auth_user_clientlocation") and \
+           req_vars.get("auth_user_clientlocation"):
+            position = req_vars.get("auth_user_clientlocation").split("|", 3)
             userlat = float(position[0])
             userlon = float(position[1])
             accuracy = float(position[2]) / 1000 # Ensures accuracy is in km
@@ -1377,11 +1377,13 @@ Thank you"""
         if record:
             return record.id
         else:
-            id = membership.insert(group_id=group_id, user_id=user_id, pe_id=entity)
+            membership_id = membership.insert(group_id=group_id,
+                                              user_id=user_id,
+                                              pe_id=entity)
         self.update_groups()
         self.log_event(self.messages.add_membership_log,
                        dict(user_id=user_id, group_id=group_id))
-        return id
+        return membership_id
 
     # -------------------------------------------------------------------------
     def verify_email(self,
@@ -1849,6 +1851,7 @@ $.filterOptionsS3({
         set_record_owner = self.s3_set_record_owner
         update_super = s3db.update_super
         otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
 
         resource, tree = data
 
@@ -1858,34 +1861,34 @@ $.filterOptionsS3({
             ltable = s3db.org_organisation_name
         def add_org(name, parent=None):
             """ Helper to add a New Organisation """
-            id = otable.insert(name=name)
-            record = Storage(id=id)
+            organisation_id = otable.insert(name=name)
+            record = Storage(id=organisation_id)
             update_super(otable, record)
-            set_record_owner(otable, id)
+            set_record_owner(otable, organisation_id)
             # @ToDo: Call onaccept?
             if parent:
                 records = db(otable.name == parent).select(otable.id)
                 if len(records) == 1:
                     # Add branch link
                     link_id = btable.insert(organisation_id = records.first().id,
-                                            branch_id = id)
+                                            branch_id = organisation_id)
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                     callback(onaccept, Storage(vars=Storage(id=link_id)))
                 elif len(records) > 1:
                     # Ambiguous
-                    s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (org, parent))
+                    s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (name, parent))
                 else:
                     # Create Parent
                     parent_id = otable.insert(name=parent)
                     update_super(otable, Storage(id=parent_id))
-                    set_record_owner(otable, id)
+                    set_record_owner(otable, parent_id)
                     # @ToDo: Call onaccept?
                     # Create link
-                    link_id = btable.insert(organisation_id == parent_id,
-                                            branch_id == id)
+                    link_id = btable.insert(organisation_id = parent_id,
+                                            branch_id = organisation_id)
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                     callback(onaccept, Storage(vars=Storage(id=link_id)))
-            return (id, record.pe_id)
+            return (organisation_id, record.pe_id)
 
         def org_lookup(org_full):
             """ Helper to lookup an Organisation """
@@ -1909,12 +1912,12 @@ $.filterOptionsS3({
                                        limitby = (0, 2))
             if len(records) == 1:
                 record = records.first()
-                id = record.id
+                organisation_id = record.id
                 pe_id = record.pe_id
             elif len(records) > 1:
                 # Ambiguous
                 s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
-                id = ""
+                organisation_id = ""
                 pe_id = ""
             elif TRANSLATE:
                 # Search by local name
@@ -1926,32 +1929,32 @@ $.filterOptionsS3({
                                            limitby = (0, 2))
                 if len(records) == 1:
                     record = records.first()
-                    id = record.id
+                    organisation_id = record.id
                     pe_id = record.pe_id
                 elif len(records) > 1:
                     # Ambiguous
                     s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
-                    id = ""
+                    organisation_id = ""
                     pe_id = ""
                 elif ORG_ADMIN:
                     # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
                     s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
-                    id = ""
+                    organisation_id = ""
                     pe_id = ""
                 else:
                     # Add a new record
-                    (id, pe_id) = add_org(org, parent)
+                    (organisation_id, pe_id) = add_org(org, parent)
 
             elif ORG_ADMIN:
                 # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
                 s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
-                id = ""
+                organisation_id = ""
                 pe_id = ""
             else:
                 # Add a new record
-                (id, pe_id) = add_org(org, parent)
+                (organisation_id, pe_id) = add_org(org, parent)
 
-            return (id, pe_id)
+            return (organisation_id, pe_id)
 
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
@@ -1971,7 +1974,7 @@ $.filterOptionsS3({
 
                 if pe_tablename == "org_organisation":
                     # This is a non-integer, so must be 1st or only phase
-                    (id, pe_id) = org_lookup(pe_value)
+                    (record_id, pe_id) = org_lookup(pe_value)
                 else:
                     table = s3db[pe_tablename]
                     if pe_tablename not in looked_up:
@@ -1980,15 +1983,14 @@ $.filterOptionsS3({
                                                                     table.pe_id,
                                                                     limitby=(0, 1)
                                                                     ).first()
-                    if not record:
+                    if record:
+                        record_id = record.id
+                    else:
                         # Add a new record
-                        id = table.insert(**{pe_field: pe_value})
-                        update_super(table, Storage(id=id))
-                        set_record_owner(table, id)
-                        record = db(table.id == id).select(table.id,
-                                                           table.pe_id,
-                                                           limitby=(0, 1)).first()
-                    id = record.id
+                        record_id = table.insert(**{pe_field: pe_value})
+                        record = Storage(id=record_id)
+                        update_super(table, record)
+                        set_record_owner(table, record_id)
                     pe_id = record.pe_id
 
                 new_value = str(pe_id)
@@ -1996,7 +1998,7 @@ $.filterOptionsS3({
                 element.text = new_value
                 # Store in case we get called again with same value
                 looked_up[pe_tablename][pe_value] = dict(pe_id=new_value,
-                                                         id=str(id),
+                                                         id=str(record_id),
                                                          )
 
         # Organisations
@@ -2015,13 +2017,13 @@ $.filterOptionsS3({
                     int(org_full)
                 except ValueError:
                     # This is a non-integer, so must be 1st or only phase
-                    (id, pe_id) = org_lookup(org_full)
+                    (organisation_id, pe_id) = org_lookup(org_full)
 
                     # Replace string with id
-                    id = str(id)
-                    element.text = id
+                    organisation_id = str(organisation_id)
+                    element.text = organisation_id
                     # Store in case we get called again with same value
-                    orgs[org_full] = dict(id=id)
+                    orgs[org_full] = dict(id=organisation_id)
                 else:
                     # Store in case we get called again with same value
                     orgs[org_full] = dict(id=org_full)
@@ -2041,23 +2043,23 @@ $.filterOptionsS3({
 
                 try:
                     # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
-                    int(org_full)
+                    int(name)
                 except ValueError:
                     # This is a non-integer, so must be 1st or only phase
                     record = db(gtable.name == name).select(gtable.id,
                                                             limitby=(0, 1)
                                                             ).first()
                     if record:
-                        id = record.id
+                        org_group_id = record.id
                     else:
                         # Add a new record
-                        id = gtable.insert(name=name)
-                        update_super(gtable, Storage(id=id))
+                        org_group_id = gtable.insert(name=name)
+                        update_super(gtable, Storage(id=org_group_id))
                     # Replace string with id
-                    id = str(id)
-                    element.text = id
+                    org_group_id = str(org_group_id)
+                    element.text = org_group_id
                     # Store in case we get called again with same value
-                    org_groups[name] = dict(id=id)
+                    org_groups[name] = dict(id=org_group_id)
                 else:
                     # Store in case we get called again with same value
                     org_groups[name] = dict(id=name)
