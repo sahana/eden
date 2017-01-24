@@ -121,7 +121,7 @@ MEDICAL,Medical,,,,cr_shelter,READ,,,,,Medical can read shelter info
 MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
 MEDICAL,Medical,,,,dvr_allowance,NONE,,,,,Medical can not see allowance details
 MEDICAL,Medical,,,,dvr_case,READ|UPDATE,,,,,
-MEDICAL,Medical,,,,dvr_case_activity,READ|UPDATE,,,,,Medical can read and update activities
+MEDICAL,Medical,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Medical can read and update activities
 MEDICAL,Medical,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Medical can manage appointments
 MEDICAL,Medical,,,,dvr_case_event,CREATE,READ,,,,Medical can register case events and read those they created
 MEDICAL,Medical,,,,dvr_case_language,READ,,,,,

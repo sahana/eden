@@ -1583,7 +1583,7 @@ def config(settings):
                 # Sort filterOptionsS3 results alphabetically
                 if r.representation == "json":
                     resource.configure(orderby = ["pr_person.first_name",
-                                                  "pr_person.last_name",
+                                                  "pr_person.middle_name",
                                                   "pr_person.last_name",
                                                   ],
                                        )
