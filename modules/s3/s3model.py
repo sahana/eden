@@ -1401,6 +1401,7 @@ class S3DynamicModel(object):
         rows = db(query).select(ftable.name,
                                 ftable.field_type,
                                 ftable.label,
+                                ftable.comments,
                                 )
         if not rows:
             return None
@@ -1444,6 +1445,10 @@ class S3DynamicModel(object):
             label = row.label
             if label:
                 field.label = current.T(label)
+
+            comments = row.comments
+            if comments:
+                field.comment = comments
 
         return field
 

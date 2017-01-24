@@ -1246,16 +1246,73 @@ class IS_JSONS3_Tests(unittest.TestCase):
         assertEqual(formatted, None)
 
 # =============================================================================
+class IS_DYNAMIC_FIELDNAME_Test(unittest.TestCase):
+    """ Test cases for IS_DYNAMIC_FIELDNAME validator """
+
+    # -------------------------------------------------------------------------
+    def testPass(self):
+        """ Test IS_DYNAMIC_FIELDNAME with valid field names """
+
+        assertEqual = self.assertEqual
+
+        requires = IS_DYNAMIC_FIELDNAME()
+
+        value, error = requires("example")
+        assertEqual(value, "example")
+        assertEqual(error, None)
+
+        value, error = requires("Another_Example")
+        assertEqual(value, "another_example")
+        assertEqual(error, None)
+
+    # -------------------------------------------------------------------------
+    def testFail(self):
+        """ Test IS_DYNAMIC_FIELDNAME with invalid field names """
+
+        assertNotEqual = self.assertNotEqual
+
+        requires = IS_DYNAMIC_FIELDNAME()
+
+        # Must not be None
+        value, error = requires(None)
+        assertNotEqual(error, None)
+
+        # Must not be empty
+        value, error = requires("")
+        assertNotEqual(error, None)
+
+        # Must not contain blanks
+        value, error = requires("must not contain blanks")
+        assertNotEqual(error, None)
+
+        # Must start with a letter
+        value, error = requires("_must_start_with_letter")
+        assertNotEqual(error, None)
+
+        # Must not contain invalid characters
+        value, error = requires("invalid#characters")
+        assertNotEqual(error, None)
+
+        # Must not be "id"
+        value, error = requires("id")
+        assertNotEqual(error, None)
+
+        # Must not be meta-field name
+        value, error = requires("modified_by")
+        assertNotEqual(error, None)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
-        ISLatTest,
-        ISLonTest,
+        #ISLatTest,
+        #ISLonTest,
         ISONEOFLazyRepresentationTests,
         IS_PHONE_NUMBER_Tests,
         IS_UTC_DATETIME_Tests,
         IS_UTC_DATE_Tests,
         IS_JSONS3_Tests,
+        IS_DYNAMIC_FIELDNAME_Test,
     )
 
 # END ========================================================================
