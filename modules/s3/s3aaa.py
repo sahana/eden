@@ -1840,8 +1840,6 @@ $.filterOptionsS3({
             Lookups Pseudo-reference Integer fields from Names
             e.g.:
             auth_membership.pe_id from organisation.name=<Org Name>
-
-            @ToDo: Add support for Sites
         """
 
         from s3utils import s3_debug
@@ -2001,68 +1999,69 @@ $.filterOptionsS3({
                                                          id=str(record_id),
                                                          )
 
+        # No longer required since we can use references in the import CSV
         # Organisations
-        elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
-        if elements:
-            orgs = looked_up["org_organisation"]
-            for element in elements:
-                org_full = element.text
-                if org_full in orgs:
-                    # Replace string with id
-                    element.text = orgs[org_full]["id"]
-                    # Don't check again
-                    continue
-                try:
-                    # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
-                    int(org_full)
-                except ValueError:
-                    # This is a non-integer, so must be 1st or only phase
-                    (organisation_id, pe_id) = org_lookup(org_full)
+        #elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
+        #if elements:
+        #    orgs = looked_up["org_organisation"]
+        #    for element in elements:
+        #        org_full = element.text
+        #        if org_full in orgs:
+        #            # Replace string with id
+        #            element.text = orgs[org_full]["id"]
+        #            # Don't check again
+        #            continue
+        #        try:
+        #            # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
+        #            int(org_full)
+        #        except ValueError:
+        #            # This is a non-integer, so must be 1st or only phase
+        #            (organisation_id, pe_id) = org_lookup(org_full)
 
-                    # Replace string with id
-                    organisation_id = str(organisation_id)
-                    element.text = organisation_id
-                    # Store in case we get called again with same value
-                    orgs[org_full] = dict(id=organisation_id)
-                else:
-                    # Store in case we get called again with same value
-                    orgs[org_full] = dict(id=org_full)
+        #            # Replace string with id
+        #            organisation_id = str(organisation_id)
+        #            element.text = organisation_id
+        #            # Store in case we get called again with same value
+        #            orgs[org_full] = dict(id=organisation_id)
+        #        else:
+        #            # Store in case we get called again with same value
+        #            orgs[org_full] = dict(id=org_full)
 
         # Organisation Groups
-        elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
-        if elements:
-            gtable = s3db.org_group
-            org_groups = looked_up.get("org_organisation_group", {})
-            for element in elements:
-                name = element.text
-                if name in org_groups:
-                    # Replace string with id
-                    element.text = org_groups[name]["id"]
-                    # Don't check again
-                    continue
+        #elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
+        #if elements:
+        #    gtable = s3db.org_group
+        #    org_groups = looked_up.get("org_organisation_group", {})
+        #    for element in elements:
+        #        name = element.text
+        #        if name in org_groups:
+        #            # Replace string with id
+        #            element.text = org_groups[name]["id"]
+        #            # Don't check again
+        #            continue
 
-                try:
-                    # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
-                    int(name)
-                except ValueError:
-                    # This is a non-integer, so must be 1st or only phase
-                    record = db(gtable.name == name).select(gtable.id,
-                                                            limitby=(0, 1)
-                                                            ).first()
-                    if record:
-                        org_group_id = record.id
-                    else:
-                        # Add a new record
-                        org_group_id = gtable.insert(name=name)
-                        update_super(gtable, Storage(id=org_group_id))
-                    # Replace string with id
-                    org_group_id = str(org_group_id)
-                    element.text = org_group_id
-                    # Store in case we get called again with same value
-                    org_groups[name] = dict(id=org_group_id)
-                else:
-                    # Store in case we get called again with same value
-                    org_groups[name] = dict(id=name)
+        #        try:
+        #            # Is this the 2nd phase of a 2-phase import & hence values have already been replaced?
+        #            int(name)
+        #        except ValueError:
+        #            # This is a non-integer, so must be 1st or only phase
+        #            record = db(gtable.name == name).select(gtable.id,
+        #                                                    limitby=(0, 1)
+        #                                                    ).first()
+        #            if record:
+        #                org_group_id = record.id
+        #            else:
+        #                # Add a new record
+        #                org_group_id = gtable.insert(name=name)
+        #                update_super(gtable, Storage(id=org_group_id))
+        #            # Replace string with id
+        #            org_group_id = str(org_group_id)
+        #            element.text = org_group_id
+        #            # Store in case we get called again with same value
+        #            org_groups[name] = dict(id=org_group_id)
+        #        else:
+        #            # Store in case we get called again with same value
+        #            org_groups[name] = dict(id=name)
 
     # -------------------------------------------------------------------------
     @staticmethod
