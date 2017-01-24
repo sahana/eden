@@ -1579,6 +1579,14 @@ def config(settings):
                 resource.configure(list_fields = list_fields,
                                    filter_widgets = filter_widgets,
                                    )
+
+                # Sort filterOptionsS3 results alphabetically
+                if r.representation == "json":
+                    resource.configure(orderby = ["pr_person.first_name",
+                                                  "pr_person.last_name",
+                                                  "pr_person.last_name",
+                                                  ],
+                                       )
             return result
         s3.prep = custom_prep
 

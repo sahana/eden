@@ -2903,7 +2903,7 @@ class S3HRSkillModel(S3Model):
                                                   )),
                            widget = S3MultiSelectWidget(header="",
                                                         selectedList=3),
-                                         
+
                            ),
                      *s3_meta_fields())
 
