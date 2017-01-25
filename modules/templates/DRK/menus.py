@@ -188,6 +188,30 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cr():
+        """ CR / Shelter Registry """
+
+        from config import drk_default_shelter
+        shelter_id = drk_default_shelter()
+
+        if not shelter_id:
+            return None
+
+        #ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="cr")(
+                    M("Shelter", f="shelter", args=[shelter_id])(
+                        M("Dashboard",
+                          args = [shelter_id, "profile"],
+                          ),
+                        M("Housing Units",
+                          args = [shelter_id, "shelter_unit"],
+                          ),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def dvr():
         """ DVR / Disaster Victim Registry """
 

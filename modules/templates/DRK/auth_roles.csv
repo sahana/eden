@@ -15,6 +15,7 @@ ADMIN_HEAD,Head of Administration,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of a
 ADMIN_HEAD,Head of Administration,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
+ADMIN_HEAD,Head of Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
 ADMIN_HEAD,Head of Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
@@ -42,6 +43,7 @@ ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administratio
 ADMINISTRATION,Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Administration has unrestricted access to task management
 ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
+ADMINISTRATION,Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to allowance information
 ADMINISTRATION,Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage activities
@@ -98,6 +100,7 @@ INFO_POINT,Info Point,,inv,,,READ,,,,,
 INFO_POINT,Info Point,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 INFO_POINT,Info Point,,,,cr_shelter,READ,,,,,Infopoint can read shelter info
 INFO_POINT,Info Point,,,,cr_shelter_registration,READ,,,,,Infopoint can read shelter registration info
+INFO_POINT,Info Point,,,,cr_shelter_unit,READ,,,,,
 INFO_POINT,Info Point,,,,dvr_allowance,NONE,,,,,Infopoint can not see allowance details
 INFO_POINT,Info Point,,,,dvr_case,READ,,,,,
 INFO_POINT,Info Point,,,,dvr_case_activity,READ,,,,,Infopoint can read case activities
@@ -119,6 +122,7 @@ MEDICAL,Medical,,inv,,,NONE,,,,,
 MEDICAL,Medical,,project,,,NONE,,,,,
 MEDICAL,Medical,,,,cr_shelter,READ,,,,,Medical can read shelter info
 MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
+MEDICAL,Medical,,,,cr_shelter_unit,READ,,,,,
 MEDICAL,Medical,,,,dvr_allowance,NONE,,,,,Medical can not see allowance details
 MEDICAL,Medical,,,,dvr_case,READ|UPDATE,,,,,
 MEDICAL,Medical,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Medical can read and update activities
@@ -137,6 +141,7 @@ QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can cr
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not access site activity reports
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
+QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,dvr_case_language,READ,,,,,
@@ -152,6 +157,7 @@ SCAN,Scan,,dvr,index,,NONE,,,,,Scan role can not access DVR index controller
 SCAN,Scan,,dvr,person,,NONE,,,,,Scan role can not access case list
 SCAN,Scan,,dvr,site_activity,,NONE,,,,,Scan role can not access site activity reports
 SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
+SCAN,Scan,,,,cr_shelter_unit,READ,,,,,
 SCAN,Scan,,,,dvr_case_appointment,CREATE|UPDATE,,,,,Scan role can create or update appointments
 SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
 SCAN,Scan,,,,dvr_case_language,READ,,,,,
@@ -168,6 +174,7 @@ SECURITY,Security,,dvr,site_activity,,NONE,,,,,Security can not access site acti
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
+SECURITY,Security,,,,cr_shelter_unit,READ,,,,,
 SECURITY,Security,,,,dvr_case,READ,,,,,
 SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
@@ -184,7 +191,8 @@ SECURITY_HEAD,Head of Security,,dvr,case_event,,CREATE|READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,site_activity,,NONE,,,,,Head of security can not access site activity reports
 SECURITY_HEAD,Head of Security,,dvr,,,READ|CREATE|UPDATE,UPDATE,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
+SECURITY_HEAD,Head of Security,,,,cr_shelter_unit,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_allowance,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_activity,NONE,,,,,
