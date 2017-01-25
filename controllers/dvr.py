@@ -843,4 +843,10 @@ def evaluation_data():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def referral_type():
+    """ Referral Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

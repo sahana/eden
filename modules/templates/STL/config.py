@@ -1363,6 +1363,7 @@ def config(settings):
                                         (T("Reference Number"), "pe_label"),
                                         "dvr_case.status_id",
                                         "dvr_case.date",
+                                        "case_details.referral_type_id",
                                         "dvr_case.organisation_id",
                                         "dvr_case.human_resource_id",
                                         "first_name",
