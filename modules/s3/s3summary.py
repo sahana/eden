@@ -189,7 +189,8 @@ class S3Summary(S3Method):
                     active_map = content
                 s.append(DIV(content,
                              _id="%s-container" % widget_id,
-                             _class="widget-container"))
+                             _class="widget-container",
+                             ))
                 widget_idx += 1
 
             if common:

@@ -56,7 +56,7 @@ from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method, S3Request
 from s3track import S3Tracker
-from s3utils import s3_addrow, s3_get_extension, s3_mark_required #, S3ModuleDebug
+from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
 
 #DEBUG = False
 #if DEBUG:
@@ -605,8 +605,8 @@ Thank you"""
                 # Add a new input checkbox "remember me for longer"
                 s3_addrow(form,
                           "",
-                          DIV(INPUT(_type='checkbox',
-                                    _class='checkbox',
+                          DIV(INPUT(_type="checkbox",
+                                    _class="checkbox",
                                     _id="auth_user_remember",
                                     _name="remember",
                                     ),
@@ -2372,7 +2372,7 @@ $.filterOptionsS3({
         return approved
 
     # -------------------------------------------------------------------------
-    def s3_approve_user(self, user):
+    def s3_approve_user(self, user, password=None):
         """
             S3 framework function
 
@@ -2387,6 +2387,9 @@ $.filterOptionsS3({
                 - Adds user to the 'Authenticated' role
                 - Adds any default roles for the user
                 - @ToDo: adds them to the Org_x Access role
+
+            @param user: the user Storage() or Row
+            @param password: optional password to include in a custom welcome_email
         """
 
         user_id = user.id
@@ -2487,7 +2490,7 @@ $.filterOptionsS3({
                                                      ).first().email
         self.auth_user_onaccept(user_email, user_id)
         # Send Welcome mail
-        self.s3_send_welcome_email(user)
+        self.s3_send_welcome_email(user, password)
 
     # -------------------------------------------------------------------------
     def s3_link_user(self, user):
@@ -2528,11 +2531,11 @@ $.filterOptionsS3({
             if "staff" in link_user_to:
                 # Add Staff Record
                 human_resource_id = self.s3_link_to_human_resource(user, person_id,
-                                                                   type=1)
+                                                                   hr_type=1)
             if "volunteer" in link_user_to:
                 # Add Volunteer Record
                 human_resource_id = self.s3_link_to_human_resource(user, person_id,
-                                                                   type=2)
+                                                                   hr_type=2)
             if "member" in link_user_to:
                 # Add Member Record
                 member_id = self.s3_link_to_member(user, person_id)
@@ -2899,9 +2902,9 @@ $.filterOptionsS3({
         if not organisation_id:
             # Create a new Organisation
             name = user.get("organisation_name", None)
-            acronym = user.get("organisation_acronym", None)
             if name:
                 # Create new organisation
+                acronym = user.get("organisation_acronym", None)
                 otable = s3db.org_organisation
                 record = Storage(name=name,
                                  acronym=acronym)
@@ -2993,7 +2996,7 @@ $.filterOptionsS3({
     def s3_link_to_human_resource(self,
                                   user,
                                   person_id,
-                                  type,
+                                  hr_type,
                                   ):
         """
             Take ownership of the HR records of the person record
@@ -3015,7 +3018,7 @@ $.filterOptionsS3({
             return None
 
         # Update existing HR record for this user
-        if type == 1:
+        if hr_type == 1:
             site_id = user.site_id
         else:
             site_id = None
@@ -3023,7 +3026,7 @@ $.filterOptionsS3({
         ltable = s3db.pr_person_user
         query = (htable.deleted == False) & \
                 (htable.status == 1) & \
-                (htable.type == type) & \
+                (htable.type == hr_type) & \
                 (htable.person_id == ptable.id) & \
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == user_id)
@@ -3058,7 +3061,7 @@ $.filterOptionsS3({
             person_ids = [person_id]
         query = (htable.person_id.belongs(person_ids)) & \
                 (htable.organisation_id == organisation_id) & \
-                (htable.type == type) & \
+                (htable.type == hr_type) & \
                 (htable.site_id == site_id)
         row = db(query).select(htable.id, limitby=(0, 1)).first()
 
@@ -3068,7 +3071,7 @@ $.filterOptionsS3({
             record = Storage(person_id=person_ids[0],
                              organisation_id=organisation_id,
                              site_id = site_id,
-                             type=type,
+                             type=hr_type,
                              owned_by_user=user_id,
                              )
             hr_id = htable.insert(**record)
@@ -3217,7 +3220,7 @@ $.filterOptionsS3({
         return approver, organisation_id
 
     # -------------------------------------------------------------------------
-    def s3_send_welcome_email(self, user):
+    def s3_send_welcome_email(self, user, password=None):
         """
             Send a welcome mail to newly-registered users
             - especially suitable for users from Facebook/Google who don't
@@ -3225,6 +3228,7 @@ $.filterOptionsS3({
 
             @param user: the user dict, must contain "email", and can
                          contain "language" for translation of the message
+            @param password: optional password to include in a custom welcome_email
         """
 
         messages = self.messages
@@ -3236,18 +3240,20 @@ $.filterOptionsS3({
         # Ensure that we send out the mails in the language that
         # the recipient wants (if we know it)
         T = current.T
-        if "language" in user:
-            T.force(user["language"])
+        language = user.get("language")
+        if language:
+            T.force(language)
 
         # Compose the message
-        system_name = settings.get_system_name()
-        subject = messages.welcome_email_subject % \
-                        {"system_name": system_name}
-        message = messages.welcome_email % \
+        system_name = s3_str(settings.get_system_name())
+        subject = s3_str(messages.welcome_email_subject % \
+                        {"system_name": system_name})
+        message = s3_str(messages.welcome_email % \
                         {"system_name": system_name,
                          "url": settings.get_base_public_url(),
-                         "profile": URL("default", "user", args=["profile"])
-                         }
+                         "profile": URL("default", "user", args=["profile"]),
+                         "password": password,
+                         })
 
         # Restore language for UI
         T.force(current.session.s3.language)

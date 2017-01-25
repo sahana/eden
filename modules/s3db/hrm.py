@@ -8089,7 +8089,8 @@ class hrm_Record(S3Method):
                     code.readable = code.writable = True
             #elif controller = "hrm":
             else:
-                widget_filter = FS("type") == 1
+                #widget_filter = FS("type") == 1
+                widget_filter = None
                 if settings.get_hrm_use_code():
                     code.readable = code.writable = True
 

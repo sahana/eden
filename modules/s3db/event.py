@@ -45,7 +45,7 @@ __all__ = ("S3EventModel",
            "S3EventMapModel",
            "S3EventOrganisationModel",
            "S3EventProjectModel",
-           #"S3EventRequestModel",
+           "S3EventRequestModel",
            "S3EventResourceModel",
            "S3EventSiteModel",
            "S3EventSitRepModel",
@@ -492,7 +492,12 @@ class S3EventModel(S3Model):
                                         "actuate": "hide",
                                         "autodelete": False,
                                         },
-                            req_req = "event_id",
+                            req_req = {"link": "event_request",
+                                       "joinby": "event_id",
+                                       "key": "req_id",
+                                       "actuate": "hide",
+                                       "autodelete": False,
+                                       },
                             stats_impact = {"link": "event_event_impact",
                                             "joinby": "event_id",
                                             "key": "impact_id",
@@ -1355,10 +1360,36 @@ class S3EventActivityModel(S3Model):
         tablename = "event_activity"
         self.define_table(tablename,
                           self.event_event_id(empty = False,
-                                              ondelete = "CASCADE"),
+                                              ondelete = "CASCADE",
+                                              ),
                           #self.event_incident_id(ondelete = "CASCADE"),
                           self.project_activity_id(#ondelete = "CASCADE", # default anyway
                                                    ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventRequestModel(S3Model):
+    """
+        Link Requests to Events
+    """
+
+    names = ("event_request",
+             )
+
+    def model(self):
+
+        tablename = "event_request"
+        self.define_table(tablename,
+                          self.event_event_id(default = current.session.s3.event,
+                                              empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.req_req_id(#ondelete = "CASCADE", # default anyway
+                                          ),
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)

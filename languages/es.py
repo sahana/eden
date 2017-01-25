@@ -6926,6 +6926,23 @@
 'Welcome to the Sahana Eden Disaster Management System': 'Bienvenido al Sistema de Manejo de Desastres Sahana Eden',
 'Welcome to the Sahana FOSS Disaster Management System': 'Bienvenido al Sistema de Gestión de Desastres Sahana FOSS',
 'Welcome to the Sahana Portal at': 'Bienvenido al Portal Sahana en',
+'Welcome to %(system_name)s': 'Bienvenido a %(system_name)s',
+"""Welcome to %(system_name)s
+ - You can start using %(system_name)s at: %(url)s
+ - To edit your profile go to: %(url)s%(profile)s
+Thank you""" : """Bienvenido a %(system_name)s
+ - Puede empezar a usar %(system_name)s desde: %(url)s
+ - Para editar su perfil ingrese a: %(url)s%(profile)s
+Gracias""",
+"""Welcome to %(system_name)s
+ - You can start using %(system_name)s at: %(url)s
+ - Your password is: %(password)s
+ - To edit your profile go to: %(url)s%(profile)s
+Thank you""" : """Bienvenido a %(system_name)s
+ - Puede empezar a usar %(system_name)s desde: %(url)s
+ - Su contraseña es: %(password)s
+ - Para editar su perfil ingrese a: %(url)s%(profile)s
+Gracias""",
 'Well-Known Text': 'Texto notoriamente conocido',
 'Were basic medical supplies available for health services prior to the disaster?': '¿Fueron básica suministros médicos disponibles para los servicios de salud antes de la catástrofe?',
 'Were breast milk substitutes used prior to the disaster?': '¿Se sustituye leche materna utilizado antes de la catástrofe?',

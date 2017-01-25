@@ -541,6 +541,9 @@ class S3CRUD(S3Method):
                 s3.cancel = cancel
 
                 if form is not None:
+                    form_postp = r.resource.get_config("form_postp")
+                    if form_postp:
+                        form_postp(form)
                     output["form"] = form
                     output["showadd_btn"] = self.crud_button(tablename=tablename,
                                                              name="label_create",

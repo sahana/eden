@@ -845,7 +845,8 @@ class S3Profile(S3CRUD):
                         _class="profile-sub-header"),
                      DIV(form,
                          _class="form-container thumbnail"),
-                     _class=_class)
+                     _class=_class,
+                     )
 
         return output
 
