@@ -1363,6 +1363,7 @@ def config(settings):
                                         (T("Reference Number"), "pe_label"),
                                         "dvr_case.status_id",
                                         "dvr_case.date",
+                                        "case_details.referral_type_id",
                                         "dvr_case.organisation_id",
                                         "dvr_case.human_resource_id",
                                         "first_name",
@@ -1579,6 +1580,14 @@ def config(settings):
                 resource.configure(list_fields = list_fields,
                                    filter_widgets = filter_widgets,
                                    )
+
+                # Sort filterOptionsS3 results alphabetically
+                if r.representation == "json":
+                    resource.configure(orderby = ["pr_person.first_name",
+                                                  "pr_person.middle_name",
+                                                  "pr_person.last_name",
+                                                  ],
+                                       )
             return result
         s3.prep = custom_prep
 

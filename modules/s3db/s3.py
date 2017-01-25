@@ -196,6 +196,10 @@ class S3DynamicTablesModel(S3Model):
                      Field("name", length=128, unique=True, notnull=True,
                            label = T("Table Name"),
                            requires = [IS_NOT_EMPTY(),
+                                       IS_LOWER(),
+                                       IS_MATCH("^%s_[a-z0-9_]+$" % DYNAMIC_PREFIX,
+                                                error_message = "Invalid table name",
+                                                ),
                                        IS_LENGTH(128),
                                        IS_NOT_IN_DB(db, "s3_table.name"),
                                        ],
@@ -244,21 +248,72 @@ class S3DynamicTablesModel(S3Model):
                      Field("name", length=128, notnull=True,
                            label = T("Field Name"),
                            requires = [IS_NOT_EMPTY(),
+                                       IS_DYNAMIC_FIELDNAME(),
                                        IS_LENGTH(128),
                                        ],
                            ),
-                     Field("field_type", length=128, notnull=True,
+                     Field("field_type", notnull=True,
                            default = "string",
                            label = T("Field Type"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
+                                       IS_DYNAMIC_FIELDTYPE(),
                                        ],
                            ),
                      Field("label",
                            label = T("Label"),
                            ),
-                     #s3_comments(),
+                     Field("require_unique", "boolean",
+                           default = False,
+                           label = T("Must be unique"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Must be unique"),
+                                                           T("Field value must be unique"),
+                                                           ),
+                                         ),
+                           ),
+                     Field("require_not_empty", "boolean",
+                           default = False,
+                           label = T("Is required"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Is required"),
+                                                           T("Field value must not be empty"),
+                                                           ),
+                                         ),
+                           ),
+                     Field("options", "json",
+                           label = T("Options"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Options"),
+                                                           T("Fixed set of selectable values for this field (JSON object)"),
+                                                           ),
+                                         ),
+                           ),
+                     Field("settings", "json",
+                           label = T("Settings"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Settings"),
+                                                           T("Configuration settings for this field (JSON object)"),
+                                                           ),
+                                         ),
+                           ),
+                     s3_comments(label = T("Tooltip"),
+                                 represent = s3_text_represent,
+                                 comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Tooltip"),
+                                                                 T("Explanation of the field to be displayed in forms"),
+                                                                 ),
+                                               ),
+                                 ),
                      *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       onvalidation = self.s3_field_onvalidation,
+                       )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -278,6 +333,74 @@ class S3DynamicTablesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def s3_field_onvalidation(form):
+        """
+            On-validation routine for s3_fields:
+                - field name must be unique within the table
+        """
+
+        table = current.s3db.s3_field
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        if "name" in form_vars:
+            new_name = form_vars.name
+
+            record = form.record if hasattr(form, "record") else None
+            missing = []
+
+            # Get the table ID
+            table_id = None
+            if "table_id" in form_vars:
+                table_id = form_vars.table_id
+            elif record and "table_id" in record:
+                table_id = record.table_id
+            elif not record_id:
+                table_id = table.table_id.default
+            else:
+                missing.append("table_id")
+
+            # Get the current field name
+            current_name = None
+            if record_id:
+                if record and "name" in record:
+                    current_name = record.name
+                else:
+                    missing.append("name")
+
+            db = current.db
+
+            # Need to reload the record?
+            if record_id and missing:
+                query = table.id == record_id
+                row = db(query).select(limitby = (0, 1), *missing).first()
+                if row:
+                    if "name" in missing:
+                        current_name = row.name
+                    if "table_id" in missing:
+                        table_id = row.table_id
+
+            # Verify that new field name is unique within the table
+            if new_name != current_name and table_id:
+                query = (table.name == new_name) & \
+                        (table.table_id == table_id) & \
+                        (table.deleted != True)
+                if record_id:
+                    query &= (table.id != record_id)
+                row = db(query).select(table.id,
+                                       limitby = (0, 1),
+                                       ).first()
+                if row:
+                    form.errors["name"] = "A field with this name already exists in this table"
 
 # =============================================================================
 def s3_table_rheader(r, tabs=None):

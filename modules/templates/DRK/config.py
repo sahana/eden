@@ -682,6 +682,14 @@ def config(settings):
                         # Dashboard and Check-in/out UI
                         current.auth.permission.fail()
 
+                if r.interactive:
+
+                    resource = r.resource
+                    resource.configure(filter_widgets = None,
+                                       insertable = False,
+                                       deletable = False,
+                                       )
+
             if r.component_name == "shelter_unit":
                 # Expose "transitory" flag for housing units
                 utable = current.s3db.cr_shelter_unit
@@ -713,6 +721,9 @@ def config(settings):
 
             return output
         s3.postp = custom_postp
+
+        attr = dict(attr)
+        attr["rheader"] = drk_cr_rheader
 
         return attr
 
@@ -897,10 +908,23 @@ def config(settings):
         s3db = current.s3db
         has_permission = current.auth.s3_has_permission
 
-        if not has_permission("create", "pr_person"):
+        # Users who can not register new residents also have
+        # only limited write-access to basic details of residents
+        if r.controller == "dvr" and not has_permission("create", "pr_person"):
 
+            # Can not write any fields in main person record
+            # (fields in components may still be writable, though)
             ptable = s3db.pr_person
             for field in ptable:
+                field.writable = False
+
+            # Can not add or edit contact data in person form
+            s3db.configure("pr_contact", insertable=False)
+
+            # Can not update shelter registration from person form
+            # (check-in/check-out may still be permitted, however)
+            rtable = s3db.cr_shelter_registration
+            for field in rtable:
                 field.writable = False
 
     settings.customise_pr_person_resource = customise_pr_person_resource
@@ -1500,6 +1524,17 @@ def config(settings):
                                         ]
                     configure(list_fields = list_fields)
 
+                elif r.component_name == "case_appointment":
+
+                    # Make appointments tab read-only even if the user is
+                    # permitted to create or update appointments (via event
+                    # registration), except for ADMINISTRATION/ADMIN_HEAD:
+                    if not has_role("ADMINISTRATION") and \
+                       not has_role("ADMIN_HEAD"):
+                        r.component.configure(insertable = False,
+                                              editable = False,
+                                              deletable = False,
+                                              )
             return result
         s3.prep = custom_prep
 
@@ -3026,6 +3061,50 @@ def drk_org_rheader(r, tabs=[]):
             rheader_fields = [["name", "email"],
                               ["organisation_id", "phone1"],
                               ["location_id", "phone2"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+    return rheader
+
+# =============================================================================
+def drk_cr_rheader(r, tabs=[]):
+    """ CR custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "cr_shelter":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Housing Units"), "shelter_unit"),
+                        (T("Client Registration"), "shelter_registration"),
+                        ]
+
+            rheader_fields = [["name",
+                               ],
+                              ["organisation_id",
+                               ],
+                              ["location_id",
+                               ],
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,

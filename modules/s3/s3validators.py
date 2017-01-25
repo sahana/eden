@@ -38,6 +38,8 @@ __all__ = ("single_phone_number_pattern",
            "IS_ADD_PERSON_WIDGET",
            "IS_ADD_PERSON_WIDGET2",
            "IS_COMBO_BOX",
+           "IS_DYNAMIC_FIELDNAME",
+           "IS_DYNAMIC_FIELDTYPE",
            "IS_FLOAT_AMOUNT",
            "IS_HTML_COLOUR",
            "IS_INT_AMOUNT",
@@ -3339,6 +3341,100 @@ class IS_PHONE_NUMBER_MULTI(Validator):
             error_message = current.T("Enter a valid phone number")
 
         return (value, error_message)
+
+# =============================================================================
+class IS_DYNAMIC_FIELDNAME(Validator):
+    """ Validator for field names in dynamic tables """
+
+    PATTERN = re.compile("^[a-z]+[a-z0-9_]*$")
+
+    def __init__(self,
+                 error_message = "Invalid field name",
+                 ):
+        """
+            Constructor
+
+            @param error_message: the error message for invalid values
+        """
+
+        self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+        """
+            Validation of a value
+
+            @param value: the value
+            @return: tuple (value, error)
+        """
+
+        if value:
+
+            name = str(value).lower().strip()
+
+            from s3fields import s3_all_meta_field_names
+
+            if name != "id" and \
+               name not in s3_all_meta_field_names() and \
+               self.PATTERN.match(name):
+                return (name, None)
+
+        return (value, self.error_message)
+
+# =============================================================================
+class IS_DYNAMIC_FIELDTYPE(Validator):
+    """ Validator for field types in dynamic tables """
+
+    SUPPORTED_TYPES = ("boolean",
+                       "string",
+                       "text",
+                       "integer",
+                       "double",
+                       "date",
+                       "datetime",
+                       "reference",
+                       )
+
+    def __init__(self,
+                 error_message = "Unsupported field type",
+                 ):
+        """
+            Constructor
+
+            @param error_message: the error message for invalid values
+        """
+
+        self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+        """
+            Validation of a value
+
+            @param value: the value
+            @return: tuple (value, error)
+        """
+
+        if value:
+
+            field_type = str(value).lower().strip()
+
+            items = field_type.split(" ")
+            base_type = items[0]
+
+            if base_type == "reference":
+
+                # Verify that referenced table is specified and exists
+                if len(items) > 1:
+                    ktablename = items[1].split(".")[0]
+                    ktable = current.s3db.table(ktablename, db_only=True)
+                    if ktable:
+                        return (field_type, None)
+
+            elif base_type in self.SUPPORTED_TYPES:
+                return (field_type, None)
+
+        return (value, self.error_message)
 
 # =============================================================================
 class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):

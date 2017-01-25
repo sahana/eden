@@ -40,6 +40,7 @@ __all__ = ("DVRCaseModel",
            "DVRActivityFundingModel",
            "DVRNeedsModel",
            "DVRNotesModel",
+           "DVRReferralModel",
            "DVRSiteActivityModel",
            "DVRVulnerabilityModel",
            "dvr_ActivityRepresent",
@@ -609,6 +610,7 @@ class DVRCaseModel(S3Model):
                      s3_date("arrival_date",
                              label = T("Arrival Date"),
                              ),
+                     self.dvr_referral_type_id(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1272,6 +1274,88 @@ class DVRNotesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+# =============================================================================
+class DVRReferralModel(S3Model):
+    """
+        Data model for case referrals (both incoming and outgoing)
+    """
+
+    names = ("dvr_referral_type",
+             "dvr_referral_type_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Referral Types (how cases are admitted)
+        #
+        tablename = "dvr_referral_type"
+        self.define_table(tablename,
+                          Field("name",
+                                label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Referral Type"),
+            title_display = T("Referral Type Details"),
+            title_list = T("Referral Types"),
+            title_update = T("Edit Referral Type"),
+            label_list_button = T("List Referral Types"),
+            label_delete_button = T("Delete Referral Type"),
+            msg_record_created = T("Referral Type added"),
+            msg_record_modified = T("Referral Type updated"),
+            msg_record_deleted = T("Referral Type deleted"),
+            msg_list_empty = T("No Referral Types found"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        referral_type_id = S3ReusableField("referral_type_id",
+                                           "reference %s" % tablename,
+                                           label = T("Type of Referral"),
+                                           ondelete = "RESTRICT",
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                           )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"dvr_referral_type_id": referral_type_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"dvr_referral_type_id": lambda name="referral_type_id", **attr: \
+                                               dummy(name, **attr),
+                }
 
 # =============================================================================
 class DVRCaseActivityModel(S3Model):
