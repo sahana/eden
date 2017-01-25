@@ -1302,6 +1302,62 @@ class IS_DYNAMIC_FIELDNAME_Test(unittest.TestCase):
         assertNotEqual(error, None)
 
 # =============================================================================
+class IS_DYNAMIC_FIELDTYPE_Test(unittest.TestCase):
+    """ Test cases for IS_DYNAMIC_FIELDTYPE validator """
+
+    # -------------------------------------------------------------------------
+    def testPass(self):
+        """ Test IS_DYNAMIC_FIELDTYPE with valid field types """
+
+        assertEqual = self.assertEqual
+
+        requires = IS_DYNAMIC_FIELDTYPE()
+
+        value, error = requires("boolean")
+        assertEqual(value, "boolean")
+        assertEqual(error, None)
+
+        value, error = requires("String")
+        assertEqual(value, "string")
+        assertEqual(error, None)
+
+        value, error = requires(" Integer ")
+        assertEqual(value, "integer")
+        assertEqual(error, None)
+
+        value, error = requires("reference org_organisation")
+        assertEqual(value, "reference org_organisation")
+        assertEqual(error, None)
+
+    # -------------------------------------------------------------------------
+    def testFail(self):
+        """ Test IS_DYNAMIC_FIELDTYPE with invalid field types """
+
+        assertNotEqual = self.assertNotEqual
+
+        requires = IS_DYNAMIC_FIELDTYPE()
+
+        # Must not be None
+        value, error = requires(None)
+        assertNotEqual(error, None)
+
+        # Must not be empty
+        value, error = requires("")
+        assertNotEqual(error, None)
+
+        # Must be a supported field type
+        value, error = requires("nonsense")
+        assertNotEqual(error, None)
+
+        # Must not be "id"
+        value, error = requires("id")
+        assertNotEqual(error, None)
+
+        # Referenced tables must be resolvable
+        value, error = requires("reference nonexistent_table")
+        assertNotEqual(error, None)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -1313,6 +1369,7 @@ if __name__ == "__main__":
         IS_UTC_DATE_Tests,
         IS_JSONS3_Tests,
         IS_DYNAMIC_FIELDNAME_Test,
+        IS_DYNAMIC_FIELDTYPE_Test,
     )
 
 # END ========================================================================

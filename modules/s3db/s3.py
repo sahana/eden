@@ -252,11 +252,11 @@ class S3DynamicTablesModel(S3Model):
                                        IS_LENGTH(128),
                                        ],
                            ),
-                     Field("field_type", length=128, notnull=True,
+                     Field("field_type", notnull=True,
                            default = "string",
                            label = T("Field Type"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
+                                       IS_DYNAMIC_FIELDTYPE(),
                                        ],
                            ),
                      Field("label",
@@ -340,7 +340,6 @@ class S3DynamicTablesModel(S3Model):
         """
             On-validation routine for s3_fields:
                 - field name must be unique within the table
-                - @todo: validate field type
         """
 
         table = current.s3db.s3_field
