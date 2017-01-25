@@ -1385,8 +1385,6 @@ class S3DynamicModel(object):
             @return: a Table instance
         """
 
-        # @todo: make sure the tablename starts with s3dt_ prefix
-
         # Is the table already defined?
         db = current.db
         redefine = tablename in db
@@ -1401,6 +1399,10 @@ class S3DynamicModel(object):
         rows = db(query).select(ftable.name,
                                 ftable.field_type,
                                 ftable.label,
+                                ftable.require_unique,
+                                ftable.require_not_empty,
+                                ftable.options,
+                                ftable.settings,
                                 ftable.comments,
                                 )
         if not rows:
@@ -1409,7 +1411,7 @@ class S3DynamicModel(object):
         # Instantiate the fields
         fields = []
         for row in rows:
-            field = self._field(row)
+            field = self._field(tablename, row)
             if field:
                 fields.append(field)
 
@@ -1428,24 +1430,138 @@ class S3DynamicModel(object):
             return None
 
     # -------------------------------------------------------------------------
-    def _field(self, row):
+    def _field(self, tablename, row):
         """
             Convert a s3_field Row into a Field instance
 
+            @param tablename: the table name
             @param row: the s3_field Row
 
             @return: a Field instance
         """
 
+        from s3fields import s3_date, s3_datetime, S3Represent
+        from s3validators import IS_NOT_ONE_OF
+
+        db = current.db
+
         field = None
 
         if row:
-            field = Field(row.name, row.field_type)
+            fieldname = row.name
+            fieldtype = row.field_type
 
+            settings = row.settings
+            if not isinstance(settings, dict):
+                settings = {}
+
+            # Field with fixed set of options
+            options = row.options
+            if options:
+                if isinstance(options, dict):
+                    options_ = options
+                    represent = S3Represent(options = options,
+                                            translate = True,
+                                            )
+
+                elif isinstance(options, list):
+                    options_ = []
+                    for opt in options:
+                        if isinstance(opt, (tuple, list)) and len(opt) >= 2:
+                            k, v = opt[:2]
+                        else:
+                            k, v = opt, s3_str(opt)
+                        options_.append((k, v))
+                    represent = S3Represent(options = dict(options_),
+                                            translate = True,
+                                            )
+
+                field = Field(fieldname, fieldtype,
+                              represent = represent,
+                              )
+                requires = IS_IN_SET(options_)
+
+            # Date fields
+            elif fieldtype == "date":
+
+                attr = {}
+                for keyword in ("min", "max", "past", "future"):
+                    setting = settings.get(keyword, DEFAULT)
+                    if setting is not DEFAULT:
+                        attr[keyword] = setting
+                attr["empty"] = False
+
+                field = s3_date(fieldname, **attr)
+                requires = field.requires
+
+            # DateTime fields
+            elif fieldtype == "datetime":
+
+                attr = {}
+                for keyword in ("past", "future"):
+                    setting = settings.get(keyword, DEFAULT)
+                    if setting is not DEFAULT:
+                        attr[keyword] = setting
+                attr["empty"] = False
+
+                field = s3_datetime(fieldname, **attr)
+                requires = field.requires
+
+            # References
+            elif fieldtype[:9] == "reference":
+
+                ktablename = fieldtype.split(" ", 1)[1].split(".", 1)[0]
+                ktable = current.s3db.table(ktablename)
+                if ktable:
+                    if "name" in ktable.fields:
+                        represent = S3Represent(lookup = ktablename,
+                                                translate = True,
+                                                )
+                    else:
+                        represent = None
+                    field = Field(fieldname, fieldtype,
+                                  represent = represent,
+                                  )
+                    requires = IS_ONE_OF(db, str(ktable._id),
+                                         represent,
+                                         )
+                else:
+                    return None
+
+            # Other field types
+            else:
+                field = Field(fieldname, fieldtype)
+
+                # @todo: handle more field settings (e.g. min/max)
+                requires = None
+
+                # Handle require_unique
+                if row.require_unique:
+                    not_one_of = IS_NOT_ONE_OF(db, "%s.%s" % (tablename,
+                                                              fieldname,
+                                                              ),
+                                               )
+                    if requires:
+                        requires = [requires, not_one_of]
+                    else:
+                        requires = not_one_of
+
+            # Handle require_not_empty
+            if row.require_not_empty:
+                if not requires:
+                    requires = IS_NOT_EMPTY()
+            elif requires:
+                requires = IS_EMPTY_OR(requires)
+
+            field.requires = requires
+
+            # Set label
+            # @todo: fallback
             label = row.label
             if label:
                 field.label = current.T(label)
 
+            # Set comment
             comments = row.comments
             if comments:
                 field.comment = comments
