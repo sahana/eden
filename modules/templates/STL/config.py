@@ -617,6 +617,16 @@ def config(settings):
             field.label = T("DS/IS Case Explanation")
             field.readable = field.writable = True
 
+            # Customise Activity Details
+            field = table.activity_details
+            field.label = T("Support provided by STL")
+            field.readable = field.writable = True
+
+            # Customise Outside Support
+            field = table.outside_support
+            field.label = T("Support provided by others")
+            field.readable = field.writable = True
+
             # Customise Priority
             field = table.priority
             field.label = T("Priority for DS")
@@ -673,6 +683,8 @@ def config(settings):
                                         "need_details",
                                         "priority",
                                         "start_date",
+                                        "activity_details",
+                                        "outside_support",
                                         "followup",
                                         "followup_date",
                                         "completed",

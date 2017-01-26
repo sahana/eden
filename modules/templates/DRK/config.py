@@ -1970,7 +1970,7 @@ def config(settings):
                                "need_id",
                                "need_details",
                                "emergency",
-                               "referral_details",
+                               "activity_details",
                                "followup",
                                "followup_date",
                                "completed",
