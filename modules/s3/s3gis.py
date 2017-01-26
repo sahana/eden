@@ -8211,7 +8211,7 @@ class LayerGoogle(Layer):
         sublayers = self.sublayers
         if sublayers:
             T = current.T
-            epsg = (Projection().epsg == 900913)
+            spherical_mercator = (Projection().epsg == 900913)
             settings = current.deployment_settings
             apikey = settings.get_gis_api_google()
             s3 = current.response.s3
@@ -8221,24 +8221,26 @@ class LayerGoogle(Layer):
 
             ldict = {}
 
-            for sublayer in sublayers:
-                # Attributes which are defaulted client-side if not set
-                if sublayer.type == "earth":
-                    ldict["Earth"] = str(T("Switch to 3D"))
-                    #{"modules":[{"name":"earth","version":"1"}]}
-                    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
-                    if script not in s3_scripts:
-                        s3_scripts.append(script)
-                    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
-                    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
-                    if debug:
-                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
-                    else:
-                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
-                    s3.js_global.append('''S3.public_url="%s"''' % settings.get_base_public_url())
-                elif epsg:
-                    # Earth is the only layer which can run in non-Spherical Mercator
-                    # @ToDo: Warning?
+            if spherical_mercator:
+                # Earth was the only layer which can run in non-Spherical Mercator
+                # @ToDo: Warning?
+                for sublayer in sublayers:
+                    # Attributes which are defaulted client-side if not set
+                    #if sublayer.type == "earth":
+                    #    # Deprecated:
+                    #    # https://maps-apis.googleblog.com/2014/12/announcing-deprecation-of-google-earth.html
+                    #    ldict["Earth"] = str(T("Switch to 3D"))
+                    #    #{"modules":[{"name":"earth","version":"1"}]}
+                    #    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
+                    #    if script not in s3_scripts:
+                    #        s3_scripts.append(script)
+                    #    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
+                    #    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
+                    #    if debug:
+                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
+                    #    else:
+                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
+                    #    s3.js_global.append('''S3.public_url="%s"''' % settings.get_base_public_url())
                     if sublayer._base:
                         # Set default Base layer
                         ldict["Base"] = sublayer.type
@@ -8263,26 +8265,26 @@ class LayerGoogle(Layer):
                         ldict["MapMakerHybrid"] = {"name": sublayer.name or "Google MapMaker Hybrid",
                                                    "id": sublayer.layer_id}
 
-            if "MapMaker" in ldict or "MapMakerHybrid" in ldict:
-                # Need to use v2 API
-                # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
-                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
-                script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
-                if script not in s3_scripts:
-                    s3_scripts.append(script)
-            else:
-                # v3 API (3.16 is frozen, 3.17 release & 3.18 is nightly)
-                script = "//maps.google.com/maps/api/js?v=3.17&sensor=false"
-                if script not in s3_scripts:
-                    s3_scripts.append(script)
-                if "StreetviewButton" in ldict:
-                    # Streetview doesn't work with v2 API
-                    ldict["StreetviewButton"] = str(T("Click where you want to open Streetview"))
-                    ldict["StreetviewTitle"] = str(T("Street View"))
-                    if debug:
-                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
-                    else:
-                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
+                if "MapMaker" in ldict or "MapMakerHybrid" in ldict:
+                    # Need to use v2 API
+                    # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
+                    # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
+                    script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
+                    if script not in s3_scripts:
+                        s3_scripts.append(script)
+                else:
+                    # v3 API (3.26 release & 3.27 is nightly)
+                    script = "//maps.google.com/maps/api/js?v=3.26&key=%s" % apikey
+                    if script not in s3_scripts:
+                        s3_scripts.append(script)
+                    if "StreetviewButton" in ldict:
+                        # Streetview doesn't work with v2 API
+                        ldict["StreetviewButton"] = str(T("Click where you want to open Streetview"))
+                        ldict["StreetviewTitle"] = str(T("Street View"))
+                        if debug:
+                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
+                        else:
+                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
 
             if options:
                 # Used by Map._setup()

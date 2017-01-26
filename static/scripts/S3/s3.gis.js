@@ -3,8 +3,6 @@
  * Used by the Map (modules/s3/s3gis.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
- *
- * NB Google Earth Panel limited to 1/page due to callback needing global scope (unless we can pass a map_id in somehow)
  */
 
 /**
@@ -747,7 +745,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Put into a Container to allow going fullscreen from a BorderLayout
-    // We need to put the mapPanel inside a 'card' container for the Google Earth Panel
+    // We had to put the mapPanel inside a 'card' container for the Google Earth Panel
+    // - since this is deprecated, we are free to redesign this
     var addMapPanelContainer = function(map) {
         var s3 = map.s3;
         var options = s3.options;
@@ -810,9 +809,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             tbar: toolbar,
             scope: this
         });
-        // Pass to Global Scope for s3.gis.fullscreen.js and addGoogleEarthControl
+        // Pass to Global Scope for s3.gis.fullscreen.js (and was for addGoogleEarthControl)
         s3.mapPanelContainer = mapPanelContainer;
 
+        /*
         if (options.Google && options.Google.Earth) {
             // Instantiate afresh after going fullscreen as fails otherwise
             var googleEarthPanel = new gxp.GoogleEarthPanel({
@@ -825,7 +825,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Pass to global scope to be accessible from googleEarthKmlLoaded callback
             // => max 1/page!
             S3.gis.googleEarthPanel = googleEarthPanel;
-        }
+        } */
 
         return mapPanelContainer;
     };
@@ -4228,14 +4228,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             addGoogleStreetviewControl(toolbar);
         }
 
-        // Google Earth
+        /* Google Earth
+        // NB Google Earth Panel limited to 1/page due to callback needing global scope (unless we can pass a map_id in somehow)
         try {
             // Only load Google layers if GoogleAPI downloaded ok
             // - allow rest of map to work offline
             if (options.Google.Earth && google) {
                 addGoogleEarthControl(toolbar);
             }
-        } catch(e) {}
+        } catch(e) {} */
 
         // Search box
         if (options.geonames) {
@@ -4374,7 +4375,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         window.resizeInterval = window.setInterval(resize, 50, point, radius);
     };
 
-    // Google Earth control
+    /* Google Earth control
     var addGoogleEarthControl = function(toolbar) {
         var map = toolbar.map;
         var s3 = map.s3;
@@ -4399,9 +4400,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         toolbar.addSeparator();
         toolbar.addButton(googleEarthButton);
-    };
+    }; */
 
-    // Supports GE Control
+    /* Supports GE Control
     var addGoogleEarthKmlLayers = function(map) {
         var layers_feature = map.s3.options.layers_feature;
         if (layers_feature) {
@@ -4428,7 +4429,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             return;
         }
         S3.gis.googleEarthPanel.earth.getFeatures().appendChild(object);
-    };
+    }; */
 
     // Google Streetview control
     var addGoogleStreetviewControl = function(toolbar) {
