@@ -505,11 +505,12 @@ svg[id^=OpenLayers] {
   height: 20px !important;
   width: 20px !important;
 }
+/*
 .x-btn-text.googleearth {
   background-image: url(../../img/gis/geosilk/google_earth.png) !important;
   height: 20px !important;
   width: 20px !important;
-}
+}*/
 .x-btn-text.streetview {
   background-image: url(../../img/gis/streetview.png) !important;
   height: 20px !important;

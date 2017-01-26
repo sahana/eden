@@ -535,7 +535,7 @@ def dojs(dogis = False, warnings = True):
                 pass
             shutil.move(outputFilename, "../gis/gxp/plugins")
 
-        for filename in ("GoogleEarthPanel",
+        for filename in (#"GoogleEarthPanel",
                          "GoogleStreetViewPanel",
                          ):
             inputFilename = os.path.join("..", "gis", "gxp", "widgets", "%s.js" % filename)
