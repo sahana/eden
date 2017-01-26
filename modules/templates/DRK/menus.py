@@ -84,6 +84,7 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 # @ToDO: Move to Dashboard Widget?
                 MM("Housing Units", c="cr", f="shelter",
+                   t = "cr_shelter_unit",
                    args = [shelter_id, "shelter_unit"],
                    check = shelter_id is not None,
                    ),
@@ -205,6 +206,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           args = [shelter_id, "profile"],
                           ),
                         M("Housing Units",
+                          t = "cr_shelter_unit",
                           args = [shelter_id, "shelter_unit"],
                           ),
                     ),
@@ -225,7 +227,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="dvr")(
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
-                        M("Create", m="create"),
+                        M("Create", m="create", t="pr_person", p="create"),
                         M("All Cases", vars = {}),
                         ),
                     M("Reports", link=False)(
