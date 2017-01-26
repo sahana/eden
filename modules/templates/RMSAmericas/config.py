@@ -83,6 +83,9 @@ def config(settings):
     # Activate entity role manager tabs for OrgAdmins
     settings.auth.entity_role_manager = True
 
+    # Map the person's Middle_name to the User Account's last_name
+    settings.auth.middle_name_as_last = True
+
     def ifrc_realm_entity(table, row):
         """
             Assign a Realm Entity to records
@@ -1268,7 +1271,8 @@ def config(settings):
                 return
 
             htable = s3db.hrm_human_resource
-            hr = db(htable.id == hr_id).select(htable.person_id,
+            hr = db(htable.id == hr_id).select(htable.id,
+                                               htable.person_id,
                                                htable.type,
                                                htable.organisation_id,
                                                limitby = (0, 1),
@@ -1304,7 +1308,8 @@ def config(settings):
                     return
 
                 htable = s3db.hrm_human_resource
-                hr = db(htable.id == hr_id).select(htable.person_id,
+                hr = db(htable.id == hr_id).select(htable.id,
+                                                   htable.person_id,
                                                    htable.type,
                                                    limitby = (0, 1),
                                                    ).first()
@@ -1315,7 +1320,8 @@ def config(settings):
                 return
 
         ptable = s3db.pr_person
-        person = db(ptable.id == person_id).select(ptable.first_name,
+        person = db(ptable.id == person_id).select(ptable.id,
+                                                   ptable.first_name,
                                                    ptable.middle_name, # NB We use middle_name for User in RMS Americas!
                                                    ptable.pe_id,
                                                    limitby = (0, 1),
@@ -1349,7 +1355,8 @@ def config(settings):
                     return
 
                 htable = s3db.hrm_human_resource
-                hr = db(htable.id == hr_id).select(htable.type,
+                hr = db(htable.id == hr_id).select(htable.id,
+                                                   htable.type,
                                                    limitby = (0, 1),
                                                    ).first()
             try:
@@ -1391,6 +1398,23 @@ def config(settings):
 
         #user = auth.get_or_create_user(user, login=False)
         user_id = db.auth_user.insert(**user)
+
+        # Set the HR record to be owned by this user
+        if hr:
+            hr.update_record(owned_by_user=user_id)
+        else:
+            hr_id = form_vars.get("id")
+            db(s3db.hrm_human_resource.id == hr_id).update(owned_by_user=user_id)
+
+        # Set the Person record to be owned by this user
+        person.update_record(owned_by_user=user_id)
+
+        # Cascade down to components
+        # pr_address
+        atable = s3db.pr_address
+        db(atable.pe_id == pe_id).update(owned_by_user=user_id)
+        # pr_contact
+        db(ctable.pe_id == pe_id).update(owned_by_user=user_id)
 
         # Link to Person so that we find this in the 'Link'
         ltable = s3db.pr_person_user
@@ -1499,6 +1523,11 @@ Thank you"""
             new_requires = f.requires.other
             new_requires.dbset = dbset
             f.requires = IS_EMPTY_OR(new_requires)
+
+            table = s3db.pr_person
+            table.first_name.label = T("Forenames")
+            table.middle_name.label = T("Father's Surname")
+            table.last_name.label = T("Mother's Surname")
 
             # For the filter
             s3db.hrm_competency.skill_id.label = T("Language")
@@ -2467,6 +2496,22 @@ Thank you"""
                 if not result:
                     return False
 
+            mode = current.session.s3.hrm.mode
+            if mode is not None:
+                # Configure for personal mode
+                # People can edit their own HR data
+                configure = s3db.configure
+                configure("hrm_human_resource",
+                          editable = True,
+                          )
+                configure("hrm_competency",
+                          editable = True,
+                          )
+                configure("hrm_experience",
+                          editable = True,
+                          insertable = True,
+                          )
+
             component_name = r.component_name
             method = r.method
             if method =="record" or component_name == "human_resource":
@@ -2490,6 +2535,8 @@ Thank you"""
                                )
 
                 # Basic Details tab
+                f = s3db.pr_person.middle_name
+                f.readable = f.writable = True
                 f = s3db.pr_person_details.nationality2
                 f.readable = f.writable = True
                 from s3 import S3SQLCustomForm
