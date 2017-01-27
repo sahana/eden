@@ -6,10 +6,13 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3model.py
 #
 import unittest
-from gluon import current
+from gluon import current, IS_NOT_EMPTY, IS_EMPTY_OR
+from gluon.languages import lazyT
+from gluon.storage import Storage
 
 from s3.s3fields import s3_meta_fields
-from s3.s3model import DYNAMIC_PREFIX
+from s3.s3model import DYNAMIC_PREFIX, S3DynamicModel
+from s3.s3validators import IS_NOT_ONE_OF
 
 from unit_tests import run_suite
 
@@ -251,9 +254,11 @@ class S3DynamicModelTests(unittest.TestCase):
         ftable.insert(table_id = table_id,
                       name = "name",
                       field_type = "string",
+                      label = "My Name",
+                      comments = "Explanation of the field",
                       )
         ftable.insert(table_id = table_id,
-                      name = "number",
+                      name = "some_number",
                       field_type = "integer",
                       )
 
@@ -300,13 +305,85 @@ class S3DynamicModelTests(unittest.TestCase):
 
         # Verify that it contains the right fields of the right type
         fields = table.fields
+
         assertIn("name", fields)
-        assertEqual(table.name.type, "string")
-        assertIn("number", fields)
-        assertEqual(table.number.type, "integer")
+        field = table.name
+        assertEqual(field.type, "string")
+        # Internationalised custom label
+        assertTrue(type(field.label) is lazyT)
+        assertEqual(field.label.m, "My Name")
+        # Internationalised comment
+        assertTrue(type(field.comment) is lazyT)
+        assertEqual(field.comment.m, "Explanation of the field")
+
+        assertIn("some_number", fields)
+        field = table.some_number
+        assertEqual(field.type, "integer")
+        # Internationalised default label
+        assertTrue(type(field.label) is lazyT)
+        assertEqual(field.label.m, "Some Number")
+        # No comment
+        assertEqual(field.comment, None)
 
         # Verify that meta-fields have automatically been added
         assertIn("uuid", fields)
+
+    # -------------------------------------------------------------------------
+    def testStringFieldConstruction(self):
+        """
+            Test construction of string field
+        """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Default string field, not unique and empty allowed
+        params = Storage(name = "name",
+                         field_type = "string",
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "name")
+        assertEqual(field.type, "string")
+        assertFalse(field.requires)
+
+        # String field, not unique but empty not allowed
+        params = Storage(name = "name",
+                         field_type = "string",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "name")
+        assertEqual(field.type, "string")
+        assertTrue(isinstance(field.requires, IS_NOT_EMPTY))
+
+        # String field, unique and empty not allowed
+        params = Storage(name = "name",
+                         field_type = "string",
+                         require_unique = True,
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "name")
+        assertEqual(field.type, "string")
+        assertTrue(isinstance(field.requires, IS_NOT_ONE_OF))
+
+        # String field, unique or empty
+        params = Storage(name = "name",
+                         field_type = "string",
+                         require_unique = True,
+                         require_not_empty = False,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "name")
+        assertEqual(field.type, "string")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_NOT_ONE_OF))
 
 # =============================================================================
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field
-#from gluon.validators import IS_EMPTY_OR
+#from gluon.validators import IS_EMPTY_OR, IS_NOT_EMPTY
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -1440,111 +1440,27 @@ class S3DynamicModel(object):
             @return: a Field instance
         """
 
-        from s3fields import s3_date, s3_datetime, S3Represent
-        from s3validators import IS_NOT_ONE_OF
-
-        db = current.db
-
         field = None
 
         if row:
-            fieldname = row.name
+
+            # Type-specific field constructor
             fieldtype = row.field_type
-
-            settings = row.settings
-            if not isinstance(settings, dict):
-                settings = {}
-
-            # Field with fixed set of options
-            options = row.options
-            if options:
-                if isinstance(options, dict):
-                    options_ = options
-                    represent = S3Represent(options = options,
-                                            translate = True,
-                                            )
-
-                elif isinstance(options, list):
-                    options_ = []
-                    for opt in options:
-                        if isinstance(opt, (tuple, list)) and len(opt) >= 2:
-                            k, v = opt[:2]
-                        else:
-                            k, v = opt, s3_str(opt)
-                        options_.append((k, v))
-                    represent = S3Represent(options = dict(options_),
-                                            translate = True,
-                                            )
-
-                field = Field(fieldname, fieldtype,
-                              represent = represent,
-                              )
-                requires = IS_IN_SET(options_)
-
-            # Date fields
+            if row.options:
+                field = self._options_field(tablename, row)
             elif fieldtype == "date":
-
-                attr = {}
-                for keyword in ("min", "max", "past", "future"):
-                    setting = settings.get(keyword, DEFAULT)
-                    if setting is not DEFAULT:
-                        attr[keyword] = setting
-                attr["empty"] = False
-
-                field = s3_date(fieldname, **attr)
-                requires = field.requires
-
-            # DateTime fields
+                field = self._date_field(tablename, row)
             elif fieldtype == "datetime":
-
-                attr = {}
-                for keyword in ("past", "future"):
-                    setting = settings.get(keyword, DEFAULT)
-                    if setting is not DEFAULT:
-                        attr[keyword] = setting
-                attr["empty"] = False
-
-                field = s3_datetime(fieldname, **attr)
-                requires = field.requires
-
-            # References
+                field = self._datetime_field(tablename, row)
             elif fieldtype[:9] == "reference":
-
-                ktablename = fieldtype.split(" ", 1)[1].split(".", 1)[0]
-                ktable = current.s3db.table(ktablename)
-                if ktable:
-                    if "name" in ktable.fields:
-                        represent = S3Represent(lookup = ktablename,
-                                                translate = True,
-                                                )
-                    else:
-                        represent = None
-                    field = Field(fieldname, fieldtype,
-                                  represent = represent,
-                                  )
-                    requires = IS_ONE_OF(db, str(ktable._id),
-                                         represent,
-                                         )
-                else:
-                    return None
-
-            # Other field types
+                field = self._reference_field(tablename, row)
             else:
-                field = Field(fieldname, fieldtype)
+                field = self._generic_field(tablename, row)
 
-                # @todo: handle more field settings (e.g. min/max)
-                requires = None
+            if not field:
+                return None
 
-                # Handle require_unique
-                if row.require_unique:
-                    not_one_of = IS_NOT_ONE_OF(db, "%s.%s" % (tablename,
-                                                              fieldname,
-                                                              ),
-                                               )
-                    if requires:
-                        requires = [requires, not_one_of]
-                    else:
-                        requires = not_one_of
+            requires = field.requires
 
             # Handle require_not_empty
             if row.require_not_empty:
@@ -1555,16 +1471,180 @@ class S3DynamicModel(object):
 
             field.requires = requires
 
-            # Set label
-            # @todo: fallback
+            # Field label and comment
+            T = current.T
             label = row.label
+            if not label:
+                fieldname = row.name
+                label = " ".join(s.capitalize() for s in fieldname.split("_"))
             if label:
-                field.label = current.T(label)
-
-            # Set comment
+                field.label = T(label)
             comments = row.comments
             if comments:
-                field.comment = comments
+                field.comment = T(comments)
+
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _generic_field(tablename, row):
+        """
+            Generic field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        if row.require_unique:
+            from s3validators import IS_NOT_ONE_OF
+            requires = IS_NOT_ONE_OF(current.db, "%s.%s" % (tablename,
+                                                            fieldname,
+                                                            ),
+                                     )
+        else:
+            requires = None
+
+        field = Field(fieldname, fieldtype,
+                      requires = requires,
+                      )
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _options_field(tablename, row):
+        """
+            Options-field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+        fieldopts = row.options
+
+        if isinstance(fieldopts, dict):
+            options_dict = options = fieldopts
+
+        elif isinstance(fieldopts, list):
+            options = []
+            for opt in fieldopts:
+                if isinstance(opt, (tuple, list)) and len(opt) >= 2:
+                    k, v = opt[:2]
+                else:
+                    k, v = opt, s3_str(opt)
+                options.append((k, v))
+            options_dict = dict(options)
+
+        else:
+            options_dict = options = {}
+            represent = None
+
+        from s3fields import S3Represent
+        field = Field(fieldname, fieldtype,
+                      represent = S3Represent(options = options_dict,
+                                              translate = True,
+                                              ),
+                      requires = IS_IN_SET(options)
+                      )
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _date_field(tablename, row):
+        """
+            Date field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        settings = row.settings or {}
+
+        attr = {}
+        for keyword in ("min", "max", "past", "future"):
+            setting = settings.get(keyword, DEFAULT)
+            if setting is not DEFAULT:
+                attr[keyword] = setting
+        attr["empty"] = False
+
+        from s3fields import s3_date
+        field = s3_date(fieldname, **attr)
+
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _datetime_field(tablename, row):
+        """
+            DateTime field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        settings = row.settings or {}
+
+        attr = {}
+        for keyword in ("past", "future"):
+            setting = settings.get(keyword, DEFAULT)
+            if setting is not DEFAULT:
+                attr[keyword] = setting
+        attr["empty"] = False
+
+        from s3fields import s3_datetime
+        field = s3_datetime(fieldname, **attr)
+
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _reference_field(tablename, row):
+        """
+            Reference field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        ktablename = fieldtype.split(" ", 1)[1].split(".", 1)[0]
+        ktable = current.s3db.table(ktablename)
+        if ktable:
+            from s3fields import S3Represent
+            from s3validators import IS_ONE_OF
+            if "name" in ktable.fields:
+                represent = S3Represent(lookup = ktablename,
+                                        translate = True,
+                                        )
+            else:
+                represent = None
+            requires = IS_ONE_OF(current.db, str(ktable._id),
+                                 represent,
+                                 )
+            field = Field(fieldname, fieldtype,
+                          represent = represent,
+                          requires = requires,
+                          )
+        else:
+            field = None
 
         return field
 
