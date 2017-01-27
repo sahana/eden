@@ -7378,7 +7378,8 @@ def hrm_person_controller(**attr):
                     configure("asset_asset",
                               insertable = False,
                               editable = False,
-                              deletable = False)
+                              deletable = False,
+                              )
 
                 elif component_name == "group_membership":
                     hrm_configure_pr_group_membership()
@@ -7394,6 +7395,7 @@ def hrm_person_controller(**attr):
                 f = table.organisation_id
                 if org is None:
                     f.widget = None
+                    f.writable = False
                 else:
                     f.default = org
                     f.readable = f.writable = False
@@ -7402,7 +7404,8 @@ def hrm_person_controller(**attr):
                                   "org_site.%s" % s3db.super_key(db.org_site),
                                   s3db.org_site_represent,
                                   filterby="organisation_id",
-                                  filter_opts=(session.s3.hrm.org,)))
+                                  filter_opts=(session.s3.hrm.org,),
+                                  ))
             elif method == "cv" or r.component_name == "training":
                 list_fields = ["course_id",
                                "grade",
@@ -7433,7 +7436,9 @@ def hrm_person_controller(**attr):
                     redirect(URL(f="staff"))
                 if hr_id and r.component_name == "human_resource":
                     r.component_id = hr_id
-                configure("hrm_human_resource", insertable = False)
+                configure("hrm_human_resource",
+                          insertable = False,
+                          )
 
         elif r.representation == "aadata":
             if r.component_name == "group_membership":
@@ -7862,6 +7867,7 @@ class hrm_CV(S3Method):
                 staff_experience = settings.get_hrm_staff_experience()
                 experience = staff_experience in ("both", "experience")
                 missions = staff_experience in ("both", "missions")
+
             if experience:
                 tablename = "hrm_experience"
                 r.customise_resource(tablename)

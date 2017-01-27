@@ -1250,14 +1250,27 @@ class S3PersonModel(S3Model):
                                 limitby=(0, 1)).first()
 
         # If there is a user and their first or last name have changed
-        if user and form_vars.first_name and \
-           (user.first_name != form_vars.first_name or \
-            user.last_name != form_vars.last_name):
-            # Update the user record
-            query = (utable.id == user.id)
-            db(query).update(first_name = form_vars.first_name,
-                             last_name = form_vars.last_name,
-                             )
+        if user:
+            middle_as_last = current.deployment_settings.get_auth_middle_name_as_last()
+            if middle_as_last:
+                # RMSAmericas: Map the Person's middle_name to the User's last_name
+                if form_vars.first_name and \
+                   (user.first_name != form_vars.first_name or \
+                   user.last_name != form_vars.middle_name):
+                    # Update the user record
+                    query = (utable.id == user.id)
+                    db(query).update(first_name = form_vars.first_name,
+                                     last_name = form_vars.middle_name,
+                                     )
+            else:
+                if form_vars.first_name and \
+                   (user.first_name != form_vars.first_name or \
+                   user.last_name != form_vars.last_name):
+                    # Update the user record
+                    query = (utable.id == user.id)
+                    db(query).update(first_name = form_vars.first_name,
+                                     last_name = form_vars.last_name,
+                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
