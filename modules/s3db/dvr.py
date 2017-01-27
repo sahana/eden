@@ -3788,6 +3788,10 @@ class DVRActivityFundingModel(S3Model):
                      Field("proposal", "text",
                            label = T("Proposed Assistance"),
                            ),
+                     Field("approved", "boolean",
+                           label = T("Approved"),
+                           represent = s3_yes_no_represent,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 

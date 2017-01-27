@@ -662,6 +662,8 @@ def config(settings):
             field = ftable.reason
             field.label = T("Justification for SNF")
             field.widget = s3_comments_widget
+            field = ftable.approved
+            field.label = T("Approved by Committee")
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
@@ -692,6 +694,7 @@ def config(settings):
                                         (T("Outcome for DS"), "outcome"),
                                         "activity_funding.funding_required",
                                         "activity_funding.reason",
+                                        "activity_funding.approved",
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "file",
