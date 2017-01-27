@@ -68,6 +68,7 @@ def config(settings):
                                                "volunteer": T("Volunteer"),
                                                #"member": T("Member")
                                                }
+    settings.auth.registration_link_user_to_default = "volunteer"
 
     #settings.auth.record_approval = True
 
@@ -82,9 +83,6 @@ def config(settings):
 
     # Activate entity role manager tabs for OrgAdmins
     settings.auth.entity_role_manager = True
-
-    # Map the person's Middle_name to the User Account's last_name
-    settings.auth.middle_name_as_last = True
 
     def ifrc_realm_entity(table, row):
         """
@@ -1342,6 +1340,7 @@ def config(settings):
             email = contact.value
         except:
             # Nothing we can do!
+            hr_id = form_vars.get("id")
             current.log.warning("Cannot create user for HR %s as cannot find Email" % hr_id)
             return
 
@@ -1753,17 +1752,40 @@ Thank you"""
             dtable.insert(human_resource_id = human_resource_id)
 
     # -------------------------------------------------------------------------
-    #def customise_hrm_training_controller(**attr):
+    def customise_hrm_training_controller(**attr):
 
-    #    # Default Filter
-    #    from s3 import s3_set_default_filter
-    #    s3_set_default_filter("~.person_id$human_resource.organisation_id",
-    #                          user_org_default_filter,
-    #                          tablename = "hrm_training")
+        # Default Filter
+        #from s3 import s3_set_default_filter
+        #s3_set_default_filter("~.person_id$human_resource.organisation_id",
+        #                      user_org_default_filter,
+        #                      tablename = "hrm_training")
 
-    #    return attr
+        s3 = current.response.s3
 
-    #settings.customise_hrm_training_controller = customise_hrm_training_controller
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+                if not result:
+                    return False
+
+            if r.method == "import":
+                # HR records may be created via importing them as participants
+                # Default to Volunteers
+                current.s3db.hrm_human_resource.type.default = 2
+                # Doesn't work as email created after human_resource
+                #current.s3db.configure("hrm_human_resource",
+                #                       create_onaccept = hrm_human_resource_create_onaccept,
+                #                       )
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_training_controller = customise_hrm_training_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_resource(r, tablename):
@@ -2514,7 +2536,16 @@ Thank you"""
 
             component_name = r.component_name
             method = r.method
-            if method =="record" or component_name == "human_resource":
+            if method == "import":
+                # HR records may be created via import
+                # Default to Volunteers
+                s3db.hrm_human_resource.type.default = 2
+                # Doesn't work as email created after human_resource
+                #s3db.configure("hrm_human_resource",
+                #               create_onaccept = hrm_human_resource_create_onaccept,
+                #               )
+                pass
+            elif method =="record" or component_name == "human_resource":
                 # Organisation needs to be an NS/Branch
                 ns_only("hrm_human_resource",
                         required = True,

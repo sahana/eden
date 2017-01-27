@@ -2662,11 +2662,11 @@ $.filterOptionsS3({
                     query = (ptable.pe_id == pe_id)
                     if middle_name:
                         db(query).update(first_name = user.first_name,
-                                         last_name = user.last_name,
+                                         middle_name = user.last_name,
                                          )
                     else:
                         db(query).update(first_name = user.first_name,
-                                         middle_name = user.last_name,
+                                         last_name = user.last_name,
                                          )
 
                 # Add the user's email address to the person record if missing
@@ -2701,7 +2701,7 @@ $.filterOptionsS3({
             else:
                 # This user account isn't yet linked to a person record
                 # => try to find a person record with same first name,
-                # last name and email address
+                # other name and email address
 
                 first_name = user.first_name
                 last_name = user.last_name

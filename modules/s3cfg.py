@@ -734,13 +734,6 @@ class S3Config(Storage):
     def get_auth_show_utc_offset(self):
         return self.auth.get("show_utc_offset", True)
 
-    def get_auth_middle_name_as_last(self):
-        """
-            Whether User Accounts use Person's middle_name as Account's last_name
-            - True for RMSAmericas
-        """
-        return self.auth.get("middle_name_as_last", False)
-
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
     def get_security_audit_read(self):
@@ -1577,6 +1570,7 @@ class S3Config(Storage):
             e.g. Apellido Paterno in Hispanic names
 
             Setting this means that auth_user.last_name matches with pr_person.middle_name
+            e.g. RMSAmericas
         """
         return self.__lazy("L10n", "mandatory_middlename", False)
 

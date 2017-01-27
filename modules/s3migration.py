@@ -96,7 +96,6 @@ class S3Migration(object):
         from information_schema.KEY_COLUMN_USAGE
         where TABLE_NAME = 'module_resourcename';
 
-        @ToDo: Function to ensure that roles match those in prepop
         @ToDo: Function to do selective additional prepop
     """
 
@@ -490,6 +489,32 @@ class S3Migration(object):
 
         # Load all conditional models
         current.s3db.load_all_models()
+
+    # -------------------------------------------------------------------------
+    def refresh_roles(self):
+        """
+            Refresh the Permissions
+        """
+
+        # Clear the Permissions table
+        current.s3db.s3_permission.truncate()
+
+        # Add Anonymous permissions from zzz_1st_run
+        auth = current.auth
+        acl = auth.permission
+        auth.s3_update_acls(
+                "ANONYMOUS",
+                {"t": "org_organisation", "uacl": acl.READ},
+                {"c": "org", "f": "sites_for_org", "uacl": acl.READ},
+        )
+
+        # Import the new ACLs
+        from s3 import S3BulkImporter
+        bi = S3BulkImporter()
+        template = current.deployment_settings.get_template()
+        filename = os.path.join(current.request.folder, "modules", "templates", template, "auth_roles.csv")
+        bi.import_role(filename)
+        current.db.commit()
 
     # -------------------------------------------------------------------------
     def post(self, moves=None,
