@@ -3453,7 +3453,8 @@ class S3PersonImageModel(S3Model):
                           self.super_link("pe_id", "pr_pentity"),
                           Field("profile", "boolean",
                                 default = False,
-                                label = T("Profile Picture?")
+                                label = T("Profile Picture?"),
+                                represent = s3_yes_no_represent,
                                 ),
                           Field("image", "upload",
                                 autodelete = True,

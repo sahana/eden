@@ -98,8 +98,7 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Surplus Meals", c="default", f="index",
                        args = "surplus_meals",
                        t = "dvr_case_event",
-                       p = "create",
-                       restrict = ("ADMINISTRATION", "ADMIN_HEAD", "INFO_POINT"),
+                       restrict = ("ADMINISTRATION", "ADMIN_HEAD", "INFO_POINT", "RP"),
                        ),
                     ),
             ]
@@ -136,37 +135,48 @@ class S3MainMenu(default.S3MainMenu):
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        ADMIN = current.auth.get_system_roles().ADMIN
+
         if not auth.is_logged_in():
             request = current.request
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \
-            request.function == "user" and \
-            "_next" in request.get_vars:
+               request.function == "user" and \
+               "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
             self_registration = settings.get_security_self_registration()
             menu_personal = MP()(
                         MP("Register", c="default", f="user",
-                           m="register", check=self_registration),
+                           m = "register",
+                           check = self_registration,
+                           ),
                         MP("Login", c="default", f="user",
-                           m="login", vars=dict(_next=login_next)),
+                           m = "login",
+                           vars = {"_next": login_next},
+                           ),
                         MP("Lost Password", c="default", f="user",
-                           m="retrieve_password"),
-            )
+                           m = "retrieve_password",
+                           ),
+                        )
         else:
             s3_has_role = auth.s3_has_role
-            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
-                                     not s3_has_role("ADMIN")
+            is_org_admin = lambda i: not s3_has_role(ADMIN) and \
+                                     s3_has_role("ORG_ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
-                           check=s3_has_role("ADMIN")),
+                           restrict = ADMIN,
+                           ),
                         MP("Administration", c="admin", f="user",
-                           check=is_org_admin),
+                           check = is_org_admin,
+                           ),
                         MP("Profile", c="default", f="person"),
                         MP("Change Password", c="default", f="user",
-                           m="change_password"),
+                           m = "change_password",
+                           ),
                         MP("Logout", c="default", f="user",
-                           m="logout"),
+                           m = "logout",
+                           ),
             )
         return menu_personal
 
@@ -243,6 +253,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Food Distribution Statistics", c="dvr", f="case_event",
                           m = "report",
+                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD", "SECURITY_HEAD", "RP"),
                           vars = {"code": "FOOD"},
                           ),
                         ),
