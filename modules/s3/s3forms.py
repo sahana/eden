@@ -3433,8 +3433,8 @@ class S3SQLInlineLink(S3SQLInlineComponent):
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
         """
-            Widget renderer, currently supports multiselect (default), hierarchy
-            and groupedopts widgets.
+            Widget renderer, currently supports multiselect (default),
+            hierarchy and groupedopts widgets.
 
             @param field: the input field
             @param value: the value to populate the widget
@@ -3444,11 +3444,18 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         """
 
         options = self.options
-        if options.readonly is True:
+        component, link = self.get_link()
+
+        has_permission = current.auth.s3_has_permission
+        ltablename = link.tablename
+
+        # User must have permission to create and delete
+        # link table entries (which is what this widget is about):
+        if options.readonly is True or \
+           not has_permission("create", ltablename) or \
+           not has_permission("delete", ltablename):
             # Render read-only
             return self.represent(value)
-
-        component, link = self.get_link()
 
         multiple = options.get("multiple", True)
         options["multiple"] = multiple

@@ -1687,12 +1687,33 @@ class DVRCaseActivityModel(S3Model):
                                 readable = service_type,
                                 writable = service_type,
                                 ),
+                     # Alternatives to document the actions performed
+                     # under this activity:
                      activity_id(readable=False,
                                  writable=False,
                                  ),
+                     Field("activity_details", "text",
+                           label = T("Support provided"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     # Support received by the beneficiary independently
+                     # of the managed activity:
+                     Field("outside_support", "text",
+                           label = T("Outside Support"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           readable = False,
+                           writable = False,
+                           ),
+                     # Details about referrals made under this activity
+                     # @deprecate: should use activity_details instead
+                     # @todo: remove once templates have been migrated?
                      Field("referral_details", "text",
                            label = T("Support provided"),
                            represent = s3_text_represent,
+                           readable = False,
+                           writable = False,
                            ),
                      Field("followup", "boolean",
                            default = True,
@@ -1744,7 +1765,7 @@ class DVRCaseActivityModel(S3Model):
                        need_field,
                        "need_details",
                        "emergency",
-                       "referral_details",
+                       "activity_details",
                        "followup",
                        "followup_date",
                        "completed",
@@ -1756,7 +1777,7 @@ class DVRCaseActivityModel(S3Model):
                                         "person_id$last_name",
                                         "case_id$reference",
                                         "need_details",
-                                        "referral_details",
+                                        "activity_details",
                                         ],
                                         label = T("Search"),
                                         ),
@@ -3766,6 +3787,10 @@ class DVRActivityFundingModel(S3Model):
                            ),
                      Field("proposal", "text",
                            label = T("Proposed Assistance"),
+                           ),
+                     Field("approved", "boolean",
+                           label = T("Approved"),
+                           represent = s3_yes_no_represent,
                            ),
                      s3_comments(),
                      *s3_meta_fields())

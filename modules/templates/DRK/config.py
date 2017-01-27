@@ -359,6 +359,21 @@ def config(settings):
 
         weather = DIV(item, _id="cms_weather", _class="cms_content")
 
+        # Show Check-in/Check-out action only if user is permitted
+        # to update shelter registrations (NB controllers may be
+        # read-only, therefore checking against default here):
+        if auth.s3_has_permission("update",
+                                  "cr_shelter_registration",
+                                  c="default",
+                                  ):
+            # Action button for check-in/out
+            cico = A("%s / %s" % (T("Check-In"), T("Check-Out")),
+                     _href=r.url(method="check-in"),
+                     _class="action-btn dashboard-action",
+                     )
+        else:
+            cico = ""
+
         # Generate profile header HTML
         output = DIV(H2(record.name),
                      P(record.comments or ""),
@@ -380,11 +395,7 @@ def config(settings):
                                  ),
                               ),
                            ),
-                     # Action button for check-in/out
-                     A("%s / %s" % (T("Check-In"), T("Check-Out")),
-                       _href=r.url(method="check-in"),
-                       _class="action-btn dashboard-action",
-                       ),
+                     cico,
                      _class="profile-header",
                      )
 
@@ -1970,7 +1981,7 @@ def config(settings):
                                "need_id",
                                "need_details",
                                "emergency",
-                               "referral_details",
+                               "activity_details",
                                "followup",
                                "followup_date",
                                "completed",
