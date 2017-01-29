@@ -17,6 +17,7 @@
          Hours
          Grade
          Trainee Organisation
+         HR Type
          Certificate Number
          First Name
          Middle Name
@@ -248,6 +249,13 @@
         <xsl:variable name="DoB" select="col[@field='DoB']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
         <xsl:variable name="Organisation" select="col[@field='Trainee Organisation']/text()"/>
+        <xsl:variable name="HRType">
+            <xsl:call-template name="lowercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='HR Type']/text()"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="Certification" select="col[@field='Certificate Number']/text()"/>
 
         <xsl:variable name="gender">
@@ -297,6 +305,17 @@
                             <xsl:value-of select="$Organisation"/>
                         </xsl:attribute>
                     </reference>
+                    <xsl:if test="$HRType!=''">
+                        <xsl:choose>
+                            <xsl:when test="$HRType='volunteer'">
+                                <data field="type" value="2"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <!-- Default to Staff -->
+                                <data field="type" value="1"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:if>
                 </resource>
             </xsl:if>
 
