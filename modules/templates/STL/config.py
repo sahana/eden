@@ -663,7 +663,7 @@ def config(settings):
             field.label = T("Justification for SNF")
             field.widget = s3_comments_widget
             field = ftable.approved
-            field.label = T("Approved by Committee")
+            field.label = T("SNF Assistance Approved by Committee")
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
