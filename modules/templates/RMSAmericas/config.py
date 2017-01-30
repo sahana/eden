@@ -1784,7 +1784,7 @@ Thank you"""
         person_pe_ids = set([p.pe_id for p in trainings])
 
         if not person_pe_ids:
-            # e.g. 1st phase of Import
+            # No people?
             return
 
         # Remove those with a User Account
