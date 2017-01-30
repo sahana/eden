@@ -1980,6 +1980,9 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             inputLabel = $('[for=' + inputId + ']');
             try {
                 window.scrollTo(0, inputLabel.offset().top);
+                // Prevent first-field focus from scrolling back to
+                // the top of the form again:
+                S3.FocusOnFirstField = false;
             } catch(e) {}
         }
 

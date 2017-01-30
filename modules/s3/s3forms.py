@@ -1102,6 +1102,8 @@ class S3SQLCustomForm(S3SQLForm):
             # Revert any records created within widgets/validators
             db.rollback()
 
+            response.error = current.T("There are errors in the form, please check your input")
+
         return form
 
     # -------------------------------------------------------------------------
