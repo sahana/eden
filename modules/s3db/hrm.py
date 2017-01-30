@@ -7523,13 +7523,14 @@ def hrm_training_controller():
     s3db = current.s3db
 
     def prep(r):
+        method = r.method
         if r.interactive or r.representation == "aadata":
             s3db.configure("hrm_training",
                            #insertable = False,
                            listadd = False,
                            )
 
-            if r.method in ("create", "update"):
+            if method in ("create", "update"):
                 # Coming from Profile page?
                 person_id = r.get_vars.get("~.person_id", None)
                 if person_id:
@@ -7538,7 +7539,7 @@ def hrm_training_controller():
                     field.readable = field.writable = False
 
             # @ToDo: Complete
-            #elif r.method == "import":
+            #elif method == "import":
             #    # Allow course to be populated onaccept from training_event_id
             #    table = s3db.hrm_training
             #    s3db.configure("hrm_training",
@@ -7552,12 +7553,20 @@ def hrm_training_controller():
             #    else:
             #        f.writable = True
 
-        if r.method == "report":
+        if method == "report":
             # Configure virtual fields for reports
             s3db.configure("hrm_training", extra_fields=["date"])
             table = s3db.hrm_training
             table.year = Field.Method("year", hrm_training_year)
             table.month = Field.Method("month", hrm_training_month)
+
+        # Can't reliably link to persons as these are imported in random order
+        # - do this postimport if desired (see RMSAmericas)
+        #elif method == "import":
+        #    # If users accounts are created for imported participants
+        #    s3db.configure("auth_user",
+        #                   create_onaccept = lambda form: current.auth.s3_approve_user(form.vars),
+        #                   )
 
         return True
     current.response.s3.prep = prep

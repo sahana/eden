@@ -84,6 +84,7 @@
                     <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
                 </xsl:when>
                 <xsl:when test="col[@field='Middle Name']!=''">
+                    <!-- Apellido Paterno -->
                     <data field="last_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
                 </xsl:when>
             </xsl:choose>

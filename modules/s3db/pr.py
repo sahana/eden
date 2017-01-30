@@ -4056,6 +4056,7 @@ class S3PersonDetailsModel(S3Model):
 
         T = current.T
         gis = current.gis
+        settings = current.deployment_settings
         messages = current.messages
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
@@ -4082,8 +4083,8 @@ class S3PersonDetailsModel(S3Model):
             3: T("literate"),
         }
 
-        # Religion Options
-        religion_opts = current.deployment_settings.get_L10n_religions()
+        # Language Options
+        languages = settings.get_L10n_languages()
 
         # Nationality Options
         STATELESS = T("Stateless")
@@ -4095,11 +4096,19 @@ class S3PersonDetailsModel(S3Model):
                                         gis.get_country(code, key_type="code") or \
                                         UNKNOWN_OPT
 
+        # Religion Options
+        religion_opts = settings.get_L10n_religions()
+
         tablename = "pr_person_details"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
                                             ondelete = "CASCADE",
                                             ),
+                          Field("language", length=16,
+                                represent = lambda opt: \
+                                    languages.get(opt, UNKNOWN_OPT),
+                                requires = IS_EMPTY_OR(IS_IN_SET(languages)),
+                                ),
                           Field("nationality",
                                 label = T("Nationality"),
                                 represent = nationality_repr,

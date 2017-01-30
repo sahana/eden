@@ -2864,16 +2864,28 @@ class S3Resource(object):
         if deleted:
             import_info["deleted"] = deleted
 
-        if success is True:
-            return xml.json_message(message=self.error, tree=tree,
-                                    **import_info)
-        elif success and hasattr(success, "job_id"):
-            self.job = success
-            return xml.json_message(message=self.error, tree=tree,
-                                    **import_info)
-        else:
-            return xml.json_message(False, 400,
-                                    message=self.error, tree=tree)
+        if success:
+            # Execute postimport if-defined
+            postimport = self.get_config("postimport")
+            if postimport:
+                #try:
+                callback(postimport, import_info, tablename=self.tablename)
+                #except:
+                #    error = "postimport failed: %s" % postimport
+                #    current.log.error(error)
+                #    raise RuntimeError
+
+            if success is True:
+                return xml.json_message(message=self.error, tree=tree,
+                                        **import_info)
+
+            elif hasattr(success, "job_id"):
+                self.job = success
+                return xml.json_message(message=self.error, tree=tree,
+                                        **import_info)
+
+        return xml.json_message(False, 400,
+                                message=self.error, tree=tree)
 
     # -------------------------------------------------------------------------
     def import_tree(self, id, tree,

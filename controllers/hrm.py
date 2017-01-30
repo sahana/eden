@@ -604,7 +604,7 @@ def training_center():
 
 # -----------------------------------------------------------------------------
 def training():
-    """ Training Controller - used for Searching for Participants """
+    """ Training Controller - used for Importing/Searching for Participants """
 
     s3.filter = FS("person_id$human_resource.type") == 1
     return s3db.hrm_training_controller()
