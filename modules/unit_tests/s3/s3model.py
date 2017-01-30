@@ -6,13 +6,13 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3model.py
 #
 import unittest
-from gluon import current, IS_NOT_EMPTY, IS_EMPTY_OR
+from gluon import current, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_NOT_EMPTY
 from gluon.languages import lazyT
 from gluon.storage import Storage
 
 from s3.s3fields import s3_meta_fields
 from s3.s3model import DYNAMIC_PREFIX, S3DynamicModel
-from s3.s3validators import IS_NOT_ONE_OF
+from s3.s3validators import IS_NOT_ONE_OF, IS_ONE_OF
 
 from unit_tests import run_suite
 
@@ -384,6 +384,161 @@ class S3DynamicModelTests(unittest.TestCase):
         assertTrue(isinstance(requires, IS_EMPTY_OR))
         requires = requires.other
         assertTrue(isinstance(requires, IS_NOT_ONE_OF))
+
+    # -------------------------------------------------------------------------
+    def testReferenceFieldConstruction(self):
+        """
+            Test construction of reference field
+        """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Reference field, empty allowed
+        params = Storage(name = "organisation_id",
+                         field_type = "reference org_organisation",
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "organisation_id")
+        assertEqual(field.type, "reference org_organisation")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_ONE_OF))
+        assertEqual(requires.ktable, "org_organisation")
+
+        # Reference field, must not be empty
+        params = Storage(name = "organisation_id",
+                         field_type = "reference org_organisation",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "organisation_id")
+        assertEqual(field.type, "reference org_organisation")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_ONE_OF))
+        assertEqual(requires.ktable, "org_organisation")
+
+        # Reference field, nonexistent table
+        params = Storage(name = "organisation_id",
+                         field_type = "reference nonexistent_table",
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field, None)
+
+    # -------------------------------------------------------------------------
+    def testIntegerFieldConstruction(self):
+        """
+            Test construction of integer field
+        """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Default integer field
+        params = Storage(name = "number",
+                         field_type = "integer",
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "integer")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_INT_IN_RANGE))
+
+        # Default integer field, empty not allowed, no range limits
+        params = Storage(name = "number",
+                         field_type = "integer",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "integer")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_INT_IN_RANGE))
+        assertEqual(requires.minimum, None)
+        assertEqual(requires.maximum, None)
+
+        # Default integer field, range limits
+        params = Storage(name = "number",
+                         field_type = "integer",
+                         settings = {"min": 2,
+                                     "max": 5,
+                                     },
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "integer")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_INT_IN_RANGE))
+        assertEqual(requires.minimum, 2)
+        assertEqual(requires.maximum, 5)
+
+    # -------------------------------------------------------------------------
+    def testDoubleFieldConstruction(self):
+        """
+            Test construction of double field
+        """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Default integer field
+        params = Storage(name = "number",
+                         field_type = "double",
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "double")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_FLOAT_IN_RANGE))
+
+        # Default integer field, empty not allowed, no range limits
+        params = Storage(name = "number",
+                         field_type = "double",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "double")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_FLOAT_IN_RANGE))
+        assertEqual(requires.minimum, None)
+        assertEqual(requires.maximum, None)
+
+        # Default integer field, range limits
+        params = Storage(name = "number",
+                         field_type = "double",
+                         settings = {"min": 2.7,
+                                     "max": 8.3,
+                                     },
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "double")
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_FLOAT_IN_RANGE))
+        assertEqual(requires.minimum, 2.7)
+        assertEqual(requires.maximum, 8.3)
 
 # =============================================================================
 if __name__ == "__main__":

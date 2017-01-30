@@ -1454,6 +1454,8 @@ class S3DynamicModel(object):
                 field = self._datetime_field(tablename, row)
             elif fieldtype[:9] == "reference":
                 field = self._reference_field(tablename, row)
+            elif fieldtype in ("integer", "double"):
+                field = self._numeric_field(tablename, row)
             else:
                 field = self._generic_field(tablename, row)
 
@@ -1646,6 +1648,41 @@ class S3DynamicModel(object):
         else:
             field = None
 
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _numeric_field(tablename, row):
+        """
+            Numeric field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        settings = row.settings or {}
+        minimum = settings.get("min")
+        maximum = settings.get("max")
+
+        if fieldtype == "integer":
+            requires = IS_INT_IN_RANGE(minimum=minimum,
+                                       maximum=maximum,
+                                       )
+        elif fieldtype == "double":
+            requires = IS_FLOAT_IN_RANGE(minimum=minimum,
+                                         maximum=maximum,
+                                         )
+        else:
+            requires = None
+
+        field = Field(fieldname, fieldtype,
+                      requires = requires,
+                      )
         return field
 
 # END =========================================================================
