@@ -1441,6 +1441,8 @@ def tables():
 
     return s3_rest_controller("s3", "table",
                               rheader = s3db.s3_table_rheader,
+                              csv_template = ("s3", "table"),
+                              csv_stylesheet = ("s3", "table.xsl"),
                               )
 
 # -----------------------------------------------------------------------------

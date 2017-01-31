@@ -316,6 +316,7 @@ class S3DynamicTablesModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("table_id", "name")),
                        onvalidation = self.s3_field_onvalidation,
                        )
 
