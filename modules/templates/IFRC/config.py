@@ -2661,7 +2661,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
-        tablename = "hrm_human_resource"
+        tablenametablename = "hrm_human_resource"
 
         auth = current.auth
         s3db = current.s3db
@@ -2726,7 +2726,7 @@ def config(settings):
             is_admin = auth.s3_has_role("ADMIN")
             if is_admin:
                 # Remove Location Filter to improve performance
-                # @ToDo: Restore this once performance issues in widget fixed
+                # @ToDo: Restore this now that performance issues in widget fixed
                 filters = []
                 append_widget = filters.append
                 filter_widgets = get_config("filter_widgets")
@@ -3130,6 +3130,10 @@ def config(settings):
                     deploying_orgs = [o.organisation_id for o in deploying_orgs]
                     if organisation_id in deploying_orgs:
                         r.resource.add_filter(FS("application.organisation_id") == organisation_id)
+
+                    if auth.s3_has_role("RDRT_ADMIN"):
+                        # Allow selection of any Organisation for HRs
+                        s3db.hrm_human_resource.organisation_id.requires = s3db.org_organisation_requires(required=True)
 
                 AP = _is_asia_pacific()
                 if AP:
