@@ -1402,6 +1402,7 @@ class S3DynamicModel(object):
                                 ftable.require_unique,
                                 ftable.require_not_empty,
                                 ftable.options,
+                                ftable.default_value,
                                 ftable.settings,
                                 ftable.comments,
                                 )
@@ -1511,7 +1512,13 @@ class S3DynamicModel(object):
         else:
             requires = None
 
+        if fieldtype in ("string", "text"):
+            default = row.default_value
+        else:
+            default = None
+
         field = Field(fieldname, fieldtype,
+                      default = default,
                       requires = requires,
                       )
         return field
@@ -1574,11 +1581,25 @@ class S3DynamicModel(object):
         settings = row.settings or {}
 
         attr = {}
-        for keyword in ("min", "max", "past", "future"):
+        for keyword in ("past", "future"):
             setting = settings.get(keyword, DEFAULT)
             if setting is not DEFAULT:
                 attr[keyword] = setting
         attr["empty"] = False
+
+        default = row.default_value
+        if default:
+            if default == "now":
+                attr["default"] = default
+            else:
+                from s3datetime import s3_decode_iso_datetime
+                try:
+                    dt = s3_decode_iso_datetime(default)
+                except ValueError:
+                    # Ignore
+                    pass
+                else:
+                    attr["default"] = dt.date()
 
         from s3fields import s3_date
         field = s3_date(fieldname, **attr)
@@ -1606,6 +1627,20 @@ class S3DynamicModel(object):
             if setting is not DEFAULT:
                 attr[keyword] = setting
         attr["empty"] = False
+
+        default = row.default_value
+        if default:
+            if default == "now":
+                attr["default"] = default
+            else:
+                from s3datetime import s3_decode_iso_datetime
+                try:
+                    dt = s3_decode_iso_datetime(default)
+                except ValueError:
+                    # Ignore
+                    pass
+                else:
+                    attr["default"] = dt
 
         from s3fields import s3_datetime
         field = s3_datetime(fieldname, **attr)
@@ -1670,17 +1705,30 @@ class S3DynamicModel(object):
         maximum = settings.get("max")
 
         if fieldtype == "integer":
+            parse = int
             requires = IS_INT_IN_RANGE(minimum=minimum,
                                        maximum=maximum,
                                        )
         elif fieldtype == "double":
+            parse = float
             requires = IS_FLOAT_IN_RANGE(minimum=minimum,
                                          maximum=maximum,
                                          )
         else:
+            parse = None
             requires = None
 
+        default = row.default_value
+        if default and parse is not None:
+            try:
+                default = parse(default)
+            except ValueError:
+                default = None
+        else:
+            default = None
+
         field = Field(fieldname, fieldtype,
+                      default = default,
                       requires = requires,
                       )
         return field

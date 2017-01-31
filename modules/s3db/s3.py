@@ -195,6 +195,7 @@ class S3DynamicTablesModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, unique=True, notnull=True,
                            label = T("Table Name"),
+                           represent = self.s3_table_name_represent(),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LOWER(),
                                        IS_MATCH("^%s_[a-z0-9_]+$" % DYNAMIC_PREFIX,
@@ -291,6 +292,9 @@ class S3DynamicTablesModel(S3Model):
                                                            ),
                                          ),
                            ),
+                     Field("default_value",
+                           label = T("Default Value"),
+                           ),
                      Field("settings", "json",
                            label = T("Settings"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -333,6 +337,29 @@ class S3DynamicTablesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def s3_table_name_represent(c="default", f="table"):
+        """
+            Return a representation function for dynamic table names,
+            renders the table name as a link to the table controller
+
+            @param c: the controller prefix
+            @param f: the function name
+
+            @returns: function
+        """
+
+        def represent(value):
+
+            if value and "_" in value:
+                suffix = value.split("_", 1)[1]
+                return A(value, _href=URL(c=c, f=f, args=[suffix]))
+            else:
+                return value
+
+        return represent
 
     # -------------------------------------------------------------------------
     @staticmethod

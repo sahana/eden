@@ -5,14 +5,16 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3model.py
 #
+import datetime
 import unittest
+
 from gluon import current, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_NOT_EMPTY
 from gluon.languages import lazyT
 from gluon.storage import Storage
 
 from s3.s3fields import s3_meta_fields
 from s3.s3model import DYNAMIC_PREFIX, S3DynamicModel
-from s3.s3validators import IS_NOT_ONE_OF, IS_ONE_OF
+from s3.s3validators import IS_NOT_ONE_OF, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 
 from unit_tests import run_suite
 
@@ -380,10 +382,21 @@ class S3DynamicModelTests(unittest.TestCase):
         field = define_field(self.TABLENAME, params)
         assertEqual(field.name, "name")
         assertEqual(field.type, "string")
+        assertEqual(field.default, None)
         requires = field.requires
         assertTrue(isinstance(requires, IS_EMPTY_OR))
         requires = requires.other
         assertTrue(isinstance(requires, IS_NOT_ONE_OF))
+
+        # String field, with default value
+        params = Storage(name = "name",
+                         field_type = "string",
+                         default_value = "Default Name"
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "name")
+        assertEqual(field.type, "string")
+        assertEqual(field.default, "Default Name")
 
     # -------------------------------------------------------------------------
     def testReferenceFieldConstruction(self):
@@ -468,7 +481,7 @@ class S3DynamicModelTests(unittest.TestCase):
         assertEqual(requires.minimum, None)
         assertEqual(requires.maximum, None)
 
-        # Default integer field, range limits
+        # Integer field with range limits
         params = Storage(name = "number",
                          field_type = "integer",
                          settings = {"min": 2,
@@ -484,6 +497,26 @@ class S3DynamicModelTests(unittest.TestCase):
         assertTrue(isinstance(requires, IS_INT_IN_RANGE))
         assertEqual(requires.minimum, 2)
         assertEqual(requires.maximum, 5)
+
+        # Integer field with default
+        params = Storage(name = "number",
+                         field_type = "integer",
+                         default_value = "14"
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "integer")
+        assertEqual(field.default, 14)
+
+        # Integer field with invalid default
+        params = Storage(name = "number",
+                         field_type = "integer",
+                         default_value = "not_an_integer"
+                         )
+        field = define_field(self.TABLENAME, params)
+        assertEqual(field.name, "number")
+        assertEqual(field.type, "integer")
+        assertEqual(field.default, None)
 
     # -------------------------------------------------------------------------
     def testDoubleFieldConstruction(self):
@@ -539,6 +572,244 @@ class S3DynamicModelTests(unittest.TestCase):
         assertTrue(isinstance(requires, IS_FLOAT_IN_RANGE))
         assertEqual(requires.minimum, 2.7)
         assertEqual(requires.maximum, 8.3)
+
+    # -------------------------------------------------------------------------
+    def testDateFieldConstruction(self):
+        """
+            Test construction of date field
+        """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Date field
+        params = Storage(name = "start_date",
+                         field_type = "date",
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "date")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_UTC_DATE))
+
+        # => verify (no) range limits
+        assertEqual(requires.minimum, None)
+        assertEqual(requires.maximum, None)
+
+        # Date field with range limits
+        params = Storage(name = "start_date",
+                         field_type = "date",
+                         require_not_empty = True,
+                         settings = {"past": 10,
+                                     "future": 8,
+                                     },
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "date")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATE))
+
+        # => verify range limits
+        now = current.request.utcnow.date()
+        from dateutil.relativedelta import relativedelta
+        assertEqual(requires.minimum, now - relativedelta(months = 10))
+        assertEqual(requires.maximum, now + relativedelta(months = 8))
+
+        # Date field with default (keyword "now")
+        params = Storage(name = "start_date",
+                         field_type = "date",
+                         default_value = "now",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "date")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATE))
+
+        # => verify default value
+        assertEqual(field.default, now)
+
+        # Date field with default (particular date)
+        params = Storage(name = "start_date",
+                         field_type = "date",
+                         default_value = "2016-08-14",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "date")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATE))
+
+        # => verify default value
+        assertEqual(field.default, datetime.date(2016, 8, 14))
+
+        # Date field with invalid default
+        params = Storage(name = "start_date",
+                         field_type = "date",
+                         default_value = "invalid_default",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "date")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATE))
+
+        # => verify default value
+        assertEqual(field.default, None)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeFieldConstruction(self):
+        """
+            Test construction of date field
+        """
+
+        import dateutil.tz
+        from dateutil.relativedelta import relativedelta
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        dm = S3DynamicModel(self.TABLENAME)
+        define_field = dm._field
+
+        # Date field
+        params = Storage(name = "start_date",
+                         field_type = "datetime",
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "datetime")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_EMPTY_OR))
+        requires = requires.other
+        assertTrue(isinstance(requires, IS_UTC_DATETIME))
+
+        # => verify (no) range limits
+        assertEqual(requires.minimum, None)
+        assertEqual(requires.maximum, None)
+
+        # Date field with range limits
+        params = Storage(name = "start_date",
+                         field_type = "datetime",
+                         require_not_empty = True,
+                         settings = {"past": 0,
+                                     "future": 720,
+                                     },
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "datetime")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATETIME))
+
+        # => verify range limits
+        # NB s3_datetime computes range limits against current.request.utcnow,
+        #    which is slightly offset against datetime.datetime.utcnow due to
+        #    processing time
+        # NB current.request.utcnow is tz-unaware, and so should be the range
+        #    limits (otherwise raises TypeError here)
+        now = current.request.utcnow
+        assertEqual(requires.minimum, now)
+        assertEqual(requires.maximum, now + relativedelta(hours = 720))
+
+        # Date field with default (keyword "now")
+        params = Storage(name = "start_date",
+                         field_type = "datetime",
+                         default_value = "now",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "datetime")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATETIME))
+
+        # => verify default value
+        assertEqual(field.default, now)
+
+        # Date field with default (particular date)
+        params = Storage(name = "start_date",
+                         field_type = "datetime",
+                         default_value = "2016-08-14T20:00:00Z",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "datetime")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATETIME))
+
+        # => verify default value
+        expected = datetime.datetime(2016, 8, 14, 20, 0, 0,
+                                     tzinfo=dateutil.tz.tzutc(),
+                                     )
+        assertEqual(field.default, expected)
+
+        # Date field with invalid default
+        params = Storage(name = "start_date",
+                         field_type = "datetime",
+                         default_value = "invalid_default",
+                         require_not_empty = True,
+                         )
+        field = define_field(self.TABLENAME, params)
+
+        # => verify field name and type
+        assertEqual(field.name, "start_date")
+        assertEqual(field.type, "datetime")
+
+        # => verify validators
+        requires = field.requires
+        assertTrue(isinstance(requires, IS_UTC_DATETIME))
+
+        # => verify default value
+        assertEqual(field.default, None)
 
 # =============================================================================
 if __name__ == "__main__":
