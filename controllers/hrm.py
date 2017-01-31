@@ -522,6 +522,10 @@ def certificate():
 def certification():
     """ Certifications Controller """
 
+    # Load Model
+    table = s3db.hrm_certification
+
+    # Over-ride list_fields
     s3db.configure("hrm_certification",
                    list_fields = ["person_id",
                                   "certificate_id",
