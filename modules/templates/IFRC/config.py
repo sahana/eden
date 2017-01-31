@@ -2661,7 +2661,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
-        tablenametablename = "hrm_human_resource"
+        tablename = "hrm_human_resource"
 
         auth = current.auth
         s3db = current.s3db
