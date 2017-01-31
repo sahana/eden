@@ -6331,9 +6331,9 @@ def hrm_rheader(r, tabs=[], profile=False):
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(TH("%s: " % table.person_id.label),
-                               record.person_id),
+                               table.person_id.represent(record.person_id)),
                             TR(TH("%s: " % table.certificate_id.label),
-                               record.certificate_id),
+                               table.certificate_id.represent(record.certificate_id)),
                             ),
                       rheader_tabs)
 
