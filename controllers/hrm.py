@@ -522,6 +522,15 @@ def certificate():
 def certification():
     """ Certifications Controller """
 
+    s3db.configure("hrm_certification",
+                   list_fields = ["person_id",
+                                  "certificate_id",
+                                  "number",
+                                  "date",
+                                  #"comments",
+                                  ],
+                   )
+
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
