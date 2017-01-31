@@ -1383,6 +1383,51 @@ class DVRCaseActivityModel(S3Model):
         service_id = self.org_service_id
 
         # ---------------------------------------------------------------------
+        # Provider Type
+        #
+        tablename = "dvr_provider_type"
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = T("Type"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Provider Type"),
+            title_display = T("Provider Type Details"),
+            title_list = T("Provider Types"),
+            title_update = T("Edit Provider Type"),
+            label_list_button = T("List Provider Types"),
+            label_delete_button = T("Delete Provider Type"),
+            msg_record_created = T("Provider Type added"),
+            msg_record_modified = T("Provider Type updated"),
+            msg_record_deleted = T("Provider Type deleted"),
+            msg_list_empty = T("No Provider Types currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        provider_type_id = S3ReusableField("provider_type_id", "reference %s" % tablename,
+                                           label = T("Provider Type"),
+                                           ondelete = "CASCADE",
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  sort = True,
+                                                                  )),
+                                           sortby = "name",
+                                           )
+
+        # ---------------------------------------------------------------------
         # Activity Group Type
         #
         tablename = "dvr_activity_group_type"
@@ -1692,6 +1737,11 @@ class DVRCaseActivityModel(S3Model):
                      activity_id(readable=False,
                                  writable=False,
                                  ),
+                     provider_type_id(label = T("Referred to"),
+                                      ondelete = "RESTRICT",
+                                      readable = False,
+                                      writable = False,
+                                      ),
                      Field("activity_details", "text",
                            label = T("Support provided"),
                            represent = s3_text_represent,

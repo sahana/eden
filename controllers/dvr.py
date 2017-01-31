@@ -439,6 +439,12 @@ def group_membership():
                               )
 
 # -----------------------------------------------------------------------------
+def provider_type():
+    """ Provider Types for Case Activities: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def activity_age_group():
     """ Activity Age Groups: RESTful CRUD Controller """
 

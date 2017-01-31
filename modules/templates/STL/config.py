@@ -882,6 +882,10 @@ def config(settings):
             field = table.achievement
             field.readable = field.writable = True
 
+            # Expose provider type field
+            field = table.provider_type_id
+            field.readable = field.writable = True
+
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         S3SQLInlineLink("need",
@@ -896,6 +900,7 @@ def config(settings):
                                         "human_resource_id",
                                         "project_id",
                                         "activity_id",
+                                        "provider_type_id",
                                         (T("Status of main complaint at last visit"), "achievement"),
                                         S3SQLInlineComponent(
                                             "document",
