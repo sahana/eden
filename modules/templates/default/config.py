@@ -970,6 +970,8 @@ def config(settings):
     #settings.mobile.forms = [
     #    ("Beneficiaries", "pr_person", {"c": "dvr", "f": "person"}),
     #]
+    # Disable mobile forms for dynamic tables:
+    #settings.mobile.dynamic_tables = False
 
     # -----------------------------------------------------------------------------
     # XForms

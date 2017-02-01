@@ -48,7 +48,7 @@ from gluon import *
 from gluon.dal import Query
 from s3datetime import s3_encode_iso_datetime
 from s3error import S3PermissionError
-from s3forms import S3SQLDefaultForm, S3SQLField
+from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLField
 from s3query import S3ResourceField
 from s3rest import S3Method
 from s3utils import s3_str, s3_unicode
@@ -145,6 +145,39 @@ class S3MobileFormList(object):
                                  "r": url,
                                  })
 
+        dynamic_tables = settings.get_mobile_dynamic_tables()
+        if dynamic_tables:
+
+            # Select all dynamic tables which have mobile_form=True
+            ttable = s3db.s3_table
+            query = (ttable.mobile_form == True) & \
+                    (ttable.deleted != True)
+            rows = current.db(query).select(ttable.name,
+                                            ttable.title,
+                                            )
+            for row in rows:
+
+                tablename = row.name
+                suffix = tablename.split("_", 1)[-1]
+
+                # Form title
+                title = row.title
+                if not title:
+                    title = " ".join(s.capitalize() for s in suffix.split("_"))
+
+                # URL
+                # @todo: make c+f configurable?
+                url = {"c": "default",
+                       "f": "table/%s" % suffix,
+                       }
+
+                # Append to form list
+                formlist.append({"n": tablename,
+                                 "l": title,
+                                 "t": tablename,
+                                 "r": url,
+                                 })
+
         self.formlist = formlist
 
     # -------------------------------------------------------------------------
@@ -199,7 +232,8 @@ class S3MobileForm(object):
             if form is None:
                 # Construct a custom form from all readable fields
                 readable_fields = self.resource.readable_fields()
-                fields = [field.name for field in readable_fields]
+                fields = [field.name for field in readable_fields
+                                     if field.type != "id"]
                 form = S3SQLCustomForm(*fields)
 
             self._form = form
@@ -359,7 +393,7 @@ class S3MobileCRUD(S3Method):
         s3db = current.s3db
         resource = r.resource
         resource_tablename = resource.tablename
-        
+
         # Output in mdata format
         output = {resource_tablename: []}
         # Lookup to ensure we extract ID, UID fields & joining FKs for all tables
@@ -395,7 +429,7 @@ class S3MobileCRUD(S3Method):
                             else:
                                 tn = q.tablename
                                 if tn not in fks:
-                                    fks[tn] = {} 
+                                    fks[tn] = {}
                                 fks[tn][q.name] = str(q.referent)
                     elif isinstance(q, Query):
                         find_fks(q)
@@ -419,10 +453,10 @@ class S3MobileCRUD(S3Method):
                     # Add the ID, UUID & any FKs to list_fields
                     if "." in selector:
                         component, fieldname = selector.split(".", 1)
-                        id_field = "%s.%s" % (component, ID) 
+                        id_field = "%s.%s" % (component, ID)
                         if id_field not in list_fields:
                             list_fields.append(id_field)
-                        uuid_field = "%s.%s" % (component, UID) 
+                        uuid_field = "%s.%s" % (component, UID)
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
                         if "$" in fieldname:
@@ -430,17 +464,17 @@ class S3MobileCRUD(S3Method):
                             fk_field = "%s.%s" % (component, fk)
                             if fk_field not in list_fields:
                                 list_fields.append(fk_field)
-                            ctablename = components[component].table._tablename # Format to handle Aliases 
+                            ctablename = components[component].table._tablename # Format to handle Aliases
                             if ctablename not in fks:
                                 fks[ctablename] = {}
                             #referent = s3db[ctablename][fk].referent
                             if fk not in fks[ctablename]:
-                                #fks[ctablename][fk] = str(referent) 
-                                fks[ctablename][fk] = str(s3db[ctablename][fk].referent) 
-                            id_field = "%s.%s$%s" % (component, fk, ID) 
+                                #fks[ctablename][fk] = str(referent)
+                                fks[ctablename][fk] = str(s3db[ctablename][fk].referent)
+                            id_field = "%s.%s$%s" % (component, fk, ID)
                             if id_field not in list_fields:
                                 list_fields.append(id_field)
-                            uuid_field = "%s.%s$%s" % (component, fk, UID) 
+                            uuid_field = "%s.%s$%s" % (component, fk, UID)
                             if uuid_field not in list_fields:
                                 list_fields.append(uuid_field)
                             # Restore once list_fields working
@@ -450,10 +484,10 @@ class S3MobileCRUD(S3Method):
                             #    tablename = referent.tablename
                             #    if fk2 not in fks[tablename]:
                             #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
-                            #    id_field = "%s.%s$%s$%s" % (component, fk, fk2, ID) 
+                            #    id_field = "%s.%s$%s$%s" % (component, fk, fk2, ID)
                             #    if id_field not in list_fields:
                             #        list_fields.append(id_field)
-                            #    uuid_field = "%s.%s$%s$%s" % (component, fk, fk2, UID) 
+                            #    uuid_field = "%s.%s$%s$%s" % (component, fk, fk2, UID)
                             #    if uuid_field not in list_fields:
                             #        list_fields.append(uuid_field)
                         else:
@@ -470,10 +504,10 @@ class S3MobileCRUD(S3Method):
                         if fk not in fks[resource_tablename]:
                             #fks[resource_tablename][fk] = str(referent)
                             fks[resource_tablename][fk] = str(s3db[resource_tablename][fk].referent)
-                        id_field = "%s$%s" % (fk, ID) 
+                        id_field = "%s$%s" % (fk, ID)
                         if id_field not in list_fields:
                             list_fields.append(id_field)
-                        uuid_field = "%s$%s" % (fk, UID) 
+                        uuid_field = "%s$%s" % (fk, UID)
                         if uuid_field not in list_fields:
                             list_fields.append(uuid_field)
                         # Restore once list_fields working
@@ -483,13 +517,13 @@ class S3MobileCRUD(S3Method):
                         #    tablename = referent.tablename
                         #    if fk2 not in fks[tablename]:
                         #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
-                        #    id_field = "%s$%s$%s" % (fk, fk2, ID) 
+                        #    id_field = "%s$%s$%s" % (fk, fk2, ID)
                         #    if id_field not in list_fields:
                         #        list_fields.append(id_field)
-                        #    uuid_field = "%s$%s$%s" % (fk, fk2, UID) 
+                        #    uuid_field = "%s$%s$%s" % (fk, fk2, UID)
                         #    if uuid_field not in list_fields:
                         #        list_fields.append(uuid_field)
-                            
+
 
         if ID not in list_fields:
             list_fields.append(ID)

@@ -205,6 +205,13 @@ class S3DynamicTablesModel(S3Model):
                                        IS_NOT_IN_DB(db, "s3_table.name"),
                                        ],
                            ),
+                     Field("title",
+                           label = T("Title"),
+                           ),
+                     Field("mobile_form", "boolean",
+                           label = T("Expose mobile form"),
+                           default = True,
+                           ),
                      #s3_comments(),
                      *s3_meta_fields())
 
