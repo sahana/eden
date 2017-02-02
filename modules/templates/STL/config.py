@@ -226,7 +226,11 @@ def config(settings):
             table = r.table
             crud_strings = s3.crud_strings[r.tablename]
 
-            from s3 import IS_ONE_OF, S3HierarchyWidget, FS, S3SQLCustomForm
+            from s3 import FS, \
+                           IS_ONE_OF, \
+                           S3HierarchyWidget, \
+                           S3Represent, \
+                           S3SQLCustomForm
 
             service_type = r.get_vars.get("service_type")
             if service_type == "MH":
@@ -274,9 +278,9 @@ def config(settings):
                                (T("Type of Group"), "group_type_id"),
                                "gender",
                                "age_group_id",
-                               "facilitator",
                                "site_id",
                                "room_id",
+                               "facilitator",
                                ]
 
                 # Custom form
@@ -287,9 +291,9 @@ def config(settings):
                                             (T("Type of Group"), "group_type_id"),
                                             "gender",
                                             "age_group_id",
-                                            "facilitator",
                                             "site_id",
                                             "room_id",
+                                            "facilitator",
                                             "comments",
                                             )
 
@@ -338,6 +342,31 @@ def config(settings):
                 field = table.gender
                 field.readable = field.writable = True
 
+                # Expose modality (with custom labels for options)
+                field = table.modality
+                modality_opts = {"E": T("CC/Camp"),
+                                 "O": T("Outreach"),
+                                 }
+                field.requires = IS_IN_SET(modality_opts, zero=None)
+                field.represent = S3Represent(options=modality_opts)
+                field.readable = field.writable = True
+
+                # Expose outreach area
+                field = table.location_id
+                field.readable = field.writable = True
+
+                # Toggle visibility of location fields for individual records
+                record = r.record
+                if record:
+                    if record.modality == "O":
+                        table.location_id.readable = True
+                        table.site_id.readable = False
+                        table.room_id.readable = False
+                    else:
+                        table.location_id.readable = False
+                        table.site_id.readable = True
+                        table.room_id.readable = True
+
                 # Custom list fields
                 list_fields = ["service_id",
                                "start_date",
@@ -345,6 +374,10 @@ def config(settings):
                                "period",
                                "gender",
                                "age_group_id",
+                               "modality",
+                               #"site_id",
+                               #"room_id",
+                               #"location_id",
                                "facilitator",
                                ]
 
@@ -355,6 +388,10 @@ def config(settings):
                                             "period",
                                             "gender",
                                             "age_group_id",
+                                            "modality",
+                                            "site_id",
+                                            "room_id",
+                                            "location_id",
                                             "facilitator",
                                             "comments",
                                             )
@@ -363,6 +400,11 @@ def config(settings):
                                crud_form = crud_form,
                                list_fields = list_fields,
                                )
+
+                scripts = s3.scripts
+                script = "/%s/static/themes/STL/js/activity.js" % r.application
+                if script not in scripts:
+                    scripts.append(script)
 
             return result
         s3.prep = custom_prep

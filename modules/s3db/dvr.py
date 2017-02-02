@@ -1539,6 +1539,11 @@ class DVRCaseActivityModel(S3Model):
                        "O": T("occasional"),
                        }
 
+        # Modality options
+        modality_opts = {"E": T("Event"),
+                         "O": T("Outreach"),
+                         }
+
         # Target gender type options
         # (Tuple list to enforce this order in drop-down)
         gender_opts = [("M", T("Male")),
@@ -1568,6 +1573,14 @@ class DVRCaseActivityModel(S3Model):
                            represent = S3Represent(options=period_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(period_opts)),
                            ),
+                     Field("modality", length=4,
+                           label = T("Modality"),
+                           default = "E",
+                           represent = S3Represent(options=dict(modality_opts)),
+                           requires = IS_IN_SET(modality_opts, zero=None),
+                           readable = False,
+                           writable = False,
+                           ),
                      self.super_link("site_id", "org_site",
                             filterby = "site_id",
                             filter_opts = permitted_facilities,
@@ -1578,12 +1591,19 @@ class DVRCaseActivityModel(S3Model):
                             updateable = True,
                             ),
                      self.org_room_id(),
+                     self.gis_location_id(
+                            label = T("Target Area"),
+                            widget = S3LocationSelector(points = False,
+                                                        polygons = True,
+                                                        #show_address = False,
+                                                        ),
+                            readable = False,
+                            writable = False,
+                            ),
                      # @todo: have alternative lookup field (hrm)
                      Field("facilitator",
                            label = T("Facilitator"),
                            ),
-                     #Field("modality"), @todo: event or outreach?
-                     #self.gis_location_id(), @todo: outreach area (if outreach)
                      Field("gender", length=4,
                            label = T("Gender"),
                            represent = S3Represent(options=dict(gender_opts)),
