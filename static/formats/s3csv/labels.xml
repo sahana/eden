@@ -59,6 +59,16 @@
 
     *********************************************************************** -->
 
+    <column name="MiddleName">
+        <label>Middle Name</label>
+        <label>Apellido Paterno</label>
+    </column>
+
+    <column name="LastName">
+        <label>Last Name</label>
+        <label>Apellido Materno</label>
+    </column>
+
     <column name="PersonGender">
         <label>PersonGender</label>
         <label>Gender</label>
