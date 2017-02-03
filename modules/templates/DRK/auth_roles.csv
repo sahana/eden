@@ -199,6 +199,7 @@ QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not access site activity reports
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
+QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,dvr_case_language,READ,,,,,
@@ -273,7 +274,7 @@ STAFF,General Staff,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 STAFF,General Staff,,inv,,,NONE,,,,,Staff can not access inv module
 STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 STAFF,General Staff,,,,cr_shelter,READ,,,,,
-STAFF,General Staff,,,,cr_shelter_registration,READ,,,,,
+STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
 STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,

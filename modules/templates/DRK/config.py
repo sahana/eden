@@ -917,7 +917,9 @@ def config(settings):
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
-        has_permission = current.auth.s3_has_permission
+        auth = current.auth
+
+        has_permission = auth.s3_has_permission
 
         # Users who can not register new residents also have
         # only limited write-access to basic details of residents
@@ -933,10 +935,15 @@ def config(settings):
             s3db.configure("pr_contact", insertable=False)
 
             # Can not update shelter registration from person form
-            # (check-in/check-out may still be permitted, however)
+            # - check-in/check-out may still be permitted, however
+            # - STAFF can update housing unit
+
+            is_staff = auth.s3_has_role("STAFF")
+
             rtable = s3db.cr_shelter_registration
             for field in rtable:
-                field.writable = False
+                if field.name != "shelter_unit_id" or not is_staff:
+                    field.writable = False
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
@@ -949,11 +956,27 @@ def config(settings):
 
         has_role = current.auth.s3_has_role
         is_admin = has_role(current.auth.get_system_roles().ADMIN)
-        QUARTIERMANAGER = not is_admin and \
-                          not any(has_role(role) for role in ("ADMINISTRATION",
-                                                              "ADMIN_HEAD",
-                                                              )) and \
-                          has_role("QUARTIER")
+
+        # Roles with extended access to person form
+        PRIVILEGED = ("ADMIN_HEAD",
+                      "ADMINISTRATION",
+                      "INFO_POINT",
+                      "MEDICAL",
+                      "POLICE",
+                      "RP",
+                      "SECURITY_HEAD",
+                      )
+
+        s3.is_privileged = None
+        def privileged():
+            # Lazy check for privileged access to person form
+            privileged = s3.is_privileged
+            if privileged is None:
+                privileged = is_admin or any(has_role(role) for role in PRIVILEGED)
+                s3.is_privileged = privileged
+            return privileged
+
+        QUARTIERMANAGER = has_role("QUARTIER") and not privileged()
 
         # Custom prep
         standard_prep = s3.prep
@@ -1257,6 +1280,10 @@ def config(settings):
                         del options[1] # Remove "unknown"
                         field.requires = IS_PERSON_GENDER(options, sort = True)
 
+                        # No comment for pe_label
+                        field = table.pe_label
+                        field.comment = None
+
                         # Last name is required
                         field = table.last_name
                         field.requires = IS_NOT_EMPTY()
@@ -1301,7 +1328,9 @@ def config(settings):
 
                         # Custom CRUD form
                         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-                        crud_form = S3SQLCustomForm(
+                        if privileged():
+                            # Extended form
+                            crud_form = S3SQLCustomForm(
 
                                     # Case Details ----------------------------
                                     (T("Case Status"), "dvr_case.status_id"),
@@ -1380,6 +1409,35 @@ def config(settings):
                                     # Archived-flag ---------------------------
                                     (T("Invalid"), "dvr_case.archived"),
                                     )
+                        else:
+                            # Reduced form
+                            crud_form = S3SQLCustomForm(
+                                    S3SQLInlineLink("case_flag",
+                                                    label = T("Flags"),
+                                                    field = "flag_id",
+                                                    help_field = "comments",
+                                                    cols = 4,
+                                                    ),
+                                    (T("ID"), "pe_label"),
+                                    "last_name",
+                                    "first_name",
+                                    "person_details.nationality",
+                                    "date_of_birth",
+                                    "gender",
+                                    reg_unit_id,
+                                    S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value"),
+                                                        ],
+                                            filterby = {"field": "contact_method",
+                                                        "options": "SMS",
+                                                        },
+                                            label = T("Mobile Phone"),
+                                            multiple = False,
+                                            name = "phone",
+                                            ),
+                                    "dvr_case.comments",
+                                    )
 
                         configure(crud_form = crud_form,
                                   )
@@ -1411,32 +1469,34 @@ def config(settings):
                             #dob_filter.operator = ["eq"]
                             filter_widgets.insert(1, dob_filter)
 
-                            # Add filter for family transferability
-                            if show_family_transferable:
-                                ft_filter = S3OptionsFilter("dvr_case.household_transferable",
-                                                            label = FAMILY_TRANSFERABLE,
-                                                            options = {True: T("Yes"),
-                                                                       False: T("No"),
-                                                                       },
-                                                            cols = 2,
-                                                            hidden = True,
-                                                            )
-                                filter_widgets.append(ft_filter)
+                            # Additional filters for privileged roles
+                            if privileged():
+                                # Add filter for family transferability
+                                if show_family_transferable:
+                                    ft_filter = S3OptionsFilter("dvr_case.household_transferable",
+                                                                label = FAMILY_TRANSFERABLE,
+                                                                options = {True: T("Yes"),
+                                                                        False: T("No"),
+                                                                        },
+                                                                cols = 2,
+                                                                hidden = True,
+                                                                )
+                                    filter_widgets.append(ft_filter)
 
-                            # Add filter for registration date
-                            reg_filter = S3DateFilter("dvr_case.date",
-                                                      hidden = True,
-                                                      )
-                            filter_widgets.append(reg_filter)
+                                # Add filter for registration date
+                                reg_filter = S3DateFilter("dvr_case.date",
+                                                          hidden = True,
+                                                          )
+                                filter_widgets.append(reg_filter)
 
-                            # Add filter for registration status
-                            reg_filter = S3OptionsFilter("shelter_registration.registration_status",
-                                                         label = T("Presence"),
-                                                         options = s3db.cr_shelter_registration_status_opts,
-                                                         hidden = True,
-                                                         cols = 3,
-                                                         )
-                            filter_widgets.append(reg_filter)
+                                # Add filter for registration status
+                                reg_filter = S3OptionsFilter("shelter_registration.registration_status",
+                                                             label = T("Presence"),
+                                                             options = s3db.cr_shelter_registration_status_opts,
+                                                             hidden = True,
+                                                             cols = 3,
+                                                             )
+                                filter_widgets.append(reg_filter)
 
                             # Add filter for IDs
                             id_filter = S3TextFilter(["pe_label"],
@@ -1449,30 +1509,37 @@ def config(settings):
 
                     # Custom list fields (must be outside of r.interactive)
                     list_fields = [(T("ID"), "pe_label"),
-                                   (T("EasyOpt No."), "eo_number.value"),
+                                   #(T("EasyOpt No."), "eo_number.value"),
                                    "last_name",
                                    "first_name",
                                    "date_of_birth",
                                    "gender",
                                    "person_details.nationality",
-                                   "dvr_case.date",
-                                   "dvr_case.status_id",
+                                   #"dvr_case.date",
+                                   #"dvr_case.status_id",
                                    (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
 
-                    # Add fields for managing transferability
-                    if settings.get_dvr_manage_transferability() and not check_overdue:
-                        transf_fields = ["dvr_case.transferable",
-                                         (T("Size of Family"), "dvr_case.household_size"),
-                                         ]
-                        if show_family_transferable:
-                            transf_fields.append((FAMILY_TRANSFERABLE,
-                                                  "dvr_case.household_transferable"))
-                        list_fields[-1:-1] = transf_fields
+                    if privileged():
+                        # Additional list fields for privileged roles
+                        list_fields.insert(1, (T("EasyOpt No."), "eo_number.value"))
+                        list_fields[-1:-1] = ("dvr_case.date",
+                                              "dvr_case.status_id",
+                                              )
 
-                    # Days of absence (virtual field)
-                    if absence_field:
-                        list_fields.append(absence_field)
+                        # Add fields for managing transferability
+                        if settings.get_dvr_manage_transferability() and not check_overdue:
+                            transf_fields = ["dvr_case.transferable",
+                                             (T("Size of Family"), "dvr_case.household_size"),
+                                             ]
+                            if show_family_transferable:
+                                transf_fields.append((FAMILY_TRANSFERABLE,
+                                                     "dvr_case.household_transferable"))
+                            list_fields[-1:-1] = transf_fields
+
+                        # Days of absence (virtual field)
+                        if absence_field:
+                            list_fields.append(absence_field)
 
                     if r.representation == "xls":
                         # Extra list_fields for XLS export
