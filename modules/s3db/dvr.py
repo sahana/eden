@@ -5074,7 +5074,7 @@ class DVRRegisterCaseEvent(S3Method):
         formvars.type_id = type_id
 
         # Check whether event type is blocked for this person
-        if type_id:
+        if person and type_id:
             blocked = self.get_blocked_events(person.id,
                                               type_id = type_id,
                                               )
