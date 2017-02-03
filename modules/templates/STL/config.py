@@ -270,6 +270,11 @@ def config(settings):
                 field = table.gender
                 field.readable = field.writable = True
 
+                # Expose activity focus
+                field = table.focus_id
+                field.label = T("Focus of Group")
+                field.readable = field.writable = True
+
                 # Custom list fields
                 list_fields = ["name",
                                "service_id",
@@ -291,6 +296,7 @@ def config(settings):
                                             (T("Type of Group"), "group_type_id"),
                                             "gender",
                                             "age_group_id",
+                                            "focus_id",
                                             "site_id",
                                             "room_id",
                                             "facilitator",

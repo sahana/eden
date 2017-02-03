@@ -1528,6 +1528,51 @@ class DVRCaseActivityModel(S3Model):
                                        )
 
         # ---------------------------------------------------------------------
+        # Activity Focus
+        #
+        tablename = "dvr_activity_focus"
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Focus"),
+            title_display = T("Activity Focus Details"),
+            title_list = T("Activity Focuses"),
+            title_update = T("Edit Activity Focus"),
+            label_list_button = T("List Activity Focuses"),
+            label_delete_button = T("Delete Activity Focus"),
+            msg_record_created = T("Activity Focus added"),
+            msg_record_modified = T("Activity Focus updated"),
+            msg_record_deleted = T("Activity Focus deleted"),
+            msg_list_empty = T("No Activity Focuses currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        focus_id = S3ReusableField("focus_id", "reference %s" % tablename,
+                                   label = T("Activity Focus"),
+                                   ondelete = "CASCADE",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          sort = True,
+                                                          )),
+                                   sortby = "name",
+                                   )
+
+        # ---------------------------------------------------------------------
         # Activity (not case-specific)
         #
         site_represent = self.org_SiteRepresent(show_link=False)
@@ -1615,6 +1660,10 @@ class DVRCaseActivityModel(S3Model):
                            ),
                      age_group_id(ondelete="SET NULL"),
                      group_type_id(ondelete="SET NULL"),
+                     focus_id(ondelete = "SET NULL",
+                              readable = False,
+                              writable = False,
+                              ),
                      s3_comments(),
                      *s3_meta_fields())
 
