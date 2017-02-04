@@ -635,7 +635,8 @@ class S3RequestModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(req_req_ref = lambda **attr: dummy("req_ref"),
+        return dict(req_req_id = lambda **attr: dummy("req_id"),
+                    req_req_ref = lambda **attr: dummy("req_ref"),
                     )
 
     # -------------------------------------------------------------------------
