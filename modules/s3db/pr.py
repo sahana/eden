@@ -4277,7 +4277,7 @@ class S3PersonTagModel(S3Model):
 
         tablename = "pr_person_tag"
         self.define_table(tablename,
-                          self.pr_person_id(),
+                          self.pr_person_id(ondelete = "CASCADE"),
                           Field("tag",
                                 label = T("Key"),
                                 ),
