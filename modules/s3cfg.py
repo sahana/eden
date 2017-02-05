@@ -3716,6 +3716,12 @@ class S3Config(Storage):
         """
         return self.__lazy("mobile", "forms", [])
 
+    def get_mobile_dynamic_tables(self):
+        """
+            Expose mobile forms for dynamic tables
+        """
+        return self.mobile.get("dynamic_tables", True)
+
     # -------------------------------------------------------------------------
     # Organisations
     #

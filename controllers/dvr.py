@@ -457,6 +457,12 @@ def activity_group_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def activity_focus():
+    """ Activity Focuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def activity():
     """ Activities: RESTful CRUD Controller """
 

@@ -1152,20 +1152,25 @@ class S3OrganisationModel(S3Model):
                               )
                 if acronym:
                     record["acronym"] = acronym
+
                 if "org_parent_organisation" in row:
                     parent = object.__getattribute__(row, "org_parent_organisation")
                     if parent.name is not None:
                         record["parent"] = parent.name
 
-                # Determine if input is org hit or acronym hit
+                # Determine if input matches the organisation name or
+                # the acronym, or neither (e.g. input matching the
+                # parent organisation)
                 value_len = len(value)
-                orgNameHit = name[:value_len].lower() == value
-                if orgNameHit:
+                name_match = s3_unicode(name)[:value_len].lower() == value
+                acronym_match = acronym and \
+                                s3_unicode(acronym)[:value_len].lower() == value
+                if name_match:
                     nextString = name[value_len:]
                     if nextString != "":
                         record["matchString"] = name[:value_len]
                         record["nextString"] = nextString
-                else:
+                elif acronym_match:
                     nextString = acronym[value_len:]
                     if nextString != "":
                         record["matchString"] = acronym[:value_len]
