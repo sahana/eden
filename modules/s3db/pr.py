@@ -3747,7 +3747,6 @@ class S3PersonIdentityModel(S3Model):
     def model(self):
 
         T = current.T
-        messages = current.messages
 
         # ---------------------------------------------------------------------
         # Identity
@@ -3817,6 +3816,14 @@ class S3PersonIdentityModel(S3Model):
                                 ),
                           #Field("ia_subdivision"), # Name of issuing authority subdivision
                           #Field("ia_code"), # Code of issuing authority (if any)
+                          Field("image", "upload",
+                                autodelete = True,
+                                label = T("Scanned Copy"),
+                                length = current.MAX_FILENAME_LENGTH,
+                                # upload folder needs to be visible to the download() function as well as the upload
+                                uploadfolder = os.path.join(current.request.folder,
+                                                            "uploads"),
+                               ),
                           s3_comments(),
                           *s3_meta_fields())
 

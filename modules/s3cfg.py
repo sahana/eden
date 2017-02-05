@@ -3323,6 +3323,7 @@ class S3Config(Storage):
     def get_hrm_record_label(self):
         """
             Label to use for the HR record tab
+            - string not LazyT
         """
         label = self.__lazy("hrm", "record_label", default=None)
         if not label:

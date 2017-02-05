@@ -431,7 +431,7 @@ def config(settings):
     # Uncomment to auto-create certificates for courses
     settings.hrm.create_certificates_from_courses = True
     settings.hrm.use_code = True
-    settings.hrm.use_description = "Medical"
+    settings.hrm.use_description = "Medical Information"
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = True
     # Uncomment to hide Job Titles

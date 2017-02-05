@@ -430,7 +430,7 @@ class S3HRModel(S3Model):
                      ),
                      Field("type", "integer",
                            default = 1,
-                           #label = T("Type"),
+                           label = T("Type"),
                            represent = lambda opt: \
                                        hrm_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(hrm_type_opts,
@@ -4720,7 +4720,7 @@ class hrm_AssignMethod(S3Method):
                            "organisation_id",
                            ]
             if len(types) == 2:
-                list_fields.append((T("Type"),"type"))
+                list_fields.append((T("Type"), "type"))
             list_fields.append("job_title_id")
             if settings.get_hrm_use_certificates():
                 list_fields.append((T("Certificates"), "person_id$certification.certificate_id"))
@@ -6129,7 +6129,7 @@ def hrm_rheader(r, tabs=[], profile=False):
         if profile:
             # Configure for personal mode
             if record_method:
-                hr_tab = (record_label, record_method)
+                hr_tab = (T(record_label), record_method)
             tabs = [(T("Person Details"), None),
                     (T("User Account"), "user"),
                     hr_tab,
@@ -6194,7 +6194,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                 else:
                     awards_tab = None
             if record_method:
-                hr_tab = (hr_record, record_method)
+                hr_tab = (T(hr_record), record_method)
             tabs = [(T("Person Details"), None),
                     hr_tab,
                     id_tab,
