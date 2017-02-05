@@ -3908,6 +3908,7 @@
 'Measures': 'Medidas',
 'Media Manager': 'Gestor de soporte',
 'Medical Attention': 'Atención Médica',
+'Medical Conditions': 'Condición Medica',
 'Medical Information': 'Información Médica',
 'Medical Staff': 'Personal Médico',
 'Medical Supplies': 'Suministros médicos',
