@@ -2127,7 +2127,7 @@ class S3HRSkillModel(S3Model):
                                  tooltip = tooltip,
                                  )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         skill_id = S3ReusableField("skill_id", "reference %s" % tablename,
                                    label = T("Skill"),
                                    ondelete = "SET NULL",
@@ -2215,7 +2215,7 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Competency Rating deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         competency_id = S3ReusableField("competency_id", "reference %s" % tablename,
                                         label = T("Competency"),
                                         ondelete = "RESTRICT",
