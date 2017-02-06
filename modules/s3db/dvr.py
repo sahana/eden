@@ -1362,10 +1362,14 @@ class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
     names = ("dvr_activity",
+             "dvr_activity_age_group",
+             "dvr_activity_focus",
+             "dvr_activity_group_type",
              "dvr_case_activity",
              "dvr_case_activity_id",
              "dvr_case_activity_need",
              "dvr_case_service_contact",
+             "dvr_provider_type",
              )
 
     def model(self):
