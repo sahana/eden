@@ -948,6 +948,33 @@ def config(settings):
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
+    def configure_person_tags():
+        """
+            Configure filtered pr_person_tag components for
+            registration numbers:
+                - EasyOpt Number (tag=EONUMBER)
+                - BAMF Registration Number (tag=BAMF)
+        """
+
+        current.s3db.add_components("pr_person",
+                                    pr_person_tag = ({"name": "eo_number",
+                                                      "joinby": "person_id",
+                                                      "filterby": {
+                                                        "tag": "EONUMBER",
+                                                        },
+                                                      "multiple": False,
+                                                      },
+                                                     {"name": "bamf",
+                                                      "joinby": "person_id",
+                                                      "filterby": {
+                                                        "tag": "BAMF",
+                                                        },
+                                                      "multiple": False,
+                                                      },
+                                                     )
+                                    )
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
@@ -1205,16 +1232,7 @@ def config(settings):
 
                 if not r.component:
 
-                    # Additional component "EasyOpt Number"
-                    s3db.add_components("pr_person",
-                                        pr_person_tag = {"name": "eo_number",
-                                                         "joinby": "person_id",
-                                                         "filterby": {
-                                                             "tag": "EONUMBER",
-                                                             },
-                                                         "multiple": False,
-                                                         },
-                                        )
+                    configure_person_tags()
 
                     # Set default shelter for shelter registration
                     shelter_id = drk_default_shelter()
@@ -1369,6 +1387,17 @@ def config(settings):
                                             multiple = False,
                                             name = "eo_number",
                                             ),
+                                    S3SQLInlineComponent(
+                                            "bamf",
+                                            fields = [("", "value"),
+                                                      ],
+                                            filterby = {"field": "tag",
+                                                        "options": "BAMF",
+                                                        },
+                                            label = T("BAMF Reference Number"),
+                                            multiple = False,
+                                            name = "bamf",
+                                            ),
                                     "dvr_case.valid_until",
                                     "dvr_case.stay_permit_until",
 
@@ -1497,6 +1526,13 @@ def config(settings):
                                                              cols = 3,
                                                              )
                                 filter_widgets.append(reg_filter)
+
+                                # Add filter for BAMF Registration Number
+                                bamf_filter = S3TextFilter(["bamf.value"],
+                                                           label = T("BAMF Ref.No."),
+                                                           hidden = True,
+                                                           )
+                                filter_widgets.append(bamf_filter)
 
                             # Add filter for IDs
                             id_filter = S3TextFilter(["pe_label"],
@@ -2026,15 +2062,9 @@ def config(settings):
 
                 filter_widgets = resource.get_config("filter_widgets")
                 if filter_widgets:
-                    s3db.add_components("pr_person",
-                                        pr_person_tag = {"name": "eo_number",
-                                                         "joinby": "person_id",
-                                                         "filterby": {
-                                                             "tag": "EONUMBER",
-                                                             },
-                                                         "multiple": False,
-                                                         },
-                                        )
+
+                    configure_person_tags()
+
                     from s3 import S3TextFilter
                     for fw in filter_widgets:
                         if isinstance(fw, S3TextFilter):
@@ -2090,17 +2120,9 @@ def config(settings):
 
             if not r.component:
 
+                configure_person_tags()
+
                 if r.interactive and not r.id:
-                    # Add EO Number as component so it can be filtered by
-                    s3db.add_components("pr_person",
-                                        pr_person_tag = {"name": "eo_number",
-                                                         "joinby": "person_id",
-                                                         "filterby": {
-                                                             "tag": "EONUMBER",
-                                                             },
-                                                         "multiple": False,
-                                                         },
-                                        )
 
                     # Custom filter widgets
                     from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, s3_get_filter_opts
