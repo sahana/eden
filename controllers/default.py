@@ -577,11 +577,27 @@ def user():
         title = response.title = T("Change Password")
         form = auth()
         # Add client-side validation
+        js_global = []
+        js_append = js_global.append
+        js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
+        js_append('''i18n.password_min_chars="%s"''' % T("You must enter a minimum of %d characters"))
+        js_append('''i18n.weak="%s"''' % T("Weak"))
+        js_append('''i18n.normal="%s"''' % T("Normal"))
+        js_append('''i18n.medium="%s"''' % T("Medium"))
+        js_append('''i18n.strong="%s"''' % T("Strong"))
+        js_append('''i18n.very_strong="%s"''' % T("Very Strong"))
+        script = '''\n'''.join(js_global)
+        s3.js_global.append(script)
         if s3.debug:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
         else:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
-        s3.jquery_ready.append("$('.password:eq(1)').pstrength()")
+        s3.jquery_ready.append(
+'''$('.password:eq(1)').pstrength({
+ 'minChar': S3.password_min_length,
+ 'minCharText': i18n.password_min_chars,
+ 'verdicts': [i18n.weak, i18n.normal, i18n.medium, i18n.strong, i18n.very_strong]
+})''')
 
     elif arg == "retrieve_password":
         title = response.title = T("Retrieve Password")

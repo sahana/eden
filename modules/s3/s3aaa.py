@@ -852,6 +852,7 @@ Thank you"""
                 else:
                     next = replace_id(next, form)
                 redirect(next, client_side=settings.client_side)
+
         return form
 
     # -------------------------------------------------------------------------
