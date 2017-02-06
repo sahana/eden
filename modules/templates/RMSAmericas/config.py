@@ -1579,6 +1579,7 @@ Thank you"""
             title_display = T("Position Details"),
             title_list = T("Position Catalog"),
             title_update = T("Edit Position"),
+            title_upload = T("Import Positions"),
             label_list_button = T("List Positions"),
             label_delete_button = T("Delete Position"),
             msg_record_created = T("Position added"),
