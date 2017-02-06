@@ -6349,6 +6349,12 @@ def org_rheader(r, tabs=[]):
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
                             ]
+                else:
+                    if type_filter == "Training Center":
+                        # e.g.RMSAmericas 
+                        skip_branches = True
+                    tabs = [(T("Basic Details"), None, {"native": 1}),
+                            ]
             else:
                 if settings.get_org_facilities_tab():
                     facilities =  (T("Facilities"), "facility")
@@ -6791,7 +6797,7 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     # Need to be explicit since can also come from Project controller
+                                     # Need to be explicit since can also come from HRM or Project controllers
                                      csv_stylesheet = ("org", "organisation.xsl"),
                                      csv_template = ("org", "organisation"),
                                      # Don't allow components with components (such as document) to breakout from tabs
