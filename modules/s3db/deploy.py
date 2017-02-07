@@ -471,6 +471,12 @@ class S3DeploymentModel(S3Model):
                                         "key": "appraisal_id",
                                         "autodelete": False,
                                         },
+                       hrm_experience = {"name": "experience",
+                                         "link": "deploy_assignment_experience",
+                                         "joinby": "assignment_id",
+                                         "key": "experience_id",
+                                         "autodelete": False,
+                                         },
                        )
 
         assignment_id = S3ReusableField("assignment_id",
@@ -684,8 +690,20 @@ class S3DeploymentModel(S3Model):
                                                             limitby = (0, 1),
                                                             ).first()
             if hr:
-                data["person_id"] = hr.person_id
+                person_id = hr.person_id
+                data["person_id"] = person_id
                 data["employment_type"] = hr.type
+
+                # Lookup User Account
+                ltable = s3db.pr_person_user
+                ptable = s3db.pr_person
+                query = (ptable.id == person_id) & \
+                        (ptable.pe_id == ltable.pe_id)
+                link = db(query).select(ltable.user_id,
+                                        limitby = (0, 1),
+                                        ).first()
+                if link:
+                    data["owned_by_user"] = link.user_id
 
         # Lookup mission details
         mission_id = data.pop("mission_id")
@@ -716,7 +734,6 @@ class S3DeploymentModel(S3Model):
                 experience_id = etable.insert(**data)
 
                 # Create link
-                ltable = db.deploy_assignment_experience
                 ltable.insert(assignment_id = assignment_id,
                               experience_id = experience_id,
                               )
