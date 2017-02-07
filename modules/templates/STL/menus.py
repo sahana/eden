@@ -181,6 +181,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Activity Age Groups", f="activity_age_group"),
                         M("Provider Types", f="provider_type"),
                         M("Activity Focuses", f="activity_focus"),
+                        M("Termination Types", f="termination_type"),
                         ),
                 )
 
