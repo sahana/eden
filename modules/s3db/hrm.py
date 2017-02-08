@@ -4106,7 +4106,13 @@ class S3HRExperienceModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Assignments
-                            deploy_assignment = "experience_id",
+                            deploy_assignment = {"name": "assignment",
+                                                 "link": "deploy_assignment_experience",
+                                                 "joinby": "experience_id",
+                                                 "key": "assignment_id",
+                                                 "autodelete": False,
+                                                 },
+                       
                             )
 
         # ---------------------------------------------------------------------
@@ -7935,10 +7941,18 @@ class hrm_CV(S3Method):
                               actions = dt_row_actions("experience", tablename),
                               tablename = tablename,
                               context = "person",
+                              filter = FS("assignment__link.assignment_id") == None,
                               create_controller = controller,
                               create_function = "person",
                               create_component = "experience",
                               pagesize = None, # all records
+                              # Settings suitable for RMSAmericas
+                              list_fields = ["start_date",
+                                             "end_date",
+                                             "employment_type",
+                                             "organisation",
+                                             "job_title",
+                                             ],
                               )
                 profile_widgets.append(widget)
 
@@ -7949,8 +7963,17 @@ class hrm_CV(S3Method):
                               actions = dt_row_actions("experience", tablename),
                               tablename = tablename,
                               context = "person",
+                              filter = FS("assignment__link.assignment_id") != None,
                               insert = False,
                               pagesize = None, # all records
+                              # Settings suitable for RMSAmericas
+                              list_fields = ["start_date",
+                                             "end_date",
+                                             "location_id",
+                                             #"organisation_id",
+                                             "job_title_id",
+                                             "job_title",
+                                             ],
                               )
                 profile_widgets.append(widget)
 
