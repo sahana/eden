@@ -4031,8 +4031,7 @@ class S3PersonEducationModel(S3Model):
                                                        ),
                                             ignore_deleted = True,
                                             ),
-                  list_fields = ["id",
-                                 # Normally accessed via component
+                  list_fields = [# Normally accessed via component
                                  #"person_id",
                                  "year",
                                  "level_id",

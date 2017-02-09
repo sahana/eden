@@ -5117,7 +5117,7 @@ class S3LocationSelector(S3Selector):
         if show_address:
             address = values.get("address")
             if show_address is True:
-                label = s3db.gis_location.addr_street.label
+                label = gtable.addr_street.label
             else:
                 label = show_address
             components["address"] = manual_input(fieldname,

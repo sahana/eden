@@ -2658,8 +2658,22 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_pr_education_resource(r, tablename):
 
-        table = current.s3db[tablename]
+        s3db = current.s3db
+        table = s3db[tablename]
         table.country.readable = table.country.writable = True
+        table.grade.readable = table.grade.writable = False
+        table.major.readable = table.major.writable = False
+        s3db.configure(tablename,
+                       list_fields = [# Normally accessed via component
+                                      #"person_id",
+                                      "year",
+                                      "level_id",
+                                      "award",
+                                      #"major",
+                                      #"grade",
+                                      "institute",
+                                      ],
+                       )
 
     settings.customise_pr_education_resource = customise_pr_education_resource
 
@@ -2827,11 +2841,6 @@ Thank you"""
                 ctable = r.component.table
                 ctable.skill_id.label = T("Language")
                 ctable.organisation_id.readable = False
-
-            elif component_name == "education":
-                etable = r.component.table
-                etable.grade.readable = etable.grade.writable = False
-                etable.major.readable = etable.major.writable = False
 
             elif component_name == "experience":
                 # 2 options here: Work Experience & Missions
