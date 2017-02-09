@@ -1705,6 +1705,51 @@ class DVRCaseActivityModel(S3Model):
                                       )
 
         # ---------------------------------------------------------------------
+        # Termination Types (=how a case activity ended)
+        #
+        tablename = "dvr_termination_type"
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Termination Type"),
+            title_display = T("Termination Type Details"),
+            title_list = T("Termination Types"),
+            title_update = T("Edit Termination Type"),
+            label_list_button = T("List Termination Types"),
+            label_delete_button = T("Delete Termination Type"),
+            msg_record_created = T("Termination Type added"),
+            msg_record_modified = T("Termination Type updated"),
+            msg_record_deleted = T("Termination Type deleted"),
+            msg_list_empty = T("No Termination Types currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        termination_type_id = S3ReusableField("termination_type_id", "reference %s" % tablename,
+                                              label = T("Termination Type"),
+                                              ondelete = "CASCADE",
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                                      represent,
+                                                                      sort = True,
+                                                                      )),
+                                              sortby = "name",
+                                              )
+
+        # ---------------------------------------------------------------------
         # Case Activity (case-specific)
         #
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
@@ -1848,7 +1893,6 @@ class DVRCaseActivityModel(S3Model):
                              label = T("Date for Follow-up"),
                              past = 0,
                              ),
-                     # @todo: provide options lookup?
                      Field("outcome", "text",
                            label = T("Outcome"),
                            represent = s3_text_represent,
@@ -1859,6 +1903,10 @@ class DVRCaseActivityModel(S3Model):
                            label = T("Completed"),
                            represent = s3_yes_no_represent,
                            ),
+                     termination_type_id(ondelete = "RESTRICT",
+                                         readable = False,
+                                         writable = False,
+                                         ),
                      s3_comments(),
                      *s3_meta_fields())
 

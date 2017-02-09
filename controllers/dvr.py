@@ -470,6 +470,12 @@ def activity():
                               )
 
 # -----------------------------------------------------------------------------
+def termination_type():
+    """ Termination Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case_activity():
     """ Case Activities: RESTful CRUD Controller """
 
