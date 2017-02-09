@@ -2624,7 +2624,7 @@ Thank you"""
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
-    def customise_pr_adress_resource(r, tablename):
+    def customise_pr_address_resource(r, tablename):
 
         #if current.auth.root_org_name() in ("Honduran Red Cross",
         #                                    "Paraguayan Red Cross",
@@ -2638,12 +2638,12 @@ Thank you"""
                        list_fields = ["type",
                                       (current.messages.COUNTRY, "location_id$L0"),
                                       (T("Address"), "location_id$addr_street"),
-                                      (settings.get_ui_label_postcode(),
-                                       "location_id$addr_postcode")
+                                      #(settings.get_ui_label_postcode(),
+                                      # "location_id$addr_postcode")
                                       ],
                        )
 
-    settings.customise_pr_adress_resource = customise_pr_adress_resource
+    settings.customise_pr_address_resource = customise_pr_address_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_contact_resource(r, tablename):
