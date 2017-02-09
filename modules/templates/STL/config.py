@@ -1130,7 +1130,7 @@ def config(settings):
         field.readable = field.writable = False
 
         field = table.value
-        field.label = current.T("Number or Address")
+        field.label = T("Number or Address")
 
         field = table.contact_method
         all_opts = current.msg.CONTACT_OPTS

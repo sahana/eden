@@ -651,18 +651,15 @@ Thank you"""
                 if userfield == "email":
                     # Check for Domains which can use Google's SMTP server for passwords
                     # @ToDo: an equivalent email_domains for other email providers
-                    gmail_domains = current.deployment_settings.get_auth_gmail_domains()
-                    if gmail_domains:
+                    gmail_domains = deployment_settings.get_auth_gmail_domains()
+                    office365_domains = deployment_settings.get_auth_office365_domains()
+                    if gmail_domains or office365_domains:
                         from gluon.contrib.login_methods.email_auth import email_auth
                         domain = form.vars[userfield].split("@")[1]
                         if domain in gmail_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
-                    office365_domains = current.deployment_settings.get_auth_office365_domains()
-                    if office365_domains:
-                        from gluon.contrib.login_methods.email_auth import email_auth
-                        domain = form.vars[userfield].split("@")[1]
-                        if domain in office365_domains:
+                        elif domain in office365_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.office365.com:587", "@%s" % domain))
 
@@ -3740,7 +3737,8 @@ $.filterOptionsS3({
                               "group_id": group_id}
                 if for_pe is not None and str(group_id) not in unrestrictable:
                     membership["pe_id"] = for_pe
-                membership_id = mtable.insert(**membership)
+                #membership_id = mtable.insert(**membership)
+                mtable.insert(**membership)
 
         # Update roles for current user if required
         if self.user and str(user_id) == str(self.user.id):

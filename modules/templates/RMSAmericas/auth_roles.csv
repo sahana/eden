@@ -35,7 +35,7 @@ AUTHENTICATED,Authenticated,,,,gis_layer_xyz,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,course,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,facility,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,job_title,,,CREATE|READ,,,,,,
-AUTHENTICATED,Authenticated,,hrm,person,,,READ,CREATE|READ|UPDATE|DELETE,,,,,Manage own Profile through consistent UI
+AUTHENTICATED,Authenticated,,hrm,person,,,CREATE|READ,CREATE|READ|UPDATE|DELETE,,,,,Manage own Profile through consistent UI
 AUTHENTICATED,Authenticated,,hrm,training_center,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,training_event,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ|UPDATE,,,,No HR Manager so user needs to manage this themselves,
@@ -117,6 +117,8 @@ ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all recor
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,supply_catalog,,ALL,,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,supply_item_category,,ALL,,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,vol_details,,ALL,,,,,,
+RIT_MEMBER,RIT Member,,hrm,person,,,CREATE|READ,CREATE|READ|UPDATE|DELETE,,,,,
+RIT_MEMBER,RIT Member,,,,hrm_certification,,CREATE|READ,CREATE|READ|UPDATE|DELETE,,,,,
 surge_capacity_manager,Surge Capacity Manager,Manages the RIT or NIT,deploy,,,,ALL,,,,,,
 surge_capacity_manager,Surge Capacity Manager,Manages the RIT or NIT,hrm,,,any,READ,,,,,,
 surge_capacity_manager,Surge Capacity Manager,Manages the RIT or NIT,hrm,person,,any,READ,,,,,,

@@ -590,120 +590,85 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ HRM Human Resource Management """
 
         has_role = current.auth.s3_has_role
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
         settings = current.deployment_settings
-
-        if "hrm" not in s3:
-            current.s3db.hrm_vars()
-        hrm_vars = s3.hrm
 
         SECTORS = "Clusters" if settings.get_ui_label_cluster() \
                              else "Sectors"
 
-        manager_mode = lambda i: hrm_vars.mode is None
-        personal_mode = lambda i: hrm_vars.mode is not None
-        is_org_admin = lambda i: hrm_vars.orgs and True or \
-                                 has_role(ADMIN)
+        is_org_admin = lambda i: has_role(ADMIN)
         is_super_editor = lambda i: has_role("staff_super") or \
                                     has_role("vol_super")
-
-        staff = {"group": "staff"}
 
         use_certs = lambda i: settings.get_hrm_use_certificates()
 
         return M()(
-                    M("Staff", c="hrm", f=("staff", "person"), m="summary",
-                      check=manager_mode)(
+                    M("Staff", c="hrm", f=("staff", "person"), m="summary")(
                         M("Create", m="create"),
                         M("Import", f="person", m="import",
-                          vars=staff, p="create"),
+                          vars={"group": "staff"}, p="create"),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="hrm", f="human_resource", m="summary",
-                      check=[manager_mode, is_super_editor]),
-                    M("Teams", c="hrm", f="group",
-                      check=manager_mode)(
+                      check=is_super_editor),
+                    M("Teams", c="hrm", f="group")(
                         M("Create", m="create"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("National Societies", c="org",
                                             f="organisation",
-                                            vars=red_cross_filter,
-                      check=manager_mode)(
+                                            vars=red_cross_filter)(
                         M("Create", m="create",
                           vars=red_cross_filter
                           ),
                         M("Import", m="import", p="create", check=is_org_admin)
                     ),
-                    M("Offices", c="org", f="office",
-                      check=manager_mode)(
+                    M("Offices", c="org", f="office")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Department Catalog", c="hrm", f="department",
-                      check=manager_mode)(
+                    M("Department Catalog", c="hrm", f="department")(
                         M("Create", m="create"),
                     ),
-                    M("Job Title Catalog", c="hrm", f="job_title",
-                      check=manager_mode)(
+                    M("Job Title Catalog", c="hrm", f="job_title")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
-                    #M("Skill Catalog", f="skill",
-                    #  check=manager_mode)(
+                    #M("Skill Catalog", f="skill")(
                     #    M("Create", m="create"),
                     #    #M("Skill Provisions", f="skill_provision"),
                     #),
-                    M("Training Events", c="hrm", f="training_event",
-                      check=manager_mode)(
+                    M("Training Events", c="hrm", f="training_event")(
                         M("Create", m="create"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
-                    M("Reports", c="hrm", f="staff", m="report",
-                      check=manager_mode)(
+                    M("Reports", c="hrm", f="staff", m="report")(
                         M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring="1")),
                         M("Training Report", f="training", m="report"),
                     ),
-                    M("Training Course Catalog", c="hrm", f="course",
-                      check=manager_mode)(
+                    M("Training Course Catalog", c="hrm", f="course")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", c="hrm", f="certificate",
-                      check=[manager_mode, use_certs])(
+                      check=use_certs)(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Organization Types", c="org", f="organisation_type",
-                      restrict=[ADMIN],
-                      check=manager_mode)(
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
                     M("Office Types", c="org", f="office_type",
-                      restrict=[ADMIN],
-                      check=manager_mode)(
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    #M("Facility Types", c="org", f="facility_type",
-                    #  restrict=[ADMIN],
-                    #  check=manager_mode)(
-                    #    M("Create", m="create"),
-                    #),
-                    #M("My Profile", c="hrm", f="person",
-                    #  check=personal_mode, vars=dict(access="personal")),
-                    # This provides the link to switch to the manager mode:
-                    M("Human Resources", c="hrm", f="index",
-                      check=[personal_mode, is_org_admin]),
-                    # This provides the link to switch to the personal mode:
-                    #M("Personal Profile", c="hrm", f="person",
-                    #  check=manager_mode, vars=dict(access="personal"))
                 )
 
     # -------------------------------------------------------------------------
@@ -1002,16 +967,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         auth = current.auth
         has_role = auth.s3_has_role
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
         root_org = auth.root_org_name()
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        manager_mode = lambda i: s3.hrm.mode is None
-        personal_mode = lambda i: s3.hrm.mode is not None
-        is_org_admin = lambda i: s3.hrm.orgs and True or \
-                                 has_role(ADMIN)
+        is_org_admin = lambda i: has_role(ADMIN)
         is_super_editor = lambda i: has_role("vol_super") or \
                                     has_role("staff_super")
 
@@ -1039,69 +1000,65 @@ class S3OptionsMenu(default.S3OptionsMenu):
         use_activities = lambda i: True if root_org == CRMADA else False
 
         return M(c="vol")(
-                    M("Volunteers", f="volunteer", m="summary",
-                      check=[manager_mode])(
+                    M("Volunteers", f="volunteer", m="summary")(
                         M("Create", m="create"),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="vol", f="human_resource", m="summary",
-                      check=[manager_mode, is_super_editor]),
+                      check=is_super_editor),
                     M(teams, f="group",
-                      check=[manager_mode, use_teams])(
+                      check=use_teams)(
                         M("Create", m="create"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
-                    #M("Department Catalog", f="department",
-                    #  check=manager_mode)(
+                    #M("Department Catalog", f="department")(
                     #    M("Create", m="create"),
                     #),
                     M("Volunteer Role Catalog", f="job_title",
-                      check=[manager_mode, vol_roles])(
+                      check=vol_roles)(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
                     M("Skill Catalog", f="skill",
-                      check=[manager_mode, use_skills])(
+                      check=use_skills)(
                         M("Create", m="create"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Activities", f="activity",
-                      check=[manager_mode, use_activities])(
+                      check=use_activities)(
                         M("Create", m="create"),
                         M("Import Hours", f="activity_hours", m="import"),
                     ),
                     M("Activity Types", f="activity_type",
-                      check=[manager_mode, use_activities, is_super_editor])(
+                      check=[use_activities, is_super_editor])(
                         M("Create", m="create"),
                         #M("Import", m="import"),
                     ),
-                    M("Training Events", f="training_event",
-                      check=manager_mode)(
+                    M("Training Events", f="training_event")(
                         M("Create", m="create"),
                         M("Facilities", f="facility"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
-                    M("Training Course Catalog", f="course",
-                      check=manager_mode)(
+                    M("Training Course Catalog", f="course")(
                         M("Create", m="create"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
-                      check=[manager_mode, use_certs])(
+                      check=use_certs)(
                         M("Create", m="create"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Programs", f="programme",
-                      check=[manager_mode, show_programmes])(
+                      check=show_programmes)(
                         M("Create", m="create"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
                     M(awards_label, f="award",
-                      check=[manager_mode, is_org_admin])(
+                      check=is_org_admin)(
                         M("Create", m="create"),
                     ),
                     M("Volunteer Cluster Type", f="cluster_type",
@@ -1119,8 +1076,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                                         "vol_cluster_position_id"))(
                         M("Create", m="create"),
                     ),
-                    M("Reports", f="volunteer", m="report",
-                      check=manager_mode)(
+                    M("Reports", f="volunteer", m="report")(
                         M("Volunteer Report", m="report"),
                         M("Hours by Activity Type", f="activity_hours", m="report",
                           check=use_activities),
@@ -1136,18 +1092,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           check=show_program_reports),
                         M("Training Report", f="training", m="report"),
                     ),
-                    #M("My Profile", f="person",
-                    #  check=personal_mode, vars=dict(access="personal")),
-                    M("My Tasks", f="task",
-                      check=[personal_mode, show_tasks],
-                      vars=dict(access="personal",
-                                mine=1)),
-                    # This provides the link to switch to the manager mode:
-                    M("Volunteer Management", f="index",
-                      check=[personal_mode, is_org_admin]),
-                    # This provides the link to switch to the personal mode:
-                    #M("Personal Profile", f="person",
-                    #  check=manager_mode, vars=dict(access="personal"))
+                    #M("My Tasks", f="task",
+                    #  check=[personal_mode, show_tasks],
+                    #  vars=dict(access="personal",
+                    #            mine=1)),
                 )
 
 # END =========================================================================

@@ -1,16 +1,17 @@
-First Name,Middle Name,Email,Password,Role,Organisation,Facility Type,Office,Language
-RIT,Admin,ritadmin@example.com,eden,surge_capacity_manager/0,International Federation of Red Cross and Red Crescent Societies,,,es
-Disaster,Manager,dm@example.com,eden,disaster_manager/0,International Federation of Red Cross and Red Crescent Societies,,,es
-CREEC,Coordinator,creec@example.com,eden,training_coordinator/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,es
-CREEEC,Assistant,creeca@example.com,eden,training_assistant/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,es
-CREPD,Coordinator,crepd@example.com,eden,training_coordinator/org_organisation.acronym=CREPD,Centro de Referencia en Preparación Institucional para Desastre,,,es
-End,User,volunteer@example.com,eden,,Cuban Red Cross,,,es
-Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red Cross,,,es
-Honduras,"M&E",hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,es
-Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,es
-Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,es
-Honduras,Warehouse Manager,hn_wh_manager@example.com,eden,"national_wh_manager,hn_user",Honduran Red Cross,,,es
-Comayagua,Warehouse Manager,hn_com_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Comayagua Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua Warehouse,es
-Tegucigalpa,Warehouse Manager,hn_teg_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Tegucigalpa Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa Warehouse,es
-Nicaragua,HR Manager,ni_hr_manager@example.com,eden,"national_hr_manager",Nicaraguan Red Cross,,,es
-Tipitapa,HR Manager,ni_tipi_hr@example.com,eden,"hr_manager",Tipitapa,,,es
+First Name,Middle Name,Email,Password,Role,Organisation,Facility Type,Office,Link,Language
+RIT,Admin,ritadmin@example.com,eden,surge_capacity_manager/0,International Federation of Red Cross and Red Crescent Societies,,,Staff,es
+Disaster,Manager,dm@example.com,eden,disaster_manager/0,International Federation of Red Cross and Red Crescent Societies,,,Staff,es
+CREEC,Coordinator,creec@example.com,eden,training_coordinator/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,Staff,es
+CREEC,Assistant,creeca@example.com,eden,training_assistant/org_organisation.acronym=CREEC,Centro de Referencia para la Resiliencia Comunitaria,,,Staff,es
+CREPD,Coordinator,crepd@example.com,eden,training_coordinator/org_organisation.acronym=CREPD,Centro de Referencia en Preparación Institucional para Desastre,,,Staff,es
+Staff,User,staff@example.com,eden,,Cuban Red Cross,,,Staff,es
+Volunteer,User,volunteer@example.com,eden,,Cuban Red Cross,,,Volunteer,es
+Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,"M&E",hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,Staff,es
+Honduras,Warehouse Manager,hn_wh_manager@example.com,eden,"national_wh_manager,hn_user",Honduran Red Cross,,,Staff,es
+Comayagua,Warehouse Manager,hn_com_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Comayagua Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Comayagua,Warehouse,Comayagua Warehouse,Staff,es
+Tegucigalpa,Warehouse Manager,hn_teg_bodega@example.com,eden,"wh_manager/inv_warehouse.name=Tegucigalpa Warehouse,hn_user/org_organisation.name=Honduran Red Cross",Tegucigalpa,Warehouse,Tegucigalpa Warehouse,Staff,es
+Nicaragua,HR Manager,ni_hr_manager@example.com,eden,"national_hr_manager",Nicaraguan Red Cross,,,Staff,es
+Tipitapa,HR Manager,ni_tipi_hr@example.com,eden,"hr_manager",Tipitapa,,,Staff,es

@@ -3305,6 +3305,7 @@
 'Information Management': 'Manejo de Información',
 'Information Technology': 'Tecnología de la Información',
 'Information gaps': 'Lagunas de información',
+'Information': 'Información',
 'Infusion catheters available': 'Catéteres de infusion disponibles',
 'Infusion catheters need per 24h': 'Necesidad de Catéteres de infusion por 24hs',
 'Infusion catheters needed per 24h': 'Catéteres de infusión necesarios por 24hs',

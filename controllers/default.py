@@ -703,13 +703,13 @@ def person():
                     )
 
     set_method("pr", "person",
-               method="user_profile",
-               action=auth_profile_method)
+               method = "user_profile",
+               action = auth_profile_method)
 
     # Custom Method for Contacts
     set_method("pr", "person",
-               method="contacts",
-               action=s3db.pr_Contacts)
+               method = "contacts",
+               action = s3db.pr_Contacts)
 
     #if settings.has_module("asset"):
     #    # Assets as component of people
@@ -725,7 +725,7 @@ def person():
             table = s3db[tablename]
 
             # Users can not delete their own person record
-            r.resource.configure(deletable=False)
+            r.resource.configure(deletable = False)
 
             s3.crud_strings[tablename].update(
                 title_display = T("Personal Profile"),
@@ -832,7 +832,8 @@ def person():
                 output["add_btn"] = A(T("Assign Asset"),
                                       _href=URL(c="asset", f="asset"),
                                       _id="add-btn",
-                                      _class="action-btn")
+                                      _class="action-btn",
+                                      )
         return output
     s3.postp = postp
 
@@ -917,10 +918,9 @@ def person():
             (T("My Maps"), "config"),
             ]
 
-    output = s3_rest_controller("pr", "person",
-                                rheader = lambda r, tabs=tabs: \
-                                          s3db.pr_rheader(r, tabs=tabs))
-    return output
+    return s3_rest_controller("pr", "person",
+                              rheader = lambda r, tabs=tabs: \
+                                                s3db.pr_rheader(r, tabs=tabs))
 
 # -----------------------------------------------------------------------------
 def group():
@@ -941,9 +941,7 @@ def group():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("pr", "group")
-
-    return output
+    return s3_rest_controller("pr", "group")
 
 # -----------------------------------------------------------------------------
 def skill():
@@ -964,9 +962,7 @@ def skill():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("hrm", "skill")
-
-    return output
+    return s3_rest_controller("hrm", "skill")
 
 # -----------------------------------------------------------------------------
 def facebook():

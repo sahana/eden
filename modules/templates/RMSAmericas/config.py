@@ -449,7 +449,7 @@ def config(settings):
     settings.hrm.training_instructors = "multiple"
     # Training Filters are Contains
     settings.hrm.training_filter_and = True
-    settings.hrm.record_label = "National Society Information"
+    settings.hrm.record_label = "Information"
     # Pass marks are defined by Course
     settings.hrm.course_pass_marks = True
     # Work History & Missions
@@ -1004,14 +1004,59 @@ def config(settings):
         #                            )
 
         #s3db.configure(tablename,
-                       #crud_form = crud_form,
-                       #list_fields = ["mission_id",
-                       #               "subject",
-                       #               "body",
-                       #               ],
+        #               crud_form = crud_form,
+        #               list_fields = ["mission_id",
+        #                              "subject",
+        #                              "body",
+        #                              ],
         #               )
 
     settings.customise_deploy_alert_resource = customise_deploy_alert_resource
+
+    # -------------------------------------------------------------------------
+    def deploy_application_onaccept(form):
+        """
+            RIT Members should be added to the RIT Role
+        """
+
+        db = current.db
+        s3db = current.s3db
+        htable = db.hrm_human_resource
+        ptable = db.pr_person
+
+        # Find the Person
+        human_resource_id = form.vars.get("human_resource_id")
+        if human_resource_id:
+            query = (htable.id == human_resource_id)
+        else:
+            table = db.deploy_application
+            query = (table.id == form.vars.get("id")) & \
+                    (table.human_resource_id == htable.id)
+
+        hr = db(query).select(htable.person_id,
+                              limitby=(0, 1)
+                              ).first()
+        person_id = hr.person_id
+
+        # Do they have a User Account?
+        ltable = s3db.pr_person_user
+        query = (ptable.id == person_id) & \
+                (ltable.pe_id == ptable.pe_id)
+        link = db(query).select(ltable.user_id,
+                                limitby=(0, 1)
+                                ).first()
+        if link:
+            # Add them to the RIT role
+            current.auth.s3_assign_role(link.user_id, "RIT_MEMBER")
+
+    # -------------------------------------------------------------------------
+    def customise_deploy_application_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               create_onaccept = deploy_application_onaccept,
+                               )
+
+    settings.customise_deploy_application_resource = customise_deploy_application_resource
 
     # -------------------------------------------------------------------------
     def customise_deploy_mission_resource(r, tablename):
@@ -1744,10 +1789,11 @@ Thank you"""
             return
 
         # Is person already a RIT Member?
+        person_id = record.person_id
         htable = s3db.hrm_human_resource
-        hr = db(htable.person_id == record.person_id).select(htable.id,
-                                                             limitby=(0, 1)
-                                                             ).first()
+        hr = db(htable.person_id == person_id).select(htable.id,
+                                                      limitby=(0, 1)
+                                                      ).first()
         try:
             human_resource_id = hr.id
         except:
@@ -1761,6 +1807,17 @@ Thank you"""
         if not exists:
             # Add them to the list
             dtable.insert(human_resource_id = human_resource_id)
+
+        # Add them to the RIT role
+        ltable = s3db.pr_person_user
+        ptable = db.pr_person
+        query = (ptable.id == person_id) & \
+                (ltable.pe_id == ptable.pe_id)
+        link = db(query).select(ltable.user_id,
+                                limitby=(0, 1)
+                                ).first()
+        if link:
+            current.auth.s3_assign_role(link.user_id, "RIT_MEMBER")
 
     # -------------------------------------------------------------------------
     def hrm_training_postimport(import_info):
@@ -2567,6 +2624,28 @@ Thank you"""
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_pr_adress_resource(r, tablename):
+
+        #if current.auth.root_org_name() in ("Honduran Red Cross",
+        #                                    "Paraguayan Red Cross",
+        #                                    ):
+            # Location Hierarchy loaded: Leave things as they are since we have the 
+        #   pass
+        #else:
+        s3db = current.s3db
+        s3db.gis_location.addr_street.label = T("Address")
+        s3db.configure("pr_address",
+                       list_fields = ["type",
+                                      (current.messages.COUNTRY, "location_id$L0"),
+                                      (T("Address"), "location_id$addr_street"),
+                                      (settings.get_ui_label_postcode(),
+                                       "location_id$addr_postcode")
+                                      ],
+                       )
+
+    settings.customise_pr_adress_resource = customise_pr_adress_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_contact_resource(r, tablename):
 
         table = current.s3db[tablename]
@@ -2613,10 +2692,11 @@ Thank you"""
         s3db = current.s3db
         request = current.request
         s3 = current.response.s3
+        has_role = current.auth.s3_has_role
 
         # @ToDo: This will cause issues with opening up profiles from mixed lists of trainees
         if request.controller == "pr" and \
-           not current.auth.s3_has_role("ADMIN"):
+           not has_role("ADMIN"):
             # Filter to just External Trainees
             # People without an HR record or whose HR record isn't RC
             from s3 import FS
@@ -2632,21 +2712,35 @@ Thank you"""
                 if not result:
                     return False
 
-            mode = current.session.s3.hrm.mode
-            if mode is not None:
+            if "profile" in request.get_vars:
+                profile = True
+            else:
+                len_roles = len(current.session.s3.roles)
+                if (len_roles <= 2) or \
+                   (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
+                    profile = True
+                else:
+                    profile = False
+            if profile:
                 # Configure for personal mode
                 # People can edit their own HR data
                 configure = s3db.configure
                 configure("hrm_human_resource",
-                          editable = True,
+                          deletable = False,
+                          #editable = True,
+                          insertable = False,
                           )
-                configure("hrm_competency",
-                          editable = True,
-                          )
-                configure("hrm_experience",
-                          editable = True,
-                          insertable = True,
-                          )
+                if not has_role("RIT_MEMBER"):
+                    configure("hrm_certification",
+                              deletable = False,
+                              editable = False,
+                              insertable = False,
+                              )
+                    configure("hrm_training",
+                              deletable = False,
+                              editable = False,
+                              insertable = False,
+                              )
 
             component_name = r.component_name
             method = r.method
@@ -2671,6 +2765,12 @@ Thank you"""
                 f = table.site_contact
                 f.readable = f.writable = False
                 if method == "record":
+                    if not has_role("ORG_ADMIN"):
+                        table.organisation_id.writable = False
+                        # Hide the Site field as this data isn't loaded & we want to keep things simple
+                        # @ToDo: Re-enable for specific NS as-required
+                        f = table.site_id
+                        f.readable = f.writable = False
                     # Use default form (legacy)
                     s3db.clear_config("hrm_human_resource", "crud_form")
 

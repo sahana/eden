@@ -43,7 +43,6 @@ __all__ = ("S3HRModel",
            "hrm_HumanResourceRepresent",
            "hrm_TrainingEventRepresent",
            #"hrm_position_represent",
-           "hrm_vars",
            "hrm_compose",
            "hrm_map_popup",
            "hrm_rheader",
@@ -4881,62 +4880,6 @@ class hrm_AssignMethod(S3Method):
             r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
-def hrm_vars():
-    """ Set session and response variables """
-
-    auth = current.auth
-    if not auth.is_logged_in():
-        # No access to HRM for unauthenticated users
-        auth.permission.fail()
-
-    s3db = current.s3db
-    session = current.session
-
-    if session.s3.hrm is None:
-        session.s3.hrm = Storage()
-    hrm_vars = session.s3.hrm
-
-    # Automatically choose an organisation
-    if "orgs" not in hrm_vars:
-        # Find all organisations the current user is a staff
-        # member of (+all their branches)
-        user = auth.user.pe_id
-        branches = s3db.pr_get_role_branches(user,
-                                             roles="Staff",
-                                             entity_type="org_organisation")
-        otable = s3db.org_organisation
-        query = (otable.pe_id.belongs(branches))
-        orgs = current.db(query).select(otable.id)
-        orgs = [org.id for org in orgs]
-        if orgs:
-            hrm_vars.orgs = orgs
-        else:
-            hrm_vars.orgs = None
-
-    # Set access mode
-    mode = current.request.get_vars.get("access")
-    if mode != "personal":
-        # Default access mode
-        sr = session.s3.system_roles
-        if sr.ADMIN in session.s3.roles or \
-           sr.ORG_ADMIN in session.s3.roles or \
-           hrm_vars.orgs or \
-           current.deployment_settings.get_security_policy() in (1, 2):
-            # Admins, OrgAdmins, Staff Members or policy<3 => always
-            # manager mode
-            mode = None
-        elif auth.s3_logged_in_human_resource():
-            # Volunteers => default to personal mode
-            mode = "personal"
-        else:
-            # All other cases => manager mode (personal mode makes
-            # no sense here since no personal Staff/Volunteer records
-            # exist)
-            mode = None
-
-    hrm_vars.mode = mode
-
-# =============================================================================
 class hrm_HumanResourceRepresent(S3Represent):
     """ Representation of human resource IDs """
 
@@ -6162,33 +6105,33 @@ def hrm_rheader(r, tabs=[], profile=False):
                      teams_tab,
                      #(T("Assets"), "asset"),
                      ]
-        elif current.session.s3.hrm.mode is not None:
-            # Configure for personal mode
-            tabs = [(T("Person Details"), None),
-                    id_tab,
-                    description_tab,
-                    address_tab,
-                    ]
-            contacts_tabs = settings.get_pr_contacts_tabs()
-            if "all" in contacts_tabs:
-                tabs.append((T("Contacts"), "contacts"))
-            if "public" in contacts_tabs:
-                tabs.append((T("Public Contacts"), "public_contacts"))
-            if "private" in contacts_tabs:
-                tabs.append((T("Private Contacts"), "private_contacts"))
-            if record_method is not None:
-                hr_tab = (T("Positions"), "human_resource")
-            tabs += [availability_tab,
-                     trainings_tab,
-                     certificates_tab,
-                     skills_tab,
-                     credentials_tab,
-                     experience_tab,
-                     experience_tab2,
-                     hr_tab,
-                     teams_tab,
-                     (T("Assets"), "asset"),
-                     ]
+        #elif current.session.s3.hrm.mode is not None:
+        #    # Configure for personal mode
+        #    tabs = [(T("Person Details"), None),
+        #            id_tab,
+        #            description_tab,
+        #            address_tab,
+        #            ]
+        #    contacts_tabs = settings.get_pr_contacts_tabs()
+        #    if "all" in contacts_tabs:
+        #        tabs.append((T("Contacts"), "contacts"))
+        #    if "public" in contacts_tabs:
+        #        tabs.append((T("Public Contacts"), "public_contacts"))
+        #    if "private" in contacts_tabs:
+        #        tabs.append((T("Private Contacts"), "private_contacts"))
+        #    if record_method is not None:
+        #        hr_tab = (T("Positions"), "human_resource")
+        #    tabs += [availability_tab,
+        #             trainings_tab,
+        #             certificates_tab,
+        #             skills_tab,
+        #             credentials_tab,
+        #             experience_tab,
+        #             experience_tab2,
+        #             hr_tab,
+        #             teams_tab,
+        #             (T("Assets"), "asset"),
+        #             ]
         else:
             # Configure for HR manager mode
             hr_record = record_label
@@ -6378,10 +6321,6 @@ def hrm_competency_controller():
          - used for Adding/Editing on Profile page
     """
 
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
-
     T = current.T
     s3db = current.s3db
     s3 = current.response.s3
@@ -6480,10 +6419,6 @@ def hrm_credential_controller():
          - used for Adding/Editing on Profile page
     """
 
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
-
     s3 = current.response.s3
 
     def prep(r):
@@ -6515,10 +6450,6 @@ def hrm_experience_controller():
          - used for Adding/Editing on Profile page
     """
 
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
-
     def prep(r):
         if r.method in ("create", "update"):
             # Coming from Profile page?
@@ -6535,12 +6466,11 @@ def hrm_experience_controller():
         return True
     current.response.s3.prep = prep
 
-    output = current.rest_controller("hrm", "experience",
-                                     # @ToDo: Create these if-required
-                                     #csv_stylesheet = ("hrm", "experience.xsl"),
-                                     #csv_template = ("hrm", "experience"),
-                                     )
-    return output
+    return current.rest_controller("hrm", "experience",
+                                   # @ToDo: Create these if-required
+                                   #csv_stylesheet = ("hrm", "experience.xsl"),
+                                   #csv_template = ("hrm", "experience"),
+                                   )
 
 # =============================================================================
 def hrm_group_controller():
@@ -6730,14 +6660,12 @@ def hrm_group_controller():
             (T("Documents"), "document"),
             ]
 
-    output = current.rest_controller("pr", "group",
-                                     csv_stylesheet = ("hrm", "group.xsl"),
-                                     csv_template = "group",
-                                     rheader = lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs),
-                                     )
-
-    return output
+    return current.rest_controller("pr", "group",
+                                   csv_stylesheet = ("hrm", "group.xsl"),
+                                   csv_template = "group",
+                                   rheader = lambda r: \
+                                                s3db.pr_rheader(r, tabs=tabs),
+                                   )
 
 # =============================================================================
 def hrm_human_resource_controller(extra_filter=None):
@@ -7144,8 +7072,7 @@ def hrm_human_resource_controller(extra_filter=None):
         return output
     s3.postp = postp
 
-    output = current.rest_controller("hrm", "human_resource")
-    return output
+    return current.rest_controller("hrm", "human_resource")
 
 # =============================================================================
 def hrm_person_controller(**attr):
@@ -7229,63 +7156,63 @@ def hrm_person_controller(**attr):
               deletable = False,
               )
 
-    mode = session.s3.hrm.mode
-    if mode is not None:
-        # Configure for personal mode
+    #mode = session.s3.hrm.mode
+    #if mode is not None:
+    #    # Configure for personal mode
+    #    s3.crud_strings[tablename].update(
+    #        title_display = T("Personal Profile"),
+    #        title_update = T("Personal Profile"))
+    #    # People can view their own HR data, but not edit it
+    #    # - over-ride in Template if need to make any elements editable
+    #    configure("hrm_human_resource",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = False,
+    #              )
+    #    configure("hrm_certification",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = False,
+    #              )
+    #    configure("hrm_credential",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = False,
+    #              )
+    #    configure("hrm_competency",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = True,  # Can add unconfirmed
+    #              )
+    #    configure("hrm_training",    # Can add but not provide grade
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = True,
+    #              )
+    #    configure("hrm_experience",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = False,
+    #              )
+    #    configure("pr_group_membership",
+    #              deletable = False,
+    #              editable = False,
+    #              insertable = False,
+    #              )
+    #else:
+    # Configure for HR manager mode
+    if settings.get_hrm_staff_label() == T("Contacts"):
         s3.crud_strings[tablename].update(
-            title_display = T("Personal Profile"),
-            title_update = T("Personal Profile"))
-        # People can view their own HR data, but not edit it
-        # - over-ride in Template if need to make any elements editable
-        configure("hrm_human_resource",
-                  deletable = False,
-                  editable = False,
-                  insertable = False,
-                  )
-        configure("hrm_certification",
-                  deletable = False,
-                  editable = False,
-                  insertable = False,
-                  )
-        configure("hrm_credential",
-                  deletable = False,
-                  editable = False,
-                  insertable = False,
-                  )
-        configure("hrm_competency",
-                  deletable = False,
-                  editable = False,
-                  insertable = True,  # Can add unconfirmed
-                  )
-        configure("hrm_training",    # Can add but not provide grade
-                  deletable = False,
-                  editable = False,
-                  insertable = True,
-                  )
-        configure("hrm_experience",
-                  deletable = False,
-                  editable = False,
-                  insertable = False,
-                  )
-        configure("pr_group_membership",
-                  deletable = False,
-                  editable = False,
-                  insertable = False,
-                  )
+                title_upload = T("Import Contacts"),
+                title_display = T("Contact Details"),
+                title_update = T("Contact Details")
+                )
     else:
-        # Configure for HR manager mode
-        if settings.get_hrm_staff_label() == T("Contacts"):
-            s3.crud_strings[tablename].update(
-                    title_upload = T("Import Contacts"),
-                    title_display = T("Contact Details"),
-                    title_update = T("Contact Details")
-                    )
-        else:
-            s3.crud_strings[tablename].update(
-                    title_upload = T("Import Staff"),
-                    title_display = T("Staff Member Details"),
-                    title_update = T("Staff Member Details")
-                    )
+        s3.crud_strings[tablename].update(
+                title_upload = T("Import Staff"),
+                title_display = T("Staff Member Details"),
+                title_update = T("Staff Member Details")
+                )
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
@@ -7426,21 +7353,21 @@ def hrm_person_controller(**attr):
                 table = s3db.hrm_human_resource
                 table.person_id.writable = table.person_id.readable = False
                 table.site_id.readable = table.site_id.writable = True
-                org = session.s3.hrm.org
-                f = table.organisation_id
-                if org is None:
-                    f.widget = None
-                    f.writable = False
-                else:
-                    f.default = org
-                    f.readable = f.writable = False
-                    table.site_id.requires = IS_EMPTY_OR(
-                        IS_ONE_OF(db,
-                                  "org_site.%s" % s3db.super_key(db.org_site),
-                                  s3db.org_site_represent,
-                                  filterby="organisation_id",
-                                  filter_opts=(session.s3.hrm.org,),
-                                  ))
+                #org = session.s3.hrm.org
+                #f = table.organisation_id
+                #if org is None:
+                #    f.widget = None
+                #    f.writable = False
+                #else:
+                #    f.default = org
+                #    f.readable = f.writable = False
+                #    table.site_id.requires = IS_EMPTY_OR(
+                #        IS_ONE_OF(db,
+                #                  "org_site.%s" % s3db.super_key(db.org_site),
+                #                  s3db.org_site_represent,
+                #                  filterby="organisation_id",
+                #                  filter_opts=(session.s3.hrm.org,),
+                #                  ))
             elif method == "cv" or r.component_name == "training":
                 list_fields = ["course_id",
                                "grade",
@@ -7453,9 +7380,9 @@ def hrm_person_controller(**attr):
                                )
 
             resource = r.resource
-            if mode is not None:
-                resource.build_query(id=auth.s3_logged_in_person())
-            elif method not in ("deduplicate", "search_ac"):
+            #if mode is not None:
+            #    resource.build_query(id=auth.s3_logged_in_person())
+            if method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
@@ -7506,10 +7433,7 @@ def hrm_person_controller(**attr):
     s3.postp = postp
 
     # REST Interface
-    if session.s3.hrm.orgname and mode is None:
-        orgname = session.s3.hrm.orgname
-    else:
-        orgname = None
+    #orgname = session.s3.hrm.orgname
 
     _attr = dict(csv_stylesheet = ("hrm", "person.xsl"),
                  csv_template = "staff",
@@ -7518,14 +7442,13 @@ def hrm_person_controller(**attr):
                                      ],
                  # Better in the native person controller (but this isn't always accessible):
                  #deduplicate = "",
-                 orgname = orgname,
+                 #orgname = orgname,
                  replace_option = T("Remove existing data before import"),
                  rheader = hrm_rheader,
                  )
     _attr.update(attr)
 
-    output = current.rest_controller("pr", "person", **_attr)
-    return output
+    return current.rest_controller("pr", "person", **_attr)
 
 # =============================================================================
 def hrm_training_controller():
@@ -7535,10 +7458,6 @@ def hrm_training_controller():
          - used for Searching for Participants
          - used for Adding/Editing on Profile page
     """
-
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
 
     s3db = current.s3db
 
@@ -7591,14 +7510,13 @@ def hrm_training_controller():
         return True
     current.response.s3.prep = prep
 
-    output = current.rest_controller("hrm", "training",
-                                     csv_stylesheet = ("hrm", "training.xsl"),
-                                     csv_template = ("hrm", "training"),
-                                     csv_extra_fields=[dict(label="Training Event",
-                                        field=s3db.hrm_training.training_event_id),
-                                        ],
-                                     )
-    return output
+    return current.rest_controller("hrm", "training",
+                                   csv_stylesheet = ("hrm", "training.xsl"),
+                                   csv_template = ("hrm", "training"),
+                                   csv_extra_fields=[dict(label="Training Event",
+                                                          field=s3db.hrm_training.training_event_id),
+                                                     ],
+                                   )
 
 # =============================================================================
 def hrm_training_event_controller():
@@ -7606,10 +7524,6 @@ def hrm_training_event_controller():
         Training Event Controller, defined in the model for use from
         multiple controllers for unified menus
     """
-
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
 
     s3 = current.response.s3
 
@@ -7692,10 +7606,9 @@ def hrm_training_event_controller():
     #    return output
     #s3.postp = postp
 
-    output = current.rest_controller("hrm", "training_event",
-                                     rheader = hrm_rheader,
-                                     )
-    return output
+    return current.rest_controller("hrm", "training_event",
+                                   rheader = hrm_rheader,
+                                   )
 
 # =============================================================================
 def hrm_xls_list_fields(r, staff=True, vol=True):
@@ -7850,7 +7763,11 @@ class hrm_CV(S3Method):
             def dt_row_actions(component, tablename):
                 def row_actions(r, list_id):
                     editable = get_config(tablename, "editable")
-                    deletable = get_config(tablename, "editable")
+                    if editable is None:
+                        editable = True
+                    deletable = get_config(tablename, "deletable")
+                    if deletable is None:
+                        deletable = True
                     if editable:
                         # HR Manager
                         actions = [{"label": T("Open"),
