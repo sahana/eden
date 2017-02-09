@@ -265,8 +265,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def pr(self):
         """ Person Registry """
 
-        if current.request.function == "person": 
-            # Training Center access to external Trainees (not Staff/Volunteers) 
+        if current.request.function == "person":
+            # Training Center access to external Trainees (not Staff/Volunteers)
             return self.hrm()
         else:
             return super(S3OptionsMenu, self).pr()
@@ -336,10 +336,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #    M("Search Members", f="group_membership"),
                         #    M("Import", f="group_membership", m="import"),
                         #),
-                        M("National Societies", c="org",
-                                                f="organisation",
-                                                vars=red_cross_filter,
-                          check=manager_mode)(
+                        M("National Societies", c="org", f="organisation",
+                          vars=red_cross_filter)(
                             M("Create", m="create",
                               vars=red_cross_filter
                               ),
