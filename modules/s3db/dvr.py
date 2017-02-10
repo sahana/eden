@@ -1370,6 +1370,7 @@ class DVRCaseActivityModel(S3Model):
              "dvr_case_activity_need",
              "dvr_case_service_contact",
              "dvr_provider_type",
+             "dvr_termination_type",
              )
 
     def model(self):
