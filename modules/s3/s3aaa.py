@@ -7423,9 +7423,6 @@ class S3RoleManager(S3Method):
             for i, role in enumerate(resource):
 
                 role_id = role.id
-                role_name = role.role
-                role_desc = role.description
-
                 actions = []
 
                 # Edit button to edit permissions of the role
@@ -7439,12 +7436,13 @@ class S3RoleManager(S3Method):
                     actions.append(edit_btn)
 
                 # Users button to manage users for this role
-                users_btn = A(T("Users"),
-                              _href=URL(c="admin", f="role",
-                                        args=[role_id, "users"],
-                                        ),
-                              _class="action-btn")
-                actions.append(users_btn)
+                if role_id != sr.ANONYMOUS:
+                    users_btn = A(T("Users"),
+                                  _href=URL(c="admin", f="role",
+                                            args=[role_id, "users"],
+                                            ),
+                                  _class="action-btn")
+                    actions.append(users_btn)
 
                 # Delete button to delete this role
                 if not role.protected and role_id not in undeletable:
@@ -7455,7 +7453,7 @@ class S3RoleManager(S3Method):
                                           ),
                                 _class="delete-btn")
                     actions.append(delete_btn)
-                tdata = [TD(actions), TD(role_name)]
+                tdata = [TD(actions), TD(role.role)]
 
                 if show_matrix:
                     # Display the permission matrix
@@ -7488,7 +7486,7 @@ class S3RoleManager(S3Method):
                         tdata += [TD(values, _nowrap="nowrap")]
                 else:
                     # Display role descriptions
-                    tdata += [TD(role_desc)]
+                    tdata += [TD(T(role.description))]
 
                 _class = i % 2 and "even" or "odd"
                 trows.append(TR(tdata, _class=_class))
