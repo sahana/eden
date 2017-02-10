@@ -237,12 +237,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         session_s3 = current.session.s3
         ADMIN = session_s3.system_roles.ADMIN
 
-        manager_mode = lambda i: session_s3.hrm.mode is None
-        #personal_mode = lambda i: session_s3.hrm.mode is not None
-
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff", #m="summary",
-                      check = manager_mode)(
+                    M(settings.get_hrm_staff_label(), f="staff")(
                         M("Create", m="create"),
                         M("Import", f="person", m="import", p="create",
                           vars = {"group": "staff"},

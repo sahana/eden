@@ -324,11 +324,22 @@ def config(settings):
                 # Filter activities
                 query = (FS("service_id$root_service").belongs(root_service_ids))
                 if r.representation == "json":
+
+                    import datetime
                     today = r.utcnow.date()
+                    fortnight = datetime.timedelta(days=14)
+
+                    # Filter by date
                     start_date = FS("start_date")
                     end_date = FS("end_date")
                     query &= ((start_date == None) | (start_date <= today)) & \
-                             ((end_date == None) | (end_date >= today))
+                             ((end_date == None) | (end_date >= today - fortnight))
+
+                    # Allow current value to remain
+                    include = r.get_vars.get("include")
+                    if include and include.isdigit():
+                        query |= (FS("id") == int(include))
+
                 r.resource.add_filter(query)
 
                 # Filter service selector
@@ -799,13 +810,37 @@ def config(settings):
             # Filter activities
             field = table.activity_id
             field.readable = field.writable = True
+
+            import datetime
             today = r.utcnow.date()
+            fortnight = datetime.timedelta(days=14)
+
             atable = s3db.dvr_activity
             stable = s3db.org_service
             left = stable.on(stable.id == atable.service_id)
             query = (stable.root_service.belongs(root_service_ids)) & \
                     ((atable.start_date == None) | (atable.start_date <= today)) & \
-                    ((atable.end_date == None) | (atable.end_date >= today))
+                    ((atable.end_date == None) | (atable.end_date >= today - fortnight))
+
+            current_activity_id = None
+            if r.component_id:
+
+                # Look up current activity_id
+                # => need to pass it to the Ajax-controller for filterOptionsS3,
+                #    otherwise it would remove the current value from the update
+                #    form when we're past the deadline
+                # => need to allow the current value to pass the validator on
+                #    update, otherwise update with unchanged value would fail
+                #    when we're past the deadline
+                component = r.component
+                component.load()
+                record = component.records().first()
+
+                if record:
+                    current_activity_id = record.activity_id
+                    if current_activity_id:
+                        query |= (atable.id == current_activity_id)
+
             field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query), "dvr_activity.id",
                                                    field.represent,
                                                    left = left,
@@ -815,10 +850,11 @@ def config(settings):
                script = '''$.filterOptionsS3({
 'trigger':'service_id',
 'target':'activity_id',
-'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&~.service_id='),
+'lookupURL': S3.Ap.concat('/dvr/activity.json?service_type=PSS&include=%s&~.service_id='),
 'fncRepresent': function(r){return r.service_id+' ('+(r.start_date||'..')+' - '+(r.end_date||'..')+') ('+(r.facilitator||'..')+')'},
 'optional': true
-})'''
+})''' % current_activity_id
+
                s3.jquery_ready.append(script)
 
             # No follow-ups for PSS
