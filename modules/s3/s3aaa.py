@@ -3652,23 +3652,34 @@ $.filterOptionsS3({
         table = self.settings.table_group
 
         if isinstance(role_id, str) and not role_id.isdigit():
-            gquery = (table.uuid == role_id)
+            query = (table.uuid == role_id)
         else:
             role_id = int(role_id)
-            gquery = (table.id == role_id)
+            query = (table.id == role_id)
 
-        role = db(gquery).select(limitby=(0, 1)).first()
+        role = db(query).select(table.id,
+                                table.protected,
+                                limitby=(0, 1),
+                                ).first()
+
         if role and not role.protected:
+
+            group_id = role.id
+            data = {"deleted": True,
+                    "group_id": None,
+                    "deleted_fk": '{"group_id": %s}' % group_id,
+                    }
+
             # Remove all memberships for this role
             mtable = self.settings.table_membership
-            mquery = (mtable.group_id == role.id)
-            db(mquery).update(deleted=True)
-            # Remove all ACLs for this role
+            db(mtable.group_id == group_id).update(**data)
+
+            # Remove all permission rules for this role
             ptable = self.permission.table
-            pquery = (ptable.group_id == role.id)
-            db(pquery).update(deleted=True)
+            db(ptable.group_id == group_id).update(**data)
+
             # Remove the role
-            db(gquery).update(role=None, deleted=True)
+            role.update_record(role=None, deleted=True)
 
     # -------------------------------------------------------------------------
     def s3_assign_role(self, user_id, group_id, for_pe=None):
