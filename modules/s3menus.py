@@ -1091,7 +1091,9 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Search by Skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
-                          vars={"group":"staff"}, p="create"),
+                          vars = {"group": "staff"},
+                          p = "create",
+                          ),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="hrm", f="human_resource", m="summary", check=vol_enabled),
@@ -1126,7 +1128,8 @@ class S3OptionsMenu(object):
                     M("Reports", f="staff", m="report")(
                         M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
-                          vars=dict(expiring=1)),
+                          vars = {"expiring": 1},
+                          ),
                         M("Training Report", f="training", m="report"),
                     ),
                 )
@@ -1141,8 +1144,6 @@ class S3OptionsMenu(object):
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        #manager_mode = lambda i: s3.hrm.mode is None
-        #personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
 
@@ -1161,7 +1162,9 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Search by skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
-                          vars={"group":"volunteer"}, p="create"),
+                          vars = {"group": "volunteer"},
+                          p = "create",
+                          ),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="vol", f="human_resource", m="summary", check=show_staff),
@@ -1200,15 +1203,19 @@ class S3OptionsMenu(object):
                     M("Reports", f="volunteer", m="report")(
                         M("Volunteer Report", m="report"),
                         M("Hours by Role Report", f="programme_hours", m="report",
-                          vars=Storage(rows="job_title_id",
-                                       cols="month",
-                                       fact="sum(hours)"),
-                          check=show_programmes),
+                          vars = {"rows": "job_title_id",
+                                  "cols": "month",
+                                  "fact": "sum(hours)",
+                                  },
+                          check = show_programmes,
+                          ),
                         M("Hours by Program Report", f="programme_hours", m="report",
-                          vars=Storage(rows="programme_id",
-                                       cols="month",
-                                       fact="sum(hours)"),
-                          check=show_programmes),
+                          vars = {"rows": "programme_id",
+                                  "cols": "month",
+                                  "fact": "sum(hours)",
+                                  },
+                          check = show_programmes,
+                          ),
                         M("Training Report", f="training", m="report"),
                     ),
                 )

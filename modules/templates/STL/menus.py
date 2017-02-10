@@ -156,16 +156,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           restrict = ("GROUP_ACTIVITIES",),
                           ),
                         M("Mental Health Support", f="activity",
-                          vars={"service_type": "MH"},
+                          vars = {"service_type": "MH"},
                           restrict = ("MENTAL_HEALTH",),
                           ),
                         ),
                     M("Archive", link=False)(
                         M("Former Beneficiaries", f="person",
-                          vars={"closed": "1"},
+                          vars = {"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
-                          vars={"archived": "1"},
+                          vars = {"archived": "1"},
                           ),
                         ),
                     M("Administration", c="dvr", link=False,
@@ -244,9 +244,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars = {"group": "staff"},
                           ),
                       ),
-                    M("Job Title Catalog", f="job_title",
-                      check = manager_mode,
-                      restrict = [ADMIN])(
+                    M("Job Title Catalog", f="job_title", restrict=[ADMIN])(
                         M("Create", m="create"),
                       ),
                     )
