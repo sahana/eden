@@ -44,6 +44,27 @@
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="PersonGender">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="MiddleName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MiddleName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="LastName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">LastName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
     <xsl:key name="courses" match="row" use="col[@field='Course']"/>
     <xsl:key name="organisations" match="row" use="col[@field='Trainee Organisation']"/>

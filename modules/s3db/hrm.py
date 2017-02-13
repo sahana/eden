@@ -6778,6 +6778,10 @@ def hrm_human_resource_controller(extra_filter=None):
                                    # Default renderer:
                                    #list_layout = s3db.pr_render_contact,
                                    orderby = "priority asc",
+                                   # Can't do this as this is the HR perspective, not Person perspective
+                                   #create_controller = c,
+                                   #create_function = "person",
+                                   #create_component = "contact",
                                    )
             address_widget = dict(label = "Address",
                                   label_create = "Add Address",
@@ -6787,47 +6791,63 @@ def hrm_human_resource_controller(extra_filter=None):
                                   icon = "home",
                                   # Default renderer:
                                   #list_layout = s3db.pr_render_address,
+                                  # Can't do this as this is the HR perspective, not Person perspective
+                                  #create_controller = c,
+                                  #create_function = "person",
+                                  #create_component = "address",
                                   )
             credentials_widget = dict(# @ToDo: deployment_setting for Labels
                                       label = "Sectors",
                                       label_create = "Add Sector",
-                                      create_controller = c,
                                       type = "datalist",
                                       tablename = "hrm_credential",
                                       filter = FS("person_id") == person_id,
                                       icon = "tags",
                                       # Default renderer:
                                       #list_layout = hrm_credential_list_layout,
+                                      create_controller = c,
+                                      # Can't do this as this is the HR perspective, not Person perspective
+                                      #create_function = "person",
+                                      #create_component = "credential",
                                       )
             skills_widget = dict(label = "Skills",
                                  label_create = "Add Skill",
-                                 create_controller = c,
                                  type = "datalist",
                                  tablename = "hrm_competency",
                                  filter = FS("person_id") == person_id,
                                  icon = "comment-alt",
                                  # Default renderer:
                                  #list_layout = hrm_competency_list_layout,
+                                 create_controller = c,
+                                 # Can't do this as this is the HR perspective, not Person perspective
+                                 #create_function = "person",
+                                 #create_component = "competency",
                                  )
             trainings_widget = dict(label = "Trainings",
                                     label_create = "Add Training",
-                                    create_controller = c,
                                     type = "datalist",
                                     tablename = "hrm_training",
                                     filter = FS("person_id") == person_id,
                                     icon = "wrench",
                                     # Default renderer:
                                     #list_layout = hrm_training_list_layout,
+                                    create_controller = c,
+                                    # Can't do this as this is the HR perspective, not Person perspective
+                                    #create_function = "person",
+                                    #create_component = "training",
                                     )
             experience_widget = dict(label = "Experience",
                                      label_create = "Add Experience",
-                                     create_controller = c,
                                      type = "datalist",
                                      tablename = "hrm_experience",
                                      filter = FS("person_id") == person_id,
                                      icon = "truck",
                                      # Default renderer:
                                      #list_layout = hrm_experience_list_layout,
+                                     create_controller = c,
+                                     # Can't do this as this is the HR perspective, not Person perspective
+                                     #create_function = "person",
+                                     #create_component = "experience",
                                      )
             docs_widget = dict(label = "Documents",
                                label_create = "Add Document",
@@ -6844,6 +6864,10 @@ def hrm_human_resource_controller(extra_filter=None):
                                     tablename = "pr_education",
                                     filter = FS("person_id") == person_id,
                                     icon = "book",
+                                    # Can't do this as this is the HR perspective, not Person perspective
+                                    #create_controller = c,
+                                    #create_function = "person",
+                                    #create_component = "education",
                                     )
             profile_widgets = [contacts_widget,
                                address_widget,

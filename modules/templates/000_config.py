@@ -136,7 +136,7 @@ settings.frontpage.rss = [
 # Bing API Key (for Map layers)
 # http://www.microsoft.com/maps/create-a-bing-maps-key.aspx
 #settings.gis.api_bing = ""
-# Google API Key (for Earth & MapMaker Layers)
+# Google API Key (for Google Maps Layers)
 # default works for localhost
 #settings.gis.api_google = ""
 # Yahoo API Key (for Geocoder)
