@@ -508,6 +508,9 @@ class S3Migration(object):
                 {"c": "org", "f": "sites_for_org", "uacl": acl.READ},
         )
 
+        # Allow loading of Org model w/o crashing
+        current.response.s3.crud_strings = Storage()
+
         # Import the new ACLs
         from s3 import S3BulkImporter
         bi = S3BulkImporter()
