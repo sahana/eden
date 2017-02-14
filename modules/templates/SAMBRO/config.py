@@ -1046,6 +1046,8 @@ def config(settings):
         instruction = row["cap_info.instruction"]
         description = row["cap_info.description"]
         status = row["cap_alert.status"]
+        msg_type = row["cap_alert.msg_type"]
+        note = row["cap_alert.note"]
 
         if event_type_id and event_type_id != current.messages["NONE"]:
             if not isinstance(event_type_id, lazyT) and \
@@ -1075,18 +1077,25 @@ def config(settings):
                          A(T("VIEW ALERT ON THE WEB"),
                            _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile")),
                          BR(), BR(),
-                         B(s3_str("%s %s Alert" % (T(row["cap_alert.scope"]),
-                                                   T(status)
+                         B(s3_str("%s %s %s %s" % (T(row["cap_alert.scope"]),
+                                                   T(status),
+                                                   T("Alert") if msg_type != "Alert" else "",
+                                                   s3_str(msg_type)
                                                    ))),
                          H2(T(s3_str(get_formatted_value(row["cap_info.headline"],
                                                          system=system)))),
                          BR(),
+                         T("Note: %(note)s") % \
+                         {"note": s3_str(note)}
+                         if note else "",
+                         BR() if note else "",
+                         BR() if note else "",
                          T("ID: %(identifier)s") % \
                          {"identifier": s3_str(row["cap_alert.identifier"])},
                          BR(), BR(),
                          T("""%(priority)s message %(message_type)s in effect for %(area_description)s""") % \
                          {"priority": s3_str(priority),
-                          "message_type": s3_str(row["cap_alert.msg_type"]),
+                          "message_type": s3_str(msg_type),
                           "area_description": s3_str(get_formatted_value(row["cap_area.name"],
                                                                          system=system)),
                          },
