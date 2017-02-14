@@ -1400,9 +1400,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     divider["_aria-hidden"] = "true"
 
     toolbar = UL(LI(A(ICON("share"),
-                      " Share",
+                      SPAN("share this",
+                           _class = "show-for-sr",
+                           ),
                       _href="#",
-                      _class="button secondary tiny",
+                      _title="Share",
                       ),
                     _class="item",
                     ),
@@ -1418,7 +1420,6 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                  LI(bookmark_btn,
                     _class="item",
                     ),
-                 divider,
                  LI(A(I(_class="fa fa-users",
                         ),
                       SPAN("make public",
@@ -1435,8 +1436,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                  LI(delete_btn,
                     _class="item",
                     ),
-                 #_class="inline-list right",
-                 _class="right",
+                 _class="controls inline-list right",
                  )
 
     #if settings.get_cms_show_tags():
@@ -1454,31 +1454,30 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                ))
 
     item = TAG["ARTICLE"](TAG["HEADER"](UL(# post priority icon
-                                           LI(SPAN(_class="dl-priority dl-icon-alert",
-                                                   ),
-                                              _class="icon",
+                                           LI(_class="item icon",
                                               ),
                                            # post type title
                                            LI(series_title,
-                                              _class="title",
+                                              _class="item primary",
                                               ),
                                            # post status
                                            LI(status,
-                                              _class="item borders",
+                                              _class="item secondary border status",
                                               ),
                                            # post visibility
                                            # @ToDo: Read the visibility
                                            LI(T("Public"),
-                                              _class="item borders",
+                                              _class="item secondary border",
                                               ),
+                                           _class="status-bar-left left inline-list"
                                            ),
                                         toolbar,
-                                        _class="left",
+                                        _class="status-bar clearfix",
                                         ),
                           DIV(P(TAG["TIME"](date),
                                 " by ",
                                 person,
-                                "&mdash;",
+                                " – ",
                                 # @ToDo: Make comments work
                                 A("0 Comments",
                                   #_href="#update-1-comments",
@@ -1489,7 +1488,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                               _class="dl-body",
                               ),
                           TAG["FOOTER"](tag_list,
-                                        _class="clearfix",
+                                        _class="footer clearfix",
                                         ),
                           #_class="panel",
                           _id=item_id,
