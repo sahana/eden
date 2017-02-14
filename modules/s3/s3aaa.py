@@ -3013,79 +3013,102 @@ $.filterOptionsS3({
 
         if not htable or (not organisation_id and \
                           settings.get_hrm_org_required()):
+            # Module disabled or no user organisation set
             return None
 
-        # Update existing HR record for this user
-        if hr_type == 1:
-            site_id = user.site_id
-        else:
-            site_id = None
+        def customise():
+            """ Customise hrm_human_resource """
+            customise = settings.customise_resource(htablename)
+            if customise:
+                request = S3Request("hrm", "human_resource",
+                                    current.request,
+                                    args = [str(hr_id)],
+                                    )
+                customise(request, htablename)
+
+        # Determine the site ID
+        site_id = user.site_id if hr_type == 1 else None
+
+        # Get existing active HR record for this user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        query = (htable.deleted == False) & \
-                (htable.status == 1) & \
-                (htable.type == hr_type) & \
-                (htable.person_id == ptable.id) & \
+        query = (ltable.user_id == user_id) & \
                 (ptable.pe_id == ltable.pe_id) & \
-                (ltable.user_id == user_id)
-        rows = db(query).select(htable.id,
-                                limitby=(0, 2))
-        if len(rows) == 1:
-            # Only update if there is a single HR Record
-            hr_id = rows.first().id
-            db(htable.id == hr_id).update(organisation_id = organisation_id,
-                                          site_id = site_id)
-            # Update record ownership
-            self.s3_set_record_owner(htable, hr_id, force_update=True)
+                (htable.person_id == ptable.id) & \
+                (htable.type == hr_type) & \
+                (htable.status == 1) & \
+                (htable.deleted == False)
+        rows = db(query).select(htable.id, limitby=(0, 2))
 
-            # Update Site link
+        accepted = None
+        if len(rows) == 1:
+            # Single active HR record of this type
+            # => update organisation and site
+            record = rows.first()
+            hr_id = record.id
+
+            # Update the record
+            customise()
+            db(htable.id == hr_id).update(organisation_id = organisation_id,
+                                          site_id = site_id,
+                                          )
+            accepted = "update"
+
+            # Update or create site link
             hstable = s3db.hrm_human_resource_site
             query = (hstable.human_resource_id == hr_id)
-            row = db(query).select(hstable.id,
-                                    limitby=(0, 1)).first()
-            if row:
-                db(query).update(site_id = site_id,
-                                 human_resource_id = hr_id,
-                                 owned_by_user = user_id)
+            hstable.update_or_insert(query,
+                                     site_id = site_id,
+                                     human_resource_id = hr_id,
+                                     owned_by_user = user_id,
+                                     )
+        else:
+            # Multiple or no HR records of this type
+
+            if rows:
+                # Multiple records
+                # => check if there is one for this organisation and site
+                if type(person_id) is list:
+                    person_id = person_id[0]
+                query = (htable.person_id == person_id) & \
+                        (htable.organisation_id == organisation_id) & \
+                        (htable.type == hr_type) & \
+                        (htable.site_id == site_id) & \
+                        (htable.deleted == False)
+                row = db(query).select(htable.id, limitby=(0, 1)).first()
             else:
-                hstable.insert(site_id=site_id,
-                               human_resource_id=hr_id,
-                               owned_by_user=user_id)
+                # No HR record exists at all
+                row = None
 
-        # Create an HR record, if one doesn't already exist
-        if isinstance(person_id, list):
-            person_ids = person_id
-        else:
-            person_ids = [person_id]
-        query = (htable.person_id.belongs(person_ids)) & \
-                (htable.organisation_id == organisation_id) & \
-                (htable.type == hr_type) & \
-                (htable.site_id == site_id)
-        row = db(query).select(htable.id, limitby=(0, 1)).first()
+            if row:
+                # At least one record for this organisation and site exists
+                # => pass
+                hr_id = row.id
 
-        if row:
-            hr_id = row.id
-        else:
-            record = Storage(person_id=person_ids[0],
-                             organisation_id=organisation_id,
-                             site_id = site_id,
-                             type=hr_type,
-                             owned_by_user=user_id,
-                             )
-            hr_id = htable.insert(**record)
-            if hr_id:
+            else:
+                # Create new HR record
+                customise()
+                record = Storage(person_id=person_id,
+                                 organisation_id=organisation_id,
+                                 site_id = site_id,
+                                 type=hr_type,
+                                 owned_by_user=user_id,
+                                 )
+                hr_id = htable.insert(**record)
                 record["id"] = hr_id
-                s3db.update_super(htable, record)
-                # Customise the resource
-                customise = settings.customise_resource(htablename)
-                if customise:
-                    request = S3Request("hrm", "human_resource",
-                                        current.request,
-                                        args=[str(hr_id)])
-                    customise(request, htablename)
+                accepted = "create"
 
-                self.s3_set_record_owner(htable, hr_id)
-                s3db.onaccept(htablename, record, method="create")
+        if hr_id and accepted:
+
+            # Update any super-records
+            s3db.update_super(htable, record)
+
+            # Set or update the record owner and realm entity
+            # (enforce update to change realm if organisation changed)
+            self.s3_set_record_owner(htable, hr_id, force_update=True)
+
+            # Run onaccept
+            s3db.onaccept(htablename, record, method=accepted)
 
         return hr_id
 
