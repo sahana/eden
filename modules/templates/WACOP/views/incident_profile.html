@@ -1,14 +1,12 @@
 {{extend "layout.html"}}
 {{if ADMIN or system_wide:}}
-<div role='complementary' class='row panel callout'>
- <div class='row'>
-  <div class='large-9 small-12 columns'>
-   <p>{{if system_wide:}}{{=system_wide}}{{pass}}</p>
+<div class="row">
+  <div role='complementary' class='alert-box'>
+    {{if ADMIN:}}
+    <a href='{{=URL(c="cms", f="post", args="update", vars={"page": "SYSTEM_WIDE"})}}' class='button secondary tiny right'>Edit System-wide Alert</a>
+    {{pass}}
+    <h2>{{if system_wide:}}{{=system_wide}}{{pass}}</h2>
   </div>
-  {{if ADMIN:}}
-  <p class='large-3 small-12 columns text-right'><a href='{{=URL(c="cms", f="post", args="update", vars={"page": "SYSTEM_WIDE"})}}' class='button button-info tiny'>Edit System-wide Alert</a></p>
-  {{pass}}
- </div>
 </div>
 {{pass}}
 {{if event:}}
@@ -34,183 +32,422 @@
  </div>
 </div>
 {{pass}}
-<div class='row panel incident-profile'>
- <div class='large-8 columns'>
-  <div class='incident panel'>
-   <header class='row incident-header active'>
-    <div class='incident-control clearfix'>
-     <p class='left'>
-     {{if active:}}Active{{else:}}Inactive{{pass}} <small>(<a href='#modal-incident-status' data-reveal-id='modal-incident-status'>change status</a>)</small>
-     </p>
-     <ul class='inline-list right'>
-      <li class='item'><a href='#' class='button secondary tiny'><span class='fa fa-share-alt'></span> Share</a></li>
-      <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
-      <li class='item'>{{=bookmark_btn}}</li>
-      <li class='item'><a href='#' title='comment'><i class='fa fa-comment'><span class='show-for-sr'>comment</span></i></a></li>
-      {{if updateable:}}
-      <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
-      <li aria-hidden='true'>|</li>
-      <li class='item'><a href='#' title='edit'><i class='fa fa-edit'><span class='show-for-sr'>edit</span></i></a></li>
-      <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
-      {{pass}}
-     </ul>
-    </div>
-    <div id='modal-incident-status' class='reveal-modal' data-reveal aria-labelledby='modalIncidentStatus' aria-hidden='true' role='dialog'>
-     <h4 id='modalIncidentStatusTitle'>Change Status of Incident</h4>
-     <form>
-      <select name='incident-status'>
-       <option value='active'{{if active:}} 'selected'{{pass}}>active</option>
-       <option value='inactive'{{if not active:}} 'selected'{{pass}}>inactive</option>
-       <!--<option value='pending'>pending</option>-->
-      </select>
-      <input class='button' type='submit' name='incident-status-submit' value='Change Status'>
-     </form>
-     <a class='close-reveal-modal' aria-label='Close'>&#215;</a>
-    </div>
-   </header>
-   <div class='row incident-content'>
-    <div class='clearfix'>
-     <div class='incident-content-summary large-10 columns'>
-      <h4>{{=name}}</h4>
-      <p>Last updated on {{=modified_on}}</p>
-      <p class='incident-labels'>
-       {{if incident_type:}}<span class='label info'>{{=incident_type}}</span>{{pass}}
-      </p>
-      {{=incident_tags}}
-     </div>
-     <!--
-     <figure class='large-2 columns organization-logo'>
-      <img src='img/spd.png' alt='' />
-      <figcaption>Seattle Police Department</figcaption>
-     </figure>-->
-    </div>
-    <div class='incident-description'>
-     <div class='incident-updates row'>
-      <p class='zero-hour small-6 columns'>Zero hour: <i class='fa fa-calendar'></i> <input type='date' name='closedat' value='{{=start_date}}' disabled></p>
-      <p class='small-6 columns'>Closed at: <input type='date' name='closedat' value='{{=end_date}}'></p>
-     </div>
-     <p>
-      <i class='fa fa-marker'></i> Street address: <input type='text' name='incident-street' value='{{=addr_street}}'>
-     </p>
-     <div class='row'>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> City: <input type='text' name='incident-city' value='{{=L3}}' disabled>
-      </p>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> State:
-       <select name='incident-state'>
-        <option>{{=L1}}</option>
-       </select>
-      </p>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> ZIP Code: <input type='text' name='incident-zip' value='{{=postcode}}'>
-      </p>
-     </div>
-     <div class='row'>
-      <p class='small-6 columns'>Latitude: <i class='fa fa-marker'></i> <input type='text' name='latitude' value='{{=lat}}' disabled></p>
-      <p class='small-6 columns'>Longitude: <i class='fa fa-marker'></i> <input type='text' name='longitude' value='{{=lon}}' disabled></p>
-     </div>
-     <h5>Incident Description:</h5>
-     <p>{{=description}}</p>
-    </div>
-   </div>
+<div class='row'>
+
+  <div class='small-12 large-6 large-push-6 columns'>
+    <h6 class='show-for-sr'>This incident on the map:</h6>
+    <iframe class='incident-map' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
   </div>
- </div>
- <div class='large-4 columns'>
-  <h3 class='show-for-sr'>This incident on the map:</h3>
-  <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
- </div>
- <div class='large-4 columns'>
-  <section>
-   <h3>Resources</h3>
-   <div class='row collapse prefix-radius'>
-    <div class='large-3 columns'>
-     <label for='event_team-search' class='prefix'>Search:</label>
+  <div class='small-12 large-6 large-pull-6 columns'>
+  
+    <div class="incident-profile">
+      
+      <header class='row incident-header info-bar {{if active:}}active{{else:}}inactive{{pass}}'>
+        <ul class="left">
+          {{# Would rather have a single variable that delivers the incident status}}
+          <li class="title">{{if active:}}Active{{else:}}Inactive{{pass}}</li>
+        </ul>
+        <ul class='right'>
+          <li class='item'>{{=flag_btn}}</li>
+          <li class='item'>{{=bookmark_btn}}</li>
+          {{if updateable:}}
+          <li class='item'>{{=share_btn}}</li>
+          <li class='item'><a href='#modal-incident-edit' data-reveal-id='modal-incident-edit' title='edit'><i class='fa fa-edit'><span class='show-for-sr'>edit</span></i></a></li>
+          <li class='item'>{{=trash_btn}}</li>
+          {{pass}}
+        </ul>
+      </header>
+      
+      <section class="row incident-body">
+
+        <div class='row incident-summary'>
+          <div class="small-12 column">
+            <h1 class="title">{{=name}}</h1>
+            <h6 class="meta">updated {{=modified_on}} by {{=modified_by}}
+              {{#incident_tags_list}}
+              <ul class="tags">
+                <li class="tag"><a href="#">Terrorism</a></li>
+                <li class="tag"><a href="#">Bomb</a></li>
+                <li class="tag"><a href="#">Crime</a></li>
+                <li class="tag"><a href="#">Alert</a></li>
+              </ul>
+              {{#end incident_tags_list}}
+            </h6>
+          </div>
+        </div>
+
+        <div class="row" data-equalizer>
+          <div class="medium-6 columns">
+            <section class="incident-data" data-equalizer-watch>
+              <p class="adr">
+                <span class="street-address">123 Fake Street</span><br>
+                <!-- <span class="street-address-2"></span><br> -->
+                <span class="city">Seattle</span>,
+                <span class="region">WA</span>
+                <span class="postal-code">12345</span><br>
+                <!-- <span class="country-name">USA</span> -->
+              </p>
+              <h6 class="meta loc">
+                <i class='fa fa-map-marker'></i>
+                <span class="lat">39.702961</span>,
+                <span class="lon">-81.738281</span>
+              </h6>
+            </section>
+          </div>
+          <div class="medium-6 columns">
+            <section class="incident-data" data-equalizer-watch>
+              <h6 class="meta">Zero Hour</h6>
+              <p>{{=start_date}}</p>
+              <h6 class="meta">Close At</h6>
+              <p>October 31, 2016 @ 14:15</p>
+            </section>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class='incident-description small-12 columns'>
+            <p>{{=description}}</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class='incident-resources small-12 columns'>
+            <h2>Resources</h2>
+            <div class="row">
+              <div class="medium-4 small-12 columns">
+                <div class='row collapse'>
+                  <div class='small-4 medium-4 columns'>
+                    <label for='event_team-search' class='prefix'>Search:</label>
+                  </div>
+                  <div class='small-5 medium-8 columns' id='dt-search-event_team'></div>
+                  <div class='small-3 medium-12 columns'>
+                    {{=create_event_team_popup}}
+                  </div>
+                </div>
+              </div>
+              <div class="medium-8 small-12 columns">
+                <div id='dt-event_team'>
+                  {{=event_team_datatable}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Modal for edit, probably should be converted to jQuer UI element -->
+      <div id='modal-incident-edit' class='reveal-modal' data-reveal aria-labelledby='modalIncidentEdit' aria-hidden='true' role='dialog'>
+       <h4 id='modalIncidentEditTitle'>Edit Incident</h4>
+       <form class="incident-updates">
+         <div class="row">
+           <div class="small-12 column">
+            <h6 class="meta">Incident Tags</h6>
+            {{=incident_tags}}
+          </div>
+         </div>
+         <div class="row">
+           <div class="small-6 columns">
+             <label>
+               Zero hour
+               <input type="date" name="zerodat" value="{{=start_date}}" disabled>
+             </label>
+           </div>
+           <div class="small-6 columns">
+             <label>
+               Closed at
+               <input type="date" name="closedat" value="{{=end_date}}">
+             </label>
+           </div>
+         </div>
+       </form>
+       <form class="incident-location">
+         <div class="row">
+           <div class="small-12 columns">
+             <label>
+               Street address
+               <input type='text' name='incident-street' value='{{=addr_street}}'>
+             </label>
+           </div>
+         </div>
+         <div class="row">
+           <div class="small-6 columns">
+             <label>
+               City
+               <input type='text' name='incident-city' value='{{=L3}}' disabled>
+             </label>
+           </div>
+           <div class="small-2 columns">
+             <label>
+               State
+               <select name='incident-state'>
+                 <option>{{=L1}}</option>
+               </select>
+             </label>
+           </div>
+           <div class="small-4 columns">
+             <label>
+               ZIP Code
+               <input type='text' name='incident-zip' value='{{=postcode}}'>
+             </label>
+           </div>
+         </div>
+         <div class="row">
+           <div class="medium-6 columns">
+             <label>
+               Latitude
+               <input type='text' name='latitude' value='{{=lat}}' disabled>
+             </label>
+           </div>
+           <div class="medium-6 columns">
+             <label>
+               Longitude
+               <input type='text' name='longitude' value='{{=lon}}' disabled>
+             </label>
+           </div>
+         </div>
+       </form>
+       <a class='close-reveal-modal' aria-label='Close'>&#215;</a>
+      </div>
+      <!-- end edit modal -->
+
     </div>
-    <div class='large-6 columns' id='dt-search-event_team'></div>
-    <div class='large-3 columns'>
-     {{=create_event_team_popup}}
-    </div>
-   </div>
-   <div id='dt-event_team'>
-    {{=event_team_datatable}}
-   </div>
-  </section>
- </div>
+  </div>
 </div>
 <hr>
 <div class='row'>
- <ul class='tabs tab-navigation' data-tab>
-  <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-  <li class='tab-title'><a href='#panel2'>Directories</a></li>
-  <li class='tab-title'><a href='#panel3'>Tasks</a></li>
- </ul>
- <div class='tabs-content panel'>
-  <div class='content active' id='panel1'>
-   <div class='row'>
-    <div class='large-3 columns'>
-     {{=filter_form}}
+  <ul class='tabs tab-navigation' data-tab>
+    <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+    <li class='tab-title'><a href='#panel2'>Directories</a></li>
+    <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+  </ul>
+  <div class='tabs-content'>
+    <div class='content active' id='panel1'>
+      <div class='row'>
+        <div class='large-3 columns'>
+          <div class="panel">
+            <a href='#modal-post-update' class="button wide radius" data-reveal-id='modal-post-update' title='add update'><i class='fa fa-plus'></i> Add Update</a>
+          </div>
+          <div class="panel">
+            {{=filter_form}}
+          </div>
+        </div>
+        <div class='large-9 columns'>
+          {{if create_post_form:}}
+          <div id='modal-post-update' class='reveal-modal' data-reveal aria-labelledby='modalPostUpdate' aria-hidden='true' role='dialog'>
+          <h4 id='modalPostUpdateTitle'>New Update</h4>
+          {{=create_post_form}}
+          <a class='close-reveal-modal' aria-label='Close'>&#215;</a>
+          </div>
+          {{pass}}
+          <ul class='dl' id="updates_datalist">
+            {{#updates_datalist}}
+            <!-- Data List Flat HTML -->
+            <!-- only li elements can be the direct child of a ul -->
+            <!-- <li class="dl-header" id="updates_datalist-header">Total Records: 1</li> -->
+            <li class="dl-empty" style="display:none">No Matching Records</li>
+            <li class="dl-row even">
+              <article class="dl-item dl-1-cols dl-col-0" id="updates_datalist-3">
+            
+                <header class="info-bar">
+                  <ul class="left">
+                    <!-- post priority icon -->
+                    <li class="icon"><span class="dl-priority dl-icon-post"></span></li>
+                    <!-- post type title -->
+                    <li class="title">Post</li>
+                    <!-- post status -->
+                    <li class="item borders">Active</li>
+                    <!-- post visibility -->
+                    <li class="item borders">Public</li>
+                  </ul>
+            
+                  <ul class="right">
+                    <li class="item"></li>
+                    <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
+                    <li class='item'><a title="Add Bookmark"><i class="fa-bookmark-o fa"></i><span class="show-for-sr">bookmark</span></a></li>
+                    <li class='item'><a title="Add Comment"><i class="fa-comment fa"></i><span class="show-for-sr">comment</span></a></li>
+                    <li class='item'><a href='#'><i class='fa fa-share-alt'></i><span class="show-for-sr">share</span></a></li>
+                    <li class='item'><a href='#' title='edit'><i class='fa fa-pencil'><span class='show-for-sr'>edit</span></i></a></li>
+                    <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
+                  </ul>
+                </header>
+
+                <!-- main body -->
+                <div class="dl-body">
+                  <!-- meta data about update -->
+                  <p class="dl-meta"><time>Dec 11 2016 19:57</time> by <a href="/eden/hrm/person/1">admin@example.com</a> &mdash; <a href="#update-1-comments">0 Comments</a></p>
+                  
+                  <p class="s3-truncate">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim tenetur, at numquam sed corporis, suscipit natus accusantium. Magni atque qui, amet. Reprehenderit voluptatem aliquid quos dolore consequatur accusamus deleniti repellat.</p>
+                  
+                  <!-- if truncated -->
+                  <p class="dl-more"><a href="#">More Info</a></p>
+                </div>
+
+                <footer class="clearfix">
+                  <!-- tagit for update -->
+                  <ul class="left inline-list s3-tags tagit ui-widget ui-widget-content ui-corner-all" data-post_id="3"></ul>
+                </footer>
+              </article>
+            </li>
+            <li class="dl-row odd">
+              <article class="dl-item dl-1-cols dl-col-0" id="updates_datalist-3">
+            
+                <header class="info-bar">
+                  <ul class="left">
+                    <!-- post priority icon -->
+                    <li class="icon"><span class="dl-priority dl-icon-alert"></span></li>
+                    <!-- post type title -->
+                    <li class="title">Post</li>
+                    <!-- post status -->
+                    <li class="item borders">Active</li>
+                    <!-- post visibility -->
+                    <li class="item borders">Public</li>
+                  </ul>
+            
+                  <ul class="right">
+                    <li class="item"></li>
+                    <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
+                    <li class='item'><a title="Add Bookmark"><i class="fa-bookmark-o fa"></i><span class="show-for-sr">bookmark</span></a></li>
+                    <li class='item'><a title="Add Comment"><i class="fa-comment fa"></i><span class="show-for-sr">comment</span></a></li>
+                    <li class='item'><a href='#'><i class='fa fa-share-alt'></i><span class="show-for-sr">share</span></a></li>
+                    <li class='item'><a href='#' title='edit'><i class='fa fa-pencil'><span class='show-for-sr'>edit</span></i></a></li>
+                    <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
+                  </ul>
+                </header>
+
+                <!-- main body -->
+                <div class="dl-body">
+                  <!-- meta data about update -->
+                  <p class="dl-meta"><time>Dec 11 2016 19:57</time> by <a href="/eden/hrm/person/1">admin@example.com</a> &mdash; <a href="#update-1-comments">0 Comments</a></p>
+                  
+                  <p class="s3-truncate">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim tenetur, at numquam sed corporis, suscipit natus accusantium. Magni atque qui, amet. Reprehenderit voluptatem aliquid quos dolore consequatur accusamus deleniti repellat.</p>
+                  
+                  <!-- if truncated -->
+                  <p class="dl-more"><a href="#">More Info</a></p>
+                </div>
+
+                <footer class="clearfix">
+                  <!-- tagit for update -->
+                  <ul class="left inline-list s3-tags tagit ui-widget ui-widget-content ui-corner-all" data-post_id="3"></ul>
+                </footer>
+                <!-- Comment on Data List Item (no set on this class name) -->
+                <ul class="dl-comment">
+                  <li class="dl-row">
+                    <article class="dl-item">
+                      <div class="dl-body">
+                        <p class="dl-meta"><time>Dec 11 2016 19:57</time> by <a href="/eden/hrm/person/1">admin@example.com</a> &mdash; <a href="#update-1-comments">0 Comments</a></p>
+                        
+                        <p class="s3-truncate">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim tenetur, at numquam sed corporis, suscipit natus accusantium. Magni atque qui, amet. Reprehenderit voluptatem aliquid quos dolore consequatur accusamus deleniti repellat.</p>
+                        
+                        <!-- if truncated -->
+                        <p class="dl-more"><a href="#">More Info</a></p>
+                      </div>
+                    </article>
+                  </li>
+                </ul>
+              </article>
+            </li>
+            <li class="dl-row even">
+              <article class="dl-item dl-1-cols dl-col-0" id="updates_datalist-3">
+            
+                <header class="info-bar">
+                  <ul class="left">
+                    <!-- post priority icon -->
+                    <li class="icon"><span class="dl-priority dl-icon-rep"></span></li>
+                    <!-- post type title -->
+                    <li class="title">Post</li>
+                    <!-- post status -->
+                    <li class="item borders">Active</li>
+                    <!-- post visibility -->
+                    <li class="item borders">Public</li>
+                  </ul>
+            
+                  <ul class="right">
+                    <li class="item"></li>
+                    <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
+                    <li class='item'><a title="Add Bookmark"><i class="fa-bookmark-o fa"></i><span class="show-for-sr">bookmark</span></a></li>
+                    <li class='item'><a title="Add Comment"><i class="fa-comment fa"></i><span class="show-for-sr">comment</span></a></li>
+                    <li class='item'><a href='#'><i class='fa fa-share-alt'></i><span class="show-for-sr">share</span></a></li>
+                    <li class='item'><a href='#' title='edit'><i class='fa fa-pencil'><span class='show-for-sr'>edit</span></i></a></li>
+                    <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
+                  </ul>
+                </header>
+
+                <!-- main body -->
+                <div class="dl-body">
+                  <!-- meta data about update -->
+                  <p class="dl-meta"><time>Dec 11 2016 19:57</time> by <a href="/eden/hrm/person/1">admin@example.com</a> &mdash; <a href="#update-1-comments">0 Comments</a></p>
+                  
+                  <p class="s3-truncate">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim tenetur, at numquam sed corporis, suscipit natus accusantium. Magni atque qui, amet. Reprehenderit voluptatem aliquid quos dolore consequatur accusamus deleniti repellat.</p>
+                  
+                  <!-- if truncated -->
+                  <p class="dl-more"><a href="#">More Info</a></p>
+                </div>
+
+                <footer class="clearfix">
+                  <!-- tagit for update -->
+                  <ul class="left inline-list s3-tags tagit ui-widget ui-widget-content ui-corner-all" data-post_id="3"></ul>
+                </footer>
+              </article>
+            </li>
+
+            <div class="dl-navigation" style="display: none;">
+              <input class="dl-pagination dl-scroll" type="hidden" value="{&quot;pagesize&quot;: 5, &quot;rowsize&quot;: 1, &quot;ajaxurl&quot;: &quot;/eden/event/incident/26/custom.dl&quot;, &quot;startindex&quot;: null, &quot;maxitems&quot;: null, &quot;totalitems&quot;: 1}">
+            </div>
+            <!-- end Data List Flat HTML -->
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class='large-9 columns'>
-     {{if create_post_form:}}
-        {{=create_post_form}}
-        <hr>
-      {{pass}}
-     <ul class='no-bullet'>
-      {{=updates_datalist}}
-     </ul>
-    </div>
-   </div>
+    <section class='staff content' id='panel2'>
+      <div class='row'>
+        <ul class='large-3 columns tabs vertical' data-tab>
+          <li class='tab-title active'><a href='#staff'>Staff</a></li>
+          <li class='tab-title'><a href='#organisations'>Organizations</a></li>
+        </ul>
+        <div class="large-9 columns">
+          <div class='tabs-content'>
+            <div class='row collapse prefix-radius content active' id='staff'>
+              <div class='large-2 columns'>
+                <label for='event_human_resource-search' class='prefix'>Search</label>
+              </div>
+              <div class='large-6 columns' id='dt-search-event_human_resource'></div>
+              <div class='large-4 columns'>
+                {{=create_event_human_resource_popup}}
+              </div>
+              <div id='dt-event_human_resource'>
+                {{=event_human_resource_datatable}}
+              </div>
+            </div>
+            <div class='row collapse prefix-radius content' id='organisations'>
+              <div class='large-2 columns'>
+                <label for='event_organisation-search' class='prefix'>Search</label>
+              </div>
+              <div class='large-6 columns' id='dt-search-event_organisation'></div>
+              <div class='large-4 columns'>
+                {{=create_event_organisation_popup}}
+              </div>
+              <div id='dt-event_organisation'>
+                {{=event_organisation_datatable}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class='tasks content' id='panel3'>
+      <div class='row collapse prefix-radius'>
+        <div class='large-2 columns'>
+          <label for='project_task-search' class='prefix'>Search</label>
+        </div>
+        <div class='large-6 columns' id='dt-search-project_task'></div>
+        <div class='large-4 columns'>
+          {{=create_project_task_popup}}
+        </div>
+        <div id='dt-project_task'>
+          {{=project_task_datatable}}
+        </div>
+      </div>
+    </section>
   </div>
-  <section class='staff content' id='panel2'>
-   <div class='row'>
-    <ul class='large-3 columns tabs vertical' data-tab>
-     <li class='tab-title active'><a href='#staff'>Staff</a></li>
-     <li class='tab-title'><a href='#organisations'>Organizations</a></li>
-    </ul>
-    <div class='tabs-content large-9 columns'>
-     <div class='row collapse prefix-radius content active' id='staff'>
-      <div class='large-2 columns'>
-       <label for='event_human_resource-search' class='prefix'>Search</label>
-      </div>
-      <div class='large-6 columns' id='dt-search-event_human_resource'></div>
-      <div class='large-4 columns'>
-       {{=create_event_human_resource_popup}}
-      </div>
-      <div id='dt-event_human_resource'>
-       {{=event_human_resource_datatable}}
-      </div>
-     </div>
-     <div class='row collapse prefix-radius content' id='organisations'>
-      <div class='large-2 columns'>
-       <label for='event_organisation-search' class='prefix'>Search</label>
-      </div>
-      <div class='large-6 columns' id='dt-search-event_organisation'></div>
-      <div class='large-4 columns'>
-       {{=create_event_organisation_popup}}
-      </div>
-      <div id='dt-event_organisation'>
-       {{=event_organisation_datatable}}
-      </div>
-     </div>
-    </div>
-   </div>
-  </section>
-  <section class='tasks content' id='panel3'>
-   <div class='row collapse prefix-radius'>
-    <div class='large-2 columns'>
-     <label for='project_task-search' class='prefix'>Search</label>
-    </div>
-    <div class='large-6 columns' id='dt-search-project_task'></div>
-    <div class='large-4 columns'>
-     {{=create_project_task_popup}}
-    </div>
-    <div id='dt-project_task'>
-     {{=project_task_datatable}}
-    </div>
-   </div>
-  </section>
- </div>
 </div>
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
