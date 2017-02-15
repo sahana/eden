@@ -114,7 +114,7 @@ MEDICAL,Medical,,,,dvr_note,CREATE|READ,UPDATE,,,,Medical can create notes and u
 MEDICAL,Medical,,,,pr_contact,READ,,,,,
 MEDICAL,Medical,,,,pr_group_membership,READ,,,,,Medical can see family members
 MEDICAL,Medical,,,,pr_image,READ,,,,,Medical can see profile pictures
-MEDICAL,Medical,,,,pr_person,READ,,,,,Medical can look up persons
+MEDICAL,Medical,,,,pr_person,READ|UPDATE,,,,,Medical can look up persons
 MEDICAL,Medical,,,,pr_person_details,READ,,,,,
 MEDICAL,Medical,,,,pr_person_tag,READ,,,,,
 POLICE,Police,,cr,,,READ,,,,,
@@ -140,7 +140,7 @@ POLICE,Police,,,,dvr_note,READ,,,,,
 POLICE,Police,,,,pr_contact,READ,,,,,
 POLICE,Police,,,,pr_group_membership,READ,,,,,
 POLICE,Police,,,,pr_image,CREATE|READ|UPDATE,,,,,Police can create and update photos
-POLICE,Police,,,,pr_person,READ,,,,,
+POLICE,Police,,,,pr_person,READ|UPDATE,,,,,
 POLICE,Police,,,,pr_person_details,READ,,,,,
 POLICE,Police,,,,pr_person_tag,READ,,,,,
 RP,Regierungspräsidium,,cr,,,READ,,,,,
@@ -193,6 +193,7 @@ SCAN,Scan,,dvr,person,,NONE,,,,,Scan role can not access case list
 SCAN,Scan,,dvr,site_activity,,NONE,,,,,Scan role can not access site activity reports
 SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
 SCAN,Scan,,,,cr_shelter_unit,READ,,,,,
+SCAN,Scan,,,,dvr_case,READ,,,,,
 SCAN,Scan,,,,dvr_case_appointment,CREATE|UPDATE,,,,,Scan role can create or update appointments
 SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
 SCAN,Scan,,,,dvr_case_language,READ,,,,,
@@ -264,6 +265,6 @@ STAFF,General Staff,,,,dvr_note,CREATE|READ,UPDATE,,,,
 STAFF,General Staff,,,,pr_contact,READ,,,,,
 STAFF,General Staff,,,,pr_group_membership,READ,,,,,
 STAFF,General Staff,,,,pr_image,READ,,,,,
-STAFF,General Staff,,,,pr_person,READ,,,,,
+STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
 STAFF,General Staff,,,,pr_person_details,READ,,,,,
 STAFF,General Staff,,,,pr_person_tag,READ,,,,,
