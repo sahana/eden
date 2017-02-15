@@ -2993,19 +2993,22 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         table = db[tablename]
                         # Audit
                         audit("create", prefix, name,
-                              record=record_id, representation=format)
+                              record = record_id,
+                              representation = format,
+                              )
                         # Add record_id
                         values[table._id.name] = record_id
                         # Update super entity link
                         s3db.update_super(table, values)
                         # Update link table
                         if link and actuate_link and \
-                            options.get("update_link", True):
+                           options.get("update_link", True):
                             link.update_link(master, values)
                         # Set record owner
                         auth.s3_set_record_owner(table, record_id)
                         # onaccept
-                        onaccept(table, Storage(vars=values), method="create")
+                        subform = Storage(vars=Storage(values))
+                        onaccept(table, subform, method="create")
 
             # Success
             return True

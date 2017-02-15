@@ -1913,17 +1913,24 @@ class DVRCaseActivityModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            dvr_activity_funding = {"joinby": "case_activity_id",
-                                                    "multiple": False,
-                                                    },
-                            dvr_need = {"link": "dvr_case_activity_need",
-                                        "joinby": "case_activity_id",
-                                        "key": "need_id",
-                                        },
+                            dvr_activity_funding = {
+                                "joinby": "case_activity_id",
+                                "multiple": False,
+                                },
+                            dvr_need = {
+                                "link": "dvr_case_activity_need",
+                                "joinby": "case_activity_id",
+                                "key": "need_id",
+                                },
                             dvr_vulnerability_type = {
                                 "link": "dvr_vulnerability_type_case_activity",
                                 "joinby": "case_activity_id",
                                 "key": "vulnerability_type_id",
+                                },
+                            supply_distribution = {
+                                "link": "supply_distribution_case_activity",
+                                "joinby": "case_activity_id",
+                                "key": "distribution_id",
                                 },
                             )
 

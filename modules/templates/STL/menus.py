@@ -45,6 +45,7 @@ class S3MainMenu(default.S3MainMenu):
             #homepage("hrm"),
             MM("Staff", c="hrm", f="staff"),
             #homepage("cr"),
+            MM("Distributions", c="supply", f="distribution_item"),
         ]
 
     # -------------------------------------------------------------------------
@@ -140,7 +141,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                        due_followups,
                                        )
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c=("dvr", "pr"))(
                     M("Current Beneficiaries", c=("dvr", "pr"), f="person",
@@ -197,8 +198,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        settings = current.deployment_settings
-        ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c=("org", "project"))(
                     M("Organizations", f="organisation")(
@@ -233,9 +233,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ HRM / Human Resources Management """
 
         settings = current.deployment_settings
-
-        session_s3 = current.session.s3
-        ADMIN = session_s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="hrm")(
                     M(settings.get_hrm_staff_label(), f="staff")(
@@ -247,6 +245,25 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Job Title Catalog", f="job_title", restrict=[ADMIN])(
                         M("Create", m="create"),
                       ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def supply():
+        """ SUPPLY / Supply Item Distribution """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M(c="supply")(
+                    M("Distribution Items", f="distribution_item")(
+                        M("Create", m="create"),
+                        ),
+                    M("Administration", link=False,
+                      restrict = (ADMIN, "ORG_ADMIN"))(
+                        M("Items", f="item"),
+                        M("Catalogs", f="catalog"),
+                        M("Item Categories", f="item_category"),
+                        )
                     )
 
 # END =========================================================================

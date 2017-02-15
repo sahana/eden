@@ -1212,6 +1212,7 @@ class S3SupplyDistributionModel(S3Model):
     names = ("supply_distribution_item",
              "supply_distribution",
              "supply_distribution_person",
+             "supply_distribution_case_activity",
              )
 
     def model(self):
@@ -1548,10 +1549,24 @@ class S3SupplyDistributionModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
+        # Supply Distributions <> Case Activity Link Table
+        #
+        tablename = "supply_distribution_case_activity"
+        define_table(tablename,
+                     self.dvr_case_activity_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                     Field("distribution_id", "reference supply_distribution",
+                           ondelete = "CASCADE",
+                           requires = IS_ONE_OF(db, "supply_distribution.id"),
+                           ),
+                     *s3_meta_fields())
+
         # Pass names back to global scope (s3.*)
         return {}
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_item_onaccept(form):
         """
@@ -1573,7 +1588,7 @@ class S3SupplyDistributionModel(S3Model):
             db(dtable.id == record_id).update(name = item[ltable.name])
         return
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_onaccept(form):
         """
@@ -1637,7 +1652,7 @@ class S3SupplyDistributionModel(S3Model):
             # Update Distribution details
             db(dtable.id == record_id).update(**data)
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_year(row):
         """ Virtual field for the supply_distribution table """
@@ -2091,7 +2106,7 @@ def supply_item_entity_category(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_country(row):
     """ Virtual field: country """
 
@@ -2157,7 +2172,7 @@ def supply_item_entity_country(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_organisation(row):
     """ Virtual field: organisation """
 
@@ -2220,7 +2235,7 @@ def supply_item_entity_organisation(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_contacts(row):
     """ Virtual field: contacts (site_id) """
 
@@ -2303,7 +2318,7 @@ def supply_item_entity_contacts(row):
         return default
 
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_status(row):
     """ Virtual field: status """
 
@@ -2683,7 +2698,7 @@ $('#organisation_dropdown').change(function(){
                                     )
     return output
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_get_shipping_code(type, site_id, field):
 
     db = current.db

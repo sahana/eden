@@ -111,6 +111,7 @@ ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,pr,contact,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,pr,contact_emergency,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,supply,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,,,dvr_activity,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,,,dvr_activity_focus,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Role to manage organisation details incl. users and roles,,,dvr_beneficiary_data,READ|CREATE|UPDATE|DELETE,,,,,
