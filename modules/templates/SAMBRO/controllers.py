@@ -1610,7 +1610,7 @@ class alert_hub_cop(S3CustomController):
             s3_debug("Cannot find Layer for Map")
             layer_id = None
 
-        time_filter = request.utcnow + timedelta(-15)
+        time_filter = request.utcnow + timedelta(-7)
 
         map_filter = "~.external=True&~.status=Actual&~.info.expires__gt=%s" % time_filter
 
