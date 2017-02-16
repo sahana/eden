@@ -29,6 +29,7 @@
 
 __all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
+           "S3SupplyDistributionDVRActivityModel",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -1211,8 +1212,8 @@ class S3SupplyDistributionModel(S3Model):
 
     names = ("supply_distribution_item",
              "supply_distribution",
+             "supply_distribution_id",
              "supply_distribution_person",
-             "supply_distribution_case_activity",
              )
 
     def model(self):
@@ -1346,8 +1347,16 @@ class S3SupplyDistributionModel(S3Model):
         #represent = S3Represent(lookup=tablename,
         #                        field_sep = " ",
         #                        fields=["value", "parameter_id"])
+        distribution_id = S3ReusableField("distribution_id",
+                                          "reference %s" % tablename,
+                                          ondelete = "CASCADE",
+                                          #represent = represent,
+                                          requires = IS_ONE_OF(db,
+                                                        "%s.id" % tablename,
+                                                        #represent,
+                                                        ),
+                                          )
 
-        # Resource Configuration
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1550,21 +1559,23 @@ class S3SupplyDistributionModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Supply Distributions <> Case Activity Link Table
-        #
-        tablename = "supply_distribution_case_activity"
-        define_table(tablename,
-                     self.dvr_case_activity_id(empty = False,
-                                               ondelete = "CASCADE",
-                                               ),
-                     Field("distribution_id", "reference supply_distribution",
-                           ondelete = "CASCADE",
-                           requires = IS_ONE_OF(db, "supply_distribution.id"),
-                           ),
-                     *s3_meta_fields())
-
         # Pass names back to global scope (s3.*)
-        return {}
+        #
+        return {"supply_distribution_id": distribution_id}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"supply_distribution_id": lambda name="distribution_id", **attr: \
+                                                 dummy(name, **attr),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1677,6 +1688,41 @@ class S3SupplyDistributionModel(S3Model):
             return [end_date.year]
         else:
             return list(xrange(date.year, end_date.year + 1))
+
+# =============================================================================
+class S3SupplyDistributionDVRActivityModel(S3Model):
+    """
+        Model to link distributions to DVR activities / case activities
+    """
+
+    names = ("supply_distribution_case_activity",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Supply Distributions <=> Case Activity Link Table
+        #
+        tablename = "supply_distribution_case_activity"
+        self.define_table(tablename,
+                          self.dvr_case_activity_id(empty = False,
+                                                    ondelete = "CASCADE",
+                                                    ),
+                          self.supply_distribution_id(empty = False,
+                                                      ondelete = "CASCADE",
+                                                      ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class supply_ItemRepresent(S3Represent):
