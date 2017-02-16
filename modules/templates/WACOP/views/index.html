@@ -1,3 +1,27 @@
 {{extend "layout.html"}}
-<h2>{{=settings.get_system_name()}}</h2>
-{{=item}}
+<main role='main' class='main'>
+ {{if not auth.s3_logged_in():}}
+ <div class='row'>
+  <div class='medium-8 columns'>
+   <p class='lead'>Welcome. Washington Common Operating Picture (WACOP) provides you with information from Seattle's public safety agencies. Anyone can create an account so they can save and share incident and event information.</p>
+  </div>
+  <div class='medium-4 columns text-center'>
+   <br>
+   <a href='/{{=appname}}/default/user/login' class='button small'>Log in</a>
+   <a href='/{{=appname}}/default/user/register' class='button small'>Register</a>
+  </div>
+ </div>
+{{pass}}
+{{=XML(alerts)}}
+{{=XML(events)}}
+ <div class='row well'>
+  <h3 class='well-title'>Incidents <small><a href='/{{=appname}}/event/incident/summary'>See all incidents</a></small></h3>
+  <div class='medium-6 columns'>
+   {{=event_incident_datatable}}
+  </div>
+  <div class='medium-6 columns'>
+   {{=XML(map)}}
+  </div>
+ </div>
+</main>
+{{include "dataTables.html"}}

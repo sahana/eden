@@ -496,20 +496,9 @@ def config(settings):
                                               update_url=custom_url)
 
                     # System-wide Alert
-                    if current.auth.s3_has_role("ADMIN"):
-                        # Admin user can edit system_wide alert
-                        output["ADMIN"] = True
-                    else:
-                        output["ADMIN"] = False
-
-                    ptable = s3db.cms_post
-                    system_wide = current.db(ptable.name == "SYSTEM_WIDE").select(ptable.body,
-                                                                                  limitby=(0, 1)
-                                                                                  ).first()
-                    if system_wide:
-                        output["system_wide"] = system_wide.body
-                    else:
-                        output["system_wide"] = False
+                    from templates.WACOP.controllers import custom_WACOP
+                    custom = custom_WACOP()
+                    output["system_wide"] = custom._system_wide_html()
 
             return output
         s3.postp = custom_postp

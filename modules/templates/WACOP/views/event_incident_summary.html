@@ -1,20 +1,9 @@
 {{extend "layout.html"}}
 <div id='incident-summary'>
+ {{=system_wide}}
  <div class='row'>
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
-{{if ADMIN or system_wide:}}
- <div role='complementary' class='row panel callout'>
-  <div class='row'>
-   <div class='large-9 small-12 columns'>
-    <p>{{if system_wide:}}{{=system_wide}}{{pass}}</p>
-   </div>
-   {{if ADMIN:}}
-   <p class='large-3 small-12 columns text-right'><a href='{{=URL(c="cms", f="post", args="update", vars={"page": "SYSTEM_WIDE"})}}' class='button button-info tiny'>Edit System-wide Alert</a></p>
-   {{pass}}
-  </div>
- </div>
-{{pass}}
  <div class='row panel' id='summary-common'>
   <div class='large-4 columns'>
    <div id='filter-form' class='form-container'>
