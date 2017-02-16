@@ -515,6 +515,8 @@
 'Back to Check-in/Check-out': 'Zurück zu Check-in/Check-out',
 'Back to %(appname)s': 'Zurück zu %(appname)s',
 'Baldness': 'Kahlköpfigkeit',
+'BAMF Reference Number': 'BAMF Aktenzeichen',
+'BAMF Ref.No.': 'BAMF Az.',
 'BAMF Registration': 'BAMF Registrierung',
 'Banana': 'Banane',
 'Bank/micro finance': 'Bank/Mikro Finanzierung',

@@ -950,12 +950,21 @@ class S3RecordMerger(object):
         if duplicate is None:
             self.raise_error(msg % (tablename, duplicate_id), KeyError)
 
-        # Find all single-components
-        single = Storage()
-        for alias in resource.components:
-            component = resource.components[alias]
+        # Find all single-components of this resource
+        # (so that their records can be merged rather than just re-linked)
+        # NB this is only reliable as far as the relevant component
+        #    declarations have actually happened before calling merge:
+        #    Where that happens in another controller (or customise_*)
+        #    than the one merge is being run from, those components may
+        #    be treated as multiple instead!
+        single = {}
+        for component in resource.components.values():
             if not component.multiple:
-                single[component.tablename] = component
+                ctablename = component.tablename
+                if ctablename in single:
+                    single[ctablename].append(component)
+                else:
+                    single[ctablename] = [component]
 
         # Is this a super-entity?
         is_super_entity = table._id.name != "id" and \
@@ -1003,46 +1012,53 @@ class S3RecordMerger(object):
 
             rtable = db[tn]
             if tn in single:
-                component = single[tn]
-                if component.link is not None:
-                    component = component.link
+                for component in single[tn]:
 
-                if fn == component.fkey:
-                    # Single component => must reduce to one record
-                    join = component.get_join()
-                    pkey = component.pkey
-                    lkey = component.lkey or component.fkey
+                    if component.link is not None:
+                        component = component.link
 
-                    # Get the component records
-                    query = (table[pkey] == original[pkey]) & join
-                    osub = db(query).select(limitby=(0, 1)).first()
-                    query = (table[pkey] == duplicate[pkey]) & join
-                    dsub = db(query).select(limitby=(0, 1)).first()
+                    if fn == component.fkey:
 
-                    ctable = component.table
+                        # Single component => must reduce to one record
+                        join = component.get_join()
+                        pkey = component.pkey
+                        lkey = component.lkey or component.fkey
 
-                    if dsub is None:
-                        # No duplicate => skip this step
-                        continue
-                    elif not osub:
-                        # No original => re-link the duplicate
-                        dsub_id = dsub[ctable._id]
-                        data = {lkey: original[pkey]}
-                        success = update_record(ctable, dsub_id, dsub, data)
-                    elif component.linked is not None:
-                        # Duplicate link => remove it
-                        dsub_id = dsub[component.table._id]
-                        delete_record(ctable, dsub_id)
-                    else:
-                        # Two records => merge them
-                        osub_id = osub[component.table._id]
-                        dsub_id = dsub[component.table._id]
-                        cresource = define_resource(component.tablename)
-                        cresource.merge(osub_id, dsub_id,
-                                        replace=replace,
-                                        update=update,
-                                        main=False)
-                    continue
+                        # Get the component records
+                        query = (table[pkey] == original[pkey]) & join
+                        osub = db(query).select(limitby=(0, 1)).first()
+                        query = (table[pkey] == duplicate[pkey]) & join
+                        dsub = db(query).select(limitby=(0, 1)).first()
+
+                        ctable = component.table
+                        ctable_id = ctable._id
+
+                        if dsub is None:
+                            # No duplicate => skip this step
+                            continue
+
+                        elif not osub:
+                            # No original => re-link the duplicate
+                            dsub_id = dsub[ctable_id]
+                            data = {lkey: original[pkey]}
+                            success = update_record(ctable, dsub_id, dsub, data)
+
+                        elif component.linked is not None:
+
+                            # Duplicate link => remove it
+                            dsub_id = dsub[ctable_id]
+                            delete_record(ctable, dsub_id)
+
+                        else:
+                            # Two records => merge them
+                            osub_id = osub[ctable_id]
+                            dsub_id = dsub[ctable_id]
+                            cresource = define_resource(component.tablename)
+                            cresource.merge(osub_id, dsub_id,
+                                            replace = replace,
+                                            update = update,
+                                            main = False,
+                                            )
 
             # Find the foreign key
             rfield = rtable[fn]

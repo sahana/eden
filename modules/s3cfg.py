@@ -3323,6 +3323,7 @@ class S3Config(Storage):
     def get_hrm_record_label(self):
         """
             Label to use for the HR record tab
+            - string not LazyT
         """
         label = self.__lazy("hrm", "record_label", default=None)
         if not label:
@@ -3714,6 +3715,12 @@ class S3Config(Storage):
                 settings.mobile.forms = [("Request", "req_req")]
         """
         return self.__lazy("mobile", "forms", [])
+
+    def get_mobile_dynamic_tables(self):
+        """
+            Expose mobile forms for dynamic tables
+        """
+        return self.mobile.get("dynamic_tables", True)
 
     # -------------------------------------------------------------------------
     # Organisations

@@ -1515,9 +1515,10 @@ def vol_person_controller():
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
         configure("asset_asset",
-                  insertable = False,
+                  deletable = False,
                   editable = False,
-                  deletable = False)
+                  insertable = False,
+                  )
 
     group = get_vars.get("group", "volunteer")
     hr_id = get_vars.get("human_resource.id", None)
@@ -1540,51 +1541,52 @@ def vol_person_controller():
     tablename = "pr_person"
     table = s3db[tablename]
     configure(tablename,
-              deletable = False)
+              deletable = False,
+              )
 
-    mode = session.s3.hrm.mode
-    if mode is not None:
-        # Configure for personal mode
-        s3db.hrm_human_resource.organisation_id.readable = True
-        s3.crud_strings[tablename].update(
-            title_display = T("Personal Profile"),
-            title_update = T("Personal Profile"))
-        # People can view their own HR data, but not edit it
-        configure("hrm_human_resource",
-                  insertable = False,
-                  editable = False,
-                  deletable = False)
-        configure("hrm_certification",
-                  insertable = True,
-                  editable = True,
-                  deletable = True)
-        configure("hrm_credential",
-                  insertable = False,
-                  editable = False,
-                  deletable = False)
-        configure("hrm_competency",
-                  insertable = True,  # Can add unconfirmed
-                  editable = False,
-                  deletable = False)
-        configure("hrm_training",    # Can add but not provide grade
-                  insertable = True,
-                  editable = False,
-                  deletable = False)
-        configure("hrm_experience",
-                  insertable = False,
-                  editable = False,
-                  deletable = False)
-        configure("pr_group_membership",
-                  insertable = False,
-                  editable = False,
-                  deletable = False)
-    else:
-        # Configure for HR manager mode
-        s3.crud_strings[tablename].update(
-                title_display = T("Volunteer Details"),
-                title_update = T("Volunteer Details"),
-                title_upload = T("Import Volunteers"),
-                )
+    #mode = session.s3.hrm.mode
+    #if mode is not None:
+    #    # Configure for personal mode
+    #    s3db.hrm_human_resource.organisation_id.readable = True
+    #    s3.crud_strings[tablename].update(
+    #        title_display = T("Personal Profile"),
+    #        title_update = T("Personal Profile"))
+    #    # People can view their own HR data, but not edit it
+    #    configure("hrm_human_resource",
+    #              insertable = False,
+    #              editable = False,
+    #              deletable = False)
+    #    configure("hrm_certification",
+    #              insertable = True,
+    #              editable = True,
+    #              deletable = True)
+    #    configure("hrm_credential",
+    #              insertable = False,
+    #              editable = False,
+    #              deletable = False)
+    #    configure("hrm_competency",
+    #              insertable = True,  # Can add unconfirmed
+    #              editable = False,
+    #              deletable = False)
+    #    configure("hrm_training",    # Can add but not provide grade
+    #              insertable = True,
+    #              editable = False,
+    #              deletable = False)
+    #    configure("hrm_experience",
+    #              insertable = False,
+    #              editable = False,
+    #              deletable = False)
+    #    configure("pr_group_membership",
+    #              insertable = False,
+    #              editable = False,
+    #              deletable = False)
+    #else:
+    # Configure for HR manager mode
+    s3.crud_strings[tablename].update(
+            title_display = T("Volunteer Details"),
+            title_update = T("Volunteer Details"),
+            title_upload = T("Import Volunteers"),
+            )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -1762,9 +1764,9 @@ def vol_person_controller():
                                )
 
             resource = r.resource
-            if mode is not None:
-                r.resource.build_query(id=current.auth.s3_logged_in_person())
-            elif method not in ("deduplicate", "search_ac"):
+            #if mode is not None:
+            #    r.resource.build_query(id=current.auth.s3_logged_in_person())
+            if method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
@@ -1851,10 +1853,7 @@ def vol_person_controller():
     s3.postp = postp
 
     # REST Interface
-    if session.s3.hrm.orgname and mode is None:
-        orgname = session.s3.hrm.orgname
-    else:
-        orgname = None
+    #orgname = session.s3.hrm.orgname
 
     return current.rest_controller("pr", resourcename,
                                    csv_template = ("hrm", "volunteer"),
@@ -1863,7 +1862,7 @@ def vol_person_controller():
                                         dict(label="Type",
                                              field=s3db.hrm_human_resource.type)
                                         ],
-                                   orgname = orgname,
+                                   #orgname = orgname,
                                    replace_option = T("Remove existing data before import"),
                                    rheader = s3db.hrm_rheader,
                                    )

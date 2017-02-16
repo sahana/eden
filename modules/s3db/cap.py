@@ -550,6 +550,7 @@ $.filterOptionsS3({
                          (T("Source"), "source"),
                          (T("Scope"), "scope"),
                          (T("Restriction"), "restriction"),
+                         (T("Note"), "note"),
                          (T("Category"), "info.category"),
                          (T("Event"), "info.event_type_id"),
                          (T("Response type"), "info.response_type"),

@@ -20,8 +20,8 @@
          HR Type
          Certificate Number
          First Name
-         Middle Name
-         Last Name
+         Middle Name (Apellido Paterno in Spanish)
+         Last Name   (Apellido Materno in Spanish)
          Sex
          Email
          DoB
@@ -34,12 +34,35 @@
          Column headers looked up in labels.xml:
 
          PersonGender...................optional.....person gender
+         MiddleName.....................optional.....person Middle Name (Apellido Paterno in Spanish)
+         LastName.......................optional.....person Last Name   (Apellido Materno in Spanish)
 
     *********************************************************************** -->
     <xsl:import href="person.xsl"/>
     <xsl:import href="../commons.xsl"/>
 
     <xsl:output method="xml"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="PersonGender">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="MiddleName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MiddleName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="LastName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">LastName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
 
     <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
@@ -248,8 +271,6 @@
     <!-- Person Record -->
     <xsl:template name="Person">
         <xsl:variable name="FirstName" select="col[@field='First Name']/text()"/>
-        <xsl:variable name="MiddleName" select="col[@field='Middle Name']/text()"/>
-        <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
         <xsl:variable name="DoB" select="col[@field='DoB']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
         <xsl:variable name="Email" select="col[@field='Email']/text()"/>
@@ -265,6 +286,16 @@
         <xsl:variable name="Language" select="col[@field='Language']/text()"/>
         <xsl:variable name="Certification" select="col[@field='Certificate Number']/text()"/>
 
+        <xsl:variable name="MiddleName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MiddleName"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="LastName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$LastName"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$PersonGender"/>

@@ -457,11 +457,23 @@ def activity_group_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def activity_focus():
+    """ Activity Focuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def activity():
     """ Activities: RESTful CRUD Controller """
 
     return s3_rest_controller(rheader = s3db.dvr_rheader,
                               )
+
+# -----------------------------------------------------------------------------
+def termination_type():
+    """ Termination Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def case_activity():

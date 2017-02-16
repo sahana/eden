@@ -488,6 +488,7 @@ class S3LocationModel(S3Model):
         auth = current.auth
         response = current.response
         settings = current.deployment_settings
+        s3 = response.s3
 
         form_vars = form.vars
         vars_get = form_vars.get
@@ -498,7 +499,7 @@ class S3LocationModel(S3Model):
         lon = vars_get("lon", None)
         addr_street = vars_get("addr_street", None)
 
-        bulk = response.s3.bulk
+        bulk = s3.bulk
 
         if addr_street and lat is None and lon is None and bulk:
 

@@ -2559,17 +2559,20 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Render read-row accordingly
             rowname = "%s-%s" % (formname, i)
             read_row = self._render_item(table, item, fields,
-                                         editable=editable,
-                                         deletable=deletable,
-                                         readonly=True,
-                                         multiple=multiple,
-                                         index=i,
-                                         layout=layout,
-                                         _id="read-row-%s" % rowname,
-                                         _class=_class)
+                                         editable = editable,
+                                         deletable = deletable,
+                                         readonly = True,
+                                         multiple = multiple,
+                                         index = i,
+                                         layout = layout,
+                                         _id = "read-row-%s" % rowname,
+                                         _class = _class,
+                                         )
             if record_id:
                 audit("read", prefix, name,
-                      record=record_id, representation="html")
+                      record = record_id,
+                      representation = "html",
+                      )
             item_rows.append(read_row)
 
         # Add the action rows
@@ -2579,15 +2582,18 @@ class S3SQLInlineComponent(S3SQLSubForm):
         _class = "edit-row inline-form hide"
         if required and has_rows:
             _class = "%s required" % _class
+        if not multiple:
+            _class = "%s single" % _class
         edit_row = self._render_item(table, item, fields,
-                                     editable=_editable,
-                                     deletable=_deletable,
-                                     readonly=False,
-                                     multiple=multiple,
-                                     index=0,
-                                     layout=layout,
-                                     _id="edit-row-%s" % formname,
-                                     _class=_class)
+                                     editable = _editable,
+                                     deletable = _deletable,
+                                     readonly = False,
+                                     multiple = multiple,
+                                     index = 0,
+                                     layout = layout,
+                                     _id = "edit-row-%s" % formname,
+                                     _class = _class,
+                                     )
         action_rows.append(edit_row)
 
         # Add-row
@@ -2624,45 +2630,48 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                     )
             has_rows = True
             add_row = self._render_item(table, None, fields,
-                                        editable=True,
-                                        deletable=True,
-                                        readonly=False,
-                                        multiple=multiple,
-                                        layout=layout,
-                                        _id="add-row-%s" % formname,
-                                        _class=_class
+                                        editable = True,
+                                        deletable = True,
+                                        readonly = False,
+                                        multiple = multiple,
+                                        layout = layout,
+                                        _id = "add-row-%s" % formname,
+                                        _class = _class,
                                         )
             action_rows.append(add_row)
 
         # Empty edit row
         empty_row = self._render_item(table, None, fields,
-                                      editable=_editable,
-                                      deletable=_deletable,
-                                      readonly=False,
-                                      multiple=multiple,
-                                      index="default",
-                                      layout=layout,
-                                      _id="empty-edit-row-%s" % formname,
-                                      _class="empty-row inline-form hide")
+                                      editable = _editable,
+                                      deletable = _deletable,
+                                      readonly = False,
+                                      multiple = multiple,
+                                      index = "default",
+                                      layout = layout,
+                                      _id = "empty-edit-row-%s" % formname,
+                                      _class = "empty-row inline-form hide",
+                                      )
         action_rows.append(empty_row)
 
         # Empty read row
         empty_row = self._render_item(table, None, fields,
-                                      editable=_editable,
-                                      deletable=_deletable,
-                                      readonly=True,
-                                      multiple=multiple,
-                                      index="none",
-                                      layout=layout,
-                                      _id="empty-read-row-%s" % formname,
-                                      _class="empty-row inline-form hide")
+                                      editable = _editable,
+                                      deletable = _deletable,
+                                      readonly = True,
+                                      multiple = multiple,
+                                      index = "none",
+                                      layout = layout,
+                                      _id = "empty-read-row-%s" % formname,
+                                      _class = "empty-row inline-form hide",
+                                      )
         action_rows.append(empty_row)
 
         # Real input: a hidden text field to store the JSON data
         real_input = "%s_%s" % (resource.tablename, field.name)
-        default = dict(_type = "text",
-                       _value = value,
-                       requires=lambda v: (v, None))
+        default = {"_type": "text",
+                   "_value": value,
+                   "requires": lambda v: (v, None),
+                   }
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "%s hide" % attr["_class"]
         attr["_id"] = real_input
@@ -2676,11 +2685,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if self.upload:
             hidden = DIV(_class="hidden", _style="display:none")
             for k, v in self.upload.items():
-                hidden.append(INPUT(_type="text",
-                                    _id=k,
-                                    _name=k,
-                                    _value=v,
-                                    _style="display:none"))
+                hidden.append(INPUT(_type = "text",
+                                    _id = k,
+                                    _name = k,
+                                    _value = v,
+                                    _style = "display:none",
+                                    ))
         else:
             hidden = ""
 

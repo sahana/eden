@@ -156,16 +156,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           restrict = ("GROUP_ACTIVITIES",),
                           ),
                         M("Mental Health Support", f="activity",
-                          vars={"service_type": "MH"},
+                          vars = {"service_type": "MH"},
                           restrict = ("MENTAL_HEALTH",),
                           ),
                         ),
                     M("Archive", link=False)(
                         M("Former Beneficiaries", f="person",
-                          vars={"closed": "1"},
+                          vars = {"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
-                          vars={"archived": "1"},
+                          vars = {"archived": "1"},
                           ),
                         ),
                     M("Administration", c="dvr", link=False,
@@ -180,6 +180,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Activity Group Types", f="activity_group_type"),
                         M("Activity Age Groups", f="activity_age_group"),
                         M("Provider Types", f="provider_type"),
+                        M("Activity Focuses", f="activity_focus"),
+                        M("Termination Types", f="termination_type"),
                         ),
                 )
 
@@ -235,20 +237,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
         session_s3 = current.session.s3
         ADMIN = session_s3.system_roles.ADMIN
 
-        manager_mode = lambda i: session_s3.hrm.mode is None
-        #personal_mode = lambda i: session_s3.hrm.mode is not None
-
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff", #m="summary",
-                      check = manager_mode)(
+                    M(settings.get_hrm_staff_label(), f="staff")(
                         M("Create", m="create"),
                         M("Import", f="person", m="import", p="create",
                           vars = {"group": "staff"},
                           ),
                       ),
-                    M("Job Title Catalog", f="job_title",
-                      check = manager_mode,
-                      restrict = [ADMIN])(
+                    M("Job Title Catalog", f="job_title", restrict=[ADMIN])(
                         M("Create", m="create"),
                       ),
                     )

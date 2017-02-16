@@ -651,18 +651,15 @@ Thank you"""
                 if userfield == "email":
                     # Check for Domains which can use Google's SMTP server for passwords
                     # @ToDo: an equivalent email_domains for other email providers
-                    gmail_domains = current.deployment_settings.get_auth_gmail_domains()
-                    if gmail_domains:
+                    gmail_domains = deployment_settings.get_auth_gmail_domains()
+                    office365_domains = deployment_settings.get_auth_office365_domains()
+                    if gmail_domains or office365_domains:
                         from gluon.contrib.login_methods.email_auth import email_auth
                         domain = form.vars[userfield].split("@")[1]
                         if domain in gmail_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
-                    office365_domains = current.deployment_settings.get_auth_office365_domains()
-                    if office365_domains:
-                        from gluon.contrib.login_methods.email_auth import email_auth
-                        domain = form.vars[userfield].split("@")[1]
-                        if domain in office365_domains:
+                        elif domain in office365_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.office365.com:587", "@%s" % domain))
 
@@ -852,6 +849,7 @@ Thank you"""
                 else:
                     next = replace_id(next, form)
                 redirect(next, client_side=settings.client_side)
+
         return form
 
     # -------------------------------------------------------------------------
@@ -3015,79 +3013,102 @@ $.filterOptionsS3({
 
         if not htable or (not organisation_id and \
                           settings.get_hrm_org_required()):
+            # Module disabled or no user organisation set
             return None
 
-        # Update existing HR record for this user
-        if hr_type == 1:
-            site_id = user.site_id
-        else:
-            site_id = None
+        def customise():
+            """ Customise hrm_human_resource """
+            customise = settings.customise_resource(htablename)
+            if customise:
+                request = S3Request("hrm", "human_resource",
+                                    current.request,
+                                    args = [str(hr_id)],
+                                    )
+                customise(request, htablename)
+
+        # Determine the site ID
+        site_id = user.site_id if hr_type == 1 else None
+
+        # Get existing active HR record for this user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        query = (htable.deleted == False) & \
-                (htable.status == 1) & \
-                (htable.type == hr_type) & \
-                (htable.person_id == ptable.id) & \
+        query = (ltable.user_id == user_id) & \
                 (ptable.pe_id == ltable.pe_id) & \
-                (ltable.user_id == user_id)
-        rows = db(query).select(htable.id,
-                                limitby=(0, 2))
-        if len(rows) == 1:
-            # Only update if there is a single HR Record
-            hr_id = rows.first().id
-            db(htable.id == hr_id).update(organisation_id = organisation_id,
-                                          site_id = site_id)
-            # Update record ownership
-            self.s3_set_record_owner(htable, hr_id, force_update=True)
+                (htable.person_id == ptable.id) & \
+                (htable.type == hr_type) & \
+                (htable.status == 1) & \
+                (htable.deleted == False)
+        rows = db(query).select(htable.id, limitby=(0, 2))
 
-            # Update Site link
+        accepted = None
+        if len(rows) == 1:
+            # Single active HR record of this type
+            # => update organisation and site
+            record = rows.first()
+            hr_id = record.id
+
+            # Update the record
+            customise()
+            db(htable.id == hr_id).update(organisation_id = organisation_id,
+                                          site_id = site_id,
+                                          )
+            accepted = "update"
+
+            # Update or create site link
             hstable = s3db.hrm_human_resource_site
             query = (hstable.human_resource_id == hr_id)
-            row = db(query).select(hstable.id,
-                                    limitby=(0, 1)).first()
-            if row:
-                db(query).update(site_id = site_id,
-                                 human_resource_id = hr_id,
-                                 owned_by_user = user_id)
+            hstable.update_or_insert(query,
+                                     site_id = site_id,
+                                     human_resource_id = hr_id,
+                                     owned_by_user = user_id,
+                                     )
+        else:
+            # Multiple or no HR records of this type
+
+            if rows:
+                # Multiple records
+                # => check if there is one for this organisation and site
+                if type(person_id) is list:
+                    person_id = person_id[0]
+                query = (htable.person_id == person_id) & \
+                        (htable.organisation_id == organisation_id) & \
+                        (htable.type == hr_type) & \
+                        (htable.site_id == site_id) & \
+                        (htable.deleted == False)
+                row = db(query).select(htable.id, limitby=(0, 1)).first()
             else:
-                hstable.insert(site_id=site_id,
-                               human_resource_id=hr_id,
-                               owned_by_user=user_id)
+                # No HR record exists at all
+                row = None
 
-        # Create an HR record, if one doesn't already exist
-        if isinstance(person_id, list):
-            person_ids = person_id
-        else:
-            person_ids = [person_id]
-        query = (htable.person_id.belongs(person_ids)) & \
-                (htable.organisation_id == organisation_id) & \
-                (htable.type == hr_type) & \
-                (htable.site_id == site_id)
-        row = db(query).select(htable.id, limitby=(0, 1)).first()
+            if row:
+                # At least one record for this organisation and site exists
+                # => pass
+                hr_id = row.id
 
-        if row:
-            hr_id = row.id
-        else:
-            record = Storage(person_id=person_ids[0],
-                             organisation_id=organisation_id,
-                             site_id = site_id,
-                             type=hr_type,
-                             owned_by_user=user_id,
-                             )
-            hr_id = htable.insert(**record)
-            if hr_id:
+            else:
+                # Create new HR record
+                customise()
+                record = Storage(person_id=person_id,
+                                 organisation_id=organisation_id,
+                                 site_id = site_id,
+                                 type=hr_type,
+                                 owned_by_user=user_id,
+                                 )
+                hr_id = htable.insert(**record)
                 record["id"] = hr_id
-                s3db.update_super(htable, record)
-                # Customise the resource
-                customise = settings.customise_resource(htablename)
-                if customise:
-                    request = S3Request("hrm", "human_resource",
-                                        current.request,
-                                        args=[str(hr_id)])
-                    customise(request, htablename)
+                accepted = "create"
 
-                self.s3_set_record_owner(htable, hr_id)
-                s3db.onaccept(htablename, record, method="create")
+        if hr_id and accepted:
+
+            # Update any super-records
+            s3db.update_super(htable, record)
+
+            # Set or update the record owner and realm entity
+            # (enforce update to change realm if organisation changed)
+            self.s3_set_record_owner(htable, hr_id, force_update=True)
+
+            # Run onaccept
+            s3db.onaccept(htablename, record, method=accepted)
 
         return hr_id
 
@@ -3654,23 +3675,34 @@ $.filterOptionsS3({
         table = self.settings.table_group
 
         if isinstance(role_id, str) and not role_id.isdigit():
-            gquery = (table.uuid == role_id)
+            query = (table.uuid == role_id)
         else:
             role_id = int(role_id)
-            gquery = (table.id == role_id)
+            query = (table.id == role_id)
 
-        role = db(gquery).select(limitby=(0, 1)).first()
+        role = db(query).select(table.id,
+                                table.protected,
+                                limitby=(0, 1),
+                                ).first()
+
         if role and not role.protected:
+
+            group_id = role.id
+            data = {"deleted": True,
+                    "group_id": None,
+                    "deleted_fk": '{"group_id": %s}' % group_id,
+                    }
+
             # Remove all memberships for this role
             mtable = self.settings.table_membership
-            mquery = (mtable.group_id == role.id)
-            db(mquery).update(deleted=True)
-            # Remove all ACLs for this role
+            db(mtable.group_id == group_id).update(**data)
+
+            # Remove all permission rules for this role
             ptable = self.permission.table
-            pquery = (ptable.group_id == role.id)
-            db(pquery).update(deleted=True)
+            db(ptable.group_id == group_id).update(**data)
+
             # Remove the role
-            db(gquery).update(role=None, deleted=True)
+            role.update_record(role=None, deleted=True)
 
     # -------------------------------------------------------------------------
     def s3_assign_role(self, user_id, group_id, for_pe=None):
@@ -3739,7 +3771,8 @@ $.filterOptionsS3({
                               "group_id": group_id}
                 if for_pe is not None and str(group_id) not in unrestrictable:
                     membership["pe_id"] = for_pe
-                membership_id = mtable.insert(**membership)
+                #membership_id = mtable.insert(**membership)
+                mtable.insert(**membership)
 
         # Update roles for current user if required
         if self.user and str(user_id) == str(self.user.id):
@@ -7413,9 +7446,6 @@ class S3RoleManager(S3Method):
             for i, role in enumerate(resource):
 
                 role_id = role.id
-                role_name = role.role
-                role_desc = role.description
-
                 actions = []
 
                 # Edit button to edit permissions of the role
@@ -7429,12 +7459,13 @@ class S3RoleManager(S3Method):
                     actions.append(edit_btn)
 
                 # Users button to manage users for this role
-                users_btn = A(T("Users"),
-                              _href=URL(c="admin", f="role",
-                                        args=[role_id, "users"],
-                                        ),
-                              _class="action-btn")
-                actions.append(users_btn)
+                if role_id != sr.ANONYMOUS:
+                    users_btn = A(T("Users"),
+                                  _href=URL(c="admin", f="role",
+                                            args=[role_id, "users"],
+                                            ),
+                                  _class="action-btn")
+                    actions.append(users_btn)
 
                 # Delete button to delete this role
                 if not role.protected and role_id not in undeletable:
@@ -7445,7 +7476,7 @@ class S3RoleManager(S3Method):
                                           ),
                                 _class="delete-btn")
                     actions.append(delete_btn)
-                tdata = [TD(actions), TD(role_name)]
+                tdata = [TD(actions), TD(role.role)]
 
                 if show_matrix:
                     # Display the permission matrix
@@ -7478,7 +7509,7 @@ class S3RoleManager(S3Method):
                         tdata += [TD(values, _nowrap="nowrap")]
                 else:
                     # Display role descriptions
-                    tdata += [TD(role_desc)]
+                    tdata += [TD(T(role.description))]
 
                 _class = i % 2 and "even" or "odd"
                 trows.append(TR(tdata, _class=_class))

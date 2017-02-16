@@ -47,6 +47,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,PG,Province,District,LLG,Village,,
 ,PH,Region,Province,"City / Municipality",Barangay,,
 ,PK,Province,District,Tehsil,Union Council,Village,
+,PY,Department,District,"City / Town / Village",,,
 ,RS,District,"Municipality / City",,,,
 ,SE,County,Municipality,,,,
 ,SL,Province,District,Chiefdom,,,

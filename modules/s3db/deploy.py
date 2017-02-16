@@ -40,6 +40,7 @@ __all__ = ("S3DeploymentOrganisationModel",
 import json
 
 from gluon import *
+from gluon.tools import callback
 
 from ..s3 import *
 from s3layouts import S3PopupLink
@@ -471,6 +472,12 @@ class S3DeploymentModel(S3Model):
                                         "key": "appraisal_id",
                                         "autodelete": False,
                                         },
+                       hrm_experience = {"name": "experience",
+                                         "link": "deploy_assignment_experience",
+                                         "joinby": "assignment_id",
+                                         "key": "experience_id",
+                                         "autodelete": False,
+                                         },
                        )
 
         assignment_id = S3ReusableField("assignment_id",
@@ -684,8 +691,20 @@ class S3DeploymentModel(S3Model):
                                                             limitby = (0, 1),
                                                             ).first()
             if hr:
-                data["person_id"] = hr.person_id
+                person_id = hr.person_id
+                data["person_id"] = person_id
                 data["employment_type"] = hr.type
+
+                # Lookup User Account
+                ltable = s3db.pr_person_user
+                ptable = s3db.pr_person
+                query = (ptable.id == person_id) & \
+                        (ptable.pe_id == ltable.pe_id)
+                link = db(query).select(ltable.user_id,
+                                        limitby = (0, 1),
+                                        ).first()
+                if link:
+                    data["owned_by_user"] = link.user_id
 
         # Lookup mission details
         mission_id = data.pop("mission_id")
@@ -716,7 +735,6 @@ class S3DeploymentModel(S3Model):
                 experience_id = etable.insert(**data)
 
                 # Create link
-                ltable = db.deploy_assignment_experience
                 ltable.insert(assignment_id = assignment_id,
                               experience_id = experience_id,
                               )
@@ -1780,6 +1798,13 @@ def deploy_apply(r, **attr):
                 rows = db(query).select(atable.id,
                                         atable.active)
                 rows = dict((row.id, row) for row in rows)
+                # onaccept is undefined in the default config
+                # but can be defined in templates, e.g. RMS Americas
+                # We are running in the hrm_human_resource controller so customise the deploy_application resource
+                tablename = "deploy_application"
+                r.customise_resource(tablename)
+                onaccept = s3db.get_config(tablename, "create_onaccept",
+                                s3db.get_config(tablename, "onaccept", None))
                 for human_resource_id in selected:
                     try:
                         hr_id = int(human_resource_id.strip())
@@ -1791,10 +1816,15 @@ def deploy_apply(r, **attr):
                             row.update_record(active=True)
                             added += 1
                     else:
-                        atable.insert(organisation_id = organisation_id,
-                                      human_resource_id = human_resource_id,
-                                      active = True,
-                                      )
+                        data = {"organisation_id": organisation_id,
+                                "human_resource_id": hr_id,
+                                "active": True,
+                                }
+                        application_id = atable.insert(**data)
+                        if onaccept:
+                            data["id"] = application_id
+                            form = Storage(vars = data)
+                            callback(onaccept, form, tablename=tablename)
                         added += 1
         current.session.confirmation = T("%(number)s %(team)s members added") % \
                                        {"number": added,

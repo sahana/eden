@@ -5727,9 +5727,7 @@ def config(settings):
         if controller == "member":
             return current.s3db.member_rheader(r)
         else:
-            s3db = current.s3db
-            s3db.hrm_vars()
-            return s3db.hrm_rheader(r)
+            return current.s3db.hrm_rheader(r)
 
     # -------------------------------------------------------------------------
     def customise_survey_series_controller(**attr):

@@ -1448,25 +1448,28 @@ class S3DynamicModel(object):
             # Type-specific field constructor
             fieldtype = row.field_type
             if row.options:
-                field = self._options_field(tablename, row)
+                construct = self._options_field
             elif fieldtype == "date":
-                field = self._date_field(tablename, row)
+                construct = self._date_field
             elif fieldtype == "datetime":
-                field = self._datetime_field(tablename, row)
+                construct = self._datetime_field
             elif fieldtype[:9] == "reference":
-                field = self._reference_field(tablename, row)
+                construct = self._reference_field
+            elif fieldtype == "boolean":
+                construct = self._boolean_field
             elif fieldtype in ("integer", "double"):
-                field = self._numeric_field(tablename, row)
+                construct = self._numeric_field
             else:
-                field = self._generic_field(tablename, row)
+                construct = self._generic_field
 
+            field = construct(tablename, row)
             if not field:
                 return None
 
             requires = field.requires
 
             # Handle require_not_empty
-            if row.require_not_empty:
+            if row.require_not_empty and fieldtype != "boolean":
                 if not requires:
                     requires = IS_NOT_EMPTY()
             elif requires:
@@ -1539,8 +1542,24 @@ class S3DynamicModel(object):
         fieldtype = row.field_type
         fieldopts = row.options
 
+        settings = row.settings or {}
+
+        # Always translate options unless translate_options is False
+        translate = settings.get("translate_options", True)
+        T = current.T
+
+        from s3utils import s3_str
+
+        sort = False
+        zero = ""
+
         if isinstance(fieldopts, dict):
-            options_dict = options = fieldopts
+            options = fieldopts
+            if translate:
+                options = dict((k, T(v)) for k, v in options.items())
+            options_dict = options
+            # Sort options unless sort_options is False (=default True)
+            sort = settings.get("sort_options", True)
 
         elif isinstance(fieldopts, list):
             options = []
@@ -1549,19 +1568,35 @@ class S3DynamicModel(object):
                     k, v = opt[:2]
                 else:
                     k, v = opt, s3_str(opt)
+                if translate:
+                    v = T(v)
                 options.append((k, v))
             options_dict = dict(options)
+            # Retain list order unless sort_options is True (=default False)
+            sort = settings.get("sort_options", False)
 
         else:
             options_dict = options = {}
-            represent = None
+
+        # Apply default value (if it is a valid option)
+        default = row.default_value
+        if default and s3_str(default) in (s3_str(k) for k in options_dict):
+            # No zero-option if we have a default value and
+            # the field must not be empty:
+            zero = None if row.require_not_empty else ""
+        else:
+            default = None
 
         from s3fields import S3Represent
         field = Field(fieldname, fieldtype,
+                      default = default,
                       represent = S3Represent(options = options_dict,
-                                              translate = True,
+                                              translate = translate,
                                               ),
-                      requires = IS_IN_SET(options)
+                      requires = IS_IN_SET(options,
+                                           sort = sort,
+                                           zero = zero,
+                                           )
                       )
         return field
 
@@ -1731,6 +1766,36 @@ class S3DynamicModel(object):
                       default = default,
                       requires = requires,
                       )
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _boolean_field(tablename, row):
+        """
+            Boolean field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        default = row.default_value
+        if default and default.lower() == "true":
+            default = True
+        else:
+            default = False
+
+        from s3utils import s3_yes_no_represent
+        field = Field(fieldname, fieldtype,
+                      default = default,
+                      represent = s3_yes_no_represent,
+                      requires = None,
+                      )
+
         return field
 
 # END =========================================================================
