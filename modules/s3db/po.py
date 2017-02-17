@@ -163,6 +163,7 @@ class OutreachAreaModel(S3Model):
                                   ),
                        #super_entity = ("doc_entity", "pr_pentity"),
                        super_entity = "doc_entity",
+                       update_realm = True,
                        )
 
         # ---------------------------------------------------------------------
