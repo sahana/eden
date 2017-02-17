@@ -1362,6 +1362,7 @@ class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
     names = ("dvr_activity",
+             "dvr_activity_id",
              "dvr_activity_age_group",
              "dvr_activity_focus",
              "dvr_activity_group_type",
@@ -1605,6 +1606,7 @@ class DVRCaseActivityModel(S3Model):
 
         tablename = "dvr_activity"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      service_id(label = T("Service Type"),
                                 ondelete = "SET NULL",
                                 readable = service_type,
@@ -1672,9 +1674,18 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table Options
+        configure(tablename,
+                  super_entity = "doc_entity",
+                  )
+
         # Components
         self.add_components(tablename,
                             dvr_case_activity = "activity_id",
+                            supply_distribution = {"link": "supply_distribution_case_activity",
+                                                   "joinby": "activity_id",
+                                                   "key": "distribution_id",
+                                                   },
                             )
 
         # CRUD Strings
@@ -2108,7 +2119,8 @@ class DVRCaseActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"dvr_case_activity_id": case_activity_id,
+        return {"dvr_activity_id": activity_id,
+                "dvr_case_activity_id": case_activity_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -2121,7 +2133,9 @@ class DVRCaseActivityModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"dvr_case_activity_id": lambda name="activity_id", **attr: \
+        return {"dvr_activity_id": lambda name="activity_id", **attr: \
+                                          dummy(name, **attr),
+                "dvr_case_activity_id": lambda name="case_activity_id", **attr: \
                                                dummy(name, **attr),
                 }
 

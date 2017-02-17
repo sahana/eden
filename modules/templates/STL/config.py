@@ -230,7 +230,8 @@ def config(settings):
                            IS_ONE_OF, \
                            S3HierarchyWidget, \
                            S3Represent, \
-                           S3SQLCustomForm
+                           S3SQLCustomForm, \
+                           S3SQLInlineComponent
 
             service_type = r.get_vars.get("service_type")
             if service_type == "MH":
@@ -384,6 +385,21 @@ def config(settings):
                         table.site_id.readable = True
                         table.room_id.readable = True
 
+                # Customise distributions
+                dtable = s3db.supply_distribution
+
+                # Default date today
+                field = dtable.date
+                field.default = current.request.utcnow.date()
+
+                # Default quantity 1
+                field = dtable.value
+                field.default = 1
+
+                # Don't allow to create new items from here
+                field = dtable.parameter_id
+                field.comment = None
+
                 # Custom list fields
                 list_fields = ["service_id",
                                "start_date",
@@ -410,6 +426,28 @@ def config(settings):
                                             "room_id",
                                             "location_id",
                                             "facilitator",
+                                            S3SQLInlineComponent(
+                                                "distribution",
+                                                explicit_add = T("Add Item"),
+                                                fields = [(T("Date"),"date"),
+                                                          "parameter_id",
+                                                          "value",
+                                                          ],
+                                                label = T("Item Distribution"),
+                                                # Embed the component rather than the link
+                                                link = False,
+                                                name = "distribution",
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "document",
+                                                name = "file",
+                                                label = T("Attachments"),
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                ),
                                             "comments",
                                             )
 
@@ -861,38 +899,11 @@ def config(settings):
             table.followup.default = False
             table.followup_date.default = None
 
-            # Customise distributions
-            dtable = s3db.supply_distribution
-
-            # Default date today
-            field = dtable.date
-            field.default = current.request.utcnow.date()
-
-            # Default quantity 1
-            field = dtable.value
-            field.default = 1
-
-            # Don't allow to create new items from here
-            field = dtable.parameter_id
-            field.comment = None
-
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
                                         "service_id",
                                         "activity_id",
-                                        S3SQLInlineComponent(
-                                            "distribution",
-                                            explicit_add = T("Add Item"),
-                                            fields = [(T("Date"),"date"),
-                                                      "parameter_id",
-                                                      "value",
-                                                      ],
-                                            label = T("Item Distribution"),
-                                            # Embed the component rather than the link
-                                            link = False,
-                                            name = "distribution",
-                                            ),
                                         S3SQLInlineComponent(
                                             "document",
                                             fields = ["file", "comments"],

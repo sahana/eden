@@ -1711,8 +1711,9 @@ class S3SupplyDistributionDVRActivityModel(S3Model):
         #
         tablename = "supply_distribution_case_activity"
         self.define_table(tablename,
-                          self.dvr_case_activity_id(empty = False,
-                                                    ondelete = "CASCADE",
+                          self.dvr_activity_id(ondelete = "CASCADE",
+                                               ),
+                          self.dvr_case_activity_id(ondelete = "CASCADE",
                                                     ),
                           self.supply_distribution_id(empty = False,
                                                       ondelete = "CASCADE",
