@@ -33,6 +33,8 @@ __all__ = ("S3HierarchyModel",
            "s3_table_rheader",
            )
 
+import random
+
 from gluon import *
 from ..s3 import *
 
@@ -193,7 +195,14 @@ class S3DynamicTablesModel(S3Model):
         #
         tablename = "s3_table"
         define_table(tablename,
+                     Field("title",
+                           label = T("Title"),
+                           ),
                      Field("name", length=128, unique=True, notnull=True,
+                           # Set a random name as default, so this field
+                           # can be hidden from the users (one-time default)
+                           default = "%s_%s" % (DYNAMIC_PREFIX, self.random_name()),
+                           filter_in = self.s3_table_name_filter_in,
                            label = T("Table Name"),
                            represent = self.s3_table_name_represent(),
                            requires = [IS_NOT_EMPTY(),
@@ -204,9 +213,6 @@ class S3DynamicTablesModel(S3Model):
                                        IS_LENGTH(128),
                                        IS_NOT_IN_DB(db, "s3_table.name"),
                                        ],
-                           ),
-                     Field("title",
-                           label = T("Title"),
                            ),
                      Field("mobile_form", "boolean",
                            label = T("Expose mobile form"),
@@ -345,6 +351,39 @@ class S3DynamicTablesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def random_name():
+        """
+            Generate a random name
+
+            @return: an 8-character random name
+        """
+
+        alpha = "abcdefghijklmnopqrstuvwxyz"
+        return ''.join(random.choice(alpha) for _ in range(8))
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def s3_table_name_filter_in(cls, name):
+        """
+            Make sure default table names are used only once (even if
+            multiple records are written during the same request cycle,
+            e.g. schema imports)
+
+            @param name: the name currently being written
+        """
+
+        field = db.s3_table.name
+
+        if not name:
+            return field.default
+        elif name == field.default:
+            # The name currently being written is the default,
+            # => set a new default for subsequent writes
+            field.default = "%s_%s" % (DYNAMIC_PREFIX, cls.random_name())
+        return name
 
     # -------------------------------------------------------------------------
     @staticmethod
