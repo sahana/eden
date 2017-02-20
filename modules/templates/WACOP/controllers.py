@@ -80,6 +80,9 @@ class index(S3CustomController):
                           orderby = "event_incident.name",
                           )
 
+        s3 = current.response.s3
+        s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % current.request.application)
+        s3.jquery_ready.append('''wacop_bookmarks()''')
         self._view(THEME, "index.html")
         return output
 
@@ -416,12 +419,30 @@ class custom_WACOP(S3CRUD):
                          _class="row well blue",
                          )
             gttable = s3db.gis_location_tag
+            btable = s3db.cms_post_user
+            bquery = (btable.event_id.belongs([row["cms_post.id"] for row in rows])) & \
+                     (btable.deleted == False)
+            bookmarks = db(bquery).select(btable.post_id)
+            bookmarks = [b.post_id for b in bookmarks]
             for row in rows:
                 record_id = row["cms_post.id"]
                 status = row["cms_post.status_id"]
                 post_dt = row._row["cms_post.date"]
                 post_date = post_dt.date().strftime("%b %d, %Y")
                 post_time = post_dt.time().strftime("%H:%M")
+                if record_id in bookmarks:
+                    bookmark = LI(ICON("bookmark"),
+                                  _title=T("Remove Bookmark"),
+                                  _class="item bookmark",
+                                  )
+                else:
+                    bookmark = LI(ICON("bookmark-empty"),
+                                  _title=T("Add Bookmark"),
+                                  _class="item bookmark",
+                                  )
+                bookmark["_data-c"] = "cms"
+                bookmark["_data-f"] = "post"
+                bookmark["_data-i"] = record_id
                 path = row._row["gis_location.path"]
                 if path:
                     L1 = path.split("/")[1]
@@ -446,17 +467,7 @@ class custom_WACOP(S3CRUD):
                                                                    ),
                                                                 _class="status-bar-left",
                                                                 ),
-                                                             UL(LI(A(A(ICON("bookmark"), # @ToDo: Different Icons for State?
-                                                                       # @ToDo: Tooltip?
-                                                                       #_title=T("Add Bookmark"),
-                                                                       #_title=T("Remove Bookmark"),
-                                                                       # @ToDo: Wire this up inc updating the icon?
-                                                                       #_id="alert-bookmark-%s" % record_id,
-                                                                       ),
-                                                                     _href="#",
-                                                                     ),
-                                                                   _class="item bookmark",
-                                                                   ),
+                                                             UL(bookmark,
                                                                 _class="controls",
                                                                 ),
                                                              # @ToDo: Allow user-visible string to be translated without affecting the style
@@ -550,10 +561,15 @@ class custom_WACOP(S3CRUD):
                          _class="row well",
                          )
             itable = s3db.event_incident
-            iquery= (itable.deleted == False)
+            iquery = (itable.deleted == False)
             rtable = s3db.event_team
-            rquery= (rtable.deleted == False)
+            rquery = (rtable.deleted == False)
             gttable = s3db.gis_location_tag
+            btable = s3db.event_bookmark
+            bquery = (btable.event_id.belongs([row["event_event.id"] for row in rows])) & \
+                     (btable.deleted == False)
+            bookmarks = db(bquery).select(btable.event_id)
+            bookmarks = [b.event_id for b in bookmarks]
             for row in rows:
                 record_id = row["event_event.id"]
                 incidents = db(iquery & (itable.event_id == record_id)).count()
@@ -581,6 +597,19 @@ class custom_WACOP(S3CRUD):
                                        )
                 else:
                     end_date = ""
+                if record_id in bookmarks:
+                    bookmark = LI(ICON("bookmark"),
+                                  _title=T("Remove Bookmark"),
+                                  _class="item bookmark",
+                                  )
+                else:
+                    bookmark = LI(ICON("bookmark-empty"),
+                                  _title=T("Add Bookmark"),
+                                  _class="item bookmark",
+                                  )
+                bookmark["_data-c"] = "event"
+                bookmark["_data-f"] = "event"
+                bookmark["_data-i"] = record_id
                 path = row._row["gis_location.path"]
                 if path:
                     L1 = path.split("/")[1]
@@ -603,16 +632,9 @@ class custom_WACOP(S3CRUD):
                                                                    ),
                                                                 _class="status-bar-left",
                                                                 ),
-                                                             UL(LI(ICON("bookmark"), # @ToDo: Different Icons for State?
-                                                                   # @ToDo: Tooltip?
-                                                                   #_title=T("Add Bookmark"),
-                                                                   #_title=T("Remove Bookmark"),
-                                                                   # @ToDo: Wire this up inc updating the icon?
-                                                                   #_id="event-bookmark-%s" % record_id,
-                                                                   _class="item bookmark",
-                                                                   ),
+                                                             UL(bookmark,
                                                                 # @ToDo: Permissions?
-                                                                LI(ICON("edit"),
+                                                                LI(ICON("pencil"),
                                                                    # @ToDo: Tooltip?
                                                                    #_title=T("Edit"),
                                                                    # @ToDo: Modal Edit?
@@ -1255,20 +1277,23 @@ class incident_Profile(custom_WACOP):
                                       limitby=(0, 1)
                                       ).first()
             if exists:
-                bookmark_btn = A(ICON("bookmark"),
-                                 _title=T("Remove Bookmark"),
-                                 _id="incident-bookmark",
-                                 )
+                bookmark = A(ICON("bookmark"),
+                             _title=T("Remove Bookmark"),
+                             _class="item bookmark",
+                             )
             else:
-                bookmark_btn = A(ICON("bookmark-empty"),
-                                 _title=T("Add Bookmark"),
-                                 _id="incident-bookmark",
-                                 )
-            script = '''incident_bookmarks(%s)''' % incident_id
+                bookmark = A(ICON("bookmark-empty"),
+                             _title=T("Add Bookmark"),
+                             _class="item bookmark",
+                             )
+            bookmark["_data-c"] = "event"
+            bookmark["_data-f"] = "incident"
+            bookmark["_data-i"] = incident_id
+            script = '''wacop_bookmarks()'''
             s3.jquery_ready.append(script)
         else:
-            bookmark_btn = ""
-        output["bookmark_btn"] = bookmark_btn
+            bookmark = ""
+        output["bookmark_btn"] = bookmark
 
         # Is this Incident part of an Event?
         event_id = record.event_id

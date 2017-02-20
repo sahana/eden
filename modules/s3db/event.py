@@ -90,11 +90,12 @@ class S3EventModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        settings = current.deployment_settings
+        set_method = self.set_method
 
         messages = current.messages
         NONE = messages["NONE"]
@@ -506,9 +507,18 @@ class S3EventModel(S3Model):
                             event_event_impact = "event_id",
                             )
 
-        self.set_method("event", "event",
-                        method = "dispatch",
-                        action = event_notification_dispatcher)
+        # Custom Methods
+        set_method("event", "event",
+                   method = "dispatch",
+                   action = event_notification_dispatcher)
+
+        set_method("event", "event",
+                   method = "add_bookmark",
+                   action = self.event_add_bookmark)
+
+        set_method("event", "event",
+                   method = "remove_bookmark",
+                   action = self.event_remove_bookmark)
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -587,7 +597,81 @@ class S3EventModel(S3Model):
                     event_type_id = lambda **attr: dummy("event_type_id"),
                     )
 
-    # =============================================================================
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def event_add_bookmark(r, **attr):
+        """
+            Bookmark an Event
+
+            S3Method for interactive requests
+        """
+
+        event_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not event_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.event_id == event_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(event_id = event_id,
+                                    user_id = user_id,
+                                    )
+
+        output = current.xml.json_message(True, 200, "Bookmark Added")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def event_remove_bookmark(r, **attr):
+        """
+            Remove a Bookmark for an Event
+
+            S3Method for interactive requests
+        """
+
+        event_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not event_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.event_id == event_id) & \
+                (ltable.user_id == user_id)
+        exists = current.db(query).select(ltable.id,
+                                          ltable.deleted,
+                                          limitby=(0, 1)
+                                          ).first()
+        if exists and not exists.deleted:
+            resource = s3db.resource("event_bookmark", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, "Bookmark Removed")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_event_year(row):
         """
@@ -1219,7 +1303,6 @@ class S3IncidentModel(S3Model):
         output = current.xml.json_message(True, 200, "Bookmark Removed")
         current.response.headers["Content-Type"] = "application/json"
         return output
-
 
 # =============================================================================
 class S3IncidentReportModel(S3Model):
@@ -1953,13 +2036,13 @@ class S3EventBookmarkModel(S3Model):
         # Bookamrks: Link table between Users & Events/Incidents
         tablename = "event_bookmark"
         self.define_table(tablename,
-                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = "CASCADE"),
                           self.event_incident_id(ondelete = "CASCADE"),
                           Field("user_id", current.auth.settings.table_user),
                           *s3_meta_fields())
 
         #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Bookmark Incident"),
+        #    label_create = T("Bookmark Incident"), # or Event
         #    title_display = T("Bookmark Details"),
         #    title_list = T("Bookmarks"),
         #    title_update = T("Edit Bookmark"),

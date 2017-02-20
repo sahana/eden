@@ -25,31 +25,6 @@ var incident_tags = function(incident_id) {
     }
 };
 
-// Bookmarks for Incident
-var incident_bookmarks = function(incident_id) {
-    $('#incident-bookmark').click(function() {
-        if ($('#incident-bookmark i').hasClass('fa-bookmark')) {
-            // Bookmark exists already
-            var url = S3.Ap.concat('/event/incident/' + incident_id + '/remove_bookmark');
-            $.getS3(url, function() {
-                // Update Icon
-                $('#incident-bookmark i').removeClass('fa-bookmark').addClass('fa-bookmark-o');
-                // Update Title - @ToDo: i18n
-                $(this).attr('title', 'Add Bookmark');
-            });
-        } else {
-            // Bookmark doesn't exist yet
-            var url = S3.Ap.concat('/event/incident/' + incident_id + '/add_bookmark');
-            $.getS3(url, function() {
-                // Update Icon
-                $('#incident-bookmark i').removeClass('fa-bookmark-o').addClass('fa-bookmark');
-                // Update Title - @ToDo: i18n
-                $(this).attr('title', 'Remove Bookmark');
-            });
-        }
-    });
-};
-
 $(document).ready(function() {
     $('main.main').attr('id', 'incident-profile');
 
