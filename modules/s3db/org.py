@@ -6351,7 +6351,7 @@ def org_rheader(r, tabs=[]):
                             ]
                 else:
                     if type_filter == "Training Center":
-                        # e.g.RMSAmericas 
+                        # e.g.RMSAmericas
                         skip_branches = True
                     tabs = [(T("Basic Details"), None, {"native": 1}),
                             ]
