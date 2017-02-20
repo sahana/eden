@@ -1,0 +1,361 @@
+// =====================================
+// 0. Utility
+// =====================================
+
+@mixin icon($name:'\f041',$color:false,$margin:rem-calc(5)){
+  &::before {
+    content: $name;
+    @if $color { color: $color; }
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    margin-right: $margin;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@mixin priority-icon($type:'I') {
+  &::before {
+    color: $dark;
+    display: inline-block;
+    font-size: small;
+    font-weight: bold;
+    text-align: center;
+    width: 20px;
+    line-height: 20px;
+  }
+  @if $type == 'D' {
+    &::before { 
+      content: "D";
+      background-color: $green;
+      border-radius: 30px;
+    }
+  } @else if $type == 'A' {
+    @include icon($name:'\f071',$color:$red,$margin:0);
+  } @else {
+    &::before {
+      content: 'I';
+      background-color: $yellow;
+    }
+  }
+}
+
+@mixin input-placeholder {
+    &.placeholder { @content; }
+    &:-moz-placeholder { @content; }
+    &::-moz-placeholder { @content; }
+    &:-ms-input-placeholder { @content; }
+    &::-webkit-input-placeholder { @content; } 
+}
+
+// =====================================
+// 1. Atoms
+// =====================================
+
+// Colors
+
+$blue:      $primary-color;
+$mint:      #4DB988;
+$red:       #FF5959;
+$yellow:    #E5AA07;
+$green:     #7EB94D;
+
+$gray:      #EFEFEF;
+$gray-alt:  #DDDDDD;
+$dark:      #4B4B4B;
+
+$body-font-color: $dark;
+
+// defaults
+
+$padding: 20;
+
+// Label
+@mixin meta-label($color:false,$size:rem-calc(12),$weight:$font-weight-normal){
+  font-family: $font-family-sans-serif;
+  font-size: $size;
+  @if $color { color: $color; }
+  letter-spacing: rem-calc(0.16);
+  text-transform: uppercase;
+  font-weight: $weight;
+  p, ul, h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+  }
+}
+
+// More
+// read more link
+@mixin read-more {
+  &::before {
+    content: '>> ';
+    vertical-align: text-bottom;
+  }
+  @include meta-label;
+}
+
+// Location one line
+@mixin location-inline {
+  @include icon($color:$red);
+}
+
+// -------------------------------------
+// Buttons
+
+.button {
+  @include button($bg:$blue,$radius:3px);
+  &.disabled, &[disabled] { 
+    @include button-style($bg:lighten($blue,30%), $disabled:true); 
+    &:hover { color: inherit; }
+  }
+
+  // Form postfix
+  &.postfix {
+    padding: $form-spacing / 2;
+    margin-left: $form-spacing / 2;
+  }
+}
+
+// =====================================
+// 2. MOLECULES
+// =====================================
+
+// -------------------------------------
+// Status Bar
+// Molecule that appears at the top of cards
+@mixin status-bar($bkg: $dark) {
+  @include clearfix;
+  background-color: $bkg;
+  color: white;
+  padding: 0 rem-calc($padding);
+  
+  a {
+    color: white;
+    &:hover {
+      
+    }
+  }
+
+  &.highlight {
+    background-color: $mint;
+  }
+  &.mute {
+    background-color: #888;
+  }
+  
+  // items in bar should be list items
+  ul {
+    margin: 0;
+    line-height: 2;
+    > li {
+      display: inline-block;
+      list-style: none;
+      margin-left: rem-calc(12);
+    }
+    &:first-child > li.icon:first-child {
+      margin-left: rem-calc(-10);
+    }
+  }
+
+  .item {
+    color: white;
+    font-weight: normal;
+    text-transform: uppercase;
+  }
+  .item.primary {
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .item.secondary {
+    text-transform: lowercase;
+    font-variant: small-caps;
+  }
+  .item.border {
+    border-style: solid;
+    border-color: rgba(255,255,255,.25);
+    border-width: 0 1px;
+    padding: 0 rem-calc(12);
+    & + .item.border {
+      margin-left: -1pt;
+      border-left: none;
+    }
+  }
+  .item.icon {}
+
+  // Status Icons
+  &.alert .item.icon {
+    @include priority-icon($type:'A')
+  }
+  &.important .item.icon {
+    @include priority-icon($type:'I')
+  }
+  &.description .item.icon {
+    @include priority-icon($type:'D')
+  }
+
+
+  .status-bar-left {
+    float: left;
+    > li:first-child {
+      margin-left: 0;
+    }
+  }
+
+  // Interactivity
+  // interactive icons that appear on the right of status bar
+  .controls {
+    float: right;
+  }
+}
+
+// -------------------------------------
+// Date & Location
+// call out boxes
+
+  // Date Location box
+  @mixin box-date-location($bkg: $gray-alt, $padding: $padding) {
+    background-color: $bkg;
+    padding: rem-calc($padding);
+    .adr {
+      @include location-inline;
+    }
+    .date-label {
+      @include meta-label;
+    }
+    .date {}
+  }
+
+  // Date box
+  @mixin box-date($bkg: $gray-alt, $padding: $padding) {
+    background-color: $bkg;
+    padding: rem-calc($padding);
+    .date-label {
+      @include meta-label;
+    }
+    .data {}
+  }
+
+  // Location box
+  @mixin box-location($bkg: $gray-alt, $padding: $padding) {
+    background-color: $bkg;
+    padding: rem-calc($padding);
+    .adr {}
+    .geo-location {
+      @include meta-label;
+      @include location-inline;
+    }
+  }
+
+// -------------------------------------
+// Search Input
+
+.search {
+  input {
+    border-right-width: 0;
+    @include input-placeholder {
+      @include meta-label;
+    }
+  }
+  .search-button {
+    margin: 0;
+    @include form-element;
+    border-left-width: 0;
+    text-align: center;
+  }
+}
+
+// =====================================
+// 3. ORGANISMS
+// =====================================
+
+// -------------------------------------
+// Callout
+$callout-bg: $blue;
+
+@mixin callout($bg:$callout-bg) {
+  @include clearfix;
+  @include panel($bg:lighten($bg, 30%),$border:false);
+  border-top: 4px solid $bg;
+  .callout-left {
+    @include grid-column(6,$collapse:true);
+  }
+  .callout-right {
+    @include grid-column(6,$collapse:true);
+  }
+}
+
+// -------------------------------------
+// Card
+// a box that displays information
+@mixin card($bkg:$gray) {
+  @include clearfix;
+  background-color: $bkg;
+  margin-bottom: rem-calc($padding);
+  .status-bar {
+    @include status-bar;
+  }
+
+  > .body,
+  > .footer {
+    padding: 0 rem-calc($padding);
+  }
+  .body {
+    padding-top: rem-calc($padding);
+  }
+  .footer {}
+}
+
+// -------------------------------------
+// Data List
+// list of data
+ul.data-list,
+ul.dl {
+  list-style-type: none;
+  margin: 0;
+  li,
+  ol {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+.data-list,
+.dl {
+  .dl-item {
+
+  }
+}
+
+// =====================================
+// 4. TEMPLATES
+// =====================================
+
+// -------------------------------------
+// Event Card
+.card-event {
+  @include card;
+  .event-date-location {
+    @include box-date-location($padding:$padding);
+    margin: 0 rem-calc(-$padding) rem-calc($padding);
+    .adr,
+    .date {
+      font-size: $h4-font-size;
+      font-weight: bold;
+    }
+  }
+}
+
+// -------------------------------------
+// Alert Card
+
+.card-alert {
+  @include card;
+  .title {
+    font-size: $h3-font-size;
+  }
+  .meta-location {
+    @include location-inline;
+    @include meta-label;
+  }
+}

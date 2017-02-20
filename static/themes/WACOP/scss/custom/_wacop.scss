@@ -1,0 +1,22 @@
+.meta {
+  @include meta-label;
+}
+
+.well {
+  padding-top: rem-calc($padding);
+  .well-title {
+    @include grid-column(12);
+    small {
+      margin-left: 20px;
+    }
+  }
+  &.blue {
+    background-color: $blue;
+    .well-title {
+      color: white;
+      a {
+        @include meta-label($color:white)
+      }
+    }
+  }
+}

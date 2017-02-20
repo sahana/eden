@@ -123,7 +123,7 @@ $steel       : #666666;
 $black       : #000000;
 
 // We use these as default colors throughout
-$primary-color  : #008cba;
+$primary-color  : #4D7EB9;
 $secondary-color: #e7e7e7;
 $alert-color    : #D92C20;
 // $success-color: #43AC6A;
@@ -229,8 +229,8 @@ $header-font-color: $darkblue;
 // We use these to control header font sizes
 // $h1-font-size: rem-calc(44);
 // $h2-font-size: rem-calc(37);
-// $h3-font-size: rem-calc(27);
-// $h4-font-size: rem-calc(23);
+$h3-font-size: rem-calc(27);
+$h4-font-size: rem-calc(23);
 // $h5-font-size: rem-calc(18);
 // $h6-font-size: 1rem;
 
