@@ -645,7 +645,7 @@ class custom_WACOP(S3CRUD):
                                                                 ),
                                                              _class="status-bar highlight",
                                                              ),
-                                               DIV(H1(row["event_event.title"],
+                                               DIV(H1(row["event_event.name"],
                                                       _class="title",
                                                       ),
                                                    DIV(DIV(SPAN(addr_street,
