@@ -1738,13 +1738,13 @@ def vol_person_controller():
                 table.person_id.writable = table.person_id.readable = False
                 table.site_id.writable = table.site_id.readable = False
                 table.site_contact.writable = table.site_contact.readable = False
-                org = session.s3.hrm.org
-                field = table.organisation_id
-                if org is None:
-                    field.widget = None
-                else:
-                    field.default = org
-                    field.readable = field.writable = False
+                #org = session.s3.hrm.org
+                #field = table.organisation_id
+                #if org is None:
+                #    field.widget = None
+                #else:
+                #    field.default = org
+                #    field.readable = field.writable = False
 
                 # Organisation Dependent Fields
                 # @ToDo: Move these to the IFRC Template & make Lazy settings
@@ -1752,6 +1752,7 @@ def vol_person_controller():
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
+
             elif method == "cv" or r.component_name == "training":
                 list_fields = ["course_id",
                                "grade",

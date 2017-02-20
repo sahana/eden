@@ -98,7 +98,7 @@ def config(settings):
                                 hrm_credential = PID,
                                 hrm_experience = PID,
                                 hrm_human_resource = SID,
-                                hrm_training = PID,
+                                hrm_training = PID, # Also see-below
                                 pr_contact = [("org_organisation", EID),
                                               ("po_household", EID),
                                               ("pr_person", EID),
@@ -176,7 +176,7 @@ def config(settings):
                 query = (table.id == row.id) & \
                         (table[fk] == ftable.id)
             record = db(query).select(ftable.realm_entity,
-                                        limitby=(0, 1)).first()
+                                      limitby=(0, 1)).first()
             if record:
                 realm_entity = record.realm_entity
                 break
@@ -188,55 +188,55 @@ def config(settings):
         use_user_organisation = False
         #use_user_root_organisation = False
 
-        if realm_entity == 0 and tablename == "org_organisation":
-            if current.request.controller == "po":
-                # Referral Agencies to be in the root_org realm
-                realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                 auth.root_org())
-            else:
-                # Suppliers & Partners are in the user organisation's realm
-                # @note: when the organisation record is first written, no
-                #        type-link would exist yet, so this needs to be
-                #        called again every time the type-links for an
-                #        organisation change in order to be effective
-                ottable = s3db.org_organisation_type
-                ltable = db.org_organisation_organisation_type
-                query = (ltable.organisation_id == row.id) & \
-                        (ottable.id == ltable.organisation_type_id) & \
-                        (ottable.name == "Red Cross / Red Crescent")
-                rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
-                if not rclink:
-                    use_user_organisation = True
-
-        elif tablename in ("org_facility", "req_req"):
+        if tablename in ("org_facility", "req_req"):
             # Facilities & Requisitions are in the user organisation's realm
             use_user_organisation = True
 
-        elif tablename == "hrm_training":
-            # Inherit realm entity from the related HR record
-            htable = s3db.hrm_human_resource
-            query = (table.id == row.id) & \
-                    (htable.person_id == table.person_id) & \
-                    (htable.deleted != True)
-            rows = db(query).select(htable.realm_entity, limitby=(0, 2))
-            if len(rows) == 1:
-                realm_entity = rows.first().realm_entity
-            else:
-                # Ambiguous => try course organisation
-                ctable = s3db.hrm_course
-                otable = s3db.org_organisation
-                query = (table.id == row.id) & \
-                        (ctable.id == table.course_id) & \
-                        (otable.id == ctable.organisation_id)
-                row = db(query).select(otable.pe_id,
-                                       limitby=(0, 1)).first()
-                if row:
-                    realm_entity = row.pe_id
-                # otherwise: inherit from the person record
+        elif realm_entity == 0:
+            if tablename == "org_organisation":
+                if current.request.controller == "po":
+                    # Referral Agencies to be in the root_org realm
+                    realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                     auth.root_org())
+                else:
+                    # Suppliers & Partners are in the user organisation's realm
+                    # @note: when the organisation record is first written, no
+                    #        type-link would exist yet, so this needs to be
+                    #        called again every time the type-links for an
+                    #        organisation change in order to be effective
+                    ottable = s3db.org_organisation_type
+                    ltable = db.org_organisation_organisation_type
+                    query = (ltable.organisation_id == row.id) & \
+                            (ottable.id == ltable.organisation_type_id) & \
+                            (ottable.name == "Red Cross / Red Crescent")
+                    rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
+                    if not rclink:
+                        use_user_organisation = True
 
-        elif realm_entity == 0 and tablename == "pr_group":
-            # Groups are in the user organisation's realm if not linked to an Organisation directly
-            use_user_organisation = True
+            elif tablename == "hrm_training":
+                # Inherit realm entity from the related HR record if none set on the person record
+                htable = s3db.hrm_human_resource
+                query = (table.id == row.id) & \
+                        (htable.person_id == table.person_id) & \
+                        (htable.deleted != True)
+                rows = db(query).select(htable.realm_entity, limitby=(0, 2))
+                if len(rows) == 1:
+                    realm_entity = rows.first().realm_entity
+                else:
+                    # Ambiguous => try course organisation
+                    ctable = s3db.hrm_course
+                    otable = s3db.org_organisation
+                    query = (table.id == row.id) & \
+                            (ctable.id == table.course_id) & \
+                            (otable.id == ctable.organisation_id)
+                    row = db(query).select(otable.pe_id,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        realm_entity = row.pe_id
+
+            elif tablename == "pr_group":
+                # Groups are in the user organisation's realm if not linked to an Organisation directly
+                use_user_organisation = True
 
         user = auth.user
         if user:
