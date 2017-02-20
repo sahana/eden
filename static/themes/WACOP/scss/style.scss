@@ -4,12 +4,15 @@ $include-html-classes: false;
 $include-html-global-classes: false;
 @import "../../foundation/scss/components/global";
 @import "../../foundation/scss/components/forms";
+@import "../../foundation/scss/components/grid";
+@import "../../foundation/scss/components/tabs";
 
 // CUSTOM VARIABLES & MIXINS
 // before writing custom CSS, search variables in _settings
 
 @import "custom/variables";
 @import "custom/colors";
+@import "custom/mixins";
 
 // CUSTOM MODULES
 
@@ -23,6 +26,7 @@ $include-html-global-classes: false;
 @import "custom/charts";
 @import "custom/widgets";
 @import "custom/misc";
+@import "custom/wacop";
 
 // CUSTOM PAGES
 
