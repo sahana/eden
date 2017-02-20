@@ -308,6 +308,20 @@ class S3DynamicTablesModel(S3Model):
                      Field("default_value",
                            label = T("Default Value"),
                            ),
+                     Field("component_key", "boolean",
+                           label = T("Is Component Key"),
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("master",
+                           # Hidden field, will be set onaccept
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("component_alias", length=128,
+                           label = T("Component Alias"),
+                           requires = IS_EMPTY_OR((IS_LENGTH(128), IS_LOWER())),
+                           ),
                      Field("settings", "json",
                            label = T("Settings"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -331,6 +345,7 @@ class S3DynamicTablesModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary=("table_id", "name")),
                        onvalidation = self.s3_field_onvalidation,
+                       onaccept = self.s3_field_onaccept,
                        )
 
         # CRUD Strings
@@ -375,7 +390,8 @@ class S3DynamicTablesModel(S3Model):
             @param name: the name currently being written
         """
 
-        field = db.s3_table.name
+        table = current.s3db.s3_table
+        field = table.name
 
         if not name:
             return field.default
@@ -426,42 +442,48 @@ class S3DynamicTablesModel(S3Model):
         else:
             record_id = None
 
+        record = form.record if hasattr(form, "record") else None
+
+        db = current.db
+
+        # Get previous values if record exists
+        if record_id:
+            fields_required = ("table_id",
+                               "name",
+                               "field_type",
+                               "component_key",
+                               "component_alias",
+                               )
+            if not record:
+                missing = fields_required
+            else:
+                missing = []
+                for fieldname in fields_required:
+                    if fieldname not in record:
+                        missing.append(fieldname)
+            if missing:
+                query = (table.id == record_id)
+                record = db(query).select(limitby=(0, 1), *missing).first()
+
+
+        # Get the table ID
+        table_id = None
+        if "table_id" in form_vars:
+            table_id = form_vars.table_id
+        elif record and "table_id" in record:
+            table_id = record.table_id
+        else:
+            table_id = table.table_id.default
+
+        # Verify field name
         if "name" in form_vars:
             new_name = form_vars.name
 
-            record = form.record if hasattr(form, "record") else None
-            missing = []
-
-            # Get the table ID
-            table_id = None
-            if "table_id" in form_vars:
-                table_id = form_vars.table_id
-            elif record and "table_id" in record:
-                table_id = record.table_id
-            elif not record_id:
-                table_id = table.table_id.default
-            else:
-                missing.append("table_id")
-
             # Get the current field name
-            current_name = None
-            if record_id:
-                if record and "name" in record:
-                    current_name = record.name
-                else:
-                    missing.append("name")
-
-            db = current.db
-
-            # Need to reload the record?
-            if record_id and missing:
-                query = table.id == record_id
-                row = db(query).select(limitby = (0, 1), *missing).first()
-                if row:
-                    if "name" in missing:
-                        current_name = row.name
-                    if "table_id" in missing:
-                        table_id = row.table_id
+            if record:
+                current_name = record.name
+            else:
+                current_name = None
 
             # Verify that new field name is unique within the table
             if new_name != current_name and table_id:
@@ -475,6 +497,90 @@ class S3DynamicTablesModel(S3Model):
                                        ).first()
                 if row:
                     form.errors["name"] = "A field with this name already exists in this table"
+
+        # Verify component settings
+        if "component_key" in form_vars:
+            component_key = form_vars.component_key
+        elif record:
+            component_key = record.component_key
+        else:
+            component_key = table.component_key.default
+        if component_key:
+
+            # Determine the master table name
+            master = None
+            if "field_type" in form_vars:
+                field_type = form_vars.field_type
+            elif record:
+                field_type = record.field_type
+            else:
+                field_type = table.field_type.default
+            field_type = str(field_type)
+            if field_type[:10] == "reference ":
+                ktablename = field_type.split(" ", 1)[1]
+                if "." in ktablename:
+                    ktablename = ktablename.split(".", 1)[0]
+                master = ktablename
+
+            # Make sure the alias is unique for the master table
+            if "component_alias" in form_vars:
+                component_alias = form_vars.component_alias
+            elif record:
+                component_alias = record.component_alias
+            if not component_alias:
+                ttable = current.s3db.s3_table
+                query = ttable.id == table_id
+                row = db(query).select(ttable.name,
+                                       limitby = (0, 1),
+                                       ).first()
+                tablename = row.name
+                component_alias = tablename.split("_", 1)[1]
+                form_vars.component_alias = component_alias
+
+            # Verify that no other dynamic component with
+            # this alias exists for the same master table
+            query = ((table.field_type == "reference %s" % master) | \
+                     (table.field_type.like("reference %s.%%" % master))) & \
+                    (table.component_key == True) & \
+                    (table.component_alias == component_alias) & \
+                    (table.deleted != True)
+            if record_id:
+                query &= (table.id != record_id)
+            row = db(query).select(table.id, limitby=(0, 1)).first()
+            if row:
+                form.errors["component_alias"] = "A component with this alias already exists for this master table"
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def s3_field_onaccept(form):
+        """
+            On-accept routine for s3_field:
+                - set master table name for component keys (from field type)
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            return
+
+        table = current.s3db.s3_field
+        row = current.db(table.id == record_id).select(table.id,
+                                                       table.component_key,
+                                                       table.field_type,
+                                                       limitby = (0, 1),
+                                                       ).first()
+
+        master = None
+        if row and row.component_key:
+            field_type = str(row.field_type)
+            if field_type[:10] == "reference ":
+                ktablename = field_type.split(" ", 1)[1]
+                if "." in ktablename:
+                    ktablename = ktablename.split(".", 1)[0]
+                master = ktablename
+
+        row.update_record(master=master)
 
 # =============================================================================
 def s3_table_rheader(r, tabs=None):
@@ -496,8 +602,12 @@ def s3_table_rheader(r, tabs=None):
         if r.tablename == "s3_table":
 
             if not tabs:
-                tabs = [(T("Table"), None),
-                        (T("Fields"), "field"),
+
+                # Use default/tables as native controller for s3_table
+                tab_vars = {"native": True}
+
+                tabs = [(T("Table"), None, tab_vars),
+                        (T("Fields"), "field", tab_vars),
                         ]
 
             rheader_fields = [["name"],
