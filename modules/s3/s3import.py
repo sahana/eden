@@ -3981,12 +3981,11 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            current.log.debug("Running job %s %s (filename=%s transform=%s)",
-                              task[1],
-                              task[2],
-                              task[3],
-                              task[4],
-                              )
+            current.log.debug("Running job %s %s (filename=%s transform=%s)" % (task[1],
+                                                                                task[2],
+                                                                                task[3],
+                                                                                task[4],
+                                                                                ))
 
             prefix = task[1]
             name = task[2]
