@@ -215,7 +215,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
                 url += "&%s" % urlfilter
 
-        _debug("...pull from URL %s", url)
+        _debug("...pull from URL %s" % url)
 
         # Figure out the protocol from the URL
         url_split = url.split("://", 1)
@@ -417,7 +417,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         config = repository.config
         resource_name = task.resource_name
 
-        _debug("S3SyncRepository.push(%s, %s)", repository.url, resource_name)
+        _debug("S3SyncRepository.push(%s, %s)" % (repository.url, resource_name))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -436,7 +436,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             url += "&msince=%s" % s3_encode_iso_datetime(last_push)
         else:
             last_push = None
-        _debug("...push to URL %s", url)
+        _debug("...push to URL %s" % url)
 
         # Define the resource
         resource = current.s3db.resource(resource_name,
@@ -472,7 +472,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # Proxy handling
             proxy = repository.proxy or config.proxy or None
             if proxy:
-                _debug("using proxy=%s", proxy)
+                _debug("using proxy=%s" % proxy)
                 proxy_handler = urllib2.ProxyHandler({protocol: proxy})
                 handlers.append(proxy_handler)
 

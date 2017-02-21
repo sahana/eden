@@ -534,10 +534,10 @@ class S3Sync(S3Method):
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s", resource.tablename)
-        _debug("Repository: %s", repository.name)
-        _debug("Conflicting item: %s", item)
-        _debug("Method: %s", item.method)
+        _debug("Resolving conflict in %s" % resource.tablename)
+        _debug("Repository: %s" % repository.name)
+        _debug("Conflicting item: %s" % item)
+        _debug("Method: %s" % item.method)
 
         if resolver:
             _debug("Applying custom rule")

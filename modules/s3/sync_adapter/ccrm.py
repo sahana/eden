@@ -86,7 +86,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         response, error = self._send_request(**request)
 
         if error:
-            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
             return error
 
         api_key = response.findall("//api_key")
@@ -94,14 +94,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             self.api_key = api_key[0].text
         else:
             error = "No API Key returned by CiviCRM"
-            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
             return error
         PHPSESSID = response.findall("//PHPSESSID")
         if len(PHPSESSID):
             self.PHPSESSID = PHPSESSID[0].text
         else:
             error = "No PHPSESSID returned by CiviCRM"
-            _debug("S3SyncCiviCRM.login FAILURE: %s", error)
+            _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
             return error
 
         _debug("S3SyncCiviCRM.login SUCCESS")
@@ -127,7 +127,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.pull(%s, %s)", repository.url, resource_name)
+        _debug("S3SyncCiviCRM.pull(%s, %s)" % (repository.url, resource_name))
 
         mtime = None
         message = ""
@@ -248,7 +248,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        _debug("S3SyncCiviCRM.pull import %s: %s", result, message)
+        _debug("S3SyncCiviCRM.pull import %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -271,7 +271,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.push(%s, %s)", repository.url, resource_name)
+        _debug("S3SyncCiviCRM.push(%s, %s)" % (repository.url, resource_name))
 
         result = log.FATAL
         remote = False
@@ -288,7 +288,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        _debug("S3SyncCiviCRM.push export %s: %s", result, message)
+        _debug("S3SyncCiviCRM.push export %s: %s" % (result, message))
         return(output, None)
 
     # -------------------------------------------------------------------------
