@@ -246,23 +246,37 @@ class S3DynamicModelTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        # Create a dynamic table
         ttable = s3db.s3_table
+        ftable = s3db.s3_field
+
+        # Create dynamic table
         table_id = ttable.insert(name = cls.TABLENAME,
                                  )
 
-        # Add two fields
-        ftable = s3db.s3_field
-        ftable.insert(table_id = table_id,
-                      name = "name",
-                      field_type = "string",
-                      label = "My Name",
-                      comments = "Explanation of the field",
-                      )
-        ftable.insert(table_id = table_id,
-                      name = "some_number",
-                      field_type = "integer",
-                      )
+        # The dynamic data model
+        model = (
+            # String field
+            {"name": "name",
+             "field_type": "string",
+             "label": "My Name",
+             "comments": "Explanation of the field",
+             },
+            # Numeric field
+            {"name": "some_number",
+             "field_type": "integer",
+             },
+            )
+
+        for field_def in model:
+
+            # Add field definition
+            record = Storage(field_def)
+            record["table_id"] = table_id
+            record_id = ftable.insert(**record)
+
+            # Run onaccept
+            record["id"] = record_id
+            s3db.onaccept(ftable, record)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -955,12 +969,132 @@ class S3DynamicModelTests(unittest.TestCase):
                               ])
 
 # =============================================================================
+class S3DynamicComponentTests(unittest.TestCase):
+    """ Dynamic Component Tests """
+
+    TABLENAME = "%s_test_component" % DYNAMIC_PREFIX
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        ttable = s3db.s3_table
+        ftable = s3db.s3_field
+
+        # Create dynamic table
+        table_id = ttable.insert(name = cls.TABLENAME,
+                                 )
+
+        # The dynamic data model
+        model = (
+            # Component key
+            {"name": "organisation_id",
+             "field_type": "reference org_organisation",
+             "component_key": True,
+             "component_alias": "test_rating",
+             "label": "Organisation",
+             },
+             # Other field
+             {"name": "value",
+              "field_type": "integer",
+              "options": {1: "very good",
+                          2: "good",
+                          3: "average",
+                          4: "acceptable",
+                          5: "poor",
+                          },
+              },
+             )
+
+        for field_def in model:
+
+            # Add field definition
+            record = Storage(field_def)
+            record["table_id"] = table_id
+            record_id = ftable.insert(**record)
+
+            # Run onaccept
+            record["id"] = record_id
+            s3db.onaccept(ftable, record)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Remove the dynamic table
+        s3db = current.s3db
+
+        ttable = s3db.s3_table
+        query = (ttable.name == cls.TABLENAME)
+        current.db(query).delete()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        s3db = current.s3db
+
+        self.dynamic_components = s3db.get_config("org_organisation",
+                                                  "dynamic_components",
+                                                  )
+
+        s3db.configure("org_organisation",
+                       dynamic_components = True,
+                       )
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.s3db.configure("org_organisation",
+                               dynamic_components = self.dynamic_components,
+                               )
+
+    # -------------------------------------------------------------------------
+    def testComponentAccess(self):
+        """ Test access to dynamic components """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        resource = s3db.resource("org_organisation")
+
+        # Verify that the component is present
+        assertTrue("test_rating" in resource.components)
+        component = resource.components["test_rating"]
+
+        # Verify table name of the component
+        assertEqual(component.tablename, self.TABLENAME)
+
+        # Verify fields in the component table
+        assertTrue("organisation_id" in component.fields)
+        assertTrue("value" in component.fields)
+
+    # -------------------------------------------------------------------------
+    def testFieldSelectorResolution(self):
+        """ Test field selector resolution for dynamic components """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+
+        resource = s3db.resource("org_organisation")
+        rfield = resource.resolve_selector("test_rating.value")
+
+        assertEqual(rfield.tname, self.TABLENAME)
+        assertEqual(rfield.fname, "value")
+        assertEqual(rfield.ftype, "integer")
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         #S3ModelTests,
         S3SuperEntityTests,
         S3DynamicModelTests,
+        S3DynamicComponentTests,
     )
 
 # END ========================================================================
