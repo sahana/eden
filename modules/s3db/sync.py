@@ -273,6 +273,7 @@ class SyncDataModel(S3Model):
                      # User-visible field for Admin
                      s3_datetime("last_connected",
                                  label = T("Last Connected"),
+                                 writable = False,
                                  ),
                      # System fields
                      Field.Method("last_pull_time",

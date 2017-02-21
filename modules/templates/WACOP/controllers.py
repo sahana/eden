@@ -419,30 +419,39 @@ class custom_WACOP(S3CRUD):
                          _class="row well blue",
                          )
             gttable = s3db.gis_location_tag
-            btable = s3db.cms_post_user
-            bquery = (btable.event_id.belongs([row["cms_post.id"] for row in rows])) & \
-                     (btable.deleted == False)
-            bookmarks = db(bquery).select(btable.post_id)
-            bookmarks = [b.post_id for b in bookmarks]
+            auth = current.auth
+            if auth.is_logged_in():
+                logged_in = True
+                user_id = auth.user.id
+                btable = s3db.cms_post_user
+                bquery = (btable.post_id.belongs([row["cms_post.id"] for row in rows])) & \
+                         (btable.deleted == False)
+                bookmarks = db(bquery).select(btable.post_id)
+                bookmarks = [b.post_id for b in bookmarks]
+            else:
+                logged_in = False
             for row in rows:
                 record_id = row["cms_post.id"]
                 status = row["cms_post.status_id"]
                 post_dt = row._row["cms_post.date"]
                 post_date = post_dt.date().strftime("%b %d, %Y")
                 post_time = post_dt.time().strftime("%H:%M")
-                if record_id in bookmarks:
-                    bookmark = LI(ICON("bookmark"),
-                                  _title=T("Remove Bookmark"),
-                                  _class="item bookmark",
-                                  )
+                if logged_in:
+                    if record_id in bookmarks:
+                        bookmark = LI(ICON("bookmark"),
+                                      _title=T("Remove Bookmark"),
+                                      _class="item bookmark",
+                                      )
+                    else:
+                        bookmark = LI(ICON("bookmark-empty"),
+                                      _title=T("Add Bookmark"),
+                                      _class="item bookmark",
+                                      )
+                    bookmark["_data-c"] = "cms"
+                    bookmark["_data-f"] = "post"
+                    bookmark["_data-i"] = record_id
                 else:
-                    bookmark = LI(ICON("bookmark-empty"),
-                                  _title=T("Add Bookmark"),
-                                  _class="item bookmark",
-                                  )
-                bookmark["_data-c"] = "cms"
-                bookmark["_data-f"] = "post"
-                bookmark["_data-i"] = record_id
+                    bookmark = ""
                 path = row._row["gis_location.path"]
                 if path:
                     L1 = path.split("/")[1]
@@ -522,8 +531,8 @@ class custom_WACOP(S3CRUD):
 
         tablename = "event_event"
         resource = s3db.resource(tablename)
-        # @ToDo: Just show Open Events?
-        #resource.add_filter(FS("~.closed") == False)
+        # Just show Open Events
+        resource.add_filter(FS("~.closed") == False)
 
         list_fields = ["id",
                        "name",
@@ -565,11 +574,20 @@ class custom_WACOP(S3CRUD):
             rtable = s3db.event_team
             rquery = (rtable.deleted == False)
             gttable = s3db.gis_location_tag
-            btable = s3db.event_bookmark
-            bquery = (btable.event_id.belongs([row["event_event.id"] for row in rows])) & \
-                     (btable.deleted == False)
-            bookmarks = db(bquery).select(btable.event_id)
-            bookmarks = [b.event_id for b in bookmarks]
+            auth = current.auth
+            if auth.is_logged_in():
+                logged_in = True
+                user_id = auth.user.id
+                etable = s3db.event_event
+                has_permission = auth.s3_has_permission
+                btable = s3db.event_bookmark
+                bquery = (btable.user_id == user_id) & \
+                         (btable.event_id.belongs([row["event_event.id"] for row in rows])) & \
+                         (btable.deleted == False)
+                bookmarks = db(bquery).select(btable.event_id)
+                bookmarks = [b.event_id for b in bookmarks]
+            else:
+                logged_in = False
             for row in rows:
                 record_id = row["event_event.id"]
                 incidents = db(iquery & (itable.event_id == record_id)).count()
@@ -597,19 +615,35 @@ class custom_WACOP(S3CRUD):
                                        )
                 else:
                     end_date = ""
-                if record_id in bookmarks:
-                    bookmark = LI(ICON("bookmark"),
-                                  _title=T("Remove Bookmark"),
-                                  _class="item bookmark",
+                if logged_in:
+                    if record_id in bookmarks:
+                        bookmark = LI(ICON("bookmark"),
+                                      _title=T("Remove Bookmark"),
+                                      _class="item bookmark",
+                                      )
+                    else:
+                        bookmark = LI(ICON("bookmark-empty"),
+                                      _title=T("Add Bookmark"),
+                                      _class="item bookmark",
+                                      )
+                    bookmark["_data-c"] = "event"
+                    bookmark["_data-f"] = "event"
+                    bookmark["_data-i"] = record_id
+                    if has_permission("update", etable, record_id):
+                        edit = LI(A(ICON("pencil"),
+                                    _href=URL(c="event", f="event",
+                                              args=["%s.popup" % record_id, "update"]
+                                              ),
+                                    _title=T("Edit Event"),
+                                    _class="s3_modal",
+                                    ),
+                                  _class="item edit",
                                   )
+                    else:
+                        edit = ""
                 else:
-                    bookmark = LI(ICON("bookmark-empty"),
-                                  _title=T("Add Bookmark"),
-                                  _class="item bookmark",
-                                  )
-                bookmark["_data-c"] = "event"
-                bookmark["_data-f"] = "event"
-                bookmark["_data-i"] = record_id
+                    bookmark = ""
+                    edit = ""
                 path = row._row["gis_location.path"]
                 if path:
                     L1 = path.split("/")[1]
@@ -633,14 +667,7 @@ class custom_WACOP(S3CRUD):
                                                                 _class="status-bar-left",
                                                                 ),
                                                              UL(bookmark,
-                                                                # @ToDo: Permissions?
-                                                                LI(ICON("pencil"),
-                                                                   # @ToDo: Tooltip?
-                                                                   #_title=T("Edit"),
-                                                                   # @ToDo: Modal Edit?
-                                                                   #_id="event-edit-%s" % record_id,
-                                                                   _class="item edit",
-                                                                   ),
+                                                                edit,
                                                                 _class="controls",
                                                                 ),
                                                              _class="status-bar highlight",

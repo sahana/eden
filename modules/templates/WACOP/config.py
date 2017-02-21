@@ -283,35 +283,35 @@ def config(settings):
                 result = standard_prep(r)
 
             if r.representation == "popup":
-                # Popups for lists in Parent Event of Incident Screen
-
-                # No Title since this is on the Popup
-                s3.crud_strings["event_event"].title_display = ""
-                # No create button & Tweak list_fields
                 cname = r.component_name
-                if cname == "incident":
-                    list_fields = ["date",
-                                   "name",
-                                   "incident_type_id",
-                                   ]
-                elif cname == "team":
-                    list_fields = ["incident_id",
-                                   "group_id",
-                                   "status_id",
-                                   ]
-                elif cname == "post":
-                    list_fields = ["date",
-                                   "series_id",
-                                   "priority",
-                                   "status_id",
-                                   "body",
-                                   ]
-                else:
-                    # Shouldn't get here but want to avoid crashes
-                    list_fields = []
-                r.component.configure(insertable = False,
-                                      list_fields = list_fields,
-                                      )
+                if cname:
+                    # Popups for lists in Parent Event of Incident Screen
+                    # No Title since this is on the Popup
+                    s3.crud_strings["event_event"].title_display = ""
+                    # No create button & Tweak list_fields
+                    if cname == "incident":
+                        list_fields = ["date",
+                                       "name",
+                                       "incident_type_id",
+                                       ]
+                    elif cname == "team":
+                        list_fields = ["incident_id",
+                                       "group_id",
+                                       "status_id",
+                                       ]
+                    elif cname == "post":
+                        list_fields = ["date",
+                                       "series_id",
+                                       "priority",
+                                       "status_id",
+                                       "body",
+                                       ]
+                    else:
+                        # Shouldn't get here but want to avoid crashes
+                        list_fields = []
+                    r.component.configure(insertable = False,
+                                          list_fields = list_fields,
+                                          )
 
             return True
         s3.prep = custom_prep

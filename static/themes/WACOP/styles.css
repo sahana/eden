@@ -39,6 +39,10 @@ p .label {
   vertical-align: middle;
 }
 
+.item.bookmark {
+  cursor: pointer;
+}
+
 /**
  * Forms
  */
