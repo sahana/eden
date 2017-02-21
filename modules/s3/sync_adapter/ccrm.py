@@ -34,14 +34,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3sync import S3SyncBaseAdapter
-from ..s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC/CCRM: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -79,6 +71,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             @return: None if successful, otherwise the error
         """
+
+        _debug = current.log.debug
 
         _debug("S3SyncCiviCRM.login()")
 
@@ -128,6 +122,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
+        _debug = current.log.debug
         repository = self.repository
         log = repository.log
         resource_name = task.resource_name
@@ -270,6 +265,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
+        _debug = current.log.debug
         repository = self.repository
 
         log = repository.log
@@ -320,7 +316,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Proxy handling
         proxy = repository.proxy or config.proxy or None
         if proxy:
-            _debug("using proxy=%s", proxy)
+            current.log.debug("using proxy=%s", proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
             handlers.append(proxy_handler)
 

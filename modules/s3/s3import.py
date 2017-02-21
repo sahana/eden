@@ -61,15 +61,8 @@ from gluon.tools import callback, fetch
 from s3datetime import s3_utc
 from s3rest import S3Method, S3Request
 from s3resource import S3Resource
-from s3utils import S3ModuleDebug, s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_auth_user_represent_name
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_auth_user_represent_name
 from s3xml import S3XML
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3IMPORTER: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Importer(S3Method):
@@ -150,7 +143,7 @@ class S3Importer(S3Method):
 
         """
 
-        _debug("S3Importer.apply_method(%s)", r)
+        current.log.debug("S3Importer.apply_method(%s)", r)
 
         # Messages
         T = current.T
@@ -305,7 +298,7 @@ class S3Importer(S3Method):
             Whilst the delete action will trigger a "DELETE" method.
         """
 
-        _debug("S3Importer.upload()")
+        current.log.debug("S3Importer.upload()")
 
         request = self.request
 
@@ -323,7 +316,7 @@ class S3Importer(S3Method):
             Generate an ImportJob from the submitted upload form
         """
 
-        _debug("S3Importer.display()")
+        current.log.debug("S3Importer.display()")
 
         response = current.response
         s3 = response.s3
@@ -439,7 +432,7 @@ class S3Importer(S3Method):
             @todo: docstring?
         """
 
-        _debug("S3Importer.display_job()")
+        current.log.debug("S3Importer.display_job()")
 
         db = current.db
         request = self.request
@@ -513,7 +506,7 @@ class S3Importer(S3Method):
             @todo: docstring?
         """
 
-        _debug("S3Importer.commit(%s, %s)", source, transform)
+        current.log.debug("S3Importer.commit(%s, %s)", source, transform)
 
         session = current.session
 
@@ -589,7 +582,7 @@ class S3Importer(S3Method):
             @todo: docstring?
         """
 
-        _debug("S3Importer.commit_items(%s, %s)", upload_id, items)
+        current.log.debug("S3Importer.commit_items(%s, %s)", upload_id, items)
         # Save the import items
         self._commit_import_job(upload_id, items)
         # Update the upload table
@@ -611,7 +604,7 @@ class S3Importer(S3Method):
             @param upload_id: the upload ID
         """
 
-        _debug("S3Importer.delete_job(%s)", upload_id)
+        current.log.debug("S3Importer.delete_job(%s)", upload_id)
 
         db = current.db
 
@@ -649,7 +642,6 @@ class S3Importer(S3Method):
 
         # redirect to the start page (remove all vars)
         self.next = request.url(vars=dict())
-        return
 
     # ========================================================================
     # Utility methods
@@ -931,12 +923,12 @@ class S3Importer(S3Method):
             @todo: complete parameter descriptions
         """
 
-        _debug("S3Importer._generate_import_job(%s, %s, %s, %s)",
-               upload_id,
-               openFile,
-               fileFormat,
-               stylesheet,
-               )
+        current.log.debug("S3Importer._generate_import_job(%s, %s, %s, %s)",
+                          upload_id,
+                          openFile,
+                          fileFormat,
+                          stylesheet,
+                          )
 
         # ---------------------------------------------------------------------
         # CSV
@@ -972,7 +964,7 @@ class S3Importer(S3Method):
         else:
             msg = self.messages.unsupported_file_type % fileFormat
             self.error = msg
-            _debug(msg)
+            current.log.debug(msg)
             return None
 
         # Get the stylesheet
@@ -1064,7 +1056,7 @@ class S3Importer(S3Method):
         if os.path.exists(stylesheet) is False:
             msg = self.messages.stylesheet_not_found % stylesheet
             self.error = msg
-            _debug(msg)
+            current.log.debug(msg)
             return None
 
         return stylesheet
@@ -1077,6 +1069,7 @@ class S3Importer(S3Method):
             @todo: parameter descriptions?
         """
 
+        _debug = current.log.debug
         _debug("S3Importer._commit_import_job(%s, %s)", upload_id, items)
 
         db = current.db
@@ -1139,7 +1132,7 @@ class S3Importer(S3Method):
             @todo: parameter descriptions?
         """
 
-        _debug("S3Importer._store_import_details(%s, %s)", job_id, key)
+        current.log.debug("S3Importer._store_import_details(%s, %s)", job_id, key)
 
         itable = S3ImportJob.define_item_table()
 
@@ -1160,7 +1153,7 @@ class S3Importer(S3Method):
             @todo: report errors in referenced records, too
         """
 
-        _debug("S3Importer._update_upload_job(%s)", upload_id)
+        current.log.debug("S3Importer._update_upload_job(%s)", upload_id)
 
         resource = self.request.resource
         db = current.db
@@ -1589,7 +1582,7 @@ class S3Importer(S3Method):
     def __define_table(self):
         """ Configures the upload table """
 
-        _debug("S3Importer.__define_table()")
+        current.log.debug("S3Importer.__define_table()")
 
         T = current.T
         request = current.request
@@ -1860,7 +1853,7 @@ class S3ImportItem(object):
         if MCI in data:
             self.mci = data[MCI]
 
-        _debug("New item: %s", self)
+        current.log.debug("New item: %s", self)
         return True
 
     # -------------------------------------------------------------------------
@@ -2194,6 +2187,7 @@ class S3ImportItem(object):
         # Make item mtime TZ-aware
         self.mtime = s3_utc(self.mtime)
 
+        _debug = current.log.debug
         _debug("Committing item %s", self)
 
         # Resolve references
@@ -2780,6 +2774,7 @@ class S3ImportItem(object):
             Store this item in the DB
         """
 
+        _debug = current.log.debug
         _debug("Storing item %s", self)
 
         if item_table is None:
@@ -3561,6 +3556,7 @@ class S3ImportJob():
 
         db = current.db
 
+        _debug = current.log.debug
         _debug("Storing Job ID=%s", self.job_id)
 
         self.__define_tables()
@@ -3619,7 +3615,7 @@ class S3ImportJob():
 
         db = current.db
 
-        _debug("Deleting job ID=%s", self.job_id)
+        current.log.debug("Deleting job ID=%s", self.job_id)
 
         self.__define_tables()
         item_table = self.item_table
@@ -3913,6 +3909,7 @@ class S3BulkImporter(object):
                                        "s3csv")
             # Try the module directory in the templates directory first
             xsl = os.path.join(templateDir, mod, xslFileName)
+            _debug = current.log.debug
             _debug("%s %s", xslFileName, xsl)
             if os.path.exists(xsl) == False:
                 # Now try the templates directory
@@ -3984,12 +3981,12 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            _debug("Running job %s %s (filename=%s transform=%s)",
-                   task[1],
-                   task[2],
-                   task[3],
-                   task[4],
-                   )
+            current.log.debug("Running job %s %s (filename=%s transform=%s)",
+                              task[1],
+                              task[2],
+                              task[3],
+                              task[4],
+                              )
 
             prefix = task[1]
             name = task[2]

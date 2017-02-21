@@ -47,14 +47,7 @@ from gluon.storage import Storage
 from gluon.tools import fetch
 
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3utils import S3ModuleDebug, s3_str, s3_truncate, s3_unicode
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3NOTIFY: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
+from s3utils import s3_str, s3_truncate, s3_unicode
 
 # =============================================================================
 class S3Notifications(object):
@@ -68,6 +61,7 @@ class S3Notifications(object):
             active subscriptions which (may) have updates.
         """
 
+        _debug = current.log.debug
         now = datetime.datetime.utcnow()
 
         _debug("S3Notifications.check_subscriptions(now=%s)", now)
@@ -99,6 +93,7 @@ class S3Notifications(object):
             @param resource_id: the pr_subscription_resource record ID
         """
 
+        _debug = current.log.debug
         _debug("S3Notifications.notify(resource_id=%s)", resource_id)
 
         db = current.db
@@ -251,6 +246,7 @@ class S3Notifications(object):
             @param resource: the S3Resource
         """
 
+        _debug = current.log.debug
         _debug("S3Notifications.send()")
 
         json_message = current.xml.json_message

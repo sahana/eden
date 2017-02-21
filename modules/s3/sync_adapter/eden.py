@@ -42,14 +42,6 @@ from gluon import *
 
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
-from ..s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -73,7 +65,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Construct the URL
         url = "%s/sync/repository/register.json" % repository.url
-        _debug("S3Sync: register at %s" % url)
+        current.log.debug("S3Sync: register at %s" % url)
 
         # The registration parameters
         config = repository.config
@@ -194,6 +186,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                      of the youngest record sent
         """
 
+        _debug = current.log.debug
         repository = self.repository
         xml = current.xml
         config = repository.config
@@ -419,6 +412,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
+        _debug = current.log.debug
         repository = self.repository
         config = repository.config
         resource_name = task.resource_name

@@ -43,14 +43,6 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
-from s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -537,6 +529,7 @@ class S3Sync(S3Method):
         """
 
         s3db = current.s3db
+        _debug = current.log.debug
 
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
