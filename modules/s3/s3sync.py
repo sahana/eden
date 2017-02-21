@@ -43,14 +43,6 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
-from s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -447,6 +439,7 @@ class S3Sync(S3Method):
         current.log.debug("S3Sync: synchronize %s" % repository.url)
 
         log = self.log
+        repository_id = repository.id
 
         error = None
         if repository.apitype == "filesync":
@@ -456,7 +449,7 @@ class S3Sync(S3Method):
             if not repository.url:
                 error = "No URL set for repository"
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = None,
                       mode = log.NONE,
@@ -467,15 +460,17 @@ class S3Sync(S3Method):
                       )
             return False
 
-        ttable = current.s3db.sync_task
-        query = (ttable.repository_id == repository.id) & \
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.sync_task
+        query = (ttable.repository_id == repository_id) & \
                 (ttable.deleted != True)
-        tasks = current.db(query).select()
+        tasks = db(query).select()
 
         connector = S3SyncRepository(repository)
         error = connector.login()
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = log.OUT,
                       mode = log.LOGIN,
@@ -522,6 +517,7 @@ class S3Sync(S3Method):
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
         s3.synchronise_uuids = False
+        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.utcnow())
 
         return success
 
@@ -537,14 +533,15 @@ class S3Sync(S3Method):
         """
 
         s3db = current.s3db
+        _debug = current.log.debug
 
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s", resource.tablename)
-        _debug("Repository: %s", repository.name)
-        _debug("Conflicting item: %s", item)
-        _debug("Method: %s", item.method)
+        _debug("Resolving conflict in %s" % resource.tablename)
+        _debug("Repository: %s" % repository.name)
+        _debug("Conflicting item: %s" % item)
+        _debug("Method: %s" % item.method)
 
         if resolver:
             _debug("Applying custom rule")

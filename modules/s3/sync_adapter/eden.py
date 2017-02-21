@@ -27,10 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
 import json
 import sys
-import urllib2
 import traceback
+import urllib2
 
 try:
     from lxml import etree
@@ -38,18 +39,10 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
-from gluon import *
+from gluon import current
 
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
-from ..s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -194,13 +187,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                      of the youngest record sent
         """
 
+        _debug = current.log.debug
         repository = self.repository
         xml = current.xml
         config = repository.config
         resource_name = task.resource_name
 
-        current.log.debug("S3Sync: pull %s from %s" % (resource_name,
-                                                       repository.url))
+        _debug("S3Sync: pull %s from %s" % (resource_name,
+                                            repository.url))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -222,10 +216,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
                 url += "&%s" % urlfilter
 
+        _debug("...pull from URL %s" % url)
+
         # Figure out the protocol from the URL
         url_split = url.split("://", 1)
         if len(url_split) == 2:
-            protocol, path = url_split
+            protocol = url_split[0]
         else:
             protocol = "http"
 
@@ -236,7 +232,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Proxy handling
         proxy = repository.proxy or config.proxy or None
         if proxy:
-            current.log.debug("S3Sync: pull, using proxy=%s" % proxy)
+            _debug("S3Sync: pull, using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
             handlers.append(proxy_handler)
 
@@ -400,7 +396,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        current.log.debug("S3Sync: import %s: %s" % (result, message))
+        _debug("S3Sync: import %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -417,11 +413,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
+        _debug = current.log.debug
         repository = self.repository
         config = repository.config
         resource_name = task.resource_name
 
-        _debug("S3SyncRepository.push(%s, %s)", repository.url, resource_name)
+        _debug("S3SyncRepository.push(%s, %s)" % (repository.url, resource_name))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -440,7 +437,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             url += "&msince=%s" % s3_encode_iso_datetime(last_push)
         else:
             last_push = None
-        _debug("...push to URL %s", url)
+        _debug("...push to URL %s" % url)
 
         # Define the resource
         resource = current.s3db.resource(resource_name,
@@ -464,7 +461,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # Find the protocol
             url_split = url.split("://", 1)
             if len(url_split) == 2:
-                protocol, path = url_split
+                protocol = url_split[0]
             else:
                 protocol = "http"
 
@@ -476,7 +473,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # Proxy handling
             proxy = repository.proxy or config.proxy or None
             if proxy:
-                _debug("using proxy=%s", proxy)
+                _debug("using proxy=%s" % proxy)
                 proxy_handler = urllib2.ProxyHandler({protocol: proxy})
                 handlers.append(proxy_handler)
 
@@ -592,6 +589,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         count = resource.results
         msg = "Data sent to peer (%s records)" % count
 
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
+
         # Set content type header
         headers = current.response.headers
         headers["Content-Type"] = "text/xml"
@@ -692,6 +691,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             result = log.SUCCESS
             remote = False
             message = "Data received from peer"
+
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
 
         return {"status": result,
                 "remote": remote,

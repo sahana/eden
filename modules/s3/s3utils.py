@@ -55,22 +55,6 @@ URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
 
 RCVARS = "rcvars"
 
-class S3ModuleDebug(object):
-    """ Helper class to debug modules """
-
-    @staticmethod
-    def on(msg, *args):
-        print >> sys.stderr, msg % args if args else msg
-
-    off = staticmethod(lambda msg, *args: None)
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3UTILS: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
-
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -79,7 +63,7 @@ def s3_debug(message, value=None):
        Provide an easy, safe, systematic way of handling Debug output
        (print to stdout doesn't work with WSGI deployments)
 
-       @ToDo: Should be using current.log.warning instead?
+       @ToDo: Deprecate & replace with current.log.debug
     """
 
     output = "S3 Debug: %s" % s3_unicode(message)

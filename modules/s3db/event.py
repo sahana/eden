@@ -2031,6 +2031,7 @@ class S3EventBookmarkModel(S3Model):
     def model(self):
 
         #T = current.T
+        auth = current.auth
 
         # ---------------------------------------------------------------------
         # Bookamrks: Link table between Users & Events/Incidents
@@ -2038,7 +2039,9 @@ class S3EventBookmarkModel(S3Model):
         self.define_table(tablename,
                           self.event_event_id(ondelete = "CASCADE"),
                           self.event_incident_id(ondelete = "CASCADE"),
-                          Field("user_id", current.auth.settings.table_user),
+                          Field("user_id", auth.settings.table_user,
+                                default = auth.user.id if auth.user else None,
+                                ),
                           *s3_meta_fields())
 
         #current.response.s3.crud_strings[tablename] = Storage(

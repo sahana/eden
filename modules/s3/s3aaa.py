@@ -58,14 +58,6 @@ from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
 
-#DEBUG = False
-#if DEBUG:
-#   import sys
-#   print >> sys.stderr, "S3AAA: DEBUG MODE"
-#   _debug = S3ModuleDebug.on
-#else:
-#   _debug = S3ModuleDebug.off
-
 # =============================================================================
 class AuthS3(Auth):
 
@@ -1840,8 +1832,6 @@ $.filterOptionsS3({
             auth_membership.pe_id from organisation.name=<Org Name>
         """
 
-        from s3utils import s3_debug
-
         db = current.db
         s3db = current.s3db
         set_record_owner = self.s3_set_record_owner
@@ -1872,7 +1862,7 @@ $.filterOptionsS3({
                     callback(onaccept, Storage(vars=Storage(id=link_id)))
                 elif len(records) > 1:
                     # Ambiguous
-                    s3_debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (name, parent))
+                    current.log.debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (name, parent))
                 else:
                     # Create Parent
                     parent_id = otable.insert(name=parent)
@@ -1912,7 +1902,7 @@ $.filterOptionsS3({
                 pe_id = record.pe_id
             elif len(records) > 1:
                 # Ambiguous
-                s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                current.log.debug("Cannot set Organisation %s for user as there are multiple matches" % org)
                 organisation_id = ""
                 pe_id = ""
             elif TRANSLATE:
@@ -1929,12 +1919,12 @@ $.filterOptionsS3({
                     pe_id = record.pe_id
                 elif len(records) > 1:
                     # Ambiguous
-                    s3_debug("Cannot set Organisation %s for user as there are multiple matches" % org)
+                    current.log.debug("Cannot set Organisation %s for user as there are multiple matches" % org)
                     organisation_id = ""
                     pe_id = ""
                 elif ORG_ADMIN:
                     # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
-                    s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
+                    current.log.debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
                     organisation_id = ""
                     pe_id = ""
                 else:
@@ -1943,7 +1933,7 @@ $.filterOptionsS3({
 
             elif ORG_ADMIN:
                 # NB ORG_ADMIN has the list of permitted pe_ids already in filter_opts
-                s3_debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
+                current.log.debug("Cannot create new Organisation %s as ORG_ADMIN cannot create new Orgs during User Imports" % org)
                 organisation_id = ""
                 pe_id = ""
             else:

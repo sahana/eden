@@ -73,14 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_str, s3_unicode #, S3ModuleDebug
-
-#DEBUG = False
-#if DEBUG:
-#    print >> sys.stderr, "S3GIS: DEBUG MODE"
-#    _debug = S3ModuleDebug.on
-#else:
-#    _debug = S3ModuleDebug.off
+from s3utils import s3_include_ext, s3_str, s3_unicode
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
