@@ -299,7 +299,7 @@ class SyncDataModel(S3Model):
                   deduplicate = S3Duplicate(),
                   list_fields = ["name",
                                  "uuid",
-                                 "last_connection",
+                                 "last_connected",
                                  #(T("Last Pull"), "last_pull_time"),
                                  #(T("Last Push"), "last_push_time"),
                                  ],
