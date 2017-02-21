@@ -73,7 +73,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Construct the URL
         url = "%s/sync/repository/register.json" % repository.url
-        current.log.debug("S3Sync: register at %s" % url)
+        _debug("S3Sync: register at %s" % url)
 
         # The registration parameters
         config = repository.config
@@ -199,8 +199,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         config = repository.config
         resource_name = task.resource_name
 
-        current.log.debug("S3Sync: pull %s from %s" % (resource_name,
-                                                       repository.url))
+        _debug("S3Sync: pull %s from %s" % (resource_name,
+                                            repository.url))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -222,6 +222,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
                 url += "&%s" % urlfilter
 
+        _debug("...pull from URL %s", url)
+
         # Figure out the protocol from the URL
         url_split = url.split("://", 1)
         if len(url_split) == 2:
@@ -236,7 +238,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Proxy handling
         proxy = repository.proxy or config.proxy or None
         if proxy:
-            current.log.debug("S3Sync: pull, using proxy=%s" % proxy)
+            _debug("S3Sync: pull, using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
             handlers.append(proxy_handler)
 
@@ -400,7 +402,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        current.log.debug("S3Sync: import %s: %s" % (result, message))
+        _debug("S3Sync: import %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
