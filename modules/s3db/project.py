@@ -3635,6 +3635,7 @@ class S3ProjectLocationModel(S3Model):
                                  "project_location_id",
                                  (T("Project"), "project_location_id$project_id"),
                                  ],
+                  onaccept = self.project_location_contact_onaccept,
                   )
 
         # Components
@@ -3705,6 +3706,38 @@ class S3ProjectLocationModel(S3Model):
             name = name[:509] + "..."
         db = current.db
         db(db.project_location.id == id).update(name=name)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_location_contact_onaccept(form):
+        """
+            If the Contact has no Realm, then set it to that of this record
+        """
+
+        db = current.db
+        form_vars = form.vars
+        person_id = form_vars.get("person_id")
+        realm_entity = form_vars.get("realm_entity")
+        if not person_id or not realm_entity:
+            # Retrieve the record
+            table = db.project_location_contact
+            record = db(table.id == form_vars.get("id")).select(table.person_id,
+                                                                table.realm_entity,
+                                                                limitby=(0, 1),
+                                                                ).first()
+            if not record:
+                return
+            person_id = record.person_id
+            realm_entity = record.realm_entity
+
+        if realm_entity:
+            ptable = db.pr_person
+            person = db(ptable.id == person_id).select(ptable.id,
+                                                       ptable.realm_entity,
+                                                       limitby=(0, 1),
+                                                       ).first()
+            if person and not person.realm_entity:
+                person.update_record(realm_entity = realm_entity)
 
 # =============================================================================
 class S3ProjectOrganisationModel(S3Model):
