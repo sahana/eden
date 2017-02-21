@@ -27,10 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
 import json
 import sys
-import urllib2
 import traceback
+import urllib2
 
 try:
     from lxml import etree
