@@ -38,7 +38,7 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
-from gluon import *
+from gluon import current
 
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
@@ -220,7 +220,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Figure out the protocol from the URL
         url_split = url.split("://", 1)
         if len(url_split) == 2:
-            protocol, path = url_split
+            protocol = url_split[0]
         else:
             protocol = "http"
 
@@ -460,7 +460,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # Find the protocol
             url_split = url.split("://", 1)
             if len(url_split) == 2:
-                protocol, path = url_split
+                protocol = url_split[0]
             else:
                 protocol = "http"
 

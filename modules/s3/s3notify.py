@@ -64,7 +64,7 @@ class S3Notifications(object):
         _debug = current.log.debug
         now = datetime.datetime.utcnow()
 
-        _debug("S3Notifications.check_subscriptions(now=%s)", now)
+        _debug("S3Notifications.check_subscriptions(now=%s)" % now)
 
         subscriptions = cls._subscriptions(now)
         if subscriptions:
@@ -94,7 +94,7 @@ class S3Notifications(object):
         """
 
         _debug = current.log.debug
-        _debug("S3Notifications.notify(resource_id=%s)", resource_id)
+        _debug("S3Notifications.notify(resource_id=%s)" % resource_id)
 
         db = current.db
         s3db = current.s3db
@@ -200,7 +200,7 @@ class S3Notifications(object):
                            })
 
         # Send the request
-        _debug("Requesting %s", page_url)
+        _debug("Requesting %s" % page_url)
         req = urllib2.Request(page_url, data=data)
         req.add_header("Content-Type", "application/json")
         success = False
@@ -257,13 +257,13 @@ class S3Notifications(object):
         data = source.read()
         subscription = json.loads(data)
 
-        #_debug("Notify PE #%s by %s on %s of %s since %s",
-        #       subscription["pe_id"],
-        #       str(subscription["method"]),
-        #       str(subscription["notify_on"]),
-        #       subscription["resource"],
-        #       subscription["last_check_time"],
-        #       )
+        #_debug("Notify PE #%s by %s on %s of %s since %s" % \
+        #           (subscription["pe_id"],
+        #            str(subscription["method"]),
+        #            str(subscription["notify_on"]),
+        #            subscription["resource"],
+        #            subscription["last_check_time"],
+        #            ))
 
         # Check notification settings
         notify_on = subscription["notify_on"]
@@ -294,7 +294,7 @@ class S3Notifications(object):
         if not numrows:
             return json_message(message="No records found")
 
-        #_debug("%s rows:", numrows)
+        #_debug("%s rows:" % numrows)
 
         # Prepare meta-data
         get_config = resource.get_config
@@ -426,7 +426,7 @@ class S3Notifications(object):
                 continue
 
             # Send the message
-            #_debug("Sending message per %s", method)
+            #_debug("Sending message per %s" % method)
             #_debug(message)
             try:
                 sent = send(pe_id,
