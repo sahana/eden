@@ -271,9 +271,9 @@ class SyncDataModel(S3Model):
                                                 T("Stores the data sent from the peer in the local file system (if supported by the adapter), for testing purposes. Enable only temporarily if and when required!"))),
                            ),
                      # User-visible field for Admin
-                     s3_date("last_connected",
-                             label = T("Last Connected"),
-                             ),
+                     s3_datetime("last_connected",
+                                 label = T("Last Connected"),
+                                 ),
                      # System fields
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
