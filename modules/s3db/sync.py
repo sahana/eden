@@ -270,6 +270,11 @@ class SyncDataModel(S3Model):
                                                 T("Keep Source Data"),
                                                 T("Stores the data sent from the peer in the local file system (if supported by the adapter), for testing purposes. Enable only temporarily if and when required!"))),
                            ),
+                     # User-visible field for Admin
+                     s3_date("last_connection",
+                             label = T("Last Connection"),
+                             ),
+                     # System fields
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
                      Field.Method("last_push_time",
@@ -294,8 +299,9 @@ class SyncDataModel(S3Model):
                   deduplicate = S3Duplicate(),
                   list_fields = ["name",
                                  "uuid",
-                                 (T("Last Pull"), "last_pull_time"),
-                                 (T("Last Push"), "last_push_time"),
+                                 "last_connection",
+                                 #(T("Last Pull"), "last_pull_time"),
+                                 #(T("Last Push"), "last_push_time"),
                                  ],
                   onaccept = self.sync_repository_onaccept,
                   ondelete = self.sync_repository_ondelete,

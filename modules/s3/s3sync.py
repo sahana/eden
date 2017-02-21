@@ -439,6 +439,7 @@ class S3Sync(S3Method):
         current.log.debug("S3Sync: synchronize %s" % repository.url)
 
         log = self.log
+        repository_id = repository.id
 
         error = None
         if repository.apitype == "filesync":
@@ -448,7 +449,7 @@ class S3Sync(S3Method):
             if not repository.url:
                 error = "No URL set for repository"
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = None,
                       mode = log.NONE,
@@ -459,15 +460,17 @@ class S3Sync(S3Method):
                       )
             return False
 
-        ttable = current.s3db.sync_task
-        query = (ttable.repository_id == repository.id) & \
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.sync_task
+        query = (ttable.repository_id == repository_id) & \
                 (ttable.deleted != True)
-        tasks = current.db(query).select()
+        tasks = db(query).select()
 
         connector = S3SyncRepository(repository)
         error = connector.login()
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = log.OUT,
                       mode = log.LOGIN,
@@ -514,6 +517,7 @@ class S3Sync(S3Method):
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
         s3.synchronise_uuids = False
+        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.now())
 
         return success
 
