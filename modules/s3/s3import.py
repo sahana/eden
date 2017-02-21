@@ -2591,11 +2591,10 @@ class S3ImportItem(object):
                 else:
                     item._update_reference(field, self.id)
 
-        _debug("Success: %s, id=%s %sd",
-               tablename,
-               self.id,
-               self.skip and "skippe" or method,
-               )
+        _debug("Success: %s, id=%s %sd" % (tablename,
+                                           self.id,
+                                           self.skip and "skippe" or method,
+                                           ))
 
         return True
 
