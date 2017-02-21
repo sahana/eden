@@ -517,7 +517,7 @@ class S3Sync(S3Method):
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
         s3.synchronise_uuids = False
-        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.now())
+        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.utcnow())
 
         return success
 

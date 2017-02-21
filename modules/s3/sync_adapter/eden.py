@@ -589,7 +589,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         count = resource.results
         msg = "Data sent to peer (%s records)" % count
 
-        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.now())
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
 
         # Set content type header
         headers = current.response.headers
@@ -692,7 +692,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             remote = False
             message = "Data received from peer"
 
-        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.now())
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
 
         return {"status": result,
                 "remote": remote,
