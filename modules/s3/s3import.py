@@ -3910,15 +3910,15 @@ class S3BulkImporter(object):
             # Try the module directory in the templates directory first
             xsl = os.path.join(templateDir, mod, xslFileName)
             _debug = current.log.debug
-            _debug("%s %s", xslFileName, xsl)
+            _debug("%s %s" % (xslFileName, xsl))
             if os.path.exists(xsl) == False:
                 # Now try the templates directory
                 xsl = os.path.join(templateDir, xslFileName)
-                _debug("%s %s", xslFileName, xsl)
+                _debug("%s %s" % (xslFileName, xsl))
                 if os.path.exists(xsl) == False:
                     # Use the same directory as the csv file
                     xsl = os.path.join(path, xslFileName)
-                    _debug("%s %s", xslFileName, xsl)
+                    _debug("%s %s" % (xslFileName, xsl))
                     if os.path.exists(xsl) == False:
                         self.errorList.append(
                         "Failed to find a transform file %s, Giving up." % xslFileName)
