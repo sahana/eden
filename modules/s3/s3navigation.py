@@ -1407,6 +1407,9 @@ class S3ComponentTabs(object):
 
         rheader_tabs = []
 
+        if r.resource.get_config("dynamic_components"):
+            self.dynamic_tabs(r.resource.tablename)
+
         tabs = tuple(t for t in self.tabs if t.active(r))
 
         mtab = False
@@ -1509,6 +1512,70 @@ class S3ComponentTabs(object):
         else:
             rheader_tabs = ""
         return rheader_tabs
+
+    # -------------------------------------------------------------------------
+    def dynamic_tabs(self, master):
+        """
+            Add dynamic tabs
+
+            @param master: the name of the master table
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        tabs = self.tabs
+        if not tabs:
+            return
+
+        ftable = s3db.s3_field
+        query = (ftable.component_key == True) & \
+                (ftable.component_tab == True) & \
+                (ftable.master == master) & \
+                (ftable.deleted == False)
+        rows = current.db(query).select(ftable.component_alias,
+                                        ftable.settings,
+                                        )
+        for row in rows:
+            alias = row.component_alias
+            if not alias:
+                continue
+
+            static_tab = False
+            for tab in tabs:
+                if tab.component == alias:
+                    static_tab = True
+                    break
+
+            if not static_tab:
+
+                label = None
+                position = None
+
+                settings = row.settings
+                if settings:
+
+                    label = settings.get("tab_label")
+
+                    position = settings.get("tab_position")
+                    if position is not None:
+                        try:
+                            position = int(position)
+                        except ValueError:
+                            position = None
+                    if position < 1 or position >= len(tabs):
+                        position = None
+
+                if not label:
+                    # Generate default label from component alias
+                    label = T(" ".join(s.capitalize()
+                                       for s in alias.split("_")
+                                       ))
+                tab = S3ComponentTab((label, alias))
+                if not position:
+                    tabs.append(tab)
+                else:
+                    tabs.insert(position, tab)
 
 # =============================================================================
 class S3ComponentTab(object):

@@ -13,6 +13,7 @@
         DataType...........string..............the data type of the field
         ComponentKey.......true|false..........use this field as component key
         ComponentAlias.....string..............the alias for the component
+        ComponentTab.......true|false..........show the component on a tab
         Options............JSON................the field options
         Unique.............true|false..........field value must be unique
         Required...........true|false..........field value must not be empty
@@ -95,6 +96,20 @@
                         <xsl:value-of select="$ComponentAlias"/>
                     </data>
                 </xsl:if>
+
+                <xsl:variable name="ComponentTab" select="col[@field='ComponentTab']/text()"/>
+                <data field="component_tab">
+                    <xsl:attribute name="value">
+                        <xsl:choose>
+                            <xsl:when test="$ComponentTab='true'">
+                                <xsl:value-of select="'true'"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </data>
 
                 <xsl:variable name="Label" select="col[@field='Label']/text()"/>
                 <xsl:if test="$Label!=''">

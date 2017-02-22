@@ -670,6 +670,11 @@ class S3Model(object):
         if mtable is None:
             return
 
+        loaded = cls.get_config(tablename, "dynamic_components_loaded")
+        if loaded:
+            # Already loaded
+            return
+
         join = ttable.on(ttable.id == ftable.table_id)
         query = (ftable.master == tablename) & \
                 (ftable.component_key == True) & \
@@ -682,7 +687,7 @@ class S3Model(object):
                                         )
 
         # Don't do this again during the same request cycle
-        cls.configure(tablename, dynamic_components=False)
+        cls.configure(tablename, dynamic_components_loaded=True)
 
         components = {}
         for row in rows:
