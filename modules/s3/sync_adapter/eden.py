@@ -202,6 +202,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         last_pull = task.last_pull
         if last_pull and task.update_policy not in ("THIS", "OTHER"):
             url += "&msince=%s" % s3_encode_iso_datetime(last_pull)
+        if task.components is False: # Allow None to remain the old default of 'Include Components'
+            url += "&components=None"
         url += "&include_deleted=True"
 
         # Send sync filters to peer
@@ -439,9 +441,16 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             last_push = None
         _debug("...push to URL %s" % url)
 
+        if task.components is False: # Allow None to remain the old default of 'Include Components'
+            components = []
+        else:
+            # Default
+            components = None
+
         # Define the resource
         resource = current.s3db.resource(resource_name,
-                                         include_deleted=True)
+                                         components = components,
+                                         include_deleted = True)
 
         # Apply sync filters for this task
         filters = current.sync.get_filters(task.id)

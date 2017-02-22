@@ -216,11 +216,12 @@ class S3Sync(S3Method):
 
         mixed =  attr.get("mixed", False)
         get_vars = r.get_vars
+        vars_get = get_vars.get
 
         resource = r.resource
 
         # Identify the requesting repository
-        repository_uuid = get_vars.get("repository")
+        repository_uuid = vars_get("repository")
         connector = None
 
         if repository_uuid:
@@ -242,19 +243,19 @@ class S3Sync(S3Method):
                                                         connector.apitype))
 
         # Additional export parameters
-        start = get_vars.get("start", None)
+        start = vars_get("start", None)
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = get_vars.get("limit", None)
+        limit = vars_get("limit", None)
         if limit is not None:
             try:
                 limit = int(limit)
             except ValueError:
                 limit = None
-        msince = get_vars.get("msince", None)
+        msince = vars_get("msince", None)
         if msince is not None:
             msince = s3_parse_datetime(msince)
 
@@ -276,6 +277,12 @@ class S3Sync(S3Method):
                     filters[tablename] = f
         if not filters:
             filters = None
+
+        # Should we include Components?
+        # @ToDo: Option to specify components?
+        components = vars_get("components", None)
+        if components and components.lower() == "none":
+            resource.components = Storage()
 
         try:
             result = connector.send(resource,
