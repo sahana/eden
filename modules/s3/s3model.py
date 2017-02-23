@@ -653,6 +653,80 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def add_dynamic_components(cls, tablename, exclude=None):
+        """
+            Helper function to look up and declare dynamic components
+            for a table; called by get_components if dynamic_components
+            is configured for the table
+
+            @param tablename: the table name
+            @param exclude: names to exclude (static components)
+        """
+
+        ttable = cls.table("s3_table")
+        ftable = cls.table("s3_field")
+
+        mtable = cls.table(tablename)
+        if mtable is None:
+            return
+
+        loaded = cls.get_config(tablename, "dynamic_components_loaded")
+        if loaded:
+            # Already loaded
+            return
+
+        join = ttable.on(ttable.id == ftable.table_id)
+        query = (ftable.master == tablename) & \
+                (ftable.component_key == True) & \
+                (ftable.deleted != True)
+        rows = current.db(query).select(ftable.name,
+                                        ftable.field_type,
+                                        ftable.component_alias,
+                                        ttable.name,
+                                        join = join,
+                                        )
+
+        # Don't do this again during the same request cycle
+        cls.configure(tablename, dynamic_components_loaded=True)
+
+        components = {}
+        for row in rows:
+
+            hook = {}
+
+            ctable = row["s3_table"]
+            ctablename = ctable.name
+            default_alias = ctablename.split("_", 1)[-1]
+
+            field = row["s3_field"]
+            alias = field.component_alias
+
+            if not alias:
+                alias = default_alias
+            if exclude and alias in exclude:
+                continue
+
+            if alias != default_alias:
+                hook["name"] = alias
+
+            hook["joinby"] = field.name
+
+            # Get the primary key
+            field_type = field.field_type
+            if field_type[:10] == "reference ":
+                ktablename = field_type.split(" ", 1)[1]
+                if "." in ktablename:
+                    ktablename, pkey = ktablename.split(".", 1)[1]
+                    if pkey and pkey != mtable._id.name:
+                        hook["pkey"] = pkey
+
+            components[ctablename] = hook
+
+        if components:
+            cls.add_components(tablename, **components)
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def get_component(cls, table, name):
         """
             Finds a component definition.
@@ -679,12 +753,9 @@ class S3Model(object):
         """
 
         components = current.model.components
-
         load = cls.table
-        get_hooks = cls.__get_hooks
 
-        hooks = Storage()
-        single = False
+        # Get tablename and table
         if type(table) is Table:
             tablename = table._tablename
         else:
@@ -693,13 +764,25 @@ class S3Model(object):
             if table is None:
                 # Primary table not defined
                 return None
+
+        # Single alias?
+        single = False
         if isinstance(names, str):
             single = True
-            names = [names]
-        h = components.get(tablename, None)
-        if h:
-            get_hooks(hooks, h, names=names)
-        if not single or single and not len(hooks):
+            names = set([names])
+        elif names is not None:
+            names = set(names)
+
+        # Get hooks for direct components
+        hooks = {}
+        get_hooks = cls.__get_hooks
+        direct_components = components.get(tablename)
+        if direct_components:
+            names = get_hooks(hooks, direct_components, names=names)
+
+        supertables = None
+        if names is None or names:
+            # Add hooks for super-components
             supertables = cls.get_config(tablename, "super_entity")
             if supertables:
                 if not isinstance(supertables, (list, tuple)):
@@ -709,10 +792,37 @@ class S3Model(object):
                         s = load(s)
                     if s is None:
                         continue
-                    h = components.get(s._tablename, None)
-                    if h:
-                        get_hooks(hooks, h, names=names, supertable=s)
+                    super_components = components.get(s._tablename)
+                    if super_components:
+                        names = get_hooks(hooks, super_components,
+                                          names = names,
+                                          supertable = s,
+                                          )
 
+        dynamic_components =  cls.get_config(tablename, "dynamic_components")
+        if dynamic_components:
+
+            if names is None or names:
+                # Add hooks for dynamic components
+                cls.add_dynamic_components(tablename, exclude=hooks)
+                names = get_hooks(hooks, direct_components, names=names)
+
+            if supertables and (names is None or names):
+                # Add hooks for dynamic super-components
+                for s in supertables:
+                    if isinstance(s, str):
+                        s = load(s)
+                    if s is None:
+                        continue
+                    cls.add_dynamic_components(s._tablename, exclude=hooks)
+                    super_components = components.get(s._tablename)
+                    if super_components:
+                        names = get_hooks(hooks, super_components,
+                                          names = names,
+                                          supertable = s,
+                                          )
+
+        # Build component-objects for each hook
         components = Storage()
         for alias in hooks:
 
@@ -738,7 +848,8 @@ class S3Model(object):
                                 table=ctable,
                                 prefix=prefix,
                                 name=name,
-                                alias=alias)
+                                alias=alias,
+                                )
 
             if hook.supertable is not None:
                 joinby = hook.supertable._id.name
@@ -783,6 +894,7 @@ class S3Model(object):
                 component.filterby = hook.filterby
 
             components[alias] = component
+
         return components
 
     # -------------------------------------------------------------------------
@@ -795,11 +907,9 @@ class S3Model(object):
         """
 
         components = current.model.components
-
         load = cls.table
-        get_hooks = cls.__get_hooks
 
-        hooks = Storage()
+        # Get tablename and table
         if type(table) is Table:
             tablename = table._tablename
         else:
@@ -807,11 +917,21 @@ class S3Model(object):
             table = load(tablename)
             if table is None:
                 return False
+
+        # Attach dynamic components
+        if cls.get_config(tablename, "dynamic_components"):
+            cls.add_dynamic_components(tablename)
+
+        # Get table hooks
+        hooks = Storage()
+        get_hooks = cls.__get_hooks
         h = components.get(tablename, None)
         if h:
             get_hooks(hooks, h)
         if len(hooks):
             return True
+
+        # Check for super-components
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
             if not isinstance(supertables, (list, tuple)):
@@ -826,6 +946,8 @@ class S3Model(object):
                     get_hooks(hooks, h, supertable=s)
             if len(hooks):
                 return True
+
+        # No components found
         return False
 
     # -------------------------------------------------------------------------
@@ -833,16 +955,25 @@ class S3Model(object):
     def __get_hooks(cls, components, hooks, names=None, supertable=None):
         """
             DRY Helper method to filter component hooks
+
+            @param components: components already found, dict {alias: component}
+            @param hooks: component hooks to filter, dict {alias: hook}
+            @param names: the names (=aliases) to include
+            @param supertable: the super-table name to set for the component
+
+            @returns: set of names that could not be found,
+                      or None if names was None
         """
 
         for alias in hooks:
-            if alias in components:
-                continue
-            if names is not None and alias not in names:
+            if alias in components or \
+               names is not None and alias not in names:
                 continue
             hook = hooks[alias]
             hook["supertable"] = supertable
             components[alias] = hook
+
+        return set(names) - set(hooks) if names is not None else None
 
     # -------------------------------------------------------------------------
     @classmethod

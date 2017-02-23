@@ -464,11 +464,6 @@ class S3Request(object):
 
         # Get the names of all components
         tablename = "%s_%s" % (self.prefix, self.name)
-        components = current.s3db.get_components(tablename)
-        if components:
-            components = components.keys()
-        else:
-            components = []
 
         # Map request args, catch extensions
         f = []
@@ -498,7 +493,8 @@ class S3Request(object):
         if l > 1:
             m = f[1][0].lower()
             i = f[1][1]
-            if m in components:
+            components = current.s3db.get_components(tablename, names=[m])
+            if components and m in components:
                 self.component_name = m
                 self.component_id = i
             else:
