@@ -805,6 +805,7 @@ class S3Model(object):
             if names is None or names:
                 # Add hooks for dynamic components
                 cls.add_dynamic_components(tablename, exclude=hooks)
+                direct_components = components.get(tablename)
                 if direct_components:
                     names = get_hooks(hooks, direct_components, names=names)
 
