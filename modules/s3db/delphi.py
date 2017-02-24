@@ -226,12 +226,10 @@ class S3DelphiModel(S3Model):
                            label = T("Active"),
                            represent = s3_yes_no_represent,
                            ),
-                     *s3_meta_fields()
+                     *s3_meta_fields(),
+                     on_define = lambda table: [table.modified_on.set_attributes(label = T("Last Modification")),
+                                                ]
                      )
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.modified_on.label = T("Last Modification")
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -296,13 +294,11 @@ class S3DelphiModel(S3Model):
                                   delphi_solution_comments),
                      Field.Method("votes",
                                   delphi_solution_votes),
-                     *s3_meta_fields()
+                     *s3_meta_fields(),
+                     on_define = lambda table: [table.created_by.set_attributes(label = T("Suggested By")),
+                                                table.modified_on.set_attributes(label = T("Last Modification")),
+                                                ]
                      )
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.created_by.label = T("Suggested By")
-        table.modified_on.label = T("Last Modification")
 
         # CRUD Strings
         crud_strings[tablename] = Storage(

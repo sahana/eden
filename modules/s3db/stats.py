@@ -100,10 +100,10 @@ class S3StatsModel(S3Model):
                      Field("description",
                            label = T("Description"),
                            ),
+                     on_define = lambda table: \
+                        [table.instance_type.set_attributes(readable = True),
+                         ],
                      )
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.instance_type.readable = True
 
         # ---------------------------------------------------------------------
         # Super entity: stats_data

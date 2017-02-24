@@ -1551,11 +1551,11 @@ class S3RequestItemModel(S3Model):
                      Field.Method("pack_quantity",
                                   self.supply_item_pack_quantity(tablename=tablename)),
                      s3_comments(),
-                     *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.site_id.label = T("Requested From")
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.site_id.set_attributes(label = T("Requested From")),
+                         ]
+                     )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1885,11 +1885,11 @@ class S3RequestSkillModel(S3Model):
                                  #              _title="%s|%s" % (T("Task Details"),
                                  #                                T("Include any special requirements such as equipment which they need to bring.")))
                                  ),
-                     *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = current.db[tablename]
-        table.site_id.label = T("Requested From")
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.site_id.set_attributes(label = T("Requested From")),
+                         ]
+                     )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(

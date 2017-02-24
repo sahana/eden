@@ -1441,7 +1441,7 @@ class S3InventoryTrackingModel(S3Model):
                                   sortby = "date",
                                   )
 
-        # Search Method
+        # Filter Widgets
         if settings.get_inv_shipment_name() == "order":
             recv_search_comment = T("Search for an order by looking for text in any field.")
             recv_search_date_field = "eta"
@@ -1451,8 +1451,6 @@ class S3InventoryTrackingModel(S3Model):
             recv_search_date_field = "date"
             recv_search_date_comment = T("Search for a shipment received between these dates")
 
-        # @todo: make lazy_table
-        table = db[tablename]
         filter_widgets = [
             S3TextFilter(["sender_id$first_name",
                           "sender_id$middle_name",
@@ -1471,7 +1469,8 @@ class S3InventoryTrackingModel(S3Model):
                          comment = recv_search_comment,
                         ),
             S3DateFilter(recv_search_date_field,
-                         label = table[recv_search_date_field].label,
+                         # This will be the default
+                         #label = table[recv_search_date_field].label,
                          comment = recv_search_date_comment,
                          hidden = True,
                         ),

@@ -1038,6 +1038,8 @@ class S3ProjectActivityModel(S3Model):
         # Project Activity
         #
 
+        represent = project_ActivityRepresent()
+
         tablename = "project_activity"
         define_table(tablename,
                      # Instance
@@ -1093,7 +1095,12 @@ class S3ProjectActivityModel(S3Model):
                      #      label = T("Year"),
                      #      ),
                      s3_comments(),
-                     *s3_meta_fields())
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [# Use the represent for Report drill-downs
+                         table.id.set_attributes(represent = represent),
+                         ]
+                     )
 
         # CRUD Strings
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Create Activity'.")
@@ -1318,7 +1325,6 @@ class S3ProjectActivityModel(S3Model):
         #                    )
 
         # Reusable Field
-        represent = project_ActivityRepresent()
         activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
                         comment = S3PopupLink(ADD_ACTIVITY,
                                               c = "project",
@@ -1334,11 +1340,6 @@ class S3ProjectActivityModel(S3Model):
                                               sort=True)),
                         sortby="name",
                         )
-
-        # Also use this Represent for Report drilldowns
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.id.represent = represent
 
         # Components
         add_components(tablename,
@@ -8120,16 +8121,12 @@ class S3ProjectTaskModel(S3Model):
                            writable = staff,
                            ),
                      Field.Method("task_id", self.project_task_task_id),
-                     *s3_meta_fields())
-
-        # Field configurations
-        # Comment these if you don't need a Site associated with Tasks
-        #table.site_id.readable = table.site_id.writable = True
-        #table.site_id.label = T("Check-in at Facility") # T("Managing Office")
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.created_on.represent = lambda dt: \
-                                        S3DateTime.date_represent(dt, utc=True)
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.created_on.set_attributes(represent = lambda dt: \
+                            S3DateTime.date_represent(dt, utc=True)),
+                         ]
+                     )
 
         # CRUD Strings
         ADD_TASK = T("Create Task")

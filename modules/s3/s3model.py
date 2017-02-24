@@ -85,7 +85,8 @@ class S3Model(object):
                             "gis",
                             "pr",
                             "sit",
-                            "org")
+                            "org",
+                            )
 
         if module is not None:
             if self.__loaded():

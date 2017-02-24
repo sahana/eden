@@ -311,6 +311,13 @@ class S3ClimateModel(S3Model):
             msg_record_deleted = T("Dataset Price removed"),
             msg_list_empty = T("No Dataset Prices"))
 
+        system_roles = auth.get_system_roles()
+        ADMIN = system_roles.ADMIN
+        if auth.s3_has_role(ADMIN):
+            paid_writable = True
+        else:
+            paid_writable = False
+
         tablename = "climate_purchase"
         define_table(tablename,
                      #user_id(),
@@ -350,6 +357,7 @@ class S3ClimateModel(S3Model):
                      Field("paid", "boolean",
                            represent = lambda opt: \
                                        opt and "Yes" or "No",
+                           writable = paid_writable,
                            ),
                      Field("i_agree_to_the_terms_and_conditions", "boolean",
                            required = True,
@@ -366,21 +374,13 @@ class S3ClimateModel(S3Model):
                                           )
                                          )
                            ),
-                     *s3_meta_fields()
+                     *s3_meta_fields(),
+                     on_define = lambda table: [table.owned_by_user.set_attributes(label = T("User")),
+                                                ]
                      )
 
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.owned_by_user.label = T("User")
-
-        system_roles = auth.get_system_roles()
-        ADMIN = system_roles.ADMIN
-        if not auth.s3_has_role(ADMIN):
-            table.paid.writable = False
-
-        ADD = T("Purchase New Data")
         crud_strings[tablename] = Storage(
-            label_create = ADD,
+            label_create = T("Purchase New Data"),
             title_display = T("Purchased Data Details"),
             title_list = T("All Purchased Data"),
             title_update = T("Edit Purchased Data"),
@@ -418,9 +418,8 @@ class S3ClimateModel(S3Model):
                      Field("query_definition", "text"),
                      )
 
-        ADD = T("Save Query")
         crud_strings[tablename] = Storage(
-            label_create = ADD,
+            label_create = T("Save Query"),
             title_display = T("Saved Query Details"),
             title_list = T("Saved Queries"),
             title_update = T("Edit Saved Query"),
@@ -432,7 +431,8 @@ class S3ClimateModel(S3Model):
             msg_list_empty = T("No Saved Queries"))
 
         configure(tablename,
-                  listadd = False)
+                  listadd = False,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

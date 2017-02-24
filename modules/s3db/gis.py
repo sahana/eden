@@ -271,30 +271,30 @@ class S3LocationModel(S3Model):
                   readable = False,
                   writable = False,
                   ),
-            *meta_spatial_fields)
+            *meta_spatial_fields,
+            on_define = lambda table: \
+                [# Doesn't set parent properly when field is defined inline as the table isn't yet in db
+                 table._create_references(),
 
-        # Would be nice if this table could be Lazy but it probably can't
-        table = db[tablename]
-        # Doesn't set parent properly when field is defined inline as the table isn't yet in db
-        table._create_references()
+                 # Default the owning role to Authenticated. This can be used to allow the site
+                 # to control whether authenticated users get to create / update locations, or
+                 # just read them. Having an owner and using ACLs also allows us to take away
+                 # privileges from generic Authenticated users for particular locations (like
+                 # hierarchy or region locations) by changing the owner on those locations, e.g.
+                 # to MapAdmin.
+                 table.owned_by_group.set_attributes(default = current.session.s3.system_roles.AUTHENTICATED),
 
-        # Default the owning role to Authenticated. This can be used to allow the site
-        # to control whether authenticated users get to create / update locations, or
-        # just read them. Having an owner and using ACLs also allows us to take away
-        # privileges from generic Authenticated users for particular locations (like
-        # hierarchy or region locations) by changing the owner on those locations, e.g.
-        # to MapAdmin.
-        table.owned_by_group.default = current.session.s3.system_roles.AUTHENTICATED
-
-        # Can't be defined in-line as otherwise get a circular reference
-        table.parent.requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db, "gis_location.id",
-                                              gis_location_represent,
-                                              # @ToDo: If level is known, filter on higher than that?
-                                              # If strict, filter on next higher level?
-                                              filterby="level",
-                                              filter_opts=hierarchy_level_keys,
-                                              orderby="gis_location.name"))
+                 # Can't be defined in-line as otherwise get a circular reference
+                 table.parent.set_attributes(requires = IS_EMPTY_OR(
+                                               IS_ONE_OF(db, "gis_location.id",
+                                                         gis_location_represent,
+                                                         # @ToDo: If level is known, filter on higher than that?
+                                                         # If strict, filter on next higher level?
+                                                         filterby="level",
+                                                         filter_opts=hierarchy_level_keys,
+                                                         orderby="gis_location.name"))),
+                 ]
+            )
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(

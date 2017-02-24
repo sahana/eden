@@ -248,6 +248,12 @@ class S3SupplyModel(S3Model):
         else:
             parent_represent = item_category_represent
 
+        item_category_requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "supply_item_category.id",
+                                              item_category_represent_nocodes,
+                                              sort=True)
+                                    )
+
         tablename = "supply_item_category"
         define_table(tablename,
                      catalog_id(),
@@ -288,7 +294,11 @@ class S3SupplyModel(S3Model):
                            writable = vehicle,
                            ),
                      s3_comments(),
-                     *s3_meta_fields())
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.parent_item_category_id.set_attributes(requires = item_category_requires),
+                         ]
+                     )
 
         # CRUD strings
         ADD_ITEM_CATEGORY = T("Create Item Category")
@@ -305,22 +315,12 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Item Categories currently registered"))
 
         # Reusable Field
-        item_category_requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db, "supply_item_category.id",
-                                              item_category_represent_nocodes,
-                                              sort=True)
-                                    )
-
         item_category_comment = S3PopupLink(c = "supply",
                                             f = "item_category",
                                             label = ADD_ITEM_CATEGORY,
                                             title = T("Item Category"),
                                             tooltip = ADD_ITEM_CATEGORY,
                                             )
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.parent_item_category_id.requires = item_category_requires
 
         item_category_id = S3ReusableField("item_category_id", "reference %s" % tablename,
                                            comment = item_category_comment,

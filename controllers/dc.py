@@ -44,6 +44,22 @@ def template():
                        ):
                 ftable[fn].readable = ftable[fn].writable = False
 
+            # Hide the fieldname
+            from uuid import uuid1
+            f = ftable.name
+            f.default = lambda: str(uuid1()).replace("-", "_")
+            f.readable = f.writable = False
+
+            # Simplify the choices of Question Type
+            type_opts = {"string": T("Text"),
+                         "integer": T("Number"),
+                         #"float": T("Fractional Number"),
+                         #"integer": T("Options"),
+                         }
+            f = ftable.field_type
+            f.requires = IS_IN_SET(type_opts)
+            f.represent = lambda opt: type_opts.get(opt, messages.UNKNOWN_OPT)
+
         return True
     s3.prep = prep
 

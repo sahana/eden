@@ -1130,15 +1130,16 @@ class CholeraTreatmentCapabilityModel(S3Model):
                            label = T("Current problems, details"),
                            ),
                      s3_comments(),
-                     *s3_meta_fields())
-
-        # Field configuration
-        # @todo: make lazy table
-        table = current.db[tablename]
-        table.modified_on.label = T("Last updated on")
-        table.modified_on.readable = True
-        table.modified_by.label = T("Last updated by")
-        table.modified_by.readable = True
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                         [table.modified_on.set_attributes(label = T("Last updated on"),
+                                                           readable = True
+                                                           ),
+                          table.modified_by.set_attributes(label = T("Last updated by"),
+                                                           readable = True,
+                                                           ),
+                          ]
+                     )
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
