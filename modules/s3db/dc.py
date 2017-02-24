@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """ Sahana Eden Data Collection Models
+    - a front-end UI to manage Assessments which uses the Dynamic Tables back-end
 
-    @copyright: 2014-2016 (c) Sahana Software Foundation
+    @copyright: 2014-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -25,8 +26,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: experimental, WIP
 """
 
 __all__ = ("DataCollectionTemplateModel",
@@ -43,14 +42,11 @@ from s3layouts import S3PopupLink
 class DataCollectionTemplateModel(S3Model):
     """
         Templates to use for Assessments / Surveys
+        - uses the Dynamic Tables back-end to store Questions
     """
 
     names = ("dc_template",
              "dc_template_id",
-             "dc_question",
-             "dc_question_id",
-             "dc_template_question",
-             "dc_question_l10n",
              )
 
     def model(self):
@@ -71,24 +67,23 @@ class DataCollectionTemplateModel(S3Model):
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
-                     # Whether to show this template in the form list
-                     # (required since form list can't use authorization)
-                     Field("public", "boolean",
-                           default = False,
-                           ),
+                     # The Dynamic Table used to store the Questions and Answers
+                     # (An alternative design would be to use Tables as reusable
+                     #  Sections but this hasn't been adopted at this time for
+                     #  simplicity)
+                     self.s3_table_id(
+                        readable = False,
+                        writable = False,
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       xform = {"collection": "dc_collection",
-                                "questions": "question",
-                                "answers": "answer",
-                                },
+                       create_onaccept = self.dc_template_create_onaccept,
                        )
-        # Represent
-        represent = S3Represent(lookup=tablename)
 
         # Reusable field
+        represent = S3Represent(lookup=tablename)
         template_id = S3ReusableField("template_id", "reference %s" % tablename,
                                       label = T("Template"),
                                       represent = represent,
@@ -117,65 +112,13 @@ class DataCollectionTemplateModel(S3Model):
 
         # Components
         add_components(tablename,
-                       dc_question = {"link": "dc_template_question",
-                                      "joinby": "template_id",
-                                      "key": "question_id",
-                                      "actuate": "hide",
-                                      "autodelete": False,
-                                      },
-                       )
-
-        # =====================================================================
-        # Data Collection Question
-        #
-        tablename = "dc_question"
-        define_table(tablename,
-                     Field("question",
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     Field("model", "json",
-                           requires = IS_EMPTY_OR(IS_JSON(native_json=True)),
-                           # @todo: representation?
-                           widget = S3QuestionWidget(),
-                           ),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Question"),
-            title_display = T("Question Details"),
-            title_list = T("Questions"),
-            title_update = T("Edit Question"),
-            title_upload = T("Import Questions"),
-            label_list_button = T("List Questions"),
-            label_delete_button = T("Delete Question"),
-            msg_record_created = T("Question added"),
-            msg_record_modified = T("Question updated"),
-            msg_record_deleted = T("Question deleted"),
-            msg_list_empty = T("No Questions currently registered"))
-
-        # Represent
-        represent = S3Represent(lookup=tablename,
-                                fields=["question"],
-                                show_link=True,
-                                )
-
-        # Reusable field
-        question_id = S3ReusableField("question_id", "reference %s" % tablename,
-                                      label = T("Question"),
-                                      represent = represent,
-                                      requires = IS_ONE_OF(db, "dc_question.id",
-                                                           represent,
-                                                           ),
-                                      sortby = "name",
-                                      comment = S3PopupLink(f="question",
-                                                            tooltip=T("Add a new data collection question"),
-                                                            ),
-                                      )
-
-        # Components
-        add_components(tablename,
-                       dc_question_l10n = "question_id",
+                       s3_field = {"name": "question",
+                                   "link": "dc_template_question",
+                                   "joinby": "template_id",
+                                   "key": "field_id",
+                                   "actuate": "replace",
+                                   "autodelete": False,
+                                   },
                        )
 
         # =====================================================================
@@ -184,58 +127,26 @@ class DataCollectionTemplateModel(S3Model):
         tablename = "dc_template_question"
         define_table(tablename,
                      template_id(),
-                     question_id(),
+                     self.s3_field_id(),
                      *s3_meta_fields())
 
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Question"),
-            label_delete_button = T("Remove Question"),
-            msg_record_created = T("Question added"),
-            msg_record_deleted = T("Question remove"),
-            msg_list_empty = T("No Questions currently registered"))
-
-        # =====================================================================
-        # Questions l10n
-        #
-        tablename = "dc_question_l10n"
-        define_table(tablename,
-                     question_id(ondelete = "CASCADE",
-                                 ),
-                     Field("language",
-                           label = T("Language"),
-                           represent = IS_ISO639_2_LANGUAGE_CODE.represent,
-                           requires = IS_ISO639_2_LANGUAGE_CODE(sort=True),
-                           ),
-                     Field("question",
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     Field("model", "json",
-                           requires = IS_EMPTY_OR(IS_JSON()),
-                           # @todo: representation?
-                           # @todo: widget?
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Translation"),
-            title_display = T("Translation"),
-            title_list = T("Translations"),
-            title_update = T("Edit Translation"),
-            title_upload = T("Import Translations"),
-            label_list_button = T("List Translations"),
-            label_delete_button = T("Delete Translation"),
-            msg_record_created = T("Translation added"),
-            msg_record_modified = T("Translation updated"),
-            msg_record_deleted = T("Translation deleted"),
-            msg_list_empty = T("No Translations currently available"))
+        # CRUD strings - unused
+        #crud_strings[tablename] = Storage(
+        #    label_create = T("Create Question"),
+        #    title_display = T("Question Details"),
+        #    title_list = T("Questions"),
+        #    title_update = T("Edit Question"),
+        #    title_upload = T("Import Questions"),
+        #    label_list_button = T("List Questions"),
+        #    label_delete_button = T("Delete Question"),
+        #    msg_record_created = T("Question added"),
+        #    msg_record_modified = T("Question updated"),
+        #    msg_record_deleted = T("Question deleted"),
+        #    msg_list_empty = T("No Questions currently registered"))
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
         return dict(dc_template_id = template_id,
-                    dc_question_id = question_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -249,20 +160,51 @@ class DataCollectionTemplateModel(S3Model):
                                 )
 
         return dict(dc_template_id = lambda **attr: dummy("template_id"),
-                    dc_question_id = lambda **attr: dummy("question_id"),
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dc_template_create_onaccept(form):
+        """
+            On-accept routine for dc_template:
+                - Create & link a Dynamic Table to use to store the Questions
+        """
+
+        form_vars = form.vars
+        try:
+            template_id = form_vars.id
+        except AttributeError:
+            return
+
+        # Create the Dynamic Table
+        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"))
+
+        # Add a Field to link Answers to the Collection
+        db = current.db
+        db.s3_field.insert(table_id = table_id,
+                           name = "collection_id",
+                           field_type = "reference dc_collection",
+                           label = "Collection",
+                           require_not_empty = True,
+                           component_key = True,
+                           component_alias = "answer",
+                           component_tab = True,
+                           )
+
+        # Link this Table to the Template
+        db(db.dc_template.id == template_id).update(table_id=table_id)
 
 # =============================================================================
 class DataCollectionModel(S3Model):
     """
         Results of Assessments / Surveys
+        - uses the Dynamic Tables back-end to store Answers
     """
 
     names = ("dc_target",
-             "dc_collection",
-             "dc_answer",
-             "dc_collection_id",
              "dc_target_id",
+             "dc_collection",
+             "dc_collection_id",
              )
 
     def model(self):
@@ -339,13 +281,10 @@ class DataCollectionModel(S3Model):
 
         # Configuration
         self.configure(tablename,
+                       # Answers are in a Dynamic Component
+                       dynamic_components = True,
                        super_entity = "doc_entity",
                        orderby = "dc_collection.date desc",
-                       )
-
-        # Components
-        add_components(tablename,
-                       dc_answer = "collection_id",
                        )
 
         # CRUD strings
@@ -411,36 +350,6 @@ class DataCollectionModel(S3Model):
                                         )
 
         # =====================================================================
-        # Data Collection Answers
-        # - the data within Assessments / Surveys
-        #
-        tablename = "dc_answer"
-        define_table(tablename,
-                     collection_id(),
-                     self.dc_question_id(),
-                     Field("answer", "json",
-                           requires = IS_EMPTY_OR(IS_JSON()),
-                           # @todo: representation? (based the question model)
-                           # @todo: widget? (based the question model)
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Answer"),
-            title_display = T("Answer Details"),
-            title_list = T("Answers"),
-            title_update = T("Edit Answer"),
-            title_upload = T("Import Answers"),
-            label_list_button = T("List Answers"),
-            label_delete_button = T("Delete Answer"),
-            msg_record_created = T("Answer added"),
-            msg_record_modified = T("Answer updated"),
-            msg_record_deleted = T("Answer deleted"),
-            msg_list_empty = T("No Answers currently registered"))
-
-        # =====================================================================
         # Pass names back to global scope (s3.*)
         return dict(dc_collection_id = collection_id,
                     dc_target_id = target_id,
@@ -477,16 +386,6 @@ def dc_rheader(r, tabs=None):
                 )
 
         rheader_fields = (["name"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "question":
-
-        tabs = ((T("Question Details"), None),
-                (T("Translations"), "question_l10n"),
-                )
-
-        rheader_fields = (["question"],
                           )
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 

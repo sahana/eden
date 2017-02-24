@@ -177,7 +177,9 @@ class S3DynamicTablesModel(S3Model):
     """ Model for dynamic tables """
 
     names = ("s3_table",
+             "s3_table_id",
              "s3_field",
+             "s3_field_id",
              )
 
     def model(self):
@@ -245,9 +247,10 @@ class S3DynamicTablesModel(S3Model):
         table_id = S3ReusableField("table_id", "reference %s" % tablename,
                                    label = T("Table"),
                                    represent = represent,
-                                   requires = IS_ONE_OF(db, "%s.id" % tablename,
-                                                        represent,
-                                                        ),
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          )),
                                    sortby = "name",
                                    )
 
@@ -256,7 +259,8 @@ class S3DynamicTablesModel(S3Model):
         #
         tablename = "s3_field"
         define_table(tablename,
-                     table_id(notnull = True,
+                     table_id(empty = False,
+                              notnull = True,
                               ondelete = "CASCADE",
                               ),
                      Field("name", length=128, notnull=True,
@@ -367,10 +371,23 @@ class S3DynamicTablesModel(S3Model):
             msg_list_empty = T("No Fields currently defined"),
         )
 
+        # Reusable field
+        represent = S3Represent(lookup=tablename, show_link=True)
+        field_id = S3ReusableField("field_id", "reference %s" % tablename,
+                                   label = T("Field"),
+                                   represent = represent,
+                                   requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                        represent,
+                                                        ),
+                                   sortby = "name",
+                                   )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"s3_table_id": table_id,
+                "s3_field_id": field_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -435,6 +452,7 @@ class S3DynamicTablesModel(S3Model):
         """
             On-validation routine for s3_fields:
                 - field name must be unique within the table
+                - @ToDo: Check for Reserved Words
         """
 
         table = current.s3db.s3_field
@@ -469,7 +487,6 @@ class S3DynamicTablesModel(S3Model):
             if missing:
                 query = (table.id == record_id)
                 record = db(query).select(limitby=(0, 1), *missing).first()
-
 
         # Get the table ID
         table_id = None

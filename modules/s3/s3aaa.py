@@ -3006,13 +3006,17 @@ $.filterOptionsS3({
             # Module disabled or no user organisation set
             return None
 
-        def customise():
+        def customise(hr_id):
             """ Customise hrm_human_resource """
             customise = settings.customise_resource(htablename)
             if customise:
+                if hr_id:
+                    args = [str(hr_id)]
+                else:
+                    args = None
                 request = S3Request("hrm", "human_resource",
                                     current.request,
-                                    args = [str(hr_id)],
+                                    args = args,
                                     )
                 customise(request, htablename)
 
@@ -3038,7 +3042,7 @@ $.filterOptionsS3({
             hr_id = record.id
 
             # Update the record
-            customise()
+            customise(hr_id)
             db(htable.id == hr_id).update(organisation_id = organisation_id,
                                           site_id = site_id,
                                           )
@@ -3077,7 +3081,7 @@ $.filterOptionsS3({
 
             else:
                 # Create new HR record
-                customise()
+                customise(hr_id = None)
                 record = Storage(person_id=person_id,
                                  organisation_id=organisation_id,
                                  site_id = site_id,
