@@ -679,10 +679,11 @@ class S3OptionsMenu(object):
                     M("Templates", f="template")(
                         M("Create", m="create"),
                     ),
-                    M("Questions", f="question")(
+                    M("Targets", f="target")(
                         M("Create", m="create"),
                     ),
-                    M("Data Collections", f="collection")(
+                    # @ToDo: Use settings for label
+                    M("Responses", f="respnse")(
                         M("Create", m="create"),
                     ),
                 )

@@ -663,17 +663,16 @@ class S3Model(object):
             @param exclude: names to exclude (static components)
         """
 
-        ttable = cls.table("s3_table")
-        ftable = cls.table("s3_field")
-
         mtable = cls.table(tablename)
         if mtable is None:
             return
 
-        loaded = cls.get_config(tablename, "dynamic_components_loaded")
-        if loaded:
+        if cls.get_config(tablename, "dynamic_components_loaded"):
             # Already loaded
             return
+
+        ttable = cls.table("s3_table")
+        ftable = cls.table("s3_field")
 
         join = ttable.on(ttable.id == ftable.table_id)
         query = (ftable.master == tablename) & \
@@ -682,6 +681,7 @@ class S3Model(object):
         rows = current.db(query).select(ftable.name,
                                         ftable.field_type,
                                         ftable.component_alias,
+                                        ftable.component_multiple,
                                         ttable.name,
                                         join = join,
                                         )
@@ -710,6 +710,8 @@ class S3Model(object):
                 hook["name"] = alias
 
             hook["joinby"] = field.name
+
+            hook["multiple"] = field.component_multiple
 
             # Get the primary key
             field_type = field.field_type

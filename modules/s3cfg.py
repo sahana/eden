@@ -2722,14 +2722,14 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # DC: Data Collection
     #
-    def get_dc_collection_label(self):
+    def get_dc_response_label(self):
         """
-            Label for Data Collections
-            - default: 'Data Collection'
-            - 'Survey'
+            Label for Responses
             - 'Assessment;
+            - 'Response' (default if set to None)
+            - 'Survey'
         """
-        return self.dc.get("collection_label", "Assessment")
+        return self.dc.get("response_label", "Assessment")
 
     # -------------------------------------------------------------------------
     # Deployments

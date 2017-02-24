@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """ Sahana Eden Data Collection Models
-    - a front-end UI to manage Assessments which uses the Dynamic Tables back-end
+    - a front-end UI to manage Assessments which uses the Dynamic Tables
+      back-end
 
     @copyright: 2014-2017 (c) Sahana Software Foundation
     @license: MIT
@@ -179,17 +180,21 @@ class DataCollectionTemplateModel(S3Model):
         # Create the Dynamic Table
         table_id = current.s3db.s3_table.insert(title = form_vars.get("name"))
 
-        # Add a Field to link Answers to the Collection
+        # Add a Field to link Answers together
         db = current.db
         db.s3_field.insert(table_id = table_id,
-                           name = "collection_id",
-                           field_type = "reference dc_collection",
-                           label = "Collection",
+                           name = "response_id",
+                           field_type = "reference dc_response",
+                           #label = "Response",
                            require_not_empty = True,
                            component_key = True,
                            component_alias = "answer",
+                           component_multiple = False,
                            component_tab = True,
+                           master = "dc_response",
                            )
+        # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+        # @ToDo: Call set_record_owner() once we start restricting these
 
         # Link this Table to the Template
         db(db.dc_template.id == template_id).update(table_id=table_id)
@@ -203,8 +208,8 @@ class DataCollectionModel(S3Model):
 
     names = ("dc_target",
              "dc_target_id",
-             "dc_collection",
-             "dc_collection_id",
+             "dc_response",
+             "dc_response_id",
              )
 
     def model(self):
@@ -222,7 +227,8 @@ class DataCollectionModel(S3Model):
         # =====================================================================
         # Data Collection Target
         # - planning of Assessments / Surveys
-        # - optional step in the process
+        #   (optional step in the process)
+        # - can be used to analyse a group of responses
         #
         tablename = "dc_target"
         define_table(tablename,
@@ -236,7 +242,7 @@ class DataCollectionModel(S3Model):
 
         # Components
         add_components(tablename,
-                       dc_collection = "target_id",
+                       dc_response = "target_id",
                        )
 
         # CRUD strings
@@ -262,10 +268,11 @@ class DataCollectionModel(S3Model):
                                     )
 
         # =====================================================================
-        # Data Collections
+        # Answers / Responses
         # - instances of an Assessment / Survey
+        # - each of these is a record in the Template's Dynamic Table
         #
-        tablename = "dc_collection"
+        tablename = "dc_response"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
                      target_id(),
@@ -281,14 +288,14 @@ class DataCollectionModel(S3Model):
 
         # Configuration
         self.configure(tablename,
-                       # Answers are in a Dynamic Component
+                       # Question Answers are in a Dynamic Component
                        dynamic_components = True,
                        super_entity = "doc_entity",
-                       orderby = "dc_collection.date desc",
+                       orderby = "dc_response.date desc",
                        )
 
         # CRUD strings
-        label = current.deployment_settings.get_dc_collection_label()
+        label = current.deployment_settings.get_dc_response_label()
         if label == "Assessment":
             label = T("Assessment")
             crud_strings[tablename] = Storage(
@@ -318,7 +325,7 @@ class DataCollectionModel(S3Model):
                 msg_record_deleted = T("Survey deleted"),
                 msg_list_empty = T("No Surveys currently registered"))
         else:
-            label = T("Data Collection")
+            label = T("Response")
             crud_strings[tablename] = Storage(
                 label_create = T("Create Data Collection"),
                 title_display = T("Data Collection Details"),
@@ -339,19 +346,19 @@ class DataCollectionModel(S3Model):
                                 )
 
         # Reusable field
-        collection_id = S3ReusableField("collection_id", "reference %s" % tablename,
-                                        label = label,
-                                        represent = represent,
-                                        requires = IS_ONE_OF(db, "dc_collection.id",
-                                                             represent,
-                                                             ),
-                                        comment = S3PopupLink(f="collection",
-                                                              ),
-                                        )
+        response_id = S3ReusableField("response_id", "reference %s" % tablename,
+                                      label = label,
+                                      represent = represent,
+                                      requires = IS_ONE_OF(db, "dc_response.id",
+                                                           represent,
+                                                           ),
+                                      comment = S3PopupLink(f="respnse",
+                                                            ),
+                                      )
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
-        return dict(dc_collection_id = collection_id,
+        return dict(dc_response_id = response_id,
                     dc_target_id = target_id,
                     )
 
@@ -365,7 +372,7 @@ class DataCollectionModel(S3Model):
                                 writable = False,
                                 )
 
-        return dict(dc_collection_id = lambda **attr: dummy("collection_id"),
+        return dict(dc_response_id = lambda **attr: dummy("response_id"),
                     dc_target_id = lambda **attr: dummy("target_id"),
                     )
 
@@ -389,7 +396,7 @@ def dc_rheader(r, tabs=None):
                           )
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-    elif resourcename == "collection":
+    elif resourcename == "response":
 
         tabs = ((T("Basic Details"), None),
                 (T("Answers"), "answer"),

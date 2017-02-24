@@ -444,11 +444,11 @@ class S3EventModel(S3Model):
                                         "actuate": "replace",
                                         },
                             event_incident = "event_id",
-                            dc_collection = {"link": "event_collection",
-                                             "joinby": "event_id",
-                                             "key": "collection_id",
-                                             "actuate": "replace",
-                                             },
+                            dc_response = {"link": "event_response",
+                                           "joinby": "event_id",
+                                           "key": "response_id",
+                                           "actuate": "replace",
+                                           },
                             dc_target = {"link": "event_target",
                                          "joinby": "event_id",
                                          "key": "target_id",
@@ -2119,7 +2119,7 @@ class S3EventDCModel(S3Model):
         Link Data Collections to Events &/or Incidents
     """
 
-    names = ("event_collection",
+    names = ("event_response",
              "event_target",
              )
 
@@ -2131,14 +2131,14 @@ class S3EventDCModel(S3Model):
         incident_id = self.event_incident_id
 
         # ---------------------------------------------------------------------
-        # Link table between Collections & Events/Incidents
-        tablename = "event_collection"
+        # Link table between Assessments & Events/Incidents
+        tablename = "event_response"
         self.define_table(tablename,
                           event_id(ondelete = "CASCADE"),
                           incident_id(ondelete = "CASCADE"),
-                          self.dc_collection_id(empty = False,
-                                                ondelete = "CASCADE",
-                                                ),
+                          self.dc_response_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------

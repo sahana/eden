@@ -54,6 +54,7 @@ class S3DocumentLibrary(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         person_comment = self.pr_person_comment
         person_id = self.pr_person_id
@@ -79,6 +80,7 @@ class S3DocumentLibrary(S3Model):
                                cms_post = T("Post"),
                                cr_shelter = T("Shelter"),
                                deploy_mission = T("Mission"),
+                               dc_response = T(settings.get_dc_response_label()),
                                doc_sitrep = T("Situation Report"),
                                dvr_case_activity = T("Case Activity"),
                                event_event = T("Event"),
@@ -202,7 +204,7 @@ class S3DocumentLibrary(S3Model):
         # - define in-template if-required
 
         # Resource Configuration
-        if current.deployment_settings.get_base_solr_url():
+        if settings.get_base_solr_url():
             onaccept = self.document_onaccept
             ondelete = self.document_ondelete
         else:

@@ -98,7 +98,7 @@ class S3MainMenu(default.S3MainMenu):
                     M("Schools", c="edu", f="school"),
                     M("Warehouses", c="inv", f="warehouse"),
                 ),
-                MM("Assessments", c="dc", f="collection", m="summary")(
+                MM("Assessments", c="dc", f="respnse", m="summary")(
                     M("Table", m="list"),
                     M("Report", m="report"),
                     M("Map", m="map"),
@@ -124,7 +124,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Calendar", c="cms", f="post", m="calendar"), # Weekly Schedule
                 MM("Staff", c="hrm", f="human_resource"),
                 MM("Disasters", c="event", f="event"),
-                MM("Assessments", c="dc", f="collection", m="summary")(
+                MM("Assessments", c="dc", f="respnse", m="summary")(
                     M("Targets", f="target"),
                 ),
                 MM("Projects", c="project", f="project", m="summary"),
@@ -215,13 +215,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Templates", f="template")(
                             M("Create", m="create"),
                         ),
-                        #M("Questions", f="question")(
-                        #    M("Create", m="create"),
-                        #),
                         M("Assessment Planning", f="target")(
                             M("Create", m="create"),
                         ),
-                        M("Assessments", f="collection")(
+                        M("Assessments", f="respnse")(
                             M("Create", m="create"),
                         ),
                     )

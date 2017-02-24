@@ -263,6 +263,9 @@ class S3DynamicTablesModel(S3Model):
                               notnull = True,
                               ondelete = "CASCADE",
                               ),
+                     Field("label",
+                           label = T("Label"),
+                           ),
                      Field("name", length=128, notnull=True,
                            label = T("Field Name"),
                            requires = [IS_NOT_EMPTY(),
@@ -276,9 +279,6 @@ class S3DynamicTablesModel(S3Model):
                            requires = [IS_NOT_EMPTY(),
                                        IS_DYNAMIC_FIELDTYPE(),
                                        ],
-                           ),
-                     Field("label",
-                           label = T("Label"),
                            ),
                      Field("require_unique", "boolean",
                            default = False,
@@ -325,6 +325,10 @@ class S3DynamicTablesModel(S3Model):
                      Field("component_alias", length=128,
                            label = T("Component Alias"),
                            requires = IS_EMPTY_OR((IS_LENGTH(128), IS_LOWER())),
+                           ),
+                     Field("component_multiple", "boolean",
+                           default = True,
+                           label = T("Component Multiple"),
                            ),
                      Field("component_tab", "boolean",
                            label = T("Show on Tab"),
@@ -455,7 +459,8 @@ class S3DynamicTablesModel(S3Model):
                 - @ToDo: Check for Reserved Words
         """
 
-        table = current.s3db.s3_field
+        db = current.db
+        table = db.s3_field
 
         form_vars = form.vars
         if "id" in form_vars:
@@ -466,8 +471,6 @@ class S3DynamicTablesModel(S3Model):
             record_id = None
 
         record = form.record if hasattr(form, "record") else None
-
-        db = current.db
 
         # Get previous values if record exists
         if record_id:
@@ -586,12 +589,13 @@ class S3DynamicTablesModel(S3Model):
         except AttributeError:
             return
 
-        table = current.s3db.s3_field
-        row = current.db(table.id == record_id).select(table.id,
-                                                       table.component_key,
-                                                       table.field_type,
-                                                       limitby = (0, 1),
-                                                       ).first()
+        db = current.db
+        table = db.s3_field
+        row = db(table.id == record_id).select(table.id,
+                                               table.component_key,
+                                               table.field_type,
+                                               limitby = (0, 1),
+                                               ).first()
 
         master = None
         if row and row.component_key:
