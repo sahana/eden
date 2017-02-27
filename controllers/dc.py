@@ -38,7 +38,6 @@ def template():
                        "default_value",
                        "component_key",
                        "component_alias",
-                       "component_multiple",
                        "component_tab",
                        "settings",
                        ):
@@ -78,7 +77,7 @@ def target():
                 table = s3db.dc_response
                 table.location_id.default = record.location_id
                 table.template_id.default = record.template_id
-                
+
         return True
     s3.prep = prep
 

@@ -189,9 +189,9 @@ class DataCollectionTemplateModel(S3Model):
                            require_not_empty = True,
                            component_key = True,
                            component_alias = "answer",
-                           component_multiple = False,
                            component_tab = True,
                            master = "dc_response",
+                           settings = {"component_multiple": False},
                            )
         # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
         # @ToDo: Call set_record_owner() once we start restricting these

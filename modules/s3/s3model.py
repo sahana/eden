@@ -682,7 +682,7 @@ class S3Model(object):
         rows = current.db(query).select(ftable.name,
                                         ftable.field_type,
                                         ftable.component_alias,
-                                        ftable.component_multiple,
+                                        ftable.settings,
                                         ttable.name,
                                         join = join,
                                         )
@@ -712,7 +712,11 @@ class S3Model(object):
 
             hook["joinby"] = field.name
 
-            hook["multiple"] = field.component_multiple
+            settings = field.settings
+            if settings:
+                multiple = settings.get("component_multiple", DEFAULT)
+                if multiple is not DEFAULT:
+                    hook["multiple"] = multiple
 
             # Get the primary key
             field_type = field.field_type
