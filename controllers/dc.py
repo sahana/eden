@@ -46,11 +46,27 @@ def template():
             # Hide the fieldname
             from uuid import uuid1
             f = ftable.name
-            f.default = lambda: str(uuid1()).replace("-", "_")
+            f.default = lambda: "f%s" % str(uuid1()).replace("-", "_")
             f.readable = f.writable = False
 
+            # CRUD Strings
+            s3.crud_strings["s3_field"] = Storage(
+                label_create = T("Create Question"),
+                title_display = T("Question Details"),
+                title_list = T("Questions"),
+                title_update = T("Edit Question"),
+                label_list_button = T("List Questions"),
+                label_delete_button = T("Delete Question"),
+                msg_record_created = T("Question created"),
+                msg_record_modified = T("Question updated"),
+                msg_record_deleted = T("Question deleted"),
+                msg_list_empty = T("No Questions currently defined"),
+            )
+
             # Simplify the choices of Question Type
-            type_opts = {"string": T("Text"),
+            type_opts = {"boolean": T("Yes/No"),
+                         #"Yes, No, Don't Know"
+                         "string": T("Text"),
                          "integer": T("Number"),
                          #"float": T("Fractional Number"),
                          #"integer": T("Options"),
@@ -76,7 +92,9 @@ def target():
                 record = r.record
                 table = s3db.dc_response
                 table.location_id.default = record.location_id
-                table.template_id.default = record.template_id
+                f = table.template_id
+                f.default = record.template_id
+                f.writable = False
 
         return True
     s3.prep = prep
@@ -86,6 +104,27 @@ def target():
 # -----------------------------------------------------------------------------
 def respnse(): # Cannot call this 'response' or it will clobber the global
     """ RESTful CRUD controller """
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "answer":
+                # CRUD Strings
+                s3.crud_strings[r.component.tablename] = Storage(
+                    label_create = T("Create Responses"),
+                    title_display = T("Response Details"),
+                    title_list = T("Responses"),
+                    title_update = T("Edit Response"),
+                    label_list_button = T("List Responses"),
+                    label_delete_button = T("Clear Response"),
+                    msg_record_created = T("Response created"),
+                    msg_record_modified = T("Response updated"),
+                    msg_record_deleted = T("Response deleted"),
+                    msg_list_empty = T("No Responses currently defined"),
+                )
+                
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("dc", "response",
                               rheader = s3db.dc_rheader,

@@ -412,7 +412,8 @@ def dc_rheader(r, tabs=None):
     elif resourcename == "target":
 
         tabs = ((T("Basic Details"), None),
-                (T("Collections"), "collection"),
+                # @ToDo: Use settings for label
+                (T("Responses"), "response"),
                 )
 
         rheader_fields = (["template_id"],
