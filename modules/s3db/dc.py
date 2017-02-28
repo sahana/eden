@@ -605,51 +605,59 @@ class DataCollectionModel(S3Model):
 def dc_rheader(r, tabs=None):
     """ Resource Headers for Data Collection Tool """
 
-    T = current.T
     if r.representation != "html":
         return None
 
-    resourcename = r.name
-
-    if resourcename == "template":
-
-        tabs = ((T("Basic Details"), None),
-                (T("Sections"), "section"),
-                (T("Questions"), "question"),
-                )
-
-        rheader_fields = (["name"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "response":
-
-        tabs = ((T("Basic Details"), None),
-                (T("Answers"), "answer"),
-                (T("Attachments"), "document"),
-                )
-
-        rheader_fields = (["template_id"],
-                          ["location_id"],
-                          ["date"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "target":
-
-        tabs = ((T("Basic Details"), None),
-                # @ToDo: Use settings for label
-                (T("Responses"), "response"),
-                )
-
-        rheader_fields = (["template_id"],
-                          ["location_id"],
-                          ["date"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
     else:
-        rheader = ""
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "dc_template":
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Sections"), "section"),
+                    (T("Questions"), "question"),
+                    )
+
+            rheader_fields = (["name"],
+                              )
+
+        elif tablename == "dc_response":
+
+            tabs = ((T("Basic Details"), None, {"native": 1}),
+                    (T("Answers"), "answer"),
+                    (T("Attachments"), "document"),
+                    )
+
+            rheader_fields = (["template_id"],
+                              ["location_id"],
+                              ["date"],
+                              )
+
+        elif tablename == "dc_target":
+
+            tabs = ((T("Basic Details"), None),
+                    # @ToDo: Use settings for label
+                    (T("Responses"), "response"),
+                    )
+
+            rheader_fields = (["template_id"],
+                              ["location_id"],
+                              ["date"],
+                              )
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table = resource.table,
+                                                         record = record,
+                                                         )
 
     return rheader
 
