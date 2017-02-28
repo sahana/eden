@@ -376,9 +376,10 @@ class S3DynamicTablesModel(S3Model):
         field_id = S3ReusableField("field_id", "reference %s" % tablename,
                                    label = T("Field"),
                                    represent = represent,
-                                   requires = IS_ONE_OF(db, "%s.id" % tablename,
-                                                        represent,
-                                                        ),
+                                   requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                      represent,
+                                                      )),
                                    sortby = "name",
                                    )
 

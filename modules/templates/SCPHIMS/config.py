@@ -258,13 +258,15 @@ def config(settings):
     settings.customise_dc_target_resource = customise_dc_target_resource
 
     # -------------------------------------------------------------------------
-    def customise_dc_collection_resource(r, tablename):
+    def customise_dc_response_resource(r, tablename):
 
         # @ToDo: Filters inc 'Assigned to me'
 
         db = current.db
         s3db = current.s3db
-        table = s3db.dc_collection
+        table = s3db.dc_response
+
+        table.person_id.label = T("Name of team leader")
 
         # Always at L4
         from s3 import S3LocationSelector
@@ -299,7 +301,7 @@ def config(settings):
                 # Prepop not done
                 current.log.warning("Cannot default Targets to Rapid Assessment form")
 
-    settings.customise_dc_collection_resource = customise_dc_collection_resource
+    settings.customise_dc_response_resource = customise_dc_response_resource
 
     # =========================================================================
     # Documents

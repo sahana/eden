@@ -1,0 +1,6 @@
+Template,Question,Type,Options,Required,Tooltip
+Rapid Assessment,"Organizations participating",text,,
+Rapid Assessment,"Contact Details",text,,
+Rapid Assessment,"Number of days since emergency event occurred",number,,
+
+
