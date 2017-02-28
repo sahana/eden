@@ -1,6 +1,7 @@
-Template,Question,Type,Options,Required,Tooltip
-Rapid Assessment,"Organizations participating",text,,
-Rapid Assessment,"Contact Details",text,,
-Rapid Assessment,"Number of days since emergency event occurred",number,,
-
-
+Template,Section,Question,Type,Options,Required,Tooltip
+Rapid Assessment,"1. Assessment team information","a) Organizations participating",text,,
+Rapid Assessment,"1. Assessment team information","d) Contact Details",text,,
+Rapid Assessment,"1. Assessment team information","e) Number of days since emergency event occurred",number,,
+Rapid Assessment,"1. Assessment team information","f) Date the event (started)",date,,
+Rapid Assessment,"2. Geographic information","e) Name/Position of Person interviewed",text,,
+Rapid Assessment,"2. Geographic information","f) Contact Details",text,,

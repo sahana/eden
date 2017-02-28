@@ -259,6 +259,8 @@ class S3SQLForm(object):
                         # Something else
                         f = None
                 if f:
+                    if f.endswith("__row"):
+                        f = f[:-5]
                     if f.startswith(tablename):
                         f = f[len(tablename) + 1:] # : -6
                         if f.startswith("sub_"):
@@ -288,7 +290,7 @@ class S3SQLForm(object):
                                                  _class = "subheading",
                                                  _id = "%s_%s__subheading" %
                                                        (tablename, f)))
-                            tr.attributes.update(_class="after_subheading")
+                            tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
                             tr = form_rows.next()
                             i += 1
                 try:

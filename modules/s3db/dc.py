@@ -48,6 +48,7 @@ class DataCollectionTemplateModel(S3Model):
 
     names = ("dc_template",
              "dc_template_id",
+             "dc_section",
              "dc_question",
              "dc_question_l10n",
              )
@@ -65,7 +66,7 @@ class DataCollectionTemplateModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # =====================================================================
-        # Data Collection Template
+        # Data Collection Templates
         #
         tablename = "dc_template"
         define_table(tablename,
@@ -108,7 +109,6 @@ class DataCollectionTemplateModel(S3Model):
             title_display = T("Template Details"),
             title_list = T("Templates"),
             title_update = T("Edit Template"),
-            title_upload = T("Import Templates"),
             label_list_button = T("List Templates"),
             label_delete_button = T("Delete Template"),
             msg_record_created = T("Template added"),
@@ -119,7 +119,50 @@ class DataCollectionTemplateModel(S3Model):
         # Components
         self.add_components(tablename,
                             dc_question = "template_id",
+                            dc_section = "template_id",
                             )
+
+        # =====================================================================
+        # Template Sections
+        #
+        tablename = "dc_section"
+        define_table(tablename,
+                     template_id(),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        section_id = S3ReusableField("section_id", "reference %s" % tablename,
+                                     label = T("Section"),
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dc_section.id",
+                                                          represent,
+                                                          )),
+                                     sortby = "name",
+                                     #comment = S3PopupLink(f="template",
+                                     #                      args=["[id]", "section"], # @ToDo: Build support for this?
+                                     #                      tooltip=T("Add a new section to the template"),
+                                     #                      ),
+                                     )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Section"),
+            title_display = T("Section Details"),
+            title_list = T("Sections"),
+            title_update = T("Edit Section"),
+            label_list_button = T("List Sections"),
+            label_delete_button = T("Delete Section"),
+            msg_record_created = T("Section added"),
+            msg_record_modified = T("Section updated"),
+            msg_record_deleted = T("Section deleted"),
+            msg_list_empty = T("No Sections currently registered"))
 
         # =====================================================================
         # Questions
@@ -130,11 +173,17 @@ class DataCollectionTemplateModel(S3Model):
                      4: T("Yes/No"),
                      5: T("Yes, No, Don't Know"),
                      6: T("Options"),
+                     #7: T("Date"),
+                     #8: T("Date/Time"),
+                     #: T("Organization"),
+                     #: T("Location"),
+                     #: T("Person"),
                      }
 
         tablename = "dc_question"
         define_table(tablename,
                      template_id(),
+                     section_id(),
                      Field("name",
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
@@ -565,6 +614,7 @@ def dc_rheader(r, tabs=None):
     if resourcename == "template":
 
         tabs = ((T("Basic Details"), None),
+                (T("Sections"), "section"),
                 (T("Questions"), "question"),
                 )
 

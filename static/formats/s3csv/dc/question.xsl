@@ -20,6 +20,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="template" match="row" use="col[@field='Template']"/>
+    <xsl:key name="section" match="row" use="col[@field='Section']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -29,6 +30,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('template',
                                                                        col[@field='Template'])[1])]">
                 <xsl:call-template name="Template"/>
+            </xsl:for-each>
+
+            <!-- Sections -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('section',
+                                                                       col[@field='Section'])[1])]">
+                <xsl:call-template name="Section"/>
             </xsl:for-each>
 
             <!-- Questions -->
@@ -50,6 +57,13 @@
             <reference field="template_id" resource="dc_template">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Template']"/>
+                </xsl:attribute>
+            </reference>
+
+            <!-- Link to Section -->
+            <reference field="section_id" resource="dc_section">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Section']"/>
                 </xsl:attribute>
             </reference>
 
@@ -80,6 +94,10 @@
                 <xsl:when test="$Type='OPTIONS' or $Type='SELECT'">
                     <data field="field_type">6</data>
                 </xsl:when>
+                <xsl:otherwise>
+                    <!-- Default to String -->
+                    <data field="field_type">1</data>
+                </xsl:otherwise>
             </xsl:choose>
 
             <!-- Required -->
@@ -113,6 +131,27 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$template"/></data>
        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Section">
+        <xsl:variable name="section" select="col[@field='Section']/text()"/>
+
+        <resource name="dc_section">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$section"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$section"/></data>
+
+            <!-- Link to Template -->
+            <reference field="template_id" resource="dc_template">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Template']"/>
+                </xsl:attribute>
+            </reference>
+
+        </resource>
 
     </xsl:template>
 
