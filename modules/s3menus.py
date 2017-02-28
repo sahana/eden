@@ -678,6 +678,7 @@ class S3OptionsMenu(object):
         return M(c="dc")(
                     M("Templates", f="template")(
                         M("Create", m="create"),
+                        M("Import", f="question", m="import"),
                     ),
                     M("Targets", f="target")(
                         M("Create", m="create"),

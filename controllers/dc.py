@@ -65,6 +65,15 @@ def template():
     return s3_rest_controller(rheader = s3db.dc_rheader)
 
 # -----------------------------------------------------------------------------
+def question():
+    """
+        RESTful CRUD controller
+        - just used for imports
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def target():
     """ RESTful CRUD controller """
 

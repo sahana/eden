@@ -214,6 +214,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return M(c="dc")(
                         M("Templates", f="template")(
                             M("Create", m="create"),
+                            M("Import", f="question", m="import"),
                         ),
                         M("Assessment Planning", f="target")(
                             M("Create", m="create"),
