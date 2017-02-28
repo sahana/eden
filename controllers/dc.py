@@ -26,54 +26,27 @@ def template():
 
         if r.record and r.component_name == "question":
 
-            # All Questions should be in the same Dynamic Table
-            ftable = db.s3_field
-            f = ftable.table_id
-            f.default = r.record.table_id
-            f.readable = f.writable = False
+            # Add JS
+            scripts_append = s3.scripts.append
+            if s3.debug:
+                scripts_append("/%s/static/scripts/tag-it.js" % appname)
+                scripts_append("/%s/static/scripts/S3/s3.dc.js" % appname)
+            else:
+                scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
+                scripts_append("/%s/static/scripts/S3/s3.dc.min.js" % appname)
+            # Add CSS
+            s3.stylesheets.append("plugins/jquery.tagit.css")
 
-            # Hide fields which complicate things
-            for fn in ("require_unique",
-                       "options",
-                       "default_value",
-                       "component_key",
-                       "component_alias",
-                       "component_tab",
-                       "settings",
-                       ):
-                ftable[fn].readable = ftable[fn].writable = False
-
-            # Hide the fieldname
-            from uuid import uuid1
-            f = ftable.name
-            f.default = lambda: "f%s" % str(uuid1()).replace("-", "_")
-            f.readable = f.writable = False
-
-            # CRUD Strings
-            s3.crud_strings["s3_field"] = Storage(
-                label_create = T("Create Question"),
-                title_display = T("Question Details"),
-                title_list = T("Questions"),
-                title_update = T("Edit Question"),
-                label_list_button = T("List Questions"),
-                label_delete_button = T("Delete Question"),
-                msg_record_created = T("Question created"),
-                msg_record_modified = T("Question updated"),
-                msg_record_deleted = T("Question deleted"),
-                msg_list_empty = T("No Questions currently defined"),
-            )
-
-            # Simplify the choices of Question Type
-            type_opts = {"boolean": T("Yes/No"),
-                         #"Yes, No, Don't Know"
-                         "string": T("Text"),
-                         "integer": T("Number"),
-                         #"float": T("Fractional Number"),
-                         #"integer": T("Options"),
-                         }
-            f = ftable.field_type
-            f.requires = IS_IN_SET(type_opts)
-            f.represent = lambda opt: type_opts.get(opt, messages.UNKNOWN_OPT)
+            # If the template has responses then we should make the Questions read-only
+            # @ToDo: Allow Editing unanswered questions?
+            rtable = s3db.dc_response
+            if db(rtable.template_id == r.id).select(rtable.id,
+                                                     limitby=(0, 1)
+                                                     ):
+                s3db.configure("dc_question",
+                               deletable = False,
+                               #editable = False,
+                               )
 
         return True
     s3.prep = prep

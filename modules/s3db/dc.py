@@ -48,6 +48,8 @@ class DataCollectionTemplateModel(S3Model):
 
     names = ("dc_template",
              "dc_template_id",
+             "dc_question",
+             "dc_question_l10n",
              )
 
     def model(self):
@@ -57,8 +59,10 @@ class DataCollectionTemplateModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
 
+        configure = self.configure
         define_table = self.define_table
-        add_components = self.add_components
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # =====================================================================
         # Data Collection Template
@@ -66,6 +70,7 @@ class DataCollectionTemplateModel(S3Model):
         tablename = "dc_template"
         define_table(tablename,
                      Field("name",
+                           label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      # The Dynamic Table used to store the Questions and Answers
@@ -79,9 +84,9 @@ class DataCollectionTemplateModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        self.configure(tablename,
-                       create_onaccept = self.dc_template_create_onaccept,
-                       )
+        configure(tablename,
+                  create_onaccept = self.dc_template_create_onaccept,
+                  )
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -112,38 +117,131 @@ class DataCollectionTemplateModel(S3Model):
             msg_list_empty = T("No Templates currently registered"))
 
         # Components
-        add_components(tablename,
-                       s3_field = {"name": "question",
-                                   "link": "dc_template_question",
-                                   "joinby": "template_id",
-                                   "key": "field_id",
-                                   "actuate": "replace",
-                                   "autodelete": False,
-                                   },
-                       )
+        self.add_components(tablename,
+                            dc_question = "template_id",
+                            )
 
         # =====================================================================
-        # Template <=> Question link table
+        # Questions
         #
-        tablename = "dc_template_question"
+        type_opts = {1: T("Text"),
+                     2: T("Number"),
+                     #3: T("Fractional Number"),
+                     4: T("Yes/No"),
+                     5: T("Yes, No, Don't Know"),
+                     6: T("Options"),
+                     }
+
+        tablename = "dc_question"
         define_table(tablename,
                      template_id(),
-                     self.s3_field_id(),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     # The Dynamic Field used to store the Question/Answers
+                     self.s3_field_id(
+                        readable = False,
+                        writable = False,
+                        ),
+                     Field("field_type", "integer", notnull=True,
+                           default = 1, # string
+                           label = T("Field Type"),
+                           represent = lambda opt: \
+                                            type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(type_opts),
+                           ),
+                     Field("options", "json",
+                           label = T("Options"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           ),
+                     Field("require_not_empty", "boolean",
+                           default = False,
+                           label = T("Is required"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Is required"),
+                                                           T("Field value must not be empty"),
+                                                           ),
+                                         ),
+                           ),
+                     s3_comments(label = T("Tooltip"),
+                                 represent = s3_text_represent,
+                                 comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Tooltip"),
+                                                                 T("Explanation of the field to be displayed in forms"),
+                                                                 ),
+                                               ),
+                                 ),
                      *s3_meta_fields())
 
-        # CRUD strings - unused
-        #crud_strings[tablename] = Storage(
-        #    label_create = T("Create Question"),
-        #    title_display = T("Question Details"),
-        #    title_list = T("Questions"),
-        #    title_update = T("Edit Question"),
-        #    title_upload = T("Import Questions"),
-        #    label_list_button = T("List Questions"),
-        #    label_delete_button = T("Delete Question"),
-        #    msg_record_created = T("Question added"),
-        #    msg_record_modified = T("Question updated"),
-        #    msg_record_deleted = T("Question deleted"),
-        #    msg_list_empty = T("No Questions currently registered"))
+        configure(tablename,
+                  onaccept = self.dc_question_onaccept,
+                  )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        question_id = S3ReusableField("question_id", "reference %s" % tablename,
+                                      label = T("Question"),
+                                      represent = represent,
+                                      requires = IS_ONE_OF(db, "dc_question.id",
+                                                           represent,
+                                                           ),
+                                      sortby = "name",
+                                      #comment = S3PopupLink(f="question",
+                                      #                      tooltip=T("Add a new question"),
+                                      #                      ),
+                                      )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Question"),
+            title_display = T("Question Details"),
+            title_list = T("Questions"),
+            title_update = T("Edit Question"),
+            title_upload = T("Import Questions"),
+            label_list_button = T("List Questions"),
+            label_delete_button = T("Delete Question"),
+            msg_record_created = T("Question added"),
+            msg_record_modified = T("Question updated"),
+            msg_record_deleted = T("Question deleted"),
+            msg_list_empty = T("No Questions currently registered"))
+
+        # =====================================================================
+        # Question Translations
+        #
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+
+        tablename = "dc_question_l10n"
+        define_table(tablename,
+                     question_id(),
+                     Field("language",
+                           label = T("Language"),
+                           represent = lambda opt: \
+                                        l10n_languages.get(opt, UNKNOWN_OPT),
+                           requires = IS_ISO639_2_LANGUAGE_CODE(),
+                           ),
+                     Field("name_l10n",
+                           label = T("Translated Field Name"),
+                           ),
+                     Field("tooltip_l10n",
+                           label = T("Translated Tooltip"),
+                           ),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Translation"),
+            title_display = T("Translation Details"),
+            title_list = T("Translations"),
+            title_update = T("Edit Translation"),
+            title_upload = T("Import Translations"),
+            label_list_button = T("List Translations"),
+            label_delete_button = T("Delete Translation"),
+            msg_record_created = T("Translation added"),
+            msg_record_modified = T("Translation updated"),
+            msg_record_deleted = T("Translation deleted"),
+            msg_list_empty = T("No Translations currently registered"))
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
@@ -198,6 +296,84 @@ class DataCollectionTemplateModel(S3Model):
 
         # Link this Table to the Template
         db(db.dc_template.id == template_id).update(table_id=table_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dc_question_onaccept(form):
+        """
+            On-accept routine for dc_question:
+                - Create & link a Dynamic Field to use to store the Question
+        """
+
+        try:
+            question_id = form.vars.id
+        except AttributeError:
+            return
+
+        db = current.db
+
+        # Read the full Question
+        qtable = db.dc_question
+        question = db(qtable.id == question_id).select(qtable.id,
+                                                       qtable.template_id,
+                                                       qtable.field_id,
+                                                       qtable.name,
+                                                       qtable.comments,
+                                                       qtable.field_type,
+                                                       qtable.options,
+                                                       qtable.require_not_empty,
+                                                       limitby=(0, 1)
+                                                       ).first()
+
+        options = question.options
+        field_type = question.field_type
+        if field_type == 1:
+            field_type = "string"
+        elif field_type in (2, 5, 6):
+            if field_type == 5:
+                T = current.T
+                options = {1: T("Yes"),
+                           2: T("No"),
+                           3: T("Don't Know"),
+                           }
+            field_type = "integer"
+        elif field_type == 4:
+            field_type = "boolean"
+        else:
+            raise NotImplementedError
+
+        field_id = question.field_id
+        if field_id:
+            # Update the Dynamic Field
+            db(current.s3db.s3_field.id == field_id).update(label = question.name,
+                                                            field_type = field_type,
+                                                            options = options,
+                                                            require_not_empty = question.require_not_empty,
+                                                            comments = question.comments,
+                                                            )
+            # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+        else:
+            # Create the Dynamic Field
+            # Lookup the table_id
+            ttable = db.dc_template
+            template = db(ttable.id == question.template_id).select(ttable.table_id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+            from uuid import uuid1
+            name = "f%s" % str(uuid1()).replace("-", "_")
+            field_id = current.s3db.s3_field.insert(table_id = template.table_id,
+                                                    label = question.name,
+                                                    name = name,
+                                                    field_type = field_type,
+                                                    options = options,
+                                                    require_not_empty = question.require_not_empty,
+                                                    comments = question.comments,
+                                                    )
+            # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+            # @ToDo: Call set_record_owner() once we start restricting these
+
+            # Link the Field to the Question
+            question.update_record(field_id=field_id)
 
 # =============================================================================
 class DataCollectionModel(S3Model):
