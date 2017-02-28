@@ -1562,11 +1562,26 @@ class S3DynamicModel(object):
 
         # Define the table
         if fields:
+            # Enable migrate
+            # => is globally disabled when settings.base.migrate
+            #    is False, overriding the table parameter
+            migrate_enabled = db._migrate_enabled
+            db._migrate_enabled = True
+
+            # Define the table
             db.define_table(tablename,
                             migrate = True,
                             redefine = redefine,
                             *fields)
-            return db[tablename]
+
+            # Instantiate table
+            # => otherwise lazy_tables may prevent it
+            table = db[tablename]
+
+            # Restore global migrate_enabled
+            db._migrate_enabled = migrate_enabled
+
+            return table
         else:
             return None
 
