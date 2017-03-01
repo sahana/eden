@@ -13,6 +13,7 @@ ADMIN_HEAD,Head of Administration,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head
 ADMIN_HEAD,Head of Administration,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
 ADMIN_HEAD,Head of Administration,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
 ADMIN_HEAD,Head of Administration,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
+ADMIN_HEAD,Head of Administration,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter flags
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
@@ -43,6 +44,7 @@ ADMINISTRATION,Administration,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
 ADMINISTRATION,Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Administration has unrestricted access to task management
 ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
+ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to allowance information
@@ -174,6 +176,7 @@ QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases 
 QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can create and read in tables required for case event registration
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not access site activity reports
+QUARTIER,Quartiermanager,,,,cr_shelter_flag,READ,,,,,Quartiermanager can read shelter flags
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
@@ -252,6 +255,7 @@ STAFF,General Staff,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 STAFF,General Staff,,inv,,,NONE,,,,,Staff can not access inv module
 STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 STAFF,General Staff,,,,cr_shelter,READ,,,,,
+STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
 STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,

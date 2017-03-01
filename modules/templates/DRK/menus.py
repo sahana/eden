@@ -208,7 +208,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if not shelter_id:
             return None
 
-        #ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="cr")(
                     M("Shelter", f="shelter", args=[shelter_id])(
@@ -220,6 +220,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           args = [shelter_id, "shelter_unit"],
                           ),
                     ),
+                    M("Administration",
+                      link = False,
+                      restrict = (ADMIN, "ADMIN_HEAD"),
+                      selectable=False,
+                      )(
+                        M("Shelter Flags", f="shelter_flag"),
+                        ),
                 )
 
     # -------------------------------------------------------------------------

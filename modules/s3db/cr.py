@@ -27,8 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3ShelterModel",
-           "S3ShelterRegistrationModel",
+__all__ = ("CRShelterModel",
+           "CRShelterFlagModel",
+           "CRShelterRegistrationModel",
            "cr_shelter_rheader",
            "cr_update_shelter_population",
            "cr_update_housing_unit_population",
@@ -48,7 +49,7 @@ NIGHT = 1
 DAY_AND_NIGHT = 2
 
 # =============================================================================
-class S3ShelterModel(S3Model):
+class CRShelterModel(S3Model):
 
     names = ("cr_shelter_type",
              "cr_shelter_service",
@@ -1029,7 +1030,84 @@ class S3ShelterModel(S3Model):
         return current.messages["NONE"]
 
 # =============================================================================
-class S3ShelterRegistrationModel(S3Model):
+class CRShelterFlagModel(S3Model):
+    """ Model for Housing Unit Flags """
+
+    names = ("cr_shelter_flag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Flags - flags that can be set for a shelter / housing unit
+        #
+        tablename = "cr_shelter_flag"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table settings
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Shelter Flag"),
+            title_display = T("Shelter Flag Details"),
+            title_list = T("Shelter Flags"),
+            title_update = T("Edit Shelter Flag"),
+            label_list_button = T("List Shelter Flags"),
+            label_delete_button = T("Delete Shelter Flag"),
+            msg_record_created = T("Shelter Flag created"),
+            msg_record_modified = T("Shelter Flag updated"),
+            msg_record_deleted = T("Shelter Flag deleted"),
+            msg_list_empty = T("No Shelter Flags currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        flag_id = S3ReusableField("flag_id", "reference %s" % tablename,
+                                  label = T("Shelter Flag"),
+                                  represent = represent,
+                                  requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                       represent,
+                                                       ),
+                                  sortby = "name",
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"cr_shelter_flag_id": flag_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"cr_shelter_flag_id":  lambda **attr: dummy("flag_id"),
+                }
+
+# =============================================================================
+class CRShelterRegistrationModel(S3Model):
 
     names = ("cr_shelter_allocation",
              "cr_shelter_registration",
