@@ -1,6 +1,96 @@
+// More link
+a.more {
+  @include read-more;
+}
+
+// External link
+a[href^="//"], a[href*="://"] {
+  @include icon(fa-external-link,after)
+}
+
+// Meta text
 .meta {
   @include meta-label;
 }
+
+// -------------------------------------
+// Table Elements
+
+table {
+  tbody {
+    tr {
+      &.odd,
+      &:nth-of-type(odd) { background: $table-odd-row-bg; }
+    }
+  }
+}
+
+// -------------------------------------
+// Buttons
+
+.button {
+  @include button($bg:$blue,$radius:3px);
+  &.disabled, &[disabled] { 
+    @include button-style($bg:lighten($blue,30%), $disabled:true); 
+    &:hover { color: inherit; }
+  }
+
+  // Form postfix
+  &.postfix {
+    padding: $form-spacing / 2;
+    margin-left: $form-spacing / 2;
+  }
+}
+
+// -------------------------------------
+// Form Elements
+
+form label {
+  @include meta-label;
+}
+
+select {
+  background-color: $gray-alt;
+  border-color: $gray-alt;
+  border-radius: $global-radius;
+}
+
+// Placeholder text
+input,
+textarea {
+  @include input-placeholder {
+    opacity: 1;
+    color: lighten($body-font-color, 40%);
+  }
+}
+
+.search-wrapper {
+  @include search;
+}
+
+// -------------------------------------
+// Data List
+// list of data
+ul.data-list,
+ul.dl {
+  list-style-type: none;
+  margin: 0;
+  li,
+  ol {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+.data-list,
+.dl {
+  .dl-item {
+
+  }
+}
+
+// -------------------------------------
+// Well
 
 .well {
   padding-top: rem-calc($padding);
@@ -17,6 +107,146 @@
       a {
         @include meta-label($color:white)
       }
+    }
+  }
+}
+
+// -------------------------------------
+// Data List
+// list of data
+ul.data-list,
+ul.dl {
+  list-style-type: none;
+  margin: 0;
+  li,
+  ol {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+.data-list,
+.dl {
+  .dl-item {
+
+  }
+}
+
+// -------------------------------------
+// Event Parent Callout
+.callout.event-parent {
+  @include callout;
+  .callout-right {
+    text-align-last: right;
+  }
+  .meta .date::after {
+    content: "|";
+    margin: 0 rem-calc(6);
+  }
+  .button {
+    margin: 0;
+  }
+}
+
+// -------------------------------------
+// Event Card
+.card-event {
+  @include card;
+  .event-date-location {
+    @include box-date-location($padding:$padding);
+    margin: 0 rem-calc(-$padding) rem-calc($padding);
+    .adr,
+    .date {
+      font-size: $h4-font-size;
+      font-weight: bold;
+    }
+  }
+}
+
+// -------------------------------------
+// Alert Card
+
+.card-alert {
+  @include card;
+  .title {
+    font-size: $h3-font-size;
+  }
+  .meta-location {
+    @include location-inline;
+    @include meta-label;
+  }
+}
+
+// -------------------------------------
+// Incident Profile Card
+
+.incident-profile {
+  @include card;
+  .incident-data {
+    @include grid-row($behavior:'nest');
+    font-size: $h5-font-size;
+    font-weight: bold;
+    margin-bottom: $paragraph-margin-bottom;
+    .incident-location {
+      @include grid-column(6);
+      .box {
+        @include box-location($padding:$padding / 2);
+      }
+    }
+    .incident-date {
+      @include grid-column(6);
+      .box {
+        @include box-date($padding:$padding / 2);
+      }
+    }
+  }
+
+  .incident-resources {
+    @include grid-row($behavior:'nest');
+    .incident-resources-rail {
+      @include grid-column(4);
+    }
+    .incident-resources-data {
+      @include grid-column(8);
+    }
+
+  }
+}
+
+// -------------------------------------
+// Notification Card
+
+.card-notification {
+  @include card($bkg:#FFF);
+  .body .desc .img {
+    max-width: 40%;
+    height: auto;
+    float: left;
+    margin: 0 rem-calc(8) rem-calc(8) 0;
+  }
+}
+
+// -------------------------------------
+// Post Card
+
+.card-post {
+  @include card($bkg:#FFF);
+  padding: 0;
+  float: none;
+  .body {
+    .meta-update {
+      width: 50%;
+    }
+    .meta-comments {
+      white-space: nowrap;
+    }
+  }
+
+  .card-post-comment {
+    background-color: $gray;
+    padding: rem-calc($padding);
+    p:last-child {
+      margin-bottom: 0;
     }
   }
 }

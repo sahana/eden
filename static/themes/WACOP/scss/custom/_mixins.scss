@@ -1,15 +1,34 @@
+@import "fa-icons";
+
 // =====================================
 // 0. Utility
 // =====================================
 
-@mixin icon($name:'\f041',$color:false,$margin:rem-calc(5)){
-  &::before {
+@mixin icon($name:fa-circle,$position:before,$color:false,$margin:rem-calc(5)){
+  $position: if($position == before or $position == after,$position,before);
+  
+  // Are they asking for a Font Awesome icon
+  @if str-slice($name,1,2) == "fa" {
+    
+    $name: map-get($fa-icons,$name);
+    // If request isn't in $fa-icons deliver a default
+    @if $name == null {
+      $name: map-get($fa-icons,fa-circle);
+    }
+  }
+  
+
+  &::#{$position} {
     content: $name;
     @if $color { color: $color; }
+    @if $position == after {
+      margin-left: $margin;      
+    } @else {
+      margin-right: $margin;      
+    }
     display: inline-block;
     font: normal normal normal 14px/1 FontAwesome;
     font-size: inherit;
-    margin-right: $margin;
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -33,7 +52,7 @@
       border-radius: 30px;
     }
   } @else if $type == 'A' {
-    @include icon($name:'\f071',$color:$red,$margin:0);
+    @include icon(fa-exclamation-triangle,$color:$red,$margin:0);
   } @else {
     &::before {
       content: 'I';
@@ -56,7 +75,7 @@
 
 // Colors
 
-$blue:      $primary-color;
+$blue:      #4D7EB9;
 $mint:      #4DB988;
 $red:       #FF5959;
 $yellow:    #E5AA07;
@@ -85,6 +104,10 @@ $padding: 20;
   }
 }
 
+.meta {
+  @include meta-label;
+}
+
 // More
 // read more link
 @mixin read-more {
@@ -95,25 +118,116 @@ $padding: 20;
   @include meta-label;
 }
 
+a.more {
+  @include read-more;
+}
+
 // Location one line
 @mixin location-inline {
-  @include icon($color:$red);
+  @include icon(fa-map-marker,$color:$red);
+}
+
+// Input with button
+@mixin input-button($input-width:9) {
+  // If input is greater than 11 reduce it to 10
+  $input-width: if($input-width > 11, 10, $input-width);
+  $btn-width: 12 - $input-width;
+  
+  @include grid-row();
+  input {
+    @include grid-column($input-width);
+  }
+
+  .btn,
+  .button,
+  button {
+    @include grid-column($btn-width);
+    border-radius: $global-radius 0 0 $global-radius;
+    font-size: rem-calc(11);
+  }
+
+  input ~ .btn,
+  input ~ .button,
+  input ~ button {
+    border-radius: 0 $global-radius $global-radius 0;
+  }
+}
+
+@mixin fieldset($side-padding: $padding){
+  fieldset {
+    border-left-width: 0; 
+    border-right-width: 0; 
+    margin-left: rem-calc(-$side-padding);
+    margin-right: rem-calc(-$side-padding);
+  }
 }
 
 // -------------------------------------
-// Buttons
+// Table Elements
 
-.button {
-  @include button($bg:$blue,$radius:3px);
-  &.disabled, &[disabled] { 
-    @include button-style($bg:lighten($blue,30%), $disabled:true); 
-    &:hover { color: inherit; }
+table {
+  tbody {
+    tr {
+      &.odd,
+      &:nth-of-type(odd) { background: $table-odd-row-bg; }
+    }
+  }
+}
+
+// -------------------------------------
+// Form Elements
+
+form label {
+  @include meta-label;
+}
+
+select {
+  background-color: $gray-alt;
+  border-color: $gray-alt;
+  border-radius: $global-radius;
+}
+
+// Placeholder text
+input,
+textarea {
+  @include input-placeholder {
+    opacity: 1;
+    color: lighten($body-font-color, 40%);
+  }
+}
+
+// Input with button
+@mixin input-button($input-width:9) {
+  // If input is greater than 11 reduce it to 10
+  $input-width: if($input-width > 11, 10, $input-width);
+  $btn-width: 12 - $input-width;
+  
+  @include grid-row();
+  input {
+    @include grid-column($input-width);
   }
 
-  // Form postfix
-  &.postfix {
-    padding: $form-spacing / 2;
-    margin-left: $form-spacing / 2;
+  .btn,
+  .button,
+  button {
+    @include grid-column($btn-width);
+    border-radius: $global-radius 0 0 $global-radius;
+    font-size: rem-calc(11);
+  }
+
+  input ~ .btn,
+  input ~ .button,
+  input ~ button {
+    border-radius: 0 $global-radius $global-radius 0;
+  }
+}
+
+@mixin fieldset($side-padding: $padding){
+  fieldset {
+    border-left-width: 0; 
+    border-right-width: 0; 
+    margin-left: rem-calc(-$side-padding);
+    margin-right: rem-calc(-$side-padding);
   }
 }
 
@@ -122,16 +236,90 @@ $padding: 20;
 // =====================================
 
 // -------------------------------------
+// Filter box
+@mixin filter($bkg: $gray, $padding: $padding) {
+  background-color: $bkg;
+  padding: rem-calc($padding);
+  .button {
+    @include meta-label;
+  }
+  > .row:last-child {
+    input, 
+    .button { margin-bottom: 0; }
+  }
+
+  .input-button-wrapper {
+    @include input-button(10);
+  }
+
+  .calendar-widget-container {
+    @include input-button(9);
+  }
+
+  @include fieldset();
+
+  // Filter s3 widgets
+  .s3-groupedopts-widget {
+    margin-bottom: 0;
+    width: 100%;
+    td {
+      label {
+        display: block;
+      }
+      input {
+          float: left;
+          margin-bottom: 0;
+          margin-right: 6px;
+        }
+      }
+  }
+
+}
+
+// -------------------------------------
+// Filter group
+@mixin filter-group($bkg: $gray, $padding: $padding) {
+  background-color: $bkg;
+  padding: rem-calc($padding);
+  .title {
+    font-size: $h4-font-size;
+    font-weight: bold;
+    a {
+      @include meta-label($size:$small-font-size,$weight:bold);
+      line-height: 0;
+      margin-left: rem-calc($padding);
+    }
+  }
+  .sub-title {
+    @include meta-label($color:$dark);
+  }
+
+  label { display: inline; }
+
+  .drop {
+    background-color: $gray-alt;
+    padding: 2px 6px;
+    font-weight: bold;
+    border-radius: 3px;
+  }
+
+}
+
+// -------------------------------------
+// Tabs
+@mixin tabs {}
+
+// -------------------------------------
 // Status Bar
 // Molecule that appears at the top of cards
-@mixin status-bar($bkg: $dark) {
+@mixin status-bar($bkg: $dark,$color:white) {
   @include clearfix;
   background-color: $bkg;
-  color: white;
+  color: $color;
   padding: 0 rem-calc($padding);
   
   a {
-    color: white;
+    color: $color;
     &:hover {
       
     }
@@ -159,7 +347,7 @@ $padding: 20;
   }
 
   .item {
-    color: white;
+    color: $color;
     font-weight: normal;
     text-transform: uppercase;
   }
@@ -206,8 +394,17 @@ $padding: 20;
   // interactive icons that appear on the right of status bar
   .controls {
     float: right;
+    .item {
+      cursor: pointer;
+    }
   }
 }
+
+// -------------------------------------
+// Data Table
+
+// -------------------------------------
+// Data List
 
 // -------------------------------------
 // Date & Location
@@ -250,18 +447,28 @@ $padding: 20;
 // -------------------------------------
 // Search Input
 
-.search {
+@mixin search {
+  position: relative;
   input {
-    border-right-width: 0;
+    padding-right: rem-calc(30);
     @include input-placeholder {
       @include meta-label;
     }
   }
-  .search-button {
-    margin: 0;
-    @include form-element;
-    border-left-width: 0;
-    text-align: center;
+  .search-button,
+  .search-icon {
+    font-size: $input-font-size;
+    position: absolute;
+    padding: $form-spacing / 2;
+    right:0;
+    top:0;
+  }
+  &.column,
+  &.columns {
+    .search-button,
+    .search-icon {
+      right:$column-gutter / 2;
+    }
   }
 }
 
@@ -304,58 +511,4 @@ $callout-bg: $blue;
     padding-top: rem-calc($padding);
   }
   .footer {}
-}
-
-// -------------------------------------
-// Data List
-// list of data
-ul.data-list,
-ul.dl {
-  list-style-type: none;
-  margin: 0;
-  li,
-  ol {
-    margin: 0;
-    list-style: none;
-  }
-}
-
-.data-list,
-.dl {
-  .dl-item {
-
-  }
-}
-
-// =====================================
-// 4. TEMPLATES
-// =====================================
-
-// -------------------------------------
-// Event Card
-.card-event {
-  @include card;
-  .event-date-location {
-    @include box-date-location($padding:$padding);
-    margin: 0 rem-calc(-$padding) rem-calc($padding);
-    .adr,
-    .date {
-      font-size: $h4-font-size;
-      font-weight: bold;
-    }
-  }
-}
-
-// -------------------------------------
-// Alert Card
-
-.card-alert {
-  @include card;
-  .title {
-    font-size: $h3-font-size;
-  }
-  .meta-location {
-    @include location-inline;
-    @include meta-label;
-  }
 }

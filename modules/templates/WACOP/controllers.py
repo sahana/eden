@@ -1867,7 +1867,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                  LI(delete_btn,
                     _class="item",
                     ),
-                 _class="controls inline-list right",
+                 _class="controls",
                  )
 
     #if settings.get_cms_show_tags():
@@ -1898,12 +1898,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                            # post visibility
                                            # @ToDo: Read the visibility
                                            LI(T("Public"),
-                                              _class="item secondary border",
+                                              _class="item secondary border visibility",
                                               ),
-                                           _class="status-bar-left left inline-list"
+                                           _class="status-bar-left"
                                            ),
                                         toolbar,
-                                        _class="status-bar clearfix",
+                                        _class="status-bar",
                                         ),
                           DIV(P(TAG["TIME"](date),
                                 " by ",
@@ -1919,9 +1919,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                               _class="dl-body",
                               ),
                           TAG["FOOTER"](tag_list,
-                                        _class="footer clearfix",
+                                        _class="footer",
                                         ),
-                          #_class="panel",
+                          _class="card-post",
                           _id=item_id,
                           )
 
