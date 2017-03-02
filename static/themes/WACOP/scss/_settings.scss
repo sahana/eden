@@ -107,9 +107,9 @@ $white       : #FFFFFF;
 // $snow        : #F9F9F9;
 // $vapor       : #F6F6F6;
 // $white-smoke : #F5F5F5;
-// $silver      : #EFEFEF;
+$silver      : #EFEFEF;
 $smoke       : #EEEEEE;
-// $gainsboro   : #DDDDDD;
+$gainsboro   : #DDDDDD;
 $iron        : #CCCCCC;
 // $base        : #AAAAAA;
 // $aluminum    : #999999;
@@ -231,7 +231,7 @@ $header-font-color: $darkblue;
 // $h2-font-size: rem-calc(37);
 $h3-font-size: rem-calc(27);
 $h4-font-size: rem-calc(23);
-// $h5-font-size: rem-calc(18);
+$h5-font-size: rem-calc(18);
 // $h6-font-size: 1rem;
 
 // We use these to control header size reduction on small screens
@@ -258,7 +258,7 @@ $h4-font-size: rem-calc(23);
 // $paragraph-font-weight: $font-weight-normal;
 // $paragraph-font-size: 1rem;
 // $paragraph-line-height: 1.6;
-// $paragraph-margin-bottom: rem-calc(20);
+$paragraph-margin-bottom: rem-calc(20);
 // $paragraph-aside-font-size: rem-calc(14);
 // $paragraph-aside-line-height: 1.35;
 // $paragraph-aside-font-style: italic;
@@ -1304,8 +1304,9 @@ $sub-nav-item-divider: "|";
 // $include-html-table-classes: $include-html-classes;
 
 // These control the background color for the table and even rows
-// $table-bg: $white;
-// $table-even-row-bg: $snow;
+$table-bg: $gainsboro;
+$table-even-row-bg: $white;
+$table-odd-row-bg: $silver;
 
 // These control the table cell border style
 // $table-border-style: solid;
@@ -1313,7 +1314,7 @@ $sub-nav-item-divider: "|";
 // $table-border-color: $gainsboro;
 
 // These control the table head styles
-// $table-head-bg: $white-smoke;
+$table-head-bg: $white;
 // $table-head-font-size: rem-calc(14);
 // $table-head-font-color: $jet;
 // $table-head-font-weight: $font-weight-bold;
