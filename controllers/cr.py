@@ -242,6 +242,14 @@ def shelter_flag():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def shelter_inspection():
+    """
+        Shelter Inspections - RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
 # =============================================================================
 def incoming():
     """

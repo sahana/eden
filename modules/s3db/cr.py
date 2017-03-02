@@ -28,7 +28,7 @@
 """
 
 __all__ = ("CRShelterModel",
-           "CRShelterFlagModel",
+           "CRShelterInspectionModel",
            "CRShelterRegistrationModel",
            "cr_shelter_rheader",
            "cr_update_shelter_population",
@@ -1030,10 +1030,13 @@ class CRShelterModel(S3Model):
         return current.messages["NONE"]
 
 # =============================================================================
-class CRShelterFlagModel(S3Model):
-    """ Model for Housing Unit Flags """
+class CRShelterInspectionModel(S3Model):
+    """ Model for Shelter / Housing Unit Flags """
 
     names = ("cr_shelter_flag",
+             "cr_shelter_flag_id",
+             "cr_shelter_inspection",
+             "cr_shelter_inspection_flag",
              )
 
     def model(self):
@@ -1086,6 +1089,80 @@ class CRShelterFlagModel(S3Model):
                                                        ),
                                   sortby = "name",
                                   )
+
+        # ---------------------------------------------------------------------
+        # Shelter Inspection
+        #
+        tablename = "cr_shelter_inspection"
+        define_table(tablename,
+                     #self.cr_shelter_id(ondelete = "CASCADE",
+                     #                   readable = False,
+                     #                   writable = False,
+                     #                   ),
+                     self.cr_housing_unit_id(ondelete = "CASCADE"),
+                     s3_date(default = "now",
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Form
+        crud_form = S3SQLCustomForm("shelter_unit_id",
+                                    "date",
+                                    S3SQLInlineLink("shelter_flag",
+                                                    field = "flag_id",
+                                                    multiple = True,
+                                                    cols = 3,
+                                                    ),
+                                    "comments",
+                                    )
+
+        # List fields
+        list_fields = ["shelter_unit_id",
+                       "date",
+                       (T("Flags"), "shelter_flag__link.flag_id"),
+                       "comments",
+                       ]
+
+        # Table configuration
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Shelter Inspection"),
+            title_display = T("Shelter Inspection Details"),
+            title_list = T("Shelter Inspections"),
+            title_update = T("Edit Shelter Inspection"),
+            label_list_button = T("List Shelter Inspections"),
+            label_delete_button = T("Delete Shelter Inspection"),
+            msg_record_created = T("Shelter Inspection created"),
+            msg_record_modified = T("Shelter Inspection updated"),
+            msg_record_deleted = T("Shelter Inspection deleted"),
+            msg_list_empty = T("No Shelter Inspections currently registered"),
+        )
+
+        # Components
+        self.add_components(tablename,
+                            cr_shelter_flag = {"link": "cr_shelter_inspection_flag",
+                                               "joinby": "inspection_id",
+                                               "key": "flag_id",
+                                               },
+                            )
+
+        # ---------------------------------------------------------------------
+        # Shelter Inspection <=> Flag link table
+        #
+        tablename = "cr_shelter_inspection_flag"
+        define_table(tablename,
+                     Field("inspection_id", "reference cr_shelter_inspection",
+                           ondelete = "CASCADE",
+                           requires = IS_ONE_OF(db, "cr_shelter_inspection.id",
+                                                ),
+                           ),
+                     flag_id(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
