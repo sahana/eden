@@ -2991,17 +2991,17 @@ class S3Config(Storage):
         """
         return self.event.get("incident_types_hierarchical", False)
 
-    def get_event_collection_tab(self):
+    def get_event_dc_response_tab(self):
         """
-            Whether to show the DC collection tab for events
+            Whether to show the DC response tab for events
         """
-        return self.event.get("collection_tab", True)
+        return self.event.get("dc_response_tab", True)
 
-    def get_event_target_tab(self):
+    def get_event_dc_target_tab(self):
         """
             Whether to show the DC target tab for events
         """
-        return self.event.get("target_tab", True)
+        return self.event.get("dc_target_tab", True)
 
     def get_event_impact_tab(self):
         """

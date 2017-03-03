@@ -94,6 +94,12 @@
                 <xsl:when test="$Type='OPTIONS' or $Type='SELECT'">
                     <data field="field_type">6</data>
                 </xsl:when>
+                <xsl:when test="$Type='DATE'">
+                    <data field="field_type">7</data>
+                </xsl:when>
+                <xsl:when test="$Type='DATETIME'">
+                    <data field="field_type">8</data>
+                </xsl:when>
                 <xsl:otherwise>
                     <!-- Default to String -->
                     <data field="field_type">1</data>

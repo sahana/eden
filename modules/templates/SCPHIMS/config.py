@@ -303,6 +303,31 @@ def config(settings):
 
     settings.customise_dc_response_resource = customise_dc_response_resource
 
+    # -------------------------------------------------------------------------
+    def customise_dc_response_controller(**attr):
+
+        # When creating Assessments from Assessments module, include the Event field
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    label = T("Disaster"),
+                                                    field = "event_id",
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "person_id",
+                                    "comments",
+                                    )
+
+        current.s3db.configure("dc_response",
+                               crud_form = crud_form,
+                               )
+
+        return attr
+
+    settings.customise_dc_response_controller = customise_dc_response_controller
+
     # =========================================================================
     # Documents
     #

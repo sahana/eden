@@ -3409,10 +3409,10 @@ def event_rheader(r):
                          ]
             if settings.get_event_impact_tab():
                 tabs.append((T("Impact"), "impact"))
-            if settings.get_event_target_tab():
-                tabs.append((T("Targets"), "target"))
-            if settings.get_event_collection_tab():
-                tabs.append((T("Assessments"), "collection"))
+            if settings.get_event_dc_target_tab():
+                tabs.append((T("Assessment Targets"), "target"))
+            if settings.get_event_dc_response_tab():
+                tabs.append((T("Assessments"), "response"))
             if settings.get_project_event_projects():
                 tabs.append((T("Projects"), "project"))
             if settings.get_project_event_activities():

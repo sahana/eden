@@ -173,7 +173,7 @@ class DataCollectionTemplateModel(S3Model):
                      4: T("Yes/No"),
                      5: T("Yes, No, Don't Know"),
                      6: T("Options"),
-                     #7: T("Date"),
+                     7: T("Date"),
                      #8: T("Date/Time"),
                      #: T("Organization"),
                      #: T("Location"),
@@ -388,6 +388,10 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "integer"
         elif field_type == 4:
             field_type = "boolean"
+        elif field_type == 7:
+            field_type = "date"
+        elif field_type == 8:
+            field_type = "datetime"
         else:
             raise NotImplementedError
 
@@ -581,6 +585,15 @@ class DataCollectionModel(S3Model):
                                                             ),
                                       )
 
+        # Components
+        add_components(tablename,
+                       event_event = {"link": "event_response",
+                                      "joinby": "response_id",
+                                      "key": "event_id",
+                                      "actuate": "replace",
+                                      },
+                       )
+
         # =====================================================================
         # Pass names back to global scope (s3.*)
         return dict(dc_response_id = response_id,
@@ -608,9 +621,10 @@ def dc_rheader(r, tabs=None):
     if r.representation != "html":
         return None
 
+    s3db = current.s3db
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
+        resource = s3db.resource(tablename, id=record.id)
     else:
         resource = r.resource
 
@@ -637,10 +651,24 @@ def dc_rheader(r, tabs=None):
                     (T("Attachments"), "document"),
                     )
 
-            rheader_fields = (["template_id"],
+            rheader_fields = [["template_id"],
                               ["location_id"],
                               ["date"],
-                              )
+                              ]
+
+            if current.deployment_settings.has_module("event"):
+                ltable = s3db.event_response
+                f = ltable.event_id
+                def event_name(record):
+                    event = current.db(ltable.response_id == record.id).select(f,
+                                                                               limitby=(0, 1)
+                                                                               ).first()
+                    if event:
+                        return f.represent(event.event_id)
+                    else:
+                        return ""
+
+                rheader_fields.insert(0, [(f.label, event_name)])
 
         elif tablename == "dc_target":
 
