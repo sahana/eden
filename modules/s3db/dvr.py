@@ -41,6 +41,7 @@ __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRNotesModel",
            "DVRReferralModel",
+           "DVRResponseModel",
            "DVRSiteActivityModel",
            "DVRVulnerabilityModel",
            "dvr_ActivityRepresent",
@@ -1358,6 +1359,123 @@ class DVRReferralModel(S3Model):
                 }
 
 # =============================================================================
+class DVRResponseModel(S3Model):
+    """ Model representing responses to case needs """
+
+    names = ("dvr_response_type",
+             "dvr_response_type_case_activity",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
+
+        # ---------------------------------------------------------------------
+        # Response Types
+        #
+        tablename = "dvr_response_type"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     # This form of hierarchy may not work on all databases:
+                     Field("parent", "reference dvr_response_type",
+                           label = T("Subtype of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_response_types,
+                           writable = hierarchical_response_types,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Hierarchy
+        if hierarchical_response_types:
+            hierarchy = "parent"
+            widget = S3HierarchyWidget(multiple = False,
+                                       leafonly = True,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("parent",),
+                                                 ),
+                       hierarchy = hierarchy,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Response Type"),
+            title_display = T("Response Type Details"),
+            title_list = T("Response Types"),
+            title_update = T("Edit Response Type"),
+            label_list_button = T("List Response Types"),
+            label_delete_button = T("Delete Response Type"),
+            msg_record_created = T("Response Type created"),
+            msg_record_modified = T("Response Type updated"),
+            msg_record_deleted = T("Response Type deleted"),
+            msg_list_empty = T("No Response Types currently registered"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        response_type_id = S3ReusableField("response_type_id",
+                                           "reference %s" % tablename,
+                                           label = T("Response Type"),
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                           sortby = "name",
+                                           widget = widget,
+                                           )
+
+        # ---------------------------------------------------------------------
+        # Response Types <=> Case Activities link table
+        #
+        tablename = "dvr_response_type_case_activity"
+        define_table(tablename,
+                     self.dvr_case_activity_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     response_type_id(
+                         empty = False,
+                         ondelete = "RESTRICT",
+                         ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+                                #readable = False,
+                                #writable = False,
+                                #)
+
+        return {}
+
+# =============================================================================
 class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
@@ -1932,6 +2050,11 @@ class DVRCaseActivityModel(S3Model):
                                 "link": "dvr_case_activity_need",
                                 "joinby": "case_activity_id",
                                 "key": "need_id",
+                                },
+                            dvr_response_type = {
+                                "link": "dvr_response_type_case_activity",
+                                "joinby": "case_activity_id",
+                                "key": "response_type_id",
                                 },
                             dvr_vulnerability_type = {
                                 "link": "dvr_vulnerability_type_case_activity",
@@ -3961,8 +4084,14 @@ class DVRVulnerabilityModel(S3Model):
         #
         tablename = "dvr_vulnerability_type_case_activity"
         define_table(tablename,
-                     vulnerability_type_id(),
-                     self.dvr_case_activity_id(),
+                     self.dvr_case_activity_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     vulnerability_type_id(
+                         empty = False,
+                         ondelete = "RESTRICT",
+                         ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

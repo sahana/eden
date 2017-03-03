@@ -194,6 +194,9 @@ def config(settings):
     # Vulnerability types hierarchical ("Protection Assessment")
     settings.dvr.vulnerability_types_hierarchical = True
 
+    # Response types hierarchical ("Interventions Required")
+    settings.dvr.response_types_hierarchical = True
+
     # Set DVR Default Label
     settings.dvr.label = "Beneficiary"
 
@@ -786,6 +789,13 @@ def config(settings):
                                                         filter = FILTER,
                                                         ),
                                         "need_details",
+                                        S3SQLInlineLink("response_type",
+                                                        label = T("Interventions Required"),
+                                                        field = "response_type_id",
+                                                        widget = "hierarchy",
+                                                        multiple = True,
+                                                        leafonly = True,
+                                                        ),
                                         "priority",
                                         "start_date",
                                         "activity_details",
@@ -816,6 +826,8 @@ def config(settings):
                            "project_id",
                            "need__link.need_id",
                            "start_date",
+                           (T("Interventions Required"),
+                                "response_type__link.response_type_id"),
                            "priority",
                            "followup",
                            "followup_date",

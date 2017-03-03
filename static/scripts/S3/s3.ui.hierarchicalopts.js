@@ -381,10 +381,18 @@
                 }
             }
 
-            this.input.val(JSON.stringify(new_selected));
+            var input = this.input;
+            if (!multiple) {
+                // Set single value
+                input.val(new_selected[0]);
+            } else {
+                // Store value list as JSON
+                input.val(JSON.stringify(new_selected));
+            }
+
             this._updateButtonText(selected_ids);
             if (changed) {
-                this.input.change();
+                input.change();
                 $(this.element).trigger('select.s3hierarchy');
             }
             return true;
