@@ -66,16 +66,18 @@ class CRShelterModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-        settings = current.deployment_settings
 
+        settings = current.deployment_settings
+        messages = current.messages
+
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        messages = current.messages
         super_link = self.super_link
         set_method = self.set_method
-        NAME = T("Name")
 
+        NAME = T("Name")
         location_id = self.gis_location_id
 
         # ---------------------------------------------------------------------
@@ -401,40 +403,19 @@ class CRShelterModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # CRUD strings
-        if settings.get_ui_label_camp():
-            ADD_SHELTER = T("Add Camp")
-            SHELTER_LABEL = T("Camp")
-            SHELTER_HELP = T("The Camp this Request is from")
-            crud_strings[tablename] = Storage(
-                label_create = ADD_SHELTER,
-                title_display = T("Camp Details"),
-                title_list = T("Camps"),
-                title_update = T("Edit Camp"),
-                label_list_button = T("List Camps"),
-                msg_record_created = T("Camp added"),
-                msg_record_modified = T("Camp updated"),
-                msg_record_deleted = T("Camp deleted"),
-                msg_list_empty = T("No Camps currently registered"))
+        # Components
+        add_components(tablename,
+                       cr_shelter_allocation = "shelter_id",
+                       cr_shelter_registration = "shelter_id",
+                       cr_shelter_unit = "shelter_id",
+                       cr_shelter_status = {"name": "status",
+                                            "joinby": "shelter_id",
+                                            },
+                       event_event_shelter = "shelter_id",
+                       evr_case = "shelter_id",
+                       )
 
-        else:
-            ADD_SHELTER = T("Create Shelter")
-            SHELTER_LABEL = T("Shelter")
-            SHELTER_HELP = T("The Shelter this Request is from")
-            crud_strings[tablename] = Storage(
-                label_create = ADD_SHELTER,
-                title_display = T("Shelter Details"),
-                title_list = T("Shelters"),
-                title_update = T("Edit Shelter"),
-                label_list_button = T("List Shelters"),
-                msg_record_created = T("Shelter added"),
-                msg_record_modified = T("Shelter updated"),
-                msg_record_deleted = T("Shelter deleted"),
-                msg_list_empty = T("No Shelters currently registered"))
-
-        # Which levels of Hierarchy are we using?
-        levels = current.gis.get_relevant_hierarchy_levels()
-
+        # Fields for pivot table reports
         report_fields = ["name",
                          "shelter_type_id",
                          #"organisation_id",
@@ -448,6 +429,7 @@ class CRShelterModel(S3Model):
             # Manual
             report_fields.append("population")
 
+        # Text filter fields
         text_fields = ["name",
                        "code",
                        "comments",
@@ -456,6 +438,7 @@ class CRShelterModel(S3Model):
                        "location_id$name",
                        ]
 
+        # List fields
         list_fields = ["name",
                        "status",
                        "shelter_type_id",
@@ -474,12 +457,15 @@ class CRShelterModel(S3Model):
         list_fields.append("location_id$addr_street")
         #list_fields.append("person_id")
 
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
         for level in levels:
             lfield = "location_id$%s" % level
             report_fields.append(lfield)
             text_fields.append(lfield)
             list_fields.append(lfield)
 
+        # Filter widgets
         cr_shelter_status_filter_opts = dict(cr_shelter_opts)
         cr_shelter_status_filter_opts[None] = T("Unspecified")
 
@@ -493,7 +479,6 @@ class CRShelterModel(S3Model):
                                          header = "",
                                          #hidden = True,
                                          )
-
         filter_widgets = [
                 S3TextFilter(text_fields,
                              label = T("Search"),
@@ -534,6 +519,7 @@ class CRShelterModel(S3Model):
                                                 label = T("Total Capacity"),
                                                 ))
 
+        # Custom create_next
         if settings.get_cr_shelter_people_registration():
             # Go to People check-in for this shelter after creation
             create_next = URL(c="cr", f="shelter",
@@ -541,6 +527,7 @@ class CRShelterModel(S3Model):
         else:
             create_next = None
 
+        # Table configuration
         configure(tablename,
                   create_next = create_next,
                   deduplicate = S3Duplicate(),
@@ -558,6 +545,51 @@ class CRShelterModel(S3Model):
                         ),
                   super_entity = ("org_site", "doc_entity", "pr_pentity"),
                   )
+
+        # Custom method to assign HRs
+        set_method("cr", "shelter",
+                   method = "assign",
+                   action = self.hrm_AssignMethod(component="human_resource_site"))
+
+        set_method("cr", "shelter",
+                   method="check-in",
+                   action = self.org_SiteCheckInMethod,
+                   )
+
+        set_method("cr", "shelter",
+                   method = "dispatch",
+                   action = cr_notification_dispatcher)
+
+        # CRUD strings
+        if settings.get_ui_label_camp():
+            ADD_SHELTER = T("Add Camp")
+            SHELTER_LABEL = T("Camp")
+            SHELTER_HELP = T("The Camp this Request is from")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_SHELTER,
+                title_display = T("Camp Details"),
+                title_list = T("Camps"),
+                title_update = T("Edit Camp"),
+                label_list_button = T("List Camps"),
+                msg_record_created = T("Camp added"),
+                msg_record_modified = T("Camp updated"),
+                msg_record_deleted = T("Camp deleted"),
+                msg_list_empty = T("No Camps currently registered"))
+
+        else:
+            ADD_SHELTER = T("Create Shelter")
+            SHELTER_LABEL = T("Shelter")
+            SHELTER_HELP = T("The Shelter this Request is from")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_SHELTER,
+                title_display = T("Shelter Details"),
+                title_list = T("Shelters"),
+                title_update = T("Edit Shelter"),
+                label_list_button = T("List Shelters"),
+                msg_record_created = T("Shelter added"),
+                msg_record_modified = T("Shelter updated"),
+                msg_record_deleted = T("Shelter deleted"),
+                msg_list_empty = T("No Shelters currently registered"))
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -579,31 +611,6 @@ class CRShelterModel(S3Model):
                                                            ),
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
-
-        self.add_components(tablename,
-                            cr_shelter_allocation = "shelter_id",
-                            cr_shelter_registration = "shelter_id",
-                            cr_shelter_unit = "shelter_id",
-                            cr_shelter_status = {"name": "status",
-                                                 "joinby": "shelter_id",
-                                                 },
-                            event_event_shelter = "shelter_id",
-                            evr_case = "shelter_id",
-                            )
-
-        # Custom Method to Assign HRs
-        set_method("cr", "shelter",
-                   method = "assign",
-                   action = self.hrm_AssignMethod(component="human_resource_site"))
-
-        set_method("cr", "shelter",
-                   method="check-in",
-                   action = self.org_SiteCheckInMethod,
-                   )
-
-        set_method("cr", "shelter",
-                   method = "dispatch",
-                   action = cr_notification_dispatcher)
 
         # -------------------------------------------------------------------------
         # Shelter statuses
@@ -831,6 +838,12 @@ class CRShelterModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Components
+        add_components(tablename,
+                       cr_shelter_inspection = "shelter_unit_id",
+                       )
+
+        # List fields
         list_fields = ["id",
                        "name",
                        ]
@@ -848,12 +861,12 @@ class CRShelterModel(S3Model):
                             "population_day",
                             ]
 
+        # Table configuration
         population_onaccept = lambda form: \
                                 self.cr_shelter_population_onaccept(
                                             form,
                                             tablename="cr_shelter_unit",
                                             )
-
         configure(tablename,
                   # @ToDo: Allow multiple shelters to have the same
                   # name of unit (Requires that Shelter is in dvr/person.xsl/csv)
@@ -869,16 +882,18 @@ class CRShelterModel(S3Model):
                   ondelete = population_onaccept,
                   )
 
+        # Reusable Field
         represent = S3Represent(lookup="cr_shelter_unit")
         housing_unit_id = S3ReusableField("shelter_unit_id", db.cr_shelter_unit,
                                           label = T("Housing Unit"),
                                           ondelete = "RESTRICT",
                                           represent = represent,
-                                          requires = IS_EMPTY_OR(IS_ONE_OF(db, "cr_shelter_unit.id",
-                                                                           represent,
-                                                                           orderby="shelter_id",
-                                                                           #sort=True
-                                                                 )),
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "cr_shelter_unit.id",
+                                                                  represent,
+                                                                  orderby="shelter_id",
+                                                                  #sort=True,
+                                                                  )),
                                           #widget = S3AutocompleteWidget("cr", "shelter_unit")
                                           )
 
@@ -1127,6 +1142,7 @@ class CRShelterInspectionModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,
+                       orderby = "%s.date desc" % tablename,
                        )
 
         # CRUD Strings
