@@ -2930,6 +2930,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("needs_hierarchical", False)
 
+    def get_dvr_vulnerability_types_hierarchical(self):
+        """
+            Vulnerability types are hierarchical
+        """
+        return self.dvr.get("vulnerability_types_hierarchical", False)
+
     # -------------------------------------------------------------------------
     # Education
     #

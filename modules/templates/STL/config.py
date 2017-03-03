@@ -191,6 +191,9 @@ def config(settings):
     settings.dvr.needs_use_service_type = True
     settings.dvr.needs_hierarchical = True
 
+    # Vulnerability types hierarchical ("Protection Assessment")
+    settings.dvr.vulnerability_types_hierarchical = True
+
     # Set DVR Default Label
     settings.dvr.label = "Beneficiary"
 
@@ -768,8 +771,11 @@ def config(settings):
                                         "human_resource_id",
                                         "project_id",
                                         S3SQLInlineLink("vulnerability_type",
-                                                        label = T("Types of Vulnerability"),
+                                                        label = T("Protection Assessment"),
                                                         field = "vulnerability_type_id",
+                                                        widget = "hierarchy",
+                                                        multiple = True,
+                                                        leafonly = True,
                                                         ),
                                         S3SQLInlineLink("need",
                                                         label = SECTOR,

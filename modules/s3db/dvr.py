@@ -3879,9 +3879,12 @@ class DVRVulnerabilityModel(S3Model):
 
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         define_table = self.define_table
         crud_strings = s3.crud_strings
+
+        hierarchical_vulnerability_types = settings.get_dvr_vulnerability_types_hierarchical()
 
         # ---------------------------------------------------------------------
         # Types of vulnerability
@@ -3892,11 +3895,32 @@ class DVRVulnerabilityModel(S3Model):
                            label = T("Type of Vulnerability"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # This form of hierarchy may not work on all Databases:
+                     Field("parent", "reference dvr_vulnerability_type",
+                           label = T("Subtype of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_vulnerability_types,
+                           writable = hierarchical_vulnerability_types,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Hierarchy
+        if hierarchical_vulnerability_types:
+            hierarchy = "parent"
+            widget = S3HierarchyWidget(multiple = False,
+                                       leafonly = True,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
+        # Table configuration
         self.configure(tablename,
-                       deduplicate = S3Duplicate(),
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("parent",),
+                                                 ),
+                       hierarchy = hierarchy,
                        )
 
         # CRUD Strings
@@ -3914,7 +3938,7 @@ class DVRVulnerabilityModel(S3Model):
         )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         vulnerability_type_id = S3ReusableField("vulnerability_type_id",
                                                 "reference %s" % tablename,
                                                 label = T("Type of Vulnerability"),
@@ -3929,6 +3953,7 @@ class DVRVulnerabilityModel(S3Model):
                                                                       f="vulnerability_type",
                                                                       tooltip=T("Create a new vulnerability type"),
                                                                       ),
+                                                widget = widget,
                                                 )
 
         # ---------------------------------------------------------------------
