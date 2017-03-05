@@ -22,6 +22,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "STDM"
+    settings.ui.menu_logo = "/%s/static/themes/STDM/img/logo.png" % current.request.application
 
     # Authentication settings
     # Should users be allowed to register themselves?
