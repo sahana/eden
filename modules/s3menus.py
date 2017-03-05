@@ -1872,6 +1872,27 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def stdm():
+        """ Social Tenure Domain Model """
+
+        return M(c="stdm")(
+                    M("Locations", f="location")(
+                        M("Create", m="create"),
+                    ),
+                    M("Parties")(
+                        M("People", f="person"),
+                        M("Groups", f="group"),
+                    ),
+                    M("Tenure Types", f="tenure_type")(
+                        M("Create", m="create"),
+                    ),
+                    M("Tenure Roles", f="tenure_role")(
+                        M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def sync(self):
         """ SYNC menu """
 

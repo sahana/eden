@@ -10,7 +10,8 @@ resourcename = request.function
 # -----------------------------------------------------------------------------
 # Options Menu (available in all Functions' Views)
 def s3_menu_postp():
-    # @todo: rewrite this for new framework
+    # Unused
+    # @todo: rewrite this for new framework?
     menu_selected = []
     group_id = s3base.s3_get_last_record_id("pr_group")
     if group_id:
