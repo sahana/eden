@@ -1594,6 +1594,12 @@ class S3OptionsMenu(object):
                     M("Referral Agencies", f="organisation")(
                         M("Create", m="create"),
                     ),
+                    M("Emotional Needs", f="emotional_need")(
+                        M("Create", m="create"),
+                    ),
+                    M("Practical Needs", f="practical_need")(
+                        M("Create", m="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1877,6 +1883,9 @@ class S3OptionsMenu(object):
         """ Social Tenure Domain Model """
 
         return M(c="stdm")(
+                    M("Tenures", f="tenure")(
+                        M("Create", m="create"),
+                    ),
                     M("Locations", f="location")(
                         M("Create", m="create"),
                     ),

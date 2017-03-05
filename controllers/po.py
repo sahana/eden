@@ -375,9 +375,21 @@ def organisation():
 
 # -----------------------------------------------------------------------------
 def organisation_area():
-    """ @todo: docstring """
+    """ RESTful CRUD COntroller """
 
     s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def emotional_need():
+    """ RESTful CRUD COntroller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def practical_need():
+    """ RESTful CRUD COntroller """
+
     return s3_rest_controller()
 
 # END =========================================================================

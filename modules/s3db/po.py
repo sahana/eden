@@ -277,6 +277,10 @@ class OutreachHouseholdModel(S3Model):
              "po_household_member",
              "po_household_followup",
              "po_household_social",
+             "po_emotional_need",
+             "po_household_emotional_need",
+             "po_practical_need",
+             "po_household_practical_need",
              )
 
     def model(self):
@@ -352,6 +356,11 @@ class OutreachHouseholdModel(S3Model):
                                                              ),
                                        )
 
+        sticker_opts = {"W": T("White"),
+                        "Y": T("Yellow"),
+                        "R": T("Red"),
+                        }
+
         # Filter Widgets
         filter_widgets = [S3TextFilter(("household_member.person_id$first_name",
                                         "household_member.person_id$middle_name",
@@ -363,6 +372,18 @@ class OutreachHouseholdModel(S3Model):
                                        ),
                           S3OptionsFilter("area_id",
                                           #hidden = True,
+                                          ),
+                          S3OptionsFilter("household_dwelling.sticker",
+                                          cols = 3,
+                                          options = sticker_opts,
+                                          ),
+                          S3OptionsFilter("emotional_need__link.emotional_need_id",
+                                          label = T("Emotional Needs"),
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("practical_need__link.practical_need_id",
+                                          label = T("Practical Needs"),
+                                          hidden = True,
                                           ),
                           S3DateFilter("date_visited",
                                        label = T("Date visited"),
@@ -389,6 +410,9 @@ class OutreachHouseholdModel(S3Model):
         list_fields = ("area_id",
                        "location_id",
                        "date_visited",
+                       "household_dwelling.sticker",
+                       "emotional_need__link.emotional_need_id",
+                       "practical_need__link.practical_need_id",
                        "followup",
                        "household_followup.followup_date",
                        "household_followup.completed",
@@ -410,6 +434,15 @@ class OutreachHouseholdModel(S3Model):
         crud_form = S3SQLCustomForm("area_id",
                                     "location_id",
                                     "date_visited",
+                                    "household_dwelling.sticker",
+                                    S3SQLInlineLink("emotional_need",
+                                                    field = "emotional_need_id",
+                                                    label = T("Emotional Needs"),
+                                                    ),
+                                    S3SQLInlineLink("practical_need",
+                                                    field = "practical_need_id",
+                                                    label = T("Practical Needs"),
+                                                    ),
                                     "followup",
                                     S3SQLInlineComponent("contact",
                                                          label = T("Contact Information"),
@@ -469,6 +502,14 @@ class OutreachHouseholdModel(S3Model):
                             po_household_followup = {"joinby": "household_id",
                                                      "multiple": False,
                                                      },
+                            po_emotional_need = {"link": "po_household_emotional_need",
+                                                 "joinby": "household_id",
+                                                 "key": "emotional_need_id",
+                                                 },
+                            po_practical_need = {"link": "po_household_practical_need",
+                                                 "joinby": "household_id",
+                                                 "key": "practical_need_id",
+                                                 },
                             po_organisation_household = "household_id",
                             )
 
@@ -534,6 +575,11 @@ class OutreachHouseholdModel(S3Model):
                            represent = S3Represent(options=repair_status),
                            requires = IS_EMPTY_OR(IS_IN_SET(repair_status)),
                            ),
+                     Field("sticker",
+                           label = T("Sticker"),
+                           represent = S3Represent(options=sticker_opts),
+                           requires = IS_EMPTY_OR(IS_IN_SET(sticker_opts)),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -546,6 +592,106 @@ class OutreachHouseholdModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(primary=("household_id",)),
                   )
+
+        # ---------------------------------------------------------------------
+        # Emotional Needs
+        #
+        tablename = "po_emotional_need"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Emotional Need"),
+            title_display = T("Emotional Need Details"),
+            title_list = T("Emotional Needs"),
+            title_update = T("Edit Emotional Need"),
+            label_list_button = T("List Emotional Needs"),
+            label_delete_button = T("Delete Emotional Need"),
+            msg_record_created = T("Emotional Need created"),
+            msg_record_modified = T("Emotional Need updated"),
+            msg_record_deleted = T("Emotional Need deleted"),
+            msg_list_empty = T("No Emotional Needs currently registered"),
+        )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        emotional_need_id = S3ReusableField("emotional_need_id", "reference %s" % tablename,
+                                            label = T("Emotional Need"),
+                                            represent = represent,
+                                            requires = IS_ONE_OF(db, "po_emotional_need.id",
+                                                                 represent,
+                                                                 ),
+                                            sortby = "name",
+                                            comment = S3PopupLink(f = "emotional_need",
+                                                                  tooltip = T("Create a new emotional need"),
+                                                                  ),
+                                            )
+
+        tablename = "po_household_emotional_need"
+        define_table(tablename,
+                     household_id(),
+                     emotional_need_id(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Practical Needs
+        #
+        tablename = "po_practical_need"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Practical Need"),
+            title_display = T("Practical Need Details"),
+            title_list = T("Practical Needs"),
+            title_update = T("Edit Practical Need"),
+            label_list_button = T("List Practical Needs"),
+            label_delete_button = T("Delete Practical Need"),
+            msg_record_created = T("Practical Need created"),
+            msg_record_modified = T("Practical Need updated"),
+            msg_record_deleted = T("Practical Need deleted"),
+            msg_list_empty = T("No Practical Needs currently registered"),
+        )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        practical_need_id = S3ReusableField("practical_need_id", "reference %s" % tablename,
+                                            label = T("Practical Need"),
+                                            represent = represent,
+                                            requires = IS_ONE_OF(db, "po_practical_need.id",
+                                                                 represent,
+                                                                 ),
+                                            sortby = "name",
+                                            comment = S3PopupLink(f = "practical_need",
+                                                                  tooltip = T("Create a new practical need"),
+                                                                  ),
+                                            )
+
+        tablename = "po_household_practical_need"
+        define_table(tablename,
+                     household_id(),
+                     practical_need_id(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Social Information

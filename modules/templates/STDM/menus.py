@@ -44,6 +44,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [homepage(),
+                M("Tenures", c="stdm", f="tenure"),
                 M("Locations", c="stdm", f="location"),
                 M("People", c="stdm", f="person"),
                 M("Groups", c="stdm", f="group"),
