@@ -1142,6 +1142,13 @@ class S3PersonModel(S3Model):
                                                 "type": 1,
                                                 },
                                             },
+                                           # National ID in particular
+                                           {"name": "national_id",
+                                            "joinby": "person_id",
+                                            "filterby": {
+                                                "type": 2,
+                                                },
+                                            },
                                            ),
                             # Personal Details
                             pr_person_details = {"joinby": "person_id",
@@ -4081,6 +4088,7 @@ class S3PersonDetailsModel(S3Model):
             4: T("separated"),
             5: T("divorced"),
             6: T("widowed"),
+            7: T("cohabiting"),
             9: T("other"),
         }
 

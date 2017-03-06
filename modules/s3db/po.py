@@ -411,8 +411,8 @@ class OutreachHouseholdModel(S3Model):
                        "location_id",
                        "date_visited",
                        "household_dwelling.sticker",
-                       "emotional_need__link.emotional_need_id",
-                       "practical_need__link.practical_need_id",
+                       (T("Emotional Needs"), "emotional_need__link.emotional_need_id"),
+                       (T("Practical Needs"), "practical_need__link.practical_need_id"),
                        "followup",
                        "household_followup.followup_date",
                        "household_followup.completed",
@@ -627,6 +627,7 @@ class OutreachHouseholdModel(S3Model):
         represent = S3Represent(lookup=tablename)
         emotional_need_id = S3ReusableField("emotional_need_id", "reference %s" % tablename,
                                             label = T("Emotional Need"),
+                                            ondelete = "CASCADE",
                                             represent = represent,
                                             requires = IS_ONE_OF(db, "po_emotional_need.id",
                                                                  represent,
@@ -677,6 +678,7 @@ class OutreachHouseholdModel(S3Model):
         represent = S3Represent(lookup=tablename)
         practical_need_id = S3ReusableField("practical_need_id", "reference %s" % tablename,
                                             label = T("Practical Need"),
+                                            ondelete = "CASCADE",
                                             represent = represent,
                                             requires = IS_ONE_OF(db, "po_practical_need.id",
                                                                  represent,

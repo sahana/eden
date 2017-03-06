@@ -320,11 +320,6 @@ def location():
                      comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
                      #_class = "filter-search",
                      ),
-        S3OptionsFilter("level",
-                        label = T("Level"),
-                        options = location_hierarchy,
-                        #hidden = True,
-                        ),
         # @ToDo: Hierarchical filter working on id
         #S3LocationFilter("id",
         #                label = T("Location"),
@@ -332,6 +327,12 @@ def location():
         #                #hidden = True,
         #                ),
         ]
+    if get_vars.get("~.level") != "None":
+        filter_widgets.append(S3OptionsFilter("level",
+                                              label = T("Level"),
+                                              options = location_hierarchy,
+                                              #hidden = True,
+                                              ))
     filter_widgets.extend(filter_level_widgets)
 
     s3db.configure(tablename,
@@ -430,6 +431,44 @@ def location():
                 zoom = config.zoom
                 bbox = {}
                 feature_resources = None
+
+                if r.method in ("create", "update"):
+                    if get_vars.get("~.level") == "None":
+                        # Specific Locations
+                        from s3 import S3SQLCustomForm
+                        crud_fields = ["name",
+                                       "parent",
+                                       "gis_feature_type",
+                                       "lat",
+                                       "lon",
+                                       "wkt",
+                                       "addr_street",
+                                       "comments",
+                                       ]
+                        if settings.get_gis_postcode_selector():
+                            crud_fields.insert(-1, "addr_postcode")
+                        crud_form = S3SQLCustomForm(*crud_fields)
+
+                        s3db.configure("gis_location",
+                                       crud_form = crud_form,
+                                       )
+
+                    elif get_vars.get("~.level__ne") == "None":
+                        # Administrative Units
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("name",
+                                                    "level",
+                                                    "parent",
+                                                    "gis_feature_type",
+                                                    "lat",
+                                                    "lon",
+                                                    "wkt",
+                                                    "comments",
+                                                    )
+
+                        s3db.configure("gis_location",
+                                       crud_form = crud_form,
+                                       )
 
                 if r.method == "create":
                     # @ToDo: Support Polygons here

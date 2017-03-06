@@ -43,7 +43,7 @@ def config(settings):
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
+    settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
@@ -116,6 +116,100 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
     #settings.security.policy = 7 # Organisation-ACLs
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+
+        list_fields = ["first_name",
+                       "middle_name",
+                       "last_name",
+                       (T("National ID"), "national_id.value"),
+                       "gender",
+                       "date_of_birth",
+                       "person_details.marital_status",
+                       # @ToDo: Household Relation: Husband, Wife, etc
+                       (T("Telephone"), "phone.value"),
+                       (T("Address"), "address.location_id$addr_street"),
+                       # @ToDo: Residence Area...which is Lx
+                       ]
+
+        from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+
+        s3db.pr_address.location_id.widget = S3LocationSelector(show_address = True,
+                                                                #show_postcode = False,
+                                                                show_map = False,
+                                                                )
+
+        crud_form = S3SQLCustomForm("first_name",
+                                    "middle_name",
+                                    "last_name",
+                                    S3SQLInlineComponent("identity",
+                                                         label = T("National ID"),
+                                                         fields = [("", "value")],
+                                                         filterby = dict(field = "type",
+                                                                         options = 2,
+                                                                         ),
+                                                         multiple = False,
+                                                         ),
+                                    "gender",
+                                    "date_of_birth",
+                                    "person_details.marital_status",
+                                    # @ToDo: Household Relation: Husband, Wife, etc
+                                    S3SQLInlineComponent("contact",
+                                                         label = T("Telephone"),
+                                                         fields = [("", "value")],
+                                                         filterby = dict(field = "contact_method",
+                                                                         options = "SMS",
+                                                                         ),
+                                                         multiple = False,
+                                                         ),
+                                    S3SQLInlineComponent("address",
+                                                         label = T("Address"),
+                                                         fields = [("", "location_id")],
+                                                         multiple = False,
+                                                         ),
+                                    "comments",
+                                    )
+
+        s3db.configure("pr_person",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.component_name == "tenure_relationship":
+
+                list_fields = ["tenure_id$location_id",
+                               "tenure_id$tenure_type_id",
+                               "tenure_role_id",
+                               ]
+
+                current.s3db.configure("stdm_tenure_relationship",
+                                       # No decent CRUD form possible
+                                       insertable = False,
+                                       list_fields = list_fields,
+                                       )
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

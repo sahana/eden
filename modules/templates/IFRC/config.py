@@ -1464,7 +1464,7 @@ def config(settings):
                                         label = T("Team"),
                                         fields = [("", "group_id")],
                                         filterby = dict(field = "group_type",
-                                                        options = 3
+                                                        options = 3,
                                                         ),
                                         multiple = False,
                                         ),

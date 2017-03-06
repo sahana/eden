@@ -1,4 +1,13 @@
 Name,Comments
+Owner,
+Tenant,
+Sub-Tenant,
+Relative of Owner,
+Friend of Owner,
+Relative of Tenant,
+Friend of Tenant,
+Relative of Sub-Tenant,
+Friend of Sub-Tenant,
 Surveyor,
 Planner,
 Enumerator,

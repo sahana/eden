@@ -1883,15 +1883,21 @@ class S3OptionsMenu(object):
         """ Social Tenure Domain Model """
 
         return M(c="stdm")(
-                    M("Tenures", f="tenure")(
-                        M("Create", m="create"),
+                    M("Administrative Units", c="gis", f="location",
+                                              vars={"~.level__ne": None})(
+                        M("Create", m="create",
+                                    vars={"~.level__ne": None}),
                     ),
-                    M("Locations", f="location")(
-                        M("Create", m="create"),
+                    M("Structures", c="gis", f="location",
+                                    vars={"~.level": None})(
+                        M("Create", m="create", vars={"~.level": None}),
                     ),
                     M("Parties")(
                         M("People", f="person"),
                         M("Groups", f="group"),
+                    ),
+                    M("Tenures", f="tenure")(
+                        M("Create", m="create"),
                     ),
                     M("Tenure Types", f="tenure_type")(
                         M("Create", m="create"),
