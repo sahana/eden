@@ -277,6 +277,9 @@ class S3MainMenu(object):
                                    check=translate),
                                 MM("Test Results", f="result"),
                             )
+            setup_url = settings.get_setup_url()
+            if setup_url:
+                menu_admin.append(MM("Setup Coapp", url=setup_url))
         elif s3_has_role("ORG_ADMIN"):
             menu_admin = MM(name_nice, c="admin", f="user", **attr)()
         else:
