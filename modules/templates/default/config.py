@@ -567,6 +567,7 @@ def config(settings):
     #settings.pr.lookup_duplicates = True
     # Uncomment to hide fields in S3AddPersonWidget[2]
     #settings.pr.request_dob = False
+    #settings.pr.request_email = False
     #settings.pr.request_gender = False
     # Uncomment to show field in S3AddPersonWidget
     #settings.pr.request_home_phone = True

@@ -1895,6 +1895,7 @@ class S3OptionsMenu(object):
                     M("Parties")(
                         M("People", f="person"),
                         M("Groups", f="group"),
+                        M("Household Relations", f="group_member_role"),
                     ),
                     M("Tenures", f="tenure")(
                         M("Create", m="create"),

@@ -26,7 +26,7 @@ def config(settings):
 
     # Authentication settings
     # Should users be allowed to register themselves?
-    #settings.security.self_registration = False
+    settings.security.self_registration = False
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
@@ -103,6 +103,10 @@ def config(settings):
     #    "USD" : "United States Dollars",
     #}
     #settings.fin.currency_default = "USD"
+
+    # Email isn't required
+    settings.pr.request_email = False
+    #settings.hrm.email_required = False
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -210,6 +214,25 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_group_resource(r, tablename):
+
+        list_fields = [(T("Name"), "name"),
+                       "comments",
+                       ]
+
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm((T("Name"), "name"),
+                                    "comments",
+                                    )
+
+        current.s3db.configure("pr_group",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+    settings.customise_pr_group_resource = customise_pr_group_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

@@ -275,7 +275,7 @@ def stdm_rheader(r):
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
                     (T("Groups"), "group_membership"),
-                    (T("Tenures"), "tenure_relationship")
+                    (T("Tenures"), "tenure_relationship"),
                     )
 
             rheader_fields = (["first_name"],
@@ -290,11 +290,12 @@ def stdm_rheader(r):
             tabs = ((T("Basic Details"), None),
                     (T("Address"), "address"),
                     (T("Contacts"), "contact"),
-                    (T("Members"), "group_membership")
-                    (T("Tenures"), "tenure_relationship")
+                    (T("Members"), "group_membership"),
+                    (T("Tenures"), "tenure_relationship"),
                     )
 
             rheader_fields = [["name"],
+                              ["comments"],
                               ]
 
         elif tablename == "gis_location":
