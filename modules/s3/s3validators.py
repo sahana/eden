@@ -3386,13 +3386,14 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
     """ Validator for field types in dynamic tables """
 
     SUPPORTED_TYPES = ("boolean",
-                       "string",
-                       "text",
-                       "integer",
-                       "double",
                        "date",
                        "datetime",
+                       "double",
+                       "integer",
                        "reference",
+                       "string",
+                       "text",
+                       "upload",
                        )
 
     def __init__(self,
