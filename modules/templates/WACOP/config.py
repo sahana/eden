@@ -621,12 +621,9 @@ def wacop_event_rheader(r, tabs=[]):
                         (T("Updates"), "post"),
                         ]
 
-            rheader_fields = [["name",
-                               ],
-                              ["start_date",
-                               ],
-                              ["comments",
-                               ],
+            rheader_fields = [["name"],
+                              ["start_date"],
+                              ["comments"],
                               ]
 
         elif tablename == "event_incident":
@@ -638,12 +635,9 @@ def wacop_event_rheader(r, tabs=[]):
                         (T("Updates"), "post"),
                         ]
 
-            rheader_fields = [["name",
-                               ],
-                              ["date",
-                               ],
-                              ["comments",
-                               ],
+            rheader_fields = [["name"],
+                              ["date"],
+                              ["comments"],
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,

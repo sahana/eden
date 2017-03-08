@@ -42,23 +42,29 @@ def group():
             f.requires = IS_ADD_PERSON_WIDGET2()
             f.widget = S3AddPersonWidget2(controller="stdm")
 
-            # @ToDo: This should only be for the Informal Settlement profile
-            f = table.role_id
-            f.readable = f.writable = True
-            f.label = T("Household Relation")
-            f.comment = S3PopupLink(c = "stdm",
-                                    f = "group_member_role",
-                                    label = T("Create Household Relation"),
-                                    vars = {"child": "role_id"},
-                                    )
-
-            list_fields = ["person_id",
-                           "role_id",
-                           ]
-
-            crud_form = S3SQLCustomForm("person_id",
-                                        "role_id",
+            if auth.s3_has_role("INFORMAL_SETTLMENT"):
+                f = table.role_id
+                f.readable = f.writable = True
+                f.label = T("Household Relation")
+                f.comment = S3PopupLink(c = "stdm",
+                                        f = "group_member_role",
+                                        label = T("Create Household Relation"),
+                                        vars = {"child": "role_id"},
                                         )
+
+                list_fields = ["person_id",
+                               "role_id",
+                               ]
+
+                crud_form = S3SQLCustomForm("person_id",
+                                            "role_id",
+                                            )
+            else:
+                list_fields = ["person_id",
+                               ]
+
+                crud_form = S3SQLCustomForm("person_id",
+                                            )
 
             s3db.configure("pr_group_membership",
                            crud_form = crud_form,
@@ -96,24 +102,177 @@ def group_member_role():
                               )
 
 # -----------------------------------------------------------------------------
-def tenure():
-    """
-        RESTful CRUD controller
-        - not yet sure what this will be used for...probably reporting, maybe mapping
-    """
-
-    return s3_rest_controller(rheader = s3db.stdm_rheader,
-                              )
-
-# -----------------------------------------------------------------------------
-def tenure_role():
+def profile():
     """ RESTful CRUD controller """
 
     return s3_rest_controller(#rheader = s3db.stdm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
+def tenure():
+    """ RESTful CRUD controller """
+
+    def prep(r):
+        
+        has_role = auth.s3_has_role
+        if has_role("ADMIN"):
+            # Unfiltered
+            pass
+
+        else:
+            ptable = s3db.stdm_profile
+            if has_role("INFORMAL_SETTLEMENT"):
+                profile = db(ptable.name == "Informal Settlement").select(ptable.id,
+                                                                          limitby=(0, 1)
+                                                                          ).first()
+                try:
+                    filter_opts = (profile.id,)
+                except:
+                    filter_opts = ()
+            elif has_role("RURAL_AGRICULTURE"):
+                profile = db(ptable.name == "Rural Agriculture").select(ptable.id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                try:
+                    filter_opts = (profile.id,)
+                except:
+                    filter_opts = ()
+            elif has_role("LOCAL_GOVERNMENT"):
+                profile = db(ptable.name == "Local Government").select(ptable.id,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                try:
+                    filter_opts = (profile.id,)
+                except:
+                    filter_opts = ()
+            else:
+                # Shouldn't ever get here
+                filter_opts = ()
+
+            f = s3db.stdm_tenure_relationship.tenure_type_id
+            v = f.requires.other
+            v.set_filter(filterby = "profile_id",
+                         filter_opts = filter_opts)
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def tenure_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def parcel():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def parcel_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def landuse():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def dispute():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def job_title():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def surveyor():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def planner():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def gov_survey():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def ownership_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def recognition_status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def structure():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def garden():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def socioeconomic_impact():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def input_service():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def farmer():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def rural_survey():
     """ RESTful CRUD controller """
 
     return s3_rest_controller(#rheader = s3db.stdm_rheader,

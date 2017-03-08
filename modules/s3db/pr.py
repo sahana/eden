@@ -5685,7 +5685,7 @@ class pr_PersonEntityRepresent(S3Represent):
             label = pentity.pe_label \
                     if pentity.pe_label else self.default_label
         else:
-            label = None
+            label = ""
 
         item = object.__getattribute__(row, instance_type)
         if instance_type == "pr_person":

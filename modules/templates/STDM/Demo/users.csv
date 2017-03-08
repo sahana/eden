@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Informal,Settlement,informal@example.com,eden,INFORMAL_SETTLEMENT,
+Local,Government,gov@example.com,eden,LOCAL_GOVERNMENT,
+Rural,Agriculture,rural@example.com,eden,RURAL_AGRICULTURE,

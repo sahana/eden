@@ -3,11 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Tenure Roles - CSV Import Stylesheet
+         Ownership Types - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
-         Name.................string..........Tenure Role Name
+         Name.................string..........Ownership Type Name
          Comments.............string..........Comments
 
     *********************************************************************** -->
@@ -22,7 +22,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="stdm_tenure_role">
+        <resource name="stdm_ownership_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>

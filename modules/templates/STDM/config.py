@@ -17,8 +17,7 @@ def config(settings):
     settings.base.system_name_short = T("STDM")
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("STDM", "default/users")
+    settings.base.prepopulate += ("STDM", "default/users", "STDM/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "STDM"
@@ -51,20 +50,20 @@ def config(settings):
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    #settings.L10n.languages = OrderedDict([
+    settings.L10n.languages = OrderedDict([
     #    ("ar", "العربية"),
     #    ("bs", "Bosanski"),
-    #    ("en", "English"),
+        ("en", "English"),
     #    ("fr", "Français"),
     #    ("de", "Deutsch"),
     #    ("el", "ελληνικά"),
-    #    ("es", "Español"),
+        ("es", "Español"),
     #    ("it", "Italiano"),
     #    ("ja", "日本語"),
     #    ("km", "ភាសាខ្មែរ"),
     #    ("ko", "한국어"),
-    #    ("ne", "नेपाली"),          # Nepali
-    #    ("prs", "دری"), # Dari
+        ("ne", "नेपाली"),          # Nepali
+        ("prs", "دری"), # Dari
     #    ("ps", "پښتو"), # Pashto
     #    ("pt", "Português"),
     #    ("pt-br", "Português (Brasil)"),
@@ -76,7 +75,7 @@ def config(settings):
     #    ("vi", "Tiếng Việt"),
     #    ("zh-cn", "中文 (简体)"),
     #    ("zh-tw", "中文 (繁體)"),
-    #])
+    ])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
@@ -119,7 +118,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    #settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 4 # Controller & Function ACLs
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
@@ -133,11 +132,12 @@ def config(settings):
                        "gender",
                        "date_of_birth",
                        "person_details.marital_status",
-                       # @ToDo: Household Relation: Husband, Wife, etc
                        (T("Telephone"), "phone.value"),
                        (T("Address"), "address.location_id$addr_street"),
                        # @ToDo: Residence Area...which is Lx
                        ]
+        if current.auth.s3_has_role("INFORMAL_SETTLEMENT"):
+            list_fields.insert(7, (T("Household Relation"), "group_membership.role_id"))
 
         from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
@@ -160,7 +160,6 @@ def config(settings):
                                     "gender",
                                     "date_of_birth",
                                     "person_details.marital_status",
-                                    # @ToDo: Household Relation: Husband, Wife, etc
                                     S3SQLInlineComponent("contact",
                                                          label = T("Telephone"),
                                                          fields = [("", "value")],
@@ -197,9 +196,8 @@ def config(settings):
 
             if r.component_name == "tenure_relationship":
 
-                list_fields = ["tenure_id$location_id",
-                               "tenure_id$tenure_type_id",
-                               "tenure_role_id",
+                list_fields = ["tenure_id$spatial_unit_id",
+                               "tenure_type_id",
                                ]
 
                 current.s3db.configure("stdm_tenure_relationship",
@@ -233,6 +231,36 @@ def config(settings):
                                )
 
     settings.customise_pr_group_resource = customise_pr_group_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_group_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.component_name == "tenure_relationship":
+
+                list_fields = ["tenure_id$spatial_unit_id",
+                               "tenure_type_id",
+                               ]
+
+                current.s3db.configure("stdm_tenure_relationship",
+                                       # No decent CRUD form possible
+                                       insertable = False,
+                                       list_fields = list_fields,
+                                       )
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_group_controller = customise_pr_group_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

@@ -43,12 +43,38 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        has_role = current.auth.s3_has_role
+        if has_role("ADMIN"):
+
+            return [homepage(),
+                    M("Tenures", c="stdm", f="tenure"),
+                    M("Gardens", c="stdm", f="garden"),
+                    M("Parcels", c="stdm", f="parcel"),
+                    M("Structures", c="stdm", f="structure"),
+                    M("People", c="stdm", f="person"),
+                    M("Groups", c="stdm", f="group"),
+                    #homepage("gis"),
+                    ]
+            
+        elif has_role("INFORMAL_SETTLEMENT"):
+            locations = M("Structures", c="stdm", f="structure")
+
+        elif has_role("RURAL_AGRICULTURE"):
+            locations = M("Gardens", c="stdm", f="garden")
+
+        elif has_role("LOCAL_GOVERNMENT"):
+            locations = M("Parcels", c="stdm", f="parcel")
+
+        else:
+            # Unauthenticated
+            locations = None
+
         return [homepage(),
                 M("Tenures", c="stdm", f="tenure"),
-                M("Locations", c="stdm", f="location"),
+                locations,
                 M("People", c="stdm", f="person"),
                 M("Groups", c="stdm", f="group"),
-                homepage("gis"),
+                #homepage("gis"),
                 ]
 
 # =============================================================================

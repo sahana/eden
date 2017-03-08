@@ -260,11 +260,11 @@ class S3MainMenu(object):
     def menu_admin(cls, **attr):
         """ Administrator Menu """
 
-        s3_has_role = current.auth.s3_has_role
+        has_role = current.auth.s3_has_role
         settings = current.deployment_settings
         name_nice = settings.modules["admin"].name_nice
 
-        if s3_has_role("ADMIN"):
+        if has_role("ADMIN"):
             translate = settings.has_module("translate")
             menu_admin = MM(name_nice, c="admin", **attr)(
                                 MM("Settings", f="setting"),
@@ -277,7 +277,7 @@ class S3MainMenu(object):
                                    check=translate),
                                 MM("Test Results", f="result"),
                             )
-        elif s3_has_role("ORG_ADMIN"):
+        elif has_role("ORG_ADMIN"):
             menu_admin = MM(name_nice, c="admin", f="user", **attr)()
         else:
             menu_admin = None
@@ -1881,30 +1881,66 @@ class S3OptionsMenu(object):
     @staticmethod
     def stdm():
         """ Social Tenure Domain Model """
+        ADMIN = current.session.s3.system_roles.ADMIN
+        has_role = current.auth.s3_has_role
+
+        informal = lambda i: has_role("INFORMAL_SETTLEMENT")
+        gov = lambda i: has_role("LOCAL_GOVERNMENT")
+        rural = lambda i: has_role("RURAL_AGRICULTURE")
 
         return M(c="stdm")(
                     M("Administrative Units", c="gis", f="location",
-                                              vars={"~.level__ne": None})(
+                                              vars={"~.level__ne": None},
+                      restrict=ADMIN)(
                         M("Create", m="create",
                                     vars={"~.level__ne": None}),
                     ),
-                    M("Structures", c="gis", f="location",
-                                    vars={"~.level": None})(
-                        M("Create", m="create", vars={"~.level": None}),
+                    #M("Spatial Units", c="gis", f="location",
+                    #                   vars={"~.level": None})(
+                    #    M("Create", m="create", vars={"~.level": None}),
+                    #),
+                    M("Gardens", f="garden",
+                      check=rural)(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
+                    ),
+                    M("Parcels", f="parcel",
+                      check=gov)(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
+                    ),
+                    M("Structures", f="structure",
+                      check=informal)(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
                     ),
                     M("Parties")(
                         M("People", f="person"),
                         M("Groups", f="group"),
-                        M("Household Relations", f="group_member_role"),
+                        M("Farmers", f="farmer", check=rural),
+                        M("Planners", f="planner", check=gov),
+                        M("Surveyors", f="surveyor", check=gov),
+                    ),
+                    M("Surveys", f="gov_survey", check=gov)(
+                        M("Create", m="create"),
+                    ),
+                    M("Surveys", f="rural_survey", check=rural)(
+                        M("Create", m="create"),
                     ),
                     M("Tenures", f="tenure")(
                         M("Create", m="create"),
                     ),
-                    M("Tenure Types", f="tenure_type")(
-                        M("Create", m="create"),
-                    ),
-                    M("Tenure Roles", f="tenure_role")(
-                        M("Create", m="create"),
+                    M("Lookup Lists", restrict=ADMIN)(
+                        M("Disputes", f="dispute"),
+                        M("Household Relations", f="group_member_role"),
+                        M("Input Services", f="input_service"),
+                        M("Land Uses", f="landuse"),
+                        M("Officer Ranks", f="job_title"),
+                        M("Ownership Types", f="ownership_type"),
+                        M("Parcel Types", f="parcel_type"),
+                        M("Recognition Statuses", f="recognition_status"),
+                        M("Socio-economic Impacts", f="socioeconomic_impact"),
+                        M("Tenure Types", f="tenure_type"),
                     ),
                 )
 

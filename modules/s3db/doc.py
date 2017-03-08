@@ -106,6 +106,7 @@ class S3DocumentLibrary(S3Model):
                                req_req = T("Request"),
                                # @ToDo: Deprecate
                                #stats_people = T("People"),
+                               stdm_tenure = T("Tenure"),
                                vulnerability_document = T("Vulnerability Document"),
                                vulnerability_risk = T("Risk"),
                                vulnerability_evac_route = T("Evacuation Route"),
