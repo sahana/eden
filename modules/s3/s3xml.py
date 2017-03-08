@@ -1375,7 +1375,7 @@ class S3XML(S3Codec):
     @classmethod
     def record(cls, table, element,
                original=None,
-               files=[],
+               files=None,
                skip=[],
                postprocess=None):
         """
@@ -1383,10 +1383,9 @@ class S3XML(S3Codec):
             it
 
             @param table: the database table
-
             @param element: the element
             @param original: the original record
-            @param files: list of attached upload files
+            @param files: dict of attached upload files
             @param postprocess: post-process hook (xml_post_parse)
             @param skip: fields to skip
         """
@@ -1507,27 +1506,22 @@ class S3XML(S3Codec):
             if field_type in ("id", "blob"):
                 continue
             elif field_type == "upload":
+
                 download_url = child.get(ATTRIBUTE["url"])
                 filename = child.get(ATTRIBUTE["filename"])
+
                 upload = None
-                if filename and filename in files:
-                    # We already have the file cached
+
+                if filename and files and filename in files:
+                    # We already have the file cached (attachment)
                     upload = files[filename]
+
                 elif download_url == "local":
-                    # File is already in-place
+                    # File is already in-place (i.e. in the local upload folder)
                     value = filename
-                    # Read from the filesystem
-                    # uploadfolder = table[f].uploadfolder
-                    # if not uploadfolder:
-                        # uploadfolder = os.path.join(current.request.folder,
-                                                    # "uploads")
-                    # filepath = os.path.join(uploadfolder, filename)
-                    # try:
-                        # upload = open(filepath, r)
-                    # except IOError:
-                        # continue
+
                 elif download_url:
-                    # Download file from Internet
+                    # Download file from network location
                     if not isinstance(download_url, str):
                         try:
                             download_url = download_url.encode("utf-8")
@@ -1539,6 +1533,7 @@ class S3XML(S3Codec):
                         upload = urllib2.urlopen(download_url)
                     except IOError:
                         continue
+
                 if upload:
                     if not isinstance(filename, str):
                         try:
@@ -1547,6 +1542,7 @@ class S3XML(S3Codec):
                             continue
                     field = table[f]
                     value = field.store(upload, filename)
+
                 elif download_url != "local":
                     continue
             else:

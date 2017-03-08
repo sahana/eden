@@ -613,14 +613,24 @@ class S3MobileCRUD(S3Method):
         output = {}
 
         # Extract the data
+        files = {}
         content_type = r.env.get("content_type")
         if content_type and content_type.startswith("multipart/"):
+
+            # Record data
             s = r.post_vars.get("data")
             try:
                 data = json.loads(s)
             except JSONERRORS:
                 msg = sys.exc_info()[1]
                 r.error(400, msg)
+
+            # Attached files
+            import cgi
+            for key in r.post_vars:
+                value = r.post_vars[key]
+                if isinstance(value, cgi.FieldStorage) and value.filename:
+                    files[value.filename] = value.file
         else:
             s = r.body
             s.seek(0)
@@ -650,6 +660,7 @@ class S3MobileCRUD(S3Method):
             FIELD = ATTRIBUTE.field
 
             rfields = resource.fields
+            table = resource.table
 
             root = etree.Element(TAG.root)
             SubElement = etree.SubElement
@@ -671,14 +682,21 @@ class S3MobileCRUD(S3Method):
                     else:
                         col = SubElement(row, DATA)
                         col.set(FIELD, fieldname)
-                        col.text = s3_unicode(value)
+                        ftype = table[fieldname].type
+                        if ftype == "upload":
+                            # Field value is name of attached file
+                            filename = s3_unicode(value)
+                            if filename in files:
+                                col.set("filename", filename)
+                        else:
+                            col.text = s3_unicode(value)
 
             tree = etree.ElementTree(root)
 
             # Try importing the tree
             # @todo: error handling
             try:
-                resource.import_xml(tree)
+                resource.import_xml(tree, files=files)
             except IOError:
                 r.unauthorised()
             else:
