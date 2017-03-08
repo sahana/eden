@@ -8,7 +8,6 @@ AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,,,"Custom Controller to allow 
 AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
 INFORMAL_SETTLEMENT,Informal Settlement,,stdm,,,"READ|CREATE|UPDATE|DELETE",,
 INFORMAL_SETTLEMENT,Informal Settlement,,stdm,ownership_type,,"READ",,
-INFORMAL_SETTLEMENT,Informal Settlement,,stdm,recognition_status,,"READ",,
 LOCAL_GOVERNMENT,Local Government,,stdm,,,"READ|CREATE|UPDATE|DELETE",,
 LOCAL_GOVERNMENT,Local Government,,stdm,parcel_type,,"READ",,
 LOCAL_GOVERNMENT,Local Government,,stdm,landuse,,"READ",,

@@ -312,7 +312,6 @@ class S3InformalSettlementModel(S3Model):
     """ Informal Settlement Profile """
 
     names = ("stdm_ownership_type",
-             "stdm_recognition_status",
              "stdm_structure",
              )
 
@@ -372,52 +371,6 @@ class S3InformalSettlementModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Recognition Statuses
-        #
-        tablename = "stdm_recognition_status"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields()
-                     )
-
-        # CRUD strings
-        ADD_TYPE = T("Create Recognition Status")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_TYPE,
-            title_display = T("Recognition Status"),
-            title_list = T("Recognition Statuses"),
-            title_update = T("Edit Recognition Status"),
-            label_list_button = T("List Recognition Statuses"),
-            label_delete_button = T("Delete Recognition Status"),
-            msg_record_created = T("Recognition Status added"),
-            msg_record_modified = T("Recognition Status updated"),
-            msg_record_deleted = T("Recognition Status deleted"),
-            msg_list_empty = T("No Recognition Statuses currently registered"))
-
-        represent = S3Represent(lookup=tablename, translate=True)
-        recognition_status_id = S3ReusableField("recognition_status_id", "reference %s" % tablename,
-                                                requires = IS_EMPTY_OR(
-                                                            IS_ONE_OF(db, "stdm_recognition_status.id",
-                                                                      represent,
-                                                                      sort=True)),
-                                                represent=represent,
-                                                label=T("Recognition Status"),
-                                                ondelete="RESTRICT",
-                                                comment = S3PopupLink(c = "stdm",
-                                                                      f = "recognition_status",
-                                                                      label = ADD_TYPE,
-                                                                      ),
-                                                )
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(),
-                  )
-
-        # ---------------------------------------------------------------------
         # Structures
         #
         tablename = "stdm_structure"
@@ -438,7 +391,10 @@ class S3InformalSettlementModel(S3Model):
                                                      ),
                      ),
                      ownership_type_id(),
-                     recognition_status_id(),
+                     Field("recognition_status", "boolean",
+                           label = T("Recognition Status"),
+                           represent = s3_yes_no_represent,
+                           ),
                      s3_comments(),
                      *s3_meta_fields()
                      )

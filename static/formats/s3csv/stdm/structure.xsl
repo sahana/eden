@@ -10,7 +10,7 @@
          Name.................string..........Name2
          Code.................string..........Name
          Ownership Type.......string..........Ownership Type
-         Recognition Status...string..........Recognition Status
+         Recognition Status...boolean.........Recognition Status
          Comments.............string..........Comments
          WKT..................string..........Polygon
 
@@ -19,7 +19,6 @@
 
     <!-- Indexes for faster processing -->
     <xsl:key name="ownership_type" match="row" use="col[@field='Ownership Type']"/>
-    <xsl:key name="recognition_status" match="row" use="col[@field='Recognition Status']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -28,12 +27,6 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('ownership_type',
                                                                        col[@field='Ownership Type'])[1])]">
                 <xsl:call-template name="OwnershipType"/>
-            </xsl:for-each>
-
-            <!-- Recognition Statuses -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('recognition_status',
-                                                                       col[@field='Recognition Status'])[1])]">
-                <xsl:call-template name="RecognitionStatus"/>
             </xsl:for-each>
 
             <!-- Process all table rows for Structure records -->
@@ -48,17 +41,27 @@
             <data field="name"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 
+            <!-- Recognition Status -->
+            <xsl:variable name="RecognitionStatus">
+                <xsl:call-template name="uppercase">
+                    <xsl:with-param name="string">
+                        <xsl:value-of select="col[@field='Recognition Status']/text()"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:variable>
+            <xsl:choose>
+                <xsl:when test="starts-with($RecognitionStatus, 'Y') or starts-with($RecognitionStatus, 'T')">
+                    <data field="recognition_status" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="starts-with($RecognitionStatus, 'N') or starts-with($RecognitionStatus, 'F')">
+                    <data field="recognition_status" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
+
             <!-- Link to Ownership Type -->
             <reference field="ownership_type_id" resource="stdm_ownership_type">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Ownership Type']"/>
-                </xsl:attribute>
-            </reference>
-
-            <!-- Link to Recognition Status -->
-            <reference field="recognition_status_id" resource="stdm_recognition_status">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Recognition Status']"/>
                 </xsl:attribute>
             </reference>
 
@@ -78,19 +81,6 @@
         <xsl:variable name="type" select="col[@field='Ownership Type']/text()"/>
 
         <resource name="stdm_ownership_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$type"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$type"/></data>
-       </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="RecognitionStatus">
-        <xsl:variable name="type" select="col[@field='Recognition Status']/text()"/>
-
-        <resource name="stdm_recognition_status">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$type"/>
             </xsl:attribute>

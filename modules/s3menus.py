@@ -1938,7 +1938,6 @@ class S3OptionsMenu(object):
                         M("Officer Ranks", f="job_title"),
                         M("Ownership Types", f="ownership_type"),
                         M("Parcel Types", f="parcel_type"),
-                        M("Recognition Statuses", f="recognition_status"),
                         M("Socio-economic Impacts", f="socioeconomic_impact"),
                         M("Tenure Types", f="tenure_type"),
                     ),
