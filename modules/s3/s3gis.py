@@ -2920,10 +2920,10 @@ class GIS(object):
                               request.application)
         driver.get(base_url)
 
+        response = current.response
+        session_id = response.session_id
         if not current.auth.override:
             # Reuse current session to allow access to ACL-controlled resources
-            response = current.response
-            session_id = response.session_id
             driver.add_cookie({"name":  response.session_id_name,
                                "value": session_id,
                                "path":  "/",

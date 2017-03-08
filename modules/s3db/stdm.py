@@ -270,6 +270,10 @@ class S3SocialTenureDomainModel(S3Model):
                             stdm_tenure_relationship = "tenure_id",
                             )
 
+        self.set_method("stdm", "tenure",
+                        method = "certificate",
+                        action = stdm_Certificate)
+
         # ---------------------------------------------------------------------
         # Tenures <> Person Entities link
         #
@@ -1225,7 +1229,286 @@ def stdm_rheader(r):
                                                          table = resource.table,
                                                          record = record,
                                                          )
+        rheader.insert(1, DIV(A(T("Print Certificate"),
+                                _href=URL(args=[record.id,
+                                                "certificate"]),
+                                _class="action-btn"),
+                                ))
 
     return rheader
+
+# =============================================================================
+def stdm_Certificate(r, **attr):
+    """
+        Generate a Tenure Certificate
+    """
+
+    T = current.T
+    s3db = current.s3db
+    db = current.db
+    #settings = current.deployment_settings
+
+    record = r.record
+    spatial_unit_id = record.spatial_unit_id
+    stable = s3db.stdm_spatial_unit
+    spatial_unit = db(stable.spatial_unit_id == spatial_unit_id).select(stable.name,
+                                                                        stable.instance_type,
+                                                                        #stable.location_id,
+                                                                        limitby=(0, 1),
+                                                                        ).first()
+    spatial_unit_code = spatial_unit.name
+    spatial_unit_type = spatial_unit.instance_type
+    if spatial_unit_type == "stdm_garden":
+        # No extra attributes
+        location_details = TABLE(TR(TH(T("Garden"))),
+                                 TR(TD(spatial_unit_code)),
+                                 )
+
+    elif spatial_unit_type == "stdm_parcel":
+        table = s3db[spatial_unit_type]
+        ptable = s3db.stdm_parcel_type
+        ltable = s3db.stdm_landuse
+        dtable = s3db.stdm_dispute
+        query = (table.spatial_unit_id == spatial_unit_id)
+        left = [ptable.on(ptable.id == table.parcel_type_id),
+                ltable.on(ltable.id == table.landuse_id),
+                dtable.on(dtable.id == table.dispute_id),
+                ]
+        spatial_unit = db(query).select(table.area,
+                                        table.value,
+                                        ptable.name,
+                                        ltable.name,
+                                        dtable.name,
+                                        left = left,
+                                        limitby=(0, 1)
+                                        ).first()
+        # @ToDo: Include Map
+        location_details = TABLE(TR(TH(T("Parcel"), _colspan=2)),
+                                 TR(TD(T("Code")), TD(spatial_unit_code)),
+                                 TR(TD(T("Area")), TD(spatial_unit[table.area])),
+                                 TR(TD(T("Value")), TD(spatial_unit[table.value])),
+                                 TR(TD(T("Parcel Type")), TD(spatial_unit[ptable.name])),
+                                 TR(TD(T("Landuse")), TD(spatial_unit[ltable.name])),
+                                 TR(TD(T("Dispute")), TD(spatial_unit[dtable.name])),
+                                 )
+    elif spatial_unit_type == "stdm_structure":
+        table = s3db[spatial_unit_type]
+        otable = s3db.stdm_ownership_type
+        query = (table.spatial_unit_id == spatial_unit_id)
+        left = [otable.on(otable.id == table.ownership_type_id),
+                ]
+        spatial_unit = db(query).select(table.name2,
+                                        table.recognition_status,
+                                        otable.name,
+                                        left = left,
+                                        limitby=(0, 1)
+                                        ).first()
+        # @ToDo: Include Map
+        location_details = TABLE(TR(TH(T("Structure"), _colspan=2)),
+                                 TR(TD(T("Name")), TD(spatial_unit[table.name2])),
+                                 TR(TD(T("Code")), TD(spatial_unit_code)),
+                                 TR(TD(T("Ownership Type")), TD(spatial_unit[otable.name])),
+                                 TR(TD(T("Recognition Status")), TD(s3_yes_no_represent(spatial_unit[table.recognition_status]))),
+                                 )
+    else:
+        raise NotImplementedError
+
+    def callback(r):
+
+        # Header
+        #otable = s3db.org_organisation
+        #org_id = record.organisation_id
+        #org = db(otable.id == org_id).select(otable.name,
+        #                                     otable.acronym, # Present for consistent cache key
+        #                                     otable.logo,
+        #                                     limitby=(0, 1),
+        #                                     ).first()
+        #if settings.get_L10n_translate_org_organisation():
+        #    org_name = s3db.org_OrganisationRepresent(parent=False,
+        #                                              acronym=False)(org_id)
+        #else:
+        #    org_name = org.name
+
+        #logo = org.logo
+        #if logo:
+        #    logo = s3db.org_organisation_logo(org)
+        #elif current.deployment_settings.get_org_branches():
+        #    root_org = current.cache.ram(
+        #        # Common key with auth.root_org
+        #        "root_org_%s" % org_id,
+        #        lambda: s3db.org_root_organisation(org_id),
+        #        time_expire=120
+        #        )
+        #    logo = s3db.org_organisation_logo(root_org)
+
+        #innerTable = TABLE(TR(TH(person_name)),
+        #                   TR(TD(org_name)),
+        #                   )
+        #if current.response.s3.rtl:
+        #    # Right-to-Left
+        #    person_details = TABLE(TR(TD(innerTable),
+        #                              TD(logo),
+        #                              ))
+        #else:
+        #    person_details = TABLE(TR(TD(logo),
+        #                              TD(innerTable),
+        #                              ))
+
+        parties = TABLE(TR(TH(T("Parties"))))
+
+        rtable = s3db.stdm_tenure_relationship
+        ttable = s3db.stdm_tenure_type
+        query = (rtable.tenure_id == record.id) & \
+                (rtable.deleted == False) & \
+                (rtable.tenure_type_id == ttable.id)
+        relationships = db(query).select(rtable.pe_id,
+                                         ttable.name,
+                                         )
+
+        petable = s3db.pr_pentity
+        ptable = s3db.pr_person
+        #gtable = s3db.pr_group
+
+        for relationship in relationships:
+            tenure_type = relationship[ttable.name]
+
+            pe_id = relationship[rtable.pe_id]
+            pe = db(petable.pe_id == pe_id).select(petable.instance_type,
+                                                   limitby=(0, 1),
+                                                   ).first()
+            pe_type = pe.instance_type
+            if pe_type == "pr_group":
+                # @ToDo: Handle Groups
+                continue
+            elif pe_type == "pr_person":
+                # See below
+                pass
+            else:
+                raise NotImplementedError
+
+            person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                      ptable.first_name,
+                                                      ptable.middle_name,
+                                                      ptable.last_name,
+                                                      limitby=(0, 1),
+                                                      ).first()
+            person_name = s3_fullname(person)
+
+            party = TABLE(TR(TH("%s: %s" % (tenure_type, person_name))))
+
+            # Photo
+            #itable = s3db.pr_image
+            #query = (itable.pe_id == pe_id) & \
+            #        (itable.profile == True)
+            #image = db(query).select(itable.image,
+            #                         limitby=(0, 1)).first()
+            #if image:
+            #    image = image.image
+            #    size = (160, None)
+            #    image = s3db.pr_image_represent(image, size=size)
+            #    size = s3db.pr_image_size(image, size)
+            #    url = URL(c="default",
+            #              f="download",
+            #              args=image)
+            #    avatar = IMG(_src=url,
+            #                 _width=size[0],
+            #                 _height=size[1],
+            #                 )
+            #    person_details[0].append(TD(avatar))
+
+            # Identity
+            idtable = s3db.pr_identity
+            query = (idtable.person_id == person.id) & \
+                    (idtable.deleted == False) & \
+                    (idtable.type == 2)
+            identity = db(query).select(idtable.value,
+                                        limitby=(0, 1)
+                                        ).first()
+            if identity:
+                identity = TABLE(TR(TH(T(("National ID")))),
+                                 TR(identity.value),
+                                 )
+                party.append(identity)
+
+            # Address
+            addrtable = s3db.pr_address
+            ltable = db.gis_location
+            query = (addrtable.pe_id == pe_id) & \
+                    (addrtable.location_id == ltable.id) & \
+                    (addrtable.deleted == False)
+            address = db(query).select(#addrtable.type,
+                                       ltable.addr_street,
+                                       ltable.L3,
+                                       ltable.L2,
+                                       ltable.L1,
+                                       #orderby = addrtable.type,
+                                       limitby=(0, 1)
+                                       ).first()
+            if address:
+                #_location = address["gis_location"]
+                address = TABLE(TR(TH(T("Address"))),
+                                TR(address.addr_street),
+                                TR(address.L3),
+                                TR(address.L2),
+                                TR(address.L1),
+                                )
+                party.append(address)
+
+            # Telephone
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == pe_id) & \
+                    (ctable.contact_method == "SMS") & \
+                    (ctable.deleted == False)
+            phone = db(query).select(ctable.value,
+                                     limitby=(0, 1)
+                                     ).first()
+            if phone:
+                phone = TABLE(TR(TH(T(("Telephone")))),
+                              TR(phone.value),
+                              )
+                party.append(phone)
+
+            parties.append(party)
+
+        # Comments:
+        comments = record.comments
+        if comments:
+            comments = TABLE(TR(TH(T("Comments"))),
+                             TR(comments))
+        else:
+            comments = TABLE()
+
+        # Space for the printed document to be signed
+        datestamp = S3DateTime.date_represent(current.request.now)
+        datestamp = "%s: %s" % (T("Date Printed"), datestamp)
+        #manager = settings.get_stdm_certificate_manager()
+        manager = T("Tenure Manager")
+        signature = TABLE(TR(TH(T("Signature"))),
+                          TR(TD()),
+                          TR(TD(manager)),
+                          TR(TD(datestamp)))
+
+        output = DIV(TABLE(TR(TH(T("Tenure Certificate")))),
+                     location_details,
+                     parties,
+                     comments,
+                     signature,
+                     )
+
+        return output
+
+    attr["rheader"] = None
+
+    from s3.s3export import S3Exporter
+    exporter = S3Exporter().pdf
+    pdf_title = s3_unicode(T("Tenure Certificate")) + " - " + spatial_unit_code # %-string substitution doesn't work
+    return exporter(r.resource,
+                    request = r,
+                    method = "list",
+                    pdf_title = pdf_title,
+                    pdf_table_autogrow = "B",
+                    pdf_callback = callback,
+                    **attr
+                    )
 
 # END =========================================================================
