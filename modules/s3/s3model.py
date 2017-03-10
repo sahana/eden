@@ -1581,12 +1581,38 @@ class S3DynamicModel(object):
             # Restore global migrate_enabled
             db._migrate_enabled = migrate_enabled
 
+            # Configure the table
+            self._configure(tablename)
+
             return table
         else:
             return None
 
     # -------------------------------------------------------------------------
-    def _field(self, tablename, row):
+    @staticmethod
+    def _configure(tablename):
+        """
+            Configure the table (e.g. CRUD strings)
+        """
+
+        # Load table configuration settings
+        ttable = current.s3db.s3_table
+        query = (ttable.name == tablename) & \
+                (ttable.deleted != True)
+        row = current.db(query).select(ttable.title,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row:
+            # Configure CRUD strings
+            title = row.title
+            if title:
+                current.response.s3.crud_strings[tablename] = Storage(
+                    title_list = current.T(title),
+                    )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _field(cls, tablename, row):
         """
             Convert a s3_field Row into a Field instance
 
@@ -1603,19 +1629,19 @@ class S3DynamicModel(object):
             # Type-specific field constructor
             fieldtype = row.field_type
             if row.options:
-                construct = self._options_field
+                construct = cls._options_field
             elif fieldtype == "date":
-                construct = self._date_field
+                construct = cls._date_field
             elif fieldtype == "datetime":
-                construct = self._datetime_field
+                construct = cls._datetime_field
             elif fieldtype[:9] == "reference":
-                construct = self._reference_field
+                construct = cls._reference_field
             elif fieldtype == "boolean":
-                construct = self._boolean_field
+                construct = cls._boolean_field
             elif fieldtype in ("integer", "double"):
-                construct = self._numeric_field
+                construct = cls._numeric_field
             else:
-                construct = self._generic_field
+                construct = cls._generic_field
 
             field = construct(tablename, row)
             if not field:
