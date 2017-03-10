@@ -1478,9 +1478,10 @@ def stdm_Certificate(r, **attr):
 
         petable = s3db.pr_pentity
         ptable = s3db.pr_person
-        #gtable = s3db.pr_group
+        gtable = s3db.pr_group
 
         for relationship in relationships:
+
             tenure_type = relationship[ttable.name]
 
             pe_id = relationship[rtable.pe_id]
@@ -1489,57 +1490,58 @@ def stdm_Certificate(r, **attr):
                                                    ).first()
             pe_type = pe.instance_type
             if pe_type == "pr_group":
-                # @ToDo: Handle Groups
-                continue
+                group = db(gtable.pe_id == pe_id).select(gname,
+                                                         limitby=(0, 1),
+                                                         ).first()
+
+                party = TABLE(TR(TH("%s: %s" % (tenure_type, group.name))))
+
             elif pe_type == "pr_person":
-                # See below
-                pass
-            else:
-                raise NotImplementedError
+                person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                          ptable.first_name,
+                                                          ptable.middle_name,
+                                                          ptable.last_name,
+                                                          limitby=(0, 1),
+                                                          ).first()
+                person_name = s3_fullname(person)
 
-            person = db(ptable.pe_id == pe_id).select(ptable.id,
-                                                      ptable.first_name,
-                                                      ptable.middle_name,
-                                                      ptable.last_name,
-                                                      limitby=(0, 1),
-                                                      ).first()
-            person_name = s3_fullname(person)
+                party = TABLE(TR(TH("%s: %s" % (tenure_type, person_name))))
 
-            party = TABLE(TR(TH("%s: %s" % (tenure_type, person_name))))
+                # Photo
+                #itable = s3db.pr_image
+                #query = (itable.pe_id == pe_id) & \
+                #        (itable.profile == True)
+                #image = db(query).select(itable.image,
+                #                         limitby=(0, 1)).first()
+                #if image:
+                #    image = image.image
+                #    size = (160, None)
+                #    image = s3db.pr_image_represent(image, size=size)
+                #    size = s3db.pr_image_size(image, size)
+                #    url = URL(c="default",
+                #              f="download",
+                #              args=image)
+                #    avatar = IMG(_src=url,
+                #                 _width=size[0],
+                #                 _height=size[1],
+                #                 )
+                #    person_details[0].append(TD(avatar))
 
-            # Photo
-            #itable = s3db.pr_image
-            #query = (itable.pe_id == pe_id) & \
-            #        (itable.profile == True)
-            #image = db(query).select(itable.image,
-            #                         limitby=(0, 1)).first()
-            #if image:
-            #    image = image.image
-            #    size = (160, None)
-            #    image = s3db.pr_image_represent(image, size=size)
-            #    size = s3db.pr_image_size(image, size)
-            #    url = URL(c="default",
-            #              f="download",
-            #              args=image)
-            #    avatar = IMG(_src=url,
-            #                 _width=size[0],
-            #                 _height=size[1],
-            #                 )
-            #    person_details[0].append(TD(avatar))
-
-            # Identity
-            idtable = s3db.pr_identity
-            query = (idtable.person_id == person.id) & \
-                    (idtable.deleted == False) & \
-                    (idtable.type == 2)
-            identity = db(query).select(idtable.value,
-                                        limitby=(0, 1)
-                                        ).first()
-            if identity:
-                identity = TABLE(TR(TH(T(("National ID")))),
-                                 TR(identity.value),
-                                 )
-                party.append(identity)
+                # Identity
+                idtable = s3db.pr_identity
+                query = (idtable.person_id == person.id) & \
+                        (idtable.deleted == False) & \
+                        (idtable.type == 2)
+                identity = db(query).select(idtable.value,
+                                            limitby=(0, 1)
+                                            ).first()
+                if identity:
+                    identity = TABLE(TR(TH(T(("National ID")))),
+                                     TR(identity.value),
+                                     )
+                    party.append(identity)
+                else:
+                    raise NotImplementedError
 
             # Address
             addrtable = s3db.pr_address
