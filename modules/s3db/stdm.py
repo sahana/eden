@@ -1490,7 +1490,7 @@ def stdm_Certificate(r, **attr):
                                                    ).first()
             pe_type = pe.instance_type
             if pe_type == "pr_group":
-                group = db(gtable.pe_id == pe_id).select(gname,
+                group = db(gtable.pe_id == pe_id).select(gtable.name,
                                                          limitby=(0, 1),
                                                          ).first()
 
