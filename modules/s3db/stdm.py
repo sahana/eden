@@ -1318,6 +1318,7 @@ def stdm_Certificate(r, **attr):
                               lon_min = bounds["lon_min"],
                               lon_max = bounds["lon_max"],
                               merge = False,
+                              pe_type = 1, # None sorts differently on Postgres
                               projection_id = default[ctable.projection_id],
                               temp = True,
                               )
