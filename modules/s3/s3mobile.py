@@ -279,7 +279,59 @@ class S3MobileForm(object):
         if form_fields:
             schema["_form"] = form_fields
 
+        strings = self.strings()
+        if strings:
+            schema["_strings"] = strings
+
         return schema
+
+    # -------------------------------------------------------------------------
+    def strings(self):
+        """
+            Add CRUD strings for mobile form
+
+            @return: a dict with CRUD strings for the resource
+        """
+
+        tablename = self.resource.tablename
+
+        title = None
+
+        # Look up the form title in deployment setting
+        forms = current.deployment_settings.get_mobile_forms()
+        if forms:
+            for form in forms:
+                if isinstance(form, (tuple, list)):
+                    if len(form) >= 2:
+                        title_, tablename_ = form[:2]
+                        if isinstance(tablename_, dict):
+                            tablename_ = title_
+                            title_ = None
+                    else:
+                        continue
+                if tablename_ == tablename:
+                    title = title_
+                    break
+
+        # Fall back to CRUD title_list
+        if not title:
+            crud_strings = current.response.s3.crud_strings.get(tablename)
+            if crud_strings:
+                title = crud_strings.get("title_list")
+
+        # Fall back to capitalized table name
+        if not title:
+            name = tablename.split("_", 1)[-1]
+            title = " ".join(word.capitalize() for word in name.split("_"))
+
+        # Build strings-dict
+        strings = {}
+        if title:
+            title = s3_str(title)
+            strings["name"] = title
+            strings["namePlural"] = title
+
+        return strings
 
     # -------------------------------------------------------------------------
     def describe(self, rfield):
