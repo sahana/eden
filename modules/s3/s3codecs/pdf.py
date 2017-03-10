@@ -1399,24 +1399,30 @@ class S3html2pdf():
             point to a static resource, directly to a file, or to an upload.
         """
 
-        from reportlab.platypus import Image
-
         I = None
-        if "_src" in html.attributes:
-            src = html.attributes["_src"]
-            sep = os.path.sep
-            root_dir = "%s%s%s" % (sep, current.request.application, sep)
+        src = html.attributes.get("_src")
+        if src:
             if uploadfolder:
+                # Assume that src is a filename directly off the uploadfolder
                 src = src.rsplit("/", 1) # Don't use os.sep here
                 src = os.path.join(uploadfolder, src[1])
-            elif src.startswith("%sstatic" % root_dir):
-                src = src.split(root_dir)[-1]
-                src = os.path.join(current.request.folder, src)
             else:
-                src = src.rsplit("/", 1) # Don't use os.sep here
-                src = os.path.join(current.request.folder,
-                                   "uploads%s" % sep, src[1])
+                request = current.request
+                base_url = "/%s/" % request.application
+                STATIC = "%sstatic" % base_url 
+                if src.startswith(STATIC):
+                    # Assume that filename is specified as a URL in static
+                    src = src.split(base_url)[-1]
+                    src = src.replace("/", os.sep)
+                    src = os.path.join(request.folder, src)
+                else:
+                    # Assume that filename is in root of main uploads folder
+                    # @ToDo: Allow use of subfolders!
+                    src = src.rsplit("/", 1) # Don't use os.sep here
+                    src = os.path.join(request.folder,
+                                       "uploads", src[1])
             if os.path.exists(src):
+                from reportlab.platypus import Image
                 I = Image(src)
 
         if not I:

@@ -57,6 +57,7 @@ class S3SocialTenureDomainModel(S3Model):
         T = current.T
         db = current.db
 
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -154,6 +155,10 @@ class S3SocialTenureDomainModel(S3Model):
                           #   [table.instance_type.set_attributes(readable = True),
                           #    ],
                           )
+
+        add_components(tablename,
+                       stdm_tenure = "spatial_unit_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Tenure Types
@@ -266,9 +271,9 @@ class S3SocialTenureDomainModel(S3Model):
                   super_entity = "doc_entity",
                   )
 
-        self.add_components(tablename,
-                            stdm_tenure_relationship = "tenure_id",
-                            )
+        add_components(tablename,
+                       stdm_tenure_relationship = "tenure_id",
+                       )
 
         self.set_method("stdm", "tenure",
                         method = "certificate",
@@ -1212,6 +1217,18 @@ def stdm_rheader(r):
             rheader_fields = (["spatial_unit_id"],
                               )
 
+        elif tablename in ("stdm_garden",
+                           "stdm_parcel",
+                           "stdm_structure",
+                           ):
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Tenures"), "tenure"),
+                    )
+
+            rheader_fields = (["name"],
+                              )
+
         elif tablename == "stdm_farmer":
 
             tabs = ((T("Basic Details"), None),
@@ -1244,22 +1261,118 @@ def stdm_Certificate(r, **attr):
     """
 
     T = current.T
+    gis = current.gis
     s3db = current.s3db
     db = current.db
     #settings = current.deployment_settings
 
+    # Location Details
     record = r.record
+    record_id = record.id
     spatial_unit_id = record.spatial_unit_id
     stable = s3db.stdm_spatial_unit
-    spatial_unit = db(stable.spatial_unit_id == spatial_unit_id).select(stable.name,
-                                                                        stable.instance_type,
-                                                                        #stable.location_id,
-                                                                        limitby=(0, 1),
-                                                                        ).first()
-    spatial_unit_code = spatial_unit.name
-    spatial_unit_type = spatial_unit.instance_type
+    gtable = db.gis_location
+    query= (stable.spatial_unit_id == spatial_unit_id) & \
+           (stable.location_id == gtable.id)
+    spatial_unit = db(query).select(stable.name,
+                                    stable.instance_type,
+                                    gtable.lat_max,
+                                    gtable.lat_min,
+                                    gtable.lon_max,
+                                    gtable.lon_min,
+                                    limitby=(0, 1),
+                                    ).first()
+    spatial_unit_code = spatial_unit[stable.name]
+    spatial_unit_type = spatial_unit[stable.instance_type]
+    location = spatial_unit[gtable]
+    # Add Inset
+    bounds = gis.get_bounds(bbox_inset = 0.02,
+                            features=[Storage(lat=location["lat_min"],
+                                              lon=location["lon_min"],
+                                              ),
+                                      Storage(lat=location["lat_min"],
+                                              lon=location["lon_max"],
+                                              ),
+                                      Storage(lat=location["lat_max"],
+                                              lon=location["lon_min"],
+                                              ),
+                                      Storage(lat=location["lat_max"],
+                                              lon=location["lon_max"],
+                                              ),
+                                      ])
+
+    # Read the Default config to inherit select elements from
+    ctable = s3db.gis_config
+    ltable = s3db.gis_layer_config
+    query = (ctable.uuid == "SITE_DEFAULT") & \
+            (ctable.id == ltable.config_id) & \
+            (ltable.base == True)
+    default = db(query).select(ctable.projection_id,
+                               ltable.layer_id,
+                               limitby=(0, 1)
+                               ).first()
+
+    # Create new config for screenshot
+    config_id = ctable.insert(lat_min = bounds["lat_min"],
+                              lat_max = bounds["lat_max"],
+                              lon_min = bounds["lon_min"],
+                              lon_max = bounds["lon_max"],
+                              merge = False,
+                              projection_id = default[ctable.projection_id],
+                              temp = True,
+                              )
+    # Enable relevant Layer (filtered to this record)
+    function = spatial_unit_type.split("_", 1)[1]
+    ftable = s3db.gis_layer_feature
+    feature_layer_id = ftable.insert(name = "screenshot",
+                                     controller = "stdm",
+                                     function = function,
+                                     filter = "~.spatial_unit_id=%s" % spatial_unit_id,
+                                     )
+    layer = dict(id = feature_layer_id)
+    s3db.update_super(ftable, layer)
+    layer_id = layer["layer_id"]
+    ltable.insert(config_id = config_id,
+                  layer_id = layer_id,
+                  )
+    # Style the layer
+    stable = s3db.gis_style
+    query = (stable.layer_id == ftable.layer_id) & \
+            (ftable.function == function)
+    style = db(query).select(stable.style,
+                             stable.marker_id,
+                             limitby=(0, 1)
+                             ).first()
+    stable.insert(layer_id = layer_id,
+                  style = style.style,
+                  marker_id = style.marker_id,
+                  )
+    # Enable Default Base Layer
+    ltable.insert(config_id = config_id,
+                  layer_id = default[ltable.layer_id],
+                  )
+    # Commit as screenshot comes in as a separate request
+    db.commit()
+
+    # Take screenshot
+    height = 449
+    width = 630
+    filename = gis.get_screenshot(config_id, temp=True, height=height, width=width)
+    if filename:
+        _map = IMG(_src=URL(c="static", f="cache", args=["jpg", filename]),
+                   _alt=T("Map"),
+                   _height=449,
+                   )
+    else:
+        current.log.debug("Unable to include Screenshot of Map")
+        _map = ""
+
+    # Remove the created style & layer
+    db(stable.layer_id == layer_id).delete()
+    db(ftable.id == feature_layer_id).delete()
+    db(s3db.gis_layer_entity.layer_id == layer_id).delete()
+
     if spatial_unit_type == "stdm_garden":
-        # No extra attributes
         location_details = TABLE(TR(TH(T("Garden"))),
                                  TR(TD(spatial_unit_code)),
                                  )
@@ -1282,7 +1395,6 @@ def stdm_Certificate(r, **attr):
                                         left = left,
                                         limitby=(0, 1)
                                         ).first()
-        # @ToDo: Include Map
         location_details = TABLE(TR(TH(T("Parcel"), _colspan=2)),
                                  TR(TD(T("Code")), TD(spatial_unit_code)),
                                  TR(TD(T("Area")), TD(spatial_unit[table.area])),
@@ -1303,7 +1415,6 @@ def stdm_Certificate(r, **attr):
                                         left = left,
                                         limitby=(0, 1)
                                         ).first()
-        # @ToDo: Include Map
         location_details = TABLE(TR(TH(T("Structure"), _colspan=2)),
                                  TR(TD(T("Name")), TD(spatial_unit[table.name2])),
                                  TR(TD(T("Code")), TD(spatial_unit_code)),
@@ -1358,7 +1469,7 @@ def stdm_Certificate(r, **attr):
 
         rtable = s3db.stdm_tenure_relationship
         ttable = s3db.stdm_tenure_type
-        query = (rtable.tenure_id == record.id) & \
+        query = (rtable.tenure_id == record_id) & \
                 (rtable.deleted == False) & \
                 (rtable.tenure_type_id == ttable.id)
         relationships = db(query).select(rtable.pe_id,
@@ -1490,6 +1601,7 @@ def stdm_Certificate(r, **attr):
 
         output = DIV(TABLE(TR(TH(T("Tenure Certificate")))),
                      location_details,
+                     _map,
                      parties,
                      comments,
                      signature,

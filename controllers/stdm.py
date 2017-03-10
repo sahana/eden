@@ -170,7 +170,21 @@ def tenure_type():
 def parcel():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+    def postp(r, output):
+        if r.interactive and r.component_name == "tenure":
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
+                                _class="action-btn",
+                                url=URL(f="tenure",
+                                        args=["[id]", "certificate"])),
+                           ]
+
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -240,14 +254,42 @@ def recognition_status():
 def structure():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+    def postp(r, output):
+        if r.interactive and r.component_name == "tenure":
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
+                                _class="action-btn",
+                                url=URL(f="tenure",
+                                        args=["[id]", "certificate"])),
+                           ]
+
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
 def garden():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(#rheader = s3db.stdm_rheader,
+    def postp(r, output):
+        if r.interactive and r.component_name == "tenure":
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
+                                _class="action-btn",
+                                url=URL(f="tenure",
+                                        args=["[id]", "certificate"])),
+                           ]
+
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller(rheader = s3db.stdm_rheader,
                               )
 
 # -----------------------------------------------------------------------------

@@ -1914,12 +1914,6 @@ class S3GISConfigModel(S3Model):
 
                      # This should be turned off for Offline deployments or expensive SatComms, such as BGAN
                      Field("geocoder", "boolean"),
-                     # Whether the config is just temporary for taking a screenshot
-                     Field("temp", "boolean",
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
                      Field("wmsbrowser_url"),
                      Field("wmsbrowser_name",
                            default = "Web Map Service",
@@ -1956,7 +1950,16 @@ class S3GISConfigModel(S3Model):
                            #writable = False,
                            #widget = S3ImageCropWidget((820, 410)),
                            ),
-
+                     # Whether the config should be merged with the default config
+                     Field("merge", "boolean",
+                           default = True,
+                           ),
+                     # Whether the config is just temporary for taking a screenshot
+                     Field("temp", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # Reusable field - used by Events & Scenarios

@@ -11,6 +11,7 @@
          Type.................string..........Layer Type
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
+         Default..............boolean.........Layer default Base in config? (SITE_DEFAULT if not-specified)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -82,6 +83,9 @@
                 </xsl:choose>
             </reference>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+            <xsl:if test="col[@field='Default']!=''">
+                <data field="base"><xsl:value-of select="col[@field='Default']"/></data>
+            </xsl:if>
         </resource>
 
     </xsl:template>
