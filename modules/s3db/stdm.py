@@ -1540,8 +1540,9 @@ def stdm_Certificate(r, **attr):
                                      TR(identity.value),
                                      )
                     party.append(identity)
-                else:
-                    raise NotImplementedError
+
+            else:
+                raise NotImplementedError
 
             # Address
             addrtable = s3db.pr_address
