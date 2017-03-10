@@ -730,6 +730,11 @@ def config(settings):
                 if isinstance(output, dict):
                     output["rheader"] = ""
 
+            # Custom view for shelter inspection
+            if r.method == "inspection":
+               from s3 import S3CustomController
+               S3CustomController._view("DRK", "shelter_inspection.html")
+
             return output
         s3.postp = custom_postp
 

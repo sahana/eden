@@ -549,16 +549,26 @@ class CRShelterModel(S3Model):
         # Custom method to assign HRs
         set_method("cr", "shelter",
                    method = "assign",
-                   action = self.hrm_AssignMethod(component="human_resource_site"))
+                   action = self.hrm_AssignMethod(component="human_resource_site"),
+                   )
 
+        # Check-in method
         set_method("cr", "shelter",
                    method="check-in",
                    action = self.org_SiteCheckInMethod,
                    )
 
+        # Notification-dispatch method
         set_method("cr", "shelter",
                    method = "dispatch",
-                   action = cr_notification_dispatcher)
+                   action = cr_notification_dispatcher,
+                   )
+
+        # Shelter Inspection method
+        set_method("cr", "shelter",
+                   method = "inspection",
+                   action = CRShelterInspection,
+                   )
 
         # CRUD strings
         if settings.get_ui_label_camp():
@@ -2138,5 +2148,231 @@ class cr_AssignUnit(S3CRUD):
             output = self.create(r, **attr)
 
         return output
+
+# =============================================================================
+class CRShelterInspection(S3Method):
+    """
+        Mobile-optimized UI for shelter inspection
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Main entry point for REST interface.
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        if not self.permitted():
+            current.auth.permission.fail()
+
+        output = {}
+        representation = r.representation
+
+        if representation == "html":
+            if r.http in ("GET", "POST"):
+                output = self.inspection_form(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
+        elif representation == "json":
+            if r.http == "POST":
+                output = self.inspection_ajax(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def permitted(self):
+        """
+            @todo: docstring
+        """
+
+        # @todo: implement
+        return True
+
+    # -------------------------------------------------------------------------
+    def inspection_form(self, r, **attr):
+        """
+            Generate the form
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        settings = current.deployment_settings
+        response = current.response
+
+        output = {}
+
+        # Limit selection of shelter units to current shelter
+        record = r.record
+        if record:
+            utable = s3db.cr_shelter_unit
+            dbset = db(utable.shelter_id == record.id)
+        else:
+            dbset = db
+
+        # Representation methods for form widgets
+        shelter_unit_represent = S3Represent(lookup="cr_shelter_unit")
+        shelter_flag_represent = S3Represent(lookup="cr_shelter_flag",
+                                             translate=True,
+                                             )
+
+        # Standard form fields and data
+        formfields = [Field("shelter_unit_id",
+                            label = T("Housing Unit"),
+                            requires = IS_ONE_OF(dbset, "cr_shelter_unit.id",
+                                                 shelter_unit_represent,
+                                                 orderby = "shelter_id",
+                                                 ),
+                            ),
+                      Field("shelter_flags",
+                            label = T("Shortcomings"),
+                            requires = IS_ONE_OF(db, "cr_shelter_flag.id",
+                                                 shelter_flag_represent,
+                                                 multiple = True,
+                                                 ),
+                            widget = S3GroupedOptionsWidget(
+                                        cols = 2,
+                                        size = None,
+                                        ),
+                            ),
+                      ]
+
+        # Buttons
+        submit_btn = INPUT(_class = "tiny primary button submit-btn",
+                           _name = "submit",
+                           _type = "button",
+                           _value = T("Submit"),
+                           )
+
+        buttons = [submit_btn]
+
+        # Add the cancel-action
+        buttons.append(A(T("Cancel"), _class = "cancel-action action-lnk"))
+
+        # Generate form
+        widget_id = "shelter-inspection-form"
+        formstyle = settings.get_ui_formstyle()
+        form = SQLFORM.factory(record = None,
+                               showid = False,
+                               formstyle = formstyle,
+                               table_name = "shelter_inspection",
+                               buttons = buttons,
+                               #hidden = hidden,
+                               _id = widget_id,
+                               *formfields)
+
+        output["form"] = form
+
+        # Custom view
+        response.view = self._view(r, "cr/shelter_inspection.html")
+
+        # Inject JS
+        options = {"ajaxURL": r.url(None,
+                                    method = "inspection",
+                                    representation = "json",
+                                    ),
+                   }
+        self.inject_js(widget_id, options)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def inspection_ajax(self, r, **attr):
+        """
+            Ajax-registration of shelter inspection
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        # Load JSON data from request body
+        s = r.body
+        s.seek(0)
+        try:
+            data = json.load(s)
+        except (ValueError, TypeError):
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        shelter_unit_id = data.get("u")
+        if shelter_unit_id:
+            # Register shelter inspection
+            error = False
+
+            # Create inspection record
+            itable = s3db.cr_shelter_inspection
+            inspection_id = itable.insert(shelter_unit_id = shelter_unit_id,
+                                          )
+            if inspection_id:
+                flag_ids = data.get("f")
+                if flag_ids:
+                    # Create links to flags
+                    ftable = s3db.cr_shelter_inspection_flag
+                    for flag_id in flag_ids:
+                        success = ftable.insert(inspection_id = inspection_id,
+                                                flag_id = flag_id,
+                                                )
+                        if not success:
+                            error = True
+                            break
+            else:
+                error = True
+
+            if error:
+                db.rollback()
+                output = {"a": s3_str(T("Error registering shelter inspection")),
+                          }
+            else:
+                output = {"m": s3_str(T("Registration successful")),
+                          }
+        else:
+            # Error - no shelter unit selected
+            output = {"a": s3_str(T("No shelter unit selected")),
+                      }
+
+        return json.dumps(output)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_js(widget_id, options):
+        """
+            Helper function to inject static JS and instantiate
+            the shelterInspection widget
+
+            @param widget_id: the node ID where to instantiate the widget
+            @param options: dict of widget options (JSON-serializable)
+        """
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        # Static JS
+        scripts = s3.scripts
+        if s3.debug:
+           script = "/%s/static/scripts/S3/s3.shelter_inspection.js" % appname
+        else:
+           script = "/%s/static/scripts/S3/s3.shelter_inspection.min.js" % appname
+        scripts.append(script)
+
+        # Instantiate widget
+        scripts = s3.jquery_ready
+        script = '''$('#%(id)s').shelterInspection(%(options)s)''' % \
+                 {"id": widget_id, "options": json.dumps(options)}
+        if script not in scripts:
+            scripts.append(script)
 
 # END =========================================================================

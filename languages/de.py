@@ -4088,6 +4088,7 @@
 'Shipments': 'Lieferungen',
 'Shipping cost': 'Lieferkosten',
 'Shooting': 'Filmaufnahme',
+'Shortcomings': 'Mängel',
 'Short Assessment': 'Kurz Beurteilung',
 'Short Description': 'Kurzbeschreibung',
 'Show %(number)s entries': 'Zeige %(number)s Einträge',

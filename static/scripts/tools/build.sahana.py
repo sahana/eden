@@ -365,6 +365,7 @@ def dojs(dogis = False, warnings = True):
                      "popup",
                      "register_validation",
                      "select_person",
+                     "shelter_inspection",
                      "sync",
                      "timeline",
                      "ui.contacts",

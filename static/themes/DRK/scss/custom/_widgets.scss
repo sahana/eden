@@ -108,6 +108,17 @@ input.date.hasDatepicker {
     margin-left: 0;
     margin-bottom: 0.5rem;
 }
+table.s3-groupedopts-widget {
+    td {
+        white-space: nowrap;
+        input {
+            vertical-align: top;
+        }
+        label {
+            white-space: pre-wrap;
+        }
+    }
+}
 
 /* ImageCropWidget */
 .imagecrop-btn {

@@ -1,0 +1,13 @@
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>
