@@ -644,18 +644,18 @@ def config(settings):
         elif r.component_name == "case_activity" or r.function == "due_followups":
             # "Individual Support" tab or "Due Follow-ups"
 
-            # CRUD Strings use "Intervention"
+            # CRUD Strings use "Protection Response"
             s3.crud_strings["dvr_case_activity"] = Storage(
-                label_create = T("Create Intervention"),
-                title_display = T("Intervention Details"),
-                title_list = T("Interventions"),
-                title_update = T("Edit Intervention"),
-                label_list_button = T("List Interventions"),
-                label_delete_button = T("Delete Intervention"),
-                msg_record_created = T("Intervention added"),
-                msg_record_modified = T("Intervention updated"),
-                msg_record_deleted = T("Intervention deleted"),
-                msg_list_empty = T("No Interventions currently registered"),
+                label_create = T("Create Protection Response"),
+                title_display = T("Protection Response Details"),
+                title_list = T("Protection Responses"),
+                title_update = T("Edit Protection Response"),
+                label_list_button = T("List Protection Responses"),
+                label_delete_button = T("Delete Protection Response"),
+                msg_record_created = T("Protection Response added"),
+                msg_record_modified = T("Protection Response updated"),
+                msg_record_deleted = T("Protection Response deleted"),
+                msg_list_empty = T("No Protection Responses currently registered"),
                 )
 
             # Get service root type
@@ -699,7 +699,7 @@ def config(settings):
             left = stable.on(stable.id == ntable.service_id)
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
-            SECTOR = T("Sector for DS/IS")
+            SECTOR = T("Protection Response Sector")
             FILTER = (FS("service_id$root_service") == root_service_id)
 
             #field = table.need_id
@@ -717,12 +717,12 @@ def config(settings):
 
             # Customise Need Details
             field = table.need_details
-            field.label = T("DS/IS Case Explanation")
+            field.label = T("Initial Situation Explanation")
             field.readable = field.writable = True
 
             # Customise Activity Details
             field = table.activity_details
-            field.label = T("Support provided by STL")
+            field.label = T("Protection Response Details")
             field.readable = field.writable = True
 
             # Customise Outside Support
@@ -732,7 +732,7 @@ def config(settings):
 
             # Customise Priority
             field = table.priority
-            field.label = T("Priority for DS")
+            field.label = T("Priority")
             field.readable = field.writable = True
 
             # Customise date fields
@@ -770,7 +770,6 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
-                                        "service_id",
                                         "human_resource_id",
                                         "project_id",
                                         S3SQLInlineLink("vulnerability_type",
@@ -780,6 +779,8 @@ def config(settings):
                                                         multiple = True,
                                                         leafonly = True,
                                                         ),
+                                        "need_details",
+                                        "service_id",
                                         S3SQLInlineLink("need",
                                                         label = SECTOR,
                                                         field = "need_id",
@@ -788,7 +789,7 @@ def config(settings):
                                                         leafonly = True,
                                                         filter = FILTER,
                                                         ),
-                                        "need_details",
+                                        "priority",
                                         S3SQLInlineLink("response_type",
                                                         label = T("Interventions Required"),
                                                         field = "response_type_id",
@@ -796,18 +797,17 @@ def config(settings):
                                                         multiple = True,
                                                         leafonly = True,
                                                         ),
-                                        "priority",
-                                        "start_date",
                                         "activity_details",
+                                        "start_date",
                                         "outside_support",
+                                        "activity_funding.funding_required",
+                                        "activity_funding.reason",
+                                        "activity_funding.approved",
                                         "followup",
                                         "followup_date",
                                         "completed",
                                         "end_date",
-                                        (T("Outcome for DS"), "outcome"),
-                                        "activity_funding.funding_required",
-                                        "activity_funding.reason",
-                                        "activity_funding.approved",
+                                        (T("Result of Protection Response"), "outcome"),
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "file",
@@ -1128,7 +1128,7 @@ def config(settings):
                 # Custom list fields
                 list_fields = [(T("Ref.No."), "person_id$pe_label"),
                                "person_id",
-                               (T("Sector for DS/IS"), "case_activity_need.need_id"),
+                               (T("Protection Response Sector"), "case_activity_need.need_id"),
                                "service_id",
                                "followup_date",
                                ]
