@@ -899,85 +899,18 @@ class custom_WACOP(S3CRUD):
 
         #  Create Form for Updates
         if updateable and auth.s3_has_permission("create", tablename):
-            # @ToDo: AJAX Form Submission
-
-            stable = db.cms_series
-            series = db(stable.deleted == False).select(stable.name,
-                                                        stable.id,
-                                                        )
-            select = SELECT(OPTION("Choose an update type…",
-                                   _disabled=True,
-                                   ),
-                            _id="cms_post_series_id",
-                            _name="series_id",
-                            )
-            for s in series:
-                # @ToDo: Option for T()
-                select.append(OPTION(s.name,
-                                     _value=s.id,
-                                     ))
-
-            #form = SQLFORM(ptable)
-            #hidden_fields = form.hidden_fields()
-            #custom = form.custom
-            #widgets = custom.widget
-            formname = "cms_post/create"
-            formkey = web2py_uuid()
-            keyname = "_formkey[%s]" % formname
-            session = current.session
-            session[keyname] = list(session.get(keyname, []))[-9:] + [formkey]
-            form = FORM(LABEL("Write new Update Post:",
-                              _for="body",
-                              ),
-                        TEXTAREA(_id="cms_post_body",
-                                 _name="body",
-                                 _placeholder="Write something…",
-                                 _rows="4",
-                                 ),
-                        DIV(DIV(select,
-                                _class="large-4 columns",
-                                ),
-                            DIV(INPUT(_id="cms_post_create_tags_input",
-                                      _class="hide",
-                                      _name="tags",
-                                      _type="text",
-                                      _value="",
-                                      ),
-                                UL(_id="cms_post_create_tags_ul",
-                                   ),
-                                _class="large-3 columns",
-                                ),
-                            DIV(INPUT(_type="submit",
-                                      _class="button tiny default right",
-                                      _value="Post Update",
-                                      ),
-                                _class="large-5 columns",
-                                ),
-                            _class="row",
-                            ),
-                        #hidden_fields, # Only needed for updates
-                        DIV(INPUT(_name="_formname",
-                                  _value=formname,
-                                  _type="hidden",
-                                  ),
-                            INPUT(_name="_formkey",
-                                  _value=formkey,
-                                  _type="hidden",
-                                  ),
-                            _style="display:none;",
-                            ),
-                        _class="form",
-                        action="#",
-                        enctype="multipart/form-data",
-                        method="post",
-                        )
-
-            form_div = DIV(form,
-                           _class="compose-update panel",
-                           )
-            output["create_post_form"] = form_div
+            output["create_post_button"] = DIV(A(ICON("add"),
+                                                 T("Add Update"),
+                                                 _href=URL(c="event", f="incident",
+                                                           args = [incident_id, "post", "create.popup"],
+                                                           vars={"refresh": "updates_datalist"},
+                                                           ),
+                                                 _class="s3_modal button wide radius",
+                                                 ),
+                                               _class="panel",
+                                               )
         else:
-            output["create_post_form"] = ""
+            output["create_post_button"] = ""
 
         # Tags for Updates
         s3 = current.response.s3
