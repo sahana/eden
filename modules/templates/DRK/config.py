@@ -2730,6 +2730,24 @@ def config(settings):
     settings.customise_project_task_resource = customise_project_task_resource
 
     # -------------------------------------------------------------------------
+    def customise_security_seized_item_resource(r, tablename):
+        """
+            Custom restrictions in seized items form
+        """
+
+        table = current.s3db.security_seized_item
+
+        # Can't add item type from item form
+        field = table.item_type_id
+        field.comment = None
+
+        # Confiscated by not writable (always default)
+        field = table.confiscated_by
+        field.writable = False
+
+    settings.customise_security_seized_item_resource = customise_security_seized_item_resource
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -3047,6 +3065,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Events"), "case_event"),
                             (T("Photos"), "image"),
                             (T("Notes"), "case_note"),
+                            (T("Confiscation"), "seized_item"),
                             ]
 
                 case = resource.select(["dvr_case.status_id",

@@ -1156,6 +1156,8 @@ class S3PersonModel(S3Model):
                                                  },
                             # Tags
                             pr_person_tag = "person_id",
+                            # Seized Items (owner)
+                            security_seized_item = "person_id",
                             )
 
         # ---------------------------------------------------------------------
