@@ -1604,7 +1604,8 @@ def config(settings):
                                     fw.opts.default = None
                                     fw.opts.hidden = True
                             if extend_text_filter and isinstance(fw, S3TextFilter):
-                                fw.field.extend(("individual_id.value",
+                                fw.field.extend(("phone.value",
+                                                 "individual_id.value",
                                                  "family_id.value",
                                                  "dvr_case.comments",
                                                  ))
