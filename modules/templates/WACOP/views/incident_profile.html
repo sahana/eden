@@ -109,21 +109,12 @@
     <div class='content active' id='panel1'>
       <div class='row'>
         <div class='large-3 columns'>
-          <div class="panel">
-            <a href='#modal-post-update' class="button wide radius" data-reveal-id='modal-post-update' title='add update'><i class='fa fa-plus'></i> Add Update</a>
-          </div>
+          {{=create_post_button}}
           <div class="panel">
             {{=filter_form}}
           </div>
         </div>
         <div class='large-9 columns'>
-          {{if create_post_form:}}
-          <div id='modal-post-update' class='reveal-modal' data-reveal aria-labelledby='modalPostUpdate' aria-hidden='true' role='dialog'>
-          <h4 id='modalPostUpdateTitle'>New Update</h4>
-          {{=create_post_form}}
-          <a class='close-reveal-modal' aria-label='Close'>&#215;</a>
-          </div>
-          {{pass}}
           <ul class='dl' id="updates_datalist">
             {{=updates_datalist}}
           </ul>

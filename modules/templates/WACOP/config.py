@@ -446,18 +446,28 @@ def config(settings):
                 current.menu.main = ""
 
             elif r.representation == "popup":
-                # Popup just used to link to Event
+                if not r.component:
+                    # Popup just used to link to Event
 
-                #s3.crud_strings["event_incident"].title_update =  T("Add to Event")
+                    #s3.crud_strings["event_incident"].title_update =  T("Add to Event")
 
-                from s3 import S3SQLCustomForm
+                    from s3 import S3SQLCustomForm
 
-                crud_form = S3SQLCustomForm("event_id",
-                                            )
+                    crud_form = S3SQLCustomForm("event_id",
+                                                )
 
-                s3db.configure("event_incident",
-                               crud_form = crud_form,
-                               )
+                    s3db.configure("event_incident",
+                                   crud_form = crud_form,
+                                   )
+                elif r.component_name == "post":
+                    from s3 import S3SQLCustomForm
+
+                    crud_form = S3SQLCustomForm("body",
+                                                )
+
+                    s3db.configure("cms_post",
+                                   crud_form = crud_form,
+                                   )
 
             return True
         s3.prep = custom_prep
