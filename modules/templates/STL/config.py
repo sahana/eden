@@ -1604,13 +1604,18 @@ def config(settings):
                                     fw.opts.default = None
                                     fw.opts.hidden = True
                             if extend_text_filter and isinstance(fw, S3TextFilter):
-                                fw.field.extend(("phone.value",
-                                                 "individual_id.value",
+                                fw.field.extend(("individual_id.value",
                                                  "family_id.value",
                                                  "dvr_case.comments",
                                                  ))
                                 fw.opts.comment = T("You can search by name, ID numbers and comments")
                                 extend_text_filter = False
+                        
+                        # Add filter for Phone
+                        phone_filter = S3TextFilter(["phone.value"],
+                                                    label = T("Phone"),                                                                 
+                                                    )
+                        filter_widgets.append(phone_filter)
 
                         # Add filter for date of birth
                         dob_filter = S3DateFilter("date_of_birth",
