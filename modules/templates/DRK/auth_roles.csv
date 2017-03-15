@@ -9,6 +9,9 @@ ADMIN_HEAD,Head of Administration,,hrm,,,CREATE|READ|UPDATE|DELETE,,,,,Head of a
 ADMIN_HEAD,Head of Administration,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
 ADMIN_HEAD,Head of Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to task management
+ADMIN_HEAD,Head of Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
+ADMIN_HEAD,Head of Administration,,security,seized_item,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
+ADMIN_HEAD,Head of Administration,,security,seized_item_type,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
 ADMIN_HEAD,Head of Administration,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
 ADMIN_HEAD,Head of Administration,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
 ADMIN_HEAD,Head of Administration,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
@@ -36,6 +39,8 @@ ADMIN_HEAD,Head of Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Head
 ADMIN_HEAD,Head of Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+ADMIN_HEAD,Head of Administration,,,,security_seized_item,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
+ADMIN_HEAD,Head of Administration,,,,security_seized_item_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
 ADMINISTRATION,Administration,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,dvr,site_activity,,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
@@ -43,6 +48,9 @@ ADMINISTRATION,Administration,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
 ADMINISTRATION,Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Administration has unrestricted access to task management
+ADMINISTRATION,Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
+ADMINISTRATION,Administration,,security,seized_item,,CREATE|READ|UPDATE,DELETE,,,,Administration can manage seized items
+ADMINISTRATION,Administration,,security,seized_item_type,,READ,,,,,Administration can read seized item types
 ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
 ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
@@ -66,6 +74,8 @@ ADMINISTRATION,Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Administ
 ADMINISTRATION,Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+ADMINISTRATION,Administration,,,,security_seized_item,CREATE|READ|UPDATE,DELETE,,,,"Administration can manage seized items, but delete only the ones they created"
+ADMINISTRATION,Administration,,,,security_seized_item_type,READ,,,,,Administration can read seized item types
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
@@ -119,6 +129,8 @@ MEDICAL,Medical,,,,pr_image,READ,,,,,Medical can see profile pictures
 MEDICAL,Medical,,,,pr_person,READ|UPDATE,,,,,Medical can look up persons
 MEDICAL,Medical,,,,pr_person_details,READ,,,,,
 MEDICAL,Medical,,,,pr_person_tag,READ,,,,,
+MEDICAL,Medical,,,,security_seized_item,NONE,,,,,
+MEDICAL,Medical,,,,security_seized_item_type,NONE,,,,,
 POLICE,Police,,cr,,,READ,,,,,
 POLICE,Police,,dvr,allowance,,NONE,,,,,
 POLICE,Police,,dvr,case_activity,,NONE,,,,,Police can not access case activity controller
@@ -145,6 +157,8 @@ POLICE,Police,,,,pr_image,CREATE|READ|UPDATE,,,,,Police can create and update ph
 POLICE,Police,,,,pr_person,READ|UPDATE,,,,,
 POLICE,Police,,,,pr_person_details,READ,,,,,
 POLICE,Police,,,,pr_person_tag,READ,,,,,
+POLICE,Police,,,,security_seized_item,NONE,,,,,
+POLICE,Police,,,,security_seized_item_type,NONE,,,,,
 RP,Regierungspräsidium,,cr,,,READ,,,,,
 RP,Regierungspräsidium,,dvr,allowance,,READ,,,,,
 RP,Regierungspräsidium,,dvr,case_activity,,NONE,,,,,
@@ -172,6 +186,8 @@ RP,Regierungspräsidium,,,,pr_image,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person_details,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person_tag,READ,,,,,
+RP,Regierungspräsidium,,,,security_seized_item,READ,,,,,RP can read seized items
+RP,Regierungspräsidium,,,,security_seized_item_type,READ,,,,,RP can read seized item types
 QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can create and read in tables required for case event registration
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
@@ -188,6 +204,8 @@ QUARTIER,Quartiermanager,,,,pr_group_membership,READ,,,,,Quartiermanager can see
 QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,Quartiermanager can look up persons
 QUARTIER,Quartiermanager,,,,pr_person_details,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_person_tag,READ,,,,,
+QUARTIER,Quartiermanager,,,,security_seized_item,NONE,,,,,
+QUARTIER,Quartiermanager,,,,security_seized_item_type,NONE,,,,,
 SCAN,Scan,,dvr,case_appointment,,NONE,,,,,Scan role can not access the list of appointments
 SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
 SCAN,Scan,,dvr,group_membership,,READ,,,,,Scan role can read family members
@@ -206,6 +224,8 @@ SCAN,Scan,,,,pr_image,READ,,,,,Scan role can see profile images
 SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
 SCAN,Scan,,,,pr_person_details,READ,,,,,
 SCAN,Scan,,,,pr_person_tag,READ,,,,,
+SCAN,Scan,,,,security_seized_item,NONE,,,,,
+SCAN,Scan,,,,security_seized_item_type,NONE,,,,,
 SECURITY,Security,,cr,shelter,,READ,,,,,
 SECURITY,Security,,dvr,case_event,,CREATE|READ,,,,,Security can create and read in tables required for case event registration
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
@@ -225,6 +245,8 @@ SECURITY,Security,,,,pr_image,READ,,,,,Security can see profile pictures
 SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
 SECURITY,Security,,,,pr_person_details,READ,,,,,
 SECURITY,Security,,,,pr_person_tag,READ,,,,,
+SECURITY,Security,,,,security_seized_item,NONE,,,,,
+SECURITY,Security,,,,security_seized_item_type,NONE,,,,,
 SECURITY_HEAD,Head of Security,,cr,,,READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,case_event,,CREATE|READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,site_activity,,NONE,,,,,Head of security can not access site activity reports
@@ -246,6 +268,8 @@ SECURITY_HEAD,Head of Security,,,,pr_image,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person_details,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person_tag,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,security_seized_item,NONE,,,,,
+SECURITY_HEAD,Head of Security,,,,security_seized_item_type,NONE,,,,,
 STAFF,General Staff,,cr,,,READ,,,,,
 STAFF,General Staff,,dvr,case_activity,,NONE,,,,,Staff can not access case activity controller
 STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
@@ -272,3 +296,5 @@ STAFF,General Staff,,,,pr_image,READ,,,,,
 STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
 STAFF,General Staff,,,,pr_person_details,READ,,,,,
 STAFF,General Staff,,,,pr_person_tag,READ,,,,,
+STAFF,General Staff,,,,security_seized_item,CREATE|READ|UPDATE,DELETE,,,,"General staff members can manage seized items, but delete only the ones they created"
+STAFF,General Staff,,,,security_seized_item_type,READ,,,,,General staff members can read seized item types

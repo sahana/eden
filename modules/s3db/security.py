@@ -394,7 +394,7 @@ class SecuritySeizedItemsModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
         item_type_id = S3ReusableField("item_type_id", "reference %s" % tablename,
-                                       label = T("Item Type"),
+                                       label = T("Type"),
                                        represent = represent,
                                        requires = IS_EMPTY_OR(
                                                    IS_ONE_OF(db, "%s.id" % tablename,
