@@ -2755,8 +2755,9 @@ def config(settings):
             if controller == "vol":
                 if arcs:
                     # ARCS have a custom Volunteer form
+                    from gluon import IS_EMPTY_OR
                     #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import IS_ONE_OF, S3LocationSelector, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
 
                     # Go back to Create form after submission
                     current.session.s3.rapid_data_entry = True
@@ -2812,6 +2813,17 @@ def config(settings):
                                            filter_opts = (organisation_id,),
                                            sort = True,
                                            )
+
+                    # Translate Programmes
+                    #represent = S3Represent(lookup="hrm_programme", translate=True)
+                    #f = s3db.hrm_programme_hours.programme_id
+                    #f.represent = represent
+                    #f.requires = IS_EMPTY_OR(
+                    #                IS_ONE_OF(db, "hrm_programme.id",
+                    #                          represent,
+                    #                          filterby="organisation_id",
+                    #                          filter_opts=(organisation_id,)
+                    #                          ))
 
                     s3db.add_components(tablename,
                                         #hrm_training = {"name": "vol_training",
@@ -2872,6 +2884,13 @@ def config(settings):
 
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
+                                                S3SQLInlineComponent("programme_hours",
+                                                                     label = "",
+                                                                     fields = ["programme_id",
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 "person_id",
                                                 S3SQLInlineComponent("perm_address",
                                                              label = T("Address"),

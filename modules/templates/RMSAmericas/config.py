@@ -1599,7 +1599,7 @@ Thank you"""
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.method in (None, "create"):
+            if r.method in (None, "create") and isinstance(output, dict):
                 form = output.get("form")
                 if form:
                     add_language(form)
