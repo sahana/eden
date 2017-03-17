@@ -825,18 +825,40 @@ class S3Migration(object):
                 sql = "ALTER TABLE `%(tablename)s` DROP FOREIGN KEY `%(fk)s`, ALTER TABLE %(tablename)s ADD CONSTRAINT %(fk)s FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fk=fk, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot amend ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
             elif db_engine == "postgres":
                 # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
-                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey, ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s ON DELETE %(ondelete)s;" % \
+                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey;" % \
+                    dict(tablename=tablename, fieldname=fieldname)
+
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot remove old ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
+                sql = "ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
-            try:
-                executesql(sql)
-            except:
-                print "Error: Table %s with FK %s" % (tablename, fk)
-                import sys
-                e = sys.exc_info()[1]
-                print >> sys.stderr, e
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot add new ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
+            else:
+                raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def remove_foreign(self, tablename, fieldname):
@@ -1022,7 +1044,7 @@ class S3Migration(object):
             db.executesql(sql)
 
         elif db_engine == "postgres":
-            sql = "ALTER TABLE %s RENAME COLUMN %s TO %s" % \
+            sql = "ALTER TABLE %s RENAME COLUMN %s TO %s;" % \
                 (tablename, fieldname_old, fieldname_new)
             db.executesql(sql)
 

@@ -678,7 +678,9 @@ class S3VolunteerAwardModel(S3Model):
         #
         tablename = "vol_volunteer_award"
         define_table(tablename,
-                     self.pr_person_id(empty=False),
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CACADE",
+                                       ),
                      award_id(),
                      s3_date(future = 0,
                              ),

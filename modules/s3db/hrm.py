@@ -2245,7 +2245,7 @@ class S3HRSkillModel(S3Model):
         #
         tablename = "hrm_competency"
         define_table(tablename,
-                     person_id(),
+                     person_id(ondelete = "CASCADE"),
                      skill_id(),
                      competency_id(),
                      # This field can only be filled-out by specific roles
@@ -3100,7 +3100,7 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_credential"
         define_table(tablename,
-                     person_id(),
+                     person_id(ondelete = "CASCADE"),
                      job_title_id(),
                      organisation_id(label = T("Credentialling Organization"),
                                      widget = widget,
