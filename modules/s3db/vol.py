@@ -679,7 +679,7 @@ class S3VolunteerAwardModel(S3Model):
         tablename = "vol_volunteer_award"
         define_table(tablename,
                      self.pr_person_id(empty = False,
-                                       ondelete = "CACADE",
+                                       ondelete = "CASCADE",
                                        ),
                      award_id(),
                      s3_date(future = 0,
@@ -764,7 +764,7 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         define_table(tablename,
-                     Field("name", length=255, notnull=True, unique=True, 
+                     Field("name", length=255, notnull=True, unique=True,
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(255),
