@@ -618,6 +618,9 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id$pe_label",
                            "person_id",
+                           "person_id$gender",
+                           "person_id$age",
+                           "person_id$phone.value",
                            "case_activity_need.need_id",
                            "project_id",
                            "followup",
@@ -639,6 +642,7 @@ def config(settings):
 
             s3db.configure("dvr_case_activity",
                            insertable = False,
+                           extra_fields = "person_id$date_of_birth",
                            )
 
         elif r.component_name == "case_activity" or r.function == "due_followups":
@@ -1520,9 +1524,11 @@ def config(settings):
 
                         from s3 import S3DateFilter, \
                                        S3LocationSelector, \
+                                       S3OptionsFilter, \
                                        S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
-                                       S3TextFilter
+                                       S3TextFilter, \
+                                       s3_get_filter_opts
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
@@ -1592,42 +1598,59 @@ def config(settings):
                                         (T("Invalid Record"), "dvr_case.archived"),
                                         )
 
+                        # Custom filter widgets
+                        filter_widgets = [
+
+                            # Standard filters
+                            S3TextFilter(["pe_label",
+                                          "first_name",
+                                          "middle_name",
+                                          "last_name",
+                                          "individual_id.value",
+                                          "family_id.value",
+                                          "dvr_case.reference",
+                                          "dvr_case.comments",
+                                          ],
+                                          label = T("Search"),
+                                          comment = T("You can search by name, ID or reference number"),
+                                          ),
+                            S3TextFilter(["phone.value"],
+                                         label = T("Phone"),
+                                         ),
+
+                            # Extended filters (initially hidden)
+                            S3OptionsFilter("dvr_case.organisation_id",
+                                            #label = T("Branch"),
+                                            options = s3_get_filter_opts("org_organisation"),
+                                            hidden = True,
+                                            ),
+                            S3OptionsFilter("person_details.nationality",
+                                            #label = T("Nationality"),
+                                            hidden = True,
+                                            ),
+                            S3DateFilter("date_of_birth",
+                                         #label = T("Date of Birth"),
+                                         hidden = True,
+                                         ),
+                            S3DateFilter("dvr_case.date",
+                                         #label = T("Registration Date"),
+                                         hidden = True,
+                                         ),
+                            ]
+
+                        if "closed" not in r.get_vars:
+                            filter_widgets.insert(2,
+                                S3OptionsFilter("dvr_case.status_id",
+                                                cols = 3,
+                                                label = T("Case Status"),
+                                                options = s3db.dvr_case_status_filter_opts,
+                                                sort = False,
+                                                ))
+
+                        # Update configuration
                         resource.configure(crud_form = crud_form,
+                                           filter_widgets = filter_widgets,
                                            )
-
-                        # Extend text filter with Family ID and case comments
-                        filter_widgets = resource.get_config("filter_widgets")
-                        extend_text_filter = True
-                        for fw in filter_widgets:
-                            if fw.field == "dvr_case.status_id":
-                                if fw.field == "dvr_case.status_id" and "closed" in r.get_vars:
-                                    fw.opts.default = None
-                                    fw.opts.hidden = True
-                            if extend_text_filter and isinstance(fw, S3TextFilter):
-                                fw.field.extend(("individual_id.value",
-                                                 "family_id.value",
-                                                 "dvr_case.comments",
-                                                 ))
-                                fw.opts.comment = T("You can search by name, ID numbers and comments")
-                                extend_text_filter = False
-                        
-                        # Add filter for Phone
-                        phone_filter = S3TextFilter(["phone.value"],
-                                                    label = T("Phone"),                                                                 
-                                                    )
-                        filter_widgets.append(phone_filter)
-
-                        # Add filter for date of birth
-                        dob_filter = S3DateFilter("date_of_birth",
-                                                  hidden=True,
-                                                  )
-                        filter_widgets.append(dob_filter)
-
-                        # Add filter for registration date
-                        reg_filter = S3DateFilter("dvr_case.date",
-                                                  hidden = True,
-                                                  )
-                        filter_widgets.append(reg_filter)
 
                     # Custom list fields (must be outside of r.interactive)
                     list_fields = [(T("Ref.No."), "pe_label"),
@@ -1642,6 +1665,9 @@ def config(settings):
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
+                    if r.representation == "xls":
+                        list_fields.append(("Phone","phone.value"))
+
                     resource.configure(list_fields = list_fields,
                                        )
 

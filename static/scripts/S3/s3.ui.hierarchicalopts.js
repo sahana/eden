@@ -646,8 +646,13 @@
         get: function() {
 
             var value = this.input.val();
-            if (value) {
-                return JSON.parse(value);
+            if (!!value) {
+                var selected = JSON.parse(value);
+                if (selected.constructor !== Array) {
+                    // Single-select => convert to Array
+                    selected = [selected];
+                }
+                return selected;
             } else {
                 return [];
             }

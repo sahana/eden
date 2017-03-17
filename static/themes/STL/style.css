@@ -395,9 +395,14 @@ select {
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
+/* line 200, ../scss/custom/_forms.scss */
+.filter-form label.inline {
+  line-height: normal;
+  padding-top: 0.2rem;
+}
 
 /* Login/Registration box */
-/* line 203, ../scss/custom/_forms.scss */
+/* line 207, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -405,13 +410,13 @@ select {
 }
 
 /* Help Popup */
-/* line 210, ../scss/custom/_forms.scss */
+/* line 214, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 214, ../scss/custom/_forms.scss */
+/* line 218, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -420,7 +425,7 @@ select {
   padding: 0;
   width: 60px;
 }
-/* line 222, ../scss/custom/_forms.scss */
+/* line 226, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
