@@ -619,7 +619,7 @@ def config(settings):
             list_fields = ["person_id$pe_label",
                            "person_id",
                            "person_id$gender",
-                           "person_id$age",                           
+                           "person_id$age",
                            "person_id$phone.value",
                            "case_activity_need.need_id",
                            "project_id",
@@ -642,6 +642,7 @@ def config(settings):
 
             s3db.configure("dvr_case_activity",
                            insertable = False,
+                           extra_fields = "person_id$date_of_birth",
                            )
 
         elif r.component_name == "case_activity" or r.function == "due_followups":
