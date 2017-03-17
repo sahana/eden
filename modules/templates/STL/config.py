@@ -1522,7 +1522,9 @@ def config(settings):
                                        S3LocationSelector, \
                                        S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
-                                       S3TextFilter
+                                       S3TextFilter, \
+                                       S3OptionsFilter, \
+                                       s3_get_filter_opts
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
@@ -1616,6 +1618,15 @@ def config(settings):
                                                     label = T("Phone"),                                                                 
                                                     )
                         filter_widgets.append(phone_filter)
+
+                        #Add filter for Organisation
+                        org_filter = S3OptionsFilter("dvr_case.organisation_id",
+                                                    options = s3_get_filter_opts("org_organisation",
+                                                                     translate = True,
+                                                                     ),
+                                                     hidden=True,
+                                                     )
+                        filter_widgets.append(org_filter)
 
                         # Add filter for date of birth
                         dob_filter = S3DateFilter("date_of_birth",
