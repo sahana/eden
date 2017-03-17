@@ -618,6 +618,9 @@ def config(settings):
             # Custom list fields
             list_fields = ["person_id$pe_label",
                            "person_id",
+                           "person_id$gender",
+                           "person_id$age",                           
+                           "person_id$phone.value",
                            "case_activity_need.need_id",
                            "project_id",
                            "followup",
@@ -1661,6 +1664,9 @@ def config(settings):
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
+                    if r.representation == "xls":
+                        list_fields.append(("Phone","phone.value"))
+
                     resource.configure(list_fields = list_fields,
                                        )
 
