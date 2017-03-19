@@ -180,7 +180,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Provider Types", f="provider_type"),
                         M("Referral Types", f="referral_type"),
                         M("Response Types", f="response_type"),
-                        M("Vulnerability Types", f="Vulnerability_type"),
+                        M("Vulnerability Types", f="vulnerability_type"),
                         M("Termination Types", f="termination_type"),
                         SEP(),
                         M("Activity Age Groups", f="activity_age_group"),
