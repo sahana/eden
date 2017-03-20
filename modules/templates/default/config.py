@@ -315,6 +315,8 @@ def config(settings):
     #settings.gis.search_geonames = False
     # Uncomment to modify the Simplify Tolerance
     #settings.gis.simplify_tolerance = 0.001
+    # Uncomment this for highly-zoomed maps showing buildings
+    #settings.gis.precision = 5
     # Uncomment to Hide the Toolbar from the main Map
     #settings.gis.toolbar = False
     # Uncomment to show Catalogue Layers in Map Widgets (e.g. Profile & Summary pages)
