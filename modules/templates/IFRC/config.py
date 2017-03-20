@@ -2893,15 +2893,15 @@ def config(settings):
                                                                      ),
                                                 "person_id",
                                                 S3SQLInlineComponent("perm_address",
-                                                             label = T("Address"),
-                                                             fields = (("", "location_id"),),
-                                                             filterby = {"field": "type",
-                                                                         "options": 2,
-                                                                         },
-                                                             link = False,
-                                                             update_link = False,
-                                                             multiple = False,
-                                                             ),
+                                                                     label = T("Address"),
+                                                                     fields = (("", "location_id"),),
+                                                                     filterby = {"field": "type",
+                                                                                 "options": 2,
+                                                                                 },
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 S3SQLInlineComponent("current_education",
                                                                      label = T("School / University"),
                                                                      fields = [("", "institute"),
@@ -5071,7 +5071,8 @@ def config(settings):
                 #f = s3db.pr_phone_contact.value
                 #f.represent = s3_phone_represent
                 #f.widget = S3PhoneWidget()
-                s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
+                s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
+                                                                        show_map = False)
                 etable = s3db.pr_education
                 etable.level_id.comment = None # Don't Add Education Levels inline
                 organisation_id = current.auth.root_org()
@@ -5085,6 +5086,7 @@ def config(settings):
                 s3db.add_components("pr_person",
                                     pr_address = {"name": "perm_address",
                                                   "joinby": "pe_id",
+                                                  "pkey": "pe_id",
                                                   "filterby": {
                                                       "type": 2,
                                                       },
@@ -5157,13 +5159,13 @@ def config(settings):
                                                 (T("Gender"), "gender"),
                                                 (T("Job"), "person_details.occupation"),
                                                 S3SQLInlineComponent("perm_address",
-                                                             label = T("Address"),
-                                                             fields = (("", "location_id"),),
-                                                             filterby = {"field": "type",
-                                                                         "options": 2,
-                                                                         },
-                                                             multiple = False,
-                                                             ),
+                                                                     label = T("Address"),
+                                                                     fields = (("", "location_id"),),
+                                                                     filterby = {"field": "type",
+                                                                                 "options": 2,
+                                                                                 },
+                                                                     multiple = False,
+                                                                     ),
                                                 S3SQLInlineComponent("current_education",
                                                                      label = T("School / University"),
                                                                      fields = [("", "institute"),

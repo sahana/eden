@@ -49,7 +49,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3query import FS
-from s3utils import s3_debug, s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_strip_markup, s3_unicode, s3_validate
+from s3utils import s3_debug, s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_unicode, s3_validate
 from s3widgets import S3Selector, S3UploadWidget
 
 # Compact JSON encoding
