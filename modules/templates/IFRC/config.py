@@ -5267,6 +5267,7 @@ def config(settings):
                                         #                },
                                         pr_address = {"name": "temp_address",
                                                       "joinby": "pe_id",
+                                                      "pkey": "pe_id",
                                                       "filterby": {
                                                           "type": 1,
                                                           },
