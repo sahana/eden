@@ -1286,7 +1286,7 @@ def stdm_Certificate(r, **attr):
     spatial_unit_type = spatial_unit[stable.instance_type]
     location = spatial_unit[gtable]
     # Add Inset
-    bounds = gis.get_bounds(bbox_inset = 0.02,
+    bounds = gis.get_bounds(bbox_inset = 0.013,
                             features=[Storage(lat=location["lat_min"],
                                               lon=location["lon_min"],
                                               ),

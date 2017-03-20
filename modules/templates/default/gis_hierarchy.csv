@@ -28,7 +28,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,IN,State,District,Subdistrict,,,
 ,IQ,Province,District,,,,
 ,IT,Region,Province,Commune,,,
-,KE,Province,District,Division,Location,
+,KE,County,Constituency,Location,SubLocation,
 ,KG,"Oblast / State City","District (Rayon) / Oblast City","Town / Village Group",Village,,
 ,KH,Province,District,Commune,Village,
 ,KZ,Province,District,,,,
