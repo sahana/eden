@@ -46,6 +46,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    # Uncomment to modify the Simplify Tolerance
+    settings.gis.simplify_tolerance = 0.001
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
