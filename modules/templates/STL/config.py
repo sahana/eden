@@ -583,27 +583,47 @@ def config(settings):
 
         component_name = r.component_name
 
-        def expose_project_id(table):
+        def expose_project_id(table, mandatory=False):
+            """
+                Helper function to expose "Project Code"
+            """
 
             field = table.project_id
+            field.label = T("Project Code")
+            field.comment = None
             field.readable = field.writable = True
+
+            # Represent as code
             represent = S3Represent(lookup = "project_project",
                                     fields = ["code"],
                                     )
             field.represent = represent
-            field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_project.id",
-                                                   represent,
-                                                   ))
-            field.comment = None
-            field.label = T("Project Code")
+            requires = IS_ONE_OF(db, "project_project.id", represent)
 
-        def expose_human_resource_id(table):
+            # Mandatory or not?
+            if mandatory:
+                field.requires = requires
+            else:
+                field.requires = IS_EMPTY_OR(requires)
+
+        def expose_human_resource_id(table, mandatory=False):
+            """
+                Helper function to expose "Person Responsible"
+            """
 
             field = table.human_resource_id
             field.label = T("Person Responsible")
             field.widget = None
             field.comment = None
             field.readable = field.writable = True
+
+            # Mandatory or not?
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                if mandatory:
+                    field.requires = requires.other
+            elif not mandatory:
+                field.requires = IS_EMPTY_OR(requires)
 
         if r.tablename == "dvr_activity":
             # "Cases" tab (activity perspective)
@@ -682,8 +702,9 @@ def config(settings):
 
             component.configure(orderby=~table.start_date)
 
-            expose_project_id(table)
-            expose_human_resource_id(table)
+            # Expose "Project Code" and "Person responsible" (both mandatory)
+            expose_project_id(table, mandatory=True)
+            expose_human_resource_id(table, mandatory=True)
 
             # Adjust validator and widget for service_id
             field = table.service_id
@@ -719,15 +740,17 @@ def config(settings):
             #                                 filter = FILTER,
             #                                 )
 
-            # Customise Need Details
+            # Customise Need Details (+make mandatory)
             field = table.need_details
             field.label = T("Initial Situation Explanation")
             field.readable = field.writable = True
+            field.requires = IS_NOT_EMPTY()
 
-            # Customise Activity Details
+            # Customise Activity Details (+make mandatory)
             field = table.activity_details
             field.label = T("Protection Response Details")
             field.readable = field.writable = True
+            field.requires = IS_NOT_EMPTY()
 
             # Customise Outside Support
             field = table.outside_support
@@ -739,9 +762,14 @@ def config(settings):
             field.label = T("Priority")
             field.readable = field.writable = True
 
-            # Customise date fields
+            # Customise start_date field (+make mandatory)
             field = table.start_date
             field.label = T("Opened on")
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+            # Show end_date field (read-only)
             field = table.end_date
             field.label = T("Closed on")
             field.readable = True
@@ -792,6 +820,7 @@ def config(settings):
                                                         multiple = False,
                                                         leafonly = True,
                                                         filter = FILTER,
+                                                        required = True,
                                                         ),
                                         "priority",
                                         S3SQLInlineLink("response_type",
@@ -840,7 +869,7 @@ def config(settings):
                            ]
 
         elif r.component_name == "pss_activity":
-            # "PSS" tab
+            # "Group Activities" tab
             table = r.component.table
 
             expose_project_id(table)

@@ -90,7 +90,7 @@
             this.input.data('input', true);
             var s = opts.selected;
             if (s) {
-                this.input.val(JSON.stringify(s));
+                this.input.val(this._stringifySelection(s));
             }
 
             // The button
@@ -147,7 +147,8 @@
             this._unbindEvents();
 
             var opts = this.options,
-                tree = this.tree;
+                tree = this.tree,
+                self = this;
 
             if (!tree.find('li').length) {
                 this.button.hide();
@@ -166,8 +167,8 @@
             // Initially selected nodes
             var currentValue = this.input.val();
             if (currentValue) {
-                var selectedValues = JSON.parse(currentValue);
-                var treeID = this.treeID;
+                var selectedValues = this._parseSelection(currentValue),
+                    treeID = this.treeID;
                 $.each(selectedValues, function() {
                     $('#' + treeID + '-' + this).data('jstree', {selected: true});
                 });
@@ -195,7 +196,6 @@
             } else if (multiple) {
                 // Provide a manual cascade-select option
                 if (!opts.cascadeOptionInTree) {
-                    var self = this;
                     contextMenu = function(node) {
                         if (tree.jstree('is_parent', node)) {
                             // Context menu for "manual" cascade select
@@ -288,15 +288,13 @@
                                 'rel': 'bulk',
                                 'class': 's3-hierarchy-action-node'
                             }
-                        }, "first"
-                    );
+                        }, "first");
                 } else {
                     this.wrapper.find('.s3-hierarchy-header').removeClass('hide').show();
                 }
             }
 
             // Initial update of button text (wait for ready-event)
-            var self = this;
             tree.on('ready.jstree', function() {
                 var selected = inst.get_checked();
                 self._updateButtonText(selected);
@@ -320,7 +318,7 @@
                 if (inst !== undefined) {
                     inst.uncheck_all();
                     if (value) {
-                        this.input.val(JSON.stringify(value));
+                        this.input.val(this._stringifySelection(value));
                         var treeID = this.treeID;
                         $.each(value, function() {
                             inst.check_node('#' + treeID + '-' + this);
@@ -339,15 +337,9 @@
 
             var inst = jQuery.jstree.reference($(this.tree));
 
-            var old_selected = this.input.val();
-            if (old_selected) {
-                old_selected = JSON.parse(old_selected);
-            } else {
-                old_selected = [];
-            }
-
-            var new_selected = [],
-                selected_ids = [],
+            var oldSelected = this._parseSelection(this.input.val()),
+                newSelected = [],
+                selectedIDs = [],
                 multiple = this.options.multiple,
                 leafonly = this.options.leafonly;
 
@@ -364,33 +356,26 @@
                         record_id = parseInt(record_id);
                     }
                     if (record_id) {
-                        new_selected.push(record_id);
-                        selected_ids.push(id);
+                        newSelected.push(record_id);
+                        selectedIDs.push(id);
                     }
                 }
             });
 
             var changed = false,
-                diff = $(new_selected).not(old_selected).get();
+                diff = $(newSelected).not(oldSelected).get();
             if (diff.length) {
                 changed = true;
             } else {
-                diff = $(old_selected).not(new_selected).get();
+                diff = $(oldSelected).not(newSelected).get();
                 if (diff.length) {
                     changed = true;
                 }
             }
 
-            var input = this.input;
-            if (!multiple) {
-                // Set single value
-                input.val(new_selected[0]);
-            } else {
-                // Store value list as JSON
-                input.val(JSON.stringify(new_selected));
-            }
+            var input = this.input.val(this._stringifySelection(newSelected));
 
-            this._updateButtonText(selected_ids);
+            this._updateButtonText(selectedIDs);
             if (changed) {
                 input.change();
                 $(this.element).trigger('select.s3hierarchy');
@@ -401,17 +386,17 @@
         /**
          * Update the button text with the number of selected items
          *
-         * @param {Array} selected_ids - the HTML element IDs of the currently selected nodes
+         * @param {Array} selectedIDs - the HTML element IDs of the currently selected nodes
          */
-        _updateButtonText: function(selected_ids) {
+        _updateButtonText: function(selectedIDs) {
 
             var text = null,
                 options = this.options,
                 limit = 1, // @todo: make configurable?
                 numSelected = 0;
 
-            if (selected_ids) {
-                numSelected = selected_ids.length;
+            if (selectedIDs) {
+                numSelected = selectedIDs.length;
             }
             if (numSelected) {
                 if (numSelected > limit) {
@@ -419,7 +404,7 @@
                 } else {
                     var items = [];
                     for (var i=0; i < numSelected; i++) {
-                        items.push($('#' + selected_ids[i] + " > a").text().replace(/^\s+|\s+$/g, ''));
+                        items.push($('#' + selectedIDs[i] + " > a").text().replace(/^\s+|\s+$/g, ''));
                     }
                     text = items.length ? items.join(' ') : options.noneSelectedText;
                 }
@@ -645,17 +630,7 @@
          */
         get: function() {
 
-            var value = this.input.val();
-            if (!!value) {
-                var selected = JSON.parse(value);
-                if (selected.constructor !== Array) {
-                    // Single-select => convert to Array
-                    selected = [selected];
-                }
-                return selected;
-            } else {
-                return [];
-            }
+            return this._parseSelection(this.input.val());
         },
 
         /**
@@ -752,6 +727,50 @@
             if (check) {
                 tree.jstree('check_node', $('#' + nodeID));
             }
+        },
+
+        /**
+         * Parse the current selection from the real input (JSON)
+         *
+         * @param {string} value - the JSON value of the real input
+         * @returns {Array} - the selected values as Array
+         */
+        _parseSelection: function(value) {
+
+            if (!!value) {
+                var selected = JSON.parse(value);
+            } else {
+                return [];
+            }
+
+            if (!!selected) {
+                if (selected.constructor !== Array) {
+                    // Single select => convert to array
+                    selected = [selected];
+                }
+            } else {
+                selected = [];
+            }
+            return selected;
+        },
+
+        /**
+         * Stringify the current selection for the real input (JSON)
+         *
+         * @param {Array} selected - the selected node IDs
+         * @returns {string} - the value for the real input (JSON)
+         */
+        _stringifySelection: function(selected) {
+
+            if (!this.options.multiple) {
+                if (selected.length) {
+                    // Single select => convert to single value
+                    selected = selected[0];
+                } else {
+                    return '';
+                }
+            }
+            return JSON.stringify(selected);
         },
 
         /**

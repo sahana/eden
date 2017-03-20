@@ -2021,7 +2021,6 @@ class DVRCaseActivityModel(S3Model):
                      s3_date("followup_date",
                              default = twoweeks,
                              label = T("Date for Follow-up"),
-                             past = 0,
                              ),
                      Field("outcome", "text",
                            label = T("Outcome"),
