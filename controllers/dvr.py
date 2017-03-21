@@ -582,6 +582,14 @@ def referral_type():
 def response_type():
     """ Response Types: RESTful CRUD Controller """
 
+    def prep(r):
+        field = r.table.parent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % r.tablename,
+                                               field.represent,
+                                               ))
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -593,6 +601,14 @@ def termination_type():
 # -----------------------------------------------------------------------------
 def vulnerability_type():
     """ Vulnerability Types: RESTful CRUD Controller """
+
+    def prep(r):
+        field = r.table.parent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % r.tablename,
+                                               field.represent,
+                                               ))
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 

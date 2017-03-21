@@ -1246,6 +1246,24 @@ def config(settings):
 
     settings.customise_dvr_household_resource = customise_dvr_household_resource
 
+    # -------------------------------------------------------------------------
+    def customise_dvr_response_type_resource(r, tablename):
+
+        current.response.s3.crud_strings["dvr_response_type"] = Storage(
+            label_create = T("Create Intervention Type"),
+            title_display = T("Intervention Type Details"),
+            title_list = T("Intervention Types"),
+            title_update = T("Edit Intervention Type"),
+            label_list_button = T("List Intervention Types"),
+            label_delete_button = T("Delete Intervention Type"),
+            msg_record_created = T("Intervention Type created"),
+            msg_record_modified = T("Intervention Type updated"),
+            msg_record_deleted = T("Intervention Type deleted"),
+            msg_list_empty = T("No Intervention Types currently registered"),
+            )
+
+    settings.customise_dvr_response_type_resource = customise_dvr_response_type_resource
+
     # =========================================================================
     # Person Registry
     #
