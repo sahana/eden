@@ -135,6 +135,9 @@ class S3MobileFormList(object):
                 if isinstance(title, basestring):
                     title = T(title)
 
+                # Provides (master-)data for download?
+                data = True if options.get("data") else False
+
                 # Append to form list
                 url = {"c": c, "f": f}
                 if url_vars:
@@ -143,6 +146,7 @@ class S3MobileFormList(object):
                                  "l": s3_str(title),
                                  "t": tablename,
                                  "r": url,
+                                 "d": data,
                                  })
 
         dynamic_tables = settings.get_mobile_dynamic_tables()
