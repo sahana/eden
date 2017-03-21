@@ -484,6 +484,10 @@ def config(settings):
     #settings.cr.people_registration = False
     # Uncomment to use Tags for Shelters
     #settings.cr.tags = True
+    # Uncomment to generate tasks from shelter inspections (requires project module)
+    #settings.cr.shelter_inspection_tasks = True
+    # Configure active statuses for shelter inspection tasks (subset of project.task_status_opts)
+    #settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
 
     # -------------------------------------------------------------------------
     # Disaster Victim Registry / Case Management

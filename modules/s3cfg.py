@@ -2719,6 +2719,23 @@ class S3Config(Storage):
         """
         return self.cr.get("tags", False)
 
+    def get_cr_shelter_inspection_tasks(self):
+        """
+            Generate tasks from shelter inspections (requires project module)
+        """
+        if self.has_module("project"):
+            return self.cr.get("shelter_inspection_tasks", False)
+        else:
+            return False
+
+    def get_cr_shelter_inspection_task_active_statuses(self):
+        """
+            List of active statuses of shelter inspection tasks
+            (subset of project_task_status_opts)
+        """
+        default = (1, 2, 3, 4, 5, 6, 11)
+        return self.cr.get("shelter_inspection_tasks_active_statuses", default)
+
     # -------------------------------------------------------------------------
     # DC: Data Collection
     #

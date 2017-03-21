@@ -4398,6 +4398,7 @@
 'Table': 'Tabelle',
 'Tags': 'Tags',
 'Take shelter in place or per <instruction>': 'Unterkunft aufsuchen oder <instruction>',
+'Task Description': 'Beschreibung der Aufgabe',
 'Task Details': 'Details zur Aufgabe',
 'Task List': 'Aufgabenliste',
 'Task Status': 'Aufgabenstatus',

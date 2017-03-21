@@ -8469,6 +8469,13 @@ class S3ProjectTaskModel(S3Model):
                        project_time = "task_id",
                        # Comments (for imports))
                        project_comment = "task_id",
+                       # Shelter Inspections
+                       cr_shelter_inspection_flag = {"link": "cr_shelter_inspection_task",
+                                                     "joinby": "task_id",
+                                                     "key": "inspection_flag_id",
+                                                     "actuate": "link",
+                                                     "autodelete": False,
+                                                     }
                        )
 
         # ---------------------------------------------------------------------

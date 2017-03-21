@@ -175,6 +175,10 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
     settings.cr.check_out_is_final = False
 
+    # Generate tasks for shelter inspections
+    settings.cr.shelter_inspection_tasks = True
+    settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
+
     # -------------------------------------------------------------------------
     def profile_header(r):
         """
