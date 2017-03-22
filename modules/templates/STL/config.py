@@ -5,6 +5,8 @@ from collections import OrderedDict
 from gluon import current, DIV, H3, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
 from gluon.storage import Storage
 
+from s3 import S3Represent
+
 # Service type names
 INDIVIDUAL_SUPPORT = "Individual Support"
 MENTAL_HEALTH = "Mental Health"
@@ -200,6 +202,11 @@ def config(settings):
     # Set DVR Default Label
     settings.dvr.label = "Beneficiary"
 
+    # Represent project IDs as code
+    stl_project_id_represent = S3Represent(lookup = "project_project",
+                                           fields = ["code"],
+                                           )
+
     # -------------------------------------------------------------------------
     def customise_dvr_home():
         """ Redirect dvr/index to dvr/person?closed=0 """
@@ -379,6 +386,16 @@ def config(settings):
                 field = table.location_id
                 field.readable = field.writable = True
 
+                # Expose project code
+                field = table.project_id
+                field.comment = None
+                field.label = T("Project Code")
+                field.represent = stl_project_id_represent
+                field.requires = IS_ONE_OF(db, "project_project.id",
+                                           stl_project_id_represent,
+                                           )
+                field.readable = field.writable = True
+
                 # Toggle visibility of location fields for individual records
                 record = r.record
                 if record:
@@ -408,6 +425,7 @@ def config(settings):
 
                 # Custom list fields
                 list_fields = ["service_id",
+                               "project_id",
                                "start_date",
                                "end_date",
                                "period",
@@ -422,6 +440,7 @@ def config(settings):
 
                 # Custom form
                 crud_form = S3SQLCustomForm("service_id",
+                                            "project_id",
                                             "start_date",
                                             "end_date",
                                             "period",
@@ -563,12 +582,43 @@ def config(settings):
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 
     # -------------------------------------------------------------------------
+    def pss_case_activity_onaccept(form):
+        """
+            PSS Case Activities inherit the project ID from
+            the group activity record (custom onaccept extension)
+
+            @param form: the FORM
+        """
+
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        atable = s3db.dvr_activity
+        ctable = s3db.dvr_case_activity
+        left = atable.on(atable.id == ctable.activity_id)
+
+        query = (ctable.id == record_id)
+
+        row = db(query).select(atable.project_id,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+
+        project_id = row.project_id if row else None
+        db(query).update(project_id = row.project_id)
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
         from s3 import FS, \
                        IS_ONE_OF, \
                        S3HierarchyWidget, \
-                       S3Represent, \
                        S3SQLCustomForm, \
                        S3SQLInlineComponent, \
                        S3SQLInlineLink, \
@@ -594,11 +644,10 @@ def config(settings):
             field.readable = field.writable = True
 
             # Represent as code
-            represent = S3Represent(lookup = "project_project",
-                                    fields = ["code"],
-                                    )
-            field.represent = represent
-            requires = IS_ONE_OF(db, "project_project.id", represent)
+            field.represent = stl_project_id_represent
+            requires = IS_ONE_OF(db, "project_project.id",
+                                 stl_project_id_represent,
+                                 )
 
             # Mandatory or not?
             if mandatory:
@@ -872,7 +921,23 @@ def config(settings):
             # "Group Activities" tab
             table = r.component.table
 
-            expose_project_id(table)
+            field = table.project_id
+            field.label = T("Project Code")
+            field.writable = False
+
+            # Configure custom onaccept to inherit
+            # project ID from group activity
+            component = r.component
+            onaccept = component.get_config("onaccept")
+            if onaccept:
+                if isinstance(onaccept, (tuple, list)):
+                    if pss_case_activity_onaccept not in onaccept:
+                        onaccept = tuple(onaccept) + (pss_case_activity_onaccept,)
+                elif onaccept and onaccept != pss_case_activity_onaccept:
+                    onaccept = (onaccept, pss_case_activity_onaccept)
+                elif not onaccept:
+                    onaccept = pss_case_activity_onaccept
+            component.configure(onaccept=onaccept)
 
             # Get service root types
             stable = s3db.org_service
@@ -952,8 +1017,8 @@ def config(settings):
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
-                                        "project_id",
                                         "service_id",
+                                        #"project_id",
                                         "activity_id",
                                         S3SQLInlineComponent(
                                             "document",
@@ -969,8 +1034,8 @@ def config(settings):
                                         )
             # Custom list fields
             list_fields = ["person_id",
-                           "project_id",
                            "service_id",
+                           "project_id",
                            "activity_id",
                            ]
 

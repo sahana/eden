@@ -682,7 +682,7 @@ class S3SQLDefaultForm(S3SQLForm):
             try:
                 callback(onaccept, form, tablename=tablename)
             except:
-                error = "onaccept failed: %s" % onaccept
+                error = "onaccept failed: %s" % str(onaccept)
                 current.log.error(error)
                 # This is getting swallowed
                 raise
@@ -1453,7 +1453,7 @@ class S3SQLCustomForm(S3SQLForm):
             try:
                 callback(onaccept, form, tablename=tablename)
             except:
-                error = "onaccept failed: %s" % onaccept
+                error = "onaccept failed: %s" % str(onaccept)
                 current.log.error(error)
                 # This is getting swallowed
                 raise

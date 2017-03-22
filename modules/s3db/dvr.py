@@ -1509,6 +1509,7 @@ class DVRCaseActivityModel(S3Model):
 
         service_type = settings.get_dvr_activity_use_service_type()
         service_id = self.org_service_id
+        project_id = self.project_project_id
 
         # ---------------------------------------------------------------------
         # Provider Type
@@ -1733,6 +1734,11 @@ class DVRCaseActivityModel(S3Model):
                                 ondelete = "SET NULL",
                                 readable = service_type,
                                 writable = service_type,
+                                ),
+                     # Expose in template as needed:
+                     project_id(ondelete = "SET NULL",
+                                readable = False,
+                                writable = False,
                                 ),
                      Field("name",
                            label = T("Title"),
@@ -1975,10 +1981,10 @@ class DVRCaseActivityModel(S3Model):
                                                 readable = False,
                                                 writable = False,
                                                 ),
-                     self.project_project_id(ondelete = "SET NULL",
-                                             readable = False,
-                                             writable = False,
-                                             ),
+                     project_id(ondelete = "SET NULL",
+                                readable = False,
+                                writable = False,
+                                ),
                      service_id(label = T("Service Type"),
                                 ondelete = "SET NULL",
                                 readable = service_type,
