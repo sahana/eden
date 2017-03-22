@@ -2736,6 +2736,14 @@ class S3Config(Storage):
         default = (1, 2, 3, 4, 5, 6, 11)
         return self.cr.get("shelter_inspection_tasks_active_statuses", default)
 
+    def get_cr_shelter_inspection_task_completed_status(self):
+        """
+            Completed-status for shelter inspection tasks (one value
+            of project_task_status_opts), will be set when inspection
+            flag is marked as resolved
+        """
+        return self.cr.get("shelter_inspection_tasks_completed_status", 12)
+
     # -------------------------------------------------------------------------
     # DC: Data Collection
     #

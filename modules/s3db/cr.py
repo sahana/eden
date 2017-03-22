@@ -36,6 +36,7 @@ __all__ = ("CRShelterModel",
            "cr_update_capacity_from_housing_units",
            "cr_check_population_availability",
            "cr_notification_dispatcher",
+           "cr_resolve_shelter_flags",
            )
 
 import json
@@ -59,6 +60,7 @@ class CRShelterModel(S3Model):
              "cr_shelter_person",
              "cr_shelter_allocation",
              "cr_shelter_unit",
+             "cr_shelter_unit_id",
              )
 
     def model(self):
@@ -894,7 +896,7 @@ class CRShelterModel(S3Model):
 
         # Reusable Field
         represent = S3Represent(lookup="cr_shelter_unit")
-        housing_unit_id = S3ReusableField("shelter_unit_id", db.cr_shelter_unit,
+        shelter_unit_id = S3ReusableField("shelter_unit_id", db.cr_shelter_unit,
                                           label = T("Housing Unit"),
                                           ondelete = "RESTRICT",
                                           represent = represent,
@@ -912,7 +914,7 @@ class CRShelterModel(S3Model):
         return dict(ADD_SHELTER = ADD_SHELTER,
                     SHELTER_LABEL = SHELTER_LABEL,
                     cr_shelter_id = shelter_id,
-                    cr_housing_unit_id = housing_unit_id,
+                    cr_shelter_unit_id = shelter_unit_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -1079,6 +1081,7 @@ class CRShelterInspectionModel(S3Model):
         configure = self.configure
 
         shelter_inspection_tasks = settings.get_cr_shelter_inspection_tasks()
+        task_priority_opts = settings.get_project_task_priority_opts()
 
         # ---------------------------------------------------------------------
         # Flags - flags that can be set for a shelter / housing unit
@@ -1101,6 +1104,14 @@ class CRShelterInspectionModel(S3Model):
                            represent = lambda v: v if v else "",
                            readable = shelter_inspection_tasks,
                            writable = shelter_inspection_tasks,
+                           ),
+                     Field("task_priority", "integer",
+                           default = 3,
+                           label = T("Priority"),
+                           represent = S3Represent(options=task_priority_opts),
+                           requires = IS_IN_SET(task_priority_opts,
+                                                zero = None,
+                                                ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1145,7 +1156,7 @@ class CRShelterInspectionModel(S3Model):
                      #                   readable = False,
                      #                   writable = False,
                      #                   ),
-                     self.cr_housing_unit_id(ondelete = "CASCADE"),
+                     self.cr_shelter_unit_id(ondelete = "CASCADE"),
                      s3_date(default = "now",
                              ),
                      s3_comments(),
@@ -1209,8 +1220,14 @@ class CRShelterInspectionModel(S3Model):
                                                 ),
                            ),
                      flag_id(),
+                     Field("resolved", "boolean",
+                           label = T("Resolved"),
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           ),
                      *s3_meta_fields())
 
+        # Table Configuration
         configure(tablename,
                   create_onaccept = self.shelter_inspection_flag_onaccept,
                   )
@@ -1229,6 +1246,16 @@ class CRShelterInspectionModel(S3Model):
                      self.project_task_id(ondelete = "RESTRICT",
                                           ),
                      *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  list_fields = ["id",
+                                 "task_id",
+                                 "inspection_flag_id",
+                                 "inspection_flag_id$resolved",
+                                 ],
+                  ondelete_cascade = self.shelter_inspection_task_ondelete_cascade,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1309,6 +1336,7 @@ class CRShelterInspectionModel(S3Model):
                                table.flag_id,
                                ftable.create_task,
                                ftable.task_description,
+                               ftable.task_priority,
                                ltable.task_id,
                                itable.shelter_unit_id,
                                utable.name,
@@ -1324,6 +1352,8 @@ class CRShelterInspectionModel(S3Model):
 
         flag = row.cr_shelter_flag
         task_description = flag.task_description
+        task_priority = flag.task_priority
+
         shelter_unit = row.cr_shelter_unit.name
 
         if flag.create_task:
@@ -1363,6 +1393,7 @@ class CRShelterInspectionModel(S3Model):
 
             # Create a new task
             task = {"name": "%s: %s" % (shelter_unit, task_description),
+                    "priority": task_priority,
                     }
             task_id = ttable.insert(**task)
             if task_id:
@@ -1383,6 +1414,45 @@ class CRShelterInspectionModel(S3Model):
             ltable.insert(inspection_flag_id = record_id,
                           task_id = create_link,
                           )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def shelter_inspection_task_ondelete_cascade(row, tablename=None):
+        """
+            Ondelete-cascade method for inspection task links:
+                - close the linked task if there are no other
+                  unresolved flags linked to it
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the task_id
+        ltable = s3db.cr_shelter_inspection_task
+        query = (ltable.id == row.id)
+        link = db(query).select(ltable.id,
+                                ltable.task_id,
+                                limitby = (0, 1),
+                                ).first()
+        task_id = link.task_id
+
+        # Are there any other unresolved flags linked to the same task?
+        ftable = s3db.cr_shelter_inspection_flag
+        ttable = s3db.project_task
+        query = (ltable.task_id == task_id) & \
+                (ltable.id != link.id) & \
+                (ltable.deleted != True) & \
+                (ftable.id == ltable.inspection_flag_id) & \
+                ((ftable.resolved == False) | (ftable.resolved == None))
+        other = db(query).select(ltable.id, limitby=(0, 1)).first()
+        if not other:
+            # Set task to completed status
+            closed = current.deployment_settings \
+                            .get_cr_shelter_inspection_task_completed_status()
+            db(ttable.id==task_id).update(status=closed)
+
+            # Remove task_id (to allow deletion of the link)
+            link.update_record(task_id = None)
 
 # =============================================================================
 class CRShelterRegistrationModel(S3Model):
@@ -1497,7 +1567,7 @@ class CRShelterRegistrationModel(S3Model):
                                                          )
                                        ),
                          ),
-                     self.cr_housing_unit_id(readable = housing_unit,
+                     self.cr_shelter_unit_id(readable = housing_unit,
                                              writable = housing_unit,
                                              ),
                      Field("day_or_night", "integer",
@@ -2647,5 +2717,40 @@ class CRShelterInspection(S3Method):
                  {"id": widget_id, "options": json.dumps(options)}
         if script not in scripts:
             scripts.append(script)
+
+# -------------------------------------------------------------------------
+def cr_resolve_shelter_flags(task_id):
+    """
+        If a task is set to an inactive status, then mark all linked
+        shelter inspection flags as resolved
+
+        @param task_id: the task record ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    active_statuses = current.deployment_settings \
+                             .get_cr_shelter_inspection_task_active_statuses()
+
+    # Get the task
+    ttable = s3db.project_task
+    query = (ttable.id == task_id)
+    task = db(query).select(ttable.id,
+                            ttable.status,
+                            limitby = (0, 1),
+                            ).first()
+
+    if task and task.status not in active_statuses:
+
+        # Mark all shelter inspection flags as resolved
+        ltable = s3db.cr_shelter_inspection_task
+        ftable = s3db.cr_shelter_inspection_flag
+        query = (ltable.task_id == task.id) & \
+                (ftable.id == ltable.inspection_flag_id) & \
+                ((ftable.resolved == False) | (ftable.resolved == None))
+        rows = db(query).select(ftable.id)
+        ids = set(row.id for row in rows)
+        db(ftable.id.belongs(ids)).update(resolved=True)
 
 # END =========================================================================
