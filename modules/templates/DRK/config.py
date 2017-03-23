@@ -2714,6 +2714,28 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
+
+        # Configure custom form for tasks
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm("name",
+                                    "status",
+                                    "priority",
+                                    "description",
+                                    "source",
+                                    S3SQLInlineLink("shelter_inspection_flag",
+                                                    field="inspection_flag_id",
+                                                    label=T("Shelter Inspection"),
+                                                    readonly=True,
+                                                    render_list=True,
+                                                    ),
+                                    "pe_id",
+                                    "date_due",
+                                    )
+        s3db.configure("project_task",
+                       crud_form = crud_form,
+                       )
+
+        # Filter assignees to human resources
         htable = s3db.hrm_human_resource
         ptable = s3db.pr_person
         query = (htable.deleted == False) & \

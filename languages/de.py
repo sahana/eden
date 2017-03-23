@@ -4081,6 +4081,7 @@
 'Shelter Flag Details': 'Details zur Unterkunftsflagge',
 'Shelter Flag updated': 'Unterkunftsflagge aktualisiert',
 'Shelter Flags': 'Unterkunftsflaggen',
+'Shelter Inspection': 'Unterkunftsinspektion',
 'Shelter Inspection created': 'Unterkunftsinspektion erstellt',
 'Shelter Inspection deleted': 'Unterkunftsinspektion gelöscht',
 'Shelter Inspection Details': 'Details zur Unterkunftsinspektion',

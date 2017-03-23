@@ -3398,6 +3398,61 @@ class S3SQLInlineComponent(S3SQLSubForm):
 class S3SQLInlineLink(S3SQLInlineComponent):
     """
         Subform to edit link table entries for the master record
+
+        Constructor options:
+
+            readonly..........True|False......render read-only always
+            multiple..........True|False......allow selection of multiple
+                                              options (default True)
+            render_list.......True|False......in read-only mode, render HTML
+                                              list rather than comma-separated
+                                              strings (default False)
+            widget............string..........which widget to use, one of:
+                                                  - multiselect (default)
+                                                  - groupedopts
+                                                  - hierarchy
+            requires..........Validator.......validator to determine the
+                                              selectable options (defaults to
+                                              field validator), not supported
+                                              for hierarchy widget
+            cols..............integer.........number of columns for grouped
+                                              options (default: None)
+            help_field........string..........additional field in the look-up
+                                              table to render as tooltip for
+                                              grouped options
+            orientation.......string..........orientation for grouped options
+                                              order, one of:
+                                                  - cols
+                                                  - rows
+            size..............integer.........maximum number of items per group
+                                              in grouped options, None to disable
+                                              grouping
+            sort..............True|False......sort grouped options (always True
+                                              when grouping, i.e. size!=None)
+            table.............True|False......render grouped options as HTML
+                                              TABLE rather than nested DIVs
+                                              (default True)
+            represent.........callback........representation method for hierarchy
+                                              nodes (defaults to field represent)
+            leafonly..........True|False......only leaf nodes can be selected
+            columns...........integer.........Foundation column-width for the
+                                              widget (for custom forms), hierarchy
+                                              and multi-select only
+            filter............resource query..filter query for hierarchy and
+                                              multi-select widget
+            header............True|False......multi-select to show a header with
+                                              search-option
+            selectedList......integer.........how many items to show on multi-select
+                                              button before collapsing into number
+            noneSelectedText..string..........placeholder text on multi-select button
+
+            filterby..........field selector..filter look-up options by this field
+                                              (can be a field in the look-up table
+                                              itself or in another table linked to it)
+            filteropts........value|list......filter for these values, or:
+            filterexpr........field selector..lookup the filter value from this
+                                              field (can be a field in the master
+                                              table, or in linked table)
     """
 
     prefix = "link"
@@ -3697,9 +3752,16 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         labels = result.values()
         labels.sort()
 
-        # Render as TAG to support HTML output
-        return TAG[""](list(chain.from_iterable([[l, ", "]
-                                                 for l in labels]))[:-1])
+        if self.options.get("render_list"):
+            # Render as HTML list
+            return UL([LI(l) for l in labels],
+                      _class = "s3-inline-link",
+                      )
+        else:
+            # Render as comma-separated list of strings
+            # (using TAG rather than join() to support HTML labels)
+            return TAG[""](list(chain.from_iterable([[l, ", "]
+                                                    for l in labels]))[:-1])
 
     # -------------------------------------------------------------------------
     def get_options(self):

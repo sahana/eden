@@ -1209,6 +1209,12 @@ h4.profile-sub-header {
   content: "...";
 }
 
+/* S3SQLInlineLink read-only list representation */
+/* line 237, ../scss/custom/_widgets.scss */
+ul.s3-inline-link {
+  font-size: inherit;
+}
+
 /* line 1, ../scss/custom/_misc.scss */
 .org-logo {
   vertical-align: top;
