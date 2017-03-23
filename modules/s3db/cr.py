@@ -1232,14 +1232,18 @@ class CRShelterInspectionModel(S3Model):
         # ---------------------------------------------------------------------
         # Shelter Inspection <=> Flag link table
         #
+        represent = ShelterInspectionRepresent(show_link=True)
         tablename = "cr_shelter_inspection_flag"
         define_table(tablename,
                      Field("inspection_id", "reference cr_shelter_inspection",
+                           label = T("Shelter Inspection"),
                            ondelete = "CASCADE",
+                           represent = represent,
                            requires = IS_ONE_OF(db, "cr_shelter_inspection.id",
+                                                represent,
                                                 ),
                            ),
-                     flag_id(),
+                     flag_id(label = T("Defect found")),
                      Field("resolved", "boolean",
                            label = T("Resolved"),
                            default = False,
@@ -1256,10 +1260,32 @@ class CRShelterInspectionModel(S3Model):
                        "resolved",
                        ]
 
+        # Filter widgets
+        filter_widgets = [S3OptionsFilter("inspection_id$shelter_unit_id",
+                                          filter = 10,
+                                          header = True,
+                                          ),
+                          S3OptionsFilter("flag_id",
+                                          label = T("Defect"),
+                                          options = s3_get_filter_opts("cr_shelter_flag"),
+                                          ),
+                          S3OptionsFilter("resolved",
+                                          label = T("Resolved"),
+                                          options = {False: T("No"),
+                                                     True: T("Yes"),
+                                                     },
+                                          default = False,
+                                          cols = 2,
+                                          ),
+                          ]
+
         # Table Configuration
         configure(tablename,
+                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  # Can not be directly inserted nor edited
                   insertable = False,
+                  editable = False,
                   create_onaccept = self.shelter_inspection_flag_onaccept,
                   )
 
@@ -2526,6 +2552,88 @@ class ShelterInspectionFlagRepresent(S3Represent):
                                         itable.id,
                                         itable.date,
                                         ftable.name,
+                                        left = left,
+                                        limitby = limitby,
+                                        )
+        return rows
+
+# =============================================================================
+class ShelterInspectionRepresent(S3Represent):
+    """ Representations of Shelter Inspections """
+
+    def __init__(self, show_link=False):
+        """
+            Constructor
+
+            @param show_link: represent as link to the shelter inspection
+        """
+
+        super(ShelterInspectionRepresent, self).__init__(
+                                       lookup="cr_shelter_inspection",
+                                       show_link=show_link,
+                                       )
+
+    # ---------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Link inspection flag representations to the inspection record
+
+            @param k: the inspection flag ID
+            @param v: the representation
+            @param row: the row from lookup_rows
+        """
+
+        if row:
+            inspection_id = row.cr_shelter_inspection.id
+            if inspection_id:
+                return A(v, _href=URL(c="cr",
+                                      f="shelter_inspection",
+                                      args=[inspection_id],
+                                      ),
+                         )
+        return v
+
+    # ---------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a Row
+
+            @param row: the Row
+        """
+
+        details = {"unit": row.cr_shelter_unit.name,
+                   "date": row.cr_shelter_inspection.date,
+                   }
+
+        return "%(date)s: %(unit)s" % details
+
+    # ---------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Lookup all rows referenced by values.
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: the fields to retrieve
+        """
+
+        s3db = current.s3db
+
+        table = self.table
+
+        utable = s3db.cr_shelter_unit
+        left = utable.on(utable.id == table.shelter_unit_id)
+
+        count = len(values)
+        if count == 1:
+            query = (table.id == values[0])
+        else:
+            query = (table.id.belongs(values))
+        limitby = (0, count)
+
+        rows = current.db(query).select(table.id,
+                                        table.date,
+                                        utable.name,
                                         left = left,
                                         limitby = limitby,
                                         )
