@@ -1083,6 +1083,10 @@ class CRShelterInspectionModel(S3Model):
         shelter_inspection_tasks = settings.get_cr_shelter_inspection_tasks()
         task_priority_opts = settings.get_project_task_priority_opts()
 
+        assignee_represent = self.pr_PersonEntityRepresent(show_label = False,
+                                                           #show_type = False,
+                                                           )
+
         # ---------------------------------------------------------------------
         # Flags - flags that can be set for a shelter / housing unit
         #
@@ -1112,6 +1116,21 @@ class CRShelterInspectionModel(S3Model):
                            requires = IS_IN_SET(task_priority_opts,
                                                 zero = None,
                                                 ),
+                           ),
+                     # Task Assignee
+                     Field("task_assign_to", "reference pr_pentity",
+                           label = T("Assign to"),
+                           represent = assignee_represent,
+                           requires = IS_EMPTY_OR(
+                                           IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                     assignee_represent,
+                                                     filterby = "instance_type",
+                                                     filter_opts = ("pr_person",
+                                                                    "pr_group",
+                                                                    #"org_organisation",
+                                                                    ),
+                                                     ),
+                                           ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1337,6 +1356,7 @@ class CRShelterInspectionModel(S3Model):
                                ftable.create_task,
                                ftable.task_description,
                                ftable.task_priority,
+                               ftable.task_assign_to,
                                ltable.task_id,
                                itable.shelter_unit_id,
                                utable.name,
@@ -1353,6 +1373,7 @@ class CRShelterInspectionModel(S3Model):
         flag = row.cr_shelter_flag
         task_description = flag.task_description
         task_priority = flag.task_priority
+        task_assign_to = flag.task_assign_to
 
         shelter_unit = row.cr_shelter_unit.name
 
@@ -1394,6 +1415,7 @@ class CRShelterInspectionModel(S3Model):
             # Create a new task
             task = {"name": "%s: %s" % (shelter_unit, task_description),
                     "priority": task_priority,
+                    "pe_id": task_assign_to,
                     }
             task_id = ttable.insert(**task)
             if task_id:

@@ -9495,18 +9495,34 @@ def task_notify(form):
         If the task is assigned to someone then notify them
     """
 
-    vars = form.vars
-    pe_id = vars.pe_id
+    formvars = form.vars
+    record = form.record
+
+    pe_id = formvars.pe_id
     if not pe_id:
+        # Not assigned to anyone
         return
+
     user = current.auth.user
     if user and user.pe_id == pe_id:
         # Don't notify the user when they assign themselves tasks
         return
-    if int(vars.status) not in current.response.s3.project_task_active_statuses:
+
+    status = formvars.status
+    if status is not None:
+        status = int(status)
+    else:
+        if record and "status" in record:
+            status = record.status
+        else:
+            table = current.s3db.project_task
+            status = table.status.default
+
+    if status not in current.response.s3.project_task_active_statuses:
         # No need to notify about closed tasks
         return
-    if form.record is None or (int(pe_id) != form.record.pe_id):
+
+    if record is None or (int(pe_id) != record.pe_id):
         # Assignee has changed
         settings = current.deployment_settings
 
@@ -9514,15 +9530,21 @@ def task_notify(form):
             # Notify assignee
             subject = "%s: Task assigned to you" % settings.get_system_name_short()
             url = "%s%s" % (settings.get_base_public_url(),
-                            URL(c="project", f="task", args=vars.id))
-            priority = current.s3db.project_task.priority.represent(int(vars.priority))
+                            URL(c="project", f="task", args=[formvars.id]))
+
+            priority = formvars.priority
+            if priority is not None:
+                priority = current.s3db.project_task.priority.represent(int(priority))
+            else:
+                priority = "unknown"
+
             message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s\n\n%s" % \
-                (url,
-                 "%s priority" % priority,
-                 vars.name,
-                 vars.description or "")
+                            (url,
+                             "%s priority" % priority,
+                             formvars.name,
+                             formvars.description or "")
+
             current.msg.send_by_pe_id(pe_id, subject, message)
-    return
 
 # =============================================================================
 class project_TaskRepresent(S3Represent):

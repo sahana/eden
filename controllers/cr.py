@@ -240,6 +240,40 @@ def shelter_flag():
         Shelter Flags - RESTful CRUD controller
     """
 
+    def prep(r):
+
+        if r.interactive:
+
+            # Filter task_assign_to option to human resources and teams
+            assignees = []
+
+            # Select active HRs
+            hr = s3db.resource("hrm_human_resource",
+                               filter = FS("status") == 1,
+                               )
+            rows = hr.select(["person_id$pe_id"], limit=None, represent=False).rows
+            if rows:
+                assignees.extend(row["pr_person.pe_id"] for row in rows)
+
+            # Select teams
+            teams = s3db.resource("pr_group",
+                                  filter = FS("group_type") == 3,
+                                  )
+            rows = teams.select(["pe_id"], limit=None, represent=False).rows
+            if rows:
+                assignees.extend(row["pr_group.pe_id"] for row in rows)
+
+            # Set filter for task_assign_to.requires
+            field = r.table.task_assign_to
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                requires = requires.other
+            requires.set_filter(filterby = "pe_id",
+                                filter_opts = assignees,
+                                )
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
