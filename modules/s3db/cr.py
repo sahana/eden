@@ -2654,6 +2654,8 @@ class CRShelterInspection(S3Method):
         """
 
         T = current.T
+
+        db = current.db
         s3db = current.s3db
 
         # Load JSON data from request body
@@ -2669,21 +2671,55 @@ class CRShelterInspection(S3Method):
             # Register shelter inspection
             error = False
 
-            # Create inspection record
-            # @todo: if we already have an inspection record for the same
-            #        unit on the same day, then use it rather than creating
-            #        a new one (+prevent duplicate flag links)
+            # Find inspection record
+            update = False
             itable = s3db.cr_shelter_inspection
-            inspection_id = itable.insert(shelter_unit_id = shelter_unit_id,
-                                          )
+            query = (itable.shelter_unit_id == shelter_unit_id) & \
+                    (itable.date == current.request.utcnow.date()) & \
+                    (itable.deleted != True)
+            row = db(query).select(itable.id,
+                                   limitby = (0, 1),
+                                   ).first()
+            if row:
+                # Update this inspection
+                update = True
+                inspection_id = row.id
+            else:
+                # Create a new inspection
+                inspection_id = itable.insert(shelter_unit_id = shelter_unit_id,
+                                              )
             if inspection_id:
+                # Currently selected flags
                 flag_ids = data.get("f")
+
+                if update:
+                    # Remove all flags linked to the current inspection
+                    # which are not in the current selection
+                    query = (FS("inspection_id") == inspection_id)
+                    if flag_ids:
+                        query &= ~(FS("flag_id").belongs(flag_ids))
+                    fresource = s3db.resource("cr_shelter_inspection_flag",
+                                              filter = query,
+                                              )
+                    fresource.delete(cascade=True)
+
                 if flag_ids:
-                    # Create links to flags
+
+                    # Determine which flags have been newly selected
+                    ftable = s3db.cr_shelter_inspection_flag
+                    if update:
+                        query = (ftable.inspection_id == inspection_id) & \
+                                (ftable.deleted == False)
+                        rows = db(query).select(ftable.flag_id)
+                        new = set(flag_ids) - set(row.flag_id for row in rows)
+                    else:
+                        new = set(flag_ids)
+
+                    # Create links to newly selected flags
                     ftable = s3db.cr_shelter_inspection_flag
                     data = {"inspection_id": inspection_id,
                             }
-                    for flag_id in flag_ids:
+                    for flag_id in new:
                         data["flag_id"] = flag_id
                         success = ftable.insert(**data)
                         if not success:
