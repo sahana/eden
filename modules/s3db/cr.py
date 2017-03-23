@@ -1196,6 +1196,7 @@ class CRShelterInspectionModel(S3Model):
         list_fields = ["shelter_unit_id",
                        "date",
                        (T("Flags"), "shelter_flag__link.flag_id"),
+                       (T("Registered by"), "modified_by"),
                        "comments",
                        ]
 
@@ -1246,10 +1247,35 @@ class CRShelterInspectionModel(S3Model):
                            ),
                      *s3_meta_fields())
 
+        # List fields
+        list_fields = ["id",
+                       "inspection_id$shelter_unit_id$name",
+                       "inspection_id$date",
+                       (T("Registered by"), "inspection_id$modified_by"),
+                       (T("Defect"), "flag_id"),
+                       "resolved",
+                       ]
+
         # Table Configuration
         configure(tablename,
+                  list_fields = list_fields,
+                  insertable = False,
                   create_onaccept = self.shelter_inspection_flag_onaccept,
                   )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Register Defect"),
+            title_display = T("Defect Details"),
+            title_list = T("Defects"),
+            title_update = T("Edit Defect"),
+            label_list_button = T("List Defects"),
+            label_delete_button = T("Delete Defect"),
+            msg_record_created = T("Defect created"),
+            msg_record_modified = T("Defect updated"),
+            msg_record_deleted = T("Defect deleted"),
+            msg_list_empty = T("No Defects currently registered"),
+        )
 
         # ---------------------------------------------------------------------
         # Inspection Flag <=> Project Task link table
@@ -1257,7 +1283,7 @@ class CRShelterInspectionModel(S3Model):
         tablename = "cr_shelter_inspection_task"
         define_table(tablename,
                      Field("inspection_flag_id", "reference cr_shelter_inspection_flag",
-                           label = T("Shortcomings"),
+                           label = T("Defects"),
                            ondelete = "CASCADE",
                            represent = ShelterInspectionFlagRepresent(show_link=True),
                            requires = IS_ONE_OF(db, "cr_shelter_inspection_flag.id"),
@@ -2593,7 +2619,7 @@ class CRShelterInspection(S3Method):
                                                  ),
                             ),
                       Field("shelter_flags",
-                            label = T("Shortcomings"),
+                            label = T("Defects"),
                             requires = IS_ONE_OF(db, "cr_shelter_flag.id",
                                                  shelter_flag_represent,
                                                  multiple = True,
