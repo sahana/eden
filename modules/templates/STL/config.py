@@ -582,6 +582,48 @@ def config(settings):
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 
     # -------------------------------------------------------------------------
+    def vulnerability_type_validation(form):
+        """
+            Validate "Protection Assessment" (dvr_vulnerability_type link)
+            in case activities: at least one THREAT must be selected
+        """
+
+        key = "link_defaultvulnerability_type"
+
+        formvars = form.vars
+        try:
+            vulnerability_types = formvars[key]
+        except (KeyError, AttributeError):
+            # No inline link we can validate
+            return
+
+        # Get the "THREAT" root node
+        ttable = current.s3db.dvr_vulnerability_type
+        query = (ttable.name == "THREAT") & \
+                (ttable.deleted == False)
+        row = current.db(query).select(ttable.id, limitby=(0, 1)).first()
+        if not row:
+            return
+
+        # Get all descendants of the THREAT node
+        from s3 import S3Hierarchy
+        h = S3Hierarchy("dvr_vulnerability_type")
+        threats = h.findall(row.id)
+        if not threats:
+            return
+
+        message = T("At least one THREAT must be selected")
+        if vulnerability_types:
+            # Single value?
+            if type(vulnerability_types) is not list:
+                vulnerability_types = [vulnerability_types]
+            # Any THREAT selected?
+            if not any(t in threats for t in vulnerability_types):
+                form.errors[key] = message
+        else:
+            form.errors[key] = message
+
+    # -------------------------------------------------------------------------
     def pss_case_activity_onaccept(form):
         """
             PSS Case Activities inherit the project ID from
@@ -749,7 +791,9 @@ def config(settings):
                 table = r.component.table
                 component = r.component
 
-            component.configure(orderby=~table.start_date)
+            component.configure(orderby = ~table.start_date,
+                                onvalidation = vulnerability_type_validation,
+                                )
 
             # Expose "Project Code" and "Person responsible" (both mandatory)
             expose_project_id(table, mandatory=True)
