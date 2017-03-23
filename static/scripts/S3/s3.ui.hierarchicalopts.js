@@ -315,7 +315,7 @@
 
                 // Check selected nodes and update hidden input
                 var inst = jQuery.jstree.reference($(this.tree));
-                if (inst !== undefined) {
+                if (inst) {
                     inst.uncheck_all();
                     if (value) {
                         this.input.val(this._stringifySelection(value));
