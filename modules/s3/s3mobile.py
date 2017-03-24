@@ -54,6 +54,8 @@ from s3rest import S3Method
 from s3utils import s3_str, s3_unicode
 from s3validators import JSONERRORS, SEPARATORS
 
+DEFAULT = lambda: None
+
 # =============================================================================
 class S3MobileFormList(object):
     """
@@ -70,15 +72,16 @@ class S3MobileFormList(object):
         settings = current.deployment_settings
 
         formlist = []
+        formdict = {}
 
         forms = settings.get_mobile_forms()
         if forms:
             keys = set()
             for item in forms:
 
+                # Parse the configuration
                 options = {}
                 if isinstance(item, (tuple, list)):
-
                     if len(item) == 2:
                         title, tablename = item
                         if isinstance(tablename, dict):
@@ -142,12 +145,14 @@ class S3MobileFormList(object):
                 url = {"c": c, "f": f}
                 if url_vars:
                     url["v"] = url_vars
-                formlist.append({"n": name,
-                                 "l": s3_str(title),
-                                 "t": tablename,
-                                 "r": url,
-                                 "d": data,
-                                 })
+                mform = {"n": name,
+                         "l": s3_str(title),
+                         "t": tablename,
+                         "r": url,
+                         "d": data,
+                         }
+                formlist.append(mform)
+                formdict[name] = mform
 
         dynamic_tables = settings.get_mobile_dynamic_tables()
         if dynamic_tables:
@@ -176,13 +181,16 @@ class S3MobileFormList(object):
                        }
 
                 # Append to form list
-                formlist.append({"n": tablename,
-                                 "l": title,
-                                 "t": tablename,
-                                 "r": url,
-                                 })
+                mform = {"n": tablename,
+                         "l": title,
+                         "t": tablename,
+                         "r": url,
+                         }
+                formlist.append(mform)
+                formdict[name] = mform
 
         self.formlist = formlist
+        self.forms = formdict
 
     # -------------------------------------------------------------------------
     def json(self):
@@ -210,6 +218,54 @@ class S3MobileForm(object):
 
         self.resource = resource
         self._form = form
+
+        self._config = DEFAULT
+
+    # -------------------------------------------------------------------------
+    @property
+    def config(self):
+        """
+            The mobile form configuration (lazy property)
+
+            @returns: a dict {tablename, title, options}
+        """
+
+        config = self._config
+        if config is DEFAULT:
+
+            tablename = self.resource.tablename
+            config = {"tablename": tablename,
+                      "title": None,
+                      "options": {},
+                      }
+
+            forms = current.deployment_settings.get_mobile_forms()
+            if forms:
+                for form in forms:
+                    options = None
+                    if isinstance(form, (tuple, list)):
+                        if len(form) == 2:
+                            title, tablename_ = form
+                            if isinstance(tablename_, dict):
+                                tablename_, options = title, tablename_
+                                title = None
+                        elif len(form) == 3:
+                            title, tablename_, options = form
+                        else:
+                            # Invalid => skip
+                            continue
+                    else:
+                        title, tablename_ = None, form
+
+                    if tablename_ == tablename:
+                        config["title"] = title
+                        if options:
+                            config["options"] = options
+                        break
+
+            self._config = config
+
+        return config
 
     # -------------------------------------------------------------------------
     @property
@@ -258,6 +314,7 @@ class S3MobileForm(object):
         schema = {}
         form_fields = []
 
+        # Build the table schema
         for element in form.elements:
             if isinstance(element, S3SQLField):
 
@@ -280,62 +337,21 @@ class S3MobileForm(object):
                 # => skip until implemented @todo
                 continue
 
+        # Add form definition
         if form_fields:
             schema["_form"] = form_fields
 
+        # Add CRUD strings
         strings = self.strings()
         if strings:
             schema["_strings"] = strings
 
+        # Add component declarations
+        components = self.components()
+        if components:
+            schema["_components"] = components
+
         return schema
-
-    # -------------------------------------------------------------------------
-    def strings(self):
-        """
-            Add CRUD strings for mobile form
-
-            @return: a dict with CRUD strings for the resource
-        """
-
-        tablename = self.resource.tablename
-
-        title = None
-
-        # Look up the form title in deployment setting
-        forms = current.deployment_settings.get_mobile_forms()
-        if forms:
-            for form in forms:
-                if isinstance(form, (tuple, list)):
-                    if len(form) >= 2:
-                        title_, tablename_ = form[:2]
-                        if isinstance(tablename_, dict):
-                            tablename_ = title_
-                            title_ = None
-                    else:
-                        continue
-                if tablename_ == tablename:
-                    title = title_
-                    break
-
-        # Fall back to CRUD title_list
-        if not title:
-            crud_strings = current.response.s3.crud_strings.get(tablename)
-            if crud_strings:
-                title = crud_strings.get("title_list")
-
-        # Fall back to capitalized table name
-        if not title:
-            name = tablename.split("_", 1)[-1]
-            title = " ".join(word.capitalize() for word in name.split("_"))
-
-        # Build strings-dict
-        strings = {}
-        if title:
-            title = s3_str(title)
-            strings["name"] = title
-            strings["namePlural"] = title
-
-        return strings
 
     # -------------------------------------------------------------------------
     def describe(self, rfield):
@@ -374,6 +390,84 @@ class S3MobileForm(object):
         # @todo: required
 
         return description
+
+    # -------------------------------------------------------------------------
+    def strings(self):
+        """
+            Add CRUD strings for mobile form
+
+            @return: a dict with CRUD strings for the resource
+        """
+
+        tablename = self.resource.tablename
+
+        # Use the title specified in deployment setting
+        config = self.config
+        title = config.get("title")
+
+        # Fall back to CRUD title_list
+        if not title:
+            crud_strings = current.response.s3.crud_strings.get(tablename)
+            if crud_strings:
+                title = crud_strings.get("title_list")
+
+        # Fall back to capitalized table name
+        if not title:
+            name = tablename.split("_", 1)[-1]
+            title = " ".join(word.capitalize() for word in name.split("_"))
+
+        # Build strings-dict
+        strings = {}
+        if title:
+            title = s3_str(title)
+            strings["name"] = title
+            strings["namePlural"] = title
+
+        return strings
+
+    # -------------------------------------------------------------------------
+    def components(self):
+        """
+            Add component declarations to the mobile form
+
+            @return: a dict with component declarations for the resource
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+        pkey = resource._id.name
+
+        options = self.config.get("options")
+
+        components = {}
+
+        if not options:
+            return components
+
+        aliases = options.get("components")
+        if not aliases:
+            return components
+
+        formlist = S3MobileFormList()
+        names = set(formlist.forms.keys())
+
+        hooks = current.s3db.get_components(tablename, names=aliases)
+        for alias, hook in hooks.items():
+
+            if hook.linktable or hook.pkey != pkey:
+                # Link table or super-component => not supported (yet)
+                continue
+
+            # Make sure the component table is exposed in config
+            # @todo: expose automatically
+            if hook.tablename not in names:
+                continue
+
+            components[alias] = {"resource": hook.tablename,
+                                 "joinby": hook.fkey,
+                                 "multiple": hook.multiple,
+                                 }
+        return components
 
 # =============================================================================
 class S3MobileCRUD(S3Method):
@@ -766,8 +860,7 @@ class S3MobileCRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def mform(r, **attr):
+    def mform(self, r, **attr):
         """
             Get the schema definition (as JSON)
 
@@ -777,8 +870,7 @@ class S3MobileCRUD(S3Method):
             @returns: a JSON string
         """
 
-        resource = r.resource
-
+        resource = self.resource
         form = S3MobileForm(resource)
 
         schema = form.schema()
