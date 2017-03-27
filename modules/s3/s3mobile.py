@@ -438,35 +438,46 @@ class S3MobileForm(object):
         pkey = resource._id.name
 
         options = self.config.get("options")
-
         components = {}
 
-        if not options:
-            return components
+        # Expose static components
+        aliases = options.get("components") if options else None
+        if aliases:
+            hooks = current.s3db.get_components(tablename, names=aliases)
+            for alias, hook in hooks.items():
+                if hook.linktable or hook.pkey != pkey:
+                    # Link table or super-component => not supported (yet)
+                    continue
+                components[alias] = {"resource": hook.tablename,
+                                     "joinby": hook.fkey,
+                                     "multiple": hook.multiple,
+                                     }
 
-        aliases = options.get("components")
-        if not aliases:
-            return components
+        # Expose dynamic components
+        ftable = current.s3db.s3_field
+        ttable = current.s3db.s3_table
+        join = ttable.on(ttable.id == ftable.table_id)
+        query = (ftable.component_key == True) & \
+                (ftable.master == tablename) & \
+                (ftable.deleted == False)
+        rows = current.db(query).select(ftable.name,
+                                        ftable.component_alias,
+                                        ftable.settings,
+                                        ttable.name,
+                                        join = join,
+                                        )
+        for row in rows:
+            component_key = row.s3_field
+            settings = component_key.settings
+            if not settings or \
+               settings.get("mobile_component") is not False:
+                alias = component_key.component_alias
+                multiple = settings.get("multiple", True)
+                components[alias] = {"resource": row.s3_table.name,
+                                     "joinby": component_key.name,
+                                     "multiple": multiple,
+                                     }
 
-        formlist = S3MobileFormList()
-        names = set(formlist.forms.keys())
-
-        hooks = current.s3db.get_components(tablename, names=aliases)
-        for alias, hook in hooks.items():
-
-            if hook.linktable or hook.pkey != pkey:
-                # Link table or super-component => not supported (yet)
-                continue
-
-            # Make sure the component table is exposed in config
-            # @todo: expose automatically
-            if hook.tablename not in names:
-                continue
-
-            components[alias] = {"resource": hook.tablename,
-                                 "joinby": hook.fkey,
-                                 "multiple": hook.multiple,
-                                 }
         return components
 
 # =============================================================================
