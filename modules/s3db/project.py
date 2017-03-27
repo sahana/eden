@@ -10226,25 +10226,62 @@ def project_task_controller():
                 #field.readable = field.writable = False
 
         elif "mine" in get_vars:
-            # Show the Open Tasks for this User
+            # Show open tasks assigned to the current user
+
+            # Show only open tasks
+            query = (FS("status").belongs(statuses))
+
             if auth.user:
-                pe_id = auth.user.pe_id
-                query = (table.pe_id == pe_id) & \
-                        (table.status.belongs(statuses))
-                r.resource.add_filter(query)
-            crud_strings.title_list = T("My Open Tasks")
-            crud_strings.msg_list_empty = T("No Tasks Assigned")
+                hide_fields = ("pe_id", "status")
+                if current.deployment_settings \
+                          .get_project_my_tasks_include_team_tasks():
+                    # Include tasks assigned to the current user's teams
+
+                    # Look up all teams the current user is member of
+                    mtable = s3db.pr_group_membership
+                    gtable = s3db.pr_group
+                    gquery = (mtable.person_id == auth.s3_logged_in_person()) & \
+                             (mtable.deleted == False) & \
+                             (gtable.id == mtable.group_id) & \
+                             (gtable.group_type == 3)
+                    groups = current.db(gquery).select(gtable.pe_id)
+
+                    # Filter query
+                    pe_ids = set(group.pe_id for group in groups)
+                    if pe_ids:
+                        # Show assignee if teams are included
+                        hide_fields = ("status",)
+                        pe_ids.add(auth.user.pe_id)
+                        query &= (FS("pe_id").belongs(pe_ids))
+                    else:
+                        query &= (FS("pe_id") == auth.user.pe_id)
+
+                else:
+                    # Filter by user pe_id
+                    query &= (FS("pe_id") == auth.user.pe_id)
+
+                # No need for assignee (always us) or status (always "assigned"
+                # or "reopened") in list fields:
+                list_fields = s3db.get_config(tablename, "list_fields")
+                if list_fields:
+                    list_fields[:] = (fn for fn in list_fields
+                                         if fn not in hide_fields)
+
+                # Adapt CRUD strings
+                crud_strings.title_list = T("My Open Tasks")
+                crud_strings.msg_list_empty = T("No Tasks Assigned")
+
+            else:
+                # Not logged-in, showing all open tasks
+                crud_strings.title_list = T("Open Tasks")
+
+            r.resource.add_filter(query)
+
+            # Can not add tasks in this list
             s3db.configure(tablename,
                            copyable = False,
                            listadd = False,
                            )
-
-            # No need for assignee (always us) or status (always "assigned"
-            # or "reopened") in list fields:
-            list_fields = s3db.get_config(tablename, "list_fields")
-            if list_fields:
-                list_fields[:] = (fn for fn in list_fields
-                                     if fn not in ("pe_id", "status"))
 
         elif "project" in get_vars:
             # Show Open Tasks for this Project

@@ -3753,10 +3753,14 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         labels.sort()
 
         if self.options.get("render_list"):
-            # Render as HTML list
-            return UL([LI(l) for l in labels],
-                      _class = "s3-inline-link",
-                      )
+            if value is None or value == [None]:
+                # Don't render as list if empty
+                return current.messages.NONE
+            else:
+                # Render as HTML list
+                return UL([LI(l) for l in labels],
+                          _class = "s3-inline-link",
+                          )
         else:
             # Render as comma-separated list of strings
             # (using TAG rather than join() to support HTML labels)

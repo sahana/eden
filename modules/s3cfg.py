@@ -4504,6 +4504,12 @@ class S3Config(Storage):
         """
         return self.project.get("task_time", True)
 
+    def get_project_my_tasks_include_team_tasks(self):
+        """
+            "My Open Tasks" to include team tasks
+        """
+        return self.project.get("my_tasks_include_team_tasks", False)
+
     # -------------------------------------------------------------------------
     # Requests Management Settings
     #
