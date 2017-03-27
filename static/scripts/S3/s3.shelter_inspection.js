@@ -86,7 +86,8 @@
             // Collect the input
             var input = {
                 u: $('#shelter_inspection_shelter_unit_id').val(),
-                f: $('#shelter_flags-options').val()
+                f: $('#shelter_flags-options').val(),
+                c: $('#shelter_inspection_comments').val()
             };
 
             // Send Ajax
@@ -169,7 +170,11 @@
             }
 
             // Reset shelter unit selector
-            $('#shelter_inspection_shelter_unit_id').val('');
+            var unitSelector = $('#shelter_inspection_shelter_unit_id');
+            unitSelector.val('');
+            if (unitSelector.hasClass('multiselect-widget')) {
+                unitSelector.multiselect('refresh');
+            }
 
             // Reset shelter flags
             var flags = $('#shelter_flags-options');
@@ -177,6 +182,9 @@
             if (flags.hasClass('groupedopts-widget')) {
                 flags.groupedopts('refresh');
             }
+
+            // Clear comments field
+            $('#shelter_inspection_comments').val('');
 
             // Disable submit until housing unit selected
             this._toggleSubmit(false);

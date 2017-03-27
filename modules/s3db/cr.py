@@ -2725,6 +2725,9 @@ class CRShelterInspection(S3Method):
                                                  shelter_unit_represent,
                                                  orderby = "shelter_id",
                                                  ),
+                            widget = S3MultiSelectWidget(multiple=False,
+                                                         filter=True,
+                                                         ),
                             ),
                       Field("shelter_flags",
                             label = T("Defects"),
@@ -2736,6 +2739,10 @@ class CRShelterInspection(S3Method):
                                         cols = 2,
                                         size = None,
                                         ),
+                            ),
+                      Field("comments",
+                            label = T("Comments"),
+                            widget = s3_comments_widget,
                             ),
                       ]
 
@@ -2805,6 +2812,9 @@ class CRShelterInspection(S3Method):
             # Register shelter inspection
             error = False
 
+            # Read comments
+            comments = data.get("c")
+
             # Find inspection record
             update = False
             itable = s3db.cr_shelter_inspection
@@ -2818,9 +2828,11 @@ class CRShelterInspection(S3Method):
                 # Update this inspection
                 update = True
                 inspection_id = row.id
+                row.update_record(comments = comments)
             else:
                 # Create a new inspection
                 inspection_id = itable.insert(shelter_unit_id = shelter_unit_id,
+                                              comments = comments,
                                               )
             if inspection_id:
                 # Currently selected flags
