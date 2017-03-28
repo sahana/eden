@@ -8440,7 +8440,7 @@ class pr_PersonSearchAutocomplete(S3Method):
         """
             Constructor
 
-            @param search_fields: tuple|list of field names
+            @param search_fields: tuple|list of field selectors
         """
 
         if search_fields is None:
@@ -8474,11 +8474,10 @@ class pr_PersonSearchAutocomplete(S3Method):
             r.error(400, "No value provided!")
         value = s3_unicode(value).lower().strip()
 
-        # Build query
-
         # Limit to max 8 partials (prevent excessively long search queries)
         partials = value.split()[:8]
 
+        # Build query
         search_fields = self.search_fields
         query = None
         for partial in partials:

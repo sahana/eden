@@ -2740,10 +2740,7 @@ class CRShelterInspection(S3Method):
                                         size = None,
                                         ),
                             ),
-                      Field("comments",
-                            label = T("Comments"),
-                            widget = s3_comments_widget,
-                            ),
+                      s3_comments(comment=None),
                       ]
 
         # Buttons
