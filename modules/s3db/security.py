@@ -416,6 +416,11 @@ class SecuritySeizedItemsModel(S3Model):
                      person_id(empty = False,
                                label = T("Owner"),
                                ondelete = "CASCADE",
+                               # Autocomplete using security controller
+                               widget = S3PersonAutocompleteWidget(
+                                           controller = "security",
+                                           function = "person_search",
+                                           ),
                                comment = None,
                                ),
                      # Type and number of items

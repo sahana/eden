@@ -1049,6 +1049,13 @@ def config(settings):
                 if r.component:
                     redirect(r.url(method=""))
 
+                # Autocomplete using alternative search method
+                search_fields = ("first_name", "last_name", "pe_label")
+                s3db.set_method("pr", "person",
+                                method = "search_ac",
+                                action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                                )
+
                 current.deployment_settings.ui.export_formats = None
 
                 # Filter to valid and open cases

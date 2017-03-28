@@ -43,6 +43,15 @@ def person():
     return s3_rest_controller("pr")
 
 # -----------------------------------------------------------------------------
+def person_search():
+    """
+        RESTful controller for autocomplete-searches
+    """
+
+    s3.prep = lambda r: r.method == "search_ac"
+    return s3_rest_controller("pr", "person")
+
+# -----------------------------------------------------------------------------
 def staff():
     """ Security Staff Assignments: RESTful CRUD controller """
 
