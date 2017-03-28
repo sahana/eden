@@ -120,7 +120,6 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 from s3 import S3SQLCustomForm
                 crud_fields = []
                 cappend = crud_fields.append
-                subheadings = {}
                 template_id = r.record.template_id
                 stable = db.dc_section
 
@@ -238,43 +237,47 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 for question in root_questions:
                     cappend(question["name"])
                 # Next add those questions with a section (likely the only questions then)
+                subheadings = {}
                 for s in sections:
                     section = s[s.items()[0][0]]
                     section_name = section["name"]
                     # 1st add those questions without a subsection
+                    _subheadings = {"fields": [],
+                                    "subheadings": {},
+                                    }
+                    subheadings[section_name] = _subheadings
                     questions = section["questions"]
                     for question in questions:
                         fname = question.items()[0][1]
-                        if section_name in subheadings:
-                            subheadings[section_name].append(fname)
-                        else:
-                            subheadings[section_name] = [fname]
+                        _subheadings["fields"].append(fname)
                         cappend(fname)
                     # Next add those questions in a subsection
                     subsections = section["subsections"]
                     for sub in subsections:
                         _sub = sub[sub.items()[0][0]]
                         section_name = _sub["name"]
+                        __subheadings = {"fields": [],
+                                         "subheadings": {},
+                                         }
+                        _subheadings["subheadings"][section_name] = __subheadings
                         questions = _sub["questions"]
                         for question in questions:
                             fname = question.items()[0][1]
-                            if section_name in subheadings:
-                                subheadings[section_name].append(fname)
-                            else:
-                                subheadings[section_name] = [fname]
+                            __subheadings["fields"].append(fname)
                             cappend(fname)
                         # Next add those questions in a subsection
                         subsubsections = _sub["subsubsections"]
                         for subsub in subsubsections:
                             _subsub = subsub[subsub.items()[0][0]]
                             section_name = _subsub["name"]
+                            ___subheadings = {"fields": [],
+                                              "subheadings": {},
+                                              }
+                            __subheadings["subheadings"][section_name] = ___subheadings
                             questions = _subsub["questions"]
                             for question in questions:
                                 fname = question.items()[0][1]
-                                if section_name in subheadings:
-                                    subheadings[section_name].append(fname)
-                                else:
-                                    subheadings[section_name] = [fname]
+                                ___subheadings["fields"].append(fname)
                                 cappend(fname)
 
                 crud_form = S3SQLCustomForm(*crud_fields)

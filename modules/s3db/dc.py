@@ -125,6 +125,8 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Template Sections
         #
+        #Currently support Sections, SubSections & SubSubSections only
+        #
         hierarchical_sections = True # @ToDo: deployment_setting
 
         tablename = "dc_section"
@@ -193,7 +195,7 @@ class DataCollectionTemplateModel(S3Model):
             msg_list_empty = T("No Sections currently registered"))
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("name", "template_id")),
+                  deduplicate = S3Duplicate(primary=("name", "parent", "template_id")),
                   hierarchy = hierarchy,
                   orderby = tablename + ".posn",
                   )
@@ -554,6 +556,7 @@ class DataCollectionModel(S3Model):
 
         # Configuration
         self.configure(tablename,
+                       create_next = URL(f="respnse", args=["[id]", "answer"]),
                        # Question Answers are in a Dynamic Component
                        dynamic_components = True,
                        super_entity = "doc_entity",
