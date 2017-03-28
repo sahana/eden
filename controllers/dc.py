@@ -116,40 +116,173 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                     msg_list_empty = T("No Responses currently defined"),
                 )
 
-                # Create Custom Form with Questions sorted by alpha-sorted Section and then alpha-sorted within them
+                # Custom Form with Questions & Subheadings sorted correctly
                 from s3 import S3SQLCustomForm
                 crud_fields = []
                 cappend = crud_fields.append
                 subheadings = {}
-
-                qtable = s3db.dc_question
+                template_id = r.record.template_id
                 stable = db.dc_section
+
+                # Extract the Sections
+                query = (stable.template_id == template_id) & \
+                        (stable.deleted == False)
+                sections = db(query).select(stable.id,
+                                            stable.parent,
+                                            stable.name,
+                                            stable.posn,
+                                            distinct = True,
+                                            )
+
+                # Put them into the hierarchy
+                root_sections = {}
+                subsections = {}
+                for section in sections:
+                    parent = section.parent
+                    if parent:
+                        # Store this for next parse
+                        if parent in subsections:
+                            subsections[parent].append(section)
+                        else:
+                            subsections[parent] = [section]
+                    else:
+                        # Root section
+                        root_sections[section.id] = {"id": section.id,
+                                                     "name": section.name,
+                                                     "posn": section.posn,
+                                                     "questions": [],
+                                                     "subsections": {},
+                                                     }
+
+                # Add the subsections
+                subsubsections = {}
+                for parent in subsections:
+                    _subsections = subsections[parent]
+                    if parent in root_sections:
+                        # SubSections
+                        for sub in _subsections:
+                            root_sections[parent]["subsections"][sub.id] = {"id": sub.id,
+                                                                            "name": sub.name,
+                                                                            "posn": sub.posn,
+                                                                            "questions": [],
+                                                                            "subsubsections": {},
+                                                                            }
+                    else:
+                        # SubSubSections - store for next parse
+                        subsubsections[parent] = _subsections
+
+                # Add the subsubsections
+                for parent in subsubsections:
+                    for root in root_sections:
+                        subsections = root_sections[root]["subsections"]
+                        if parent in subsections:
+                            _subsubsections = subsubsections[parent]
+                            for subsub in _subsubsections:
+                                subsections[parent]["subsubsections"][subsub.id] = {"id": subsub.id,
+                                                                                    "name": subsub.name,
+                                                                                    "posn": subsub.posn,
+                                                                                    "questions": [],
+                                                                                    }
+
+                # Add the Questions
+                qtable = s3db.dc_question
                 ftable = db.s3_field
                 query = (qtable.template_id == r.record.template_id) & \
                         (qtable.deleted == False) & \
                         (qtable.field_id == ftable.id)
                 left = stable.on(stable.id == qtable.section_id)
-                fields = db(query).select(stable.name,
-                                          ftable.label,
-                                          ftable.name,
-                                          left = left,
-                                          orderby = (stable.name, ftable.label),
-                                          )
-                for f in fields:
-                    fname = f["s3_field.name"]
-                    section_name = f["dc_section.name"]
-                    if section_name in subheadings:
-                        subheadings[section_name].append(fname)
-                    else:
-                        subheadings[section_name] = [fname]
-                    cappend(fname)
+                questions = db(query).select(stable.id,
+                                             qtable.posn,
+                                             ftable.name,
+                                             left = left,
+                                             )
+                root_questions = []
+                for question in questions:
+                    section_id = question["dc_section.id"]
+                    question = {question["dc_question.posn"]: question["s3_field.name"]}
+                    if not section_id:
+                        root_questions.append(question)
+                        continue
+                    if section_id in root_sections:
+                        root_sections[section_id]["questions"].append(question)
+                        continue
+                    for section in root_sections:
+                        if section_id in root_sections[section]["subsections"]:
+                            root_sections[section]["subsections"][section_id]["questions"].append(question)
+                            continue
+                        for subsection in root_sections[section]["subsections"]:
+                            if section_id in root_sections[section]["subsections"][subsection]["subsubsections"]:
+                                root_sections[section]["subsections"][subsection]["subsubsections"][section_id]["questions"].append(question)
+
+                # Sort them by Position
+                root_questions.sort()
+                sections = [{v["posn"]: v} for k, v in root_sections.items()]
+                sections.sort()
+                for s in sections:
+                    section = s[s.items()[0][0]]
+                    subsections = [{v["posn"]: v} for k, v in section["subsections"].items()]
+                    subsections.sort()
+                    section["subsections"] = subsections
+                    section["questions"].sort()
+                    for sub in subsections:
+                        _sub = sub[sub.items()[0][0]]
+                        subsubsections = [{v["posn"]: v} for k, v in _sub["subsubsections"].items()]
+                        subsubsections.sort()
+                        _sub["subsubsections"] = subsubsections
+                        _sub["questions"].sort()
+                        for subsub in subsubsections:
+                            subsub[subsub.items()[0][0]]["questions"].sort()
+
+                # Append questions to the form, with subheadings
+                # 1st add those questions without a section (likely the only questions then)
+                for question in root_questions:
+                    cappend(question["name"])
+                # Next add those questions with a section (likely the only questions then)
+                for s in sections:
+                    section = s[s.items()[0][0]]
+                    section_name = section["name"]
+                    # 1st add those questions without a subsection
+                    questions = section["questions"]
+                    for question in questions:
+                        fname = question.items()[0][1]
+                        if section_name in subheadings:
+                            subheadings[section_name].append(fname)
+                        else:
+                            subheadings[section_name] = [fname]
+                        cappend(fname)
+                    # Next add those questions in a subsection
+                    subsections = section["subsections"]
+                    for sub in subsections:
+                        _sub = sub[sub.items()[0][0]]
+                        section_name = _sub["name"]
+                        questions = _sub["questions"]
+                        for question in questions:
+                            fname = question.items()[0][1]
+                            if section_name in subheadings:
+                                subheadings[section_name].append(fname)
+                            else:
+                                subheadings[section_name] = [fname]
+                            cappend(fname)
+                        # Next add those questions in a subsection
+                        subsubsections = _sub["subsubsections"]
+                        for subsub in subsubsections:
+                            _subsub = subsub[subsub.items()[0][0]]
+                            section_name = _subsub["name"]
+                            questions = _subsub["questions"]
+                            for question in questions:
+                                fname = question.items()[0][1]
+                                if section_name in subheadings:
+                                    subheadings[section_name].append(fname)
+                                else:
+                                    subheadings[section_name] = [fname]
+                                cappend(fname)
 
                 crud_form = S3SQLCustomForm(*crud_fields)
                 s3db.configure(r.component.tablename,
                                crud_form = crud_form,
                                subheadings = subheadings,
                                )
-                
+
         return True
     s3.prep = prep
 

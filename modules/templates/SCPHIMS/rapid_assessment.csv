@@ -1,7 +1,197 @@
-Template,Section,Question,Type,Options,Required,Tooltip
-Rapid Assessment,"1. Assessment team information","a) Organizations participating",text,,
-Rapid Assessment,"1. Assessment team information","d) Contact Details",text,,
-Rapid Assessment,"1. Assessment team information","e) Number of days since emergency event occurred",number,,
-Rapid Assessment,"1. Assessment team information","f) Date the event (started)",date,,
-Rapid Assessment,"2. Geographic information","e) Name/Position of Person interviewed",text,,
-Rapid Assessment,"2. Geographic information","f) Contact Details",text,,
+Template,Section,Section Position,SubSection,SubSection Position,SubSubSection,SubSubSection Position,Question,Question Position,Type,Options,Required,Tooltip
+Rapid Assessment,1. Assessment team information,1,,,,,a) Organizations participating,1,text,,,
+Rapid Assessment,1. Assessment team information,1,,,,,d) Contact Details,2,text,,,
+Rapid Assessment,1. Assessment team information,1,,,,,e) Number of days since emergency event occurred,3,number,,,
+Rapid Assessment,1. Assessment team information,1,,,,,f) Date the event (started),4,date,,,
+Rapid Assessment,2. Geographic information,2,,,,,e) Name/Position of Person interviewed,5,text,,,
+Rapid Assessment,2. Geographic information,2,,,,,f) Contact Details,6,text,,,
+Rapid Assessment,3. Demographic data,3,a) Pre-Event,1,,,i. Total population of Barangay,1,number,,,
+Rapid Assessment,3. Demographic data,3,a) Pre-Event,1,,,ii. Total number of households in Barangay,2,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,i. Male Adults,3,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,ii. Female Adults,4,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,iii. Total Adults,5,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,iv. Male Children (5-18),6,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,v. Female Children (5-18),7,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,vi. Male Children <5,8,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,vii. Female Children <5,9,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,viii. Total Children,10,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,ix. Grand Total,11,number,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,x. Total Households,12,number,,,
+Rapid Assessment,3. Demographic data,3,c),3,i.,1,Have people been forced or obliged to leave their homes or residences as consequence of this event (Internally Displaced People - IDPs)?,1,boolean,,,
+Rapid Assessment,3. Demographic data,3,c),3,ii.,2,Name of Evacuation centre,1,text,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Families total,1,number,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Total population,2,number,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Adults total,3,number,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Children total,4,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,persons with severe disability,1,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,2,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,female headed households,3,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,4,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,elderly persons,5,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,6,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,adolescent/children headed households,7,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,8,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,pregnant women,9,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,<16 yrs,10,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,16-19 yrs,11,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,20 yrs,12,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,lactating mothers,13,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,14,number,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,Other special needs,15,boolean,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,specify,16,text,,,
+Rapid Assessment,3. Demographic data,3,"e)",5,,,Are there people staying outside of the Evacuation Centre who have also been displaced?,1,boolean,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Male Adults,1,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Female Adults,2,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead Adults,3,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Male Children,4,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Female Children,5,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead Children,6,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead,7,number,,,confirmed
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Male Adults,8,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Female Adults,9,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing Adults,10,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Male Children,11,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Female Children,12,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing Children,13,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing,14,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Male Adults,15,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Female Adults,16,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured Adults,17,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Male Children,18,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Female Children,19,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured Children,20,number,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured,21,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,,,"i. Has the community received any assistance?",1,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Blankets,1,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",2,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,3,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,4,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,5,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,6,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,7,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,8,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,9,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,10,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,11,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Cooking Utensils,12,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",13,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,14,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,15,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,16,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,17,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,18,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,19,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,20,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,21,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,22,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Clothes,23,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",24,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,25,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,26,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,27,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,28,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,29,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,30,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,31,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,32,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,33,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Food,34,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",35,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,36,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,37,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,38,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,39,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,40,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,41,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,42,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,43,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,44,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Hygiene Kit(s),45,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",46,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,47,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,48,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,49,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,50,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,51,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,52,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,53,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,54,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,55,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Tarpaulin,56,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",57,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,58,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,59,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,60,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,61,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,62,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,63,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,64,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,65,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,66,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Mosquito Nets,67,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",68,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,69,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,70,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,71,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,72,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,73,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,74,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,75,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,76,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,77,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Tents,78,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",79,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,80,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,81,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,82,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,83,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,84,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,85,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,86,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,87,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,88,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Water,89,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",90,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,91,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,92,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,93,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,94,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,95,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,96,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,97,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,98,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,99,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Water Kit(s),100,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",101,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,102,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,103,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,104,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,105,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,106,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,107,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,108,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,109,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,110,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Voucher/Cash,111,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",112,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,113,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,114,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,115,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,116,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,117,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,118,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,119,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,120,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,121,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Others,122,boolean,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Specify,123,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,"When provided (in days since event)",124,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Qty,125,number,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Unit,126,text,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Gov't,127,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,NNGO,128,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,INGO,129,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,130,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Church,131,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Private Entities,132,boolean,,,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,"a)",1,"ii. If yes, Kind of assistance provided",1,Other,133,boolean,,,Source

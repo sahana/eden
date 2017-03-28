@@ -125,26 +125,54 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Template Sections
         #
+        hierarchical_sections = True # @ToDo: deployment_setting
+
         tablename = "dc_section"
         define_table(tablename,
                      template_id(),
+                     Field("parent", "reference dc_section",
+                           label = T("SubSection of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_sections,
+                           writable = hierarchical_sections,
+                           ),
                      Field("name",
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("posn", "integer",
+                           label = T("Position"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
+        requires = IS_EMPTY_OR(IS_ONE_OF(db, "dc_section.id",
+                                         represent,
+                                         ))
+        if hierarchical_sections:
+            hierarchy = "parent"
+            # Can't be defined in-line as otherwise get a circular reference
+            parent = db[tablename].parent
+            parent.represent = represent
+            parent.requires = requires
+
+            widget = S3HierarchyWidget(lookup = tablename,
+                                       represent = represent,
+                                       multiple = False,
+                                       leafonly = True,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
         section_id = S3ReusableField("section_id", "reference %s" % tablename,
                                      label = T("Section"),
                                      represent = represent,
-                                     requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "dc_section.id",
-                                                          represent,
-                                                          )),
+                                     requires = requires,
                                      sortby = "name",
+                                     widget = widget,
                                      #comment = S3PopupLink(f="template",
                                      #                      args=["[id]", "section"], # @ToDo: Build support for this?
                                      #                      tooltip=T("Add a new section to the template"),
@@ -163,6 +191,12 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_modified = T("Section updated"),
             msg_record_deleted = T("Section deleted"),
             msg_list_empty = T("No Sections currently registered"))
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("name", "template_id")),
+                  hierarchy = hierarchy,
+                  orderby = tablename + ".posn",
+                  )
 
         # =====================================================================
         # Questions
@@ -184,6 +218,9 @@ class DataCollectionTemplateModel(S3Model):
         define_table(tablename,
                      template_id(),
                      section_id(),
+                     Field("posn", "integer",
+                           label = T("Position"),
+                           ),
                      Field("name",
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),

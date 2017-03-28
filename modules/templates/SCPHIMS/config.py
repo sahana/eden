@@ -228,8 +228,9 @@ def config(settings):
 
         # Always at L3
         from s3 import S3LocationSelector
-        table.location_id.widget = S3LocationSelector(levels=("L1", "L2", "L3"),
-                                                      show_map=False)
+        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3"),
+                                                      show_map = False,
+                                                      )
 
         has_role = current.auth.s3_has_role
         if has_role("ERT_LEADER") or has_role("HUM_MANAGER"):
@@ -271,7 +272,9 @@ def config(settings):
 
         # Always at L4
         from s3 import S3LocationSelector
-        table.location_id.widget = S3LocationSelector(levels=("L1", "L2", "L3", "L4"))
+        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
+                                                      show_map = False,
+                                                      )
 
         # Always SC
         otable = s3db.org_organisation
