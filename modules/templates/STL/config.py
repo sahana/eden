@@ -246,6 +246,35 @@ def config(settings):
                            S3SQLCustomForm, \
                            S3SQLInlineComponent
 
+            # Expose organisation_id
+            field = table.organisation_id
+            field.readable = field.writable = True
+
+            # Organisation is required
+            requires = field.requires
+            if isinstance(requires, IS_EMPTY_OR):
+                field.requires = requires.other
+
+            # Hierarchical Organisation Selector
+            represent = s3db.org_OrganisationRepresent(parent=False)
+            field.widget = S3HierarchyWidget(lookup="org_organisation",
+                                             represent=represent,
+                                             multiple=False,
+                                             leafonly=False,
+                                             )
+
+            # Context-adapted tool tip
+            field.comment = DIV(_class = "tooltip",
+                                _title = "%s|%s" % (T("Organisation"),
+                                                    T("The organisation/branch managing this activity"),
+                                                    ),
+                                )
+
+            # Default to user organisation
+            user = current.auth.user
+            if user:
+                field.default = user.organisation_id
+
             service_type = r.get_vars.get("service_type")
             if service_type == "MH":
 
@@ -304,6 +333,7 @@ def config(settings):
 
                 # Custom form
                 crud_form = S3SQLCustomForm("name",
+                                            "organisation_id",
                                             "service_id",
                                             "start_date",
                                             "end_date",
@@ -439,7 +469,8 @@ def config(settings):
                                ]
 
                 # Custom form
-                crud_form = S3SQLCustomForm("service_id",
+                crud_form = S3SQLCustomForm("organisation_id",
+                                            "service_id",
                                             "project_id",
                                             "start_date",
                                             "end_date",
