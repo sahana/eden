@@ -7,7 +7,10 @@
     "use strict";
 
     var modality = '#dvr_activity_modality',
-        wrapperID = 'dvr_activity_location_id__wrapper';
+        wrapperID = 'dvr_activity_location_id__wrapper',
+        certificate = '#dvr_activity_certificate',
+        certificateDetailsRow = '#dvr_activity_certificate_details__row';
+
 
     /**
      * Toggle fields for Site/Room and Target Area by Modality
@@ -31,6 +34,20 @@
         $(show).removeClass('hide').show();
     };
 
+    /**
+     * Toggle certificate details input
+     */
+    var toggleCertificateDetails = function() {
+
+        if ($(certificate).is(':checked')) {
+            $(certificateDetailsRow).removeClass('hide').show();
+        } else {
+            $(certificateDetailsRow).hide();
+            // Remove details when certificate-flag is unchecked
+            $('#dvr_activity_certificate_details').val('');
+        }
+    };
+
     $(document).ready(function() {
 
         // If we have an active modality input...
@@ -49,6 +66,18 @@
 
             // Set initial visibility
             toggleActivityLocationFields();
+        }
+
+        // If we have an active certificate checkbox...
+        if ($(certificate).length) {
+
+            // Toggle visibility of certificate details row
+            $(certificate).unbind('.dvr').bind('change.dvr', function() {
+                toggleCertificateDetails();
+            });
+
+            // Set initial visibility
+            toggleCertificateDetails();
         }
     });
 

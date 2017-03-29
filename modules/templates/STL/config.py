@@ -426,6 +426,13 @@ def config(settings):
                                            )
                 field.readable = field.writable = True
 
+                # Expose certificate fields
+                field = table.certificate
+                field.readable = field.writable = True
+
+                field = table.certificate_details
+                field.readable = field.writable = True
+
                 # Toggle visibility of location fields for individual records
                 record = r.record
                 if record:
@@ -494,6 +501,8 @@ def config(settings):
                                                 link = False,
                                                 name = "distribution",
                                                 ),
+                                            "certificate",
+                                            "certificate_details",
                                             S3SQLInlineComponent(
                                                 "document",
                                                 name = "file",
