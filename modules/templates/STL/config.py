@@ -1719,13 +1719,13 @@ def config(settings):
                     if r.interactive:
 
                         from s3 import S3DateFilter, \
+                                       S3HierarchyFilter, \
                                        S3LocationSelector, \
                                        S3OptionsFilter, \
                                        S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
                                        S3TextFilter, \
-                                       s3_get_filter_opts, \
-                                       S3HierarchyFilter
+                                       s3_get_filter_opts
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
@@ -1825,13 +1825,13 @@ def config(settings):
                                             #label = T("Nationality"),
                                             hidden = True,
                                             ),
-                            S3OptionsFilter("gender",                                            
+                            S3OptionsFilter("gender",
                                             hidden = True,
                                             ),
                             S3HierarchyFilter("dvr_case_activity.service_id",
-                                             lookup="org_service",
-                                             hidden=True,
-                                             ),
+                                              lookup = "org_service",
+                                              hidden = True,
+                                              ),
                             S3DateFilter("date_of_birth",
                                          #label = T("Date of Birth"),
                                          hidden = True,
