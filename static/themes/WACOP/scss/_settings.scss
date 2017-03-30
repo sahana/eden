@@ -95,12 +95,13 @@ $column-gutter: rem-calc(20);
 $font-weight-normal: normal !default;
 $font-weight-bold: bold !default;
 
+// Depricated colors
 $darkblue    : #112E51;
 $lightblue   : #0071bc;
 $rcred       : #CC0000;
 $brightred   : #EE3224;
 $blood       : #E50000;
-$darksteel    : #4D4D4D;
+// $darksteel    : #4D4D4D;
 
 $white       : #FFFFFF;
 // $ghost       : #FAFAFA;
@@ -111,9 +112,9 @@ $silver      : #EFEFEF;
 $smoke       : #EEEEEE;
 $gainsboro   : #DDDDDD;
 $iron        : #CCCCCC;
-// $base        : #AAAAAA;
+$base        : #AAAAAA;
 // $aluminum    : #999999;
-// $jumbo       : #888888;
+$jumbo       : #888888;
 // $monsoon     : #777777;
 $steel       : #666666;
 // $charcoal    : #555555;
@@ -125,14 +126,22 @@ $black       : #000000;
 // We use these as default colors throughout
 $primary-color  : #4D7EB9;
 $secondary-color: #e7e7e7;
-$alert-color    : #D92C20;
-// $success-color: #43AC6A;
-// $warning-color: #f08a24;
+$alert-color    : #FF5959;
+$success-color  : #7EB94D;
+$warning-color  : #E5AA07;
 // $info-color: #a0d3e8;
+
+// Theme colors
+$blue:      $primary-color;
+$mint:      #4DB988;
+$red:       $alert-color;
+$yellow:    $warning-color;
+$green:     $success-color;
+$darksteel: #4D4D4D;
 
 // We use these to control various global styles
 // $body-bg: $white;
-// $body-font-color: $jet;
+$body-font-color: $darksteel;
 // $body-font-family: $font-family-sans-serif;
 // $body-font-weight: $font-weight-normal;
 // $body-font-style: normal;
@@ -149,6 +158,7 @@ $alert-color    : #D92C20;
 // We use these to make sure border radius matches unless we want it different.
 // $global-radius: 3px;
 // $global-rounded: 1000px;
+$global-padding: rem-calc(20);
 
 // We use these to control inset shadow shiny edges and depressions.
 // $shiny-edge-size: 0 1px 0;
@@ -277,8 +287,8 @@ $paragraph-margin-bottom: rem-calc(20);
 // We use these to style anchors
 // $anchor-text-decoration: none;
 // $anchor-text-decoration-hover: none;
-$anchor-font-color: $lightblue;
-$anchor-font-color-hover: scale-color($lightblue, $lightness: -14%);
+$anchor-font-color: $primary-color;
+$anchor-font-color-hover: scale-color($anchor-font-color, $lightness: -14%);
 
 // We use these to style the <hr> element
 // $hr-border-width: 1px;
@@ -448,10 +458,10 @@ $anchor-font-color-hover: scale-color($lightblue, $lightness: -14%);
 // $include-html-button-classes: $include-html-classes;
 
 // We use these to build padding for buttons.
-// $button-tny: rem-calc(10);
-// $button-sml: rem-calc(14);
-// $button-med: rem-calc(16);
-// $button-lrg: rem-calc(18);
+$button-tny: rem-calc(6);
+$button-sml: rem-calc(10);
+$button-med: rem-calc(12);
+$button-lrg: rem-calc(14);
 
 // We use this to control the display property.
 // $button-display: inline-block;
@@ -1351,12 +1361,12 @@ $table-head-bg: $white;
 // $include-html-tabs-classes: $include-html-classes;
 
 // $tabs-navigation-padding: rem-calc(16);
-// $tabs-navigation-bg-color: $silver;
-// $tabs-navigation-active-bg-color: $white;
-// $tabs-navigation-hover-bg-color: scale-color($tabs-navigation-bg-color, $lightness: -6%);
-// $tabs-navigation-font-color: $jet;
-// $tabs-navigation-active-font-color: $tabs-navigation-font-color;
-// $tabs-navigation-font-size: rem-calc(16);
+$tabs-navigation-bg-color: transparent;
+$tabs-navigation-active-bg-color: transparent;
+$tabs-navigation-hover-bg-color: transparent;
+$tabs-navigation-font-color: $jumbo;
+$tabs-navigation-active-font-color: $darksteel;
+$tabs-navigation-font-size: $h4-font-size;
 // $tabs-navigation-font-family: $body-font-family;
 
 // $tabs-content-margin-bottom: rem-calc(24);

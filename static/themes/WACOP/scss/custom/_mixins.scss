@@ -6,25 +6,25 @@
 
 @mixin icon($name:fa-circle,$position:before,$color:false,$margin:rem-calc(5)){
   $position: if($position == before or $position == after,$position,before);
-  
+
   // Are they asking for a Font Awesome icon
   @if str-slice($name,1,2) == "fa" {
-    
+
     $name: map-get($fa-icons,$name);
     // If request isn't in $fa-icons deliver a default
     @if $name == null {
       $name: map-get($fa-icons,fa-circle);
     }
   }
-  
+
 
   &::#{$position} {
     content: $name;
     @if $color { color: $color; }
     @if $position == after {
-      margin-left: $margin;      
+      margin-left: $margin;
     } @else {
-      margin-right: $margin;      
+      margin-right: $margin;
     }
     display: inline-block;
     font: normal normal normal 14px/1 FontAwesome;
@@ -37,7 +37,7 @@
 
 @mixin priority-icon($type:'I') {
   &::before {
-    color: $dark;
+    color: $darksteel;
     display: inline-block;
     font-size: small;
     font-weight: bold;
@@ -46,7 +46,7 @@
     line-height: 20px;
   }
   @if $type == 'D' {
-    &::before { 
+    &::before {
       content: "D";
       background-color: $green;
       border-radius: 30px;
@@ -66,30 +66,12 @@
     &:-moz-placeholder { @content; }
     &::-moz-placeholder { @content; }
     &:-ms-input-placeholder { @content; }
-    &::-webkit-input-placeholder { @content; } 
+    &::-webkit-input-placeholder { @content; }
 }
 
 // =====================================
 // 1. Atoms
 // =====================================
-
-// Colors
-
-$blue:      #4D7EB9;
-$mint:      #4DB988;
-$red:       #FF5959;
-$yellow:    #E5AA07;
-$green:     #7EB94D;
-
-$gray:      #EFEFEF;
-$gray-alt:  #DDDDDD;
-$dark:      #4B4B4B;
-
-$body-font-color: $dark;
-
-// defaults
-
-$padding: 20;
 
 // Label
 @mixin meta-label($color:false,$size:rem-calc(12),$weight:$font-weight-normal){
@@ -104,10 +86,6 @@ $padding: 20;
   }
 }
 
-.meta {
-  @include meta-label;
-}
-
 // More
 // read more link
 @mixin read-more {
@@ -116,10 +94,6 @@ $padding: 20;
     vertical-align: text-bottom;
   }
   @include meta-label;
-}
-
-a.more {
-  @include read-more;
 }
 
 // Location one line
@@ -132,7 +106,7 @@ a.more {
   // If input is greater than 11 reduce it to 10
   $input-width: if($input-width > 11, 10, $input-width);
   $btn-width: 12 - $input-width;
-  
+
   @include grid-row();
   input {
     @include grid-column($input-width);
@@ -153,81 +127,12 @@ a.more {
   }
 }
 
-@mixin fieldset($side-padding: $padding){
+@mixin fieldset($side-padding: $global-padding){
   fieldset {
-    border-left-width: 0; 
-    border-right-width: 0; 
-    margin-left: rem-calc(-$side-padding);
-    margin-right: rem-calc(-$side-padding);
-  }
-}
-
-// -------------------------------------
-// Table Elements
-
-table {
-  tbody {
-    tr {
-      &.odd,
-      &:nth-of-type(odd) { background: $table-odd-row-bg; }
-    }
-  }
-}
-
-// -------------------------------------
-// Form Elements
-
-form label {
-  @include meta-label;
-}
-
-select {
-  background-color: $gray-alt;
-  border-color: $gray-alt;
-  border-radius: $global-radius;
-}
-
-// Placeholder text
-input,
-textarea {
-  @include input-placeholder {
-    opacity: 1;
-    color: lighten($body-font-color, 40%);
-  }
-}
-
-// Input with button
-@mixin input-button($input-width:9) {
-  // If input is greater than 11 reduce it to 10
-  $input-width: if($input-width > 11, 10, $input-width);
-  $btn-width: 12 - $input-width;
-  
-  @include grid-row();
-  input {
-    @include grid-column($input-width);
-  }
-
-  .btn,
-  .button,
-  button {
-    @include grid-column($btn-width);
-    border-radius: $global-radius 0 0 $global-radius;
-    font-size: rem-calc(11);
-  }
-
-  input ~ .btn,
-  input ~ .button,
-  input ~ button {
-    border-radius: 0 $global-radius $global-radius 0;
-  }
-}
-
-@mixin fieldset($side-padding: $padding){
-  fieldset {
-    border-left-width: 0; 
-    border-right-width: 0; 
-    margin-left: rem-calc(-$side-padding);
-    margin-right: rem-calc(-$side-padding);
+    border-left-width: 0;
+    border-right-width: 0;
+    margin-left: -$side-padding;
+    margin-right: -$side-padding;
   }
 }
 
@@ -237,14 +142,14 @@ textarea {
 
 // -------------------------------------
 // Filter box
-@mixin filter($bkg: $gray, $padding: $padding) {
+@mixin filter($bkg: $silver, $padding: $global-padding) {
   background-color: $bkg;
-  padding: rem-calc($padding);
+  padding: $padding;
   .button {
     @include meta-label;
   }
   > .row:last-child {
-    input, 
+    input,
     .button { margin-bottom: 0; }
   }
 
@@ -278,26 +183,31 @@ textarea {
 
 // -------------------------------------
 // Filter group
-@mixin filter-group($bkg: $gray, $padding: $padding) {
+@mixin filter-group($bkg: $silver, $padding: $global-padding) {
   background-color: $bkg;
-  padding: rem-calc($padding);
+  padding: $padding;
   .title {
     font-size: $h4-font-size;
     font-weight: bold;
     a {
       @include meta-label($size:$small-font-size,$weight:bold);
       line-height: 0;
-      margin-left: rem-calc($padding);
+      margin-left: $padding;
     }
   }
   .sub-title {
-    @include meta-label($color:$dark);
+    @include meta-label($color:$darksteel);
+  }
+  > ul,
+  ul.item-group {
+    margin: 0;
+    li { list-style: none; }
   }
 
   label { display: inline; }
 
   .drop {
-    background-color: $gray-alt;
+    background-color: $gainsboro;
     padding: 2px 6px;
     font-weight: bold;
     border-radius: 3px;
@@ -306,22 +216,18 @@ textarea {
 }
 
 // -------------------------------------
-// Tabs
-@mixin tabs {}
-
-// -------------------------------------
 // Status Bar
 // Molecule that appears at the top of cards
-@mixin status-bar($bkg: $dark,$color:white) {
+@mixin status-bar($bkg: $darksteel,$color:white) {
   @include clearfix;
   background-color: $bkg;
   color: $color;
-  padding: 0 rem-calc($padding);
-  
+  padding: 0 $global-padding;
+
   a {
     color: $color;
     &:hover {
-      
+
     }
   }
 
@@ -331,7 +237,7 @@ textarea {
   &.mute {
     background-color: #888;
   }
-  
+
   // items in bar should be list items
   ul {
     margin: 0;
@@ -403,6 +309,40 @@ textarea {
 // -------------------------------------
 // Data Table
 
+@mixin data-table(){
+  .dataTables_processing {}
+  .dataTables_info { float:left; }
+  .dataTables_length {
+    float: right;
+    margin: rem-calc(-6) rem-calc(10) rem-calc(6) 0;
+    select {
+      width: auto;
+      padding-right: 25px;
+      margin: 0;
+    }
+  }
+  .dataTable_table {
+    clear:both;
+    table { width: 100%; }
+  }
+  .dt-export-options {
+    float: right;
+    .dt-export {
+      display: inline;
+      cursor: pointer;
+      margin-left: rem-calc(5);
+      &.export_kml { @include icon(fa-map-o,$color:$blue,$margin:0); }
+      &.export_pdf { @include icon(fa-file-pdf-o,$color:$blue,$margin:0); }
+      &.export_rss { @include icon(fa-rss,$color:$blue,$margin:0); }
+      &.export_xls { @include icon(fa-file-excel-o,$color:$blue,$margin:0); }
+      &.export_xml { @include icon(fa-file-text-o,$color:$blue,$margin:0); }
+    }
+  }
+  .dataTables_paginate {
+    text-align: center;
+  }
+}
+
 // -------------------------------------
 // Data List
 
@@ -411,9 +351,9 @@ textarea {
 // call out boxes
 
   // Date Location box
-  @mixin box-date-location($bkg: $gray-alt, $padding: $padding) {
+  @mixin box-date-location($bkg: $gainsboro, $padding: $global-padding) {
     background-color: $bkg;
-    padding: rem-calc($padding);
+    padding: $padding;
     .adr {
       @include location-inline;
     }
@@ -424,9 +364,9 @@ textarea {
   }
 
   // Date box
-  @mixin box-date($bkg: $gray-alt, $padding: $padding) {
+  @mixin box-date($bkg: $gainsboro, $padding: $global-padding) {
     background-color: $bkg;
-    padding: rem-calc($padding);
+    padding: $padding;
     .date-label {
       @include meta-label;
     }
@@ -434,9 +374,9 @@ textarea {
   }
 
   // Location box
-  @mixin box-location($bkg: $gray-alt, $padding: $padding) {
+  @mixin box-location($bkg: $gainsboro, $padding: $global-padding) {
     background-color: $bkg;
-    padding: rem-calc($padding);
+    padding: $padding;
     .adr {}
     .geo-location {
       @include meta-label;
@@ -478,7 +418,7 @@ textarea {
 
 // -------------------------------------
 // Callout
-$callout-bg: $blue;
+$callout-bg: $base;
 
 @mixin callout($bg:$callout-bg) {
   @include clearfix;
@@ -495,20 +435,20 @@ $callout-bg: $blue;
 // -------------------------------------
 // Card
 // a box that displays information
-@mixin card($bkg:$gray) {
+@mixin card($bkg:$silver) {
   @include clearfix;
   background-color: $bkg;
-  margin-bottom: rem-calc($padding);
+  margin-bottom: $global-padding;
   .status-bar {
     @include status-bar;
   }
 
   > .body,
   > .footer {
-    padding: 0 rem-calc($padding);
+    padding: 0 $global-padding;
   }
   .body {
-    padding-top: rem-calc($padding);
+    padding-top: $global-padding;
   }
   .footer {}
 }
