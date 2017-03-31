@@ -58,6 +58,9 @@ from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
 
+# DRY helper to get the original name of a Table (_tablename can be an alias)
+original_tablename = lambda table: table._ot if table._ot else table._tablename
+
 # =============================================================================
 class AuthS3(Auth):
 
@@ -4598,16 +4601,22 @@ $.filterOptionsS3({
         """
 
         if hasattr(table, "_tablename"):
-            table = table._tablename
+            tablename = original_tablename(table)
+        else:
+            tablename = table
+
         if not self.user:
+
             session = current.session
             if "owned_records" not in session:
-                session.owned_records = Storage()
-            records = session.owned_records.get(table, [])
+                session.owned_records = {}
+
+            records = session.owned_records.get(tablename, [])
             record_id = str(record_id)
             if record_id not in records:
                 records.append(record_id)
-            session.owned_records[table] = records
+
+            session.owned_records[tablename] = records
 
     # -------------------------------------------------------------------------
     def s3_session_owns(self, table, record_id):
@@ -4619,17 +4628,18 @@ $.filterOptionsS3({
         """
 
         session = current.session
-        if "owned_records" not in session:
+        if self.user or not record_id or "owned_records" not in session:
             return False
+
         if hasattr(table, "_tablename"):
-            table = table._tablename
-        if record_id and not self.user:
-            try:
-                records = session.owned_records.get(table, [])
-            except:
-                records = []
-            if str(record_id) in records:
-                return True
+            tablename = original_tablename(table)
+        else:
+            tablename = table
+
+        records = session.owned_records.get(tablename)
+        if records:
+            return str(record_id) in records
+
         return False
 
     # -------------------------------------------------------------------------
@@ -4644,18 +4654,28 @@ $.filterOptionsS3({
         session = current.session
         if "owned_records" not in session:
             return
+
         if table is not None:
+
             if hasattr(table, "_tablename"):
-                table = table._tablename
-            if table in session.owned_records:
-                records = session.owned_records[table]
-                if record_id is not None:
-                    if str(record_id) in records:
-                        records.remove(str(record_id))
+                tablename = original_tablename(table)
+            else:
+                tablename = table
+
+            if tablename in session.owned_records:
+
+                if record_id:
+                    # Remove just this record ID
+                    record_id = str(record_id)
+                    records = session.owned_records[tablename]
+                    if record_id in records:
+                        records.remove(record_id)
                 else:
-                    del session.owned_records[table]
+                    # Remove all record IDs for this table
+                    del session.owned_records[tablename]
         else:
-            session.owned_records = Storage()
+            # Remove all session ownerships
+            session.owned_records = {}
 
     # -------------------------------------------------------------------------
     def s3_update_record_owner(self, table, record, update=False, **fields):
@@ -4771,7 +4791,7 @@ $.filterOptionsS3({
 
         # Find the table
         if hasattr(table, "_tablename"):
-            tablename = table._tablename
+            tablename = original_tablename(table)
         else:
             tablename = table
             table = s3db.table(tablename)
@@ -4903,7 +4923,7 @@ $.filterOptionsS3({
 
         # Find the table
         if hasattr(table, "_tablename"):
-            tablename = table._tablename
+            tablename = original_tablename(table)
         else:
             tablename = table
             table = s3db.table(tablename)
@@ -5013,8 +5033,9 @@ $.filterOptionsS3({
 
         # Fall back to standard lookup cascade
         if realm_entity == 0:
+            tablename = original_tablename(table)
             if "pe_id" in record and \
-               table._tablename not in ("pr_person", "dvi_body"):
+               tablename not in ("pr_person", "dvi_body"):
                 realm_entity = record["pe_id"]
             elif "organisation_id" in record:
                 realm_entity = s3db.pr_get_pe_id("org_organisation",
@@ -5150,11 +5171,10 @@ $.filterOptionsS3({
                 redirect(URL(c="default", f="index"))
         elif table is not None:
             if hasattr(table, "_tablename"):
-                tablename = table._tablename
+                tablename = original_tablename(table)
             else:
                 tablename = table
-            s3db.configure(tablename,
-                           insertable = False)
+            s3db.configure(tablename, insertable=False)
 
         return site_ids # Will be []
 
@@ -5194,10 +5214,10 @@ $.filterOptionsS3({
                 redirect(URL(c="default", f="index"))
         elif table is not None:
             if hasattr(table, "_tablename"):
-                tablename = table._tablename
+                tablename = original_tablename(table)
             else:
                 tablename = table
-            s3db.configure(tablename, insertable = False)
+            s3db.configure(tablename, insertable=False)
 
         return []
 
@@ -5778,7 +5798,7 @@ class S3Permission(object):
         if user is None:
             # Session ownership?
             if hasattr(table, "_tablename"):
-                tablename = table._tablename
+                tablename = original_tablename(table)
             else:
                 tablename = table
             session = current.session
@@ -5996,15 +6016,19 @@ class S3Permission(object):
         settings = current.deployment_settings
 
         if settings.get_auth_record_approval():
+
+            if type(table) is Table:
+                tablename = original_tablename(table)
+            else:
+                tablename = table
+
             tables = settings.get_auth_record_approval_required_for()
             if tables is not None:
-                table = table._tablename if type(table) is Table else table
-                if table in tables:
-                    return True
-                else:
-                    return False
-            elif current.s3db.get_config(table, "requires_approval"):
+                return tablename in tables
+
+            elif current.s3db.get_config(tablename, "requires_approval"):
                 return True
+
             else:
                 return False
         else:
@@ -6030,13 +6054,15 @@ class S3Permission(object):
         settings = current.deployment_settings
         auth = current.auth
 
+        tablename = original_tablename(table)
+
         if not settings.get_auth_record_approval():
             if auth.s3_logged_in() and auth.user:
                 approver.default = auth.user.id
             else:
                 approver.default = 0
         elif force or \
-             table._tablename not in settings.get_auth_record_approval_manual():
+             tablename not in settings.get_auth_record_approval_manual():
             if auth.override:
                 approver.default = 0
             elif auth.s3_logged_in() and \
@@ -6259,7 +6285,8 @@ class S3Permission(object):
             error = AttributeError("undefined table %s" % tablename)
             table = current.s3db.table(tablename,
                                        db_only = True,
-                                       default = error)
+                                       default = error,
+                                       )
 
         if not isinstance(method, (list, tuple)):
             method = [method]
@@ -6597,6 +6624,9 @@ class S3Permission(object):
 
         # Table ACLs
         if t and self.use_tacls:
+            # Be sure to use the original table name
+            if hasattr(t, "_tablename"):
+                t = original_tablename(t)
             tq = (table.controller == None) & \
                  (table.function == None) & \
                  (table.tablename == t)
@@ -6819,7 +6849,7 @@ class S3Permission(object):
                 result[key] = acl
 
         #for pe in result:
-            #print "ACL for PE %s: %04X %04X" % (pe, result[pe][0], result[pe][1])
+        #    print "ACL for PE %s: %04X %04X" % (pe, result[pe][0], result[pe][1])
 
         return result
 
@@ -6997,7 +7027,7 @@ class S3Permission(object):
             return
 
         if hasattr(table, "_tablename"):
-            tablename = table._tablename
+            tablename = original_tablename(table)
         else:
             tablename = table
 

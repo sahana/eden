@@ -1832,7 +1832,7 @@ def config(settings):
                                               lookup = "org_service",
                                               hidden = True,
                                               ),
-                            S3OptionsFilter("dvr_case_activity.project_id",                                            
+                            S3OptionsFilter("dvr_case_activity.project_id",
                                             options = s3_get_filter_opts("project_project"),
                                             hidden = True,
                                             ),
@@ -1878,6 +1878,30 @@ def config(settings):
 
                     resource.configure(list_fields = list_fields,
                                        )
+
+                    if r.method == "report":
+                        report_fields = ("gender",
+                                         "person_details.nationality",
+                                         "dvr_case.status_id",
+                                         "dvr_case_activity.service_id",
+                                         "age_group",
+                                         "dvr_case.date",
+                                         )
+
+                        report_facts = [(T("Number of Beneficiaries"), "count(id)"),
+                                        ]
+
+                        report_options = {"rows": report_fields,
+                                          "cols": report_fields,
+                                          "fact": report_facts,
+                                          "defaults": {
+                                              "rows": "dvr_case_activity.service_id",
+                                              "cols": "person_details.nationality",
+                                              "fact": report_facts[0],
+                                              }
+                                          }
+                        resource.configure(report_options = report_options,
+                                           )
 
                 elif r.component_name == "evaluation":
 
