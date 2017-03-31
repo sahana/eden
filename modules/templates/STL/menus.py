@@ -148,8 +148,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
                         M("All Beneficiaries", vars = {}),
-                        M(follow_up_label, f="due_followups"),
                         M("Beneficiary Report", m="report"),
+                        M(follow_up_label, f="due_followups"),
                         ),
                     M("Activities", link=False,
                       restrict = ("ORG_ADMIN", "GROUP_ACTIVITIES", "MENTAL_HEALTH"))(
