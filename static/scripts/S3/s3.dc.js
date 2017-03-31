@@ -29,12 +29,14 @@ $(document).ready(function() {
         $('#dc_question_options').tagit();
     } else {
         // Hide the Options field & label
+        //$('#dc_question_options, #dc_question_options__label, #dc_question_sort_options, #dc_question_sort_options__label').hide();
         $('#dc_question_options, #dc_question_options__label').hide();
     }
     qtype.change(function() {
         if ($(this).val() == 6) {
             // Options Field
             // Show the Options field & label
+            //$('#dc_question_options, #dc_question_options__label, #dc_question_sort_options, #dc_question_sort_options__label').show();
             $('#dc_question_options, #dc_question_options__label').show();
             // Convert the TEXTAREA field to an INPUT
             $textarea = $('#dc_question_options');
@@ -48,6 +50,7 @@ $(document).ready(function() {
             $input.tagit();
         } else {
             // Hide the Options field & label
+            //$('#dc_question_options, #dc_question_options__label, #dc_question_sort_options, #dc_question_sort_options__label').hide();
             $('#dc_question_options, #dc_question_options__label').hide();
         }
     });

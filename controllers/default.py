@@ -927,7 +927,7 @@ def group():
     """
         RESTful CRUD controller
         - needed when group add form embedded in default/person
-        - only create method is allowed, when opened in a inline form.
+        - only create method is allowed, when opened in an inline form.
     """
 
     # Check if it is called from a inline form
@@ -1476,7 +1476,9 @@ def table():
 # -----------------------------------------------------------------------------
 def get_settings():
     """
-       Function to respond to get requests. Requires admin permissions
+       Function to lookup the value of a deployment_setting
+       Responds to GET requests.
+       Requires admin permissions
     """
 
     # Check if the request has a valid authorization header with admin cred.

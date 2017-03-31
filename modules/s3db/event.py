@@ -2982,8 +2982,8 @@ def event_notification_dispatcher(r, **attr):
 
             record = r.record
             id = record.id
-            eventName = record.name
-            startDate = record.start_date
+            eventName = record.start_name
+            startDate = record.date
             exercise = record.exercise
             status = record.closed
 
@@ -3004,7 +3004,7 @@ def event_notification_dispatcher(r, **attr):
             record = r.record
             id = record.id
             incName = record.name
-            zeroHour = record.start_date
+            zeroHour = record.date
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed

@@ -243,13 +243,24 @@ class DataCollectionTemplateModel(S3Model):
                            label = T("Options"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
                            ),
+                     # Use List to force order or Dict to alphasort
+                     #Field("sort_options", "boolean",
+                     #      default = True,
+                     #      label = T("Sort Options?"),
+                     #      represent = s3_yes_no_represent,
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Sort Options?"),
+                     #                                      T("Whether options should be sorted alphabetically"),
+                     #                                      ),
+                     #                    ),
+                     #      ),
                      Field("require_not_empty", "boolean",
                            default = False,
-                           label = T("Is required"),
+                           label = T("Required?"),
                            represent = s3_yes_no_represent,
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Is required"),
-                                                           T("Field value must not be empty"),
+                                         _title="%s|%s" % (T("Required?"),
+                                                           T("Is the field mandatory? (Cannot be left empty)"),
                                                            ),
                                          ),
                            ),
@@ -413,25 +424,30 @@ class DataCollectionTemplateModel(S3Model):
                                                        limitby=(0, 1)
                                                        ).first()
 
-        options = question.options
         field_type = question.field_type
+        options = None
         if field_type == 1:
             field_type = "string"
-        elif field_type in (2, 5, 6):
-            if field_type == 5:
-                T = current.T
-                options = {1: T("Yes"),
-                           2: T("No"),
-                           3: T("Don't Know"),
-                           }
+        elif field_type == 2:
             field_type = "integer"
         elif field_type == 4:
             field_type = "boolean"
+        elif field_type == 5:
+            T = current.T
+            options = [T("Yes"),
+                       T("No"),
+                       T("Don't Know"),
+                       ]
+            field_type = "string"
+        elif field_type == 6:
+            options = question.options
+            field_type = "string"
         elif field_type == 7:
             field_type = "date"
         elif field_type == 8:
             field_type = "datetime"
         else:
+            current.log.debug(field_type)
             raise NotImplementedError
 
         field_id = question.field_id
@@ -440,6 +456,7 @@ class DataCollectionTemplateModel(S3Model):
             db(current.s3db.s3_field.id == field_id).update(label = question.name,
                                                             field_type = field_type,
                                                             options = options,
+                                                            #settings = settings,
                                                             require_not_empty = question.require_not_empty,
                                                             comments = question.comments,
                                                             )
@@ -458,6 +475,7 @@ class DataCollectionTemplateModel(S3Model):
                                                     name = name,
                                                     field_type = field_type,
                                                     options = options,
+                                                    #settings = settings,
                                                     require_not_empty = question.require_not_empty,
                                                     comments = question.comments,
                                                     )
@@ -694,6 +712,7 @@ def dc_rheader(r, tabs=None):
             rheader_fields = [["template_id"],
                               ["location_id"],
                               ["date"],
+                              ["person_id"],
                               ]
 
             if current.deployment_settings.has_module("event"):
