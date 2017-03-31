@@ -1878,6 +1878,24 @@ def config(settings):
 
                     resource.configure(list_fields = list_fields,
                                        )
+                    
+                    if r.method == "report":
+                        report_fields = ["gender",
+                                        "person_details.nationality",
+                                        "dvr_case.status_id",
+                                        "dvr_case_activity.service_id",
+                                        "age_group",
+                                        "dvr_case.date",
+                                        ]
+                        
+                        report_facts = [(T("Count of Beneficiaries"), "count(id)"),                                        
+                                        ]
+                        
+                        report_options = Storage(rows = report_fields,
+                                                cols = report_fields, 
+                                                fact = report_facts,                                                                                               
+                                                )
+                        resource.configure(report_options = report_options)
 
                 elif r.component_name == "evaluation":
 
