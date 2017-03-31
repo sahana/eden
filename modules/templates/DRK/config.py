@@ -2784,6 +2784,9 @@ def config(settings):
 
         table = current.s3db.security_seized_item
 
+        field = table.person_id
+        field.comment = T("Enter some characters of the ID or name to start the search, then select from the drop-down")
+
         # Can't add item type from item form
         field = table.item_type_id
         field.comment = None
