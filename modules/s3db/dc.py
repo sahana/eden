@@ -576,7 +576,8 @@ class DataCollectionModel(S3Model):
         self.configure(tablename,
                        create_next = URL(f="respnse", args=["[id]", "answer"]),
                        # Question Answers are in a Dynamic Component
-                       dynamic_components = True,
+                       # - however they all have the same component name so add correct one in controller instead!
+                       #dynamic_components = True,
                        super_entity = "doc_entity",
                        orderby = "dc_response.date desc",
                        )
