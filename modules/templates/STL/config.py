@@ -1715,6 +1715,15 @@ def config(settings):
                                                           ),
                                         )
 
+                    # Custom label for enrolled_in_school-flag
+                    field = dtable.enrolled_in_school
+                    field.label = T("Registered at public school")
+                    field.comment = DIV(_class="tooltip",
+                                        _title="%s|%s" % (T("Registered at Public School"),
+                                                          T("If the beneficiary is a child, is (s)he registered at a public school?"),
+                                                          ),
+                                        )
+
                     resource = r.resource
                     if r.interactive:
 
@@ -1742,6 +1751,7 @@ def config(settings):
                                         "case_details.arrival_date",
                                         "date_of_birth",
                                         "gender",
+                                        "case_details.enrolled_in_school",
                                         "person_details.marital_status",
                                         "case_details.registered",
                                         S3SQLInlineComponent(
