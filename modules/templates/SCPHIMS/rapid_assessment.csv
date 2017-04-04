@@ -1,12 +1,8 @@
 Template,Section,Section Position,SubSection,SubSection Position,SubSubSection,SubSubSection Position,Question,Question Position,Type,Options,Required,Tooltip
 Rapid Assessment,1. Assessment team information,1,,,,,a) Organizations participating,1,text,,,
 Rapid Assessment,1. Assessment team information,1,,,,,d) Contact Details,2,text,,,
-Rapid Assessment,1. Assessment team information,1,,,,,e) Number of days since emergency event occurred,3,number,,,
-Rapid Assessment,1. Assessment team information,1,,,,,f) Date the event (started),4,date,,,
 Rapid Assessment,2. Geographic information,2,,,,,e) Name/Position of Person interviewed,5,text,,,
 Rapid Assessment,2. Geographic information,2,,,,,f) Contact Details,6,text,,,
-Rapid Assessment,3. Demographic data,3,a) Pre-Event,1,,,i. Total population of Barangay,1,number,,,
-Rapid Assessment,3. Demographic data,3,a) Pre-Event,1,,,ii. Total number of households in Barangay,2,number,,,
 Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,i. Male Adults,3,number,,,
 Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,ii. Female Adults,4,number,,,
 Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,iii. Total Adults,5,number,,,

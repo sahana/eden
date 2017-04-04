@@ -310,8 +310,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dc_response_controller(**attr):
 
-        
-
         s3 = current.response.s3
         standard_prep = s3.prep
         def custom_prep(r):
@@ -340,10 +338,8 @@ def config(settings):
                                        )
 
             elif r.component_name == "answer":
-                # @ToDo: Default the Event Date
+                current.s3db.event_event.start_date.label = T("Date the Event Occurred")
                 # @ToDo: Default the pre-event Demographiocs data
-                pass
-                
 
             return True
         s3.prep = custom_prep

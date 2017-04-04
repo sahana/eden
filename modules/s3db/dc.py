@@ -563,7 +563,7 @@ class DataCollectionModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
                      target_id(),
                      template_id(),
-                     s3_date(default = "now"),
+                     s3_datetime(default = "now"),
                      location_id(),
                      self.org_organisation_id(),
                      self.pr_person_id(
@@ -715,19 +715,67 @@ def dc_rheader(r, tabs=None):
                               ["person_id"],
                               ]
 
-            if current.deployment_settings.has_module("event"):
-                ltable = s3db.event_response
-                f = ltable.event_id
-                def event_name(record):
-                    event = current.db(ltable.response_id == record.id).select(f,
-                                                                               limitby=(0, 1)
-                                                                               ).first()
-                    if event:
-                        return f.represent(event.event_id)
+            db = current.db
+            has_module = current.deployment_settings.has_module
+            if has_module("stats"):
+                # @ToDo: deployment_setting
+                ptable = s3db.stats_demographic
+                dtable = s3db.stats_demographic_data
+                date_field = dtable.date
+                value_field = dtable.value
+                query = (ptable.name == "Population") & \
+                        (dtable.parameter_id == ptable.parameter_id) & \
+                        (dtable.location_id == record.location_id) & \
+                        (dtable.deleted == False)
+                data = db(query).select(value_field,
+                                        date_field,
+                                        limitby=(0, 1),
+                                        orderby = ~date_field, # @ToDo: Handle case where system stores future predictions
+                                        ).first()
+                
+                def population(record):
+                    if data:
+                        return value_field.represent(data.value)
                     else:
                         return ""
 
-                rheader_fields.insert(0, [(f.label, event_name)])
+                rheader_fields.insert(2, [(T("Total Population"), population)])
+
+            if has_module("event"):
+                etable = s3db.event_event
+                ltable = s3db.event_response
+                event_id = ltable.event_id
+                date_field = etable.start_date
+                query = (ltable.response_id == record.id) & \
+                        (etable.id == event_id)
+                event = db(query).select(etable.id,
+                                         date_field,
+                                         limitby=(0, 1)
+                                         ).first()
+                
+                def event_name(record):
+                    if event:
+                        return event_id.represent(event.id)
+                    else:
+                        return ""
+
+                def event_date(record):
+                    if event:
+                        return date_field.represent(event.start_date)
+                    else:
+                        return ""
+
+                def event_days(record):
+                    if event:
+                        timedelta = record.date - event.start_date
+                        return timedelta.days
+                    else:
+                        return ""
+
+                rheader_fields.insert(0, [(event_id.label, event_name)])
+                rheader_fields.insert(1, [(date_field.label, event_date)])
+                # @ToDo: deployment_setting
+                rheader_fields.insert(2, [(T("Number of Days since Event Occurred"), event_days)])
 
         elif tablename == "dc_target":
 
