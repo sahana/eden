@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3Model",
+           #"S3DynamicModel",
            )
 
 from gluon import *

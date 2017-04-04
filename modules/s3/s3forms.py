@@ -1718,45 +1718,46 @@ class S3SQLField(S3SQLFormElement):
 
         rfield = S3ResourceField(resource, self.selector)
 
-        components = resource.components
-        subtables = {}
-        if components:
-            for alias, component in components.items():
-                if component.multiple:
-                    continue
-                if component._alias:
-                    tablename = component._alias
-                else:
-                    tablename = component.tablename
-                subtables[tablename] = alias
+        field = rfield.field
+        if field is None:
+            raise SyntaxError("Invalid selector: %s" % self.selector)
 
         tname = rfield.tname
-        if rfield.field is not None:
 
-            field = rfield.field
+        options = self.options
+        label = options.get("label", DEFAULT)
+        widget = options.get("widget", DEFAULT)
 
-            options = self.options
-            label = options.get("label", DEFAULT)
-            widget = options.get("widget", DEFAULT)
+        if resource._alias:
+            tablename = resource._alias
+        else:
+            tablename = resource.tablename
 
+        if tname == tablename:
             # Field in the main table
-            if resource._alias:
-                tablename = resource._alias
-            else:
-                tablename = resource.tablename
-            if tname == tablename:
-                field = rfield.field
 
-                if label is not DEFAULT:
-                    field.label = label
-                if widget is not DEFAULT:
-                    field.widget = widget
+            if label is not DEFAULT:
+                field.label = label
+            if widget is not DEFAULT:
+                field.widget = widget
 
-                return None, field.name, field
+            return None, field.name, field
 
-            # Field in a subtable (= single-record-component)
-            elif tname in subtables:
-                field = rfield.field
+        else:
+            components = resource.components
+            subtables = {}
+            if components:
+                for alias, component in components.items():
+                    if component.multiple:
+                        continue
+                    if component._alias:
+                        tablename = component._alias
+                    else:
+                        tablename = component.tablename
+                    subtables[tablename] = alias
+
+            if tname in subtables:
+                # Field in a subtable (= single-record-component)
 
                 alias = subtables[tname]
                 name = "sub_%s_%s" % (alias, rfield.fname)
@@ -1766,11 +1767,10 @@ class S3SQLField(S3SQLFormElement):
                                                    label = label,
                                                    widget = widget,
                                                    )
+
                 return alias, field.name, renamed_field
-            else:
-                raise SyntaxError("Invalid subtable: %s" % tname)
-        else:
-            raise SyntaxError("Invalid selector: %s" % self.selector)
+
+            raise SyntaxError("Invalid subtable: %s" % tname)
 
 # =============================================================================
 class S3SQLSubForm(S3SQLFormElement):

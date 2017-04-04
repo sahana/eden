@@ -103,7 +103,8 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
         if r.interactive:
             if r.component_name == "answer":
                 # CRUD Strings
-                s3.crud_strings[r.component.tablename] = Storage(
+                tablename = r.component.tablename
+                s3.crud_strings[tablename] = Storage(
                     label_create = T("Create Responses"),
                     title_display = T("Response Details"),
                     title_list = T("Responses"),
@@ -281,7 +282,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                                 cappend(fname)
 
                 crud_form = S3SQLCustomForm(*crud_fields)
-                s3db.configure(r.component.tablename,
+                s3db.configure(tablename,
                                crud_form = crud_form,
                                subheadings = subheadings,
                                )
