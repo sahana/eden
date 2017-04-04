@@ -375,7 +375,9 @@ class DataCollectionTemplateModel(S3Model):
             return
 
         # Create the Dynamic Table
-        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"))
+        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
+                                                mobile_form = False, # We don't expose the dynamic table directly
+                                                )
 
         # Add a Field to link Answers together
         db = current.db

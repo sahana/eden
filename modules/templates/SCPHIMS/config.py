@@ -131,6 +131,8 @@ def config(settings):
 
     settings.mobile.forms = [("Beneficiaries", "pr_person", {"c": "dvr",
                                                              }),
+                             ("Rapid Assessments", "dc_response", {"c": "dc",
+                                                                   }),
                              ]
 
     # =========================================================================
