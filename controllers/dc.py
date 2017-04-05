@@ -98,6 +98,27 @@ def target():
 def respnse(): # Cannot call this 'response' or it will clobber the global
     """ RESTful CRUD controller """
 
+    # All templates use the same component name for answers so need to add the right component manually
+    request_args = request.args
+    if len(request_args) > 1 and request_args[1] == "answer":
+        response_id = request_args[0]
+        dtable = s3db.s3_table
+        rtable = s3db.dc_response
+        ttable = s3db.dc_template
+        query = (rtable.id == response_id) & \
+                (rtable.template_id == ttable.id) & \
+                (ttable.table_id == dtable.id)
+        template = db(query).select(dtable.name,
+                                    limitby=(0, 1),
+                                    ).first()
+        dtablename = template.name
+        components = {dtablename: {"name": "answer",
+                                   "joinby": "response_id",
+                                   "multiple": False,
+                                   }
+                      }
+        s3db.add_components("dc_response", **components)
+
     # Pre-process
     def prep(r):
         if r.interactive:

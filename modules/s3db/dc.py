@@ -375,7 +375,9 @@ class DataCollectionTemplateModel(S3Model):
             return
 
         # Create the Dynamic Table
-        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"))
+        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
+                                                mobile_form = False, # We don't expose the dynamic table directly
+                                                )
 
         # Add a Field to link Answers together
         db = current.db
@@ -576,7 +578,8 @@ class DataCollectionModel(S3Model):
         self.configure(tablename,
                        create_next = URL(f="respnse", args=["[id]", "answer"]),
                        # Question Answers are in a Dynamic Component
-                       dynamic_components = True,
+                       # - however they all have the same component name so add correct one in controller instead!
+                       #dynamic_components = True,
                        super_entity = "doc_entity",
                        orderby = "dc_response.date desc",
                        )

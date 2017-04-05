@@ -345,7 +345,7 @@ class S3Model(object):
         # Define sessions table
         if current.deployment_settings.get_base_session_db():
             # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
-            # Not DRY, bit no easy way to make it so
+            # Not DRY, but no easy way to make it so
             current.db.define_table("web2py_session",
                                     Field("locked", "boolean", default=False),
                                     Field("client_ip", length=64),
