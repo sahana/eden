@@ -88,6 +88,7 @@ def target():
                 f = table.template_id
                 f.default = record.template_id
                 f.writable = False
+                f.comment = None
 
         return True
     s3.prep = prep
@@ -99,9 +100,12 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
     """ RESTful CRUD controller """
 
     # All templates use the same component name for answers so need to add the right component manually
-    request_args = request.args
-    if len(request_args) > 1 and request_args[1] == "answer":
-        response_id = request_args[0]
+    try:
+        response_id = int(request.args(0))
+    except:
+        # Multiple record method
+        pass
+    else:
         dtable = s3db.s3_table
         rtable = s3db.dc_response
         ttable = s3db.dc_template

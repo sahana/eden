@@ -531,6 +531,11 @@ class DataCollectionModel(S3Model):
         # Components
         add_components(tablename,
                        dc_response = "target_id",
+                       event_event = {"link": "event_target",
+                                      "joinby": "target_id",
+                                      "key": "event_id",
+                                      "actuate": "replace",
+                                      },
                        )
 
         # CRUD strings
@@ -813,9 +818,17 @@ def dc_rheader(r, tabs=None):
 
         elif tablename == "dc_target":
 
+            label = current.deployment_settings.get_dc_response_label()
+            if label == "Assessment":
+                RESPONSES = T("Assessments")
+            elif label == "Survey":
+                RESPONSES = T("Surveys")
+            else:
+                RESPONSES = T("Responses")
+        
             tabs = ((T("Basic Details"), None),
                     # @ToDo: Use settings for label
-                    (T("Responses"), "response"),
+                    (RESPONSES, "response"),
                     )
 
             rheader_fields = (["template_id"],
