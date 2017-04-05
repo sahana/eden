@@ -31,6 +31,8 @@ __all__ = ("S3Model",
            #"S3DynamicModel",
            )
 
+#from collections import OrderedDict
+
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
@@ -1769,6 +1771,15 @@ class S3DynamicModel(object):
         else:
             default = None
 
+        # Widget?
+        #widget = settings.get("widget")
+        #if widget == "radio":
+        len_options = len(options)
+        if len_options < 4:
+            widget = lambda field, value: SQLFORM.widgets.radio.widget(field, value, cols=len_options)
+        else:
+            widget = None
+        
         from s3fields import S3Represent
         field = Field(fieldname, fieldtype,
                       default = default,
@@ -1778,7 +1789,8 @@ class S3DynamicModel(object):
                       requires = IS_IN_SET(options,
                                            sort = sort,
                                            zero = zero,
-                                           )
+                                           ),
+                      widget = widget,
                       )
         return field
 
@@ -1963,7 +1975,6 @@ class S3DynamicModel(object):
         """
 
         fieldname = row.name
-        fieldtype = row.field_type
 
         default = row.default_value
         if default and default.lower() == "true":
@@ -1971,12 +1982,37 @@ class S3DynamicModel(object):
         else:
             default = False
 
+        #settings = row.settings or {}
+        #widget = settings.get("widget")
+        #if widget == "radio":
+        #    # boolean is hardcoded to a checkbox widget in SQLFORM.accepts
+        #    # - if var is in form.vars then it is interpreted as True
+        #    fieldtype = "integer"
+        #    T = current.T
+        #    #def filter_in(value):
+        #    #    if value == "False":
+        #    #        value = False
+        #    #    return value
+        #    requires = IS_IN_SET(OrderedDict([(1, T("Yes")),
+        #                                      (2, T("No")),
+        #                                      ]))
+        #    widget = lambda field, value: SQLFORM.widgets.radio.widget(field, value, cols=2)
+        #else:
+        # Default checkbox
+        fieldtype = row.field_type
+        #filter_in = None
+        #requires = None
+        #widget = None
+
         from s3utils import s3_yes_no_represent
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = s3_yes_no_represent,
-                      requires = None,
+                      #requires = requires,
+                      #widget = widget,
                       )
+        #if filter_in:
+        #    field.filter_in = filter_in
 
         return field
 

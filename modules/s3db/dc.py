@@ -376,7 +376,7 @@ class DataCollectionTemplateModel(S3Model):
 
         # Create the Dynamic Table
         table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
-                                                mobile_form = False, # We don't expose the dynamic table directly
+                                                #mobile_form = False,
                                                 )
 
         # Add a Field to link Answers together
@@ -719,24 +719,55 @@ def dc_rheader(r, tabs=None):
                               ]
 
             db = current.db
+
+            def contacts(record):
+                ptable = s3db.pr_person
+                ctable = s3db.pr_contact
+                query = (ptable.id == record.person_id) & \
+                        (ptable.pe_id == ctable.pe_id) & \
+                        (ctable.deleted == False)
+                data = db(query).select(ctable.value,
+                                        ctable.contact_method,
+                                        ctable.priority,
+                                        orderby = ~ctable.priority,
+                                        )
+                if data:
+                    # Prioritise Phone then Email
+                    email = None
+                    other = None
+                    for contact in data:
+                        if contact.contact_method == "SMS":
+                            return contact.value
+                        elif contact.contact_method == "Email":
+                            if not email:
+                                email = contact.value
+                        else:
+                            if not other:
+                                other = contact.value
+                    return email or other
+                else:
+                    # @ToDo: Provide an Edit button
+                    return A(T("Add"))
+
+            rheader_fields.append([(T("Contact Details"), contacts)])
+
             has_module = current.deployment_settings.has_module
             if has_module("stats"):
-                # @ToDo: deployment_setting
-                ptable = s3db.stats_demographic
-                dtable = s3db.stats_demographic_data
-                date_field = dtable.date
-                value_field = dtable.value
-                query = (ptable.name == "Population") & \
-                        (dtable.parameter_id == ptable.parameter_id) & \
-                        (dtable.location_id == record.location_id) & \
-                        (dtable.deleted == False)
-                data = db(query).select(value_field,
-                                        date_field,
-                                        limitby=(0, 1),
-                                        orderby = ~date_field, # @ToDo: Handle case where system stores future predictions
-                                        ).first()
-                
+                # @ToDo: deployment_setting, not just presence of module
                 def population(record):
+                    ptable = s3db.stats_demographic
+                    dtable = s3db.stats_demographic_data
+                    date_field = dtable.date
+                    value_field = dtable.value
+                    query = (ptable.name == "Population") & \
+                            (dtable.parameter_id == ptable.parameter_id) & \
+                            (dtable.location_id == record.location_id) & \
+                            (dtable.deleted == False)
+                    data = db(query).select(value_field,
+                                            date_field,
+                                            limitby=(0, 1),
+                                            orderby = ~date_field, # @ToDo: Handle case where system stores future predictions
+                                            ).first()
                     if data:
                         return value_field.represent(data.value)
                     else:
