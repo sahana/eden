@@ -260,7 +260,6 @@ class S3DynamicTablesModel(S3Model):
         tablename = "s3_field"
         define_table(tablename,
                      table_id(empty = False,
-                              notnull = True,
                               ondelete = "CASCADE",
                               ),
                      Field("label",
