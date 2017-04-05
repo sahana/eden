@@ -2738,19 +2738,14 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
 
     def render_row(row_id, label, widget, comment, hidden=False):
 
-        controls = DIV(DIV(LABEL("Search:",
-                                 _class="prefix",
-                                 ),
-                           _class="large-4 columns",
-                           _for=widget[1].attributes["_name"],
-                           ),
-                       DIV(widget,
-                           _class="large-8 columns",
-                           ),
-                       _class="row collapse prefix-radius",
+        controls = DIV(widget,
+                       SPAN(I(_class="fa fa-search"),
+                            _class="search-icon"
+                            ),
+                       _class="search-wrapper",
                        _id=row_id,
                        )
-        return controls
+        return DIV(DIV(controls,_class="small-12 column"),_class="row")
 
     if args:
         row_id = form
@@ -2803,15 +2798,7 @@ def filter_formstyle_profile(form, fields, *args, **kwargs):
             if submit:
                 submit.add_class("small primary button")
 
-        if isinstance(label, LABEL):
-            label.add_class("left inline")
-
-        controls_col = DIV(widget, _class="small-12 columns controls")
-        if label:
-            label_col = DIV(label, _class="medium-2 columns")
-        else:
-            label_col = ""
-            #controls_col.add_class("medium-offset-2")
+        controls = DIV(widget, _class="controls")
 
         if comment:
             comment = render_tooltip(label,
@@ -2822,9 +2809,8 @@ def filter_formstyle_profile(form, fields, *args, **kwargs):
                 comment.add_class("inline-tooltip")
             controls_col.append(comment)
 
-        _class = "form-row row hide" if hidden else "form-row row"
-        return DIV(label_col,
-                   controls_col,
+        _class = "row hide" if hidden else "row"
+        return DIV(DIV(label,controls,_class="small-12 columns"),
                    _class=_class, _id=row_id)
 
     if args:

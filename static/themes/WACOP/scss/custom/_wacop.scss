@@ -111,6 +111,14 @@ ul.dl {
 }
 
 // -------------------------------------
+// Filter form
+
+.filter-form {
+   @include filter;
+   .no-options-available { display: none; }
+}
+
+// -------------------------------------
 // Data Table
 
 // .dt-wrapper {

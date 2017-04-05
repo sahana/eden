@@ -167,6 +167,9 @@
   .s3-groupedopts-widget {
     margin-bottom: 0;
     width: 100%;
+    input {
+      vertical-align: inherit;
+    }
     td {
       label {
         display: block;
@@ -175,8 +178,8 @@
           float: left;
           margin-bottom: 0;
           margin-right: 6px;
-        }
       }
+    }
   }
 
 }
@@ -402,6 +405,9 @@
     padding: $form-spacing / 2;
     right:0;
     top:0;
+    .fa {
+      line-height: inherit;
+    }
   }
   &.column,
   &.columns {
@@ -444,9 +450,11 @@ $callout-bg: $base;
   }
 
   > .body,
+  > .dl-body,
   > .footer {
     padding: 0 $global-padding;
   }
+  .dl-body,
   .body {
     padding-top: $global-padding;
   }
