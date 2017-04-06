@@ -1491,7 +1491,6 @@ class person_Dashboard(custom_WACOP):
         s3 = current.response.s3
 
         output = {}
-        output["create_post_form"] = False
 
         # Map of Incidents
         ltable = current.s3db.gis_layer_feature

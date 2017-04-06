@@ -1,11 +1,11 @@
 {{extend "layout.html"}}
 <div class='row'>
- <div class="small-12 column">
+ <div class='small-12 column'>
    {{=XML(map)}}
  </div>
 </div>
 <div class='row'>
- <div class="small-12 column">
+ <div class='small-12 column'>
    <ul class='tabs tab-navigation' data-tab>
     <li class='tab-title active'><a href='#panel1'>Updates</a></li>
     <li class='tab-title'><a href='#panel2'>Directories</a></li>
@@ -18,8 +18,8 @@
        {{=filter_form}}
       </div>
       <div class='large-9 columns'>
-       {{if create_post_form:}}
-          {{=create_post_form}}
+       {{if create_post_button:}}
+          {{=create_post_button}}
           <hr>
        {{pass}}
        <ul class='no-bullet'>
