@@ -31,13 +31,13 @@ __all__ = ("S3Model",
            #"S3DynamicModel",
            )
 
-#from collections import OrderedDict
+from collections import OrderedDict
 
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field
-#from gluon.validators import IS_EMPTY_OR, IS_NOT_EMPTY
+#from gluon.validators import IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -1653,11 +1653,12 @@ class S3DynamicModel(object):
             requires = field.requires
 
             # Handle require_not_empty
-            if row.require_not_empty and fieldtype != "boolean":
-                if not requires:
-                    requires = IS_NOT_EMPTY()
-            elif requires:
-                requires = IS_EMPTY_OR(requires)
+            if fieldtype != "boolean":
+                if row.require_not_empty:
+                    if not requires:
+                        requires = IS_NOT_EMPTY()
+                elif requires:
+                    requires = IS_EMPTY_OR(requires)
 
             field.requires = requires
 
@@ -1975,6 +1976,7 @@ class S3DynamicModel(object):
         """
 
         fieldname = row.name
+        fieldtype = row.field_type
 
         default = row.default_value
         if default and default.lower() == "true":
@@ -1982,42 +1984,41 @@ class S3DynamicModel(object):
         else:
             default = False
 
-        #settings = row.settings or {}
-        #widget = settings.get("widget")
-        #if widget == "radio":
-        #    # boolean is hardcoded to a checkbox widget in SQLFORM.accepts
-        #    # - if var is in form.vars then it is interpreted as True
-        #    fieldtype = "integer"
-        #    T = current.T
-        #    #def filter_in(value):
-        #    #    if value == "False":
-        #    #        value = False
-        #    #    return value
-        #    requires = IS_IN_SET(OrderedDict([(1, T("Yes")),
-        #                                      (2, T("No")),
-        #                                      ]))
-        #    widget = lambda field, value: SQLFORM.widgets.radio.widget(field, value, cols=2)
-        #else:
-        # Default checkbox
-        fieldtype = row.field_type
-        #filter_in = None
+        settings = row.settings or {}
 
-        # No default IS_EMPTY_OR for boolean-fields
-        # => NULL values in SQL are neither True nor False, so always
-        #    require special handling; to prevent that, we remove the
-        #    default IS_EMPTY_OR and always set a default
-        requires = None
-        #widget = None
+        widget = settings.get("widget")
+        if widget == "radio":
+            # Render two radio-buttons Yes|No
+
+            T = current.T
+            requires = [IS_IN_SET(OrderedDict([(True, T("Yes")),
+                                               (False, T("No")),
+                                               ])),
+                        # Form option comes in as str
+                        # => convert to boolean
+                        lambda v: (str(v) == "True", None),
+                        ]
+            widget = lambda field, value: \
+                     SQLFORM.widgets.radio.widget(field, value, cols=2)
+        else:
+            # Default single checkbox widget
+
+            # No default IS_EMPTY_OR for boolean-fields
+            # => NULL values in SQL are neither True nor False, so always
+            #    require special handling; to prevent that, we remove the
+            #    default IS_EMPTY_OR and always set a default
+            requires = None
+            widget = None
 
         from s3utils import s3_yes_no_represent
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = s3_yes_no_represent,
                       requires = requires,
-                      #widget = widget,
                       )
-        #if filter_in:
-        #    field.filter_in = filter_in
+
+        if widget:
+            field.widget = widget
 
         return field
 
