@@ -1979,8 +1979,14 @@ class S3DynamicModel(object):
         fieldtype = row.field_type
 
         default = row.default_value
-        if default and default.lower() == "true":
-            default = True
+        if default:
+            default = default.lower()
+            if default == "true":
+                default = True
+            elif default == "none":
+                default = None
+            else:
+                default = False
         else:
             default = False
 
