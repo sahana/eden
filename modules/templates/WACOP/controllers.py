@@ -170,7 +170,7 @@ class custom_WACOP(S3CRUD):
             ptable = s3db.cms_post
 
             form = SQLFORM(ptable)
-            #onvalidation = 
+            #onvalidation =
             post_vars = r.post_vars
             if form.accepts(post_vars,
                             current.session,
@@ -356,7 +356,7 @@ class custom_WACOP(S3CRUD):
                           label,
                           ),
                   _href = url,
-                  _class = "button tiny postfix s3_modal", 
+                  _class = "button tiny postfix s3_modal",
                   _title = label,
                   )
         else:
@@ -1025,7 +1025,7 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
 
         response = current.response
         s3 = response.s3
-        
+
         # How many records per page?
         if s3.dataTable_pageLength:
             display_length = s3.dataTable_pageLength
@@ -1161,7 +1161,7 @@ class incident_Profile(custom_WACOP):
         else:
             output["active"] = True
             output["end_date"] = ""
-        
+
         incident_type = record.incident_type_id
         if incident_type:
             output["incident_type"] = itable.incident_type_id.represent(incident_type)
@@ -1491,6 +1491,7 @@ class person_Dashboard(custom_WACOP):
         s3 = current.response.s3
 
         output = {}
+        output["create_post_form"] = False
 
         # Map of Incidents
         ltable = current.s3db.gis_layer_feature
