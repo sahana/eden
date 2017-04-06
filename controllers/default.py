@@ -169,7 +169,7 @@ def index():
         HM("Assessments", c="survey", f="series", icon="assessment"),
     )
     org_menu = HM("Who is doing What and Where")(
-        HM("Organisations", c="org", f="organisation", icon="organisation"),
+        HM("Organizations", c="org", f="organisation", icon="organisation"),
         HM("Facilities", c="org", f="facility", icon="facility"),
         HM("Activities", c="project", f="activity", icon="activity"),
         HM("Projects", c="project", f="project", icon="project"),
