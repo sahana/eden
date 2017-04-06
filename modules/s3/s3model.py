@@ -1779,7 +1779,7 @@ class S3DynamicModel(object):
             widget = lambda field, value: SQLFORM.widgets.radio.widget(field, value, cols=len_options)
         else:
             widget = None
-        
+
         from s3fields import S3Represent
         field = Field(fieldname, fieldtype,
                       default = default,
@@ -2001,14 +2001,19 @@ class S3DynamicModel(object):
         # Default checkbox
         fieldtype = row.field_type
         #filter_in = None
-        #requires = None
+
+        # No default IS_EMPTY_OR for boolean-fields
+        # => NULL values in SQL are neither True nor False, so always
+        #    require special handling; to prevent that, we remove the
+        #    default IS_EMPTY_OR and always set a default
+        requires = None
         #widget = None
 
         from s3utils import s3_yes_no_represent
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = s3_yes_no_represent,
-                      #requires = requires,
+                      requires = requires,
                       #widget = widget,
                       )
         #if filter_in:
