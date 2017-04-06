@@ -749,7 +749,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
-        if r.function != "distribution":
+        if r.function not in ("activity", "distribution"):
             return
 
         # Beneficiaries
@@ -1302,8 +1302,8 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.interactive and r.component_name == "case":
-                if "showadd_btn" in output:
+            if r.interactive:
+                if r.component_name == "case" and "showadd_btn" in output:
                     # Replace add button with one for the Person perspective
                     from gluon import URL
                     from s3 import S3CRUD
@@ -1320,6 +1320,12 @@ def config(settings):
                                                  _href=url,
                                                  )
                     output["buttons"] = {"add_btn": add_btn}
+                elif r.component_name == "person" and \
+                     r.function != "distribution":
+                    # Only Logs should be editing Beneficiaries
+                    s3db.configure("pr_person",
+                                   insertable = False,
+                                   )
 
             return output
         s3.postp = custom_postp

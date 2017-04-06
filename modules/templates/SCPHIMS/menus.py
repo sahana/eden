@@ -137,7 +137,8 @@ class S3MainMenu(default.S3MainMenu):
             # Manage Distributions inc Beneficiary Registration
             return [
                 homepage(),
-                M("Beneficiaries", c="dvr", f="person"),
+                # Beneficiaries only managed via their Distribution
+                #M("Beneficiaries", c="dvr", f="person"),
                 M("Distributions", c="project", f="distribution"),
                 homepage("gis"),
             ]
@@ -375,8 +376,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
             # Manage Distributions inc Beneficiary Registration
             return M(c="project")(
                      M("Distributions", f="distribution")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
+                        # Logs can only add Beneficiaries to existing Activities
+                        #M("Create", m="create"),
+                        #M("Map", m="map"),
                      ),
                  )
         elif has_role("ERT_LEADER"):

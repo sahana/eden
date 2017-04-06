@@ -90,10 +90,17 @@ def target():
                 f.writable = False
                 f.comment = None
 
+                # Open in native controller (cannot just set native as can't call this 'response')
+                s3db.configure("dc_response",
+                               linkto = lambda record_id: URL(f="respnse", args=[record_id, "read"]),
+                               linkto_update = lambda record_id: URL(f="respnse", args=[record_id, "update"]),
+                               )
+
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.dc_rheader)
+    return s3_rest_controller(rheader = s3db.dc_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def respnse(): # Cannot call this 'response' or it will clobber the global
