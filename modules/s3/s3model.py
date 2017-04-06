@@ -1992,14 +1992,24 @@ class S3DynamicModel(object):
 
         settings = row.settings or {}
 
+        # NB no IS_EMPTY_OR for boolean-fields:
+        # => NULL values in SQL are neither True nor False, so always
+        #    require special handling; to prevent that, we remove the
+        #    default IS_EMPTY_OR and always set a default
+        # => DAL converts everything that isn't True to False anyway,
+        #    so accepting an empty selection would create an
+        #    implicit default with no visible feedback (poor UX)
+
         widget = settings.get("widget")
         if widget == "radio":
             # Render two radio-buttons Yes|No
-
             T = current.T
             requires = [IS_IN_SET(OrderedDict([(True, T("Yes")),
                                                (False, T("No")),
-                                               ])),
+                                               ]),
+                                  # better than "Value not allowed"
+                                  error_message = T("Please select a value"),
+                                  ),
                         # Form option comes in as str
                         # => convert to boolean
                         lambda v: (str(v) == "True", None),
@@ -2007,13 +2017,10 @@ class S3DynamicModel(object):
             widget = lambda field, value: \
                      SQLFORM.widgets.radio.widget(field, value, cols=2)
         else:
-            # Default single checkbox widget
-
-            # No default IS_EMPTY_OR for boolean-fields
-            # => NULL values in SQL are neither True nor False, so always
-            #    require special handling; to prevent that, we remove the
-            #    default IS_EMPTY_OR and always set a default
+            # Remove default IS_EMPTY_OR
             requires = None
+
+            # Default single checkbox widget
             widget = None
 
         from s3utils import s3_yes_no_represent
