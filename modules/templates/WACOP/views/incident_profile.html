@@ -32,9 +32,9 @@
     <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
   </div>
   <div class='small-12 large-6 large-pull-6 columns'>
-  
+
     <section class='incident-profile'>
-      
+
       <header class='status-bar {{if active:}}active{{pass}}'>
         <ul class='status-bar-left'>
           <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
@@ -49,7 +49,7 @@
           {{pass}}
         </ul>
       </header>
-      
+
       <div class='body'>
 
         <h1 class='title'>{{=name}}</h1>
@@ -80,7 +80,7 @@
         <p class='desc'>{{=description}}</p>
 
         <h4>Resources</h4>
-          
+
         <div class='incident-resources'>
           <div class='incident-resources-rail'>
             <div class='search-wrapper'>
@@ -100,77 +100,79 @@
 </div>
 <hr>
 <div class='row'>
-  <ul class='tabs tab-navigation' data-tab>
-    <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-    <li class='tab-title'><a href='#panel2'>Directories</a></li>
-    <li class='tab-title'><a href='#panel3'>Tasks</a></li>
-  </ul>
-  <div class='tabs-content'>
-    <div class='content active' id='panel1'>
-      <div class='row'>
-        <div class='large-3 columns'>
-          {{=create_post_button}}
-          <div class="panel">
-            {{=filter_form}}
+  <div class='small-12 column'>
+    <ul class='tabs tab-navigation' data-tab>
+      <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+      <li class='tab-title'><a href='#panel2'>Directories</a></li>
+      <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+    </ul>
+    <div class='tabs-content'>
+      <div class='content active' id='panel1'>
+        <div class='row'>
+          <div class='large-3 columns'>
+            {{=create_post_button}}
+            <div class='panel'>
+              {{=filter_form}}
+            </div>
+          </div>
+          <div class='large-9 columns'>
+            <ul class='dl' id='updates_datalist'>
+              {{=updates_datalist}}
+            </ul>
           </div>
         </div>
-        <div class='large-9 columns'>
-          <ul class='dl' id="updates_datalist">
-            {{=updates_datalist}}
+      </div>
+      <section class='staff content' id='panel2'>
+        <div class='row'>
+          <ul class='large-3 columns tabs vertical' data-tab>
+            <li class='tab-title active'><a href='#staff'>Staff</a></li>
+            <li class='tab-title'><a href='#organisations'>Organizations</a></li>
           </ul>
-        </div>
-      </div>
-    </div>
-    <section class='staff content' id='panel2'>
-      <div class='row'>
-        <ul class='large-3 columns tabs vertical' data-tab>
-          <li class='tab-title active'><a href='#staff'>Staff</a></li>
-          <li class='tab-title'><a href='#organisations'>Organizations</a></li>
-        </ul>
-        <div class="large-9 columns">
-          <div class='tabs-content'>
-            <div class='row collapse prefix-radius content active' id='staff'>
-              <div class='large-2 columns'>
-                <label for='event_human_resource-search' class='prefix'>Search</label>
+          <div class='large-9 columns'>
+            <div class='tabs-content'>
+              <div class='row collapse prefix-radius content active' id='staff'>
+                <div class='large-2 columns'>
+                  <label for='event_human_resource-search' class='prefix'>Search</label>
+                </div>
+                <div class='large-6 columns' id='dt-search-event_human_resource'></div>
+                <div class='large-4 columns'>
+                  {{=create_event_human_resource_popup}}
+                </div>
+                <div id='dt-event_human_resource'>
+                  {{=event_human_resource_datatable}}
+                </div>
               </div>
-              <div class='large-6 columns' id='dt-search-event_human_resource'></div>
-              <div class='large-4 columns'>
-                {{=create_event_human_resource_popup}}
-              </div>
-              <div id='dt-event_human_resource'>
-                {{=event_human_resource_datatable}}
-              </div>
-            </div>
-            <div class='row collapse prefix-radius content' id='organisations'>
-              <div class='large-2 columns'>
-                <label for='event_organisation-search' class='prefix'>Search</label>
-              </div>
-              <div class='large-6 columns' id='dt-search-event_organisation'></div>
-              <div class='large-4 columns'>
-                {{=create_event_organisation_popup}}
-              </div>
-              <div id='dt-event_organisation'>
-                {{=event_organisation_datatable}}
+              <div class='row collapse prefix-radius content' id='organisations'>
+                <div class='large-2 columns'>
+                  <label for='event_organisation-search' class='prefix'>Search</label>
+                </div>
+                <div class='large-6 columns' id='dt-search-event_organisation'></div>
+                <div class='large-4 columns'>
+                  {{=create_event_organisation_popup}}
+                </div>
+                <div id='dt-event_organisation'>
+                  {{=event_organisation_datatable}}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-    <section class='tasks content' id='panel3'>
-      <div class='row collapse prefix-radius'>
-        <div class='large-2 columns'>
-          <label for='project_task-search' class='prefix'>Search</label>
+      </section>
+      <section class='tasks content' id='panel3'>
+        <div class='row collapse prefix-radius'>
+          <div class='large-2 columns'>
+            <label for='project_task-search' class='prefix'>Search</label>
+          </div>
+          <div class='large-6 columns' id='dt-search-project_task'></div>
+          <div class='large-4 columns'>
+            {{=create_project_task_popup}}
+          </div>
+          <div id='dt-project_task'>
+            {{=project_task_datatable}}
+          </div>
         </div>
-        <div class='large-6 columns' id='dt-search-project_task'></div>
-        <div class='large-4 columns'>
-          {{=create_project_task_popup}}
-        </div>
-        <div id='dt-project_task'>
-          {{=project_task_datatable}}
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 </div>
 {{include "dataLists.html"}}

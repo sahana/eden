@@ -827,7 +827,6 @@ def dc_rheader(r, tabs=None):
                 RESPONSES = T("Responses")
         
             tabs = ((T("Basic Details"), None),
-                    # @ToDo: Use settings for label
                     (RESPONSES, "response"),
                     )
 

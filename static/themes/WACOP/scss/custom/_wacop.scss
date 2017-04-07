@@ -30,8 +30,8 @@ table {
 
 .button {
   @include button($bg:$blue,$radius:3px);
-  &.disabled, &[disabled] { 
-    @include button-style($bg:lighten($blue,30%), $disabled:true); 
+  &.disabled, &[disabled] {
+    @include button-style($bg:lighten($blue,30%), $disabled:true);
     &:hover { color: inherit; }
   }
 
@@ -50,8 +50,8 @@ form label {
 }
 
 select {
-  background-color: $gray-alt;
-  border-color: $gray-alt;
+  background-color: $gainsboro;
+  border-color: $gainsboro;
   border-radius: $global-radius;
 }
 
@@ -66,6 +66,27 @@ textarea {
 
 .search-wrapper {
   @include search;
+}
+
+// -------------------------------------
+// Tabs
+.tabs {
+  .tab-title:not(:last-child) {
+    margin-right: 1.5rem;
+  }
+  .tab-title a {
+    border-bottom-style: solid;
+    border-bottom-width: 4px;
+    border-bottom-color: transparent;
+    padding: 0 rem-calc(4);
+    &:hover {
+      border-bottom-color: inherit;
+    }
+  }
+  .tab-title.active a {
+    border-bottom-color: inherit;
+    font-weight: bold;
+  }
 }
 
 // -------------------------------------
@@ -90,10 +111,49 @@ ul.dl {
 }
 
 // -------------------------------------
+// Data Table
+
+// .dt-wrapper {
+//   @include data-table();
+//   .dt-export-options {
+//     z-index: 1;
+//     position: relative;
+//   }
+//   .dataTables_wrapper {
+//     clear: none;
+//     .dataTables_info {
+//       clear: none;
+//       float: left;
+//     }
+//     .dataTables_length {
+//       float: left;
+//       margin: rem-calc(-6) 0  rem-calc(6) rem-calc(10);
+//     }
+//   }
+//   .dataTable_table {
+//     margin-bottom: rem-calc(10);
+//     table.dataTable thead th {
+//       border-bottom: none;
+//     }
+//   }
+//   .paging_full_numbers a.paginate_button {
+//     @include meta-label();
+//     background-color: $blue;
+//     color: $white !important;
+//     border:none;
+//     border-radius: $global-radius;
+//     padding: 3px 5px;
+//     &:hover {
+//       background-color: lighten($blue, 10%);
+//     }
+//   }
+// }
+
+// -------------------------------------
 // Well
 
 .well {
-  padding-top: rem-calc($padding);
+  padding-top: $global-padding;
   .well-title {
     @include grid-column(12);
     small {
@@ -112,30 +172,9 @@ ul.dl {
 }
 
 // -------------------------------------
-// Data List
-// list of data
-ul.data-list,
-ul.dl {
-  list-style-type: none;
-  margin: 0;
-  li,
-  ol {
-    margin: 0;
-    list-style: none;
-  }
-}
-
-.data-list,
-.dl {
-  .dl-item {
-
-  }
-}
-
-// -------------------------------------
 // Event Parent Callout
 .callout.event-parent {
-  @include callout;
+  @include callout($blue);
   .callout-right {
     text-align-last: right;
   }
@@ -153,8 +192,8 @@ ul.dl {
 .card-event {
   @include card;
   .event-date-location {
-    @include box-date-location($padding:$padding);
-    margin: 0 rem-calc(-$padding) rem-calc($padding);
+    @include box-date-location($padding:$global-padding);
+    margin: 0 (-$global-padding) $global-padding;
     .adr,
     .date {
       font-size: $h4-font-size;
@@ -190,13 +229,13 @@ ul.dl {
     .incident-location {
       @include grid-column(6);
       .box {
-        @include box-location($padding:$padding / 2);
+        @include box-location($padding:$global-padding / 2);
       }
     }
     .incident-date {
       @include grid-column(6);
       .box {
-        @include box-date($padding:$padding / 2);
+        @include box-date($padding:$global-padding / 2);
       }
     }
   }
@@ -243,8 +282,8 @@ ul.dl {
   }
 
   .card-post-comment {
-    background-color: $gray;
-    padding: rem-calc($padding);
+    background-color: $silver;
+    padding: $global-padding;
     p:last-child {
       margin-bottom: 0;
     }
