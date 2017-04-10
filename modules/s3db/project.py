@@ -5486,8 +5486,15 @@ def project_status_represent(value):
         @ToDo: Configurable thresholds
     """
 
-    if current.auth.permission.format == "geojson":
+    representation = current.auth.permission.format
+    if representation == "geojson":
         return value
+
+    # Represent the number
+    represent = IS_FLOAT_AMOUNT.represent(value, precision=2)
+
+    if representation in ("pdf", "xls"):
+        return represent
 
     if value >= 80:
         colour = "00ff00" # Green
@@ -5495,9 +5502,6 @@ def project_status_represent(value):
         colour = "ffff00" # Yellow
     else:
         colour = "ff0000" # Red
-
-    # Represent the number
-    represent = IS_FLOAT_AMOUNT.represent(value, precision=2)
 
     return SPAN(represent,
                 _class = "project_status",
