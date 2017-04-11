@@ -51,7 +51,7 @@ from s3error import S3PermissionError
 from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLField
 from s3query import S3ResourceField
 from s3rest import S3Method
-from s3utils import s3_str, s3_unicode
+from s3utils import s3_get_foreign_key, s3_str, s3_unicode
 from s3validators import JSONERRORS, SEPARATORS
 
 DEFAULT = lambda: None
@@ -203,6 +203,392 @@ class S3MobileFormList(object):
         return json.dumps(self.formlist, separators=SEPARATORS)
 
 # =============================================================================
+class S3MobileSchema(object):
+    """
+        Table schema for a mobile resource
+    """
+
+    # Field types supported for mobile resources
+    SUPPORTED_FIELD_TYPES =("string",
+                            "text",
+                            "integer",
+                            "double",
+                            "date",
+                            "datetime",
+                            "boolean",
+                            "reference",
+                            )
+
+    # -------------------------------------------------------------------------
+    def __init__(self, resource):
+        """
+            Constructor
+
+            @param resource - the S3Resource
+        """
+
+        self.resource = resource
+
+        # Initialize reference map
+        self._references = None
+
+        # Initialize the schema
+        self._schema = None
+
+        # Initialize the form description
+        self._form = None
+
+    # -------------------------------------------------------------------------
+    def serialize(self):
+        """
+            Serialize the table schema
+
+            @return: a JSON-serializable dict containing the table schema
+        """
+
+        schema = self._schema
+        if schema is None:
+
+            # Initialize
+            schema = {}
+            self._references = {}
+
+            # Introspect and build schema
+            fields = self.fields()
+            for field in fields:
+                description = self.describe(field)
+                if description:
+                    schema[field.name] = description
+
+            # Store schema
+            self._schema = schema
+
+        return schema
+
+    # -------------------------------------------------------------------------
+    @property
+    def references(self):
+        """
+            Tables (and records) referenced in this schema (lazy property)
+
+            @return: a dict {tablename: [recordID, ...]} of all
+                     referenced tables and records
+        """
+
+        if self._references is None:
+            # Trigger introspection to gather all references
+            self.serialize()
+
+        return self._references
+
+    # -------------------------------------------------------------------------
+    @property
+    def form(self):
+        """
+            The mobile form (field order) for the resource (lazy property)
+        """
+
+        if self._form is None:
+            self.serialize()
+
+        return self._form
+
+    # -------------------------------------------------------------------------
+    # Introspection methods
+    # -------------------------------------------------------------------------
+    def describe(self, field):
+        """
+            Construct a field description for the schema
+
+            @param field: a Field instance
+
+            @return: the field description as JSON-serializable dict
+        """
+
+        fieldtype = str(field.type)
+        SUPPORTED_FIELD_TYPES = set(self.SUPPORTED_FIELD_TYPES)
+
+        # Check if foreign key
+        if fieldtype[:9] == "reference":
+
+            # Skip super-entity references until supported by mobile client
+            key = s3_get_foreign_key(field)[1]
+            if key and key != "id":
+                return None
+
+            is_foreign_key = True
+
+            # Store schema reference
+            lookup = fieldtype[10:].split(".")[0]
+            references = self._references
+            if lookup not in references:
+                references[lookup] = set()
+        else:
+            is_foreign_key = False
+            lookup = None
+
+        # Check that field type is supported
+        if fieldtype in SUPPORTED_FIELD_TYPES or is_foreign_key:
+            supported = True
+        else:
+            supported = False
+        if not supported:
+            return None
+
+        # Create a field description
+        description = {"type": fieldtype,
+                       "label": str(field.label),
+                       }
+
+        # Add field settings to description
+        settings = self.settings(field)
+        if settings:
+            description["settings"] = settings
+
+        # Add field options to description
+        options = self.get_options(field)
+        if options:
+            description["options"] = options
+
+        # Add default value to description
+        default = self.get_default(field, lookup=lookup)
+        if default:
+            description["default"] = default
+
+        # @todo: add tooltip to description
+
+        return description
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def settings(cls, field):
+        """
+            Encode settings for the field description
+
+            @param field: a Field instance
+
+            @return: a dict with the field settings
+        """
+
+        settings = {}
+
+        # Add readable/writable settings if False (True is assumed)
+        if not field.readable:
+            settings["readable"] = False
+        if not field.writable:
+            settings["writable"] = False
+
+        # Add required flag if True (False is assumed)
+        if cls.is_required(field):
+            settings["required"] = True
+
+        # @todo: min/max settings for numeric and date/time fields
+
+        return settings
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def is_required(field):
+        """
+            Determine whether a value is required for a field
+
+            @param field: the Field
+
+            @return: True|False
+        """
+
+        required = field.notnull
+
+        if not required and field.requires:
+            error = field.validate("")[1]
+            if error is not None:
+                required = True
+
+        return required
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_options(field):
+        """
+            Get the options for a field with IS_IN_SET
+
+            @param field: the Field
+            @return: a list of tuples (key, label) with the field options
+        """
+
+        # Check supported field types
+        # @todo: add other types (may require special option key encoding)
+        #        => foreign keys must report all valid options as record
+        #           references so they can be resolved
+        if str(field.type) not in ("string", "integer"):
+            return None
+
+        # Get field validator
+        requires = field.requires
+        if not requires:
+            return None
+        if not isinstance(requires, (tuple, list)):
+            requires = [requires]
+
+        # Check for IS_IN_SET, and extract the options
+        requires = requires[0]
+        if isinstance(requires, IS_EMPTY_OR):
+            requires = requires.other
+        if isinstance(requires, IS_IN_SET):
+            options = []
+            for key, label in requires.options():
+                if not key:
+                    continue
+                options.append((key, s3_str(label)))
+            return options
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def get_default(self, field, lookup=None):
+        """
+            Get the default value for a field
+
+            @param field: the Field
+
+            @returns: the default value for the field
+        """
+
+        default = field.default
+        if default is not None:
+
+            fieldtype = str(field.type)
+
+            if fieldtype[:9] == "reference":
+
+                # Convert the default value into a UUID
+                uuid = self.get_uuid(lookup, default)
+                if uuid:
+                    # Store record reference for later resolution
+                    self._references[lookup].add(default)
+                    default = uuid
+                else:
+                    default = None
+
+            elif fieldtype in ("date", "datetime", "time"):
+
+                # @todo: implement this
+                # => typically using a dynamic default (e.g. "now"), which
+                #    will need special encoding and handling on the mobile
+                #    side
+                # => static defaults must be encoded in ISO-Format
+                default = None
+
+            else:
+
+                # Use field default as-is
+                default = field.default
+
+        return default
+
+    # -------------------------------------------------------------------------
+    def fields(self):
+        """
+            Determine which fields need to be included in the schema
+
+            @returns: a list of Field instances
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+
+        fields = []
+        mobile_form = self._form = []
+
+        # Prevent duplicates
+        fnames = set()
+        include = fnames.add
+
+        form = self.mobile_form(resource)
+        for element in form.elements:
+
+            if isinstance(element, S3SQLField):
+                rfield = resource.resolve_selector(element.selector)
+
+                fname = rfield.fname
+
+                if rfield.tname == tablename and fname not in fnames:
+                    fields.append(rfield.field)
+                    mobile_form.append(fname)
+                    include(fname)
+
+        if resource.parent and \
+           not resource.linktable and \
+           resource.pkey == resource.parent._id.name:
+
+            # Include the parent key
+            fkey = resource.fkey
+            if fkey not in fnames:
+                fields.append(resource.table[fkey])
+                include(fkey)
+
+        return fields
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def mobile_form(resource):
+        """
+            Get the mobile form for a resource
+
+            @param resource: the S3Resource
+            @returns: an S3SQLForm instance
+        """
+
+        # Get the form definition from "mobile_form" table setting
+        form = resource.get_config("mobile_form")
+        if form is None:
+            # Fallback
+            form = resource.get_config("crud_form")
+
+        # @todo: if resource is a dynamic table, establish
+        #        the mobile form from the "form" table setting
+        #        before falling back to all readable fields
+
+        if not form:
+            # No mobile form configured, or is a S3SQLDefaultForm
+            # => construct a custom form that includes all readable fields
+            readable_fields = resource.readable_fields()
+            fields = [field.name for field in readable_fields
+                                 if field.type != "id"]
+            form = S3SQLCustomForm(*fields)
+
+        return form
+
+    # -------------------------------------------------------------------------
+    # Utility functions
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_uuid(tablename, record_id):
+        """
+            Look up the UUID of a record
+
+            @param tablename: the table name
+            @param record_id: the record ID
+
+            @return: the UUID of the specified record, or None if
+                     the record does not exist or has no UUID
+        """
+
+        table = current.s3db.table(tablename)
+        if not table or "uuid" not in table.fields:
+            return None
+
+        query = (table._id == record_id)
+        if "deleted" in table.fields:
+            query &= (table.deleted == False)
+
+        row = current.db(query).select(table.uuid,
+                                       limitby = (0, 1),
+                                       ).first()
+
+        return row.uuid or None if row else None
+
+# =============================================================================
 class S3MobileForm(object):
     """
         Mobile representation of an S3SQLForm
@@ -268,128 +654,83 @@ class S3MobileForm(object):
         return config
 
     # -------------------------------------------------------------------------
-    @property
-    def form(self):
+    def serialize(self):
         """
-            The form configuration (lazy property), fallback cascade:
-                1. the form specified in constructor
-                2. "mobile_form" config
-                3. "crud_form" config
-                4. all readable fields
+            Serialize the mobile form configuration for the target resource
 
-            @returns: an S3SQLForm instance
+            @return: a JSON-serialiable dict containing the mobile form
+                     configuration for export to the mobile client
         """
 
-        form = self._form
-        if form is None:
-
-            resource = self.resource
-            form = resource.get_config("mobile_form")
-
-            if form is None:
-                form = resource.get_config("crud_form")
-
-            if form is None:
-                # Construct a custom form from all readable fields
-                readable_fields = self.resource.readable_fields()
-                fields = [field.name for field in readable_fields
-                                     if field.type != "id"]
-                form = S3SQLCustomForm(*fields)
-
-            self._form = form
-
-        return form
-
-    # -------------------------------------------------------------------------
-    def schema(self):
-        """
-            Convert the form configuration into an EdenMobile schema dict
-
-            @returns: a JSON-serializable dict with the schema definition
-        """
-
-        form = self.form
+        s3db = current.s3db
         resource = self.resource
 
-        schema = {}
-        form_fields = []
+        ms = S3MobileSchema(resource)
+        schema = ms.serialize()
 
-        # Build the table schema
-        for element in form.elements:
-            if isinstance(element, S3SQLField):
-
-                # Resolve the selector
-                rfield = resource.resolve_selector(element.selector)
-
-                if rfield.tname == resource.tablename:
-
-                    description = self.describe(rfield)
-                    if description:
-                        fname = rfield.fname
-                        schema[fname] = description
-                        form_fields.append(fname)
-                else:
-                    # Subtable field
-                    # => skip until implemented @todo
-                    continue
-            else:
-                # Inline component or other form element
-                # => skip until implemented @todo
-                continue
-
-        # Add form definition
-        if form_fields:
-            schema["_form"] = form_fields
+        main = {"tablename": resource.tablename,
+                "schema": schema,
+                "form": ms.form,
+                }
 
         # Add CRUD strings
         strings = self.strings()
         if strings:
-            schema["_strings"] = strings
+            main["strings"] = strings
 
-        # Add component declarations
+        # Required and provided schemas
+        required = set(ms.references.keys())
+        provided = set([resource.tablename])
+
+        # Add schemas for components
         components = self.components()
+        for alias in components:
+
+            # Generate a resource for the component table
+            cresource = resource.components.get(alias)
+            if not cresource:
+                continue
+
+            # Get the schema for the component
+            cschema = S3MobileSchema(cresource)
+            hook = components[alias]
+            hook["schema"] = cschema.serialize()
+
+            # Mark as provided
+            provided.add(cresource.tablename)
+
+            for tname in cschema.references:
+                required.add(tname)
+
+        # Add schemas for referenced tables
+        references = {}
+        required = list(required)
+        while required:
+
+            tablename = required.pop()
+            if tablename in provided:
+                continue
+
+            rresource = s3db.resource(tablename)
+            rs = S3MobileSchema(rresource)
+            references[tablename] = {"schema": rs.serialize()}
+
+            for reference in rs.references:
+                if reference not in provided:
+                    required.append(reference)
+
+            provided.add(tablename)
+
+        # @todo: add default lookup records
+
+        form = {"main": main,
+                }
+        if references:
+            form["references"] = references
         if components:
-            schema["_components"] = components
+            form["components"] = components
 
-        return schema
-
-    # -------------------------------------------------------------------------
-    def describe(self, rfield):
-        """
-            Generate a description of a resource field (for mobile schemas)
-
-            @param rfield: the S3ResourceField
-
-            @returns: a JSON-serializable dict describing the field
-        """
-
-        field = rfield.field
-        if not field:
-            # Virtual field
-            return None
-
-        # Basic field description
-        description = {"type": rfield.ftype,
-                       "label": s3_str(field.label),
-                       }
-
-        # Field settings
-        if field.notnull:
-            description["notnull"] = True
-        if not field.readable:
-            description["readable"] = False
-        if not field.writable:
-            description["writable"] = False
-
-        # @todo: options
-        # @todo: minimum
-        # @todo: maximum
-        # @todo: default value
-        # @todo: readable, writable
-        # @todo: placeholder?
-        # @todo: required
-
-        return description
+        return form
 
     # -------------------------------------------------------------------------
     def strings(self):
@@ -873,7 +1214,7 @@ class S3MobileCRUD(S3Method):
     # -------------------------------------------------------------------------
     def mform(self, r, **attr):
         """
-            Get the schema definition (as JSON)
+            Get the mobile form for the target resource
 
             @param r: the S3Request instance
             @param attr: controller attributes
@@ -882,14 +1223,16 @@ class S3MobileCRUD(S3Method):
         """
 
         resource = self.resource
-        form = S3MobileForm(resource)
 
-        schema = form.schema()
-        schema["_controller"] = r.controller
-        schema["_function"] = r.function
+        # Get the mobile form
+        mform = S3MobileForm(resource).serialize()
 
-        name = resource.tablename
-        output = json.dumps({name: schema})
+        # Add controller and function for data exchange
+        mform["controller"] = r.controller
+        mform["function"] = r.function
+
+        # Convert to JSON
+        output = json.dumps(mform, separators=SEPARATORS)
 
         current.response.headers = {"Content-Type": "application/json"}
         return output

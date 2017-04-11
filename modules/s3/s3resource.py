@@ -3638,6 +3638,18 @@ class S3Resource(object):
         return current.s3db.get_config(self.tablename, key, default=default)
 
     # -------------------------------------------------------------------------
+    def clear_config(self, *keys):
+        """
+            Clear configuration settings for this resource
+
+            @param keys: keys to remove (can be multiple)
+
+            @note: no keys specified removes all settings for this resource
+        """
+
+        current.s3db.clear_config(self.tablename, *keys)
+
+    # -------------------------------------------------------------------------
     def limitby(self, start=0, limit=0):
         """
             Convert start+limit parameters into a limitby tuple

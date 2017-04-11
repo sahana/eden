@@ -138,6 +138,14 @@ class S3SQLForm(object):
     # -------------------------------------------------------------------------
     # Utility functions
     # -------------------------------------------------------------------------
+    def __len__(self):
+        """
+            Support len(crud_form)
+        """
+
+        return len(self.elements)
+
+    # -------------------------------------------------------------------------
     def _config(self, key, default=None):
         """
             Get a configuration setting for the current table
@@ -792,14 +800,6 @@ class S3SQLDefaultForm(S3SQLForm):
 # =============================================================================
 class S3SQLCustomForm(S3SQLForm):
     """ Custom SQL Form """
-
-    # -------------------------------------------------------------------------
-    def __len__(self):
-        """
-            Support len(crud_form)
-        """
-
-        return len(self.elements)
 
     # -------------------------------------------------------------------------
     def insert(self, index, element):
