@@ -3477,13 +3477,20 @@ class S3PersonImageModel(S3Model):
             9:T("other")
         }
 
+
         def get_file(table):
-            """ Callback to return the file field for our record """
-            if len(request.args) < 3:
-                return None
-            query = (table.id == request.args[2])
-            record = db(query).select(table.image, limitby = (0, 1)).first()
-            return record.image if record else None
+            """ Decorator to return a table-specific file-callback """
+
+            def cb():
+                """ Callback to return the file field for our record """
+
+                if len(request.args) < 3:
+                    return None
+                query = (table.id == request.args[2])
+                record = db(query).select(table.image, limitby = (0, 1)).first()
+                return record.image if record else None
+
+            return cb
 
         tablename = "pr_image"
         self.define_table(tablename,
@@ -3523,11 +3530,18 @@ class S3PersonImageModel(S3Model):
                                     _title="%s|%s" % (T("Description"),
                                                       T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
           *s3_meta_fields(),
+
+          # Image-validator needs the Table instance
+          # => set it on-define to allow the table to be lazy
           on_define = lambda table: [
-            table.image.set_attributes(requires = \
-                IS_PROCESSED_IMAGE("image", lambda table: get_file(table),
-                                    upload_path=os.path.join(request.folder,
-                                                             "uploads"))),
+            table.image.set_attributes(
+                requires = IS_PROCESSED_IMAGE("image",
+                              get_file(table),
+                              upload_path = os.path.join(request.folder,
+                                                         "uploads",
+                                                         ),
+                              ),
+                ),
             ]
           )
 
