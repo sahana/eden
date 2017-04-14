@@ -241,10 +241,14 @@ def config(settings):
 
             from s3 import FS, \
                            IS_ONE_OF, \
+                           S3DateFilter, \
+                           S3HierarchyFilter, \
                            S3HierarchyWidget, \
+                           S3OptionsFilter, \
                            S3Represent, \
                            S3SQLCustomForm, \
-                           S3SQLInlineComponent
+                           S3SQLInlineComponent, \
+                           s3_get_filter_opts
 
             # Expose organisation_id
             field = table.organisation_id
@@ -516,38 +520,33 @@ def config(settings):
                                             "comments",
                                             )
 
-                from s3 import S3DateFilter, \
-                               S3OptionsFilter, \
-                               S3HierarchyFilter, \
-                               s3_get_filter_opts
-
                 # Custom filter widgets
                 filter_widgets = [
                     S3HierarchyFilter("service_id",
                                       lookup = "org_service",
                                       filter = (FS("root_service").belongs(root_service_ids)),
-                                     ),
+                                      ),
                     S3OptionsFilter("project_id",
                                     options = s3_get_filter_opts("project_project"),
-                                   ),
+                                    ),
                     S3OptionsFilter("gender",
                                     hidden = True,
-                                   ),
+                                    ),
                     S3OptionsFilter("age_group_id",
                                     hidden = True,
-                                   ),
+                                    ),
                     S3DateFilter("start_date",
                                  hidden = True,
-                                ),
+                                 ),
                     S3DateFilter("end_date",
                                  hidden = True,
-                                ),
+                                 ),
                     ]
 
                 s3db.configure("dvr_activity",
                                crud_form = crud_form,
                                filter_widgets = filter_widgets,
-                               list_fields = list_fields,                               
+                               list_fields = list_fields,
                                )
 
                 scripts = s3.scripts
