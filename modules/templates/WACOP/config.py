@@ -24,6 +24,8 @@ def config(settings):
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "WACOP"
 
+    settings.ui.social_buttons = True
+
     # -------------------------------------------------------------------------
     # Self-Registration and User Profile
     #
@@ -270,10 +272,17 @@ def config(settings):
                             #                  },
                             )
 
+        # Custom Browse
+        from templates.WACOP.controllers import event_Browse, event_Profile
+        set_method = s3db.set_method
+        set_method("event", "event",
+                   method = "browse",
+                   action = event_Browse)
+
         # Custom Profile
-        #s3db.set_method("event", "event",
-        #                method = "custom",
-        #                action = event_Profile)
+        set_method("event", "event",
+                   method = "custom",
+                   action = event_Profile)
 
         # Custom prep
         standard_prep = s3.prep

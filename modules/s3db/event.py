@@ -443,6 +443,9 @@ class S3EventModel(S3Model):
                                         "key": "post_id",
                                         "actuate": "replace",
                                         },
+                            event_bookmark = "event_id",
+                            event_tag = "event_id", # cms_tag
+                            event_event_tag = "event_id", # Key-Value Store
                             event_incident = "event_id",
                             dc_response = {"link": "event_response",
                                            "joinby": "event_id",
@@ -483,9 +486,6 @@ class S3EventModel(S3Model):
                             event_event_location = "event_id",
                             # Should be able to do everything via the cms_post variant
                             #event_post = "event_id",
-                            event_event_tag = {"name": "tag",
-                                               "joinby": "event_id",
-                                               },
                             event_team = "event_id",
                             pr_group = {"link": "event_team",
                                         "joinby": "event_id",
@@ -519,6 +519,14 @@ class S3EventModel(S3Model):
         set_method("event", "event",
                    method = "remove_bookmark",
                    action = self.event_remove_bookmark)
+
+        set_method("event", "event",
+                   method = "add_tag",
+                   action = self.event_add_tag)
+
+        set_method("event", "event",
+                   method = "remove_tag",
+                   action = self.event_remove_tag)
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -668,6 +676,104 @@ class S3EventModel(S3Model):
             resource.delete()
 
         output = current.xml.json_message(True, 200, "Bookmark Removed")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def event_add_tag(r, **attr):
+        """
+            Add a Tag to an Event
+
+            S3Method for interactive requests
+            - designed to be called as an afterTagAdded callback to tag-it.js
+        """
+
+        event_id = r.id
+        if not event_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        tag = r.args[2]
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.cms_tag
+        ltable = s3db.event_tag
+        exists = db(ttable.name == tag).select(ttable.id,
+                                               ttable.deleted,
+                                               ttable.deleted_fk,
+                                               limitby=(0, 1)
+                                               ).first()
+        if exists:
+            tag_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ttable.id == tag_id).update(**data)
+        else:
+            tag_id = ttable.insert(name=tag)
+        query = (ltable.tag_id == tag_id) & \
+                (ltable.event_id == event_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == exists.id).update(**data)
+        else:
+            ltable.insert(event_id = event_id,
+                          tag_id = tag_id,
+                          )
+
+        output = current.xml.json_message(True, 200, "Tag Added")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def event_remove_tag(r, **attr):
+        """
+            Remove a Tag from an Event
+
+            S3Method for interactive requests
+            - designed to be called as an afterTagRemoved callback to tag-it.js
+        """
+
+        event_id = r.id
+        if not event_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        tag = r.args[2]
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.cms_tag
+        exists = db(ttable.name == tag).select(ttable.id,
+                                               ttable.deleted,
+                                               limitby=(0, 1)
+                                               ).first()
+        if exists:
+            tag_id = exists.id
+            ltable = s3db.event_tag
+            query = (ltable.tag_id == tag_id) & \
+                    (ltable.event_id == event_id)
+            exists = db(query).select(ltable.id,
+                                      ltable.deleted,
+                                      limitby=(0, 1)
+                                      ).first()
+            if exists and not exists.deleted:
+                resource = s3db.resource("event_tag", id=exists.id)
+                resource.delete()
+
+        output = current.xml.json_message(True, 200, "Tag Removed")
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -960,20 +1066,20 @@ class S3IncidentModel(S3Model):
 
         # Custom Methods
         set_method("event", "incident",
-                   method = "add_tag",
-                   action = self.incident_add_tag)
-
-        set_method("event", "incident",
-                   method = "remove_tag",
-                   action = self.incident_remove_tag)
-
-        set_method("event", "incident",
                    method = "add_bookmark",
                    action = self.incident_add_bookmark)
 
         set_method("event", "incident",
                    method = "remove_bookmark",
                    action = self.incident_remove_bookmark)
+
+        set_method("event", "incident",
+                   method = "add_tag",
+                   action = self.incident_add_tag)
+
+        set_method("event", "incident",
+                   method = "remove_tag",
+                   action = self.incident_remove_tag)
 
         # Custom Method to Assign HRs
         set_method("event", "incident",
@@ -2827,16 +2933,13 @@ class S3EventTagModel(S3Model):
         #T = current.T
 
         # ---------------------------------------------------------------------
-        # Tasks
-        # Tasks are to be assigned to resources managed by this EOC
-        # - we manage in detail
-        # @ToDo: Task Templates
+        # Tags
 
         tablename = "event_tag"
         self.define_table(tablename,
-                          #self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
+                          self.event_event_id(ondelete = "CASCADE",
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
                                                  ),
                           self.cms_tag_id(empty = False,
                                           ondelete = "CASCADE",

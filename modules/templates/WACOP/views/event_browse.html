@@ -1,0 +1,19 @@
+{{extend "layout.html"}}
+<main role='main' class='main'>  
+ {{=XML(alerts)}}
+ {{=XML(events)}}
+ <div class='row well'>
+  <div class='medium-4 columns'>
+   {{=filter_form}}
+  </div>
+  <div class='medium-8 columns'>
+   {{=XML(map)}}
+  </div>
+ </div>
+ <div class='row well'>
+  <h3>Events</h3>
+  {{=event_event_datatable}}
+ </div>
+</main>
+{{include "dataTables.html"}}
+{{include "dataLists.html"}}

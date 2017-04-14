@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, SQLFORM
+from gluon import current, Field, SQLFORM
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.utils import web2py_uuid
-from s3 import s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3OptionsFilter, S3Request, S3TextFilter, S3URLQuery
+from s3 import s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter, S3OptionsFilter, S3Request, S3TextFilter, S3URLQuery
 
 THEME = "WACOP"
 
@@ -15,6 +15,7 @@ class index(S3CustomController):
     def __call__(self):
 
         T = current.T
+        s3 = current.response.s3
 
         custom = custom_WACOP()
 
@@ -59,12 +60,13 @@ class index(S3CustomController):
                   "dt_searching": False,
                   #"dt_lengthMenu": None,
                   }
-        current.response.s3.no_formats = True
+        s3.no_formats = True
 
         custom._datatable(r = S3Request("event", "incident"),
                           output = output,
                           dtargs = dtargs,
                           dt_init = None,
+                          event_id = None,
                           incident_id = None,
                           updateable = False,
                           start = 0,
@@ -80,9 +82,9 @@ class index(S3CustomController):
                           orderby = "event_incident.name",
                           )
 
-        s3 = current.response.s3
         s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % current.request.application)
         s3.jquery_ready.append('''wacop_bookmarks()''')
+
         self._view(THEME, "index.html")
         return output
 
@@ -101,13 +103,18 @@ class custom_WACOP(S3CRUD):
             @param attr: controller arguments
         """
 
-        if r.name == "incident":
+        if r.name == "event":
+            event_id = r.id
+            incident_id = None
+        elif r.name == "incident":
+            event_id = None
             incident_id = r.id
         else:
+            event_id = None
             incident_id = None
 
         if r.http == "POST":
-            output = self._post(r, incident_id, **attr)
+            output = self._post(r, event_id, incident_id, **attr)
             if output:
                 # Update deleted
                 return output
@@ -118,10 +125,15 @@ class custom_WACOP(S3CRUD):
             return self._html(r, **attr)
 
         elif representation == "aadata":
-            return self._aadata(r, incident_id, **attr)
+            return self._aadata(r, event_id, incident_id, **attr)
 
         elif representation == "dl":
-            if incident_id:
+            if event_id:
+                # Event Profile
+                # - only show Updates relating to this Event
+                filter = (FS("event_post.event_id") == event_id)
+                ajaxurl = URL(args = [event_id, "custom.dl"])
+            elif incident_id:
                 # Incident Profile
                 # - only show Updates relating to this Incident
                 filter = (FS("event_post.incident_id") == incident_id)
@@ -136,7 +148,7 @@ class custom_WACOP(S3CRUD):
         raise HTTP(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
-    def _post(self, r, incident_id, **attr):
+    def _post(self, r, event_id, incident_id, **attr):
         """
             Handle POSTs
 
@@ -184,9 +196,14 @@ class custom_WACOP(S3CRUD):
                 record = dict(id=post_id)
                 s3db.update_super(ptable, record)
                 # @ToDo: onaccept / record ownership / audit if-required
-                if incident_id:
+                if event_id:
+                    # Link to Event
+                    s3db.event_post.insert(event_id = event_id,
+                                           post_id = post_id,
+                                           )
+                elif incident_id:
                     # Link to Incident
-                    s3db.event_post.insert(incident_id = r.id,
+                    s3db.event_post.insert(incident_id = incident_id,
                                            post_id = post_id,
                                            )
                 # Process Tags
@@ -243,6 +260,7 @@ class custom_WACOP(S3CRUD):
                    output,
                    dtargs,
                    dt_init,
+                   event_id,
                    incident_id,
                    updateable,
                    start,
@@ -261,7 +279,14 @@ class custom_WACOP(S3CRUD):
         c, f = tablename.split("_", 1)
 
         resource = current.s3db.resource(tablename)
-        if incident_id:
+        if event_id:
+            ltablename = "event_%s" % f
+            if tablename == ltablename:
+                # Need simplified selector for some reason
+                resource.add_filter(FS("event_id") == event_id)
+            else:
+                resource.add_filter(FS("event_%s.event_id" % f) == event_id)
+        elif incident_id:
             resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
 
         list_id = "custom-list-%s" % tablename
@@ -289,7 +314,12 @@ class custom_WACOP(S3CRUD):
 
         # @ToDo: Permissions
         messages = current.messages
-        if incident_id:
+        if event_id:
+            read_url = URL(c="event", f="event",
+                           args=[event_id, f, "[id].popup"])
+            delete_url = URL(c="event", f="event",
+                             args=[event_id, f, "[id]", "delete"])
+        elif incident_id:
             read_url = URL(c="event", f="incident",
                            args=[incident_id, f, "[id].popup"])
             delete_url = URL(c="event", f="incident",
@@ -329,12 +359,23 @@ class custom_WACOP(S3CRUD):
         if updateable and current.auth.s3_has_permission("create", tablename):
             if tablename == "event_human_resource":
                 label = current.T("Assign Staff")
-                url = URL(c="event", f="incident",
-                          args=[incident_id, "assign"],
-                          vars={"refresh": list_id},
-                          )
+                if event_id:
+                    url = URL(c="event", f="event",
+                              args=[event_id, "assign"],
+                              vars={"refresh": list_id},
+                              )
+                else:
+                    url = URL(c="event", f="incident",
+                              args=[incident_id, "assign"],
+                              vars={"refresh": list_id},
+                              )
             else:
-                if incident_id:
+                if event_id:
+                    url = URL(c="event", f="event",
+                              args=[event_id, f, "create.popup"],
+                              vars={"refresh": list_id},
+                              )
+                elif incident_id:
                     url = URL(c="event", f="incident",
                               args=[incident_id, f, "create.popup"],
                               vars={"refresh": list_id},
@@ -770,7 +811,7 @@ class custom_WACOP(S3CRUD):
         return system_wide
 
     # -------------------------------------------------------------------------
-    def _updates_html(self, r, output, incident_id, updateable, **attr):
+    def _updates_html(self, r, output, event_id, incident_id, updateable, **attr):
         """
             Create the HTML for the Updates section
 
@@ -784,8 +825,14 @@ class custom_WACOP(S3CRUD):
 
         tablename = "cms_post"
         resource = s3db.resource(tablename)
-        if incident_id:
+        if event_id:
+            resource.add_filter(FS("event_post.event_id") == event_id)
+            ajaxurl = URL(args = [event_id, "custom.dl"])
+        elif incident_id:
             resource.add_filter(FS("event_post.incident_id") == incident_id)
+            ajaxurl = URL(args = [incident_id, "custom.dl"])
+        else:
+            ajaxurl = URL(args = "dashboard.dl")
 
         list_fields = ["series_id",
                        "priority",
@@ -820,10 +867,6 @@ class custom_WACOP(S3CRUD):
             data = msg
         else:
             # Render the list
-            if incident_id:
-                ajaxurl = URL(args = [incident_id, "custom.dl"])
-            else:
-                ajaxurl = URL(args = "dashboard.dl")
             data = datalist.html(pagesize = 5,
                                  ajaxurl = ajaxurl,
                                  )
@@ -888,8 +931,7 @@ class custom_WACOP(S3CRUD):
                                    formstyle = filter_formstyle_profile,
                                    submit=True,
                                    ajax=True,
-                                   url=URL(args=[incident_id, "custom.dl"],
-                                           vars={}),
+                                   url=ajaxurl,
                                    ajaxurl=URL(c="cms", f="post",
                                                args=["filter.options"], vars={}),
                                    )
@@ -899,12 +941,22 @@ class custom_WACOP(S3CRUD):
 
         #  Create Form for Updates
         if updateable and auth.s3_has_permission("create", tablename):
+            if event_id:
+                url = URL(c="event", f="event",
+                          args = [event_id, "post", "create.popup"],
+                          vars={"refresh": "updates_datalist"},
+                          )
+            elif incident_id:
+                url = URL(c="event", f="incident",
+                          args = [incident_id, "post", "create.popup"],
+                          vars={"refresh": "updates_datalist"},
+                          )
+            else:
+                # Update doesn't make sense here
+                raise NotImplementedError
             output["create_post_button"] = DIV(A(ICON("add"),
                                                  T("Add Update"),
-                                                 _href=URL(c="event", f="incident",
-                                                           args = [incident_id, "post", "create.popup"],
-                                                           vars={"refresh": "updates_datalist"},
-                                                           ),
+                                                 _href=url,
                                                  _class="s3_modal button wide radius",
                                                  ),
                                                _class="panel",
@@ -940,7 +992,7 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
         s3.jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
-    def _aadata(self, r, filter, **attr):
+    def _aadata(self, r, event_id, incident_id, **attr):
         """
             Handle DataTable AJAX updates
 
@@ -987,7 +1039,10 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
         resource = current.s3db.resource(tablename)
-        if incident_id:
+        if event_id:
+            c, f = tablename.split("_", 1)
+            resource.add_filter(FS("event_%s.event_id" % f) == event_id)
+        elif incident_id:
             c, f = tablename.split("_", 1)
             resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
 
@@ -1105,6 +1160,550 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
         return output
 
 # =============================================================================
+class event_Browse(custom_WACOP):
+    """
+        Custom browse page for Events
+    """
+
+    # -------------------------------------------------------------------------
+    def _html(self, r, **attr):
+        """
+            Handle HTML representation
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Virtual Fields
+        etable = s3db.event_event
+        append = etable._virtual_methods.append
+
+        s3db.configure("event_event",
+                       extra_fields = ("end_date",
+                                       "exercise",
+                                       ),
+                       )
+        def event_status(row):
+            if row["event_event.exercise"]:
+                status = T("Testing")
+            elif not row["event_event.end_date"]:
+                status = T("Open")
+            else:
+                status = T("Closed")
+            return status
+        append(Field.Method("status", event_status))
+
+        itable = s3db.event_incident
+        def event_incidents(row):
+            query = (itable.event_id == row["event_event.id"]) & \
+                    (itable.deleted == False)
+            incidents = db(query).count()
+            return incidents
+        append(Field.Method("incidents", event_incidents))
+
+        ertable = s3db.event_team
+        def event_resources(row):
+            query = (ertable.event_id == row["event_event.id"]) & \
+                    (ertable.deleted == False)
+            resources = db(query).count()
+            return resources
+        append(Field.Method("resources", event_resources))
+
+        ettable = s3db.event_tag
+        ttable = s3db.cms_tag
+        def event_tags(row):
+            query = (ettable.event_id == row["event_event.id"]) & \
+                    (ettable.deleted == False) & \
+                    (ettable.tag_id == ttable.id)
+            tags = db(query).select(ttable.name)
+            if tags:
+                tags = [t.name for t in tags]
+                tags = ", ".join(tags)
+                return tags
+            else:
+                return current.messages["NONE"]
+        append(Field.Method("tags", event_tags))
+
+        # Alerts Cards
+        alerts = self._alerts_html()
+
+        # Events Cards
+        events = self._events_html()
+
+        # Map of Incidents
+        ltable = s3db.gis_layer_feature
+        layer = db(ltable.name == "Events").select(ltable.layer_id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            # No prepop done?
+            layer_id = None
+        feature_resources = [{"name"     : T("Events"),
+                              "id"       : "search_results",
+                              "layer_id" : layer_id,
+                              },
+                             ]
+        map = current.gis.show_map(height = 350,
+                                   width = 425,
+                                   collapsed = True,
+                                   callback='''S3.search.s3map()''',
+                                   feature_resources = feature_resources,
+                                   )
+
+        # Output
+        output = {"alerts": alerts,
+                  "events": events,
+                  "map": map,
+                  }
+
+        # Filter Form
+        # @ToDo: This should use start_date/end_date not just date
+        date_filter = S3DateFilter("start_date",
+                                   label = "",
+                                   #hide_time = True,
+                                   )
+        date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
+
+        filter_widgets = [S3TextFilter(["name",
+                                        "comments",
+                                        ],
+                                       formstyle = text_filter_formstyle,
+                                       label = T("Search"),
+                                       _placeholder = T("Enter search term…"),
+                                       ),
+                          S3LocationFilter("event_location.location_id",
+                                           label = "",
+                                           #label = T("City"),
+                                           widget = "multiselect",
+                                           levels = ("L1", "L2", "L3"),
+                                           ),
+                          S3OptionsFilter("tag.tag_id",
+                                          label = "",
+                                          noneSelectedText = "Tag",
+                                          ),
+                          S3OptionsFilter("status",
+                                          label = "",
+                                          noneSelectedText = "Status",
+                                          ),
+                          date_filter,
+                          ]
+
+        auth = current.auth
+        user = auth.user
+        if user:
+            filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
+                                                     label = "",
+                                                     options = {"*": T("All"),
+                                                                user.id: T("My Bookmarks"),
+                                                                },
+                                                     cols = 2,
+                                                     multiple = False,
+                                                     table = False,
+                                                     ))
+
+        filter_form = S3FilterForm(filter_widgets,
+                                   formstyle = filter_formstyle_profile,
+                                   submit=True,
+                                   ajax=True,
+                                   url=URL(args=["browse.dl"],
+                                           vars={}),
+                                   ajaxurl=URL(c="event", f="event",
+                                               args=["filter.options"], vars={}),
+                                   )
+        output["filter_form"] = filter_form.html(r.resource, r.get_vars,
+                                                 # Map & dataTable
+                                                 target="default_map custom-list-event_event",
+                                                 alias=None)
+
+        # Events dataTable
+        dtargs = {"dt_pagination": False,
+                  "dt_pageLength": 10,
+                  "dt_pagination": False,
+                  "dt_searching": False,
+                  #"dt_lengthMenu": None,
+                  }
+        #s3.no_formats = True
+
+        self._datatable(r,
+                        output = output,
+                        dtargs = dtargs,
+                        dt_init = None,
+                        event_id = None,
+                        incident_id = None,
+                        updateable = False,
+                        start = 0,
+                        limit = 10,
+                        tablename = "event_event",
+                        list_fields = ["name",
+                                       (T("Status"), "status"),
+                                       (T("Zero Hour"), "start_date"),
+                                       (T("Closed"), "end_date"),
+                                       (T("City"), "location.location_id.L3"),
+                                       (T("State"), "location.location_id.L3"),
+                                       (T("Tags"), "tags"),
+                                       (T("Incidents"), "incidents"),
+                                       (T("Resources"), "resources"),
+                                       ],
+                        orderby = "event_event.name",
+                        )
+
+        s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % r.application)
+        s3.jquery_ready.append('''wacop_bookmarks()''')
+
+        S3CustomController._view(THEME, "event_browse.html")
+        current.menu.options = None
+        return output
+
+# =============================================================================
+class event_Profile(custom_WACOP):
+    """
+        Custom profile page for Events
+    """
+
+    # -------------------------------------------------------------------------
+    def _html(self, r, **attr):
+        """
+            Handle HTML representation
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        event_id = r.id
+        incident_id = None
+
+        T = current.T
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+        response = current.response
+        s3 = response.s3
+
+        etable = s3db.event_event
+        itable = s3db.event_incident
+        ptable = s3db.cms_post
+        gtable = s3db.gis_location
+        #rtable = s3db.pr_group
+        ertable = s3db.event_team
+        eptable = s3db.event_post
+        ttable = s3db.cms_tag
+        ittable = s3db.event_tag
+
+        date_represent = lambda dt: S3DateTime.date_represent(dt,
+                                                              format = "%b %d %Y %H:%M",
+                                                              utc = True,
+                                                              #calendar = calendar,
+                                                              )
+
+        # Map of Incidents
+        ltable = s3db.gis_layer_feature
+        layer = db(ltable.name == "Incidents").select(ltable.layer_id,
+                                                      limitby=(0, 1)
+                                                      ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            # No prepop done?
+            layer_id = None
+        feature_resources = [{"name"     : T("Incidents"),
+                              "id"       : "search_results",
+                              "layer_id" : layer_id,
+                              "filter"   : "~.event_id=%s" % event_id,
+                              },
+                             ]
+        map = current.gis.show_map(height = 350,
+                                   width = 425,
+                                   collapsed = True,
+                                   callback='''S3.search.s3map()''',
+                                   feature_resources = feature_resources,
+                                   )
+
+        # Output
+        output = {"map": map,
+                  }
+
+        # Event Details
+        updateable = auth.s3_has_permission("update", etable, record_id=event_id, c="event", f="event")
+        output["updateable"] = updateable
+
+        user = auth.user
+        if user:
+            user_id = user.id
+            ltable = s3db.event_bookmark
+            query = (ltable.event_id == event_id) & \
+                    (ltable.user_id == user_id)
+            exists = db(query).select(ltable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+            if exists:
+                bookmark = A(ICON("bookmark"),
+                             _title=T("Remove Bookmark"),
+                             _class="button radius small",
+                             )
+            else:
+                bookmark = A(ICON("bookmark-empty"),
+                             _title=T("Add Bookmark"),
+                             _class="button radius small",
+                             )
+            bookmark["_data-c"] = "event"
+            bookmark["_data-f"] = "event"
+            bookmark["_data-i"] = event_id
+            script = '''wacop_bookmarks()'''
+            s3.jquery_ready.append(script)
+        else:
+            bookmark = ""
+        output["bookmark_btn"] = bookmark
+
+        event = Storage()
+        record = r.record
+        event.name = record.name
+        event.desc = record.comments
+        event.start_date = date_represent(record.start_date)
+        end_date = record.end_date
+        if end_date:
+            event.active = False
+            event.end_date = date_represent(end_date)
+        else:
+            event.active = True
+            event.end_date = "n/a"
+
+        eltable = s3db.event_event_location
+        query = (eltable.event_id == event_id) & \
+                (eltable.deleted == False)
+        event_location = db(query).select(eltable.location_id,
+                                          limitby = (0, 1),
+                                          ).first()
+        if event_location:
+            event.location = eltable.location_id.represent(event_location.location_id)
+        else:
+            event.location = ""
+
+        query = (itable.event_id == event_id) & \
+                (itable.deleted == False)
+        incidents = db(query).count()
+        event.incidents = A("%s %s" % (incidents, T("Incidents")),
+                            _href = URL(c="event", f="event",
+                                        args = "incident.popup",
+                                        ),
+                            _class = "s3_modal",
+                            _title = T("Incidents"),
+                            )
+
+        query = (ertable.event_id == event_id) & \
+                (ertable.deleted == False)
+        resources = db(query).count()
+        event.resources = A("%s %s" % (resources, T("Resources")),
+                            _href = URL(c="event", f="event",
+                                        args = "team.popup",
+                                        ),
+                            _class = "s3_modal",
+                            _title = T("Resources"),
+                            )
+
+        query = (eptable.event_id == event_id) & \
+                (eptable.deleted == False)
+        updates = db(query).count()
+        event.updates = A("%s %s" % (updates, T("Updates")),
+                            _href = URL(c="event", f="event",
+                                        args = "post.popup",
+                                        ),
+                            _class = "s3_modal",
+                            _title = T("Updates"),
+                            )
+
+        if record.exercise:
+            event.status = T("Testing")
+        elif not record.end_date:
+            event.status = T("Open")
+        else:
+            event.status = T("Closed")
+
+        output["event"] = event
+
+        # DataTables
+        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+
+        get_vars = r.get_vars
+        start = get_vars.get("start", None)
+        limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except (ValueError, TypeError):
+                    start = None
+                    limit = 0 # use default
+        else:
+            # Use defaults
+            start = None
+
+        # How many records per page?
+        if s3.dataTable_pageLength:
+            display_length = s3.dataTable_pageLength
+        else:
+            display_length = 10
+
+        # Server-side pagination?
+        if not s3.no_sspag:
+            dt_pagination = "true"
+            if not limit and display_length is not None:
+                limit = 2 * display_length
+            else:
+                limit = None
+        else:
+            dt_pagination = "false"
+
+        dtargs = attr.get("dtargs", {})
+        dtargs["dt_pagination"] = dt_pagination
+        dtargs["dt_pageLength"] = display_length
+        dtargs["dt_base_url"] = r.url(method="", vars={})
+
+        s3.no_formats = True
+        datatable = self._datatable
+
+        # Virtual Field for Status
+        s3db.configure("event_incident",
+                       extra_fields = ("end_date",
+                                       "exercise",
+                                       ),
+                       )
+        def incident_status(row):
+            if row["event_incident.exercise"]:
+                status = T("Testing")
+            elif not row["event_incident.end_date"]:
+                status = T("Open")
+            else:
+                status = T("Closed")
+            return status
+        itable._virtual_methods.append(Field.Method("status", incident_status))
+
+        # Incidents dataTable
+        tablename = "event_incident"
+        list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
+                       "name",
+                       (T("Status"), "status"),
+                       (T("Type"), "incident_type_id"),
+                       "location_id",
+                       (T("Start"), "date"),
+                       ]
+        orderby = "event_incident.name"
+        datatable(r,
+                  output,
+                  dtargs,
+                  dt_init,
+                  event_id,
+                  incident_id,
+                  updateable,
+                  start,
+                  limit,
+                  tablename,
+                  list_fields,
+                  orderby)
+
+        # Resources dataTable
+        tablename = "event_team"
+        list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
+                       "group_id",
+                       "status_id",
+                       ]
+        orderby = "pr_group.name"
+        datatable(r,
+                  output,
+                  dtargs,
+                  dt_init,
+                  event_id,
+                  incident_id,
+                  updateable,
+                  start,
+                  limit,
+                  tablename,
+                  list_fields,
+                  orderby)
+
+        # Tasks dataTable
+        tablename = "project_task"
+        list_fields = ["status",
+                       (T("Description"), "name"),
+                       (T("Created"), "created_on"),
+                       (T("Due"), "date_due"),
+                       ]
+        orderby = "project_task.date_due"
+        datatable(r,
+                  output,
+                  dtargs,
+                  dt_init,
+                  event_id,
+                  incident_id,
+                  updateable,
+                  start,
+                  limit,
+                  tablename,
+                  list_fields,
+                  orderby)
+
+        # Staff dataTable
+        tablename = "event_human_resource"
+        list_fields = [(T("Name"), "human_resource_id"),
+                       (T("Title"), "human_resource_id$job_title_id"),
+                       "human_resource_id$organisation_id",
+                       (T("Email"), "human_resource_id$person_id$email.value"),
+                       (T("Phone"), "human_resource_id$person_id$phone.value"),
+                       "status",
+                       (T("Notes"), "comments"),
+                       ]
+        orderby = "event_human_resource.human_resource_id"
+        datatable(r,
+                  output,
+                  dtargs,
+                  dt_init,
+                  event_id,
+                  incident_id,
+                  updateable,
+                  start,
+                  limit,
+                  tablename,
+                  list_fields,
+                  orderby)
+
+        # Organisations dataTable
+        tablename = "event_organisation"
+        list_fields = [(T("Name"), "organisation_id"),
+                       "status",
+                       "comments",
+                       ]
+        orderby = "event_organisation.organisation_id"
+        datatable(r,
+                  output,
+                  dtargs,
+                  dt_init,
+                  event_id,
+                  incident_id,
+                  updateable,
+                  start,
+                  limit,
+                  tablename,
+                  list_fields,
+                  orderby)
+
+        # Updates DataList
+        self._updates_html(r, output, event_id, incident_id, updateable, **attr)
+
+        S3CustomController._view(THEME, "event_profile.html")
+        current.menu.options = None
+        return output
+
+# =============================================================================
 class incident_Profile(custom_WACOP):
     """
         Custom profile page for an Incident
@@ -1119,6 +1718,7 @@ class incident_Profile(custom_WACOP):
             @param attr: controller arguments
         """
 
+        event_id = None
         incident_id = r.id
 
         T = current.T
@@ -1143,7 +1743,7 @@ class incident_Profile(custom_WACOP):
                                                               #calendar = calendar,
                                                               )
 
-        output = {"incident_id": incident_id,
+        output = {#"incident_id": incident_id,
                   }
 
         # Incident Details
@@ -1392,6 +1992,7 @@ class incident_Profile(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
+                  event_id,
                   incident_id,
                   updateable,
                   start,
@@ -1412,6 +2013,7 @@ class incident_Profile(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
+                  event_id,
                   incident_id,
                   updateable,
                   start,
@@ -1435,6 +2037,7 @@ class incident_Profile(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
+                  event_id,
                   incident_id,
                   updateable,
                   start,
@@ -1454,6 +2057,7 @@ class incident_Profile(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
+                  event_id,
                   incident_id,
                   updateable,
                   start,
@@ -1463,7 +2067,7 @@ class incident_Profile(custom_WACOP):
                   orderby)
 
         # Updates DataList
-        self._updates_html(r, output, incident_id, updateable, **attr)
+        self._updates_html(r, output, event_id, incident_id, updateable, **attr)
 
         S3CustomController._view(THEME, "incident_profile.html")
         # Done for the whole controller
@@ -1486,6 +2090,8 @@ class person_Dashboard(custom_WACOP):
         """
 
         #person_id = r.id
+        event_id = None
+        incident_id = None
 
         T = current.T
         s3 = current.response.s3
@@ -1571,7 +2177,8 @@ class person_Dashboard(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
-                  None, # incident_id
+                  event_id,
+                  incident_id,
                   True, # updateable
                   start,
                   limit,
@@ -1592,7 +2199,8 @@ class person_Dashboard(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
-                  None, # incident_id
+                  event_id,
+                  incident_id,
                   True, # updateable
                   start,
                   limit,
@@ -1609,7 +2217,8 @@ class person_Dashboard(custom_WACOP):
                   output,
                   dtargs,
                   dt_init,
-                  None, # incident_id
+                  event_id,
+                  incident_id,
                   True, # updateable
                   start,
                   limit,
@@ -1618,7 +2227,7 @@ class person_Dashboard(custom_WACOP):
                   orderby)
 
         # Updates DataList (without Create...at least until we can select an Incident to link it to)
-        self._updates_html(r, output, None, False, **attr)
+        self._updates_html(r, output, event_id, incident_id, False, **attr)
 
         S3CustomController._view(THEME, "dashboard.html")
         # Done for the whole controller

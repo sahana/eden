@@ -1,6 +1,7 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airport')),name,~.obsolete=False,,True,,,,,False,,,0
 Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,False,0,0
+Events,All Open Events,event,event,incident,Danger Area,{name} (T('Event'))<br />{event_type_id},"name,event_type_id",~.closed=0,,True,,,,,False,,,
 Fire Stations,All Active Fire Stations,fire,station,fire_station,Water Hydrant,{name} (T('Fire Station')),name,~.obsolete=False,,True,,,,,False,,,0
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,0
 Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,0

@@ -3,177 +3,169 @@
 {{if event:}}
 <div class='row'>
  <div role='complementary' class='callout event-parent'>
-   <div class='callout-left'>
-     <h6 class='meta'>This incident is part of the event</h6>
-     <h1 class='title'>{{=event.name}}</h1>
-     <a href='{{=event.url}}' class='button radius small'>Go to Event</a>
-   </div>
-   <div class='callout-right meta'>
-     <p>
-       <span class='date-label'>Zero hour:</span> <span class='date'>{{=event.start_date}}</span>
-       <span class='location adr'>
-         {{=event.location}}
-       </span>
-     </p>
-     <p>
-       {{=event.incidents}}
-       {{=event.resources}}
-       {{=event.updates}}
-     </p>
-     <span class='label {{=event.status}}'>{{=event.status}}</span>
-   </div>
+  <div class='callout-left'>
+   <h6 class='meta'>This incident is part of the event</h6>
+   <h1 class='title'>{{=event.name}}</h1>
+   <a href='{{=event.url}}' class='button radius small'>Go to Event</a>
+  </div>
+  <div class='callout-right meta'>
+   <p>
+    <span class='date-label'>Zero hour:</span> <span class='date'>{{=event.start_date}}</span>
+    <span class='location adr'>
+     {{=event.location}}
+    </span>
+   </p>
+   <p>
+    {{=event.incidents}}
+    {{=event.resources}}
+    {{=event.updates}}
+   </p>
+   <span class='label {{=event.status}}'>{{=event.status}}</span>
+  </div>
  </div>
 </div>
 {{pass}}
 <div class='row'>
-
-  <div class='small-12 large-6 large-push-6 columns'>
-    <h6 class='show-for-sr'>This incident on the map:</h6>
-    <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
-  </div>
-  <div class='small-12 large-6 large-pull-6 columns'>
-
-    <section class='incident-profile'>
-
-      <header class='status-bar {{if active:}}active{{pass}}'>
-        <ul class='status-bar-left'>
-          <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
-        </ul>
-        <ul class='right'>
-          <li class='item flag'><a href='#'><i class='fa-flag fa'></i></a></li>
-          <li class='item bookmark'>{{=bookmark_btn}}</li>
-          <li class='item share'><a href='#'><i class='fa-share-alt fa'></i></a></li>
-          {{if updateable:}}
-          <li class='item edit'><a href='#'><i class='fa-pencil fa'></i></a></li>
-          <li class='item delete'><a href='#'><i class='fa-trash fa'></i></a></li>
-          {{pass}}
-        </ul>
-      </header>
-
-      <div class='body'>
-
-        <h1 class='title'>{{=name}}</h1>
-        <p class='meta'>updated {{=modified_on}} by {{#modified_by}}</p>
-        <div class='tag-wrapper clearfix'>{{=incident_tags}}</div>
-        <div class='incident-data' data-equalizer>
-          <div class='incident-location adr'>
-            <div class='box' data-equalizer-watch>
-              <div class='street-address'>{{=addr_street}}</div>
-              <!-- <div class='extended-address'>Suite 207</div> -->
-              <span class='locality'>{{=L3}}</span>,
-              <span class='region'>{{=L1}}</span>
-              <span class='postal-code'>{{=postcode}}</span>
-              <div class='geo-location'>{{=lat}}, {{=lon}}</div>
-            </div>
-          </div>
-          <div class='incident-date'>
-            <div class='box' data-equalizer-watch>
-              <span class='date-label'>Zero hour:</span>
-              <div class='date'>{{=start_date}}</div>
-              {{if end_date:}}
-              <span class='date-label'>Closed at:</span>
-              <div class='date'>{{=end_date}}</div>
-              {{pass}}
-            </div>
-          </div>
-        </div>
-        <p class='desc'>{{=description}}</p>
-
-        <h4>Resources</h4>
-
-        <div class='incident-resources'>
-          <div class='incident-resources-rail'>
-            <div class='search-wrapper'>
-              <div id='dt-search-event_team'></div>
-              <span class='search-icon'><i class='fa fa-search'></i></span>
-            </div>
-            <!-- <a href='#' class='button primary expand'><i class='fa-plus fa'></i> Add Resource</a> -->
-            {{=create_event_team_popup}}
-          </div>
-          <div class='incident-resources-data'>
-            {{=event_team_datatable}}
-          </div>
-        </div>
+ <div class='small-12 large-6 large-push-6 columns'>
+  <h6 class='show-for-sr'>This incident on the map:</h6>
+  <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
+ </div>
+ <div class='small-12 large-6 large-pull-6 columns'>
+  <section class='incident-profile'>
+   <header class='status-bar {{if active:}}active{{pass}}'>
+    <ul class='status-bar-left'>
+     <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
+    </ul>
+    <ul class='right'>
+     <li class='item flag'><a href='#'><i class='fa-flag fa'></i></a></li>
+     <li class='item bookmark'>{{=bookmark_btn}}</li>
+     <!--<li class='item share'><a href='#'><i class='fa-share-alt fa'></i></a></li>-->
+    {{if updateable:}}
+     <li class='item edit'><a href='#'><i class='fa-pencil fa'></i></a></li>
+     <li class='item delete'><a href='#'><i class='fa-trash fa'></i></a></li>
+    {{pass}}
+    </ul>
+   </header>
+   <div class='body'>
+    <h1 class='title'>{{=name}}</h1>
+    <p class='meta'>updated {{=modified_on}} by {{#modified_by}}</p>
+    <div class='tag-wrapper clearfix'>{{=incident_tags}}</div>
+    <div class='incident-data' data-equalizer>
+     <div class='incident-location adr'>
+      <div class='box' data-equalizer-watch>
+       <div class='street-address'>{{=addr_street}}</div>
+       <!-- <div class='extended-address'>Suite 207</div> -->
+       <span class='locality'>{{=L3}}</span>,
+       <span class='region'>{{=L1}}</span>
+       <span class='postal-code'>{{=postcode}}</span>
+       <div class='geo-location'>{{=lat}}, {{=lon}}</div>
       </div>
-    </section>
-  </div>
+     </div>
+     <div class='incident-date'>
+      <div class='box' data-equalizer-watch>
+       <span class='date-label'>Zero hour:</span>
+       <div class='date'>{{=start_date}}</div>
+      {{if end_date:}}
+       <span class='date-label'>Closed at:</span>
+       <div class='date'>{{=end_date}}</div>
+      {{pass}}
+      </div>
+     </div>
+    </div>
+    <p class='desc'>{{=description}}</p>
+    <h4>Resources</h4>
+    <div class='incident-resources'>
+     <div class='incident-resources-rail'>
+      <div class='search-wrapper'>
+       <div id='dt-search-event_team'></div>
+       <span class='search-icon'><i class='fa fa-search'></i></span>
+      </div>
+      {{=create_event_team_popup}}
+     </div>
+     <div class='incident-resources-data'>
+      {{=event_team_datatable}}
+     </div>
+    </div>
+   </div>
+  </section>
+ </div>
 </div>
 <hr>
 <div class='row'>
-  <div class='small-12 column'>
-    <ul class='tabs tab-navigation' data-tab>
-      <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-      <li class='tab-title'><a href='#panel2'>Directories</a></li>
-      <li class='tab-title'><a href='#panel3'>Tasks</a></li>
-    </ul>
-    <div class='tabs-content'>
-      <div class='content active' id='panel1'>
-        <div class='row'>
-          <div class='large-3 columns'>
-            {{=create_post_button}}
-            <div class='panel'>
-              {{=filter_form}}
-            </div>
-          </div>
-          <div class='large-9 columns'>
-            <ul class='dl' id='updates_datalist'>
-              {{=updates_datalist}}
-            </ul>
-          </div>
-        </div>
+ <div class='small-12 column'>
+  <ul class='tabs tab-navigation' data-tab>
+   <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+   <li class='tab-title'><a href='#panel2'>Directories</a></li>
+   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+  </ul>
+  <div class='tabs-content'>
+   <div class='content active' id='panel1'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_post_button}}
+      <div class='panel'>
+       {{=filter_form}}
       </div>
-      <section class='staff content' id='panel2'>
-        <div class='row'>
-          <ul class='large-3 columns tabs vertical' data-tab>
-            <li class='tab-title active'><a href='#staff'>Staff</a></li>
-            <li class='tab-title'><a href='#organisations'>Organizations</a></li>
-          </ul>
-          <div class='large-9 columns'>
-            <div class='tabs-content'>
-              <div class='row collapse prefix-radius content active' id='staff'>
-                <div class='large-2 columns'>
-                  <label for='event_human_resource-search' class='prefix'>Search</label>
-                </div>
-                <div class='large-6 columns' id='dt-search-event_human_resource'></div>
-                <div class='large-4 columns'>
-                  {{=create_event_human_resource_popup}}
-                </div>
-                <div id='dt-event_human_resource'>
-                  {{=event_human_resource_datatable}}
-                </div>
-              </div>
-              <div class='row collapse prefix-radius content' id='organisations'>
-                <div class='large-2 columns'>
-                  <label for='event_organisation-search' class='prefix'>Search</label>
-                </div>
-                <div class='large-6 columns' id='dt-search-event_organisation'></div>
-                <div class='large-4 columns'>
-                  {{=create_event_organisation_popup}}
-                </div>
-                <div id='dt-event_organisation'>
-                  {{=event_organisation_datatable}}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class='tasks content' id='panel3'>
-        <div class='row collapse prefix-radius'>
-          <div class='large-2 columns'>
-            <label for='project_task-search' class='prefix'>Search</label>
-          </div>
-          <div class='large-6 columns' id='dt-search-project_task'></div>
-          <div class='large-4 columns'>
-            {{=create_project_task_popup}}
-          </div>
-          <div id='dt-project_task'>
-            {{=project_task_datatable}}
-          </div>
-        </div>
-      </section>
+     </div>
+     <div class='large-9 columns'>
+      <ul class='dl' id='updates_datalist'>
+       {{=updates_datalist}}
+      </ul>
+     </div>
     </div>
+   </div>
+   <section class='staff content' id='panel2'>
+    <div class='row'>
+     <ul class='large-3 columns tabs vertical' data-tab>
+      <li class='tab-title active'><a href='#staff'>Staff</a></li>
+      <li class='tab-title'><a href='#organisations'>Organizations</a></li>
+     </ul>
+     <div class='large-9 columns'>
+      <div class='tabs-content'>
+       <div class='row collapse prefix-radius content active' id='staff'>
+        <div class='large-2 columns'>
+         <label for='event_human_resource-search' class='prefix'>Search</label>
+        </div>
+        <div class='large-6 columns' id='dt-search-event_human_resource'></div>
+        <div class='large-4 columns'>
+         {{=create_event_human_resource_popup}}
+        </div>
+        <div id='dt-event_human_resource'>
+         {{=event_human_resource_datatable}}
+        </div>
+       </div>
+       <div class='row collapse prefix-radius content' id='organisations'>
+        <div class='large-2 columns'>
+         <label for='event_organisation-search' class='prefix'>Search</label>
+        </div>
+        <div class='large-6 columns' id='dt-search-event_organisation'></div>
+        <div class='large-4 columns'>
+         {{=create_event_organisation_popup}}
+        </div>
+        <div id='dt-event_organisation'>
+         {{=event_organisation_datatable}}
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class='tasks content' id='panel3'>
+    <div class='row collapse prefix-radius'>
+     <div class='large-2 columns'>
+      <label for='project_task-search' class='prefix'>Search</label>
+     </div>
+     <div class='large-6 columns' id='dt-search-project_task'></div>
+     <div class='large-4 columns'>
+      {{=create_project_task_popup}}
+     </div>
+     <div id='dt-project_task'>
+      {{=project_task_datatable}}
+     </div>
+    </div>
+   </section>
   </div>
+ </div>
 </div>
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
