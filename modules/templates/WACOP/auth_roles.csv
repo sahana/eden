@@ -5,16 +5,16 @@ ANONYMOUS,Anonymous,,event,event,,,READ,,,,,general Public can view Events
 ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,general Public can view Events
 ANONYMOUS,Anonymous,,cms,post,,,READ,,,,,general Public can view Updates inc Alerts
 ANONYMOUS,Anonymous,,,,cms_post,,READ,,,,,general Public can view Updates inc Alerts
-AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,,,"Authenticated users can see the Map"
-AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
-AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,,,"But need to be able to add/edit addresses"
-AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,Authenticated,,hrm,,,"READ|UPDATE",,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,person,,,"READ|UPDATE",,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,gis,,,,READ,READ|CREATE|UPDATE|DELETE,,,,Authenticated users can see the Map
+AUTHENTICATED,Authenticated,,gis,location,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,pr,,,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,pr,person,,,CREATE,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,pr,pentity,,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,pr,person_search,,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,hrm,,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,person,,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,staff,,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 ADASHI,ADASHI,,sync,sync,,,READ|CREATE|UPDATE,,,true,true,
 ADASHI,ADASHI,,,,event_incident,,READ|CREATE|UPDATE,,,true,true,
 ADASHI,ADASHI,,,,event_incident_type,,READ|CREATE|UPDATE,,,true,true,
