@@ -438,13 +438,20 @@ class S3EventModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            # Should be able to do everything via the link table
+                            #event_post = "event_id",
                             cms_post = {"link": "event_post",
                                         "joinby": "event_id",
                                         "key": "post_id",
                                         "actuate": "replace",
                                         },
+                            cr_shelter = {"link": "event_shelter",
+                                          "joinby": "event_id",
+                                          "key": "shelter_id",
+                                          "actuate": "replace",
+                                          },
                             event_bookmark = "event_id",
-                            event_tag = "event_id", # cms_tag
+                            event_tag = "event_id",       # cms_tag
                             event_event_tag = "event_id", # Key-Value Store
                             event_incident = "event_id",
                             dc_response = {"link": "event_response",
@@ -467,26 +474,34 @@ class S3EventModel(S3Model):
                                             "key": "location_id",
                                             "actuate": "hide",
                                             },
-                            event_activity = {"name": "event_activity",
-                                              "joinby": "event_id",
-                                              },
+                            # Should be able to do everything via the link table
+                            #event_activity = {"name": "event_activity",
+                            #                  "joinby": "event_id",
+                            #                  },
                             project_activity = {"link": "event_activity",
                                                 "joinby": "event_id",
                                                 "key": "activity_id",
                                                 "actuate": "replace",
                                                 },
-                            event_project = {"name": "event_project",
-                                             "joinby": "event_id",
-                                             },
+                            # Should be able to do everything via the link table
+                            #event_project = {"name": "event_project",
+                            #                 "joinby": "event_id",
+                            #                 },
                             project_project = {"link": "event_project",
                                                "joinby": "event_id",
                                                "key": "project_id",
                                                "actuate": "replace",
                                                },
+                            project_task = {"link": "event_task",
+                                            "joinby": "event_id",
+                                            "key": "task_id",
+                                            "actuate": "replace",
+                                            #"autocomplete": "name",
+                                            "autodelete": True,
+                                            },
                             event_event_location = "event_id",
-                            # Should be able to do everything via the cms_post variant
-                            #event_post = "event_id",
-                            event_team = "event_id",
+                            # Should be able to do everything via the link table
+                            #event_team = "event_id",
                             pr_group = {"link": "event_team",
                                         "joinby": "event_id",
                                         "key": "group_id",
@@ -980,7 +995,8 @@ class S3IncidentModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            event_asset = "incident_id",
+                            # Should be able to do everything via the link table
+                            #event_asset = "incident_id",
                             asset_asset = {"link": "event_asset",
                                            "joinby": "incident_id",
                                            "key": "asset_id",
@@ -994,7 +1010,8 @@ class S3IncidentModel(S3Model):
                                         "key": "post_id",
                                         "actuate": "replace",
                                         },
-                            event_human_resource = "incident_id",
+                            # Should be able to do everything via the link table
+                            #event_human_resource = "incident_id",
                             hrm_human_resource = ({"link": "event_human_resource",
                                                    "joinby": "incident_id",
                                                    "key": "human_resource_id",
@@ -1009,7 +1026,8 @@ class S3IncidentModel(S3Model):
                                                    "autodelete": False,
                                                    },
                                                   ),
-                            event_organisation = "incident_id",
+                            # Should be able to do everything via the link table
+                            #event_organisation = "incident_id",
                             org_organisation = {"link": "event_organisation",
                                                 "joinby": "incident_id",
                                                 "key": "organisation_id",
@@ -1018,19 +1036,21 @@ class S3IncidentModel(S3Model):
                                                 #"autocomplete": "name",
                                                 "autodelete": False,
                                                 },
-                            event_team = "incident_id",
+                            # Should be able to do everything via the link table
+                            #event_team = "incident_id",
                             pr_group = {"link": "event_team",
                                         "joinby": "incident_id",
                                         "key": "group_id",
                                         "actuate": "hide",
                                         "autodelete": False,
                                         },
-                            # Should be able to do everything via the cms_post variant
+                            # Should be able to do everything via the link table
                             #event_post = "incident_id",
                             event_site = "incident_id",
-                            event_sitrep = {"name": "incident_sitrep",
-                                            "joinby": "incident_id",
-                                            },
+                            # Should be able to do everything via the link table
+                            #event_sitrep = {"name": "incident_sitrep",
+                            #                "joinby": "incident_id",
+                            #                },
                             doc_sitrep = {"link": "event_sitrep",
                                           "joinby": "incident_id",
                                           "key": "sitrep_id",
@@ -1038,9 +1058,10 @@ class S3IncidentModel(S3Model):
                                           #"autocomplete": "name",
                                           "autodelete": True,
                                           },
-                            event_task = {"name": "incident_task",
-                                          "joinby": "incident_id",
-                                          },
+                            # Should be able to do everything via the link table
+                            #event_task = {"name": "incident_task",
+                            #              "joinby": "incident_id",
+                            #              },
                             project_task = {"link": "event_task",
                                             "joinby": "incident_id",
                                             "key": "task_id",
@@ -2970,9 +2991,9 @@ class S3EventTaskModel(S3Model):
 
         tablename = "event_task"
         self.define_table(tablename,
-                          #self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
+                          self.event_event_id(ondelete = "CASCADE",
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
                                                  ),
                           self.project_task_id(empty = False,
                                                ondelete = "CASCADE",
@@ -2993,7 +3014,8 @@ class S3EventTaskModel(S3Model):
         #    msg_list_empty = T("No Tasks currently registered in this incident"))
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("incident_id",
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
                                                             "task_id",
                                                             ),
                                                  ),
@@ -3527,7 +3549,7 @@ def event_rheader(r):
             if settings.get_project_event_activities():
                 tabs.append((T("Activities"), "activity"))
             if settings.has_module("cr"):
-                tabs.append((T("Shelters"), "event_shelter"))
+                tabs.append((T("Shelters"), "shelter"))
             #if settings.has_module("req"):
             #    tabs.append((T("Requests"), "req"))
             if settings.get_event_dispatch_tab():

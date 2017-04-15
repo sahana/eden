@@ -44,10 +44,11 @@ def event():
             method = r.method
             if r.component:
                 cname = r.component_name
-                if cname == "collection":
-                    # @ToDo: Filter Locations available based on Event Locations
-                    #s3db.dc_collection.location_id.default = r.record.location_id
-                    s3.crud_strings["dc_collection"].label_create = T("Add Assessment")
+                if cname == "req":
+                    if method != "update" and method != "read":
+                        # Hide fields which don't make sense in a Create form
+                        # inc list_create (list_fields over-rides)
+                        s3db.req_create_form_mods()
 
                 #elif cname == "document":
                 #    # @ToDo: Filter Locations available based on Event Locations
@@ -61,11 +62,10 @@ def event():
                 #    # @ToDo: Filter Locations available based on Event Locations
                 #    #s3db.doc_document.location_id.default = r.record.location_id
 
-                elif cname == "req":
-                    if method != "update" and method != "read":
-                        # Hide fields which don't make sense in a Create form
-                        # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods()
+                elif cname == "response":
+                    # @ToDo: Filter Locations available based on Event Locations
+                    #s3db.dc_collection.location_id.default = r.record.location_id
+                    s3.crud_strings["dc_response"].label_create = T("Add Assessment")
 
                 elif cname == "target":
                     # @ToDo: Filter Locations available based on Event Locations

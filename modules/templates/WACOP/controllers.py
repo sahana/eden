@@ -750,7 +750,7 @@ class custom_WACOP(S3CRUD):
                                                    ),
                                                TAG["footer"](P(A(T("Read More"),
                                                                  _href=URL(c="event", f="event",
-                                                                           args=[record_id, "profile"],
+                                                                           args=[record_id, "custom"],
                                                                            ),
                                                                  _class="more",
                                                                  ),
@@ -1491,6 +1491,7 @@ class event_Profile(custom_WACOP):
         event.incidents = A("%s %s" % (incidents, T("Incidents")),
                             _href = URL(c="event", f="event",
                                         args = "incident.popup",
+                                        vars = {"view": 1},
                                         ),
                             _class = "s3_modal",
                             _title = T("Incidents"),
@@ -1501,7 +1502,8 @@ class event_Profile(custom_WACOP):
         resources = db(query).count()
         event.resources = A("%s %s" % (resources, T("Resources")),
                             _href = URL(c="event", f="event",
-                                        args = "team.popup",
+                                        args = "group.popup",
+                                        vars = {"view": 1},
                                         ),
                             _class = "s3_modal",
                             _title = T("Resources"),
@@ -1513,6 +1515,7 @@ class event_Profile(custom_WACOP):
         event.updates = A("%s %s" % (updates, T("Updates")),
                             _href = URL(c="event", f="event",
                                         args = "post.popup",
+                                        vars = {"view": 1},
                                         ),
                             _class = "s3_modal",
                             _title = T("Updates"),
@@ -1922,7 +1925,7 @@ class incident_Profile(custom_WACOP):
                                 )
 
             event.url = URL(c="event", f="event",
-                            args = [event_id, "profile"],
+                            args = [event_id, "custom"],
                             )
 
             if erecord.exercise:
