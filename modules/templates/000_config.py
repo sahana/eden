@@ -14,7 +14,7 @@
 """
 
 # Remove this line when you have edited this file sufficiently to proceed to the web interface
-FINISHED_EDITING_CONFIG_FILE = False
+FINISHED_EDITING_CONFIG_FILE = True
 
 # Select the Template
 # - which Modules are enabled
@@ -63,7 +63,7 @@ settings.base.migrate = True
 # JS Debug messages are also available in the Console
 # can also load an individual page in debug mode by appending URL with
 # ?debug=1
-settings.base.debug = False
+settings.base.debug = True
 
 # Uncomment this to prevent automated test runs from remote
 # settings.base.allow_testing = False
