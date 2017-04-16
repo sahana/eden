@@ -1068,6 +1068,7 @@
                     selectedRows[t] = [];
                     if ($(this).prop('checked')) {
                         selectionMode[t] = 'Exclusive';
+                        selectedRows[t].push(0);
                         dt.api().draw(false);
                     } else {
                         selectionMode[t] = 'Inclusive';
