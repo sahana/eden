@@ -229,6 +229,11 @@ settings.frontpage.rss = [
 # - note: invalid settings are ignored
 #
 settings.import_template()
+settings.modules["ocr"] = Storage(
+    restricted = False,
+    module_type = None
+)
+
 
 # =============================================================================
 # Over-rides to the Template may be done here
