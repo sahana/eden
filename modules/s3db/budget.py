@@ -258,6 +258,7 @@ class S3BudgetModel(S3Model):
                      Field("description",
                            label = T("Description"),
                            ),
+                     self.gis_location_id(),
                      Field("subsistence", "double",
                            default = 0.0,
                            label = T("Subsistence Cost"),

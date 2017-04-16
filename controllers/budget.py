@@ -58,8 +58,6 @@ def location():
         REST controller for budget_location
     """
 
-    # @todo: link to gis_location
-
     return s3_rest_controller(main="code")
 
 # =============================================================================
