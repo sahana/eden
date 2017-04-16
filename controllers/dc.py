@@ -326,4 +326,15 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                               rheader = s3db.dc_rheader,
                               )
 
+# -----------------------------------------------------------------------------
+def template_question():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for adding questions to a template
+    """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
 # END =========================================================================
