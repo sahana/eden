@@ -1,0 +1,44 @@
+*** Settings ***
+Documentation  Run using "python web2py.py --no-banner -M -S eden -R applications/eden/tests/edentest_runner.py -A Asset"
+...            Test cases for asset
+Resource  ../../resources/main.txt
+
+*** Variables ***
+${ASSET URL}            http://${BASEURL}/asset/asset
+
+${AssetNumberField}   	asset_asset_number
+${AssertSearchField}	asset-asset_asset_number-supply_item_name-asset_asset_comments-gis_location_L0-gis_location_L1-gis_location_L2-gis_location_L3-gis_location_L4-text-filter
+${AssetDeleteButton}	delete-btn
+
+*** Test Cases ***
+
+Create Asset
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${ASSET URL}/create
+    Input Text  ${AssetNumberField}  TS-001
+    Select From List  xpath=//select[@name="type"]  Other
+    Select From List  xpath=//select[@name="item_id"]  Flashlight
+    Select From List  xpath=//select[@name="organisation_id"]  TERA
+    Wait Until Element Is Visible  xpath=//select[@name="site_id"]
+    Select From List  xpath=//select[@name="site_id"]  Station 1
+    Submit CRUD Form
+    Should Show Confirmation
+
+Find Asset By Asset Number
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${ASSET URL}
+    Input Text  ${AssertSearchField}  TS-001
+    Wait For Filter Result
+    Should Give X Results  1
+    DataTable Row Should Contain  1  Asset Number  TS-001
+
+Delete Asset
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${ASSET URL}
+    Input Text  ${AssertSearchField}  TS-001
+    Wait For Filter Result
+    Click Element  xpath=//*[@id="datatable"]/tbody/tr[1]/td[1]/a[1]
+    Wait Until Page Contains Element  ${AssetDeleteButton}
+    Click Element  ${AssetDeleteButton}
+    Confirm Action
+    Should Show Confirmation
