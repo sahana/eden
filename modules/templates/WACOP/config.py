@@ -297,7 +297,7 @@ def config(settings):
                 f.readable = f.writable = False
 
             elif r.representation == "popup" and r.get_vars.get("view"):
-                # Popups for lists in Parent Event of Incident Screen
+                # Popups for lists in Parent Event of Incident Screen or Event Profile header
                 # No Title since this is on the Popup
                 s3.crud_strings["event_event"].title_display = ""
                 # No create button & Tweak list_fields
@@ -360,11 +360,17 @@ def config(settings):
         table.closed.represent = status_represent
         table.event_id.readable = table.event_id.writable = True
 
+        # Custom Browse
+        from templates.WACOP.controllers import incident_Browse, incident_Profile
+        set_method = s3db.set_method
+        set_method("event", "incident",
+                   method = "browse",
+                   action = incident_Browse)
+
         # Custom Profile
-        from templates.WACOP.controllers import incident_Profile
-        s3db.set_method("event", "incident",
-                        method = "custom",
-                        action = incident_Profile)
+        set_method("event", "incident",
+                   method = "custom",
+                   action = incident_Profile)
 
         #s3.crud_strings["event_incident"].title_list =  T("Browse Incidents")
 
@@ -375,99 +381,99 @@ def config(settings):
             if callable(standard_prep):
                 result = standard_prep(r)
 
-            if r.method == "summary":
-                # Map (only) in common area
-                settings.ui.summary = ({"name": "table",
-                                        "label": "Table",
-                                        "widgets": [{"method": "datatable"}]
-                                        },
-                                       {"name": "charts",
-                                        "label": "Report",
-                                        "widgets": [{"method": "report",
-                                                     "ajax_init": True}]
-                                        },
-                                       {"common": True,
-                                        "name": "map",
-                                        "label": "Map",
-                                        "widgets": [{"method": "map",
-                                                     "ajax_init": True}],
-                                        },
-                                       )
+            #if r.method == "summary":
+            #    # Map (only) in common area
+            #    settings.ui.summary = ({"name": "table",
+            #                            "label": "Table",
+            #                            "widgets": [{"method": "datatable"}]
+            #                            },
+            #                           {"name": "charts",
+            #                            "label": "Report",
+            #                            "widgets": [{"method": "report",
+            #                                         "ajax_init": True}]
+            #                            },
+            #                           {"common": True,
+            #                            "name": "map",
+            #                            "label": "Map",
+            #                            "widgets": [{"method": "map",
+            #                                         "ajax_init": True}],
+            #                            },
+            #                           )
 
-                from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
-                from templates.WACOP.controllers import filter_formstyle_summary, text_filter_formstyle
+            #    from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+            #    from templates.WACOP.controllers import filter_formstyle_summary, text_filter_formstyle
 
-                # @ToDo: This should use date/end_date not just date
-                date_filter = S3DateFilter("date",
-                                           #formstyle = filter_formstyle_summary,
-                                           label = "",
-                                           #hide_time = True,
-                                           )
-                date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
+            #    # @ToDo: This should use date/end_date not just date
+            #    date_filter = S3DateFilter("date",
+            #                               #formstyle = filter_formstyle_summary,
+            #                               label = "",
+            #                               #hide_time = True,
+            #                               )
+            #    date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 
-                filter_widgets = [S3TextFilter(["name",
-                                                "comments",
-                                                ],
-                                               formstyle = text_filter_formstyle,
-                                               label = T("Search"),
-                                               _placeholder = T("Enter search term…"),
-                                               ),
-                                  S3OptionsFilter("organisation_id",
-                                                  label = "",
-                                                  noneSelectedText = "Lead Organization",
-                                                  widget = "multiselect",
-                                                  ),
-                                  S3OptionsFilter("closed",
-                                                  formstyle = filter_formstyle_summary,
-                                                  options = {"*": T("All"),
-                                                             False: T("Open"),
-                                                             True: T("Closed"),
-                                                             },
-                                                  cols = 1,
-                                                  multiple = False,
-                                                  ),
-                                  S3OptionsFilter("incident_type_id",
-                                                  formstyle = filter_formstyle_summary,
-                                                  label = T("Incident Type"),
-                                                  noneSelectedText = "All",
-                                                  widget = "multiselect",
-                                                  ),
-                                  date_filter,
-                                  ]
+            #    filter_widgets = [S3TextFilter(["name",
+            #                                    "comments",
+            #                                    ],
+            #                                   formstyle = text_filter_formstyle,
+            #                                   label = T("Search"),
+            #                                   _placeholder = T("Enter search term…"),
+            #                                   ),
+            #                      S3OptionsFilter("organisation_id",
+            #                                      label = "",
+            #                                      noneSelectedText = "Lead Organization",
+            #                                      widget = "multiselect",
+            #                                      ),
+            #                      S3OptionsFilter("closed",
+            #                                      formstyle = filter_formstyle_summary,
+            #                                      options = {"*": T("All"),
+            #                                                 False: T("Open"),
+            #                                                 True: T("Closed"),
+            #                                                 },
+            #                                      cols = 1,
+            #                                      multiple = False,
+            #                                      ),
+            #                      S3OptionsFilter("incident_type_id",
+            #                                      formstyle = filter_formstyle_summary,
+            #                                      label = T("Incident Type"),
+            #                                      noneSelectedText = "All",
+            #                                      widget = "multiselect",
+            #                                      ),
+            #                      date_filter,
+            #                      ]
 
-                list_fields = ["closed",
-                               "name",
-                               (T("Type"), "incident_type_id"),
-                               "location_id",
-                               (T("Start"), "date"),
-                               (T("End"), "end_date"),
-                               "event_id",
-                               ]
+            #    list_fields = ["closed",
+            #                   "name",
+            #                   (T("Type"), "incident_type_id"),
+            #                   "location_id",
+            #                   (T("Start"), "date"),
+            #                   (T("End"), "end_date"),
+            #                   "event_id",
+            #                   ]
 
-                s3db.configure("event_incident",
-                               filter_widgets = filter_widgets,
-                               list_fields = list_fields,
-                               )
+            #    s3db.configure("event_incident",
+            #                   filter_widgets = filter_widgets,
+            #                   list_fields = list_fields,
+            #                   )
 
                 # @ToDo: Configure Timeline
                 # Last 5 days (@ToDo: Configurable Start/End & deduce appropriate unit)
                 # Qty of Newly-opened Incidents per Unit
-                pass
 
-            elif r.method == "assign":
+            if r.method == "assign":
                 current.menu.main = ""
 
             elif r.representation == "popup":
-                #if not r.component:
-                #    # Popup just used to link to Event (Old?)
-                #    #s3.crud_strings["event_incident"].title_update =  T("Add to Event")
-                #    from s3 import S3SQLCustomForm
-                #    crud_form = S3SQLCustomForm("event_id",
-                #                                )
-                #    s3db.configure("event_incident",
-                #                   crud_form = crud_form,
-                #                   )
-                if r.component_name == "post":
+                if not r.component:
+                    if r.get_vars.get("set_event"):
+                        # Popup just used to link to Event
+                        #s3.crud_strings["event_incident"].title_update =  T("Add to Event")
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("event_id",
+                                                    )
+                        s3db.configure("event_incident",
+                                       crud_form = crud_form,
+                                       )
+                elif r.component_name == "post":
                     from s3 import S3SQLCustomForm
 
                     crud_form = S3SQLCustomForm("body",
@@ -497,26 +503,26 @@ def config(settings):
                                                  "modules", "templates",
                                                  "WACOP", "views",
                                                  "assign.html")
-                else:
-                    # Summary or Profile pages
-                    # Additional styles
-                    s3.external_stylesheets += ["https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css",
-                                                "https://fonts.googleapis.com/css?family=Merriweather:400,700|Source+Sans+Pro:400,700",
-                                                ]
+                #else:
+                #    # Summary or Profile pages
+                #    # Additional styles
+                #    s3.external_stylesheets += ["https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css",
+                #                                "https://fonts.googleapis.com/css?family=Merriweather:400,700|Source+Sans+Pro:400,700",
+                #                                ]
 
-                    if r.method == "summary":
-                        # Open the Custom profile page instead of the normal one
-                        from gluon import URL
-                        from s3 import S3CRUD
-                        custom_url = URL(args = ["[id]", "custom"])
-                        S3CRUD.action_buttons(r,
-                                              read_url=custom_url,
-                                              update_url=custom_url)
+                    #if r.method == "summary":
+                    #    # Open the Custom profile page instead of the normal one
+                    #    from gluon import URL
+                    #    from s3 import S3CRUD
+                    #    custom_url = URL(args = ["[id]", "custom"])
+                    #    S3CRUD.action_buttons(r,
+                    #                          read_url=custom_url,
+                    #                          update_url=custom_url)
 
-                    # System-wide Alert
-                    from templates.WACOP.controllers import custom_WACOP
-                    custom = custom_WACOP()
-                    output["system_wide"] = custom._system_wide_html()
+               #     # System-wide Alert
+               #     from templates.WACOP.controllers import custom_WACOP
+               #     custom = custom_WACOP()
+               #     output["system_wide"] = custom._system_wide_html()
 
             return output
         s3.postp = custom_postp

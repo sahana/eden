@@ -44,6 +44,7 @@
      <li class='item edit'><a href='#'><i class='fa-pencil fa'></i></a></li>
      <li class='item delete'><a href='#'><i class='fa-trash fa'></i></a></li>
     {{pass}}
+     <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"], vars={"set_event": 1})}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
     </ul>
    </header>
    <div class='body'>

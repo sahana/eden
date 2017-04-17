@@ -375,8 +375,10 @@ class DataCollectionTemplateModel(S3Model):
             return
 
         # Create the Dynamic Table
+        mobile_data = current.deployment_settings.get_dc_mobile_data()
         table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
                                                 #mobile_form = False,
+                                                mobile_data = mobile_data,
                                                 )
 
         # Add a Field to link Answers together
