@@ -500,6 +500,16 @@ class S3EventModel(S3Model):
                                             },
                             event_event_location = "event_id",
                             # Should be able to do everything via the link table
+                            #event_organisation = "event_id",
+                            org_organisation = {"link": "event_organisation",
+                                                "joinby": "event_id",
+                                                "key": "organisation_id",
+                                                #"actuate": "embed",
+                                                "actuate": "hide",
+                                                #"autocomplete": "name",
+                                                "autodelete": False,
+                                                },
+                            # Should be able to do everything via the link table
                             #event_team = "event_id",
                             pr_group = {"link": "event_team",
                                         "joinby": "event_id",
@@ -507,6 +517,22 @@ class S3EventModel(S3Model):
                                         "actuate": "hide",
                                         "autodelete": False,
                                         },
+                            # Should be able to do everything via the link table
+                            #event_human_resource = "event_id",
+                            hrm_human_resource = ({"link": "event_human_resource",
+                                                   "joinby": "event_id",
+                                                   "key": "human_resource_id",
+                                                   "actuate": "hide",
+                                                   "autodelete": False,
+                                                   },
+                                                  {"name": "assign",
+                                                   "link": "event_human_resource",
+                                                   "joinby": "event_id",
+                                                   "key": "human_resource_id",
+                                                   "actuate": "hide",
+                                                   "autodelete": False,
+                                                   },
+                                                  ),
                             req_req = {"link": "event_request",
                                        "joinby": "event_id",
                                        "key": "req_id",
@@ -541,6 +567,11 @@ class S3EventModel(S3Model):
         set_method("event", "event",
                    method = "remove_tag",
                    action = self.event_remove_tag)
+
+        # Custom Method to Assign HRs
+        set_method("event", "event",
+                   method = "assign",
+                   action = self.hrm_AssignMethod(component="human_resource"))
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
