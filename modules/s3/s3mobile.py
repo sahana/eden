@@ -163,6 +163,7 @@ class S3MobileFormList(object):
                     (ttable.deleted != True)
             rows = current.db(query).select(ttable.name,
                                             ttable.title,
+                                            ttable.mobile_data,
                                             )
             for row in rows:
 
@@ -185,6 +186,7 @@ class S3MobileFormList(object):
                          "l": title,
                          "t": tablename,
                          "r": url,
+                         "d": row.mobile_data,
                          }
                 formlist.append(mform)
                 formdict[name] = mform
