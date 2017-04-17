@@ -115,6 +115,9 @@ class index(S3CustomController):
         s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % current.request.application)
         s3.jquery_ready.append('''wacop_bookmarks()''')
 
+        # System-wide Message
+        output["system_wide"] = custom._system_wide_html()
+
         self._view(THEME, "index.html")
         return output
 
