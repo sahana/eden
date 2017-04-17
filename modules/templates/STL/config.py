@@ -1757,6 +1757,7 @@ def config(settings):
 
                         from s3 import S3DateFilter, \
                                        S3HierarchyFilter, \
+                                       S3LocationFilter, \
                                        S3LocationSelector, \
                                        S3OptionsFilter, \
                                        S3SQLCustomForm, \
@@ -1832,7 +1833,10 @@ def config(settings):
                                         "dvr_case.comments",
                                         (T("Invalid Record"), "dvr_case.archived"),
                                         )
-
+                        
+                        opt_yes_no = {True: T("Yes"),
+                                      False: T("No"),
+                                      }
                         # Custom filter widgets
                         filter_widgets = [
 
@@ -1874,6 +1878,26 @@ def config(settings):
                             S3OptionsFilter("dvr_case_activity.project_id",
                                             options = s3_get_filter_opts("project_project"),
                                             hidden = True,
+                                            ),
+                            S3OptionsFilter("dvr_case.human_resource_id",
+                                            hidden = True,
+                                            ),
+                            S3LocationFilter("address.location_id",
+                                             hidden = True,
+                                             ),
+                            S3OptionsFilter("person_details.marital_status",
+                                            options = s3db.pr_marital_status_opts,
+                                            hidden = True,
+                                            ),
+                            S3OptionsFilter("case_details.registered",
+                                            cols = 2,
+                                            hidden = True,
+                                            options = opt_yes_no,
+                                            ),
+                            S3OptionsFilter("case_details.enrolled_in_school",
+                                            cols = 2,
+                                            hidden = True,
+                                            options = opt_yes_no,
                                             ),
                             S3DateFilter("date_of_birth",
                                          #label = T("Date of Birth"),
