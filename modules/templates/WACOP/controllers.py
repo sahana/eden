@@ -397,12 +397,12 @@ class custom_WACOP(S3CRUD):
                 label = current.T("Assign Staff")
                 if event_id:
                     url = URL(c="event", f="event",
-                              args=[event_id, "assign"],
+                              args=[event_id, "assign.popup"],
                               vars={"refresh": list_id},
                               )
                 else:
                     url = URL(c="event", f="incident",
-                              args=[incident_id, "assign"],
+                              args=[incident_id, "assign.popup"],
                               vars={"refresh": list_id},
                               )
             else:
