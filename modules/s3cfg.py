@@ -2756,6 +2756,13 @@ class S3Config(Storage):
         """
         return self.dc.get("response_label", "Assessment")
 
+    def get_dc_mobile_data(self):
+        """
+            Whether Mobile Clients should download Assessments
+            - e.g. when these are created through Targetting
+        """
+        return self.dc.get("mobile_data", False)
+
     # -------------------------------------------------------------------------
     # Deployments
     #

@@ -54,7 +54,7 @@ class S3MainMenu(default.S3MainMenu):
                 dashboard,
                 MM("Map", c="gis", f="index"),
                 #MM("Dashboard", c="event", f="event", m="summary"),
-                MM("Incidents", c="event", f="incident", m="summary"),
+                MM("Incidents", c="event", f="incident", m="browse"),
                 #MM("Alerts", c="event", f="alert", m="summary"),
                 MM("Events", c="event", f="event", m="browse"),
                 #MM("Tasks", c="project", f="task", m="summary"),
@@ -185,7 +185,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Log", f="log"),
                     ),
                     M("Taxonomies")(
-                        M("Event Types", c="event", f="event_type"),
+                        #M("Event Types", c="event", f="event_type"),
                         M("Incident Types", c="event", f="incident_type"),
                         M("Organization Types", c="org", f="organisation_type"),
                         M("Update Statuses", c="cms", f="status"),

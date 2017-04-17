@@ -41,7 +41,6 @@ __all__ = ("S3EventModel",
            "S3EventHRModel",
            "S3EventTeamModel",
            "S3EventImpactModel",
-           #"S3EventIReportModel",
            "S3EventMapModel",
            "S3EventOrganisationModel",
            "S3EventProjectModel",
@@ -887,7 +886,7 @@ class S3IncidentModel(S3Model):
                                               writable = False,
                                               ),
                           self.event_incident_type_id(),
-                          self.scenario_scenario_id(),
+                          self.scenario_scenario_id(), # Enabled when module is enabled
                           Field("name", notnull=True, # Name could be a code
                                 length = 64,
                                 label = T("Name"),
@@ -1006,10 +1005,12 @@ class S3IncidentModel(S3Model):
                                            "autodelete": False,
                                            },
                             cms_post = {"link": "event_post",
-                                        "joinby": "event_id",
+                                        "joinby": "incident_id",
                                         "key": "post_id",
                                         "actuate": "replace",
                                         },
+                            event_bookmark = "incident_id",
+                            event_tag = "incident_id",  # cms_tag
                             # Should be able to do everything via the link table
                             #event_human_resource = "incident_id",
                             hrm_human_resource = ({"link": "event_human_resource",
@@ -1239,15 +1240,53 @@ class S3IncidentModel(S3Model):
     @staticmethod
     def incident_update_onaccept(form):
         """
-            When an Incident is updated, check for closure
+            When an Incident is updated
+                - set correct event_id for all relevant components
+                - check for closure
         """
 
+        db = current.db
+        s3db = current.s3db
+
         form_vars = form.vars
-        if form_vars.closed:
-            incident = form_vars.id
+        incident_id = form_vars.id
+
+        closed = form_vars.get("closed")
+        event_id = form_vars.get("event_id", False)
+        if event_id is False or closed is None:
+            # Read the record
+            itable = s3db.event_incident
+            record = db(itable.id == incident_id).select(itable.closed,
+                                                         itable.event_id,
+                                                         limitby=(0,1)
+                                                         ).first()
+            closed = record.closed
+            event_id = record.event_id
+
+        if event_id:
+            # Cascade to all relevant components
+            for tablename in (#"event_asset",
+                              #"event_human_resource",
+                              #"event_resource",
+                              #"event_site",
+                              "event_event_impact",
+                              "event_response",
+                              "event_target",
+                              "event_organisation",
+                              "event_post",
+                              "event_request",
+                              "event_sitrep",
+                              "event_task",
+                              "event_team",
+                              ):
+                table = s3db.table(tablename)
+                if table:
+                    db(table.incident_id == incident_id).update(event_id = event_id)
+
+        if closed:
             # Ensure this incident isn't active in the session
             s3 = current.session.s3
-            if s3.incident == incident:
+            if s3.incident == incident_id:
                 s3.incident = None
 
             # @ToDo: Hide the Incident from the Map menu
@@ -1261,7 +1300,7 @@ class S3IncidentModel(S3Model):
             db = current.db
             ltable = current.s3db.event_post
             table = db.cms_post
-            rows = db(ltable.incident_id == incident).select(ltable.post_id)
+            rows = db(ltable.incident_id == incident_id).select(ltable.post_id)
             for row in rows:
                 db(table.id == row.post_id).update(expired=True)
 
@@ -1456,6 +1495,11 @@ class S3IncidentReportModel(S3Model):
 
         T = current.T
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Incident Reports
         #
@@ -1573,6 +1617,11 @@ class S3EventActivityModel(S3Model):
 
     def model(self):
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         tablename = "event_activity"
         self.define_table(tablename,
                           self.event_event_id(empty = False,
@@ -1589,7 +1638,7 @@ class S3EventActivityModel(S3Model):
 # =============================================================================
 class S3EventRequestModel(S3Model):
     """
-        Link Requests to Events
+        Link Requests to Incidents &/or Events
     """
 
     names = ("event_request",
@@ -1597,16 +1646,25 @@ class S3EventRequestModel(S3Model):
 
     def model(self):
 
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
         tablename = "event_request"
         self.define_table(tablename,
                           self.event_event_id(default = current.session.s3.event,
-                                              empty = False,
-                                              ondelete = "CASCADE",
+                                              ondelete = ondelete,
                                               ),
-                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE"),
                           self.req_req_id(#ondelete = "CASCADE", # default anyway
                                           ),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_request"),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -1638,6 +1696,11 @@ class S3EventResourceModel(S3Model):
                        2: T("Assigned"),
                        3: T("En Route"),
                        }
+
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Resources
@@ -1773,6 +1836,8 @@ class S3EventResourceModel(S3Model):
                        filter_widgets = filter_widgets,
                        #list_fields = list_fields,
                        list_layout = event_resource_list_layout,
+                       #onaccept = lambda form: \
+                       # set_event_from_incident(form, "event_resource"),
                        orderby = "event_resource.date desc",
                        report_options = report_options,
                        super_entity = ("stats_data", "sit_trackable"),
@@ -1982,6 +2047,11 @@ class S3EventAlertModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         tablename = "event_alert"
         define_table(tablename,
                      # PE representing its Recipients
@@ -2082,14 +2152,19 @@ class S3EventAssetModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Assets
-        # @ToDo: Search Widget
 
         tablename = "event_asset"
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
+                          #self.event_event_id(ondelete = ondelete),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE"),
                           # @ToDo: Notification
@@ -2146,6 +2221,8 @@ class S3EventAssetModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
+                       #onaccept = lambda form: \
+                       # set_event_from_incident(form, "event_asset"),
                        super_entity = "budget_cost_item",
                        )
 
@@ -2156,6 +2233,7 @@ class S3EventAssetModel(S3Model):
 class S3EventBookmarkModel(S3Model):
     """
         Bookmarks for Events &/or Incidents
+        - the Incident bookmarks do NOT populate the Event's
     """
 
     names = ("event_bookmark",
@@ -2206,18 +2284,25 @@ class S3EventCMSModel(S3Model):
 
         #T = current.T
 
+        define_table = self.define_table
+
         post_id = self.cms_post_id
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Link table between Posts & Events/Incidents
         tablename = "event_post"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          post_id(empty = False,
-                                  ondelete = "CASCADE",
-                                  ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     self.event_event_id(ondelete = ondelete),
+                     self.event_incident_id(ondelete = "CASCADE"),
+                     post_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     *s3_meta_fields())
 
         #current.response.s3.crud_strings[tablename] = Storage(
         #    label_create = T("Tag Post"),
@@ -2231,17 +2316,22 @@ class S3EventCMSModel(S3Model):
         #    msg_record_deleted = T("Tag removed"),
         #    msg_list_empty = T("No Posts currently tagged to this event"))
 
+        self.configure(tablename,
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_post"),
+                       )
+
         # ---------------------------------------------------------------------
         # Link table between Posts & Incident Types
         tablename = "event_post_incident_type"
-        self.define_table(tablename,
-                          post_id(empty = False,
-                                  ondelete = "CASCADE",
-                                  ),
-                          self.event_incident_type_id(empty = False,
-                                                      ondelete = "CASCADE",
-                                                      ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     post_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     self.event_incident_type_id(empty = False,
+                                                 ondelete = "CASCADE",
+                                                 ),
+                     *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2260,30 +2350,48 @@ class S3EventDCModel(S3Model):
 
         #T = current.T
 
+        configure = self.configure
+        define_table = self.define_table
+
         event_id = self.event_event_id
         incident_id = self.event_incident_id
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Link table between Assessments & Events/Incidents
         tablename = "event_response"
-        self.define_table(tablename,
-                          event_id(ondelete = "CASCADE"),
-                          incident_id(ondelete = "CASCADE"),
-                          self.dc_response_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     event_id(ondelete = ondelete),
+                     incident_id(ondelete = "CASCADE"),
+                     self.dc_response_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = lambda form: \
+                    set_event_from_incident(form, "event_response"),
+                  )
 
         # ---------------------------------------------------------------------
         # Link table between Targets & Events/Incidents
         tablename = "event_target"
-        self.define_table(tablename,
-                          event_id(ondelete = "CASCADE"),
-                          incident_id(ondelete = "CASCADE"),
-                          self.dc_target_id(empty = False,
-                                            ondelete = "CASCADE",
-                                            ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     event_id(ondelete = ondelete),
+                     incident_id(ondelete = "CASCADE"),
+                     self.dc_target_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = lambda form: \
+                    set_event_from_incident(form, "event_target"),
+                  )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2292,7 +2400,7 @@ class S3EventDCModel(S3Model):
 class S3EventHRModel(S3Model):
     """
         Link Human Resources to Events/Incidents
-        @ToDo: Replace with Deployment module
+        @ToDo: Replace with Deployment module?
     """
 
     names = ("event_human_resource",
@@ -2309,6 +2417,11 @@ class S3EventHRModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Staff/Volunteers
         # @ToDo: Use Positions, not individual HRs
@@ -2318,7 +2431,7 @@ class S3EventHRModel(S3Model):
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
-                          #self.event_event_id(ondelete = "CASCADE",
+                          #self.event_event_id(ondelete = ondelete,
                           #                    # Enable in template if-desired
                           #                    readable = False,
                           #                    writable = False,
@@ -2379,6 +2492,8 @@ class S3EventHRModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
+                       #onaccept = lambda form: \
+                       # set_event_from_incident(form, "event_human_resource"),
                        super_entity = "budget_cost_item",
                        )
 
@@ -2387,7 +2502,7 @@ class S3EventHRModel(S3Model):
 
 # =============================================================================
 class S3EventTeamModel(S3Model):
-    """ Link teams to incidents """
+    """ Link Teams to Events &/or Incidents """
 
     names = ("event_team_status",
              "event_team",
@@ -2492,39 +2607,13 @@ class S3EventTeamModel(S3Model):
                   deduplicate = S3Duplicate(primary=("incident_id",
                                                      "group_id",
                                                      )),
-                  onaccept = self.event_team_onaccept,
+                  onaccept = lambda form: \
+                        set_event_from_incident(form, "event_team"),
                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
-
-    #--------------------------------------------------------------------------    
-    @staticmethod
-    def event_team_onaccept(form):
-        """
-            Set the event_id from the incident_id
-        """
-
-        form_vars = form.vars
-        event_id = form_vars.get("event_id")
-        incident_id = form_vars.get("incident_id")
-        if incident_id and not event_id:
-            db = current.db
-            s3db = current.s3db
-            itable = s3db.event_incident
-            incident = db(itable.id == incident_id).select(itable.event_id,
-                                                           limitby=(0, 1)
-                                                           ).first()
-            try:
-                event_id = incident.event_id
-            except:
-                # Nothing we can do if Incident is invalid
-                pass
-            else:
-                if not event_id:
-                    return
-                db(s3db.event_team.id == form_vars.get("id")).update(event_id = event_id)
 
 # =============================================================================
 class S3EventImpactModel(S3Model):
@@ -2543,12 +2632,17 @@ class S3EventImpactModel(S3Model):
 
         #T = current.T
 
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Event Impact
 
         tablename = "event_event_impact"
         self.define_table(tablename,
-                          self.event_event_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = ondelete),
                           self.event_incident_id(ondelete = "CASCADE"),
                           self.stats_impact_id(empty = False,
                                                ondelete = "CASCADE",
@@ -2557,7 +2651,8 @@ class S3EventImpactModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
-                       onaccept = self.event_impact_onaccept,
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_event_impact"),
                        )
 
         # Not accessed directly
@@ -2572,90 +2667,6 @@ class S3EventImpactModel(S3Model):
         #    msg_record_modified = T("Impact updated"),
         #    msg_record_deleted = T("Impact removed"),
         #    msg_list_empty = T("No Impacts currently registered in this Event"))
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_impact_onaccept(form):
-        """
-            Onaccept-routine for event_impact links:
-                - populate event_id from incident if empty
-        """
-
-        try:
-            form_vars = form.vars
-            record_id = form_vars.id
-        except KeyError:
-            return
-        if not record_id:
-            return
-
-        db = current.db
-        s3db = current.s3db
-
-        table = s3db.event_event_impact
-
-        # Make sure we have both keys
-        if any(f not in form_vars for f in ("event_id", "incident_id")):
-            query = (table.id == record_id)
-            record = db(query).select(table.id,
-                                      table.event_id,
-                                      table.incident_id,
-                                      limitby=(0, 1)).first()
-            if not record:
-                return
-        else:
-            record = form_vars
-
-        # If event_id is empty - populate it from the incident
-        if not record.event_id and record.incident_id:
-            itable = s3db.event_incident
-            query = (itable.id == record.incident_id)
-            incident = db(query).select(itable.event_id,
-                                        limitby=(0, 1)).first()
-            if incident:
-                db(table.id == record_id).update(event_id = incident.event_id)
-
-# =============================================================================
-class S3EventIReportModel(S3Model):
-    """
-        Link Incident Reports to Incidents
-
-        @ToDo: Deprecate
-    """
-
-    names = ("event_ireport",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Incident Reports
-        tablename = "event_ireport"
-        self.define_table(tablename,
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
-                                                 ),
-                          self.irs_ireport_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
-                          *s3_meta_fields())
-
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Incident Report"),
-            title_display = T("Incident Report Details"),
-            title_list = T("Incident Reports"),
-            title_update = T("Edit Incident Report"),
-            label_list_button = T("List Incident Reports"),
-            label_delete_button = T("Remove Incident Report from this incident"),
-            msg_record_created = T("Incident Report added"),
-            msg_record_modified = T("Incident Report updated"),
-            msg_record_deleted = T("Incident Report removed"),
-            msg_list_empty = T("No Incident Reports currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2703,7 +2714,7 @@ class S3EventMapModel(S3Model):
 # =============================================================================
 class S3EventOrganisationModel(S3Model):
     """
-        Link Organisations to Incidents
+        Link Organisations to Events &/or Incidents
     """
 
     names = ("event_organisation",
@@ -2720,15 +2731,20 @@ class S3EventOrganisationModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Organisations linked to this Incident
         #
 
         tablename = "event_organisation"
         self.define_table(tablename,
-                          #self.event_event_id(),
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
+                          self.event_event_id(ondelete = ondelete,
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
                                                  ),
                           self.org_organisation_id(empty = False,
                                                    ondelete = "CASCADE",
@@ -2755,6 +2771,16 @@ class S3EventOrganisationModel(S3Model):
             msg_record_deleted = T("Organization removed"),
             msg_list_empty = T("No Organizations currently registered in this incident"))
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "organisation_id",
+                                                            ),
+                                                 ),
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_organisation"),
+                       )
+
         # Pass names back to global scope (s3.*)
         return {}
 
@@ -2768,6 +2794,11 @@ class S3EventProjectModel(S3Model):
              )
 
     def model(self):
+
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
 
         tablename = "event_project"
         self.define_table(tablename,
@@ -2804,6 +2835,11 @@ class S3EventSiteModel(S3Model):
 
         SITE_LABEL = current.deployment_settings.get_org_site_label()
 
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Facilities
         # @ToDo: Filter Widgets
@@ -2811,6 +2847,8 @@ class S3EventSiteModel(S3Model):
         self.define_table(tablename,
                           # Instance table
                           super_link("cost_item_id", "budget_cost_item"),
+                          #self.event_event_id(ondelete = ondelete,
+                          #                    ),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE",
                                                  ),
@@ -2880,6 +2918,8 @@ class S3EventSiteModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
+                       #onaccept = lambda form: \
+                       #         set_event_from_incident(form, "event_site"),
                        super_entity = "budget_cost_item",
                        )
 
@@ -2893,12 +2933,17 @@ class S3EventSitRepModel(S3Model):
     """
 
     names = ("event_sitrep",
-             "event_sitrep_id",
+             #"event_sitrep_id",
              )
 
     def model(self):
 
         T = current.T
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # SitReps
@@ -2907,7 +2952,7 @@ class S3EventSitRepModel(S3Model):
         tablename = "event_sitrep"
         self.define_table(tablename,
                           # @ToDo: Validate that SitRep is linked to either an Event or an Incident
-                          self.event_event_id(ondelete = "CASCADE",
+                          self.event_event_id(ondelete = ondelete,
                                               ),
                           self.event_incident_id(ondelete = "CASCADE",
                                                  ),
@@ -2935,6 +2980,8 @@ class S3EventSitRepModel(S3Model):
                                                             "sitrep_id",
                                                             ),
                                                  ),
+                       onaccept = lambda form: \
+                                set_event_from_incident(form, "event_sitrep"),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -2943,7 +2990,8 @@ class S3EventSitRepModel(S3Model):
 # =============================================================================
 class S3EventTagModel(S3Model):
     """
-        Link Tags to Incidents
+        Link (CMS) Tags to Events or Incidents
+        - the Incident tags do NOT populate the Event's
     """
 
     names = ("event_tag",
@@ -2973,7 +3021,8 @@ class S3EventTagModel(S3Model):
 # =============================================================================
 class S3EventTaskModel(S3Model):
     """
-        Link Tasks to Incidents
+        Link Tasks to Incidents &/or Events
+        - normally linked at the Incident level & just visible at the Event level
     """
 
     names = ("event_task",
@@ -2983,6 +3032,11 @@ class S3EventTaskModel(S3Model):
 
         T = current.T
 
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Tasks
         # Tasks are to be assigned to resources managed by this EOC
@@ -2991,7 +3045,7 @@ class S3EventTaskModel(S3Model):
 
         tablename = "event_task"
         self.define_table(tablename,
-                          self.event_event_id(ondelete = "CASCADE",
+                          self.event_event_id(ondelete = ondelete,
                                               ),
                           self.event_incident_id(ondelete = "CASCADE",
                                                  ),
@@ -3019,6 +3073,8 @@ class S3EventTaskModel(S3Model):
                                                             "task_id",
                                                             ),
                                                  ),
+                       onaccept = lambda form: \
+                                set_event_from_incident(form, "event_task"),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3027,7 +3083,7 @@ class S3EventTaskModel(S3Model):
 # =============================================================================
 class S3EventShelterModel(S3Model):
     """
-        Link Shelters to Events / Incidents
+        Link Shelters to Events
     """
 
     names = ("event_event_shelter",
@@ -3037,12 +3093,18 @@ class S3EventShelterModel(S3Model):
 
         T = current.T
 
+        ondelete = "CASCADE"
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
+
         # ---------------------------------------------------------------------
         # Shelters
         #   Link table for cr_shelter <> event_event
         tablename = "event_event_shelter"
         self.define_table(tablename,
-                          self.event_event_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = ondelete),
                           #self.event_incident_id(ondelete = "CASCADE"),
                           self.cr_shelter_id(empty = False,
                                              ondelete = "CASCADE",
@@ -3081,6 +3143,45 @@ class S3EventShelterModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
+
+# =============================================================================
+def set_event_from_incident(form, tablename):
+    """
+        Populate event_id from incident if set.
+    """
+
+    try:
+        form_vars = form.vars
+        record_id = form_vars.id
+    except KeyError:
+        return
+    if not record_id:
+        return
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.table(tablename)
+
+    # Make sure we have the incident_id
+    if "incident_id" not in form_vars:
+        record = db(table.id == record_id).select(table.id,
+                                                  table.incident_id,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        if not record:
+            return
+    else:
+        record = form_vars
+
+    # If incident_id is set then use this to set the event_id
+    if record.incident_id:
+        itable = s3db.event_incident
+        incident = db(itable.id == record.incident_id).select(itable.event_id,
+                                                              limitby=(0, 1)
+                                                              ).first()
+        if incident:
+            db(table.id == record_id).update(event_id = incident.event_id)
 
 # =============================================================================
 def event_notification_dispatcher(r, **attr):

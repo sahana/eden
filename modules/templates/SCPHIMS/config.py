@@ -170,6 +170,9 @@ def config(settings):
     # Data Collection
     #
 
+    # Download Assessments - as these have been created through Targetting
+    settings.dc.mobile_data = True
+
     def dc_target_onaccept(form):
         """
             Add/Update entry to calendar
