@@ -2417,10 +2417,10 @@ class S3EventHRModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Staff/Volunteers
@@ -2431,11 +2431,11 @@ class S3EventHRModel(S3Model):
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
-                          #self.event_event_id(ondelete = ondelete,
-                          #                    # Enable in template if-desired
-                          #                    readable = False,
-                          #                    writable = False,
-                          #                    ),
+                          self.event_event_id(ondelete = ondelete,
+                                              # Enable in template if-desired
+                                              readable = False,
+                                              writable = False,
+                                              ),
                           self.event_incident_id(ondelete = "CASCADE"),
                           # @ToDo: Add Warning?
                           self.hrm_human_resource_id(empty = False,
@@ -2492,8 +2492,8 @@ class S3EventHRModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
-                       #onaccept = lambda form: \
-                       # set_event_from_incident(form, "event_human_resource"),
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_human_resource"),
                        super_entity = "budget_cost_item",
                        )
 
