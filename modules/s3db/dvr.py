@@ -63,7 +63,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from ..s3 import *
-from s3layouts import S3PopupLink
+from s3layouts import S3PopupLink, S3AddResourceLink
 
 # =============================================================================
 class DVRCaseModel(S3Model):
