@@ -23,7 +23,7 @@ def config(settings):
     settings.base.system_name_short = T("SAMBRO")
 
     # Pre-Populate
-    settings.base.prepopulate += ("SAMBRO", "SAMBRO/Demo", "default/users")
+    settings.base.prepopulate += ("SAMBRO", "SAMBRO/MM", "SAMBRO/Demo", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SAMBRO"
