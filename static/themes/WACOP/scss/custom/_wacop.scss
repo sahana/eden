@@ -180,6 +180,13 @@ ul.dl {
 }
 
 // -------------------------------------
+// Callout
+
+.callout {
+  @include callout();
+}
+
+// -------------------------------------
 // Event Parent Callout
 .callout.event-parent {
   @include callout($blue);

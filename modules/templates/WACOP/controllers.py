@@ -443,9 +443,7 @@ class custom_WACOP(S3CRUD):
             output["create_%s_popup" % tablename] = ""
 
         # Render the widget
-        output["%s_datatable" % tablename] = DIV(contents,
-                                                 _class="card-holder",
-                                                 )
+        output["%s_datatable" % tablename] = contents
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -827,21 +825,21 @@ class custom_WACOP(S3CRUD):
                                            args = "update",
                                            vars = {"page": "SYSTEM_WIDE"},
                                            ),
-                               _class = "button button-info tiny",
+                               _class = "button button-info",
                                ),
-                             _class = "large-3 small-12 columns text-right",
+                             _class = "callout-right text-right",
                              )
             else:
                 edit_btn = ""
             system_wide = DIV(DIV(DIV(P(record and record.body or "",
                                         ),
-                                      _class="large-9 small-12 columns",
+                                      _class="callout-left",
                                       ),
                                   edit_btn,
                                   _role="complementary",
-                                 _class="row panel callout",
+                                 _class="callout",
                                  ),
-                              _class="row",
+                              _class="row well",
                               )
         else:
             # Don't display the section

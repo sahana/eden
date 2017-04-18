@@ -305,6 +305,10 @@
     float: right;
     .item {
       cursor: pointer;
+      &:after {
+        content: ' ';
+        white-space: pre;
+      }
     }
   }
 }

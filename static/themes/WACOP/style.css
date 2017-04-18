@@ -638,7 +638,12 @@ div.tabs span.tab_other a:hover {
   margin-top: 20px;
   margin-bottom: 1rem;
 }
-/* line 10, ../scss/custom/_footer.scss */
+/* line 9, ../scss/custom/_footer.scss */
+#footer .socialmedia_element {
+  display: inline-block;
+  margin-left: .5em;
+}
+/* line 14, ../scss/custom/_footer.scss */
 #footer button.btn {
   font-size: 0.6875rem;
   border: 0;
@@ -653,17 +658,17 @@ div.tabs span.tab_other a:hover {
   color: #ffffff;
   background: #dddddd;
 }
-/* line 17, ../scss/custom/_footer.scss */
+/* line 21, ../scss/custom/_footer.scss */
 #footer button.btn:hover {
   color: #ffffff;
   background: #a0a0a0;
 }
 
-/* line 22, ../scss/custom/_footer.scss */
+/* line 26, ../scss/custom/_footer.scss */
 #poweredby {
-  margin-right: 0.5rem;
+  margin-top: 0.5rem;
 }
-/* line 24, ../scss/custom/_footer.scss */
+/* line 28, ../scss/custom/_footer.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
@@ -1496,7 +1501,7 @@ textarea::-webkit-input-placeholder {
 .search-wrapper {
   position: relative;
 }
-/* line 395, ../scss/custom/_mixins.scss */
+/* line 399, ../scss/custom/_mixins.scss */
 .search-wrapper input {
   padding-right: 1.875rem;
 }
@@ -1560,7 +1565,7 @@ textarea::-webkit-input-placeholder {
 .search-wrapper input::-webkit-input-placeholder p, .search-wrapper input::-webkit-input-placeholder ul, .search-wrapper input::-webkit-input-placeholder h1, .search-wrapper input::-webkit-input-placeholder h2, .search-wrapper input::-webkit-input-placeholder h3, .search-wrapper input::-webkit-input-placeholder h4, .search-wrapper input::-webkit-input-placeholder h5, .search-wrapper input::-webkit-input-placeholder h6 {
   font-size: inherit;
 }
-/* line 401, ../scss/custom/_mixins.scss */
+/* line 405, ../scss/custom/_mixins.scss */
 .search-wrapper .search-button,
 .search-wrapper .search-icon {
   font-size: 0.875rem;
@@ -1569,12 +1574,12 @@ textarea::-webkit-input-placeholder {
   right: 0;
   top: 0;
 }
-/* line 408, ../scss/custom/_mixins.scss */
+/* line 412, ../scss/custom/_mixins.scss */
 .search-wrapper .search-button .fa,
 .search-wrapper .search-icon .fa {
   line-height: inherit;
 }
-/* line 414, ../scss/custom/_mixins.scss */
+/* line 418, ../scss/custom/_mixins.scss */
 .search-wrapper.column .search-button,
 .search-wrapper.column .search-icon, .search-wrapper.columns .search-button,
 .search-wrapper.columns .search-icon {
@@ -1785,7 +1790,62 @@ ul.dl ol {
   font-size: inherit;
 }
 
-/* line 184, ../scss/custom/_wacop.scss */
+/* line 185, ../scss/custom/_wacop.scss */
+.callout {
+  border-style: none;
+  border-width: 0;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  background: #f7f7f7;
+  color: #333333;
+  border-top: 4px solid #AAAAAA;
+}
+/* line 237, ../../foundation/scss/components/_global.scss */
+.callout:before, .callout:after {
+  content: " ";
+  display: table;
+}
+/* line 238, ../../foundation/scss/components/_global.scss */
+.callout:after {
+  clear: both;
+}
+/* line 61, ../../foundation/scss/components/_panels.scss */
+.callout > :first-child {
+  margin-top: 0;
+}
+/* line 62, ../../foundation/scss/components/_panels.scss */
+.callout > :last-child {
+  margin-bottom: 0;
+}
+/* line 67, ../../foundation/scss/components/_panels.scss */
+.callout h1, .callout h2, .callout h3, .callout h4, .callout h5, .callout h6, .callout p, .callout li, .callout dl {
+  color: #333333;
+}
+/* line 74, ../../foundation/scss/components/_panels.scss */
+.callout h1, .callout h2, .callout h3, .callout h4, .callout h5, .callout h6 {
+  line-height: 1;
+  margin-bottom: 0.625rem;
+}
+/* line 76, ../../foundation/scss/components/_panels.scss */
+.callout h1.subheader, .callout h2.subheader, .callout h3.subheader, .callout h4.subheader, .callout h5.subheader, .callout h6.subheader {
+  line-height: 1.4;
+}
+/* line 437, ../scss/custom/_mixins.scss */
+.callout .callout-left {
+  padding-left: 0;
+  padding-right: 0;
+  width: 50%;
+  float: left;
+}
+/* line 440, ../scss/custom/_mixins.scss */
+.callout .callout-right {
+  padding-left: 0;
+  padding-right: 0;
+  width: 50%;
+  float: left;
+}
+
+/* line 191, ../scss/custom/_wacop.scss */
 .callout.event-parent {
   border-style: none;
   border-width: 0;
@@ -1825,35 +1885,35 @@ ul.dl ol {
 .callout.event-parent h1.subheader, .callout.event-parent h2.subheader, .callout.event-parent h3.subheader, .callout.event-parent h4.subheader, .callout.event-parent h5.subheader, .callout.event-parent h6.subheader {
   line-height: 1.4;
 }
-/* line 433, ../scss/custom/_mixins.scss */
+/* line 437, ../scss/custom/_mixins.scss */
 .callout.event-parent .callout-left {
   padding-left: 0;
   padding-right: 0;
   width: 50%;
   float: left;
 }
-/* line 436, ../scss/custom/_mixins.scss */
+/* line 440, ../scss/custom/_mixins.scss */
 .callout.event-parent .callout-right {
   padding-left: 0;
   padding-right: 0;
   width: 50%;
   float: left;
 }
-/* line 186, ../scss/custom/_wacop.scss */
+/* line 193, ../scss/custom/_wacop.scss */
 .callout.event-parent .callout-right {
   text-align-last: right;
 }
-/* line 189, ../scss/custom/_wacop.scss */
+/* line 196, ../scss/custom/_wacop.scss */
 .callout.event-parent .meta .date::after {
   content: "|";
   margin: 0 0.375rem;
 }
-/* line 193, ../scss/custom/_wacop.scss */
+/* line 200, ../scss/custom/_wacop.scss */
 .callout.event-parent .button {
   margin: 0;
 }
 
-/* line 200, ../scss/custom/_wacop.scss */
+/* line 207, ../scss/custom/_wacop.scss */
 .card-event {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -1867,7 +1927,7 @@ ul.dl ol {
 .card-event:after {
   clear: both;
 }
-/* line 448, ../scss/custom/_mixins.scss */
+/* line 452, ../scss/custom/_mixins.scss */
 .card-event .status-bar {
   background-color: #4D4D4D;
   color: white;
@@ -2006,18 +2066,23 @@ ul.dl ol {
 .card-event .status-bar .controls .item {
   cursor: pointer;
 }
-/* line 452, ../scss/custom/_mixins.scss */
+/* line 308, ../scss/custom/_mixins.scss */
+.card-event .status-bar .controls .item:after {
+  content: ' ';
+  white-space: pre;
+}
+/* line 456, ../scss/custom/_mixins.scss */
 .card-event > .body,
 .card-event > .dl-body,
 .card-event > .footer {
   padding: 0 1.25rem;
 }
-/* line 457, ../scss/custom/_mixins.scss */
+/* line 461, ../scss/custom/_mixins.scss */
 .card-event .dl-body,
 .card-event .body {
   padding-top: 1.25rem;
 }
-/* line 202, ../scss/custom/_wacop.scss */
+/* line 209, ../scss/custom/_wacop.scss */
 .card-event .event-date-location {
   background-color: #DDDDDD;
   padding: 1.25rem;
@@ -2035,7 +2100,7 @@ ul.dl ol {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* line 363, ../scss/custom/_mixins.scss */
+/* line 367, ../scss/custom/_mixins.scss */
 .card-event .event-date-location .date-label {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -2047,14 +2112,14 @@ ul.dl ol {
 .card-event .event-date-location .date-label p, .card-event .event-date-location .date-label ul, .card-event .event-date-location .date-label h1, .card-event .event-date-location .date-label h2, .card-event .event-date-location .date-label h3, .card-event .event-date-location .date-label h4, .card-event .event-date-location .date-label h5, .card-event .event-date-location .date-label h6 {
   font-size: inherit;
 }
-/* line 205, ../scss/custom/_wacop.scss */
+/* line 212, ../scss/custom/_wacop.scss */
 .card-event .event-date-location .adr,
 .card-event .event-date-location .date {
   font-size: 1.4375rem;
   font-weight: bold;
 }
 
-/* line 216, ../scss/custom/_wacop.scss */
+/* line 223, ../scss/custom/_wacop.scss */
 .card-alert {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -2068,7 +2133,7 @@ ul.dl ol {
 .card-alert:after {
   clear: both;
 }
-/* line 448, ../scss/custom/_mixins.scss */
+/* line 452, ../scss/custom/_mixins.scss */
 .card-alert .status-bar {
   background-color: #4D4D4D;
   color: white;
@@ -2207,22 +2272,27 @@ ul.dl ol {
 .card-alert .status-bar .controls .item {
   cursor: pointer;
 }
-/* line 452, ../scss/custom/_mixins.scss */
+/* line 308, ../scss/custom/_mixins.scss */
+.card-alert .status-bar .controls .item:after {
+  content: ' ';
+  white-space: pre;
+}
+/* line 456, ../scss/custom/_mixins.scss */
 .card-alert > .body,
 .card-alert > .dl-body,
 .card-alert > .footer {
   padding: 0 1.25rem;
 }
-/* line 457, ../scss/custom/_mixins.scss */
+/* line 461, ../scss/custom/_mixins.scss */
 .card-alert .dl-body,
 .card-alert .body {
   padding-top: 1.25rem;
 }
-/* line 218, ../scss/custom/_wacop.scss */
+/* line 225, ../scss/custom/_wacop.scss */
 .card-alert .title {
   font-size: 1.6875rem;
 }
-/* line 221, ../scss/custom/_wacop.scss */
+/* line 228, ../scss/custom/_wacop.scss */
 .card-alert .meta-location {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -2247,7 +2317,7 @@ ul.dl ol {
   font-size: inherit;
 }
 
-/* line 230, ../scss/custom/_wacop.scss */
+/* line 237, ../scss/custom/_wacop.scss */
 .incident-profile {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -2261,7 +2331,7 @@ ul.dl ol {
 .incident-profile:after {
   clear: both;
 }
-/* line 448, ../scss/custom/_mixins.scss */
+/* line 452, ../scss/custom/_mixins.scss */
 .incident-profile .status-bar {
   background-color: #4D4D4D;
   color: white;
@@ -2400,18 +2470,23 @@ ul.dl ol {
 .incident-profile .status-bar .controls .item {
   cursor: pointer;
 }
-/* line 452, ../scss/custom/_mixins.scss */
+/* line 308, ../scss/custom/_mixins.scss */
+.incident-profile .status-bar .controls .item:after {
+  content: ' ';
+  white-space: pre;
+}
+/* line 456, ../scss/custom/_mixins.scss */
 .incident-profile > .body,
 .incident-profile > .dl-body,
 .incident-profile > .footer {
   padding: 0 1.25rem;
 }
-/* line 457, ../scss/custom/_mixins.scss */
+/* line 461, ../scss/custom/_mixins.scss */
 .incident-profile .dl-body,
 .incident-profile .body {
   padding-top: 1.25rem;
 }
-/* line 232, ../scss/custom/_wacop.scss */
+/* line 239, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data {
   margin: 0 -0.625rem;
   max-width: none;
@@ -2429,19 +2504,19 @@ ul.dl ol {
 .incident-profile .incident-data:after {
   clear: both;
 }
-/* line 237, ../scss/custom/_wacop.scss */
+/* line 244, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 239, ../scss/custom/_wacop.scss */
+/* line 246, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
 }
-/* line 384, ../scss/custom/_mixins.scss */
+/* line 388, ../scss/custom/_mixins.scss */
 .incident-profile .incident-data .incident-location .box .geo-location {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -2465,19 +2540,19 @@ ul.dl ol {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* line 243, ../scss/custom/_wacop.scss */
+/* line 250, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 245, ../scss/custom/_wacop.scss */
+/* line 252, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
 }
-/* line 373, ../scss/custom/_mixins.scss */
+/* line 377, ../scss/custom/_mixins.scss */
 .incident-profile .incident-data .incident-date .box .date-label {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -2489,7 +2564,7 @@ ul.dl ol {
 .incident-profile .incident-data .incident-date .box .date-label p, .incident-profile .incident-data .incident-date .box .date-label ul, .incident-profile .incident-data .incident-date .box .date-label h1, .incident-profile .incident-data .incident-date .box .date-label h2, .incident-profile .incident-data .incident-date .box .date-label h3, .incident-profile .incident-data .incident-date .box .date-label h4, .incident-profile .incident-data .incident-date .box .date-label h5, .incident-profile .incident-data .incident-date .box .date-label h6 {
   font-size: inherit;
 }
-/* line 251, ../scss/custom/_wacop.scss */
+/* line 258, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources {
   margin: 0 -0.625rem;
   max-width: none;
@@ -2504,14 +2579,14 @@ ul.dl ol {
 .incident-profile .incident-resources:after {
   clear: both;
 }
-/* line 253, ../scss/custom/_wacop.scss */
+/* line 260, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-rail {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 33.33333%;
   float: left;
 }
-/* line 256, ../scss/custom/_wacop.scss */
+/* line 263, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-data {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
@@ -2519,7 +2594,7 @@ ul.dl ol {
   float: left;
 }
 
-/* line 266, ../scss/custom/_wacop.scss */
+/* line 273, ../scss/custom/_wacop.scss */
 .card-notification {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -2533,7 +2608,7 @@ ul.dl ol {
 .card-notification:after {
   clear: both;
 }
-/* line 448, ../scss/custom/_mixins.scss */
+/* line 452, ../scss/custom/_mixins.scss */
 .card-notification .status-bar {
   background-color: #4D4D4D;
   color: white;
@@ -2672,18 +2747,23 @@ ul.dl ol {
 .card-notification .status-bar .controls .item {
   cursor: pointer;
 }
-/* line 452, ../scss/custom/_mixins.scss */
+/* line 308, ../scss/custom/_mixins.scss */
+.card-notification .status-bar .controls .item:after {
+  content: ' ';
+  white-space: pre;
+}
+/* line 456, ../scss/custom/_mixins.scss */
 .card-notification > .body,
 .card-notification > .dl-body,
 .card-notification > .footer {
   padding: 0 1.25rem;
 }
-/* line 457, ../scss/custom/_mixins.scss */
+/* line 461, ../scss/custom/_mixins.scss */
 .card-notification .dl-body,
 .card-notification .body {
   padding-top: 1.25rem;
 }
-/* line 268, ../scss/custom/_wacop.scss */
+/* line 275, ../scss/custom/_wacop.scss */
 .card-notification .body .desc .img {
   max-width: 40%;
   height: auto;
@@ -2691,7 +2771,7 @@ ul.dl ol {
   margin: 0 0.5rem 0.5rem 0;
 }
 
-/* line 279, ../scss/custom/_wacop.scss */
+/* line 286, ../scss/custom/_wacop.scss */
 .card-post {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -2707,7 +2787,7 @@ ul.dl ol {
 .card-post:after {
   clear: both;
 }
-/* line 448, ../scss/custom/_mixins.scss */
+/* line 452, ../scss/custom/_mixins.scss */
 .card-post .status-bar {
   background-color: #4D4D4D;
   color: white;
@@ -2846,31 +2926,36 @@ ul.dl ol {
 .card-post .status-bar .controls .item {
   cursor: pointer;
 }
-/* line 452, ../scss/custom/_mixins.scss */
+/* line 308, ../scss/custom/_mixins.scss */
+.card-post .status-bar .controls .item:after {
+  content: ' ';
+  white-space: pre;
+}
+/* line 456, ../scss/custom/_mixins.scss */
 .card-post > .body,
 .card-post > .dl-body,
 .card-post > .footer {
   padding: 0 1.25rem;
 }
-/* line 457, ../scss/custom/_mixins.scss */
+/* line 461, ../scss/custom/_mixins.scss */
 .card-post .dl-body,
 .card-post .body {
   padding-top: 1.25rem;
 }
-/* line 284, ../scss/custom/_wacop.scss */
+/* line 291, ../scss/custom/_wacop.scss */
 .card-post .body .meta-update {
   width: 50%;
 }
-/* line 287, ../scss/custom/_wacop.scss */
+/* line 294, ../scss/custom/_wacop.scss */
 .card-post .body .meta-comments {
   white-space: nowrap;
 }
-/* line 292, ../scss/custom/_wacop.scss */
+/* line 299, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment {
   background-color: #EFEFEF;
   padding: 1.25rem;
 }
-/* line 295, ../scss/custom/_wacop.scss */
+/* line 302, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment p:last-child {
   margin-bottom: 0;
 }
