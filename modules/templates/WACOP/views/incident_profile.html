@@ -93,28 +93,26 @@
 </div>
 <hr>
 <div class='row'>
- <div class='small-12 column'>
-  <ul class='tabs tab-navigation' data-tab>
-   <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-   <li class='tab-title'><a href='#panel2'>Directories</a></li>
-   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
-  </ul>
-  <div class='tabs-content'>
-   <div class='content active' id='panel1'>
-    <div class='row'>
-     <div class='large-3 columns'>
-      {{=create_post_button}}
-      <div class='panel'>
-       {{=filter_form}}
+  <div class='small-12 column'>
+    <ul class='tabs tab-navigation' data-tab>
+      <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+      <li class='tab-title'><a href='#panel2'>Directories</a></li>
+      <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+    </ul>
+    <div class='tabs-content'>
+      <div class='content active' id='panel1'>
+        <div class='row'>
+          <div class='large-3 columns'>
+            {{=create_post_button}}
+            {{=filter_form}}
+          </div>
+          <div class='large-9 columns'>
+            <ul class='dl' id='updates_datalist'>
+              {{=updates_datalist}}
+            </ul>
+          </div>
+        </div>
       </div>
-     </div>
-     <div class='large-9 columns'>
-      <ul class='dl' id='updates_datalist'>
-       {{=updates_datalist}}
-      </ul>
-     </div>
-    </div>
-   </div>
    <section class='staff content' id='panel2'>
     <div class='row'>
      <ul class='large-3 columns tabs vertical' data-tab>

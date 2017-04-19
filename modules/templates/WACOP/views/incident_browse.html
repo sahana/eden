@@ -1,6 +1,6 @@
 {{extend "layout.html"}}
 {{=system_wide}}
-<main role='main' class='main'>  
+<main role='main' class='main'>
  {{=XML(alerts)}}
  {{=XML(events)}}
  <div class='row well'>
@@ -12,8 +12,10 @@
   </div>
  </div>
  <div class='row well'>
-  <h3>Incidents</h3>
-  {{=event_incident_datatable}}
+  <h3 class="well-title">Incidents</h3>
+  <div class="small-12 column">
+    {{=event_incident_datatable}}
+  </div>
  </div>
 </main>
 {{include "dataTables.html"}}

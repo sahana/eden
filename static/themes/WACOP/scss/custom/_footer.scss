@@ -6,6 +6,10 @@
     margin-top: 20px;
     margin-bottom: 1rem;
 
+    .socialmedia_element {
+        display: inline-block;
+        margin-left: .5em;
+    }
     // Debug buttons in footer - use action-button styles
     button.btn {
         @include tiny_button_style();
@@ -20,7 +24,7 @@
     }
 }
 #poweredby {
-    margin-right: 0.5rem;
+    margin-top: 0.5rem;
     a {
         color: #999999;
         text-decoration: none;
