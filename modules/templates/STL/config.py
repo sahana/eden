@@ -1752,6 +1752,18 @@ def config(settings):
                                                           ),
                                         )
 
+                    # Subset of languages for the case-language component
+                    ltable = current.s3db.dvr_case_language
+                    field = ltable.language
+                    field.requires._select = OrderedDict([
+                        ("ar", "Arabic"),
+                        ("ku", "Kurdish"),
+                        ("fa", "Persian"),
+                        ("ur", "Urdu"),
+                        ("tr", "Turkish"),
+                        ("en", "English"),
+                    ])
+
                     resource = r.resource
                     if r.interactive:
 
@@ -1829,11 +1841,20 @@ def config(settings):
                                                 multiple = False,
                                                 name = "phone",
                                                 ),
+                                        S3SQLInlineComponent(
+                                                "case_language",
+                                                fields = ["language",
+                                                          "quality",
+                                                          "comments",
+                                                          ],
+                                                label = T("Language / Communication Mode"),
+                                                explicit_add = T("Add Language"),
+                                                ),
                                         "dvr_case.disclosure_consent",
                                         "dvr_case.comments",
                                         (T("Invalid Record"), "dvr_case.archived"),
                                         )
-                        
+
                         opt_yes_no = {True: T("Yes"),
                                       False: T("No"),
                                       }
