@@ -83,23 +83,6 @@ input.date.hasDatepicker {
     z-index: 1000!important;
 }
 
-/* Range filter widgets */
-.range-filter-label label {
-    font-size: 1.0em;
-}
-.range-filter-widget {
-    input.date-filter-input {
-        width: auto;
-        float: left;
-        margin-right: 2px;
-    }
-}
-.btn.date-clear-btn {
-    font-size: 0.85em;
-    padding: 0.325em;
-    margin-top: 0.5em;
-}
-
 /* ImageCropWidget */
 .imagecrop-btn {
     font-size: 1em;

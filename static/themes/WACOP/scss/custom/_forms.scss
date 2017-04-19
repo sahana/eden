@@ -38,10 +38,6 @@ form {
         background: $form_error_bgcolor;
         color: white;
     }
-    .date-clear-btn {
-        font-size: 0.75rem;
-        margin-left: 0.15rem !important;
-    }
     .action-lnk {
         font-weight: normal;
         font-size: 0.75rem;
@@ -88,45 +84,6 @@ form {
     }
 }
 
-/* General Widgets */
-input[type="text"],
-input[type="password"],
-input[type="date"],
-input[type="datetime"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"],
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="time"],
-input[type="url"],
-textarea,
-select {
-  height: 1.75rem;
-  padding: 0.25rem;
-  margin: 0;
-  display: inline-block;
-  font-weight: normal;
-}
-input[type="text"],
-input[type="password"],
-input[type="date"],
-input[type="datetime"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"],
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="time"],
-input[type="url"],
-select {
-    width: auto !important;
-    max-width: 100%;
-}
 textarea {
     resize: both;
     max-width: 100%;
