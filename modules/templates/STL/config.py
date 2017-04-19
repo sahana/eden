@@ -305,7 +305,7 @@ def config(settings):
                                            sort=True,
                                            )
                 field.widget = S3HierarchyWidget(multiple = False,
-                                                 leafonly = False,
+                                                 leafonly = True,
                                                  filter = (FS("root_service") == root_service_id),
                                                  )
 
@@ -392,15 +392,23 @@ def config(settings):
 
                 # Filter service selector
                 field = table.service_id
+                field.represent = S3Represent(lookup = "org_service",
+                                              hierarchy = True,
+                                              translate = True,
+                                              )
                 field.requires = IS_ONE_OF(db, "org_service.id",
                                            field.represent,
                                            filterby = "root_service",
                                            filter_opts = root_service_ids,
                                            sort=True,
                                            )
+                widget_represent = S3Represent(lookup = "org_service",
+                                               hierarchy = False,
+                                               translate = True)
                 field.widget = S3HierarchyWidget(multiple = False,
-                                                 leafonly = False,
+                                                 leafonly = True,
                                                  filter = (FS("root_service").belongs(root_service_ids)),
+                                                 represent = widget_represent,
                                                  )
 
                 # Expose gender type
@@ -784,48 +792,194 @@ def config(settings):
             elif not mandatory:
                 field.requires = IS_EMPTY_OR(requires)
 
-        if r.tablename == "dvr_activity":
-            # "Cases" tab (activity perspective)
-
-            # Show person_id as link
-            catable = s3db.dvr_case_activity
-            field = catable.person_id
-            field.represent = s3db.pr_PersonRepresent(show_link=True)
-
-            expose_project_id(catable)
-
-            # Custom list fields
-            list_fields = ["person_id$pe_label",
-                           "person_id",
-                           "person_id$gender",
-                           "person_id$age",
-                           "person_id$phone.value",
-                           "case_activity_need.need_id",
-                           "project_id",
-                           "followup",
-                           "followup_date",
-                           ]
-
-            crud_form = S3SQLCustomForm("person_id",
-                                        S3SQLInlineLink("need",
-                                                        label = T("Needs"),
-                                                        field = "need_id",
-                                                        widget = "hierarchy",
-                                                        ),
-                                        "need_details",
-                                        "project_id",
-                                        "followup",
-                                        "followup_date",
-                                        "comments",
+        # Different representations of service_id:
+        # - lists use hierarchical
+        # - hierarchy-widgets use non-hierarchical
+        service_represent = S3Represent(lookup = "org_service",
+                                        hierarchy = False,
+                                        translate = True,
                                         )
+        service_represent_hierarchical = S3Represent(lookup = "org_service",
+                                                     hierarchy = True,
+                                                     translate = True,
+                                                     )
+
+        # Custom labels
+        COMPLAINT_TYPE = T("MH Complaint Type")
+
+        if r.tablename == "dvr_activity":
+            # "Beneficiaries" tab of group activities
+
+            from s3 import S3PersonAutocompleteWidget
+
+            catable = s3db.dvr_case_activity
+
+            # Expose and configure person_id field
+            field = catable.person_id
+            field.readable = field.writable = True
+            field.represent = s3db.pr_PersonRepresent(show_link=True)
+            field.widget = S3PersonAutocompleteWidget(
+                               controller = "dvr",
+                               function = "person_search",
+                               )
+            field.comment = T("Enter some characters of the ID or name to start the search, then select from the drop-down")
+
+            # Determine root service type of maste record
+            root_service_id = root_service_name = None
+            stable = s3db.org_service
+
+            if r.record:
+                rstable = stable.with_alias("root_service")
+
+                left = rstable.on(rstable.id == stable.root_service)
+                query = (stable.id == r.record.service_id) & \
+                        (stable.deleted == False)
+                root_service = db(query).select(rstable.id,
+                                                rstable.name,
+                                                left=left,
+                                                limitby=(0, 1)).first()
+                if root_service:
+                    root_service_id = root_service.id
+                    root_service_name = root_service.name if root_service else None
+
+            insertable = False
+
+            # Service-type specific crud_form/list_fields
+            if root_service_name == INDIVIDUAL_SUPPORT:
+
+                # This service type has no group activities
+                r.error(400, "Invalid Group Activity")
+
+            elif root_service_name == MENTAL_HEALTH:
+
+                # "Beneficiaries" tab of Mental Health group activities
+
+                expose_project_id(catable)
+                expose_human_resource_id(catable)
+
+                # Filter need types
+                ntable = s3db.dvr_need
+                left = stable.on(stable.id == ntable.service_id)
+                query = (stable.root_service == root_service_id) & \
+                        (stable.deleted != True)
+
+                FILTER = (FS("service_id$root_service") == root_service_id)
+
+                field = s3db.dvr_case_activity_need.need_id
+                field.label = COMPLAINT_TYPE
+                field.comment = None
+                field.requires = IS_ONE_OF(db(query), "dvr_need.id",
+                                           field.represent,
+                                           left = left,
+                                           )
+
+                # No follow-ups for MH
+                catable.followup.default = False
+                catable.followup_date.default = None
+
+                # Expose achievement field
+                field = catable.achievement
+                field.readable = field.writable = True
+
+                # Expose provider type field
+                field = catable.provider_type_id
+                field.readable = field.writable = True
+
+                # Expose termination type field
+                field = catable.termination_type_id
+                field.label = T("Type of Exit")
+                field.readable = field.writable = True
+
+                crud_form = S3SQLCustomForm("person_id",
+                                            S3SQLInlineLink("need",
+                                                            label = COMPLAINT_TYPE,
+                                                            field = "need_id",
+                                                            widget = "hierarchy",
+                                                            multiple = False,
+                                                            leafonly = True,
+                                                            filter = FILTER,
+                                                            ),
+                                            "human_resource_id",
+                                            "project_id",
+                                            "provider_type_id",
+                                            (T("Status of main complaint at last visit"), "achievement"),
+                                            "termination_type_id",
+                                            S3SQLInlineComponent(
+                                                "document",
+                                                name = "file",
+                                                label = T("Attachments"),
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                ),
+                                            "comments",
+                                            )
+
+                # Custom list fields
+                list_fields = ["person_id$pe_label",
+                               "person_id",
+                               "person_id$gender",
+                               "person_id$age",
+                               (T("Phone Number"), "person_id$phone.value"),
+                               "need__link.need_id",
+                               "human_resource_id",
+                               "project_id",
+                               ]
+            else:
+
+                # "Beneficiaries" tab of PSS-type group activities
+
+                # Allow creation of new case activities
+                insertable = True
+
+                # Inherit + hide service_id
+                field = catable.service_id
+                field.default = r.record.service_id
+                field.readable = field.writable = False
+
+                # Inherit + hide project_id
+                field = catable.project_id
+                field.default = r.record.project_id
+                field.readable = field.writable = False
+
+                # No follow-ups for PSS
+                catable.followup.default = False
+                catable.followup_date.default = None
+
+                # Custom CRUD form
+                crud_form = S3SQLCustomForm("person_id",
+                                            S3SQLInlineComponent(
+                                                "document",
+                                                fields = ["file", "comments"],
+                                                filterby = {"field": "file",
+                                                            "options": "",
+                                                            "invert": True,
+                                                            },
+                                                label = T("Attachments"),
+                                                name = "file",
+                                                ),
+                                            "comments",
+                                            )
+
+                # Custom list fields
+                list_fields = ["person_id$pe_label",
+                               "person_id",
+                               "person_id$gender",
+                               "person_id$age",
+                               (T("Phone Number"), "person_id$phone.value"),
+                               "comments",
+                               ]
 
             s3db.configure("dvr_case_activity",
-                           insertable = False,
+                           insertable = insertable,
                            extra_fields = "person_id$date_of_birth",
                            )
 
         elif r.component_name == "case_activity" or r.function == "due_followups":
-            # "Individual Support" tab or "Due Follow-ups"
+
+            # "Individual Support" tab of Beneficiary, or "Due Follow-ups"
 
             # CRUD Strings use "Protection Response"
             s3.crud_strings["dvr_case_activity"] = Storage(
@@ -876,7 +1030,7 @@ def config(settings):
                                        sort=True,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
-                                             leafonly = False,
+                                             leafonly = True,
                                              filter = (FS("root_service") == root_service_id),
                                              )
 
@@ -1030,7 +1184,9 @@ def config(settings):
                            ]
 
         elif r.component_name == "pss_activity":
-            # "Group Activities" tab
+
+            # "Group Activities" tab of Beneficiary
+
             table = r.component.table
 
             field = table.project_id
@@ -1062,6 +1218,7 @@ def config(settings):
 
             # Filter service types
             field = table.service_id
+            field.represent = service_represent_hierarchical
             field.requires = IS_ONE_OF(db, "org_service.id",
                                        field.represent,
                                        filterby = "root_service",
@@ -1071,6 +1228,7 @@ def config(settings):
             field.widget = S3HierarchyWidget(multiple = False,
                                              leafonly = True,
                                              filter = (FS("root_service").belongs(root_service_ids)),
+                                             represent = service_represent,
                                              )
 
             # Filter activities
@@ -1151,9 +1309,10 @@ def config(settings):
                            "activity_id",
                            ]
 
-
         elif r.component_name == "mh_activity":
-            # "Mental Health" tab
+
+            # "Mental Health" tab of Beneficiary
+
             table = r.component.table
 
             expose_project_id(table)
@@ -1176,16 +1335,15 @@ def config(settings):
                                        sort=True,
                                        )
             field.widget = S3HierarchyWidget(multiple = False,
-                                            leafonly = True,
-                                            filter = (FS("root_service") == root_service_id),
-                                            )
+                                             leafonly = True,
+                                             filter = (FS("root_service") == root_service_id),
+                                             )
 
             # Filter need types
             ntable = s3db.dvr_need
             left = stable.on(stable.id == ntable.service_id)
             query = (stable.root_service == root_service_id) & \
                     (stable.deleted != True)
-            COMPLAINT_TYPE = T("MH Complaint Type")
             FILTER = (FS("service_id$root_service") == root_service_id)
 
             #field = table.need_id
@@ -1281,7 +1439,9 @@ def config(settings):
                            ]
 
         else:
-            # Activity list (or counting due follow-ups)
+
+            # Case activity list (or counting due follow-ups)
+
             expose_project_id(s3db.dvr_case_activity)
 
             crud_form = S3SQLCustomForm("person_id",
@@ -1664,6 +1824,16 @@ def config(settings):
                 crud_strings["title_list"] = T("Invalid Cases")
 
             if controller == "dvr":
+
+                if r.method == "search_ac":
+
+                    # Autocomplete using alternative search method
+                    search_fields = ("first_name", "last_name", "pe_label")
+                    s3db.set_method("pr", "person",
+                                    method = "search_ac",
+                                    action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                                    )
+
                 if not r.component:
 
                     from s3 import IS_ONE_OF, S3HierarchyWidget
