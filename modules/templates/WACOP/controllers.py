@@ -1990,7 +1990,7 @@ class incident_Profile(custom_WACOP):
                                                               #calendar = calendar,
                                                               )
 
-        output = {"incident_id": incident_id, # For 'Add to Event'
+        output = {"incident_id": incident_id,
                   }
 
         # Incident Details
@@ -2738,12 +2738,16 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
 
         controls = DIV(widget,
                        SPAN(I(_class="fa fa-search"),
-                            _class="search-icon"
+                            _class="search-icon",
                             ),
                        _class="search-wrapper",
                        _id=row_id,
                        )
-        return DIV(DIV(controls,_class="small-12 column"),_class="row")
+        return DIV(DIV(controls,
+                       _class="small-12 column",
+                       ),
+                   _class="row",
+                   )
 
     if args:
         row_id = form
@@ -2808,8 +2812,13 @@ def filter_formstyle_profile(form, fields, *args, **kwargs):
             controls_col.append(comment)
 
         _class = "row hide" if hidden else "row"
-        return DIV(DIV(label,controls,_class="small-12 columns"),
-                   _class=_class, _id=row_id)
+        return DIV(DIV(label,
+                       controls,
+                       _class="small-12 columns",
+                       ),
+                   _class=_class,
+                   _id=row_id,
+                   )
 
     if args:
         row_id = form

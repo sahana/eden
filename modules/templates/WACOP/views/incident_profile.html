@@ -41,8 +41,8 @@
      <li class='item bookmark'>{{=bookmark_btn}}</li>
      <!--<li class='item share'><a href='#'><i class='fa-share-alt fa'></i></a></li>-->
     {{if updateable:}}
-     <li class='item edit'><a href='#'><i class='fa-pencil fa'></i></a></li>
-     <li class='item delete'><a href='#'><i class='fa-trash fa'></i></a></li>
+     <li class='item edit'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal'><i class='fa-pencil fa'></i></a></li>
+     <li class='item delete'><a href='{{=URL(c="event", f="incident", args=[incident_id, "delete"])}}'><i class='fa-trash fa'></i></a></li>
     {{pass}}
      <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"], vars={"set_event": 1})}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
     </ul>
@@ -93,26 +93,26 @@
 </div>
 <hr>
 <div class='row'>
-  <div class='small-12 column'>
-    <ul class='tabs tab-navigation' data-tab>
-      <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-      <li class='tab-title'><a href='#panel2'>Directories</a></li>
-      <li class='tab-title'><a href='#panel3'>Tasks</a></li>
-    </ul>
-    <div class='tabs-content'>
-      <div class='content active' id='panel1'>
-        <div class='row'>
-          <div class='large-3 columns'>
-            {{=create_post_button}}
-            {{=filter_form}}
-          </div>
-          <div class='large-9 columns'>
-            <ul class='dl' id='updates_datalist'>
-              {{=updates_datalist}}
-            </ul>
-          </div>
-        </div>
-      </div>
+ <div class='small-12 column'>
+  <ul class='tabs tab-navigation' data-tab>
+   <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+   <li class='tab-title'><a href='#panel2'>Directories</a></li>
+   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+  </ul>
+  <div class='tabs-content'>
+   <div class='content active' id='panel1'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_post_button}}
+      {{=filter_form}}
+     </div>
+     <div class='large-9 columns'>
+      <ul class='dl' id='updates_datalist'>
+       {{=updates_datalist}}
+      </ul>
+     </div>
+    </div>
+   </div>
    <section class='staff content' id='panel2'>
     <div class='row'>
      <ul class='large-3 columns tabs vertical' data-tab>
