@@ -845,7 +845,9 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    # Always single
+                    # Always single...except with spatial DB
+                    if type(geojson) is list:
+                        geojson = geojson[-1]
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
