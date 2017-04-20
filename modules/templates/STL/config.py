@@ -1728,6 +1728,31 @@ def config(settings):
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
+    def is_turkish_phone_number(value):
+        """
+            Custom validator for beneficiary mobile phone number:
+                - requires 3-digit area code and 7-digit local number
+                - rejects all country codes other than 0090 resp. +90
+                - fixed output format with leading +90 country code
+                - removes all whitespace
+        """
+
+        msg = "Enter turkish phone number in international format like +907837549574"
+
+        if isinstance(value, basestring):
+            import re
+            match = re.match("^(0090|\+90|0){0,1}((\s*[0-9]){10})$", value.strip())
+            if match:
+                error = None
+                value = "+90%s" % "".join(match.groups()[1].split())
+            else:
+                error = msg
+        else:
+            error = msg
+
+        return value, error
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
@@ -1923,7 +1948,7 @@ def config(settings):
                                         )
 
                     # Subset of languages for the case-language component
-                    ltable = current.s3db.dvr_case_language
+                    ltable = s3db.dvr_case_language
                     field = ltable.language
                     field.requires._select = OrderedDict([
                         ("ar", "Arabic"),
@@ -1933,6 +1958,14 @@ def config(settings):
                         ("tr", "Turkish"),
                         ("en", "English"),
                     ])
+
+                    # Custom validation for phone number
+                    field = s3db.pr_contact.value
+                    field.requires = is_turkish_phone_number
+
+                    # Temporarily disable international format requirement
+                    # (will be enforced by custom validator anyway)
+                    settings.msg.require_international_phone_numbers = False
 
                     resource = r.resource
                     if r.interactive:
