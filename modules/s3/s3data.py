@@ -918,7 +918,10 @@ class S3DataTable(object):
 
 # =============================================================================
 class S3DataList(object):
-    """ Class representing a data list """
+    """
+        Class representing a list of data cards
+        -clien-side implementation in static/scripts/S3/s3.dataLists.js
+    """
 
     # -------------------------------------------------------------------------
     # Standard API
@@ -988,6 +991,7 @@ class S3DataList(object):
             @param pagesize: maximum number of items per page
             @param rowsize: number of items per row
             @param ajaxurl: the URL to Ajax-update the datalist
+            @param empty: message to display if the list is empty
             @param popup_url: the URL for the modal used for the 'more'
                               button (=> we deactivate InfiniteScroll)
             @param popup_title: the title for the modal

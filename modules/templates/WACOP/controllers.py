@@ -859,6 +859,7 @@ class custom_WACOP(S3CRUD):
         T = current.T
         db = current.db
         s3db = current.s3db
+        s3 = current.response.s3
 
         tablename = "cms_post"
         resource = s3db.resource(tablename)
@@ -879,34 +880,39 @@ class custom_WACOP(S3CRUD):
                        "created_by",
                        "tag.name",
                        ]
+
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
                                                    limit=5,
                                                    list_id="updates_datalist",
                                                    orderby="date desc",
                                                    layout=cms_post_list_layout)
-        if numrows == 0:
-            # Empty table or just no match?
-            ptable = s3db.cms_post
-            if "deleted" in ptable:
-                available_records = db(ptable.deleted != True)
-            else:
-                available_records = db(ptable._id > 0)
-            if available_records.select(ptable._id,
-                                        limitby=(0, 1)).first():
-                msg = DIV(self.crud_string(tablename,
-                                           "msg_no_match"),
-                          _class="empty")
-            else:
-                msg = DIV(self.crud_string(tablename,
-                                           "msg_list_empty"),
-                          _class="empty")
-            data = msg
-        else:
-            # Render the list
-            data = datalist.html(pagesize = 5,
-                                 ajaxurl = ajaxurl,
-                                 )
+
+        s3.dl_no_header = True
+
+        #if numrows == 0:
+        #    # Empty table or just no match?
+        #    ptable = s3db.cms_post
+        #    if "deleted" in ptable:
+        #        available_records = db(ptable.deleted != True)
+        #    else:
+        #        available_records = db(ptable._id > 0)
+        #    if available_records.select(ptable._id,
+        #                                limitby=(0, 1)).first():
+        #        msg = DIV(self.crud_string(tablename,
+        #                                   "msg_no_match"),
+        #                  _class="empty")
+        #    else:
+        #        msg = DIV(self.crud_string(tablename,
+        #                                   "msg_list_empty"),
+        #                  _class="empty")
+        #    data = msg
+        #else:
+        # Render the list
+        # - do this anyway to ensure 1st-added update refreshes the list
+        data = datalist.html(pagesize = 5,
+                             ajaxurl = ajaxurl,
+                             )
 
         # Render the widget
         output["updates_datalist"] = data
@@ -1008,7 +1014,6 @@ class custom_WACOP(S3CRUD):
             output["create_post_button"] = ""
 
         # Tags for Updates
-        s3 = current.response.s3
         if s3.debug:
             s3.scripts.append("/%s/static/scripts/tag-it.js" % current.request.application)
         else:
@@ -1322,10 +1327,11 @@ class event_Browse(custom_WACOP):
                                        _placeholder = T("Enter search term…"),
                                        ),
                           S3LocationFilter("event_location.location_id",
-                                           label = "",
-                                           #label = T("City"),
+                                           #label = "",
+                                           label = T("City"),
                                            widget = "multiselect",
-                                           levels = ("L1", "L2", "L3"),
+                                           #levels = ("L1", "L2", "L3"),
+                                           levels = ("L3",),
                                            ),
                           S3OptionsFilter("tag.tag_id",
                                           label = "",
