@@ -4,7 +4,7 @@ from gluon import current, Field, SQLFORM
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.utils import web2py_uuid
-from s3 import s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter, S3OptionsFilter, S3Request, S3TextFilter, S3URLQuery
+from s3 import s3_fieldmethod, s3_fullname, s3_str, FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter, S3OptionsFilter, S3Request, S3TextFilter, S3URLQuery
 
 THEME = "WACOP"
 
@@ -71,7 +71,12 @@ class index(S3CustomController):
                                  args=[row["event_incident.id"], "custom"],
                                  ),
                      )
-        append(Field.Method("name_click", incident_name))
+        #append(Field.Method("name_click", incident_name))
+        itable.name_click = s3_fieldmethod("name_click",
+                                           incident_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
 
         def incident_status(row):
             if row["event_incident.exercise"]:
@@ -102,8 +107,7 @@ class index(S3CustomController):
                           start = 0,
                           limit = 10,
                           tablename = "event_incident",
-                          list_fields = [#(T("Name"), "name_click",), # Displaying as raw HTML not hyperlink
-                                         "name",
+                          list_fields = [(T("Name"), "name_click"),
                                          (T("Type"), "incident_type_id"),
                                          (T("Status"), "status"),
                                          "location_id",
@@ -320,6 +324,10 @@ class custom_WACOP(S3CRUD):
             else:
                 resource.add_filter(FS("event_%s.event_id" % f) == event_id)
         elif incident_id:
+            ltablename = "event_%s" % f
+            if tablename == ltablename:
+                # Need simplified selector for some reason
+                resource.add_filter(FS("incident_id") == incident_id)
             resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
 
         list_id = "custom-list-%s" % tablename
@@ -346,31 +354,34 @@ class custom_WACOP(S3CRUD):
         empty = DIV(empty_str, _class="empty")
 
         # @ToDo: Permissions
-        messages = current.messages
-        if f in ("event", "incident"):
-            profile = "custom"
-        else:
-            profile = "profile"
-        if event_id and f != "incident":
-            read_url = URL(c="event", f="event",
-                           args=[event_id, f, "[id]", profile])
-            delete_url = URL(c="event", f="event",
-                             args=[event_id, f, "[id]", "delete"])
-        elif incident_id:
-            read_url = URL(c="event", f="incident",
-                           args=[incident_id, f, "[id]", profile])
-            delete_url = URL(c="event", f="incident",
-                             args=[incident_id, f, "[id]", "delete"])
-        else:
-            read_url = URL(c=c, f=f,
-                           args = ["[id]", profile])
-            delete_url = URL(c=c, f=f,
-                             args=["[id]", "delete"])
-        dtargs["dt_row_actions"] = [{"label": messages.READ,
-                                     "url": read_url,
-                                     #"icon": "fa fa-eye",
-                                     "icon": "fa fa-caret-right",
-                                     #"_class": "s3_modal",
+        #messages = current.messages
+        #if f in ("event", "incident"):
+        #    profile = "custom"
+        #else:
+        #    profile = "profile"
+        #if event_id and f != "incident":
+        #    read_url = URL(c="event", f="event",
+        #                   args=[event_id, f, "[id]", profile])
+        #    delete_url = URL(c="event", f="event",
+        #                     args=[event_id, f, "[id]", "delete"])
+        #elif incident_id:
+        #    read_url = URL(c="event", f="incident",
+        #                   args=[incident_id, f, "[id]", profile])
+        #    delete_url = URL(c="event", f="incident",
+        #                     args=[incident_id, f, "[id]", "delete"])
+        #else:
+        #    read_url = URL(c=c, f=f,
+        #                   args = ["[id]", profile])
+        #    delete_url = URL(c=c, f=f,
+        #                     args=["[id]", "delete"])
+        # Hide the Action Buttons as we assume that the first column is clickable to open details
+        dtargs["dt_row_actions"] = [{#"label": messages.READ,
+                                     "label": "",
+                                     #"url": read_url,
+                                     "url": "",
+                                    ##"icon": "fa fa-eye",
+                                    # "icon": "fa fa-caret-right",
+                                    # #"_class": "s3_modal",
                                      },
                                     # @ToDo: AJAX delete
                                     #{"label": messages.DELETE,
@@ -1232,10 +1243,24 @@ class event_Browse(custom_WACOP):
         append = etable._virtual_methods.append
 
         s3db.configure("event_event",
-                       extra_fields = ("end_date",
+                       extra_fields = ("name",
+                                       "end_date",
                                        "exercise",
                                        ),
                        )
+
+        def event_name(row):
+            return A(row["event_event.name"],
+                     _href = URL(c="event", f="event",
+                                 args=[row["event_event.id"], "custom"],
+                                 ),
+                     )
+        etable.name_click = s3_fieldmethod("name_click",
+                                           event_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
+
         def event_status(row):
             if row["event_event.exercise"]:
                 status = T("Testing")
@@ -1390,7 +1415,7 @@ class event_Browse(custom_WACOP):
                         start = 0,
                         limit = 10,
                         tablename = "event_event",
-                        list_fields = ["name",
+                        list_fields = [(T("Name"), "name_click"),
                                        (T("Status"), "status"),
                                        (T("Zero Hour"), "start_date"),
                                        (T("Closed"), "end_date"),
@@ -1438,10 +1463,24 @@ class incident_Browse(custom_WACOP):
         append = itable._virtual_methods.append
 
         s3db.configure("event_incident",
-                       extra_fields = ("end_date",
+                       extra_fields = ("name",
+                                       "end_date",
                                        "exercise",
                                        ),
                        )
+
+        def incident_name(row):
+            return A(row["event_incident.name"],
+                     _href = URL(c="event", f="incident",
+                                 args=[row["event_incident.id"], "custom"],
+                                 ),
+                     )
+        itable.name_click = s3_fieldmethod("name_click",
+                                           incident_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
+
         def incident_status(row):
             if row["event_incident.exercise"]:
                 status = T("Testing")
@@ -1592,7 +1631,7 @@ class incident_Browse(custom_WACOP):
                         start = 0,
                         limit = 10,
                         tablename = "event_incident",
-                        list_fields = ["name",
+                        list_fields = [(T("Name"), "name_click"),
                                        (T("Type"), "incident_type_id"),
                                        (T("Status"), "status"),
                                        (T("Zero Hour"), "date"),
@@ -1830,12 +1869,26 @@ class event_Profile(custom_WACOP):
         s3.no_formats = True
         datatable = self._datatable
 
-        # Virtual Field for Status
+        # Virtual Fields
         s3db.configure("event_incident",
-                       extra_fields = ("end_date",
+                       extra_fields = ("name",
+                                       "end_date",
                                        "exercise",
                                        ),
                        )
+
+        def incident_name(row):
+            return A(row["event_incident.name"],
+                     _href = URL(c="event", f="incident",
+                                 args=[row["event_incident.id"], "custom"],
+                                 ),
+                     )
+        itable.name_click = s3_fieldmethod("name_click",
+                                           incident_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
+
         def incident_status(row):
             if row["event_incident.exercise"]:
                 status = T("Testing")
@@ -1848,8 +1901,7 @@ class event_Profile(custom_WACOP):
 
         # Incidents dataTable
         tablename = "event_incident"
-        list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
-                       "name",
+        list_fields = [(T("Name"), "name_click"),
                        (T("Status"), "status"),
                        (T("Type"), "incident_type_id"),
                        "location_id",
@@ -1871,8 +1923,27 @@ class event_Profile(custom_WACOP):
 
         # Resources dataTable
         tablename = "event_team"
-        list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
-                       "group_id",
+        s3db.configure(tablename,
+                       extra_fields = ("group_id",
+                                       ),
+                       )
+
+        group_represent = ertable.group_id.represent
+        def team_name(row):
+            group_id = row["event_team.group_id"]
+            return A(group_represent(group_id),
+                     _href = URL(c="event", f="event",
+                                 args=[event_id, "group", group_id, "profile"],
+                                 ),
+                     )
+        ertable.name_click = s3_fieldmethod("name_click",
+                                            team_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+
+        list_fields = [(T("Name"), "name_click"),
                        "status_id",
                        ]
         orderby = "pr_group.name"
@@ -1891,8 +1962,24 @@ class event_Profile(custom_WACOP):
 
         # Tasks dataTable
         tablename = "project_task"
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       )
+
+        def task_name(row):
+            return A(row["project_task.name"],
+                     _href = URL(c="event", f="event",
+                                 args=[event_id, "task", row["project_task.id"], "profile"],
+                                 ),
+                     )
+        s3db.project_task.name_click = s3_fieldmethod("name_click",
+                                                      task_name,
+                                                      # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                      represent = lambda v: v,
+                                                      )
         list_fields = ["status",
-                       (T("Description"), "name"),
+                       (T("Description"), "name_click"),
                        (T("Created"), "created_on"),
                        (T("Due"), "date_due"),
                        ]
@@ -1912,7 +1999,27 @@ class event_Profile(custom_WACOP):
 
         # Staff dataTable
         tablename = "event_human_resource"
-        list_fields = [(T("Name"), "human_resource_id"),
+        s3db.configure(tablename,
+                       extra_fields = ("human_resource_id",
+                                       ),
+                       )
+
+        ehrtable = s3db.event_human_resource
+        hr_represent = ehrtable.human_resource_id.represent
+        def hr_name(row):
+            hr_id = row["event_human_resource.human_resource_id"]
+            return A(hr_represent(hr_id),
+                     _href = URL(c="event", f="event",
+                                 args=[event_id, "human_resource", hr_id, "profile"],
+                                 ),
+                     )
+        ehrtable.name_click = s3_fieldmethod("name_click",
+                                             hr_name,
+                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                             # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                             )
+        list_fields = [(T("Name"), "name_click"),
                        (T("Title"), "human_resource_id$job_title_id"),
                        "human_resource_id$organisation_id",
                        (T("Email"), "human_resource_id$person_id$email.value"),
@@ -1936,7 +2043,27 @@ class event_Profile(custom_WACOP):
 
         # Organisations dataTable
         tablename = "event_organisation"
-        list_fields = [(T("Name"), "organisation_id"),
+        s3db.configure(tablename,
+                       extra_fields = ("organisation_id",
+                                       ),
+                       )
+
+        eotable = s3db.event_organisation
+        org_represent = eotable.organisation_id.represent
+        def org_name(row):
+            organisation_id = row["event_organisation.organisation_id"]
+            return A(org_represent(organisation_id),
+                     _href = URL(c="event", f="event",
+                                 args=[event_id, "organisation_id", organisation_id, "profile"],
+                                 ),
+                     )
+        eotable.name_click = s3_fieldmethod("name_click",
+                                            org_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+        list_fields = [(T("Name"), "name_click"),
                        "status",
                        "comments",
                        ]
@@ -2249,8 +2376,26 @@ class incident_Profile(custom_WACOP):
 
         # Resources dataTable
         tablename = "event_team"
-        list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
-                       "group_id",
+        s3db.configure(tablename,
+                       extra_fields = ("group_id",
+                                       ),
+                       )
+
+        group_represent = ertable.group_id.represent
+        def team_name(row):
+            group_id = row["event_team.group_id"]
+            return A(group_represent(group_id),
+                     _href = URL(c="event", f="incident",
+                                 args=[incident_id, "group", group_id, "profile"],
+                                 ),
+                     )
+        ertable.name_click = s3_fieldmethod("name_click",
+                                            team_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+        list_fields = [(T("Name"), "name_click"),
                        "status_id",
                        ]
         orderby = "pr_group.name"
@@ -2269,8 +2414,24 @@ class incident_Profile(custom_WACOP):
 
         # Tasks dataTable
         tablename = "project_task"
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       )
+
+        def task_name(row):
+            return A(row["project_task.name"],
+                     _href = URL(c="event", f="incident",
+                                 args=[incident_id, "task", row["project_task.id"], "profile"],
+                                 ),
+                     )
+        s3db.project_task.name_click = s3_fieldmethod("name_click",
+                                                      task_name,
+                                                      # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                      represent = lambda v: v,
+                                                      )
         list_fields = ["status",
-                       (T("Description"), "name"),
+                       (T("Description"), "name_click"),
                        (T("Created"), "created_on"),
                        (T("Due"), "date_due"),
                        ]
@@ -2290,7 +2451,27 @@ class incident_Profile(custom_WACOP):
 
         # Staff dataTable
         tablename = "event_human_resource"
-        list_fields = [(T("Name"), "human_resource_id"),
+        s3db.configure(tablename,
+                       extra_fields = ("human_resource_id",
+                                       ),
+                       )
+
+        ehrtable = s3db.event_human_resource
+        hr_represent = ehrtable.human_resource_id.represent
+        def hr_name(row):
+            hr_id = row["event_human_resource.human_resource_id"]
+            return A(hr_represent(hr_id),
+                     _href = URL(c="event", f="incident",
+                                 args=[incident_id, "human_resource", hr_id, "profile"],
+                                 ),
+                     )
+        ehrtable.name_click = s3_fieldmethod("name_click",
+                                             hr_name,
+                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                             # @ToDo: Bulk lookups
+                                             represent = lambda v: v,
+                                             )
+        list_fields = [(T("Name"), "name_click"),
                        (T("Title"), "human_resource_id$job_title_id"),
                        "human_resource_id$organisation_id",
                        (T("Email"), "human_resource_id$person_id$email.value"),
@@ -2314,7 +2495,27 @@ class incident_Profile(custom_WACOP):
 
         # Organisations dataTable
         tablename = "event_organisation"
-        list_fields = [(T("Name"), "organisation_id"),
+        s3db.configure(tablename,
+                       extra_fields = ("organisation_id",
+                                       ),
+                       )
+
+        eotable = s3db.event_organisation
+        org_represent = eotable.organisation_id.represent
+        def org_name(row):
+            organisation_id = row["event_organisation.organisation_id"]
+            return A(org_represent(organisation_id),
+                     _href = URL(c="event", f="incident",
+                                 args=[incident_id, "organisation", organisation_id, "profile"],
+                                 ),
+                     )
+        eotable.name_click = s3_fieldmethod("name_click",
+                                            org_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+        list_fields = [(T("Name"), "name_click"),
                        "status",
                        "comments",
                        ]
@@ -2363,12 +2564,13 @@ class person_Dashboard(custom_WACOP):
         incident_id = None
 
         T = current.T
+        s3db = current.s3db
         s3 = current.response.s3
 
         output = {}
 
         # Map of Incidents
-        ltable = current.s3db.gis_layer_feature
+        ltable = s3db.gis_layer_feature
         layer = current.db(ltable.name == "Incidents").select(ltable.layer_id,
                                                               limitby=(0, 1)
                                                               ).first()
@@ -2436,8 +2638,25 @@ class person_Dashboard(custom_WACOP):
 
         # Tasks dataTable
         tablename = "project_task"
+        s3db.project_task # Load default model so that config overrides
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       )
+
+        def task_name(row):
+            return A(row["project_task.name"],
+                     _href = URL(c="project", f="task",
+                                 args=[row["project_task.id"], "profile"],
+                                 ),
+                     )
+        s3db.project_task.name_click = s3_fieldmethod("name_click",
+                                                      task_name,
+                                                      # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                      represent = lambda v: v,
+                                                      )
         list_fields = ["status",
-                       (T("Description"), "name"),
+                       (T("Description"), "name_click"),
                        (T("Created"), "created_on"),
                        (T("Due"), "date_due"),
                        ]
@@ -2457,7 +2676,25 @@ class person_Dashboard(custom_WACOP):
 
         # Staff dataTable
         tablename = "hrm_human_resource"
-        list_fields = [(T("Name"), "person_id"),
+        s3db.configure(tablename,
+                       extra_fields = ("person_id",
+                                       ),
+                       )
+
+        def hr_name(row):
+            person_id = row["hrm_human_resource.person_id"]
+            return A(s3_fullname(person_id),
+                     _href = URL(c="hrm", f="person",
+                                 args=[person_id, "profile"],
+                                 ),
+                     )
+        s3db.hrm_human_resource.name_click = s3_fieldmethod("name_click",
+                                                            hr_name,
+                                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                            # @ToDo: Bulk lookups
+                                                            represent = lambda v: v,
+                                                            )
+        list_fields = [(T("Name"), "name_click"),
                        (T("Title"), "job_title_id"),
                        "organisation_id",
                        (T("Email"), "person_id$email.value"),
@@ -2479,7 +2716,23 @@ class person_Dashboard(custom_WACOP):
 
         # Organisations dataTable
         tablename = "org_organisation"
-        list_fields = ["name",
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       )
+
+        def org_name(row):
+            return A(row["org_organisation.name"],
+                     _href = URL(c="org", f="organisation",
+                                 args=[row["org_organisation.name"], "profile"],
+                                 ),
+                     )
+        s3db.org_organisation.name_click = s3_fieldmethod("name_click",
+                                                          org_name,
+                                                          # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                          represent = lambda v: v,
+                                                          )
+        list_fields = [(T("Name"), "name_click"),
                        ]
         orderby = "org_organisation.name"
         datatable(r,

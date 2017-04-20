@@ -328,6 +328,25 @@ table tr td {
   padding: 0.25rem 0.625rem;
 }
 
+/* jquery.dataTables.responsive.css uses + / - to expand the row
+   - we want a caret instead
+*/
+table.dataTable.dtr-inline.collapsed tbody td:first-child:before,
+table.dataTable.dtr-inline.collapsed tbody th:first-child:before {
+  color: inherit;
+  background-color: inherit;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 0 0 0;
+  font: normal normal normal 14px/1 FontAwesome;
+  content: '\f0da'; /* fa-caret-right */
+}
+table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child:before,
+table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
+  background-color: inherit;
+  content: '\f0d7'; /* fa-caret-down */
+}
+
 /**
  * Footer
  */

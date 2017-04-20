@@ -497,6 +497,20 @@ def config(settings):
             if r.method == "assign":
                 current.menu.main = ""
 
+            elif r.component_name == "task":
+                from s3 import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("name",
+                                            "description",
+                                            "source",
+                                            "priority",
+                                            "pe_id",
+                                            "date_due",
+                                            "status",
+                                            "comments",
+                                            )
+                r.component.configure(crud_form = crud_form,
+                                      )
+
             elif r.representation == "popup":
                 if not r.component:
                     if r.get_vars.get("set_event"):
