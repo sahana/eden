@@ -8016,7 +8016,7 @@ class S3ProjectTaskModel(S3Model):
                                  comment = S3PopupLink(c = "project",
                                                        f = "tag",
                                                        title = ADD_TAG,
-                                                       tooltip = T("A project tag helps to assosiate keywords with projects/tasks."),
+                                                       tooltip = T("A project tag helps to associate keywords with projects/tasks."),
                                                        ),
                                  )
 
@@ -8130,6 +8130,7 @@ class S3ProjectTaskModel(S3Model):
                            writable = staff,
                            ),
                      Field.Method("task_id", self.project_task_task_id),
+                     s3_comments(),
                      *s3_meta_fields(),
                      on_define = lambda table: \
                         [table.created_on.set_attributes(represent = lambda dt: \
@@ -8326,9 +8327,12 @@ class S3ProjectTaskModel(S3Model):
                                           orderby = "date"
                                           ),
                      "time_actual",
+                     "comments",
                      ))
         else:
-            cappend("status")
+            cextend(("status",
+                     "comments",
+                     ))
 
         # Custom Form
         crud_form = S3SQLCustomForm(*crud_fields)

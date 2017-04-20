@@ -296,6 +296,41 @@ def config(settings):
                 f = s3db.event_event.event_type_id
                 f.readable = f.writable = False
 
+            elif cname == "task":
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
+                itable = s3db.event_incident
+                query = (itable.event_id == r.id) & \
+                        (itable.closed == False) & \
+                        (itable.deleted == False)
+                set = current.db(query)
+                f = s3db.event_task.incident_id
+                f.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(set, "event_incident.id",
+                                          f.represent,
+                                          orderby="event_incident.name",
+                                          sort=True))
+                crud_form = S3SQLCustomForm(
+                    S3SQLInlineComponent("incident",
+                                         fields = [("", "incident_id")],
+                                         label = T("Incident"),
+                                         multiple = False,
+                                         filterby = dict(field = "event_id",
+                                                         options = r.id,
+                                                         )
+                                         ),
+                    "name",
+                    "description",
+                    "source",
+                    "priority",
+                    "pe_id",
+                    "date_due",
+                    "status",
+                    "comments",
+                    )
+                r.component.configure(crud_form = crud_form,
+                                      )
+                
             elif r.representation == "popup" and r.get_vars.get("view"):
                 # Popups for lists in Parent Event of Incident Screen or Event Profile header
                 # No Title since this is on the Popup
