@@ -316,6 +316,8 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
                                                list_id=list_id,
                                                orderby=orderby,
                                                layout=layout)
+    # NB If this list has a create function then cannot use this approach as
+    # it won't refresh the page after the 1st record is created!
     if numrows == 0:
         # Empty table or just no match?
         table = resource.table
