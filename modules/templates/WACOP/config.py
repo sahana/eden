@@ -233,9 +233,13 @@ def config(settings):
 
         s3db = current.s3db
         table = s3db.cms_post                      
+        table.priority.readable = table.priority.writable = True
         table.series_id.readable = table.series_id.writable = True
+        table.status_id.readable = table.status_id.writable = True
 
         crud_fields = [(T("Type"), "series_id"),
+                       (T("Priority"), "priority"),
+                       (T("Status"), "status_id"),
                        (T("Text"), "body"),
                        # @ToDo: Tags widget: applied client-side
                        #S3SQLInlineComponent("tag_post",
