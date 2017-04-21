@@ -67,7 +67,6 @@
             this.autocompleteLabel = $('#' + fieldname + '-autocomplete-label');
 
             this.refresh();
-
         },
 
         /**

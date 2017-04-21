@@ -275,7 +275,9 @@ def config(settings):
         crud_fields = [(T("Type"), "series_id"),
                        (T("Priority"), "priority"),
                        (T("Status"), "status_id"),
+                       (T("Title"), "title"),
                        (T("Text"), "body"),
+                       (T("Location"), "location_id"),
                        # Tags are added client-side
                        ]
 
