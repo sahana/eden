@@ -227,10 +227,45 @@ def config(settings):
     settings.cms.show_tags = True
 
     # -------------------------------------------------------------------------
+    def cms_post_onaccept(form):
+        """
+            Handle Tags in Create / Update forms
+        """
+
+        post_id = form.vars.id
+
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.cms_tag
+        ltable = s3db.cms_tag_post
+
+        # Delete all existing tags for this post
+        db(ltable.post_id == post_id).delete()
+
+        # Add these tags
+        tags = current.request.post_vars.get("tags")
+        if not tags:
+            return
+
+        tags = tags.split(",")
+        tag_ids = db(ttable.name.belongs(tags)).select(ttable.id,
+                                                       ttable.name).as_dict(key="name")
+        for tag in tags:
+            row = tag_ids.get("tag")
+            if row:
+                tag_id = row.get("id")
+            else:
+                tag_id = ttable.insert(name=tag)
+            ltable.insert(post_id = post_id,
+                          tag_id = tag_id,
+                          )
+
+    # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
+        db = current.db
         s3db = current.s3db
         table = s3db.cms_post                      
         table.priority.readable = table.priority.writable = True
@@ -241,11 +276,7 @@ def config(settings):
                        (T("Priority"), "priority"),
                        (T("Status"), "status_id"),
                        (T("Text"), "body"),
-                       # @ToDo: Tags widget: applied client-side
-                       #S3SQLInlineComponent("tag_post",
-                       #                     fields = [("", "tag_id")],
-                       #                     label = T("Tags"),
-                       #                     ),
+                       # Tags are added client-side
                        ]
 
         if r.tablename != "event_incident":
@@ -256,7 +287,7 @@ def config(settings):
                 query = (itable.event_id == r.id) & \
                         (itable.closed == False) & \
                         (itable.deleted == False)
-                set = current.db(query)
+                set = db(query)
                 f = s3db.event_post.incident_id
                 f.requires = IS_EMPTY_OR(
                                 IS_ONE_OF(set, "event_incident.id",
@@ -272,8 +303,38 @@ def config(settings):
         crud_form = S3SQLCustomForm(*crud_fields
                                     )
 
+        # Client support for Tags
+        appname = r.application
+        s3 = current.response.s3
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            scripts_append("/%s/static/scripts/tag-it.js" % appname)
+        else:
+            scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
+        scripts_append("/%s/static/themes/WACOP/js/update_tags.js" % appname)
+        if r.method == "create":
+            s3.jquery_ready.append('''wacop_update_tags("")''')
+        elif r.method == "update":
+            ttable = s3db.cms_tag
+            ltable = s3db.cms_tag_post
+            if r.tablename == "cms_post":
+                post_id = r.id
+            else:
+                post_id = r.component.id
+            query = (ltable.post_id == post_id) & \
+                    (ltable.tag_id == ttable.id)
+            tags = db(query).select(ttable.name)
+            tags = [tag.name for tag in tags]
+            tags = ",".join(tags)
+            s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
+
+        # Processing Tags
+        default = s3db.get_config(tablename, "onaccept")
+        onaccept = [default, cms_post_onaccept]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       onaccept = onaccept,
                        )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
