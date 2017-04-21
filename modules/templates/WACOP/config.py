@@ -229,16 +229,43 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-        s3db = current.s3db
-        table = s3db.cms_post
-
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
-        crud_form = S3SQLCustomForm((T("Text"), "body"),
-                                    # @ToDo: Tags widget
-                                    S3SQLInlineComponent("tag_post",
-                                                         fields = [("", "tag_id")],
-                                                         label = T("Tags"),
-                                                         ),
+
+        s3db = current.s3db
+        table = s3db.cms_post                      
+        table.series_id.readable = table.series_id.writable = True
+
+        crud_fields = [(T("Type"), "series_id"),
+                       (T("Text"), "body"),
+                       # @ToDo: Tags widget: applied client-side
+                       #S3SQLInlineComponent("tag_post",
+                       #                     fields = [("", "tag_id")],
+                       #                     label = T("Tags"),
+                       #                     ),
+                       ]
+
+        if r.tablename != "event_incident":
+            if r.tablename == "event_event" and r.method != "validate": # Validate comes in with no r.id!
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                itable = s3db.event_incident
+                query = (itable.event_id == r.id) & \
+                        (itable.closed == False) & \
+                        (itable.deleted == False)
+                set = current.db(query)
+                f = s3db.event_post.incident_id
+                f.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(set, "event_incident.id",
+                                          f.represent,
+                                          orderby="event_incident.name",
+                                          sort=True))
+            crud_fields.insert(0, S3SQLInlineComponent("incident_post",
+                                                       fields = [("", "incident_id")],
+                                                       label = T("Incident"),
+                                                       multiple = False,
+                                                       ))
+
+        crud_form = S3SQLCustomForm(*crud_fields
                                     )
 
         s3db.configure(tablename,
@@ -381,18 +408,16 @@ def config(settings):
         # Load normal model to be able to override configuration
         table = s3db.event_incident
 
-        def status_represent(value):
-            " Represent the closed field as Status Open/Closed instead of True/False "
-
-            if value is True:
-                return T("Closed")
-            elif value is False:
-                return T("Open")
-            else:
-                return current.messages["NONE"]
-
-        table.closed.label = T("Status")
-        table.closed.represent = status_represent
+        #def status_represent(value):
+        #    " Represent the closed field as Status Open/Closed instead of True/False "
+        #    if value is True:
+        #        return T("Closed")
+        #    elif value is False:
+        #        return T("Open")
+        #    else:
+        #        return current.messages["NONE"]
+        #table.closed.label = T("Status")
+        #table.closed.represent = status_represent
         table.event_id.readable = table.event_id.writable = True
 
         # Custom Browse
@@ -522,15 +547,15 @@ def config(settings):
                         s3db.configure("event_incident",
                                        crud_form = crud_form,
                                        )
-                elif r.component_name == "post":
-                    from s3 import S3SQLCustomForm
+                #elif r.component_name == "post":
+                #    from s3 import S3SQLCustomForm
 
-                    crud_form = S3SQLCustomForm("body",
-                                                )
+                #    crud_form = S3SQLCustomForm("body",
+                #                                )
 
-                    s3db.configure("cms_post",
-                                   crud_form = crud_form,
-                                   )
+                #    s3db.configure("cms_post",
+                #                   crud_form = crud_form,
+                #                   )
 
             return True
         s3.prep = custom_prep
@@ -552,6 +577,10 @@ def config(settings):
                                                  "modules", "templates",
                                                  "WACOP", "views",
                                                  "assign.html")
+                #elif r.component_name == "post":
+                #    # Add Tags - no, do client-side
+                #    output["form"].append()
+
                 #else:
                 #    # Summary or Profile pages
                 #    # Additional styles

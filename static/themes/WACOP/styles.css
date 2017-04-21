@@ -65,63 +65,6 @@ fieldset {
     padding-bottom: 0;
 }
 
-/* Incident Summary page */
-#incident-summary h2 {
-    color: #112e51;
-    font-family: "Merriweather",serif;
-    font-size: 2.3125rem;
-    font-family: "Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
-    font-style: normal;
-    font-weight: normal;
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
-    margin-top: 0.2rem;
-    text-rendering: optimizelegibility;
-}
-#incident-summary .callout {
-    background-color: #dce4ef;
-    border-color: #8ba6ca;
-    margin-top: 1.5rem;
-}
-#incident-summary table.s3-groupedopts-widget {
-    border: 0;
-}
-
-#summary-tab-headers .ui-tabs-nav {
-    margin: 0;
-}
-.ui-tabs .ui-tabs-nav {
-    padding: 0;
-}
-#summary-tab-headers li {
-    margin-right: 0;
-}
-#summary-tab-headers li a {
-    background-color: #d6d7d9;
-    color: #5b616b;
-    padding: 1em 6em;
-}
-#summary-tab-headers li.ui-state-active > a {
-    background-color: #fff;
-    color: #5b616b;
-    cursor: default;
-}
-.dataTables_length option {
-    margin-right: 5px;
-}
-
-.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
-    border-bottom-right-radius: 0;
-}
-.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl {
-    border-bottom-left-radius: 0;
-}
-.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr {
-    border-top-right-radius: 0;
-}
-.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl {
-    border-top-left-radius: 0;
-}
 /* Map */
 .x-toolbar table {
     width: auto;
@@ -331,6 +274,14 @@ table tr td {
 /* jquery.dataTables.responsive.css uses + / - to expand the row
    - we want a caret instead
 */
+table.dataTable tbody td:first-child,
+table.dataTable thead th:first-child {
+  display: none; /* Hide empty column by default */
+}
+table.dataTable.dtr-inline.collapsed tbody td:first-child,
+table.dataTable.dtr-inline.collapsed thead th:first-child {
+  display: block;
+}
 table.dataTable.dtr-inline.collapsed tbody td:first-child:before,
 table.dataTable.dtr-inline.collapsed tbody th:first-child:before {
   color: inherit;

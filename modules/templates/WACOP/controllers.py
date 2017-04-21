@@ -150,11 +150,11 @@ class custom_WACOP(S3CRUD):
             event_id = None
             incident_id = None
 
-        if r.http == "POST":
-            output = self._post(r, event_id, incident_id, **attr)
-            if output:
-                # Update deleted
-                return output
+        #if r.http == "POST":
+        #    output = self._post(r, event_id, incident_id, **attr)
+        #    if output:
+        #        # Update deleted
+        #        return output
 
         representation = r.representation
 
@@ -188,6 +188,7 @@ class custom_WACOP(S3CRUD):
     def _post(self, r, event_id, incident_id, **attr):
         """
             Handle POSTs
+            - deprecated
 
             @param r: the S3Request
             @param attr: controller arguments
@@ -1352,8 +1353,8 @@ class event_Browse(custom_WACOP):
                                        _placeholder = T("Enter search term…"),
                                        ),
                           S3LocationFilter("event_location.location_id",
-                                           #label = "",
-                                           label = T("City"),
+                                           label = "",
+                                           #label = T("City"),
                                            widget = "multiselect",
                                            #levels = ("L1", "L2", "L3"),
                                            levels = ("L3",),
