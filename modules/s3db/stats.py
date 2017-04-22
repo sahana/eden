@@ -1319,7 +1319,7 @@ class S3StatsImpactModel(S3Model):
                                      ondelete = "CASCADE",
                                      represent = S3Represent(lookup=tablename),
                                      requires = IS_EMPTY_OR(
-                                        IS_ONE_OF_EMPTY(db, "stats_impact.id")),
+                                        IS_ONE_OF_EMPTY(current.db, "stats_impact.id")),
                                      )
 
         configure(tablename,
