@@ -2547,38 +2547,6 @@ class S3MultiPath:
                 return False
 
 # =============================================================================
-def s3_fieldmethod(name, f, represent=None):
-    """
-        Helper to attach a representation method to a Field.Method.
-
-        @param name: the field name
-        @param f: the field method
-        @param represent: the representation function
-    """
-
-    from gluon import Field
-
-    if represent is not None:
-
-        class Handler(object):
-            def __init__(self, method, row):
-                self.method=method
-                self.row=row
-            def __call__(self, *args, **kwargs):
-                return self.method(self.row, *args, **kwargs)
-        if hasattr(represent, "bulk"):
-            Handler.represent = represent
-        else:
-            Handler.represent = staticmethod(represent)
-
-        fieldmethod = Field.Method(name, f, handler=Handler)
-
-    else:
-        fieldmethod = Field.Method(name, f)
-
-    return fieldmethod
-
-# =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):
     """ Simple markup stripper """
 
