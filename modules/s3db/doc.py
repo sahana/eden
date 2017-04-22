@@ -800,7 +800,7 @@ class S3DocSitRepModel(S3Model):
                                     ondelete = "RESTRICT",
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "doc_sitrep.id",
+                                                IS_ONE_OF(current.db, "doc_sitrep.id",
                                                           represent,
                                                           orderby="doc_sitrep.name",
                                                           sort=True)),
