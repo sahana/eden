@@ -49,12 +49,6 @@ from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unic
 from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from s3widgets import S3CalendarWidget, S3DateWidget
 
-try:
-    db = current.db
-except:
-    # Running from 000_1st_run
-    db = None
-
 # =============================================================================
 class FieldS3(Field):
     """

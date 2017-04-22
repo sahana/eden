@@ -1636,6 +1636,17 @@ def config(settings):
     settings.customise_pr_contact_resource = customise_pr_contact_resource
 
     # -------------------------------------------------------------------------
+    def customise_pr_education_level_resource(r, tablename):
+
+        table = current.s3db.pr_education_level
+
+        # Hide organisation_id (not used here)
+        field = table.organisation_id
+        field.readable = field.writable = False
+
+    settings.customise_pr_education_level_resource = customise_pr_education_level_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -1655,8 +1666,9 @@ def config(settings):
                                            ),
                        )
 
-        # Person tag for Family ID Number
+        # Custom components
         s3db.add_components("pr_person",
+                            # Govt-assigned IDs: Family ID, Individual ID
                             pr_person_tag = ({"name": "family_id",
                                               "joinby": "person_id",
                                               "filterby": {
@@ -1672,6 +1684,11 @@ def config(settings):
                                               "multiple": False,
                                               },
                                              ),
+                            # Education level (simplified model)
+                            pr_education_level = {"link": "pr_education",
+                                                  "joinby": "person_id",
+                                                  "key": "level_id",
+                                                  },
                             )
 
         # Add contacts-method
@@ -1977,6 +1994,7 @@ def config(settings):
                                        S3OptionsFilter, \
                                        S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
+                                       S3SQLInlineLink, \
                                        S3TextFilter, \
                                        s3_get_filter_opts
 
@@ -2044,6 +2062,10 @@ def config(settings):
                                                 multiple = False,
                                                 name = "phone",
                                                 ),
+                                        S3SQLInlineLink("education_level",
+                                                        field = "level_id",
+                                                        multiple = False,
+                                                        ),
                                         S3SQLInlineComponent(
                                                 "case_language",
                                                 fields = ["language",
