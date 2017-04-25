@@ -566,6 +566,7 @@ class S3RangeFilter(S3FilterWidget):
 class S3DateFilter(S3RangeFilter):
     """
         Date Range Filter Widget
+        - use a single field or a pair of fields for start_date/end_date
 
         Configuration options:
 
@@ -589,6 +590,44 @@ class S3DateFilter(S3RangeFilter):
     input_labels = {"ge": "From", "le": "To"}
 
     # -------------------------------------------------------------------------
+    def data_element(self, variables):
+        """
+            Overrides S3FilterWidget.data_element(), constructs multiple
+            hidden INPUTs (one per variable) with element IDs of the form
+            <id>-<operator>-data (where no operator is translated as "eq").
+
+            @param variables: the variables
+        """
+
+        fields = self.field
+        if type(fields) is not list:
+            # Use function from S3RangeFilter parent class
+            return super(S3DateFilter, self).data_element(variables)
+
+        selectors = self.selector.split("|")
+        operators = self.operator
+
+        elements = []
+        _id = self.attr["_id"]
+
+        start = True
+        for selector in selectors:
+            if start:
+                operator = operators[0]
+                start = False
+            else:
+                operator = operators[1]
+            variable = self._variable(selector, [operator])[0]
+
+            elements.append(
+                INPUT(_type = "hidden",
+                      _id = "%s-%s-data" % (_id, operator),
+                      _class = "filter-widget-data %s-data" % self._class,
+                      _value = variable))
+
+        return elements
+
+    # -------------------------------------------------------------------------
     def widget(self, resource, values):
         """
             Render this widget as HTML helper object(s)
@@ -607,34 +646,6 @@ class S3DateFilter(S3RangeFilter):
             _class = _class
         _id = attr["_id"]
 
-        # Determine the field type
-        if resource:
-            rfield = S3ResourceField(resource, self.field)
-            field = rfield.field
-        else:
-            rfield = field = None
-        if not field:
-            if not rfield or rfield.virtual:
-                ftype = self.opts.get("fieldtype", "datetime")
-            else:
-                # Unresolvable selector
-                return ""
-        else:
-            ftype = rfield.ftype
-
-        # S3CalendarWidget requires a Field
-        if not field:
-            if rfield:
-                tname, fname = rfield.tname, rfield.fname
-            else:
-                tname, fname = "notable", "datetime"
-                if not _id:
-                    raise SyntaxError("%s: _id parameter required " \
-                                      "when rendered without resource." % \
-                                      self.__class__.__name__)
-            field = Field(fname, ftype, requires = IS_UTC_DATE())
-            field.tablename = field._tablename = tname
-
         # Classes and labels for the individual date/time inputs
         T = current.T
         input_class = self._input_class
@@ -647,79 +658,129 @@ class S3DateFilter(S3RangeFilter):
         filter_widget = DIV(_id=_id, _class=_class)
         append = filter_widget.append
 
-        selector = self.selector
         get_variable = self._variable
-        for operator in self.operator:
 
-            input_id = "%s-%s" % (_id, operator)
+        fields = self.field
+        if type(fields) is not list:
+            fields = [fields]
+            selector = self.selector
+        else:
+            selectors = self.selector.split("|")
+
+        start = True
+        for field in fields:
+            # Determine the field type
+            if resource:
+                rfield = S3ResourceField(resource, field)
+                field = rfield.field
+            else:
+                rfield = field = None
+            if not field:
+                if not rfield or rfield.virtual:
+                    ftype = self.opts.get("fieldtype", "datetime")
+                else:
+                    # Unresolvable selector
+                    return ""
+            else:
+                ftype = rfield.ftype
+
+            # S3CalendarWidget requires a Field
+            if not field:
+                if rfield:
+                    tname, fname = rfield.tname, rfield.fname
+                else:
+                    tname, fname = "notable", "datetime"
+                    if not _id:
+                        raise SyntaxError("%s: _id parameter required " \
+                                          "when rendered without resource." % \
+                                          self.__class__.__name__)
+                field = Field(fname, ftype, requires = IS_UTC_DATE())
+                field.tablename = field._tablename = tname
+
+            if len(fields) == 1:
+                operators = self.operator
+            else:
+                # 2 Separate fields
+                if start:
+                    operators = ["ge"]
+                    selector = selectors[0]
+                    start = False
+                else:
+                    operators = ["le"]
+                    selector = selectors[1]
+                    input_class += " end_date"
 
             # Do we want a timepicker?
             timepicker = False if ftype == "date" or hide_time else True
-            if timepicker:
+            if timepicker and "datetimepicker" not in input_class:
                 input_class += " datetimepicker"
 
-            # Make the two inputs constrain each other
-            set_min = set_max = None
-            if operator == "ge":
-                set_min = "#%s-%s" % (_id, "le")
-            elif operator == "le":
-                set_max = "#%s-%s" % (_id, "ge")
+            for operator in operators:
 
-            # Instantiate the widget
-            widget = S3CalendarWidget(timepicker = timepicker,
-                                      set_min = set_min,
-                                      set_max = set_max,
-                                      )
+                input_id = "%s-%s" % (_id, operator)
 
-            # Populate with the value, if given
-            # if user has not set any of the limits, we get [] in values.
-            value = values.get(get_variable(selector, operator))
-            if value in (None, []):
-                value = None
-            elif type(value) is list:
-                value = value[0]
+                # Make the two inputs constrain each other
+                set_min = set_max = None
+                if operator == "ge":
+                    set_min = "#%s-%s" % (_id, "le")
+                elif operator == "le":
+                    set_max = "#%s-%s" % (_id, "ge")
 
-            # Widget expects a string in local calendar and format
-            if isinstance(value, basestring):
-                # URL filter or filter default come as string in
-                # Gregorian calendar and ISO format => convert into
-                # a datetime
-                dt = s3_decode_iso_datetime(value)
-            else:
-                # Assume datetime
-                dt = value
-            if dt:
-                if timepicker:
-                    dtstr = S3DateTime.datetime_represent(dt, utc=False)
+                # Instantiate the widget
+                widget = S3CalendarWidget(timepicker = timepicker,
+                                          set_min = set_min,
+                                          set_max = set_max,
+                                          )
+
+                # Populate with the value, if given
+                # if user has not set any of the limits, we get [] in values.
+                value = values.get(get_variable(selector, operator))
+                if value in (None, []):
+                    value = None
+                elif type(value) is list:
+                    value = value[0]
+
+                # Widget expects a string in local calendar and format
+                if isinstance(value, basestring):
+                    # URL filter or filter default come as string in
+                    # Gregorian calendar and ISO format => convert into
+                    # a datetime
+                    dt = s3_decode_iso_datetime(value)
                 else:
-                    dtstr = S3DateTime.date_represent(dt, utc=False)
-            else:
-                dtstr = None
+                    # Assume datetime
+                    dt = value
+                if dt:
+                    if timepicker:
+                        dtstr = S3DateTime.datetime_represent(dt, utc=False)
+                    else:
+                        dtstr = S3DateTime.date_represent(dt, utc=False)
+                else:
+                    dtstr = None
 
-            # Render the widget
-            picker = widget(field,
-                            dtstr,
-                            _class = input_class,
-                            _id = input_id,
-                            _name = input_id,
-                            )
+                # Render the widget
+                picker = widget(field,
+                                dtstr,
+                                _class = input_class,
+                                _id = input_id,
+                                _name = input_id,
+                                )
 
-            if operator in input_labels:
-                label = DIV(LABEL("%s:" % T(input_labels[operator]),
-                                  _for=input_id,
-                                  ),
-                            _class="range-filter-label",
-                            )
-            else:
-                label = ""
+                if operator in input_labels:
+                    label = DIV(LABEL("%s:" % T(input_labels[operator]),
+                                      _for=input_id,
+                                      ),
+                                _class="range-filter-label",
+                                )
+                else:
+                    label = ""
 
-            # Append label and widget
-            append(DIV(label,
-                       DIV(picker,
-                           _class="range-filter-widget",
-                           ),
-                       _class="range-filter-field",
-                       ))
+                # Append label and widget
+                append(DIV(label,
+                           DIV(picker,
+                               _class="range-filter-widget",
+                               ),
+                           _class="range-filter-field",
+                           ))
 
         return filter_widget
 

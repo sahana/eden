@@ -89,9 +89,8 @@ class index(S3CustomController):
         append(Field.Method("status", incident_status))
 
         # Incidents dataTable
-        dtargs = {"dt_pagination": False,
+        dtargs = {"dt_pagination": True,
                   "dt_pageLength": 10,
-                  "dt_pagination": False,
                   "dt_searching": False,
                   #"dt_lengthMenu": None,
                   }
@@ -105,7 +104,8 @@ class index(S3CustomController):
                           incident_id = None,
                           updateable = False,
                           start = 0,
-                          limit = 10,
+                          #limit = 10,
+                          limit = None,
                           tablename = "event_incident",
                           list_fields = [(T("Name"), "name_click"),
                                          (T("Type"), "incident_type_id"),
@@ -164,23 +164,24 @@ class custom_WACOP(S3CRUD):
         elif representation == "aadata":
             return self._aadata(r, event_id, incident_id, **attr)
 
-        elif representation == "dl":
-            if event_id:
-                # Event Profile
-                # - only show Updates relating to this Event
-                filter = (FS("event_post.event_id") == event_id)
-                ajaxurl = URL(args = [event_id, "custom.dl"])
-            elif incident_id:
-                # Incident Profile
-                # - only show Updates relating to this Incident
-                filter = (FS("event_post.incident_id") == incident_id)
-                ajaxurl = URL(args = [incident_id, "custom.dl"])
-            else:
-                # Dashboard
-                # - show all Updates
-                filter = None
-                ajaxurl = URL(args = "dashboard.dl")
-            return self._dl(r, filter, ajaxurl, **attr)
+        # Now using Native Controller to avoid filter being interpreted for main resource
+        #elif representation == "dl":
+        #    if event_id:
+        #        # Event Profile
+        #        # - only show Updates relating to this Event
+        #        filter = (FS("event_post.event_id") == event_id)
+        #        ajaxurl = URL(args = [event_id, "custom.dl"])
+        #    elif incident_id:
+        #        # Incident Profile
+        #        # - only show Updates relating to this Incident
+        #        filter = (FS("event_post.incident_id") == incident_id)
+        #        ajaxurl = URL(args = [incident_id, "custom.dl"])
+        #    else:
+        #        # Dashboard
+        #        # - show all Updates
+        #        filter = None
+        #        ajaxurl = URL(args = "dashboard.dl")
+        #    return self._dl(r, filter, ajaxurl, **attr)
 
         raise HTTP(405, current.ERROR.BAD_METHOD)
 
@@ -877,12 +878,19 @@ class custom_WACOP(S3CRUD):
         resource = s3db.resource(tablename)
         if event_id:
             resource.add_filter(FS("event_post.event_id") == event_id)
-            ajaxurl = URL(args = [event_id, "custom.dl"])
+            #ajaxurl = URL(args = [event_id, "custom.dl"])
+            vars = {"event_post.event_id": event_id,
+                    }
         elif incident_id:
             resource.add_filter(FS("event_post.incident_id") == incident_id)
-            ajaxurl = URL(args = [incident_id, "custom.dl"])
+            #ajaxurl = URL(args = [incident_id, "custom.dl"])
+            vars = {"event_post.incident_id": incident_id,
+                    }
         else:
-            ajaxurl = URL(args = "dashboard.dl")
+            #ajaxurl = URL(args = "dashboard.dl")
+            vars = {}
+        ajaxurl = URL(c="cms", f="post",
+                      vars=vars, extension="dl")
 
         list_fields = ["series_id",
                        "priority",
@@ -930,8 +938,9 @@ class custom_WACOP(S3CRUD):
         output["updates_datalist"] = data
 
         # Filter Form
-        # @ToDo: This should use date/end_date not just date
         date_filter = S3DateFilter("date",
+                                   # If we introduce an end_date on Posts:
+                                   #["date", "end_date"],
                                    label = "",
                                    #hide_time = True,
                                    )
@@ -1338,8 +1347,7 @@ class event_Browse(custom_WACOP):
                   }
 
         # Filter Form
-        # @ToDo: This should use start_date/end_date not just date
-        date_filter = S3DateFilter("start_date",
+        date_filter = S3DateFilter(["start_date", "end_date"],
                                    label = "",
                                    #hide_time = True,
                                    )
@@ -1398,9 +1406,8 @@ class event_Browse(custom_WACOP):
                                                  alias=None)
 
         # Events dataTable
-        dtargs = {"dt_pagination": False,
+        dtargs = {"dt_pagination": True,
                   "dt_pageLength": 10,
-                  "dt_pagination": False,
                   "dt_searching": False,
                   #"dt_lengthMenu": None,
                   }
@@ -1414,7 +1421,8 @@ class event_Browse(custom_WACOP):
                         incident_id = None,
                         updateable = False,
                         start = 0,
-                        limit = 10,
+                        #limit = 10,
+                        limit = None,
                         tablename = "event_event",
                         list_fields = [(T("Name"), "name_click"),
                                        (T("Status"), "status"),
@@ -1550,8 +1558,7 @@ class incident_Browse(custom_WACOP):
                   }
 
         # Filter Form
-        # @ToDo: This should use start_date/end_date not just date
-        date_filter = S3DateFilter("date",
+        date_filter = S3DateFilter(["date", "end_date"],
                                    label = "",
                                    #hide_time = True,
                                    )
@@ -1614,9 +1621,8 @@ class incident_Browse(custom_WACOP):
                                                  alias=None)
 
         # Events dataTable
-        dtargs = {"dt_pagination": False,
+        dtargs = {"dt_pagination": True,
                   "dt_pageLength": 10,
-                  "dt_pagination": False,
                   "dt_searching": False,
                   #"dt_lengthMenu": None,
                   }
@@ -1630,7 +1636,8 @@ class incident_Browse(custom_WACOP):
                         incident_id = None,
                         updateable = False,
                         start = 0,
-                        limit = 10,
+                        #limit = 10,
+                        limit = None,
                         tablename = "event_incident",
                         list_fields = [(T("Name"), "name_click"),
                                        (T("Type"), "incident_type_id"),

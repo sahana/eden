@@ -332,10 +332,18 @@ def config(settings):
 
         # Processing Tags
         default = s3db.get_config(tablename, "onaccept")
-        onaccept = [default, cms_post_onaccept]
+        if isinstance(default, list):
+            # Customise has already been run once, so don't chain again
+            # (Happens during 1st_run as we run for main folder & Demo)
+            onaccept = default
+        else:
+            onaccept = [default, cms_post_onaccept]
+
+        from templates.WACOP.controllers import cms_post_list_layout
 
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       list_layout = cms_post_list_layout,
                        onaccept = onaccept,
                        )
 

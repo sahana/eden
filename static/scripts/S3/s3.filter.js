@@ -473,7 +473,15 @@ S3.search = {};
                 }
                 var jsDate = $this.calendarWidget('getJSDate', end),
                     urlValue = isoFormat(jsDate);
-                queries.push([urlVar, urlValue]);
+                if (end && $this.hasClass('end_date')) {
+                    // end_date
+                    urlVar = urlVar.split('__')[0];
+                    // @ToDo: filterURL should AND multiple $filter into 1 (will be required when we have multiple $filter in a single page)
+                    queries.push(['$filter', '(' + urlVar + ' ' + operator + ' "' + urlValue + '") or (' + urlVar + ' eq None)']);
+                } else {
+                    // Single field or start_date
+                    queries.push([urlVar, urlValue]);
+                }
             } else {
                 // Remove the filter (explicit null)
                 queries.push([urlVar, null]);
