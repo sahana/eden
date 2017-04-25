@@ -224,6 +224,15 @@ class S3DynamicTablesModel(S3Model):
                            label = T("Expose data for mobile clients"),
                            default = False,
                            ),
+                     Field("settings", "json",
+                           label = T("Settings"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Settings"),
+                                                           T("Configuration settings for this table (JSON object)"),
+                                                           ),
+                                         ),
+                           ),
                      #s3_comments(),
                      *s3_meta_fields())
 
