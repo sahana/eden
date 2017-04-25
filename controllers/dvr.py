@@ -819,6 +819,11 @@ def note():
 
     return s3_rest_controller()
 
+def note_type():
+    """ Note Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # =============================================================================
 # Household
 #
