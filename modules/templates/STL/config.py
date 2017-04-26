@@ -1964,6 +1964,13 @@ def config(settings):
                                                           ),
                                         )
 
+                    # Custom labels for referral types
+                    field = dtable.referral_type_id
+                    field.label = T("Referred to Case Management by")
+
+                    field = dtable.activity_referral_type_id
+                    field.label = T("Referred to Group Activities by")
+
                     # Subset of languages for the case-language component
                     ltable = s3db.dvr_case_language
                     field = ltable.language
@@ -2004,6 +2011,7 @@ def config(settings):
                                         "dvr_case.status_id",
                                         "dvr_case.date",
                                         "case_details.referral_type_id",
+                                        "case_details.activity_referral_type_id",
                                         "dvr_case.organisation_id",
                                         "dvr_case.human_resource_id",
                                         "first_name",

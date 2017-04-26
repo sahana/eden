@@ -617,6 +617,10 @@ class DVRCaseModel(S3Model):
                              label = T("Arrival Date"),
                              ),
                      self.dvr_referral_type_id(),
+                     self.dvr_referral_type_id(
+                         "activity_referral_type_id",
+                         label = T("Referred to Group Activities by"),
+                         ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
