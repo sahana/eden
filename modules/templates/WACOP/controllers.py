@@ -279,11 +279,15 @@ class custom_WACOP(S3CRUD):
                               )
             else:
                 if event_id:
+                    if f == "team":
+                        f = "group"
                     url = URL(c="event", f="event",
                               args=[event_id, f, "create.popup"],
                               vars={"refresh": dataTable_id},
                               )
                 elif incident_id:
+                    if f == "team":
+                        f = "group"
                     url = URL(c="event", f="incident",
                               args=[incident_id, f, "create.popup"],
                               vars={"refresh": dataTable_id},
