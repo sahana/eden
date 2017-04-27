@@ -3840,6 +3840,8 @@ class S3BulkImporter(object):
                               "prefix": "pr",
                               "name": "person"},
             }
+        # Keep track of which resources have been customised so we don't do this twice
+        self.customised = []
         self.errorList = []
         self.resultList = []
 
@@ -4038,11 +4040,13 @@ class S3BulkImporter(object):
             else:
                 S.close()
 
-            # Customise the resource
-            customise = current.deployment_settings.customise_resource(tablename)
-            if customise:
-                request = S3Request(prefix, name, current.request)
-                customise(request, tablename)
+            if tablename not in self.customised:
+                # Customise the resource
+                customise = current.deployment_settings.customise_resource(tablename)
+                if customise:
+                    request = S3Request(prefix, name, current.request)
+                    customise(request, tablename)
+                    self.customised.append(tablename)
 
             extra_data = None
             if task[5]:
@@ -4624,11 +4628,13 @@ class S3BulkImporter(object):
         tablename = "%s_%s" % (prefix, resourcename)
         resource = current.s3db.resource(tablename)
 
-        # Customise the resource
-        customise = current.deployment_settings.customise_resource(tablename)
-        if customise:
-            request = S3Request(prefix, resourcename, current.request)
-            customise(request, tablename)
+        if tablename not in self.customised:
+            # Customise the resource
+            customise = current.deployment_settings.customise_resource(tablename)
+            if customise:
+                request = S3Request(prefix, resourcename, current.request)
+                customise(request, tablename)
+                self.customised.append(tablename)
 
         auth = current.auth
         auth.rollback = True

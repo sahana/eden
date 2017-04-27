@@ -333,9 +333,8 @@ def config(settings):
         # Processing Tags
         default = s3db.get_config(tablename, "onaccept")
         if isinstance(default, list):
-            # Customise has already been run once, so don't chain again
-            # (Happens during 1st_run as we run for main folder & Demo)
             onaccept = default
+            onaccept.append(cms_post_onaccept)
         else:
             onaccept = [default, cms_post_onaccept]
 
