@@ -341,6 +341,8 @@ def config(settings):
 
         from templates.WACOP.controllers import cms_post_list_layout
 
+        s3.dl_no_header = True
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = ["series_id",
@@ -353,6 +355,7 @@ def config(settings):
                                       ],
                        list_layout = cms_post_list_layout,
                        onaccept = onaccept,
+                       orderby = "cms_post.date desc",
                        )
 
     settings.customise_cms_post_resource = customise_cms_post_resource

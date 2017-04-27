@@ -783,7 +783,7 @@ class custom_WACOP(S3CRUD):
             ajax_vars["event_post.incident_id"] = incident_id
         #else:
         #    #ajaxurl = URL(args = "dashboard.dl")
-        ajaxurl = URL(c="cms", f="post",
+        ajaxurl = URL(c="cms", f="post", args="datalist",
                       vars=ajax_vars, extension="dl")
 
         list_fields = ["series_id",
