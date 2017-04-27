@@ -219,6 +219,7 @@ class S3MobileSchema(object):
                             "datetime",
                             "boolean",
                             "reference",
+                            "upload",
                             )
 
     # -------------------------------------------------------------------------
