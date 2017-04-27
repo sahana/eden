@@ -235,7 +235,6 @@ class S3DataTable(object):
             real_end = self.end
             self.end = self.start + 1
         table = self.table(id, flist, action_col)
-        cache = None
         if pagination:
             self.end = real_end
             aadata = self.aadata(totalrows,
@@ -250,6 +249,8 @@ class S3DataTable(object):
                      "cacheUpper": self.end if filteredrows > self.end else filteredrows,
                      "cacheLastJson": aadata,
                      }
+        else:
+            cache = None
 
         html = self.htmlConfig(table,
                                id,
@@ -902,7 +903,7 @@ class S3DataTable(object):
                 else:
                     details.append(s3_unicode(row[field]))
             aadata.append(details)
-        structure["dataTable_id"] = id
+        structure["dataTable_id"] = id # Is this used anywhere? Can't see it used, so could be removed?
         structure["dataTable_filter"] = self.filterString
         structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
         structure["dataTable_sort"] = self.orderby

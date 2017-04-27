@@ -343,6 +343,14 @@ def config(settings):
 
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       list_fields = ["series_id",
+                                      "priority",
+                                      "status_id",
+                                      "date",
+                                      "body",
+                                      "created_by",
+                                      "tag.name",
+                                      ],
                        list_layout = cms_post_list_layout,
                        onaccept = onaccept,
                        )
@@ -355,6 +363,100 @@ def config(settings):
     settings.event.incident_teams_tab = "Units"
     # Uncomment to preserve linked Incidents when an Event is deleted
     settings.event.cascade_delete_incidents = False
+
+    # -------------------------------------------------------------------------
+    def customise_event_event_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
+
+        db = current.db
+        s3db = current.s3db
+
+        # Virtual Fields
+        etable = s3db.event_event
+        #append = etable._virtual_methods.append
+
+        def event_name(row):
+            return A(row["event_event.name"],
+                     _href = URL(c="event", f="event",
+                                 args=[row["event_event.id"], "custom"],
+                                 extension = "", # ensure no .aadata
+                                 ),
+                     )
+        #append(Field.Method("name_click", event_name))
+        etable.name_click = s3_fieldmethod("name_click",
+                                           event_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
+
+        def event_status(row):
+            if row["event_event.exercise"]:
+                status = T("Testing")
+            elif not row["event_event.end_date"]:
+                status = T("Open")
+            else:
+                status = T("Closed")
+            return status
+        #append(Field.Method("status", event_status))
+        etable.status = s3_fieldmethod("status", event_status)
+
+        itable = s3db.event_incident
+        def event_incidents(row):
+            query = (itable.event_id == row["event_event.id"]) & \
+                    (itable.deleted == False)
+            incidents = db(query).count()
+            return incidents
+        #append(Field.Method("incidents", event_incidents))
+        etable.incidents = s3_fieldmethod("incidents", event_incidents)
+
+        ertable = s3db.event_team
+        def event_resources(row):
+            query = (ertable.event_id == row["event_event.id"]) & \
+                    (ertable.deleted == False)
+            resources = db(query).count()
+            return resources
+        #append(Field.Method("resources", event_resources))
+        etable.resources = s3_fieldmethod("resources", event_resources)
+
+        ettable = s3db.event_tag
+        ttable = s3db.cms_tag
+        def event_tags(row):
+            query = (ettable.event_id == row["event_event.id"]) & \
+                    (ettable.deleted == False) & \
+                    (ettable.tag_id == ttable.id)
+            tags = db(query).select(ttable.name)
+            if tags:
+                tags = [t.name for t in tags]
+                tags = ", ".join(tags)
+                return tags
+            else:
+                return current.messages["NONE"]
+        #append(Field.Method("tags", event_tags))
+        etable.tags = s3_fieldmethod("tags", event_tags)
+
+        list_fields = [(T("Name"), "name_click"),
+                       (T("Status"), "status"),
+                       (T("Zero Hour"), "start_date"),
+                       (T("Closed"), "end_date"),
+                       (T("City"), "location.location_id.L3"),
+                       (T("State"), "location.location_id.L1"),
+                       (T("Tags"), "tags"),
+                       (T("Incidents"), "incidents"),
+                       (T("Resources"), "resources"),
+                       ]
+
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       "end_date",
+                                       "exercise",
+                                       ),
+                       list_fields = list_fields,
+                       orderby = "event_event.name",
+                       )
+
+    settings.customise_event_event_resource = customise_event_event_resource
 
     # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
@@ -474,6 +576,102 @@ def config(settings):
     settings.customise_event_event_controller = customise_event_event_controller
 
     # -------------------------------------------------------------------------
+    def customise_event_incident_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
+
+        s3db = current.s3db
+
+        # Virtual Fields
+        itable = s3db.event_incident
+        #append = itable._virtual_methods.append
+
+        def incident_name(row):
+            return A(row["event_incident.name"],
+                     _href = URL(c="event", f="incident",
+                                 args=[row["event_incident.id"], "custom"],
+                                 extension = "", # ensure no .aadata
+                                 ),
+                     )
+        #append(Field.Method("name_click", incident_name))
+        itable.name_click = s3_fieldmethod("name_click",
+                                           incident_name,
+                                           # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                           represent = lambda v: v,
+                                           )
+
+        def incident_status(row):
+            if row["event_incident.exercise"]:
+                status = T("Testing")
+            elif not row["event_incident.end_date"]:
+                status = T("Open")
+            else:
+                status = T("Closed")
+            return status
+        #append(Field.Method("status", incident_status))
+        itable.status = s3_fieldmethod("status", incident_status)
+
+        if r.method == "browse" or r.get_vars.get("browse"):
+            # Incident Browse
+            db = current.db
+            ertable = s3db.event_team
+            def incident_resources(row):
+                query = (ertable.event_id == row["event_incident.id"]) & \
+                        (ertable.deleted == False)
+                resources = db(query).count()
+                return resources
+            #append(Field.Method("resources", incident_resources))
+            itable.resources = s3_fieldmethod("resources", incident_resources)
+
+            ettable = s3db.event_tag
+            ttable = s3db.cms_tag
+            def incident_tags(row):
+                query = (ettable.incident_id == row["event_incident.id"]) & \
+                        (ettable.deleted == False) & \
+                        (ettable.tag_id == ttable.id)
+                tags = db(query).select(ttable.name)
+                if tags:
+                    tags = [t.name for t in tags]
+                    tags = ", ".join(tags)
+                    return tags
+                else:
+                    return current.messages["NONE"]
+            #append(Field.Method("tags", incident_tags))
+            itable.tags = s3_fieldmethod("tags", incident_tags)
+
+            list_fields = [(T("Name"), "name_click"),
+                           (T("Status"), "status"),
+                           (T("Type"), "incident_type_id"),
+                           (T("Zero Hour"), "date"),
+                           (T("Closed"), "end_date"),
+                           (T("City"), "location.location_id.L3"),
+                           (T("State"), "location.location_id.L1"),
+                           (T("Tags"), "tags"),
+                           (T("Resources"), "resources"),
+                           (T("Event"), "event_id"),
+                           ]
+        else:
+            # Homepage or Event Profile
+            list_fields = [(T("Name"), "name_click"),
+                           (T("Status"), "status"),
+                           (T("Type"), "incident_type_id"),
+                           "location_id",
+                           (T("Start"), "date"),
+                           ]
+
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       "end_date",
+                                       "exercise",
+                                       ),
+                       list_fields = list_fields,
+                       orderby = "event_incident.name",
+                       )
+
+    settings.customise_event_incident_resource = customise_event_incident_resource
+
+    # -------------------------------------------------------------------------
     def customise_event_incident_controller(**attr):
 
         s3db = current.s3db
@@ -483,16 +681,6 @@ def config(settings):
         # Load normal model to be able to override configuration
         table = s3db.event_incident
 
-        #def status_represent(value):
-        #    " Represent the closed field as Status Open/Closed instead of True/False "
-        #    if value is True:
-        #        return T("Closed")
-        #    elif value is False:
-        #        return T("Open")
-        #    else:
-        #        return current.messages["NONE"]
-        #table.closed.label = T("Status")
-        #table.closed.represent = status_represent
         table.event_id.readable = table.event_id.writable = True
 
         # Custom Browse
@@ -693,21 +881,137 @@ def config(settings):
     settings.customise_event_incident_controller = customise_event_incident_controller
 
     # -------------------------------------------------------------------------
-    def customise_event_team_resource(r, tablename):
-        # @ToDo: Have both Team & Event_Team in 1 form
+    def customise_event_human_resource_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
 
         s3db = current.s3db
 
-        #s3db.event_team.group_id.label = T("Resource")
+        # Virtual Fields
+        # Always used from either the Event or Incident context
+        f = r.function
+        record_id = r.id
+        ehrtable = s3db.event_human_resource
+        hr_represent = ehrtable.human_resource_id.represent
+        def hr_name(row):
+            hr_id = row["event_human_resource.human_resource_id"]
+            return A(hr_represent(hr_id),
+                     _href = URL(c="event", f=f,
+                                 args=[record_id, "human_resource", hr_id, "profile"],
+                                 ),
+                     )
+        ehrtable.name_click = s3_fieldmethod("name_click",
+                                             hr_name,
+                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                             # @ToDo: Bulk lookups
+                                             represent = lambda v: v,
+                                             )
 
-        from s3 import S3SQLCustomForm
+        s3db.configure(tablename,
+                       #crud_form = crud_form,
+                       extra_fields = ("human_resource_id",
+                                       ),
+                       list_fields = [(T("Name"), "name_click"),
+                                      (T("Title"), "human_resource_id$job_title_id"),
+                                      "human_resource_id$organisation_id",
+                                      (T("Email"), "human_resource_id$person_id$email.value"),
+                                      (T("Phone"), "human_resource_id$person_id$phone.value"),
+                                      "status",
+                                      (T("Notes"), "comments"),
+                                      ],
+                       orderby = "event_human_resource.human_resource_id",
+                       )
+
+    settings.customise_event_human_resource_resource = customise_event_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_organisation_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
+
+        s3db = current.s3db
+
+        # Virtual Fields
+        # Always used from either the Event or Incident context
+        f = r.function
+        record_id = r.id
+        eotable = s3db.event_organisation
+        org_represent = eotable.organisation_id.represent
+        def org_name(row):
+            organisation_id = row["event_organisation.organisation_id"]
+            return A(org_represent(organisation_id),
+                     _href = URL(c="event", f=f,
+                                 args=[record_id, "organisation", organisation_id, "profile"],
+                                 ),
+                     )
+        eotable.name_click = s3_fieldmethod("name_click",
+                                            org_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+
+        s3db.configure(tablename,
+                       #crud_form = crud_form,
+                       extra_fields = ("organisation_id",
+                                       ),
+                       list_fields = [(T("Name"), "name_click"),
+                                      "status",
+                                      "comments",
+                                      ],
+                       orderby = "event_organisation.organisation_id",
+                       )
+
+    settings.customise_event_organisation_resource = customise_event_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_team_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod, S3SQLCustomForm
+
+        s3db = current.s3db
+        ertable = s3db.event_team
+
+        #sertable.group_id.label = T("Resource")
+
+        # Form
+        # @ToDo: Have both Team & Event_Team in 1 form
         crud_form = S3SQLCustomForm("incident_id",
                                     "group_id",
                                     "status_id",
                                     )
 
+        # Virtual Fields
+        # Always used from either the Event or Incident context
+        f = r.function
+        record_id = r.id
+        group_represent = ertable.group_id.represent
+        def team_name(row):
+            group_id = row["event_team.group_id"]
+            return A(group_represent(group_id),
+                     _href = URL(c="event", f=f,
+                                 args=[record_id, "group", group_id, "profile"],
+                                 extension = "", # ensure no .aadata
+                                 ),
+                     )
+        ertable.name_click = s3_fieldmethod("name_click",
+                                            team_name,
+                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                            # @ToDo: Bulk lookups
+                                            represent = lambda v: v,
+                                            )
+
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       extra_fields = ("group_id",
+                                       ),
+                       list_fields = [(T("Name"), "name_click"),
+                                      "status_id",
+                                      ],
+                       orderby = "pr_group.name",
                        )
 
     settings.customise_event_team_resource = customise_event_team_resource
@@ -765,6 +1069,44 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # -------------------------------------------------------------------------
+    def customise_project_task_resource(r, tablename):
+
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
+
+        s3db = current.s3db
+
+        # Virtual Fields
+        # Always used from either the Event or Incident context
+        f = r.function
+        record_id = r.id
+        def task_name(row):
+            return A(row["project_task.name"],
+                     _href = URL(c="event", f="event",
+                                 args=[event_id, "task", row["project_task.id"], "profile"],
+                                 ),
+                     )
+        s3db.project_task.name_click = s3_fieldmethod("name_click",
+                                                      task_name,
+                                                      # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                      represent = lambda v: v,
+                                                      )
+
+        s3db.configure(tablename,
+                       #crud_form = crud_form,
+                       extra_fields = ("name",
+                                       ),
+                       list_fields = ["status",
+                                      (T("Description"), "name_click"),
+                                      (T("Created"), "created_on"),
+                                      (T("Due"), "date_due"),
+                                      ],
+                       orderby = "project_task.date_due",
+                       )
+
+    settings.customise_project_task_resource = customise_project_task_resource
 
 # =============================================================================
 def wacop_event_rheader(r, tabs=[]):

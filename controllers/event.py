@@ -309,6 +309,18 @@ def team_status():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def human_resource():
+    """ Events <> Human Resources """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def organisation():
+    """ Events <> Organisations """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def compose():
     """ Send message to people/teams """
 
