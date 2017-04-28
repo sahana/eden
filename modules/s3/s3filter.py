@@ -1720,7 +1720,14 @@ class S3OptionsFilter(S3FilterWidget):
                 # If the search field is a foreign key, then try to perform
                 # a reverse lookup of primary IDs in the lookup table which
                 # are linked to at least one record in the resource => better
-                # scalability.
+                # scalability
+                # => only if the number of lookup options is much (!) smaller than
+                #    the number of records in the resource to filter, otherwise
+                #    this can have the opposite effect (e.g. person_id being the
+                #    search field); however, counting records in both tables before
+                #    deciding this would be even less scalable, hence:
+                # @todo: implement a widget option to enforce forward-lookup if
+                #        the look-up table is the big table
                 rows = None
                 if field:
                     ktablename, key, m = s3_get_foreign_key(field, m2m=False)
@@ -1731,44 +1738,33 @@ class S3OptionsFilter(S3FilterWidget):
                         ktable = current.s3db.table(ktablename)
                         key_field = ktable[key]
                         colname = str(key_field)
-                        join = None
-                        left = None
 
-                        accessible_query = current.auth.s3_accessible_query
+                        # Find only values linked to records the user is
+                        # permitted to read, and apply any resource filters
+                        # (= use the resource query)
+                        query = resource.get_query()
 
-                        # Respect the validator of the foreign key field.
-
-                        # Commented because questionable: We want a filter
-                        # option for every current field value, even if it
-                        # doesn't match the validator (don't we?)
-
-                        #requires = field.requires
-                        #if requires:
-                            #if not isinstance(requires, list):
-                                #requires = [requires]
-                            #requires = requires[0]
-                            #if isinstance(requires, IS_EMPTY_OR):
-                                #requires = requires.other
-                            #if isinstance(requires, IS_ONE_OF_EMPTY):
-                                #query, left = requires.query(ktable)
-                        #else:
-                            #query = accessible_query("read", ktable)
-                        #query &= (key_field == field)
-
-                        # The user should only see values used
-                        # in records they're permitted to see:
-                        query = accessible_query("read", resource.table)
-
-                        # Apply any resource filter
+                        # Must include rfilter joins when using the resource
+                        # query (both inner and left):
                         rfilter = resource.rfilter
                         if rfilter:
-                            query &= rfilter.get_query()
                             join = rfilter.get_joins()
                             left = rfilter.get_joins(left=True)
+                        else:
+                            join = left = None
 
+                        # The actual query for the look-up table
+                        # @note: the inner join here is required even if rfilter
+                        #        already left-joins the look-up table, because we
+                        #        must make sure look-up values are indeed linked
+                        #        to the resource => not redundant!
                         query &= (key_field == field) & \
-                                 accessible_query("read", ktable)
+                                 current.auth.s3_accessible_query("read", ktable)
 
+                        # If the filter field is in a joined table itself,
+                        # then we also need the join for that table (this
+                        # could be redundant, but checking that will likely
+                        # take more effort than we can save by avoiding it)
                         joins = rfield.join
                         for tname in joins:
                             query &= joins[tname]
@@ -1803,11 +1799,12 @@ class S3OptionsFilter(S3FilterWidget):
                 # but not endlessly scalable:
                 if rows is None:
                     rows = resource.select([selector],
-                                           limit=None,
-                                           orderby=field,
-                                           groupby=groupby,
-                                           virtual=virtual,
-                                           as_rows=True)
+                                           limit = None,
+                                           orderby = field,
+                                           groupby = groupby,
+                                           virtual = virtual,
+                                           as_rows = True,
+                                           )
 
                 opt_keys = [] # Can't use set => would make orderby pointless
                 if rows:
