@@ -263,8 +263,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
-
         db = current.db
         s3db = current.s3db
         table = s3db.cms_post                      
@@ -272,90 +270,182 @@ def config(settings):
         table.series_id.readable = table.series_id.writable = True
         table.status_id.readable = table.status_id.writable = True
 
-        crud_fields = [(T("Type"), "series_id"),
-                       (T("Priority"), "priority"),
-                       (T("Status"), "status_id"),
-                       (T("Title"), "title"),
-                       (T("Text"), "body"),
-                       (T("Location"), "location_id"),
-                       # Tags are added client-side
-                       ]
+        method = r.method
+        if method in ("create", "update"):
+            # Custom Form
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
-        if r.tablename != "event_incident":
-            if r.tablename == "event_event" and r.method != "validate": # Validate comes in with no r.id!
-                from gluon import IS_EMPTY_OR
-                from s3 import IS_ONE_OF
-                itable = s3db.event_incident
-                query = (itable.event_id == r.id) & \
-                        (itable.closed == False) & \
-                        (itable.deleted == False)
-                set = db(query)
-                f = s3db.event_post.incident_id
-                f.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(set, "event_incident.id",
-                                          f.represent,
-                                          orderby="event_incident.name",
-                                          sort=True))
-            crud_fields.insert(0, S3SQLInlineComponent("incident_post",
-                                                       fields = [("", "incident_id")],
-                                                       label = T("Incident"),
-                                                       multiple = False,
-                                                       ))
+            crud_fields = [(T("Type"), "series_id"),
+                           (T("Priority"), "priority"),
+                           (T("Status"), "status_id"),
+                           (T("Title"), "title"),
+                           (T("Text"), "body"),
+                           (T("Location"), "location_id"),
+                           # Tags are added client-side
+                           ]
 
-        crud_form = S3SQLCustomForm(*crud_fields
-                                    )
+            if r.tablename != "event_incident":
+                if r.tablename == "event_event":
+                    from gluon import IS_EMPTY_OR
+                    from s3 import IS_ONE_OF
+                    itable = s3db.event_incident
+                    query = (itable.event_id == r.id) & \
+                            (itable.closed == False) & \
+                            (itable.deleted == False)
+                    set = db(query)
+                    f = s3db.event_post.incident_id
+                    f.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(set, "event_incident.id",
+                                              f.represent,
+                                              orderby="event_incident.name",
+                                              sort=True))
+                crud_fields.insert(0, S3SQLInlineComponent("incident_post",
+                                                           fields = [("", "incident_id")],
+                                                           label = T("Incident"),
+                                                           multiple = False,
+                                                           ))
 
-        # Client support for Tags
-        appname = r.application
-        s3 = current.response.s3
-        scripts_append = s3.scripts.append
-        if s3.debug:
-            scripts_append("/%s/static/scripts/tag-it.js" % appname)
-        else:
-            scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
-        scripts_append("/%s/static/themes/WACOP/js/update_tags.js" % appname)
-        if r.method == "create":
-            s3.jquery_ready.append('''wacop_update_tags("")''')
-        elif r.method == "update":
-            ttable = s3db.cms_tag
-            ltable = s3db.cms_tag_post
-            if r.tablename == "cms_post":
-                post_id = r.id
+            crud_form = S3SQLCustomForm(*crud_fields
+                                        )
+
+            # Client support for Tags
+            appname = r.application
+            s3 = current.response.s3
+            scripts_append = s3.scripts.append
+            if s3.debug:
+                scripts_append("/%s/static/scripts/tag-it.js" % appname)
             else:
-                post_id = r.component.id
-            query = (ltable.post_id == post_id) & \
-                    (ltable.tag_id == ttable.id)
-            tags = db(query).select(ttable.name)
-            tags = [tag.name for tag in tags]
-            tags = ",".join(tags)
-            s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
+                scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
+            scripts_append("/%s/static/themes/WACOP/js/update_tags.js" % appname)
+            if method == "create":
+                s3.jquery_ready.append('''wacop_update_tags("")''')
+            elif method == "update":
+                ttable = s3db.cms_tag
+                ltable = s3db.cms_tag_post
+                if r.tablename == "cms_post":
+                    post_id = r.id
+                else:
+                    post_id = r.component.id
+                query = (ltable.post_id == post_id) & \
+                        (ltable.tag_id == ttable.id)
+                tags = db(query).select(ttable.name)
+                tags = [tag.name for tag in tags]
+                tags = ",".join(tags)
+                s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
 
-        # Processing Tags
-        default = s3db.get_config(tablename, "onaccept")
-        if isinstance(default, list):
-            onaccept = default
-            onaccept.append(cms_post_onaccept)
-        else:
-            onaccept = [default, cms_post_onaccept]
+            # Processing Tags
+            default = s3db.get_config(tablename, "onaccept")
+            if isinstance(default, list):
+                onaccept = default
+                onaccept.append(cms_post_onaccept)
+            else:
+                onaccept = [default, cms_post_onaccept]
 
-        from templates.WACOP.controllers import cms_post_list_layout
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           onaccept = onaccept,
+                           )
 
-        s3.dl_no_header = True
+        elif method in ("custom", "datalist", "filter"):
+            # dataList configuration
+            from templates.WACOP.controllers import cms_post_list_layout
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = ["series_id",
-                                      "priority",
-                                      "status_id",
-                                      "date",
-                                      "body",
-                                      "created_by",
-                                      "tag.name",
-                                      ],
-                       list_layout = cms_post_list_layout,
-                       onaccept = onaccept,
-                       orderby = "cms_post.date desc",
-                       )
+            s3 = current.response.s3
+            s3.dl_no_header = True
+
+            s3db.configure(tablename,
+                           list_fields = ["series_id",
+                                          "priority",
+                                          "status_id",
+                                          "date",
+                                          "body",
+                                          "created_by",
+                                          "tag.name",
+                                          ],
+                           list_layout = cms_post_list_layout,
+                           orderby = "cms_post.date desc",
+                           )
+
+            if method in ("custom", "filter"):
+                # Filter Widgets
+                from s3 import S3DateFilter, \
+                               S3LocationFilter, \
+                               S3OptionsFilter, \
+                               S3TextFilter
+
+                if method == "filter":
+                    # Apply filter_vars
+                    get_vars = r.get_vars
+                    for k, v in get_vars.iteritems():
+                        # We only expect a maximum of 1 of these, no need to append
+                        from s3 import FS
+                        s3.filter = (FS(k) == v)
+
+                date_filter = S3DateFilter("date",
+                                           # If we introduce an end_date on Posts:
+                                           #["date", "end_date"],
+                                           label = "",
+                                           #hide_time = True,
+                                           )
+                date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
+
+                from templates.WACOP.controllers import text_filter_formstyle
+
+                filter_widgets = [S3TextFilter(["body",
+                                                ],
+                                               formstyle = text_filter_formstyle,
+                                               label = T("Search"),
+                                               _placeholder = T("Enter search term…"),
+                                               ),
+                                  S3OptionsFilter("series_id",
+                                                  label = "",
+                                                  noneSelectedText = "Type", # T() added in widget
+                                                  widget = "multiselect",
+                                                  ),
+                                  S3OptionsFilter("priority",
+                                                  label = "",
+                                                  noneSelectedText = "Priority", # T() added in widget
+                                                  widget = "multiselect",
+                                                  ),
+                                  S3OptionsFilter("status_id",
+                                                  label = "",
+                                                  noneSelectedText = "Status", # T() added in widget
+                                                  widget = "multiselect",
+                                                  ),
+                                  S3OptionsFilter("created_by$organisation_id",
+                                                  label = "",
+                                                  noneSelectedText = "Source", # T() added in widget
+                                                  ),
+                                  S3OptionsFilter("tag_post.tag_id",
+                                                  label = "",
+                                                  noneSelectedText = "Tag", # T() added in widget
+                                                  ),
+                                  date_filter,
+                                  ]
+                if r.tablename == "event_event" or \
+                   (method == "filter" and get_vars.get("event_post.event_id")):
+                    # Event Profile
+                    filter_widgets.insert(1, S3OptionsFilter("incident_post.incident_id",
+                                                             label = "",
+                                                             noneSelectedText = "Incident", # T() added in widget
+                                                             widget = "multiselect",
+                                                             ))
+
+                user = current.auth.user
+                if user:
+                    filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
+                                                             label = "",
+                                                             options = {"*": T("All"),
+                                                                        user.id: T("My Bookmarks"),
+                                                                        },
+                                                             cols = 2,
+                                                             multiple = False,
+                                                             table = False,
+                                                             ))
+
+                s3db.configure(tablename,
+                               filter_widgets = filter_widgets,
+                               )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 

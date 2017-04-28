@@ -1,4 +1,4 @@
-// Tags for Posts (Alerts/Updates)
+// Tags for Posts (Alerts/Updates) in create/update forms (dataList tags done in controllers.py _updates_html()
 function wacop_update_tags(tags) {
     // @ToDo: i18n
     // @ToDo: Populate for Update forms

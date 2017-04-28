@@ -1754,15 +1754,25 @@ class S3OptionsFilter(S3FilterWidget):
                             #query = accessible_query("read", ktable)
                         #query &= (key_field == field)
 
-                        query = accessible_query("read", ktable) & \
-                                (key_field == field)
+                        # The user should only see values used
+                        # in records they're permitted to see:
+                        query = accessible_query("read", resource.table)
+
+                        # Apply any resource filter
+                        rfilter = resource.rfilter
+                        if rfilter:
+                            query &= rfilter.get_query()
+                            joins = rfilter.get_joins()
+                            for tname in joins:
+                                query &= joins[tname]
+                            left = rfilter.get_joins(left=True)
+
+                        query &= (key_field == field) & \
+                                 accessible_query("read", ktable)
+
                         joins = rfield.join
                         for tname in joins:
                             query &= joins[tname]
-
-                        # We do not allow the user to see values only used
-                        # in records he's not permitted to see:
-                        query &= accessible_query("read", resource.table)
 
                         # Filter options by location?
                         location_filter = opts.get("location_filter")
@@ -1784,7 +1794,8 @@ class S3OptionsFilter(S3FilterWidget):
                         rows = current.db(query).select(key_field,
                                                         resource._id.min(),
                                                         groupby=key_field,
-                                                        left=left)
+                                                        left=left,
+                                                        )
 
                 # If we can not perform a reverse lookup, then we need
                 # to do a forward lookup of all unique values of the
@@ -2704,22 +2715,27 @@ class S3Filter(S3Method):
     def _options(self, r, **attr):
         """
             Get the updated options for the filter form for the target
-            resource as JSON
+            resource as JSON.
+            NB These use a fresh resource, so filter vars are not respected.
+            s3.filter if respected, so if you need to filter the options, then
+            can apply filter vars to s3.filter in customise() if the controller
+            is not the same as the calling one!
 
             GET filter.options
 
             @param r: the S3Request
-            @param attr: additional controller parameters
+            @param attr: additional controller parameters (ignored currently)
         """
 
         resource = self.resource
-        get_config = resource.get_config
 
         options = {}
 
-        filter_widgets = get_config("filter_widgets", None)
+        filter_widgets = resource.get_config("filter_widgets", None)
         if filter_widgets:
-            fresource = current.s3db.resource(resource.tablename)
+            fresource = current.s3db.resource(resource.tablename,
+                                              filter = current.response.s3.filter,
+                                              )
 
             for widget in filter_widgets:
                 if hasattr(widget, "ajax_options"):
