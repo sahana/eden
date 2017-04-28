@@ -1731,6 +1731,7 @@ class S3OptionsFilter(S3FilterWidget):
                         ktable = current.s3db.table(ktablename)
                         key_field = ktable[key]
                         colname = str(key_field)
+                        join = None
                         left = None
 
                         accessible_query = current.auth.s3_accessible_query
@@ -1762,9 +1763,7 @@ class S3OptionsFilter(S3FilterWidget):
                         rfilter = resource.rfilter
                         if rfilter:
                             query &= rfilter.get_query()
-                            joins = rfilter.get_joins()
-                            for tname in joins:
-                                query &= joins[tname]
+                            join = rfilter.get_joins()
                             left = rfilter.get_joins(left=True)
 
                         query &= (key_field == field) & \
@@ -1794,6 +1793,7 @@ class S3OptionsFilter(S3FilterWidget):
                         rows = current.db(query).select(key_field,
                                                         resource._id.min(),
                                                         groupby=key_field,
+                                                        join=join,
                                                         left=left,
                                                         )
 
