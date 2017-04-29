@@ -1534,10 +1534,14 @@ class S3OptionsFilter(S3FilterWidget):
 
         # Get the options
         ftype, options, noopt = self._options(resource, values=values)
-        if noopt:
-            return SPAN(noopt, _class="no-options-available")
+        if options is None:
+            options = []
+            hide_widget = True
+            hide_noopt = ""
         else:
             options = OrderedDict(options)
+            hide_widget = False
+            hide_noopt = " hide"
 
         # Any-All-Option : for many-to-many fields the user can
         # search for records containing all the options or any
@@ -1609,9 +1613,10 @@ class S3OptionsFilter(S3FilterWidget):
 
 
         # Add widget class and default class
-        classes = set(attr.get("_class", "").split()) | \
-                  set((widget_class, self._class))
-        attr["_class"] = " ".join(classes) if classes else None
+        classes = attr.get("_class", "").split() + [widget_class, self._class]
+        if hide_widget:
+            classes.append("hide")
+        attr["_class"] = " ".join(set(classes)) if classes else None
 
         # Render the widget
         dummy_field = Storage(name=name,
@@ -1619,7 +1624,12 @@ class S3OptionsFilter(S3FilterWidget):
                               requires=IS_IN_SET(options, multiple=True))
         widget = w(dummy_field, values, **attr)
 
-        return TAG[""](any_all, widget)
+        return TAG[""](any_all,
+                       widget,
+                       SPAN(noopt,
+                            _class="no-options-available%s" % hide_noopt,
+                            ),
+                       )
 
     # -------------------------------------------------------------------------
     def ajax_options(self, resource):
@@ -1633,8 +1643,8 @@ class S3OptionsFilter(S3FilterWidget):
         attr = self._attr(resource)
         ftype, options, noopt = self._options(resource)
 
-        if noopt:
-            options = {attr["_id"]: str(noopt)}
+        if options is None:
+            options = {attr["_id"]: {"empty": str(noopt)}}
         else:
             #widget_type = opts["widget"]
             # Use groupedopts widget if we specify cols, otherwise assume multiselect
@@ -1959,7 +1969,7 @@ class S3OptionsFilter(S3FilterWidget):
             options.insert(0, ("", "")) # XML("&nbsp;") better?
 
         # Sort the options
-        return (ftype, options, None)
+        return (ftype, options, opts.get("no_opts", NOOPT))
 
     # -------------------------------------------------------------------------
     @staticmethod

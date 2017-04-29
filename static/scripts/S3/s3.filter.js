@@ -931,7 +931,8 @@ S3.search = {};
      * updateOptions: Update the options of all filter widgets
      */
     var updateOptions = function(options) {
-
+        
+        var filter_id;
         for (filter_id in options) {
             var widget = $('#' + filter_id);
 
@@ -939,70 +940,96 @@ S3.search = {};
                 var newopts = options[filter_id];
 
                 // OptionsFilter
-                if ($(widget).hasClass('options-filter')) {
-                    if ($(widget)[0].tagName.toLowerCase() == 'select') {
+                if (widget.hasClass('options-filter')) {
+                    if (widget[0].tagName.toLowerCase() == 'select') {
                         // Standard SELECT
-                        var selected = $(widget).val(),
-                            s=[], opts='', group, item, value, label, tooltip;
 
                         // Update HTML
                         if (newopts.hasOwnProperty('empty')) {
 
-                            // @todo: implement
+                            // Ensure the widget is hidden
+                            if (widget.hasClass('multiselect-filter-widget') &&
+                                widget.multiselect('instance')) {
+                                widget.multiselect('refresh');
+                                widget.multiselect('instance').button.hide();
+                            } else if (widget.hasClass('groupedopts-filter-widget') &&
+                                widget.groupedopts('instance')) {
+                                widget.groupedopts('refresh');
+                            } else {
+                                widget.hide();
+                            }
 
-                        } else
-
-                        if (newopts.hasOwnProperty('groups')) {
-                            for (var i=0, len=newopts.groups.length; i < len; i++) {
-                                group = newopts.groups[i];
-                                if (group.label) {
-                                    opts += '<optgroup label="' + group.label + '">';
-                                }
-                                for (var j=0, lenj=group.items.length; j < lenj; j++) {
-                                    item = group.items[j];
-                                    value = item[0].toString();
-                                    if (selected && $.inArray(value, selected) >= 0) {
-                                        s.push(value);
-                                    }
-                                    opts += '<option value="' + value + '"';
-                                    tooltip = item[3];
-                                    if (tooltip) {
-                                        opts += ' title="' + tooltip + '"';
-                                    }
-                                    label = item[1];
-                                    opts += '>' + label + '</option>';
-                                }
-                                if (group.label) {
-                                    opts += '</optgroup>';
-                                }
+                            // Show the no-opts
+                            var noopt = widget.siblings('.no-options-available');
+                            if (noopt.length) {
+                                noopt.html(newopts.empty);
+                                noopt.removeClass('hide').show();
                             }
 
                         } else {
-                            for (var i=0, len=newopts.length; i < len; i++) {
-                                item = newopts[i];
-                                value = item[0].toString();
-                                label = item[1];
-                                if (selected && $.inArray(value, selected) >= 0) {
-                                    s.push(value);
+
+                            var selected = widget.val(),
+                                s=[], opts='', group, item, value, label, tooltip;
+
+                            if (newopts.hasOwnProperty('groups')) {
+                                for (var i=0, len=newopts.groups.length; i < len; i++) {
+                                    group = newopts.groups[i];
+                                    if (group.label) {
+                                        opts += '<optgroup label="' + group.label + '">';
+                                    }
+                                    for (var j=0, lenj=group.items.length; j < lenj; j++) {
+                                        item = group.items[j];
+                                        value = item[0].toString();
+                                        if (selected && $.inArray(value, selected) >= 0) {
+                                            s.push(value);
+                                        }
+                                        opts += '<option value="' + value + '"';
+                                        tooltip = item[3];
+                                        if (tooltip) {
+                                            opts += ' title="' + tooltip + '"';
+                                        }
+                                        label = item[1];
+                                        opts += '>' + label + '</option>';
+                                    }
+                                    if (group.label) {
+                                        opts += '</optgroup>';
+                                    }
                                 }
-                                opts += '<option value="' + value + '">' + label + '</option>';
+
+                            } else {
+                                for (var i=0, len=newopts.length; i < len; i++) {
+                                    item = newopts[i];
+                                    value = item[0].toString();
+                                    label = item[1];
+                                    if (selected && $.inArray(value, selected) >= 0) {
+                                        s.push(value);
+                                    }
+                                    opts += '<option value="' + value + '">' + label + '</option>';
+                                }
                             }
-                        }
-                        $(widget).html(opts);
+                            widget.html(opts);
 
-                        // Update SELECTed value
-                        if (s) {
-                            $(widget).val(s);
-                        }
+                            // Update SELECTed value
+                            if (s) {
+                                widget.val(s);
+                            }
 
-                        // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') &&
-                            widget.groupedopts('instance')) {
-                            widget.groupedopts('refresh');
-                        } else
-                        if (widget.hasClass('multiselect-filter-widget') &&
-                            widget.multiselect('instance')) {
-                            widget.multiselect('refresh');
+                            // Hide the no-opts
+                            var noopt = widget.siblings('.no-options-available');
+                            if (noopt.length) {
+                                noopt.hide();
+                            }
+                            // Refresh UI widgets
+                            if (widget.hasClass('groupedopts-filter-widget') &&
+                                widget.groupedopts('instance')) {
+                                widget.groupedopts('refresh');
+                            } else if (widget.hasClass('multiselect-filter-widget') &&
+                                widget.multiselect('instance')) {
+                                widget.multiselect('refresh');
+                                widget.multiselect('instance').button.show();
+                            } else {
+                                widget.removeClass('hide').show();
+                            }
                         }
 
                     } else {

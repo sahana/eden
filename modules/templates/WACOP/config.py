@@ -400,25 +400,27 @@ def config(settings):
                                   S3OptionsFilter("series_id",
                                                   label = "",
                                                   noneSelectedText = "Type", # T() added in widget
-                                                  widget = "multiselect",
+                                                  no_opts = "",
                                                   ),
                                   S3OptionsFilter("priority",
                                                   label = "",
                                                   noneSelectedText = "Priority", # T() added in widget
-                                                  widget = "multiselect",
+                                                  no_opts = "",
                                                   ),
                                   S3OptionsFilter("status_id",
                                                   label = "",
                                                   noneSelectedText = "Status", # T() added in widget
-                                                  widget = "multiselect",
+                                                  no_opts = "",
                                                   ),
                                   S3OptionsFilter("created_by$organisation_id",
                                                   label = "",
                                                   noneSelectedText = "Source", # T() added in widget
+                                                  no_opts = "",
                                                   ),
                                   S3OptionsFilter("tag_post.tag_id",
                                                   label = "",
                                                   noneSelectedText = "Tag", # T() added in widget
+                                                  no_opts = "",
                                                   ),
                                   date_filter,
                                   ]
@@ -428,7 +430,7 @@ def config(settings):
                     filter_widgets.insert(1, S3OptionsFilter("incident_post.incident_id",
                                                              label = "",
                                                              noneSelectedText = "Incident", # T() added in widget
-                                                             widget = "multiselect",
+                                                             no_opts = "",
                                                              ))
 
                 user = current.auth.user
@@ -795,84 +797,6 @@ def config(settings):
             # Call standard postp
             if callable(standard_prep):
                 result = standard_prep(r)
-
-            #if r.method == "summary":
-            #    # Map (only) in common area
-            #    settings.ui.summary = ({"name": "table",
-            #                            "label": "Table",
-            #                            "widgets": [{"method": "datatable"}]
-            #                            },
-            #                           {"name": "charts",
-            #                            "label": "Report",
-            #                            "widgets": [{"method": "report",
-            #                                         "ajax_init": True}]
-            #                            },
-            #                           {"common": True,
-            #                            "name": "map",
-            #                            "label": "Map",
-            #                            "widgets": [{"method": "map",
-            #                                         "ajax_init": True}],
-            #                            },
-            #                           )
-
-            #    from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
-            #    from templates.WACOP.controllers import filter_formstyle_summary, text_filter_formstyle
-
-            #    # @ToDo: This should use date/end_date not just date
-            #    date_filter = S3DateFilter("date",
-            #                               #formstyle = filter_formstyle_summary,
-            #                               label = "",
-            #                               #hide_time = True,
-            #                               )
-            #    date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
-
-            #    filter_widgets = [S3TextFilter(["name",
-            #                                    "comments",
-            #                                    ],
-            #                                   formstyle = text_filter_formstyle,
-            #                                   label = T("Search"),
-            #                                   _placeholder = T("Enter search term…"),
-            #                                   ),
-            #                      S3OptionsFilter("organisation_id",
-            #                                      label = "",
-            #                                      noneSelectedText = "Lead Organization",
-            #                                      widget = "multiselect",
-            #                                      ),
-            #                      S3OptionsFilter("closed",
-            #                                      formstyle = filter_formstyle_summary,
-            #                                      options = {"*": T("All"),
-            #                                                 False: T("Open"),
-            #                                                 True: T("Closed"),
-            #                                                 },
-            #                                      cols = 1,
-            #                                      multiple = False,
-            #                                      ),
-            #                      S3OptionsFilter("incident_type_id",
-            #                                      formstyle = filter_formstyle_summary,
-            #                                      label = T("Incident Type"),
-            #                                      noneSelectedText = "All",
-            #                                      widget = "multiselect",
-            #                                      ),
-            #                      date_filter,
-            #                      ]
-
-            #    list_fields = ["closed",
-            #                   "name",
-            #                   (T("Type"), "incident_type_id"),
-            #                   "location_id",
-            #                   (T("Start"), "date"),
-            #                   (T("End"), "end_date"),
-            #                   "event_id",
-            #                   ]
-
-            #    s3db.configure("event_incident",
-            #                   filter_widgets = filter_widgets,
-            #                   list_fields = list_fields,
-            #                   )
-
-                # @ToDo: Configure Timeline
-                # Last 5 days (@ToDo: Configurable Start/End & deduce appropriate unit)
-                # Qty of Newly-opened Incidents per Unit
 
             if r.method == "assign":
                 current.menu.main = ""
