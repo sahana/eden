@@ -11,6 +11,9 @@ from s3 import S3Represent
 INDIVIDUAL_SUPPORT = "Individual Support"
 MENTAL_HEALTH = "Mental Health"
 
+# Protection assessment categories
+THREAT = "A.THREAT"
+
 def config(settings):
     """
         Settings for the SupportToLife deployment in Turkey
@@ -675,7 +678,7 @@ def config(settings):
 
         # Get the "THREAT" root node
         ttable = current.s3db.dvr_vulnerability_type
-        query = (ttable.name == "THREAT") & \
+        query = (ttable.name == THREAT) & \
                 (ttable.deleted == False)
         row = current.db(query).select(ttable.id, limitby=(0, 1)).first()
         if not row:
@@ -1088,6 +1091,9 @@ def config(settings):
             field = table.end_date
             field.label = T("Closed on")
             field.readable = True
+            # Allow to manually set closed_on (for historic records, only create)
+            if not r.component_id:
+                field.writable = True
 
             # Customise "completed" flag
             # => label as "Status" and use drop-down for open/closed
