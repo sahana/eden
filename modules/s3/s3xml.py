@@ -2214,12 +2214,21 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def tree2json(cls, tree, pretty_print=False, native=False):
+    def tree2json(cls, tree, pretty_print=False, native=False, as_dict=False):
         """
             Converts an element tree into JSON
 
             @param tree: the element tree
-            @param pretty_print: provide pretty formatted output
+            @param pretty_print: indent and insert line breaks into
+                                 the JSON string to make it human-readable
+                                 (useful for debug)
+            @param native: tree is S3XML
+            @param as_dict: return a JSON-serializable object instead of
+                            a string, useful for embedding the data in
+                            other structures
+
+            @return: a JSON string (with as_dict=False),
+                     or a JSON-serializable object (with as_dict=True)
         """
 
         if isinstance(tree, etree._ElementTree):
@@ -2240,8 +2249,10 @@ class S3XML(S3Codec):
             else:
                 root_dict["s3"] = json.loads(root_dict["s3"])
 
-        if pretty_print:
-            js = json.dumps(root_dict, indent=4)
+        if as_dict:
+            return root_dict
+        elif pretty_print:
+            js = json.dumps(root_dict, indent=2)
             return "\n".join([l.rstrip() for l in js.splitlines()])
         else:
             return json.dumps(root_dict, separators=SEPARATORS)
