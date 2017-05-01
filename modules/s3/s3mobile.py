@@ -534,6 +534,45 @@ class S3MobileSchema(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def has_mobile_form(tablename):
+        """
+            Check whether a table exposes a mobile form
+
+            @param tablename: the table name
+
+            @return: True|False
+        """
+
+        from s3model import DYNAMIC_PREFIX
+        if tablename.startswith(DYNAMIC_PREFIX):
+
+            ttable = current.s3db.s3_table
+            query = (ttable.name == tablename) & \
+                    (ttable.mobile_form == True) & \
+                    (ttable.deleted != True)
+            row = current.db(query).select(ttable.id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                return True
+        else:
+
+            forms = current.deployment_settings.get_mobile_forms()
+            for spec in forms:
+                if isinstance(spec, (tuple, list)):
+                    if len(spec) > 1 and not isinstance(spec[1], dict):
+                        tn = spec[1]
+                    else:
+                        tn = spec[0]
+                else:
+                    tn = spec
+                if tn == tablename:
+                    return True
+
+        return False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def mobile_form(resource):
         """
             Get the mobile form for a resource
@@ -829,10 +868,7 @@ class S3MobileCRUD(S3Method):
     """
         Mobile Data Handler
 
-        responds to GET /prefix/name/mdata.json     (Data download)
-                    POST /prefix/name/mdata.json    (Data upload)
-                    GET /prefix/name/mform.json     (Schema download)
-                    GET /prefix/name/xform.xml      (XForms analogously, later...)
+        responds to GET /prefix/name/mform.json     (Schema download)
     """
 
     # -------------------------------------------------------------------------
@@ -850,27 +886,10 @@ class S3MobileCRUD(S3Method):
 
         output = {}
 
-        if method == "mdata":
+        if method == "mform":
             if representation == "json":
                 if http == "GET":
-                    # Data download
-                    output = self.mdata_export(r, **attr)
-
-                elif http == "POST":
-                    # Data upload
-                    output = self.mdata_import(r, **attr)
-
-                else:
-                    r.error(405, current.ERROR.BAD_METHOD)
-            else:
-                r.error(415, current.ERROR.BAD_FORMAT)
-
-        elif method == "mform":
-            if representation == "json":
-                if http == "GET":
-                    # Form download
                     output = self.mform(r, **attr)
-
                 else:
                     r.error(405, current.ERROR.BAD_METHOD)
             else:
@@ -878,340 +897,6 @@ class S3MobileCRUD(S3Method):
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def mdata_export(r, **attr):
-        """
-            Provide data for mobile app
-
-            @param r: the S3Request instance
-            @param attr: controller attributes
-
-            @returns: a JSON string
-        """
-
-        ID = "id"
-        PID = "pe_id"
-        UID = current.xml.UID
-        s3db = current.s3db
-        resource = r.resource
-        resource_tablename = resource.tablename
-
-        # Output in mdata format
-        output = {resource_tablename: []}
-        # Lookup to ensure we extract ID, UID fields & joining FKs for all tables
-        tablenames = [resource_tablename]
-        # Keep track of which FKs we have so that we can replace them with UID
-        fks = {resource_tablename: {}}
-
-        # Default to the 'mobile_list_fields' setting
-        list_fields = resource.get_config("mobile_list_fields")
-        if not list_fields:
-            # Fallback to the 'list_fields' setting
-            list_fields = resource.get_config("list_fields")
-        if not list_fields:
-            # Fallback to all readable fields
-            list_fields = [field.name for field in resource.readable_fields()]
-        else:
-            # Ensure that we have all UID fields included
-            # Ensure we have FKs between all linked records
-            components = resource.components
-            def find_fks(join):
-                """
-                    Helper function to get the FKs from a Join
-                """
-                for q in (join.first, join.second):
-                    if isinstance(q, Field):
-                        if q.referent:
-                            # FK
-                            if q.tablename == resource_tablename:
-                                fieldname = q.name
-                                if fieldname not in list_fields:
-                                    list_fields.append(fieldname)
-                                    fks[resource_tablename][fieldname] = str(q.referent)
-                            else:
-                                tn = q.tablename
-                                if tn not in fks:
-                                    fks[tn] = {}
-                                fks[tn][q.name] = str(q.referent)
-                    elif isinstance(q, Query):
-                        find_fks(q)
-
-            for selector in list_fields:
-                rfield = S3ResourceField(resource, selector)
-                tablename = rfield.tname
-                if tablename not in tablenames:
-                    output[tablename] = []
-                    tablenames.append(tablename)
-                    # Find the FKs
-                    if tablename in fks:
-                        this_fks = fks[tablename]
-                    else:
-                        fks[tablename] = this_fks = {}
-
-                    for tn in rfield.join:
-                        join = rfield.join[tn]
-                        find_fks(join)
-
-                    # Add the ID, UUID & any FKs to list_fields
-                    if "." in selector:
-                        component, fieldname = selector.split(".", 1)
-                        id_field = "%s.%s" % (component, ID)
-                        if id_field not in list_fields:
-                            list_fields.append(id_field)
-                        uuid_field = "%s.%s" % (component, UID)
-                        if uuid_field not in list_fields:
-                            list_fields.append(uuid_field)
-                        if "$" in fieldname:
-                            fk, fieldname = fieldname.split("$", 1)
-                            fk_field = "%s.%s" % (component, fk)
-                            if fk_field not in list_fields:
-                                list_fields.append(fk_field)
-                            ctablename = components[component].table._tablename # Format to handle Aliases
-                            if ctablename not in fks:
-                                fks[ctablename] = {}
-                            #referent = s3db[ctablename][fk].referent
-                            if fk not in fks[ctablename]:
-                                #fks[ctablename][fk] = str(referent)
-                                fks[ctablename][fk] = str(s3db[ctablename][fk].referent)
-                            id_field = "%s.%s$%s" % (component, fk, ID)
-                            if id_field not in list_fields:
-                                list_fields.append(id_field)
-                            uuid_field = "%s.%s$%s" % (component, fk, UID)
-                            if uuid_field not in list_fields:
-                                list_fields.append(uuid_field)
-                            # Restore once list_fields working
-                            #if "$" in fieldname:
-                            #    # e.g. address.location_id$parent$uuid
-                            #    fk2, fieldname = fieldname.split("$", 1)
-                            #    tablename = referent.tablename
-                            #    if fk2 not in fks[tablename]:
-                            #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
-                            #    id_field = "%s.%s$%s$%s" % (component, fk, fk2, ID)
-                            #    if id_field not in list_fields:
-                            #        list_fields.append(id_field)
-                            #    uuid_field = "%s.%s$%s$%s" % (component, fk, fk2, UID)
-                            #    if uuid_field not in list_fields:
-                            #        list_fields.append(uuid_field)
-                        else:
-                            for fk in this_fks:
-                                fk_field = "%s.%s" % (component, fk)
-                                if fk_field not in list_fields:
-                                    list_fields.append(fk_field)
-
-                    elif "$" in selector:
-                        fk, fieldname = selector.split("$", 1)
-                        if fk not in list_fields:
-                            list_fields.append(fk)
-                        #referent = s3db[resource_tablename][fk].referent
-                        if fk not in fks[resource_tablename]:
-                            #fks[resource_tablename][fk] = str(referent)
-                            fks[resource_tablename][fk] = str(s3db[resource_tablename][fk].referent)
-                        id_field = "%s$%s" % (fk, ID)
-                        if id_field not in list_fields:
-                            list_fields.append(id_field)
-                        uuid_field = "%s$%s" % (fk, UID)
-                        if uuid_field not in list_fields:
-                            list_fields.append(uuid_field)
-                        # Restore once list_fields working
-                        #if "$" in fieldname:
-                        #    # e.g. location_id$parent$uuid
-                        #    fk2, fieldname = fieldname.split("$", 1)
-                        #    tablename = referent.tablename
-                        #    if fk2 not in fks[tablename]:
-                        #        fks[tablename][fk2] = str(s3db[tablename][fk2].referent)
-                        #    id_field = "%s$%s$%s" % (fk, fk2, ID)
-                        #    if id_field not in list_fields:
-                        #        list_fields.append(id_field)
-                        #    uuid_field = "%s$%s$%s" % (fk, fk2, UID)
-                        #    if uuid_field not in list_fields:
-                        #        list_fields.append(uuid_field)
-
-
-        if ID not in list_fields:
-            list_fields.append(ID)
-        if UID not in list_fields:
-            list_fields.append(UID)
-
-        data = resource.select(list_fields, raw_data=True)
-        rows = data.rows
-
-        # Build lookups of IDs to UIDs & PIDs to UIDs
-        id_lookup = {}
-        pid_lookup = {}
-        for record in rows:
-            tablenames = {}
-            for field in record:
-                value = record[field]
-                tablename, field = field.split(".", 1)
-                if tablename not in tablenames:
-                    tablenames[tablename] = {ID: None,
-                                             PID: None,
-                                             UID: None,
-                                             }
-                if field == ID:
-                    tablenames[tablename][ID] = value
-                elif field == PID:
-                    tablenames[tablename][PID] = value
-                elif field == UID:
-                    tablenames[tablename][UID] = value
-            for tablename in tablenames:
-                if tablename not in id_lookup:
-                    id_lookup[tablename] = {}
-                id_lookup[tablename][tablenames[tablename][ID]] = tablenames[tablename][UID]
-                pid = tablenames[tablename][PID]
-                if pid:
-                    pid_lookup[pid] = tablenames[tablename][UID]
-
-        # Convert to S3Mobile format
-        # & replace FKs with UUID
-        for record in rows:
-            # Keep track of which tables have no data
-            empty = []
-            row = {tablename: [] for tablename in tablenames}
-            for field in record:
-                value = record[field]
-                tablename, field = field.split(".", 1)
-                if field == ID:
-                    # Don't include these in output
-                    continue
-                this_fks = fks[tablename]
-                if field in this_fks:
-                    if value:
-                        # Replace ID with UUID:
-                        referent = this_fks[field]
-                        tn, fn = referent.split(".", 1)
-                        if fn == PID:
-                            value = pid_lookup[value]
-                        else:
-                            value = id_lookup[tn][value]
-
-                elif field == "uuid":
-                    if value is None:
-                        empty.append(tablename)
-                        continue
-                elif isinstance(value, datetime.date) or \
-                     isinstance(value, datetime.datetime):
-                    value = s3_encode_iso_datetime(value).decode("utf-8")
-                row[tablename].append((field, value))
-            for tablename in tablenames:
-                if tablename not in empty:
-                    output[tablename].append(row[tablename])
-
-        output = json.dumps(output, separators=SEPARATORS)
-        current.response.headers = {"Content-Type": "application/json"}
-        return output
-
-    # -------------------------------------------------------------------------
-    def mdata_import(self, r, **attr):
-        """
-            Process data submission from mobile app
-
-            @param r: the S3Request instance
-            @param attr: controller attributes
-
-            @returns: JSON message
-        """
-
-        output = {}
-
-        # Extract the data
-        files = {}
-        content_type = r.env.get("content_type")
-        if content_type and content_type.startswith("multipart/"):
-
-            # Record data
-            s = r.post_vars.get("data")
-            try:
-                data = json.loads(s)
-            except JSONERRORS:
-                msg = sys.exc_info()[1]
-                r.error(400, msg)
-
-            # Attached files
-            import cgi
-            for key in r.post_vars:
-                value = r.post_vars[key]
-                if isinstance(value, cgi.FieldStorage) and value.filename:
-                    files[value.filename] = value.file
-        else:
-            s = r.body
-            s.seek(0)
-            try:
-                data = json.load(s)
-            except JSONERRORS:
-                msg = sys.exc_info()[1]
-                r.error(400, msg)
-
-        xml = current.xml
-
-        resource = r.resource
-        tablename = resource.tablename
-
-        records = data.get(tablename)
-        if records:
-
-            # Create import tree
-            TAG = xml.TAG
-            ATTRIBUTE = xml.ATTRIBUTE
-            IGNORE_FIELDS = xml.IGNORE_FIELDS
-            FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
-
-            RESOURCE = TAG.resource
-            DATA = TAG.data
-            NAME = ATTRIBUTE.name
-            FIELD = ATTRIBUTE.field
-
-            rfields = resource.fields
-            table = resource.table
-
-            root = etree.Element(TAG.root)
-            SubElement = etree.SubElement
-
-            for record in records:
-
-                row = SubElement(root, RESOURCE)
-                row.set(NAME, tablename)
-
-                for fieldname, value in record.items():
-                    if value is None:
-                        continue
-                    elif fieldname not in rfields:
-                        continue
-                    elif fieldname in IGNORE_FIELDS:
-                        continue
-                    elif fieldname in FIELDS_TO_ATTRIBUTES:
-                        row.set(fieldname, value)
-                    else:
-                        col = SubElement(row, DATA)
-                        col.set(FIELD, fieldname)
-                        ftype = table[fieldname].type
-                        if ftype == "upload":
-                            # Field value is name of attached file
-                            filename = s3_unicode(value)
-                            if filename in files:
-                                col.set("filename", filename)
-                        else:
-                            col.text = s3_unicode(value)
-
-            tree = etree.ElementTree(root)
-
-            # Try importing the tree
-            # @todo: error handling
-            try:
-                resource.import_xml(tree, files=files)
-            except IOError:
-                r.unauthorised()
-            else:
-                import_result = self.import_result(resource)
-
-            output = xml.json_message(**import_result)
-        else:
-            output = xml.json_message(True, 200, "No records to import")
-
-        current.response.headers = {"Content-Type": "application/json"}
         return output
 
     # -------------------------------------------------------------------------
@@ -1239,45 +924,5 @@ class S3MobileCRUD(S3Method):
 
         current.response.headers = {"Content-Type": "application/json"}
         return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def import_result(resource):
-        """
-            Extract import results from the resource to report back
-            to the mobile client
-
-            @param resource: the S3Resource that has been imported to
-
-            @returns: a dict with import result details
-        """
-
-        info = {}
-
-        if "uuid" not in resource.fields:
-            return info
-
-        db = current.db
-
-        created_ids = resource.import_created
-        updated_ids = resource.import_updated
-
-        uuid_field = resource.table.uuid
-
-        if created_ids:
-            query = (resource._id.belongs(created_ids))
-            rows = db(query).select(uuid_field,
-                                    limitby = (0, len(created_ids)),
-                                    )
-            info["created"] = [row.uuid for row in rows]
-
-        if updated_ids:
-            query = (resource._id.belongs(updated_ids))
-            rows = db(query).select(uuid_field,
-                                    limitby = (0, len(updated_ids)),
-                                    )
-            info["updated"] = [row.uuid for row in rows]
-
-        return info
 
 # END =========================================================================
