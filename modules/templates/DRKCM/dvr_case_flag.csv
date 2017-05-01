@@ -1,0 +1,9 @@
+Name,External,Not Transferable,Comments
+Priority,false,false,
+Security,false,false,
+Medical,false,false,
+Mail,false,false,
+Sought,false,false,
+Police,true,true,"With the police, still entitled to benefits, cannot be transferred"
+Hospital,true,true,"In Hospital, still entitled to benefits, cannot be transferred"
+AFA/UMF,false,false,"AFA=Without Parents pending Youth Service,UMF=Visiting pending Decision"

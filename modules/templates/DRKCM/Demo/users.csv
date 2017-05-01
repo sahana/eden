@@ -1,0 +1,12 @@
+First Name,Last Name,Email,Password,Role,Organisation,Facility Type,Office,Language
+BEA,Administration,administration@example.com,eden,ADMINISTRATION,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Head of Administration,admin_head@example.com,eden,ADMIN_HEAD,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Head of Security,security_head@example.com,eden,SECURITY_HEAD,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Medical,medical@example.com,eden,MEDICAL,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Quartiermanager,quartier@example.com,eden,QUARTIER,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Scan,scan@example.com,eden,SCAN,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Security,security@example.com,eden,SECURITY,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+BEA,Staff,staff@example.com,eden,STAFF,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+Caterer,User,caterer@example.com,eden,"SCAN,FOOD_STATS",Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+Police,User,police@example.com,eden,POLICE,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
+RP,User,rp@example.com,eden,RP,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
