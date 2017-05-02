@@ -224,6 +224,7 @@ def config(settings):
     # CMS Content Management
     #
     settings.cms.bookmarks = True
+    settings.cms.richtext = True
     settings.cms.show_tags = True
 
     # -------------------------------------------------------------------------
