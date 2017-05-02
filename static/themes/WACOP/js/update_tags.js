@@ -15,6 +15,6 @@ function wacop_update_tags(tags) {
         singleFieldNode: $('#cms_post_tags'),
         autocomplete: {
             source: S3.Ap.concat('/cms/tag/tag_list.json')
-        }
+        }//,
     });    
 }
