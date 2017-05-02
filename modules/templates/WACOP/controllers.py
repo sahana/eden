@@ -1828,31 +1828,26 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                   limitby=(0, 1)
                                   ).first()
         if exists:
-            bookmark_btn = A(ICON("bookmark"),
-                             SPAN("remove bookmark",
-                                  _class = "show-for-sr",
-                                  ),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
-                                (URL(c="cms", f="post",
-                                     args=[record_id, "remove_bookmark"]),
-                                 list_id,
-                                 record_id),
-                             _title=T("Remove Bookmark"),
-                             )
+            bookmark = A(ICON("bookmark"),
+                         SPAN("remove bookmark",
+                              _class = "show-for-sr",
+                              ),
+                         _class="bookmark",
+                         _title=T("Remove Bookmark"),
+                         )
         else:
-            bookmark_btn = A(ICON("bookmark-empty"),
-                             SPAN("bookmark",
-                                  _class = "show-for-sr",
-                                  ),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
-                                (URL(c="cms", f="post",
-                                     args=[record_id, "add_bookmark"]),
-                                 list_id,
-                                 record_id),
-                             _title=T("Add Bookmark"),
-                             )
+            bookmark = A(ICON("bookmark-empty"),
+                         SPAN("bookmark",
+                              _class = "show-for-sr",
+                              ),
+                         _class="bookmark",
+                         _title=T("Add Bookmark"),
+                         )
+        bookmark["_data-c"] = "cms"
+        bookmark["_data-f"] = "post"
+        bookmark["_data-i"] = record_id
     else:
-        bookmark_btn = ""
+        bookmark = ""
 
     divider = LI("|")
     divider["_aria-hidden"] = "true"
@@ -1875,7 +1870,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                       ),
                     _class="item",
                     ),
-                 LI(bookmark_btn,
+                 LI(bookmark,
                     _class="item",
                     ),
                  LI(A(I(_class="fa fa-users",
