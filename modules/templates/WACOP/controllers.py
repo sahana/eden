@@ -741,14 +741,12 @@ class custom_WACOP(S3CRUD):
         ajaxurl = URL(c="cms", f="post", args="datalist",
                       vars=ajax_vars, extension="dl")
 
-        list_fields = ["series_id",
-                       "priority",
-                       "status_id",
-                       "date",
-                       "body",
-                       "created_by",
-                       "tag.name",
-                       ]
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        # list_fields defined in customise() to be DRY
+        list_fields = s3db.get_config(tablename, "list_fields")
 
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
@@ -788,10 +786,6 @@ class custom_WACOP(S3CRUD):
 
         # Filter Form
         # Widgets defined in customise() to be visible to filter.options
-        customise = current.deployment_settings.customise_resource(tablename)
-        if customise:
-            customise(r, tablename)
-
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
 
         ajax_vars.pop("refresh")
@@ -1849,6 +1843,42 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         bookmark = ""
 
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = (documents,)
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except (IOError, TypeError):
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(ICON("file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(ICON("paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
     divider = LI("|")
     divider["_aria-hidden"] = "true"
 
@@ -1940,6 +1970,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                               P(body),
                               _class="dl-body",
                               ),
+                          docs,
                           TAG["FOOTER"](tag_list,
                                         _class="footer",
                                         ),

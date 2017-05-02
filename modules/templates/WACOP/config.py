@@ -283,6 +283,13 @@ def config(settings):
                            (T("Text"), "body"),
                            (T("Location"), "location_id"),
                            # Tags are added client-side
+                           S3SQLInlineComponent("document",
+                                                name = "file",
+                                                label = T("Files"),
+                                                fields = [("", "file"),
+                                                          #"comments",
+                                                          ],
+                                                ),
                            ]
 
             if r.tablename != "event_incident":
@@ -362,6 +369,7 @@ def config(settings):
                                           "body",
                                           "created_by",
                                           "tag.name",
+                                          "document.file",
                                           ],
                            list_layout = cms_post_list_layout,
                            orderby = "cms_post.date desc",
