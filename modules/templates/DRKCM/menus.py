@@ -46,10 +46,6 @@ class S3MainMenu(default.S3MainMenu):
             return [
                 MM("Cases", c="security", f="person"),
                 #MM("ToDo", c="project", f="task"),
-                MM("Check-In / Check-Out", c="cr", f="shelter",
-                   args = [shelter_id, "check-in"],
-                   check = shelter_id is not None,
-                   ),
                 MM("Confiscation", c="security", f="seized_item"),
             ]
 

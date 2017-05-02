@@ -9,9 +9,6 @@ from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
 
-# Limit after which a checked-out resident is reported overdue (days)
-ABSENCE_LIMIT = 5
-
 def config(settings):
     """
         DRKCM Template: Case Management, German Red Cross
@@ -184,208 +181,6 @@ def config(settings):
     settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
 
     # -------------------------------------------------------------------------
-    def check_in_status(site, person):
-        """
-            Determine the current check-in status for a person
-
-            @param site: the site record (instance!)
-            @param person: the person record
-
-            see org_SiteCheckInMethod for details of the return value
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        result = {"valid": False,
-                  "check_in_allowed": False,
-                  "check_out_allowed": False,
-                  }
-        person_id = person.id
-
-        # Check the case status
-        ctable = s3db.dvr_case
-        cstable = s3db.dvr_case_status
-        query = (ctable.person_id == person_id) & \
-                (cstable.id == ctable.status_id)
-        status = db(query).select(cstable.is_closed,
-                                  limitby = (0, 1),
-                                  ).first()
-
-        if status and status.is_closed:
-            result["error"] = T("Not currently a resident")
-            return result
-
-        # Find the Registration
-        stable = s3db.cr_shelter
-        rtable = s3db.cr_shelter_registration
-        query = (stable.site_id == site.site_id) & \
-                (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id) & \
-                (rtable.deleted != True)
-        registration = db(query).select(rtable.id,
-                                        rtable.registration_status,
-                                        limitby=(0, 1),
-                                        ).first()
-        if not registration:
-            result["error"] = T("Registration not found")
-            return result
-
-        result["valid"] = True
-
-        # Check current status
-        reg_status = registration.registration_status
-        if reg_status == 2:
-            # Currently checked-in at this site
-            status = 1
-        elif reg_status == 3:
-            # Currently checked-out from this site
-            status = 2
-        else:
-            # No previous status
-            status = None
-        result["status"] = status
-
-        check_in_allowed = True
-        check_out_allowed = True
-
-        # Check if we have any case flag to deny check-in or to show advise
-        ftable = s3db.dvr_case_flag
-        ltable = s3db.dvr_case_flag_case
-        query = (ltable.person_id == person_id) & \
-                (ltable.deleted != True) & \
-                (ftable.id == ltable.flag_id) & \
-                (ftable.deleted != True)
-        flags = db(query).select(ftable.name,
-                                 ftable.deny_check_in,
-                                 ftable.deny_check_out,
-                                 ftable.advise_at_check_in,
-                                 ftable.advise_at_check_out,
-                                 ftable.advise_at_id_check,
-                                 ftable.instructions,
-                                 )
-
-        from gluon import DIV, H4, P
-        info = []
-        append = info.append
-        for flag in flags:
-            if flag.deny_check_in:
-                check_in_allowed = False
-            if flag.deny_check_out:
-                check_out_allowed = False
-
-            # Show flag instructions?
-            if status == 1:
-                advise = flag.advise_at_check_out
-            elif status == 2:
-                advise = flag.advise_at_check_in
-            else:
-                advise = flag.advise_at_check_in or flag.advise_at_check_out
-            if advise:
-                instructions = flag.instructions
-                if instructions is not None:
-                    instructions = instructions.strip()
-                if not instructions:
-                    instructions = current.T("No instructions for this flag")
-                append(DIV(H4(T(flag.name)),
-                           P(instructions),
-                           _class="checkpoint-instructions",
-                           ))
-        if info:
-            result["info"] = DIV(_class="checkpoint-advise", *info)
-
-        result["check_in_allowed"] = check_in_allowed
-        result["check_out_allowed"] = check_out_allowed
-
-        return result
-
-    # -------------------------------------------------------------------------
-    def site_check_in(site_id, person_id):
-        """
-            When a person is checked-in to a Shelter then update the
-            Shelter Registration
-
-            @param site_id: the site_id of the shelter
-            @param person_id: the person_id to check-in
-        """
-
-        s3db = current.s3db
-        db = current.db
-
-        # Find the Registration
-        stable = s3db.cr_shelter
-        rtable = s3db.cr_shelter_registration
-
-        query = (stable.site_id == site_id) & \
-                (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id) & \
-                (rtable.deleted != True)
-        registration = db(query).select(rtable.id,
-                                        rtable.registration_status,
-                                        limitby=(0, 1),
-                                        ).first()
-        if not registration:
-            return
-
-        # Update the Shelter Registration
-        registration.update_record(check_in_date = current.request.utcnow,
-                                   registration_status = 2,
-                                   )
-        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-        if onaccept:
-            onaccept(registration)
-
-    # -------------------------------------------------------------------------
-    def site_check_out(site_id, person_id):
-        """
-            When a person is checked-out from a Shelter then update the
-            Shelter Registration
-
-            @param site_id: the site_id of the shelter
-            @param person_id: the person_id to check-in
-        """
-
-        s3db = current.s3db
-        db = current.db
-
-        # Find the Registration
-        stable = s3db.cr_shelter
-        rtable = s3db.cr_shelter_registration
-        query = (stable.site_id == site_id) & \
-                (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id) & \
-                (rtable.deleted != True)
-        registration = db(query).select(rtable.id,
-                                        rtable.registration_status,
-                                        limitby=(0, 1),
-                                        ).first()
-        if not registration:
-            return
-
-        # Update the Shelter Registration
-        registration.update_record(check_out_date = current.request.utcnow,
-                                    registration_status = 3,
-                                    )
-        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-        if onaccept:
-            onaccept(registration)
-
-    # -------------------------------------------------------------------------
-    def org_site_check(site_id):
-        """ Custom tasks for scheduled site checks """
-
-        # Update transferability
-        from controllers import update_transferability
-        result = update_transferability(site_id=site_id)
-
-        # Log the result
-        msg = "Update Transferability: " \
-              "%s transferable cases found for site %s" % (result, site_id)
-        current.log.info(msg)
-
-    settings.org.site_check = org_site_check
-
-    # -------------------------------------------------------------------------
     def customise_auth_user_resource(r, tablename):
 
         current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
@@ -406,28 +201,19 @@ def config(settings):
             else:
                 result = True
 
-            if r.method == "check-in":
-                # Configure check-in methods
-                current.s3db.configure("cr_shelter",
-                                       site_check_in = site_check_in,
-                                       site_check_out = site_check_out,
-                                       check_in_status = check_in_status,
-                                       )
+            has_role = current.auth.s3_has_role
+            if has_role("SECURITY") and not has_role("ADMIN"):
+                # Security can access nothing in cr/shelter except
+                # Dashboard and Check-in/out UI
+                current.auth.permission.fail()
 
-            else:
-                has_role = current.auth.s3_has_role
-                if has_role("SECURITY") and not has_role("ADMIN"):
-                    # Security can access nothing in cr/shelter except
-                    # Dashboard and Check-in/out UI
-                    current.auth.permission.fail()
+            if r.interactive:
 
-                if r.interactive:
-
-                    resource = r.resource
-                    resource.configure(filter_widgets = None,
-                                       insertable = False,
-                                       deletable = False,
-                                       )
+                resource = r.resource
+                resource.configure(filter_widgets = None,
+                                   insertable = False,
+                                   deletable = False,
+                                   )
 
             if r.component_name == "shelter_unit":
                 # Expose "transitory" flag for housing units
@@ -451,12 +237,6 @@ def config(settings):
             # Call standard postp
             if callable(standard_postp):
                 output = standard_postp(r, output)
-
-            # Hide side menu and rheader for check-in
-            if r.method == "check-in":
-                current.menu.options = None
-                if isinstance(output, dict):
-                    output["rheader"] = ""
 
             # Custom view for shelter inspection
             if r.method == "inspection":
@@ -554,10 +334,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
-    # Uncomment this to enable tracking of transfer origin/destination sites
-    settings.dvr.track_transfer_sites = True
-    # Uncomment this to enable features to manage transferability of cases
-    settings.dvr.manage_transferability = True
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
     settings.dvr.household_size = "auto"
     # Uncomment this to enable features to manage case flags
@@ -593,58 +369,58 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
-    def event_overdue(code, interval):
-        """
-            Get cases (person_ids) for which a certain event is overdue
+    #def event_overdue(code, interval):
+        #"""
+            #Get cases (person_ids) for which a certain event is overdue
 
-            @param code: the event code
-            @param interval: the interval in days
-        """
+            #@param code: the event code
+            #@param interval: the interval in days
+        #"""
 
-        db = current.db
-        s3db = current.s3db
+        #db = current.db
+        #s3db = current.s3db
 
-        ttable = s3db.dvr_case_event_type
-        ctable = s3db.dvr_case
-        stable = s3db.dvr_case_status
-        etable = s3db.dvr_case_event
+        #ttable = s3db.dvr_case_event_type
+        #ctable = s3db.dvr_case
+        #stable = s3db.dvr_case_status
+        #etable = s3db.dvr_case_event
 
-        # Get event type ID
-        query = (ttable.code == code) & \
-                (ttable.deleted != True)
-        row = db(query).select(ttable.id, limitby=(0, 1)).first()
-        if row:
-            type_id = row.id
-        else:
-            # No such event
-            return set()
+        ## Get event type ID
+        #query = (ttable.code == code) & \
+                #(ttable.deleted != True)
+        #row = db(query).select(ttable.id, limitby=(0, 1)).first()
+        #if row:
+            #type_id = row.id
+        #else:
+            ## No such event
+            #return set()
 
-        # Determine deadline
-        now = current.request.utcnow
-        then = now - datetime.timedelta(days=interval)
+        ## Determine deadline
+        #now = current.request.utcnow
+        #then = now - datetime.timedelta(days=interval)
 
-        # Check only open cases
-        join = stable.on((stable.id == ctable.status_id) & \
-                         (stable.is_closed == False))
+        ## Check only open cases
+        #join = stable.on((stable.id == ctable.status_id) & \
+                         #(stable.is_closed == False))
 
-        # Join only events after the deadline
-        left = etable.on((etable.person_id == ctable.person_id) & \
-                         (etable.type_id == type_id) & \
-                         (etable.date != None) & \
-                         (etable.date >= then) & \
-                         (etable.deleted != True))
+        ## Join only events after the deadline
+        #left = etable.on((etable.person_id == ctable.person_id) & \
+                         #(etable.type_id == type_id) & \
+                         #(etable.date != None) & \
+                         #(etable.date >= then) & \
+                         #(etable.deleted != True))
 
-        # ...and then select the rows which don't have any
-        query = (ctable.archived == False) & \
-                (ctable.date < then.date()) & \
-                (ctable.deleted == False)
-        rows = db(query).select(ctable.person_id,
-                                left = left,
-                                join = join,
-                                groupby = ctable.person_id,
-                                having = (etable.date.max() == None),
-                                )
-        return set(row.person_id for row in rows)
+        ## ...and then select the rows which don't have any
+        #query = (ctable.archived == False) & \
+                #(ctable.date < then.date()) & \
+                #(ctable.deleted == False)
+        #rows = db(query).select(ctable.person_id,
+                                #left = left,
+                                #join = join,
+                                #groupby = ctable.person_id,
+                                #having = (etable.date.max() == None),
+                                #)
+        #return set(row.person_id for row in rows)
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
@@ -913,62 +689,12 @@ def config(settings):
                 table = r.table
                 ctable = s3db.dvr_case
 
-                # Used in both list_fields and rheader
-                table.absence = Field.Method("absence", drk_absence)
-
                 if r.representation in ("html", "iframe", "aadata"):
                     # Delivers HTML, so restrict to GUI:
-                    absence_field = (T("Checked-out"), "absence")
                     configure(extra_fields = ["shelter_registration.registration_status",
                                               "shelter_registration.check_out_date",
                                               ],
                               )
-                else:
-                    absence_field = None
-
-                # List modes
-                check_overdue = False
-                show_family_transferable = False
-
-                # Labels
-                FAMILY_TRANSFERABLE = T("Family Transferable")
-
-                if not r.record:
-
-                    overdue = get_vars.get("overdue")
-                    if overdue in ("check-in", "!check-in"):
-                        # Filter case list for overdue check-in
-                        reg_status = FS("shelter_registration.registration_status")
-                        checkout_date = FS("shelter_registration.check_out_date")
-
-                        checked_out = (reg_status == 3)
-                        # Must catch None explicitly because it is neither
-                        # equal nor unequal with anything according to SQL rules
-                        not_checked_out = ((reg_status == None) | (reg_status != 3))
-
-                        # Due date for check-in
-                        due_date = r.utcnow - \
-                                   datetime.timedelta(days=ABSENCE_LIMIT)
-
-                        if overdue[0] == "!":
-                            query = not_checked_out | \
-                                    checked_out & (checkout_date >= due_date)
-                        else:
-                            query = checked_out & \
-                                    ((checkout_date < due_date) | (checkout_date == None))
-                        resource.add_filter(query)
-                        check_overdue = True
-
-                    elif overdue:
-                        # Filter for cases for which no such event was
-                        # registered for at least 3 days:
-                        record_ids = event_overdue(overdue.upper(), 3)
-                        query = FS("id").belongs(record_ids)
-                        resource.add_filter(query)
-
-                    show_family_transferable = get_vars.get("show_family_transferable")
-                    if show_family_transferable == "1":
-                        show_family_transferable = True
 
                 if not r.component:
 
@@ -1240,18 +966,6 @@ def config(settings):
 
                             # Additional filters for privileged roles
                             if privileged():
-                                # Add filter for family transferability
-                                if show_family_transferable:
-                                    ft_filter = S3OptionsFilter("dvr_case.household_transferable",
-                                                                label = FAMILY_TRANSFERABLE,
-                                                                options = {True: T("Yes"),
-                                                                        False: T("No"),
-                                                                        },
-                                                                cols = 2,
-                                                                hidden = True,
-                                                                )
-                                    filter_widgets.append(ft_filter)
-
                                 # Add filter for registration date
                                 reg_filter = S3DateFilter("dvr_case.date",
                                                           hidden = True,
@@ -1303,28 +1017,12 @@ def config(settings):
                                               "dvr_case.status_id",
                                               )
 
-                        # Add fields for managing transferability
-                        if settings.get_dvr_manage_transferability() and not check_overdue:
-                            transf_fields = ["dvr_case.transferable",
-                                             (T("Size of Family"), "dvr_case.household_size"),
-                                             ]
-                            if show_family_transferable:
-                                transf_fields.append((FAMILY_TRANSFERABLE,
-                                                     "dvr_case.household_transferable"))
-                            list_fields[-1:-1] = transf_fields
-
-                        # Days of absence (virtual field)
-                        if absence_field:
-                            list_fields.append(absence_field)
-
                     if r.representation == "xls":
                         # Extra list_fields for XLS export
 
                         # Add appointment dates
                         atypes = ["GU",
                                   "X-Ray",
-                                  "Reported Transferable",
-                                  "Transfer",
                                   "Sent to RP",
                                   ]
                         COMPLETED = 4
@@ -1497,7 +1195,6 @@ def config(settings):
                                "group_head",
                                (ROLE, "role_id"),
                                (T("Case Status"), "person_id$dvr_case.status_id"),
-                               "person_id$dvr_case.transferable",
                                ]
                 # Retain group_id in list_fields if added in standard prep
                 lfields = resource.get_config("list_fields")
@@ -2573,69 +2270,6 @@ def drk_default_shelter():
     return shelter_id
 
 # =============================================================================
-def drk_absence(row):
-    """
-        Field method to display duration of absence in
-        dvr/person list view and rheader
-
-        @param row: the Row
-    """
-
-    if hasattr(row, "cr_shelter_registration"):
-        registration = row.cr_shelter_registration
-    else:
-        registration = None
-
-    result = current.messages["NONE"]
-
-    if registration is None or \
-       not hasattr(registration, "registration_status") or \
-       not hasattr(registration, "check_out_date"):
-        # must reload
-        db = current.db
-        s3db = current.s3db
-
-        person = row.pr_person if hasattr(row, "pr_person") else row
-        person_id = person.id
-        if not person_id:
-            return result
-        table = s3db.cr_shelter_registration
-        query = (table.person_id == person_id) & \
-                (table.deleted != True)
-        registration = db(query).select(table.registration_status,
-                                        table.check_out_date,
-                                        limitby = (0, 1),
-                                        ).first()
-
-    if registration and \
-       registration.registration_status == 3:
-
-        T = current.T
-
-        check_out_date = registration.check_out_date
-        if check_out_date:
-
-            delta = (current.request.utcnow - check_out_date).total_seconds()
-            if delta < 0:
-                delta = 0
-            days = int(delta / 86400)
-
-            if days < 1:
-                result = "<1 %s" % T("Day")
-            elif days == 1:
-                result = "1 %s" % T("Day")
-            else:
-                result = "%s %s" % (days, T("Days"))
-
-            if days >= ABSENCE_LIMIT:
-                result = SPAN(result, _class="overdue")
-
-        else:
-            result = SPAN(T("Date unknown"), _class="overdue")
-
-    return result
-
-# =============================================================================
 def drk_dvr_rheader(r, tabs=[]):
     """ DVR custom resource headers """
 
@@ -2691,7 +2325,6 @@ def drk_dvr_rheader(r, tabs=[]):
                 case = resource.select(["dvr_case.status_id",
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
-                                        "dvr_case.transferable",
                                         "dvr_case.last_seen_on",
                                         "first_name",
                                         "last_name",
@@ -2710,7 +2343,6 @@ def drk_dvr_rheader(r, tabs=[]):
                     last_seen_on = lambda row: case["dvr_case.last_seen_on"]
                     name = lambda row: s3_fullname(row)
                     shelter = lambda row: case["cr_shelter_registration.shelter_unit_id"]
-                    transferable = lambda row: case["dvr_case.transferable"]
                 else:
                     # Target record exists, but doesn't match filters
                     return None
@@ -2720,8 +2352,6 @@ def drk_dvr_rheader(r, tabs=[]):
                                    (T("Shelter"), shelter),
                                    ],
                                   [(T("Name"), name),
-                                   (T("Transferable"), transferable),
-                                   (T("Checked-out"), "absence"),
                                    ],
                                   ["date_of_birth",
                                    (T("Size of Family"), household_size),
