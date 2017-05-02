@@ -39,6 +39,7 @@ __all__ = ("S3ContentModel",
            "cms_post_list_layout",
            "S3CMS",
            #"cms_Calendar",
+           #"cms_TagList",
            )
 
 import datetime
@@ -568,6 +569,11 @@ class S3ContentModel(S3Model):
                                  sortby = "name",
                                  )
 
+        # Custom Methods
+        set_method("cms", "tag",
+                   method = "tag_list",
+                   action = cms_TagList)
+
         # ---------------------------------------------------------------------
         # Tags <> Posts link table
         #
@@ -817,7 +823,7 @@ class S3ContentModel(S3Model):
                           tag_id = tag_id,
                           )
 
-        output = current.xml.json_message(True, 200, "Tag Added")
+        output = current.xml.json_message(True, 200, current.T("Tag Added"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -855,7 +861,7 @@ class S3ContentModel(S3Model):
                 resource = current.s3db.resource("cms_tag_post", id=exists.id)
                 resource.delete()
 
-        output = current.xml.json_message(True, 200, "Tag Removed")
+        output = current.xml.json_message(True, 200, current.T("Tag Removed"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -897,7 +903,7 @@ class S3ContentModel(S3Model):
                                     user_id = user_id,
                                     )
 
-        output = current.xml.json_message(True, 200, "Bookmark Added")
+        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -928,7 +934,7 @@ class S3ContentModel(S3Model):
             resource = current.s3db.resource("cms_post_user", id=exists.id)
             resource.delete()
 
-        output = current.xml.json_message(True, 200, "Bookmark Removed")
+        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -2062,5 +2068,30 @@ class cms_Calendar(S3Method):
                    BR(),
                    location,
                    )
+
+# =============================================================================
+class cms_TagList(S3Method):
+    """
+        Return a list of available Tags
+        - suitable for use in Tag-It's AutoComplete
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.representation == "json":
+            table = current.s3db.cms_tag
+            tags = current.db(table.deleted == False).select(table.name)
+            tag_list = [tag.name for tag in tags]
+            output = json.dumps(tag_list, separators=SEPARATORS)
+            return output
+
+        raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

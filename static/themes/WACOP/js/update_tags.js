@@ -12,10 +12,9 @@ function wacop_update_tags(tags) {
         // @ToDo: i18n
         placeholderText: 'Add tags here…',
         singleField: true,
-        singleFieldNode: $('#cms_post_tags')//,
-        // @ToDo: make options visible
-        //autocomplete: {
-        //    source: S3.Ap.concat('/cms/tag/search_ac.json')
-        //}
+        singleFieldNode: $('#cms_post_tags'),
+        autocomplete: {
+            source: S3.Ap.concat('/cms/tag/tag_list.json')
+        }//,
     });    
 }

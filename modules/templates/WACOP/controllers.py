@@ -741,14 +741,12 @@ class custom_WACOP(S3CRUD):
         ajaxurl = URL(c="cms", f="post", args="datalist",
                       vars=ajax_vars, extension="dl")
 
-        list_fields = ["series_id",
-                       "priority",
-                       "status_id",
-                       "date",
-                       "body",
-                       "created_by",
-                       "tag.name",
-                       ]
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        # list_fields defined in customise() to be DRY
+        list_fields = s3db.get_config(tablename, "list_fields")
 
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
@@ -788,10 +786,6 @@ class custom_WACOP(S3CRUD):
 
         # Filter Form
         # Widgets defined in customise() to be visible to filter.options
-        customise = current.deployment_settings.customise_resource(tablename)
-        if customise:
-            customise(r, tablename)
-
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
 
         ajax_vars.pop("refresh")
@@ -849,10 +843,12 @@ if(ui.duringInitialization){return}
 var post_id=$(this).attr('data-post_id')
 var url=S3.Ap.concat('/cms/post/',post_id,'/add_tag/',ui.tagLabel)
 $.getS3(url)
+S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
 },afterTagRemoved:function(event,ui){
 var post_id=$(this).attr('data-post_id')
 var url=S3.Ap.concat('/cms/post/',post_id,'/remove_tag/',ui.tagLabel)
 $.getS3(url)
+S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
 },'''
         else:
             readonly = '''readOnly:true'''
@@ -860,7 +856,7 @@ $.getS3(url)
 '''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
 S3.tagit()
 S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
-                                      args="search_ac.json"),
+                                      args="tag_list.json"),
                                   readonly)
         s3.jquery_ready.append(script)
 
@@ -1135,8 +1131,6 @@ class event_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
-        response = current.response
-        s3 = response.s3
 
         etable = s3db.event_event
         itable = s3db.event_incident
@@ -1177,18 +1171,19 @@ class event_Profile(custom_WACOP):
             if exists:
                 bookmark = A(ICON("bookmark"),
                              _title=T("Remove Bookmark"),
-                             _class="button radius small",
+                             _class="button radius small bookmark",
                              )
             else:
                 bookmark = A(ICON("bookmark-empty"),
                              _title=T("Add Bookmark"),
-                             _class="button radius small",
+                             _class="button radius small bookmark",
                              )
             bookmark["_data-c"] = "event"
             bookmark["_data-f"] = "event"
             bookmark["_data-i"] = event_id
-            script = '''wacop_bookmarks()'''
-            s3.jquery_ready.append(script)
+            # Done globally in _view
+            #script = '''wacop_bookmarks()'''
+            #s3.jquery_ready.append(script)
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark
@@ -1365,8 +1360,6 @@ class incident_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
-        response = current.response
-        s3 = response.s3
 
         ptable = s3db.cms_post
         gtable = s3db.gis_location
@@ -1465,7 +1458,7 @@ class incident_Profile(custom_WACOP):
             script = '''incident_tags(%s)''' % incident_id
         else:
             script = '''incident_tags(false)'''
-        s3.jquery_ready.append(script)
+        current.response.s3.jquery_ready.append(script)
 
         user = auth.user
         if user:
@@ -1489,8 +1482,9 @@ class incident_Profile(custom_WACOP):
             bookmark["_data-c"] = "event"
             bookmark["_data-f"] = "incident"
             bookmark["_data-i"] = incident_id
-            script = '''wacop_bookmarks()'''
-            s3.jquery_ready.append(script)
+            # Done globally in _view
+            #script = '''wacop_bookmarks()'''
+            #s3.jquery_ready.append(script)
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark
@@ -1830,31 +1824,62 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                   limitby=(0, 1)
                                   ).first()
         if exists:
-            bookmark_btn = A(ICON("bookmark"),
-                             SPAN("remove bookmark",
-                                  _class = "show-for-sr",
-                                  ),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
-                                (URL(c="cms", f="post",
-                                     args=[record_id, "remove_bookmark"]),
-                                 list_id,
-                                 record_id),
-                             _title=T("Remove Bookmark"),
-                             )
+            bookmark = A(ICON("bookmark"),
+                         SPAN("remove bookmark",
+                              _class = "show-for-sr",
+                              ),
+                         _class="bookmark",
+                         _title=T("Remove Bookmark"),
+                         )
         else:
-            bookmark_btn = A(ICON("bookmark-empty"),
-                             SPAN("bookmark",
-                                  _class = "show-for-sr",
-                                  ),
-                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
-                                (URL(c="cms", f="post",
-                                     args=[record_id, "add_bookmark"]),
-                                 list_id,
-                                 record_id),
-                             _title=T("Add Bookmark"),
-                             )
+            bookmark = A(ICON("bookmark-empty"),
+                         SPAN("bookmark",
+                              _class = "show-for-sr",
+                              ),
+                         _class="bookmark",
+                         _title=T("Add Bookmark"),
+                         )
+        bookmark["_data-c"] = "cms"
+        bookmark["_data-f"] = "post"
+        bookmark["_data-i"] = record_id
     else:
-        bookmark_btn = ""
+        bookmark = ""
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = (documents,)
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except (IOError, TypeError):
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(ICON("file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(ICON("paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
 
     divider = LI("|")
     divider["_aria-hidden"] = "true"
@@ -1877,7 +1902,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                       ),
                     _class="item",
                     ),
-                 LI(bookmark_btn,
+                 LI(bookmark,
                     _class="item",
                     ),
                  LI(A(I(_class="fa fa-users",
@@ -1947,6 +1972,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                               P(body),
                               _class="dl-body",
                               ),
+                          docs,
                           TAG["FOOTER"](tag_list,
                                         _class="footer",
                                         ),
