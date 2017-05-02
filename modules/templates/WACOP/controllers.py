@@ -1135,8 +1135,6 @@ class event_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
-        response = current.response
-        s3 = response.s3
 
         etable = s3db.event_event
         itable = s3db.event_incident
@@ -1177,18 +1175,19 @@ class event_Profile(custom_WACOP):
             if exists:
                 bookmark = A(ICON("bookmark"),
                              _title=T("Remove Bookmark"),
-                             _class="button radius small",
+                             _class="button radius small bookmark",
                              )
             else:
                 bookmark = A(ICON("bookmark-empty"),
                              _title=T("Add Bookmark"),
-                             _class="button radius small",
+                             _class="button radius small bookmark",
                              )
             bookmark["_data-c"] = "event"
             bookmark["_data-f"] = "event"
             bookmark["_data-i"] = event_id
-            script = '''wacop_bookmarks()'''
-            s3.jquery_ready.append(script)
+            # Done globally in _view
+            #script = '''wacop_bookmarks()'''
+            #s3.jquery_ready.append(script)
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark
@@ -1365,8 +1364,6 @@ class incident_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
-        response = current.response
-        s3 = response.s3
 
         ptable = s3db.cms_post
         gtable = s3db.gis_location
@@ -1465,7 +1462,7 @@ class incident_Profile(custom_WACOP):
             script = '''incident_tags(%s)''' % incident_id
         else:
             script = '''incident_tags(false)'''
-        s3.jquery_ready.append(script)
+        current.response.s3.jquery_ready.append(script)
 
         user = auth.user
         if user:
@@ -1489,8 +1486,9 @@ class incident_Profile(custom_WACOP):
             bookmark["_data-c"] = "event"
             bookmark["_data-f"] = "incident"
             bookmark["_data-i"] = incident_id
-            script = '''wacop_bookmarks()'''
-            s3.jquery_ready.append(script)
+            # Done globally in _view
+            #script = '''wacop_bookmarks()'''
+            #s3.jquery_ready.append(script)
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark

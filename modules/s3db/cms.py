@@ -823,7 +823,7 @@ class S3ContentModel(S3Model):
                           tag_id = tag_id,
                           )
 
-        output = current.xml.json_message(True, 200, "Tag Added")
+        output = current.xml.json_message(True, 200, current.T("Tag Added"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -861,7 +861,7 @@ class S3ContentModel(S3Model):
                 resource = current.s3db.resource("cms_tag_post", id=exists.id)
                 resource.delete()
 
-        output = current.xml.json_message(True, 200, "Tag Removed")
+        output = current.xml.json_message(True, 200, current.T("Tag Removed"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -903,7 +903,7 @@ class S3ContentModel(S3Model):
                                     user_id = user_id,
                                     )
 
-        output = current.xml.json_message(True, 200, "Bookmark Added")
+        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -934,7 +934,7 @@ class S3ContentModel(S3Model):
             resource = current.s3db.resource("cms_post_user", id=exists.id)
             resource.delete()
 
-        output = current.xml.json_message(True, 200, "Bookmark Removed")
+        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
