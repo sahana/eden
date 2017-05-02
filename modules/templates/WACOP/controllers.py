@@ -860,7 +860,7 @@ $.getS3(url)
 '''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
 S3.tagit()
 S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
-                                      args="search_ac.json"),
+                                      args="tag_list.json"),
                                   readonly)
         s3.jquery_ready.append(script)
 

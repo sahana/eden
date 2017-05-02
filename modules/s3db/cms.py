@@ -39,6 +39,7 @@ __all__ = ("S3ContentModel",
            "cms_post_list_layout",
            "S3CMS",
            #"cms_Calendar",
+           #"cms_TagList",
            )
 
 import datetime
@@ -567,6 +568,11 @@ class S3ContentModel(S3Model):
                                                           represent)),
                                  sortby = "name",
                                  )
+
+        # Custom Methods
+        set_method("cms", "tag",
+                   method = "tag_list",
+                   action = cms_TagList)
 
         # ---------------------------------------------------------------------
         # Tags <> Posts link table
@@ -2062,5 +2068,30 @@ class cms_Calendar(S3Method):
                    BR(),
                    location,
                    )
+
+# =============================================================================
+class cms_TagList(S3Method):
+    """
+        Return a list of available Tags
+        - suitable for use in Tag-It's AutoComplete
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.representation == "json":
+            table = current.s3db.cms_tag
+            tags = current.db(table.deleted == False).select(table.name)
+            tag_list = [tag.name for tag in tags]
+            output = json.dumps(tag_list, separators=SEPARATORS)
+            return output
+
+        raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================
