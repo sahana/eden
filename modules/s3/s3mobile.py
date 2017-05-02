@@ -233,7 +233,7 @@ class S3MobileSchema(object):
         self.resource = resource
 
         # Initialize reference map
-        self._references = None
+        self._references = {}
 
         # Initialize the schema
         self._schema = None
@@ -326,6 +326,7 @@ class S3MobileSchema(object):
             references = self._references
             if lookup not in references:
                 references[lookup] = set()
+
         else:
             is_foreign_key = False
             lookup = None
@@ -349,7 +350,7 @@ class S3MobileSchema(object):
             description["settings"] = settings
 
         # Add field options to description
-        options = self.get_options(field)
+        options = self.get_options(field, lookup=lookup)
         if options:
             description["options"] = options
 
@@ -410,8 +411,7 @@ class S3MobileSchema(object):
         return required
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_options(field):
+    def get_options(self, field, lookup=None):
         """
             Get the options for a field with IS_IN_SET
 
@@ -419,32 +419,50 @@ class S3MobileSchema(object):
             @return: a list of tuples (key, label) with the field options
         """
 
-        # Check supported field types
-        # @todo: add other types (may require special option key encoding)
-        #        => foreign keys must report all valid options as record
-        #           references so they can be resolved
-        if str(field.type) not in ("string", "integer"):
-            return None
-
-        # Get field validator
         requires = field.requires
         if not requires:
             return None
-        if not isinstance(requires, (tuple, list)):
-            requires = [requires]
-
-        # Check for IS_IN_SET, and extract the options
-        requires = requires[0]
+        if isinstance(requires, (list, tuple)):
+            requires = requires[0]
         if isinstance(requires, IS_EMPTY_OR):
             requires = requires.other
-        if isinstance(requires, IS_IN_SET):
-            options = []
-            for key, label in requires.options():
-                if not key:
-                    continue
-                options.append((key, s3_str(label)))
-            return options
+
+        fieldtype = str(field.type)
+        if fieldtype[:9] == "reference":
+
+            # For writable foreign keys, look up all valid options
+            # and report them as schema references:
+            if field.writable:
+                add = self._references[lookup].add
+
+                # @note: introspection only works with e.g. IS_ONE_OF,
+                #        but not with widget-specific validators like
+                #        IS_ADD_PERSON_WIDGET2 => should change these
+                #        widgets to apply the conversion internally on
+                #        the dummy input (like S3LocationSelector), and
+                #        then have regular IS_ONE_OF's for the fields
+                if hasattr(requires, "options"):
+                    for value, label in requires.options():
+                        if value:
+                            add(long(value))
+
+            # Foreign keys have no fixed options, however
+            return None
+
+        elif fieldtype in ("string", "integer"):
+
+            # Check for IS_IN_SET, and extract the options
+            if isinstance(requires, IS_IN_SET):
+                options = []
+                for value, label in requires.options():
+                    if value is not None:
+                        options.append((value, s3_str(label)))
+                return options
+            else:
+                return None
+
         else:
+            # @todo: add other types (may require special option key encoding)
             return None
 
     # -------------------------------------------------------------------------
