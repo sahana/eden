@@ -1042,9 +1042,9 @@ def config(settings):
         itable = current.s3db.cap_info
         event_type_id = row["cap_info.event_type_id"]
         priority_id = row["cap_info.priority"]
-        response_type = row["cap_info.response_type"]
-        instruction = row["cap_info.instruction"]
-        description = row["cap_info.description"]
+        response_type = row["_row"]["cap_info.response_type"] if system else row["cap_info.response_type"]
+        instruction = row["_row"]["cap_info.instruction"] if system else row["cap_info.instruction"]
+        description = row["_row"]["cap_info.description"] if system else row["cap_info.description"]
         status = row["cap_alert.status"]
         msg_type = row["cap_alert.msg_type"]
         note = row["cap_alert.note"]
@@ -1085,13 +1085,17 @@ def config(settings):
                          H2(T(s3_str(get_formatted_value(row["cap_info.headline"],
                                                          system=system)))),
                          BR(),
-                         T("Note: %(note)s") % \
-                         {"note": s3_str(note)}
+                         XML("%(label)s: %(note)s" %
+                         {"label": B(T("Note")),
+                          "note": s3_str(note),
+                          })
                          if note else "",
                          BR() if note else "",
                          BR() if note else "",
-                         T("ID: %(identifier)s") % \
-                         {"identifier": s3_str(row["cap_alert.identifier"])},
+                         XML("%(label)s: %(identifier)s" %
+                         {"label": B(T("ID")),
+                          "identifier": s3_str(row["cap_alert.identifier"])
+                          }),
                          BR(), BR(),
                          T("""%(priority)s message %(message_type)s in effect for %(area_description)s""") % \
                          {"priority": s3_str(priority),
@@ -1122,26 +1126,33 @@ def config(settings):
                           },
                          BR(),
                          BR() if description else "",
-                         T("Alert Description: %(alert_description)s") % \
-                         {"alert_description": s3_str(get_formatted_value(description,
-                                                                          system=system))}
+                         XML("%(label)s: %(alert_description)s" %
+                         {"label": B(T("Alert Description")),
+                          "alert_description": s3_str(get_formatted_value(description,
+                                                                          system=False,
+                                                                          ul=True)),
+                          })
                          if description else "",
-                         BR() if description else "",
-                         BR(),
+                         BR() if not isinstance(description, list) else "",
                          BR() if response_type else "",
-                         T("Expected Response: %(response_type)s") % \
-                         {"response_type": s3_str(get_formatted_value(response_type,
+                         XML(T("%(label)s: %(response_type)s") % 
+                         {"label": B(T("Expected Response")),
+                          "response_type": s3_str(get_formatted_value(response_type,
                                                                       represent = itable.response_type.represent,
-                                                                      system=system)),
-                          }
+                                                                      system=False,
+                                                                      ul=True)),
+                          })
                          if response_type else "",
-                         BR() if response_type else "",
-                         BR(),
+                         BR() if not isinstance(response_type, list) else "",
                          BR() if instruction else "",
-                         T("Instructions: %(instruction)s") % \
-                         {"instruction": s3_str(get_formatted_value(instruction, system=system))}
+                         XML(T("%(label)s: %(instruction)s") %
+                         {"label": B(T("Instructions")),
+                          "instruction": s3_str(get_formatted_value(instruction,
+                                                                    system=False,
+                                                                    ul=True)),
+                          })
                          if instruction else "",
-                         BR() if instruction else "",
+                         BR() if not isinstance(instruction, list) else "",
                          BR(),
                          T("Alert is effective from %(effective)s and expires on %(expires)s") % \
                          {"effective": s3_str(get_formatted_value(row["cap_info.effective"],
@@ -1376,7 +1387,10 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
         return ack_id
 
     # -------------------------------------------------------------------------
-    def get_formatted_value(value, represent=None, system=True):
+    def get_formatted_value(value,
+                            represent=None,
+                            system=True,
+                            ul=False):
         """ For non-system notification returns the formatted represented value
         """
 
@@ -1396,7 +1410,10 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
                             else:
                                 nvalue.append(value_)
                     if len(nvalue):
-                        nvalue = ", ".join(nvalue)
+                        if ul:
+                            nvalue = UL(nvalue)
+                        else:
+                            nvalue = ", ".join(nvalue)
                     else:
                         return None
                 else:
