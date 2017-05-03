@@ -527,6 +527,10 @@ def config(settings):
     #settings.dvr.needs_hierarchical = True
     # Uncomment this to use hierarchical vulnerability types
     #settings.dvr.vulnerability_types_hierarchical = True
+    # Uncomment this to show a warning during event registration if the person is not currently checked-in
+    #settings.dvr.event_registration_checkin_warning = True
+    # Uncomment this to show profile pictures in event registration UI only on demand
+    #settings.dvr.event_registration_show_picture = False
 
     # -------------------------------------------------------------------------
     # Events

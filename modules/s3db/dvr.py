@@ -5064,9 +5064,6 @@ class DVRRegisterCaseEvent(S3Method):
     # Action to check flag restrictions for
     ACTION = "id-check"
 
-    # Whether to show profile picture by default
-    SHOW_PICTURE = False
-
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -5304,13 +5301,16 @@ class DVRRegisterCaseEvent(S3Method):
         # Custom view
         response.view = self._view(r, "dvr/register_case_event.html")
 
+        # Show profile picture by default or only on demand?
+        show_picture = settings.get_dvr_event_registration_show_picture()
+
         # Inject JS
         options = {"tablename": resourcename,
                    "ajaxURL": r.url(None,
                                     method = "register",
                                     representation = "json",
                                     ),
-                   "showPicture": self.SHOW_PICTURE,
+                   "showPicture": show_picture,
                    "showPictureText": s3_str(T("Show Picture")),
                    "hidePictureText": s3_str(T("Hide Picture")),
                    }
@@ -6210,9 +6210,6 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
 
     # Do not check minimum intervals for consecutive registrations
     check_intervals = False
-
-    # Show profile picture by default
-    SHOW_PICTURE = True
 
     # -------------------------------------------------------------------------
     # Configuration
