@@ -416,6 +416,8 @@ class S3MobileSchema(object):
             Get the options for a field with IS_IN_SET
 
             @param field: the Field
+            @param lookup: the look-up table name (if field is a foreign key)
+
             @return: a list of tuples (key, label) with the field options
         """
 
@@ -430,9 +432,10 @@ class S3MobileSchema(object):
         fieldtype = str(field.type)
         if fieldtype[:9] == "reference":
 
-            # For writable foreign keys, look up all valid options
-            # and report them as schema references:
-            if field.writable:
+            # For writable foreign keys, if the referenced table
+            # does not expose a mobile form itself, look up all
+            # valid options and report them as schema references:
+            if field.writable and not self.has_mobile_form(lookup):
                 add = self._references[lookup].add
 
                 # @note: introspection only works with e.g. IS_ONE_OF,
@@ -771,17 +774,36 @@ class S3MobileForm(object):
             if tablename in provided:
                 continue
 
-            rresource = s3db.resource(tablename)
-            rs = S3MobileSchema(rresource)
-            references[tablename] = {"schema": rs.serialize()}
+            # Check if we need to include any records
+            record_ids = ms.references[tablename]
+            if record_ids:
+                rresource = s3db.resource(tablename, id=list(record_ids))
+            else:
+                rresource = s3db.resource(tablename)
 
+            # Serialize the table schema
+            rs = S3MobileSchema(rresource)
+            schema = rs.serialize()
+            spec = {"schema": schema}
+
+            # Include records as required
+            if record_ids:
+                fields = schema.keys()
+                # @todo: apply msince
+                tree = rresource.export_tree(fields=fields,
+                                             references=fields,
+                                             )
+                data = current.xml.tree2json(tree, as_dict=True)
+                spec["data"] = data
+
+            references[tablename] = spec
+
+            # Check for dependencies
             for reference in rs.references:
                 if reference not in provided:
                     required.append(reference)
 
             provided.add(tablename)
-
-        # @todo: add default lookup records
 
         form = {"main": main,
                 }
