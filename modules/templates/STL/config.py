@@ -11,9 +11,6 @@ from s3 import S3Represent
 INDIVIDUAL_SUPPORT = "Individual Support"
 MENTAL_HEALTH = "Mental Health"
 
-# Protection assessment categories
-THREAT = "A.THREAT"
-
 def config(settings):
     """
         Settings for the SupportToLife deployment in Turkey
@@ -664,7 +661,8 @@ def config(settings):
     def vulnerability_type_validation(form):
         """
             Validate "Protection Assessment" (dvr_vulnerability_type link)
-            in case activities: at least one THREAT must be selected
+            in case activities: for any required root category, at least one
+            child category must be selected
         """
 
         key = "link_defaultvulnerability_type"
@@ -676,31 +674,44 @@ def config(settings):
             # No inline link we can validate
             return
 
-        # Get the "THREAT" root node
+        # Single value? => convert to list
+        if vulnerability_types and \
+           type(vulnerability_types) is not list:
+            vulnerability_types = [vulnerability_types]
+
+        # Get all required root categories
         ttable = current.s3db.dvr_vulnerability_type
-        query = (ttable.name == THREAT) & \
+        query = (ttable.required == True) & \
                 (ttable.deleted == False)
-        row = current.db(query).select(ttable.id, limitby=(0, 1)).first()
-        if not row:
+        rows = current.db(query).select(ttable.id,
+                                        ttable.name,
+                                        )
+        if not rows:
             return
 
-        # Get all descendants of the THREAT node
+        # Get the hierarchy
         from s3 import S3Hierarchy
         h = S3Hierarchy("dvr_vulnerability_type")
-        threats = h.findall(row.id)
-        if not threats:
-            return
 
-        message = T("At least one THREAT must be selected")
-        if vulnerability_types:
-            # Single value?
-            if type(vulnerability_types) is not list:
-                vulnerability_types = [vulnerability_types]
-            # Any THREAT selected?
-            if not any(t in threats for t in vulnerability_types):
+        for row in rows:
+
+            # Find all child categories
+            children = h.findall(row.id)
+            if not children:
+                continue
+
+            message = T("At least one %(category)s must be selected") % \
+                      {"category": row.name}
+
+            # Check that at least one child is selected
+            if vulnerability_types:
+                if not any(c in children for c in vulnerability_types):
+                    form.errors[key] = message
+                    break
+            else:
+                # Nothing selected at all
                 form.errors[key] = message
-        else:
-            form.errors[key] = message
+                break
 
     # -------------------------------------------------------------------------
     def pss_case_activity_onaccept(form):
@@ -1621,6 +1632,16 @@ def config(settings):
 
     settings.customise_dvr_response_type_resource = customise_dvr_response_type_resource
 
+    # -------------------------------------------------------------------------
+    def customise_dvr_vulnerability_type_resource(r, tablename):
+
+        # Expose required-flag
+        table = current.s3db.dvr_vulnerability_type
+        field = table.required
+        field.readable = field.writable = True
+
+    settings.customise_dvr_vulnerability_type_resource = customise_dvr_vulnerability_type_resource
+
     # =========================================================================
     # Person Registry
     #
@@ -2409,6 +2430,45 @@ def config(settings):
         return attr
 
     settings.customise_org_facility_controller = customise_org_facility_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_service_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            # Prevent name/parent change for service categories
+            # with dependent functionality:
+            record = r.record
+            if record and \
+               record.name in (INDIVIDUAL_SUPPORT, MENTAL_HEALTH) and \
+               not record.parent:
+
+                field = r.table.name
+                field.writable = False
+
+                field = r.table.parent
+                field.readable = field.writable = False
+
+                # @todo: delete should be prevented too?
+                #r.resource.configure(deletable = False)
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_org_service_controller = customise_org_service_controller
 
     # =========================================================================
     # Project Module

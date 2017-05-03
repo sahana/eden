@@ -4066,6 +4066,13 @@ class DVRVulnerabilityModel(S3Model):
                            readable = hierarchical_vulnerability_types,
                            writable = hierarchical_vulnerability_types,
                            ),
+                     Field("required", "boolean",
+                           default = False,
+                           label = T("Required Category"),
+                           represent = s3_yes_no_represent,
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
