@@ -666,6 +666,7 @@
 'Case Archived': 'Fall Archiviert',
 'Case Closed': 'Fall Abgeschlossen',
 'Case closed on': 'Fall abgeschlossen am',
+'Case Consulting': 'Fallberatung',
 'Case Details': 'Details zum Fall',
 'Case details updated': 'Fall aktualisiert',
 'Case Flags': 'Fall Flaggen',

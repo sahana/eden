@@ -16,8 +16,8 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = "Case Management"
-    settings.base.system_name_short = "Case Management"
+    settings.base.system_name = T("Case Consulting")
+    settings.base.system_name_short = T("Case Consulting")
 
     # PrePopulate data
     settings.base.prepopulate += ("DRKCM", "default/users", "DRKCM/Demo")
@@ -103,7 +103,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    settings.security.policy = 5 # Controller, Function & Table ACLs
+    settings.security.policy = 7 # Hierarchical Realms
 
     # Version details on About-page require login
     settings.security.version_info_requires_login = True
@@ -127,8 +127,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Organisations Module Settings
     #
-    settings.org.default_organisation = "Deutsches Rotes Kreuz"
-    settings.org.default_site = "BEA Benjamin Franklin Village"
+    #settings.org.default_organisation = "Deutsches Rotes Kreuz"
 
     # -------------------------------------------------------------------------
     # Persons Module Settings
@@ -179,13 +178,6 @@ def config(settings):
     # Generate tasks for shelter inspections
     settings.cr.shelter_inspection_tasks = True
     settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
-
-    # -------------------------------------------------------------------------
-    def customise_auth_user_resource(r, tablename):
-
-        current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
-
-    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_controller(**attr):
@@ -292,13 +284,6 @@ def config(settings):
 
                 # Prep runs before split into create/update (Create should never happen in Village)
                 table = r.table
-                shelter_id = drk_default_shelter()
-                if shelter_id:
-                    # Only 1 Shelter
-                    f = table.shelter_id
-                    f.default = shelter_id
-                    f.writable = False # f.readable kept as True for cr_shelter_registration_onvalidation
-                    f.comment = None
 
                 # Only edit for this Person
                 f = table.person_id
@@ -367,60 +352,6 @@ def config(settings):
         s3_redirect_default(URL(f="person", vars={"closed": "0"}))
 
     settings.customise_dvr_home = customise_dvr_home
-
-    # -------------------------------------------------------------------------
-    #def event_overdue(code, interval):
-        #"""
-            #Get cases (person_ids) for which a certain event is overdue
-
-            #@param code: the event code
-            #@param interval: the interval in days
-        #"""
-
-        #db = current.db
-        #s3db = current.s3db
-
-        #ttable = s3db.dvr_case_event_type
-        #ctable = s3db.dvr_case
-        #stable = s3db.dvr_case_status
-        #etable = s3db.dvr_case_event
-
-        ## Get event type ID
-        #query = (ttable.code == code) & \
-                #(ttable.deleted != True)
-        #row = db(query).select(ttable.id, limitby=(0, 1)).first()
-        #if row:
-            #type_id = row.id
-        #else:
-            ## No such event
-            #return set()
-
-        ## Determine deadline
-        #now = current.request.utcnow
-        #then = now - datetime.timedelta(days=interval)
-
-        ## Check only open cases
-        #join = stable.on((stable.id == ctable.status_id) & \
-                         #(stable.is_closed == False))
-
-        ## Join only events after the deadline
-        #left = etable.on((etable.person_id == ctable.person_id) & \
-                         #(etable.type_id == type_id) & \
-                         #(etable.date != None) & \
-                         #(etable.date >= then) & \
-                         #(etable.deleted != True))
-
-        ## ...and then select the rows which don't have any
-        #query = (ctable.archived == False) & \
-                #(ctable.date < then.date()) & \
-                #(ctable.deleted == False)
-        #rows = db(query).select(ctable.person_id,
-                                #left = left,
-                                #join = join,
-                                #groupby = ctable.person_id,
-                                #having = (etable.date.max() == None),
-                                #)
-        #return set(row.person_id for row in rows)
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
@@ -699,42 +630,6 @@ def config(settings):
                 if not r.component:
 
                     configure_person_tags()
-
-                    # Set default shelter for shelter registration
-                    shelter_id = drk_default_shelter()
-                    if shelter_id:
-                        rtable = s3db.cr_shelter_registration
-                        field = rtable.shelter_id
-                        field.default = shelter_id
-                        field.readable = field.writable = False
-
-                        # Filter housing units to units of this shelter
-                        field = rtable.shelter_unit_id
-                        dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
-                        field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset,
-                                            "cr_shelter_unit.id",
-                                            field.represent,
-                                            # Only available units:
-                                            filterby = "status",
-                                            filter_opts = (1,),
-                                            sort=True,
-                                            ))
-
-                    default_site = settings.get_org_default_site()
-                    default_organisation = settings.get_org_default_organisation()
-
-                    if default_organisation and not default_site:
-
-                        # Limit sites to default_organisation
-                        field = ctable.site_id
-                        requires = field.requires
-                        if requires:
-                            if isinstance(requires, IS_EMPTY_OR):
-                                requires = requires.other
-                            if hasattr(requires, "dbset"):
-                                stable = s3db.org_site
-                                query = (stable.organisation_id == default_organisation)
-                                requires.dbset = db(query)
 
                     configure = resource.configure
                     if r.interactive and r.method != "import":
@@ -1141,13 +1036,6 @@ def config(settings):
 
             resource = r.resource
             if r.controller == "dvr":
-
-                # Set default shelter
-                shelter_id = drk_default_shelter()
-                if shelter_id:
-                    rtable = s3db.cr_shelter_registration
-                    field = rtable.shelter_id
-                    field.default = shelter_id
 
                 if r.interactive:
                     table = resource.table
@@ -2242,32 +2130,6 @@ def config(settings):
            module_type = None,
         )),
     ])
-
-# =============================================================================
-def drk_default_shelter():
-    """
-        Lazy getter for the default shelter_id
-    """
-
-    s3 = current.response.s3
-    shelter_id = s3.drk_default_shelter
-
-    if not shelter_id:
-        default_site = current.deployment_settings.get_org_default_site()
-
-        # Get the shelter_id for default site
-        if default_site:
-            stable = current.s3db.cr_shelter
-            query = (stable.site_id == default_site)
-            shelter = current.db(query).select(stable.id,
-                                            limitby=(0, 1),
-                                            ).first()
-            if shelter:
-                shelter_id = shelter.id
-
-        s3.drk_default_shelter = shelter_id
-
-    return shelter_id
 
 # =============================================================================
 def drk_dvr_rheader(r, tabs=[]):
