@@ -827,7 +827,21 @@ def config(settings):
                                )
             field.comment = T("Enter some characters of the ID or name to start the search, then select from the drop-down")
 
-            # Determine root service type of maste record
+            # Adapt CRUD strings to perspective
+            s3.crud_strings["dvr_case_activity"] = Storage(
+                label_create = T("Add Beneficiary"),
+                title_display = T("Beneficiary Details"),
+                title_list = T("Beneficiaries"),
+                title_update = T("Edit Beneficiary"),
+                label_list_button = T("List Beneficiaries"),
+                label_delete_button = T("Remove Beneficiary"),
+                msg_record_created = T("Beneficiary added"),
+                msg_record_modified = T("Beneficiary updated"),
+                msg_record_deleted = T("Beneficiary removed"),
+                msg_list_empty = T("No Beneficiaries currently registered"),
+                )
+
+            # Determine root service type of master record
             root_service_id = root_service_name = None
             stable = s3db.org_service
 
