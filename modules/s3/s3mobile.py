@@ -46,7 +46,7 @@ except ImportError:
 
 from gluon import *
 from gluon.dal import Query
-from s3datetime import s3_encode_iso_datetime
+from s3datetime import s3_encode_iso_datetime, s3_parse_datetime
 from s3error import S3PermissionError
 from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLField
 from s3query import S3ResourceField
@@ -717,9 +717,12 @@ class S3MobileForm(object):
         return config
 
     # -------------------------------------------------------------------------
-    def serialize(self):
+    def serialize(self, msince=None):
         """
             Serialize the mobile form configuration for the target resource
+
+            @param msince: include look-up records only if modified
+                           after this datetime ("modified since")
 
             @return: a JSON-serialiable dict containing the mobile form
                      configuration for export to the mobile client
@@ -789,12 +792,13 @@ class S3MobileForm(object):
             # Include records as required
             if record_ids:
                 fields = schema.keys()
-                # @todo: apply msince
-                tree = rresource.export_tree(fields=fields,
-                                             references=fields,
+                tree = rresource.export_tree(fields = fields,
+                                             references = fields,
+                                             msince = msince,
                                              )
-                data = current.xml.tree2json(tree, as_dict=True)
-                spec["data"] = data
+                if len(tree.getroot()):
+                    data = current.xml.tree2json(tree, as_dict=True)
+                    spec["data"] = data
 
             references[tablename] = spec
 
@@ -952,8 +956,12 @@ class S3MobileCRUD(S3Method):
 
         resource = self.resource
 
+        msince = r.get_vars.get("msince")
+        if msince:
+            msince = s3_parse_datetime(msince)
+
         # Get the mobile form
-        mform = S3MobileForm(resource).serialize()
+        mform = S3MobileForm(resource).serialize(msince=msince)
 
         # Add controller and function for data exchange
         mform["controller"] = r.controller
