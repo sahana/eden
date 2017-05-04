@@ -718,15 +718,18 @@ class S3DateFilter(S3RangeFilter):
             # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
             start_field = S3ResourceField(resource, fields[0]).field
             end_field = S3ResourceField(resource, fields[1]).field
-            fields = (start_field.min(),
+            fields = (start_field,
+                      start_field.min(),
                       start_field.max(),
+                      end_field,
                       end_field.max(),
                       )
         else:
             separate = False
             rfield = S3ResourceField(resource, fields)
             field = rfield.field
-            fields = (field.min(),
+            fields = (field,
+                      field.min(),
                       field.max(),
                       )
 
@@ -796,7 +799,8 @@ class S3DateFilter(S3RangeFilter):
         slider = opts_get("slider", False)
         if slider:
             # Load Moment into Browser
-            # NB This will probably get used more widely in future
+            # @ToDo: locale support
+            # NB This will probably get used more widely in future, so maybe need to abstract this somewhere else
             s3 = current.response.s3
             if s3.debug:
                 if s3.cdn:
