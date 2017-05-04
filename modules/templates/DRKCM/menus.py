@@ -36,48 +36,16 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        from config import drk_default_shelter
-        shelter_id = drk_default_shelter()
-
-        has_role = current.auth.s3_has_role
-        not_admin = not has_role("ADMIN")
-
-        if not_admin and has_role("SECURITY"):
-            return [
-                MM("Cases", c="security", f="person"),
-                #MM("ToDo", c="project", f="task"),
-                MM("Confiscation", c="security", f="seized_item"),
-            ]
-
-        elif not_admin and has_role("QUARTIER"):
-            return [
-                MM("Cases", c=("dvr", "cr"), f=("person", "shelter_registration")),
-                MM("Confiscation", c="security", f="seized_item"),
-            ]
-
-        else:
-            return [
-                MM("Cases", c=("dvr", "pr")),
-                MM("Event Registration", c="dvr", f="case_event",
-                   m = "register",
-                   p = "create",
-                   # Show only if not authorized to see "Cases"
-                   check = lambda this: not this.preceding()[-1].check_permission(),
-                   ),
-                MM("ToDo", c="project", f="task"),
-                MM("Housing Units", c="cr", f="shelter",
-                   t = "cr_shelter_unit",
-                   args = [shelter_id, "shelter_unit"],
-                   check = shelter_id is not None,
-                   ),
+        return [
+            MM("Cases", c=("dvr", "pr")),
+            MM("ToDo", c="project", f="task"),
+            MM("More", link=False)(
+                MM("Organizations", c="org", f="organisation"),
+                MM("Facilities", c="org", f="facility"),
                 homepage("vol"),
                 homepage("hrm"),
-                MM("More", link=False)(
-                    MM("Facilities", c="org", f="facility"),
-                    #homepage("req"),
-                    homepage("inv"),
-                    ),
-            ]
+                ),
+        ]
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -178,37 +146,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def cr():
         """ CR / Shelter Registry """
 
-        from config import drk_default_shelter
-        shelter_id = drk_default_shelter()
-
-        if not shelter_id:
-            return None
-
         ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="cr")(
-                    M("Shelter", f="shelter", args=[shelter_id])(
-                        M("Housing Units",
-                          t = "cr_shelter_unit",
-                          args = [shelter_id, "shelter_unit"],
-                          ),
-                    ),
-                    #M("Room Inspection", f = "shelter", link=False)(
-                    #      M("Register",
-                    #        args = [shelter_id, "inspection"],
-                    #        t = "cr_shelter_inspection",
-                    #        p = "create",
-                    #        ),
-                    #      M("Overview", f = "shelter_inspection"),
-                    #      M("Defects", f = "shelter_inspection_flag"),
-                    #      ),
-                    #M("Administration",
-                    #  link = False,
-                    #  restrict = (ADMIN, "ADMIN_HEAD"),
-                    #  selectable=False,
-                    #  )(
-                    #    M("Shelter Flags", f="shelter_flag"),
-                    #    ),
+                    M("Shelter", f="shelter"),
                 )
 
     # -------------------------------------------------------------------------
@@ -235,16 +176,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M(follow_up_label, f="due_followups"),
                         M("All Activities"),
-                        M("Report", m="report"),
+                        #M("Report", m="report"),
                         ),
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
-                        M("Import Updates", m="import", p="create",
-                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
-                          ),
-                        M("Bulk Status Update", m="manage", p="update",
-                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
-                          ),
+                        #M("Import Updates", m="import", p="create",
+                          #restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
+                          #),
+                        #M("Bulk Status Update", m="manage", p="update",
+                          #restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
+                          #),
                         ),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
@@ -297,18 +238,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Create", m="create"),
                     M("My Open Tasks", vars={"mine":1}),
                  ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def security():
-        """ SECURITY / Security Management """
-
-        return M(c="security")(
-                M("Confiscation", f="seized_item")(
-                    M("Create", m="create"),
-                    M("Item Types", f="seized_item_type"),
-                    ),
                 )
 
 # END =========================================================================
