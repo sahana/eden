@@ -718,36 +718,49 @@ class S3DateFilter(S3RangeFilter):
             # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
             start_field = S3ResourceField(resource, fields[0]).field
             end_field = S3ResourceField(resource, fields[1]).field
-            fields = (start_field.min(),
-                      start_field.max(),
-                      end_field.max(),
-                      )
-            groupby = (start_field, end_field)
-        else:
-            separate = False
-            rfield = S3ResourceField(resource, fields)
-            field = rfield.field
-            fields = (field.min(),
-                      field.max(),
-                      )
-            groupby = field
-
-        row = current.db(query).select(*fields,
-                                       join=join,
-                                       left=left,
-                                       groupby = groupby,
+            set = current.db(query)
+            start_min_row = set.select(start_field,
+                                       join = join,
+                                       left = left,
+                                       orderby = start_field,
                                        limitby = (0, 1)
                                        ).first()
-
-        if separate:
-            minimum = row[start_field.min()]
-            maximum = row[start_field.max()]
-            end_max = row[end_field.max()]
+            minimum = start_min_row[start_field]
+            start_max_row = set.select(start_field,
+                                       join = join,
+                                       left = left,
+                                       orderby = ~start_field,
+                                       limitby = (0, 1)
+                                       ).first()
+            maximum = start_max_row[start_field]
+            end_row = set.select(end_field,
+                                 join = join,
+                                 left = left,
+                                 orderby = ~end_field,
+                                 limitby = (0, 1)
+                                 ).first()
+            end_max = end_row[end_field]
             if end_max:
                 maximum = max(maximum, end_max)
         else:
-            minimum = row[field.min()]
-            maximum = row[field.max()]
+            # Not using field.max() as Postgres wants to GROUPBY which means you need multiple queries anyway
+            rfield = S3ResourceField(resource, fields)
+            field = rfield.field
+            set = current.db(query)
+            min_row = set.select(field,
+                                 join = join,
+                                 left = left,
+                                 orderby = field,
+                                 limitby = (0, 1)
+                                 ).first()
+            minimum = min_row[field]
+            max_row = set.select(field,
+                                 join = join,
+                                 left = left,
+                                 orderby = ~field,
+                                 limitby = (0, 1)
+                                 ).first()
+            maximum = max_row[field]
 
         # Ensure that we can select the extreme values
         minute_step = 5
