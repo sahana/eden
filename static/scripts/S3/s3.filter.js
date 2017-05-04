@@ -280,7 +280,13 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.date-filter-input').each(function() {
-            $(this).calendarWidget('clear');
+            var $this = $(this);
+            $this.calendarWidget('clear');
+            var widget_name = $this.attr('id');
+            var widget = $('#' + widget_name.slice(0, -3));
+            widget.find('.range-picker').each(function() {
+                $(this).trigger('clear');
+            });
         });
         // Hierarchy filter widget (experimental)
         form.find('.hierarchy-filter').each(function() {
@@ -731,6 +737,8 @@ S3.search = {};
                 } else {
                     $this.calendarWidget('clear');
                 }
+                // Ensure any range-picker is updated with new value
+                $this.trigger('change');
             }
         });
 
@@ -1036,6 +1044,18 @@ S3.search = {};
                         // other widget types of options filter
                     }
 
+                } else if (widget.hasClass('date-filter')) {
+                    var min = newopts.min;
+                    var max = newopts.max;
+                    $('#' + filter_id + '-ge').calendarWidget('instance').option('minDateTime', min)
+                                                                         .option('maxDateTime', max)
+                                                                         .refresh();
+                    $('#' + filter_id + '-le').calendarWidget('instance').option('minDateTime', min)
+                                                                         .option('maxDateTime', max)
+                                                                         .refresh();
+                    widget.find('.range-picker').each(function() {
+                        $(this).trigger('resize', min, max);
+                    });
                 } else {
                     // @todo: other filter types (e.g. S3LocationFilter)
                 }
@@ -1893,6 +1913,113 @@ S3.search = {};
             $(this).closest('form').trigger('optionChanged');
         });
 
+        // Range-Picker
+        // https://github.com/zhangtasdq/range-picker
+        // @ToDo: Copy (ideally Move DRY) non-Date aspects to range-filter
+        $('.date-filter').find('.range-picker').each(function() {
+            var $this = $(this);
+            var fmt = $this.data('fmt');
+            var minValue = $this.data('min');
+            if (minValue) {
+                var minDate = moment(minValue);
+            } else {
+                var minDate = moment().subtract(5, 'minutes');
+                $this.data('min', minDate.format());
+            }
+            var maxValue = $this.data('max');
+            if (maxValue) {
+                var maxDate = moment(maxValue);
+            } else {
+                var maxDate = moment().subtract(5, 'minutes');
+                $this.data('max', maxDate.format());
+            }
+            var offset,
+                timeOffset,
+                currentDate;
+            var rangePicker = $this.rangepicker({
+                type: 'double',
+                startValue: minDate.format(fmt),
+                endValue: maxDate.format(fmt),
+                translateSelectLabel: function(currentPosition, totalPosition) {
+                    minDate = new Date($this.data('min'));
+                    maxDate = new Date($this.data('max'));
+                    offset = maxDate - minDate;
+                    timeOffset = offset * (currentPosition / totalPosition);
+                    currentDate = new Date(+minDate + parseInt(timeOffset));
+                    return moment(currentDate).format(fmt);
+                }
+            });
+            var widget_name = $this.parent().attr('id');
+            var startField = $('#' + widget_name + '-ge');
+            var endField = $('#' + widget_name + '-le');
+            // minuteStep handled server-side by extending widget ranges in _options
+            //var startStep = startField.calendarWidget('option', 'minuteStep');
+            var values,
+                totalPosition,
+                startValue,
+                endValue,
+                startDate,
+                endDate;
+            // If the slider is updated then update the INPUTs & trigger a form refresh
+            $this.on('update', function(e) {
+                values = rangePicker.getSelectValue();
+                totalPosition = values['totalWidth'];
+                startValue = values['start'];
+                endValue = values['end'];
+                minDate = new Date($this.data('min'));
+                maxDate = new Date($this.data('max'));
+                offset = maxDate - minDate;
+                timeOffset = offset * (startValue / totalPosition);
+                startDate = new Date(+minDate + parseInt(timeOffset));
+                startField.val(moment(startDate).format(fmt));
+                timeOffset = offset * (endValue / totalPosition);
+                endDate = new Date(+minDate + parseInt(timeOffset));
+                endField.val(moment(endDate).format(fmt));
+                $this.closest('form').trigger('optionChanged');
+            });
+            // If the INPUTs are updated then update the slider
+            function updatePosition() {
+                startValue = startField.val();
+                minDate = new Date($this.data('min'));
+                maxDate = new Date($this.data('max'));
+                offset = maxDate - minDate;
+                if (startValue) {
+                    startDate = moment(startValue, fmt);
+                    timeOffset = startDate - minDate;
+                    startValue = ((timeOffset / offset) * 100) + '%';
+                } else {
+                    startValue = '0%';
+                }
+                endValue = endField.val();
+                if (endValue) {
+                    endDate = moment(endField.val(), fmt);
+                    timeOffset = endDate - minDate;
+                    endValue = ((timeOffset / offset) * 100) + '%';
+                } else {
+                    endValue = '100%';
+                }
+                rangePicker.updatePosition(endValue, startValue);
+            }
+            startField.on('change', function(e) {
+                updatePosition();
+            });
+            endField.on('change', function(e) {
+                updatePosition();
+            });
+            // Handle clear
+            $this.on('clear', function(e) {
+                rangePicker.updatePosition('100%', '0%');
+            });
+            // Allow resizing by updateOptions
+            $this.on('resize', function(e, min, max) {
+                $this.data('min', min);
+                $this.data('max', max);
+                rangePicker.__refresh({'startValue': moment(min).format(fmt),
+                                       'endValue': moment(max).format(fmt)//,
+                                       });
+            });
+        });
+
         // Don't submit if pressing Enter
         $('.text-filter').keypress(function(e) {
             if (e.which == 13) {
@@ -2118,7 +2245,7 @@ S3.search = {};
                         }).keypress(function(e) {
                             if(e.which == 13) {
                                 e.preventDefault();
-                                $this = $(this);
+                                var $this = $(this);
                                 if ($this.val()) {
                                     $this.addClass('changed');
                                 }

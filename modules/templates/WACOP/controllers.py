@@ -916,6 +916,7 @@ class event_Browse(custom_WACOP):
         date_filter = S3DateFilter(["start_date", "end_date"],
                                    label = "",
                                    #hide_time = True,
+                                   slider = True,
                                    )
         date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 
@@ -1028,6 +1029,7 @@ class incident_Browse(custom_WACOP):
         date_filter = S3DateFilter(["date", "end_date"],
                                    label = "",
                                    #hide_time = True,
+                                   slider = True,
                                    )
         date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 

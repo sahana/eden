@@ -8275,7 +8275,8 @@ class LayerGoogle(Layer):
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                 else:
-                    # v3 API (3.26 release & 3.27 is nightly)
+                    # v3 API (3.26 is frozen, 3.27 is release & 3.28 is experimental)
+                    # https://developers.google.com/maps/documentation/javascript/versions
                     script = "//maps.google.com/maps/api/js?v=3.26&key=%s" % apikey
                     if script not in s3_scripts:
                         s3_scripts.append(script)

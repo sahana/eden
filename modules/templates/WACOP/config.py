@@ -395,6 +395,7 @@ def config(settings):
                                            #["date", "end_date"],
                                            label = "",
                                            #hide_time = True,
+                                           slider = True,
                                            )
                 date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 

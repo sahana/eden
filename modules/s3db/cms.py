@@ -2090,6 +2090,7 @@ class cms_TagList(S3Method):
             tags = current.db(table.deleted == False).select(table.name)
             tag_list = [tag.name for tag in tags]
             output = json.dumps(tag_list, separators=SEPARATORS)
+            current.response.headers["Content-Type"] = "application/json"
             return output
 
         raise HTTP(405, current.ERROR.BAD_METHOD)

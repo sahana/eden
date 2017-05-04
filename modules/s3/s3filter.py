@@ -507,6 +507,60 @@ class S3RangeFilter(S3FilterWidget):
         return elements
 
     # -------------------------------------------------------------------------
+    def ajax_options(self, resource):
+        """
+            Method to Ajax-retrieve the current options of this widget
+
+            @param resource: the S3Resource
+        """
+
+        min, max = self._options(resource)
+
+        attr = self._attr(resource)
+        options = {attr["_id"]: {"min": min,
+                                 "max": max,
+                                 }}
+        return options
+
+    # -------------------------------------------------------------------------
+    def _options(self, resource):
+        """
+            Helper function to retrieve the current options for this
+            filter widget
+
+            @param resource: the S3Resource
+        """
+
+        # Find only values linked to records the user is
+        # permitted to read, and apply any resource filters
+        # (= use the resource query)
+        query = resource.get_query()
+
+        # Must include rfilter joins when using the resource
+        # query (both inner and left):
+        rfilter = resource.rfilter
+        if rfilter:
+            join = rfilter.get_joins()
+            left = rfilter.get_joins(left=True)
+        else:
+            join = left = None
+
+        rfield = S3ResourceField(resource, self.field)
+        field = rfield.field
+
+        row = current.db(query).select(field.min(),
+                                       field.max(),
+                                       join=join,
+                                       left=left,
+                                       limitby = (0, 1)
+                                       ).first()
+
+        min = row[field.min()]
+        max = row[field.max()]
+
+        return min, max
+
+    # -------------------------------------------------------------------------
     def widget(self, resource, values):
         """
             Render this widget as HTML helper object(s)
@@ -628,6 +682,84 @@ class S3DateFilter(S3RangeFilter):
         return elements
 
     # -------------------------------------------------------------------------
+    def _options(self, resource, as_str=True):
+        """
+            Helper function to retrieve the current options for this
+            filter widget
+
+            @param resource: the S3Resource
+            @param as_str: return date as ISO-formatted string not raw DateTime
+        """
+
+        # Find only values linked to records the user is
+        # permitted to read, and apply any resource filters
+        # (= use the resource query)
+        query = resource.get_query()
+
+        # Must include rfilter joins when using the resource
+        # query (both inner and left):
+        rfilter = resource.rfilter
+        if rfilter:
+            join = rfilter.get_joins()
+            left = rfilter.get_joins(left=True)
+        else:
+            join = left = None
+
+        fields = self.field
+        if type(fields) is list:
+            # Separate start_date & end_date
+            separate = True
+            # Q: How should we handle NULL end_date?
+            # A: Ignore & just provide constraints that provide differentiation?
+            # B: Allow scrolling arbitrarily into the end space?
+            # Going with (A) for now
+            # If wanting to do (B) then can coalesce a long end_date to the NULLs:
+            # http://stackoverflow.com/questions/21286215/how-can-i-include-null-values-in-a-min-or-max
+            # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
+            start_field = S3ResourceField(resource, fields[0]).field
+            end_field = S3ResourceField(resource, fields[1]).field
+            fields = (start_field.min(),
+                      start_field.max(),
+                      end_field.max(),
+                      )
+        else:
+            separate = False
+            rfield = S3ResourceField(resource, fields)
+            field = rfield.field
+            fields = (field.min(),
+                      field.max(),
+                      )
+
+        row = current.db(query).select(*fields,
+                                       join=join,
+                                       left=left,
+                                       limitby = (0, 1)
+                                       ).first()
+
+        if separate:
+            minimum = row[start_field.min()]
+            maximum = max(row[start_field.max()], row[end_field.max()])
+        else:
+            minimum = row[field.min()]
+            maximum = row[field.max()]
+
+        # Ensure that we can select the extreme values
+        minute_step = 5
+        if minimum:
+            minimum -= datetime.timedelta(minutes = minute_step)
+        if maximum:
+            maximum += datetime.timedelta(minutes = minute_step)
+
+        if as_str:
+            ISO = "%Y-%m-%dT%H:%M:%S"
+            if minimum:
+                minimum = minimum.strftime(ISO)
+            if maximum:
+                maximum = maximum.strftime(ISO)
+
+        return minimum, maximum
+
+    # -------------------------------------------------------------------------
     def widget(self, resource, values):
         """
             Render this widget as HTML helper object(s)
@@ -652,11 +784,48 @@ class S3DateFilter(S3RangeFilter):
         input_labels = self.input_labels
 
         # Picker options
-        hide_time = self.opts.get("hide_time", False)
+        opts_get = self.opts.get
+        hide_time = opts_get("hide_time", False)
+
+        minimum, maximum = self._options(resource, as_str=False)
 
         # Generate the input elements
         filter_widget = DIV(_id=_id, _class=_class)
         append = filter_widget.append
+
+        slider = opts_get("slider", False)
+        if slider:
+            # Load Moment into Browser
+            # NB This will probably get used more widely in future
+            s3 = current.response.s3
+            if s3.debug:
+                if s3.cdn:
+                    s3.scripts.append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js")
+                else:
+                    s3.scripts.append("/%s/static/scripts/moment.js" % current.request.application)
+            else:
+                if s3.cdn:
+                    s3.scripts.append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js")
+                else:
+                    s3.scripts.append("/%s/static/scripts/moment.min.js" % current.request.application)
+            range_picker = DIV(_class="range-picker")
+            ISO = "%Y-%m-%dT%H:%M:%S"
+            if minimum:
+                range_picker["_data-min"] = minimum.strftime(ISO)
+            if maximum:
+                range_picker["_data-max"] = maximum.strftime(ISO)
+            if hide_time:
+                # @ToDo: Translate Settings from Python to Moment
+                # http://momentjs.com/docs/#/displaying/
+                # https://github.com/benjaminoakes/moment-strftime
+                # range_picker["_data-fmt"] = current.deployment_settings.get_L10n_date_format()
+                range_picker["_data-fmt"] = "MMM D YYYY"
+                #range_picker["_data-fmt"] = "LL" # Locale-aware version
+            else:
+                #range_picker["_data-fmt"] = current.deployment_settings.get_L10n_datetime_format()
+                range_picker["_data-fmt"] = "MMM D YYYY HH:mm"
+                #range_picker["_data-fmt"] = "LLL" # Locale-aware version
+            append(range_picker)
 
         get_variable = self._variable
 
@@ -677,7 +846,7 @@ class S3DateFilter(S3RangeFilter):
                 rfield = field = None
             if not field:
                 if not rfield or rfield.virtual:
-                    ftype = self.opts.get("fieldtype", "datetime")
+                    ftype = opts_get("fieldtype", "datetime")
                 else:
                     # Unresolvable selector
                     return ""
@@ -728,6 +897,8 @@ class S3DateFilter(S3RangeFilter):
 
                 # Instantiate the widget
                 widget = S3CalendarWidget(timepicker = timepicker,
+                                          minimum = minimum,
+                                          maximum = maximum,
                                           set_min = set_min,
                                           set_max = set_max,
                                           )
@@ -789,6 +960,7 @@ class S3SliderFilter(S3RangeFilter):
     """
         Filter widget for Ranges which is controlled by a Slider instead of
         INPUTs
+        Wraps jQueryUI's Range Slider in S3.range_slider in S3.js
 
         Configuration options:
 
@@ -833,7 +1005,7 @@ class S3SliderFilter(S3RangeFilter):
 
         # Options
         step = self.opts.get("step", 1)
-        type = self.opts.get("type", "int")
+        _type = self.opts.get("type", "int")
 
         # Generate the input elements
         field = str(field)
