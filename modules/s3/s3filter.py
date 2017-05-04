@@ -730,11 +730,9 @@ class S3DateFilter(S3RangeFilter):
                       field.max(),
                       )
 
-        row = current.db(query).select(*fields,
-                                       join=join,
-                                       left=left,
-                                       limitby = (0, 1)
-                                       ).first()
+        row = current.db(query).select(join = join,
+                                       left = left,
+                                       *fields).first()
 
         if separate:
             minimum = row[start_field.min()]
