@@ -1041,8 +1041,20 @@ def config(settings):
                 table = r.component.table
                 component = r.component
 
+            # Extend onvalidation with custom validation for
+            # mandatory vulnerability type categories
+            onvalidation = component.get_config("onvalidation")
+            if isinstance(onvalidation, (tuple, list)):
+                if vulnerability_type_validation not in onvalidation:
+                   onvalidation = list(onvalidation)
+                   onvalidation.append(vulnerability_type_validation)
+            elif onvalidation:
+                onvalidation = (onvalidation, vulnerability_type_validation)
+            else:
+                onvalidation = vulnerability_type_validation
+
             component.configure(orderby = ~table.start_date,
-                                onvalidation = vulnerability_type_validation,
+                                onvalidation = onvalidation,
                                 )
 
             # Expose "Project Code" and "Person responsible" (both mandatory)
@@ -1199,6 +1211,12 @@ def config(settings):
                                             ),
                                         "comments",
                                         )
+
+            scripts = s3.scripts
+            script = "/%s/static/themes/STL/js/case_activity.js" % r.application
+            if script not in scripts:
+                scripts.append(script)
+
             list_fields = ["person_id",
                            "service_id",
                            "human_resource_id",
