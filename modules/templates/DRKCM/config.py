@@ -16,8 +16,8 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Case Consulting")
-    settings.base.system_name_short = T("Case Consulting")
+    settings.base.system_name = "RefuScope"
+    settings.base.system_name_short = "RefuScope"
 
     # PrePopulate data
     settings.base.prepopulate += ("DRKCM", "default/users", "DRKCM/Demo")
@@ -119,17 +119,6 @@ def config(settings):
     settings.hrm.teams_orgs = False
 
     # -------------------------------------------------------------------------
-    # Inventory Module Settings
-    #
-    settings.inv.facility_label = "Facility"
-    settings.inv.facility_manage_staff = False
-
-    # -------------------------------------------------------------------------
-    # Organisations Module Settings
-    #
-    #settings.org.default_organisation = "Deutsches Rotes Kreuz"
-
-    # -------------------------------------------------------------------------
     # Persons Module Settings
     #
     settings.pr.hide_third_gender = False
@@ -159,162 +148,6 @@ def config(settings):
 
     settings.project.task_time = False
     settings.project.my_tasks_include_team_tasks = True
-
-    # -------------------------------------------------------------------------
-    # Requests Module Settings
-    #
-    settings.req.req_type = ("Stock",)
-    settings.req.use_commit = False
-    settings.req.recurring = False
-
-    # -------------------------------------------------------------------------
-    # Shelter Module Settings
-    #
-    #settings.cr.day_and_night = False
-    settings.cr.shelter_population_dynamic = True
-    settings.cr.shelter_housing_unit_management = True
-    settings.cr.check_out_is_final = False
-
-    # Generate tasks for shelter inspections
-    settings.cr.shelter_inspection_tasks = True
-    settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
-
-    # -------------------------------------------------------------------------
-    def customise_cr_shelter_controller(**attr):
-
-        s3 = current.response.s3
-
-        # Custom prep
-        standard_prep = s3.prep
-        def custom_prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
-
-            has_role = current.auth.s3_has_role
-            if has_role("SECURITY") and not has_role("ADMIN"):
-                # Security can access nothing in cr/shelter except
-                # Dashboard and Check-in/out UI
-                current.auth.permission.fail()
-
-            if r.interactive:
-
-                resource = r.resource
-                resource.configure(filter_widgets = None,
-                                   insertable = False,
-                                   deletable = False,
-                                   )
-
-            if r.component_name == "shelter_unit":
-                # Expose "transitory" flag for housing units
-                utable = current.s3db.cr_shelter_unit
-                field = utable.transitory
-                field.readable = field.writable = True
-                list_fields = ["name",
-                               "transitory",
-                               "capacity_day",
-                               "population_day",
-                               "available_capacity_day",
-                               ]
-                r.component.configure(list_fields=list_fields)
-
-            return result
-        s3.prep = custom_prep
-
-        # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
-
-            # Custom view for shelter inspection
-            if r.method == "inspection":
-               from s3 import S3CustomController
-               S3CustomController._view("DRK", "shelter_inspection.html")
-
-            return output
-        s3.postp = custom_postp
-
-        attr = dict(attr)
-        attr["rheader"] = drk_cr_rheader
-
-        return attr
-
-    settings.customise_cr_shelter_controller = customise_cr_shelter_controller
-
-    # -------------------------------------------------------------------------
-    def customise_cr_shelter_registration_resource(r, tablename):
-
-        table = current.s3db.cr_shelter_registration
-        field = table.shelter_unit_id
-
-        # Filter to available housing units
-        from gluon import IS_EMPTY_OR
-        field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "cr_shelter_unit.id",
-                                               field.represent,
-                                               filterby = "status",
-                                               filter_opts = (1,),
-                                               orderby="shelter_id",
-                                               ))
-
-    settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
-
-    # -------------------------------------------------------------------------
-    def customise_cr_shelter_registration_controller(**attr):
-        """
-            Shelter Registration controller is just used
-            by the Quartiermanager role.
-        """
-
-        s3 = current.response.s3
-
-        # Custom prep
-        standard_prep = s3.prep
-        def custom_prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
-
-            if r.method == "assign":
-
-                # Prep runs before split into create/update (Create should never happen in Village)
-                table = r.table
-
-                # Only edit for this Person
-                f = table.person_id
-                f.default = r.get_vars["person_id"]
-                f.writable = False
-                f.comment = None
-                # Registration status hidden
-                f = table.registration_status
-                f.readable = False
-                f.writable = False
-                # Check-in dates hidden
-                f = table.check_in_date
-                f.readable = False
-                f.writable = False
-                f = table.check_out_date
-                f.readable = False
-                f.writable = False
-
-                # Go back to the list of residents after assigning
-                from gluon import URL
-                current.s3db.configure("cr_shelter_registration",
-                                       create_next = URL(c="dvr", f="person"),
-                                       update_next = URL(c="dvr", f="person"),
-                                       )
-
-            return result
-        s3.prep = custom_prep
-
-        return attr
-
-    settings.customise_cr_shelter_registration_controller = customise_cr_shelter_registration_controller
 
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
@@ -421,37 +254,9 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
-        has_role = current.auth.s3_has_role
-        is_admin = has_role(current.auth.get_system_roles().ADMIN)
-
-        # Roles with extended access to person form
-        PRIVILEGED = ("ADMIN_HEAD",
-                      "ADMINISTRATION",
-                      "INFO_POINT",
-                      "MEDICAL",
-                      "POLICE",
-                      "RP",
-                      "SECURITY_HEAD",
-                      )
-
-        s3.is_privileged = None
-        def privileged():
-            # Lazy check for privileged access to person form
-            privileged = s3.is_privileged
-            if privileged is None:
-                privileged = is_admin or any(has_role(role) for role in PRIVILEGED)
-                s3.is_privileged = privileged
-            return privileged
-
-        QUARTIERMANAGER = has_role("QUARTIER") and not privileged()
-
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
-
-            if QUARTIERMANAGER:
-                # Enforce closed=0
-                r.vars["closed"] = r.get_vars["closed"] = "0"
 
             # Call standard prep
             if callable(standard_prep):
@@ -459,190 +264,26 @@ def config(settings):
             else:
                 result = True
 
-            get_vars = r.get_vars
-
-            archived = get_vars.get("archived")
+            archived = r.get_vars.get("archived")
             if archived in ("1", "true", "yes"):
                 crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
 
-            controller = r.controller
-            resource = r.resource
-
-            if controller == "security":
-                # Restricted view for Security staff
-                if r.component:
-                    redirect(r.url(method=""))
-
-                # Autocomplete using alternative search method
-                search_fields = ("first_name", "last_name", "pe_label")
-                s3db.set_method("pr", "person",
-                                method = "search_ac",
-                                action = s3db.pr_PersonSearchAutocomplete(search_fields),
-                                )
-
-                current.deployment_settings.ui.export_formats = None
-
-                # Filter to valid and open cases
-                query = (FS("dvr_case.id") != None) & \
-                        ((FS("dvr_case.archived") == False) | \
-                         (FS("dvr_case.archived") == None)) & \
-                        (FS("dvr_case.status_id$is_closed") == False)
-                resource.add_filter(query)
-
-                # Adjust CRUD strings
-                s3.crud_strings["pr_person"].update(
-                    {"title_list": T("Current Cases"),
-                     "label_list_button": T("List Cases"),
-                     }
-                    )
-
-                # No side menu
-                current.menu.options = None
-
-                # Only Show Security Notes
-                ntable = s3db.dvr_note_type
-                note_type = db(ntable.name == "Security").select(ntable.id,
-                                                                 limitby=(0, 1),
-                                                                 ).first()
-                try:
-                    note_type_id = note_type.id
-                except:
-                    current.log.error("Prepop not done - deny access to dvr_note component")
-                    note_type_id = None
-                    atable = s3db.dvr_note
-                    atable.date.readable = atable.date.writable = False
-                    atable.note.readable = atable.note.writable = False
-
-                # Custom CRUD form
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent
-                crud_form = S3SQLCustomForm(
-                                (T("ID"), "pe_label"),
-                                "last_name",
-                                "first_name",
-                                "date_of_birth",
-                                #"gender",
-                                "person_details.nationality",
-                                "cr_shelter_registration.shelter_unit_id",
-                                S3SQLInlineComponent(
-                                        "case_note",
-                                        fields = [(T("Date"), "date"),
-                                                  "note",
-                                                  ],
-                                        filterby = {"field": "note_type_id",
-                                                    "options": note_type_id,
-                                                    },
-                                        label = T("Security Notes"),
-                                        ),
-                                )
-
-                # Custom list fields
-                list_fields = [(T("ID"), "pe_label"),
-                               "last_name",
-                               "first_name",
-                               "date_of_birth",
-                               #"gender",
-                               "person_details.nationality",
-                               "shelter_registration.shelter_unit_id",
-                               ]
-
-                # Profile page (currently unused)
-                if r.method == "profile":
-                    from gluon.html import DIV, H2, P, TABLE, TR, TD, A
-                    from s3 import s3_fullname
-                    person_id = r.id
-                    record = r.record
-                    table = r.table
-                    dtable = s3db.pr_person_details
-                    details = db(dtable.person_id == person_id).select(dtable.nationality,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                    try:
-                        nationality = details.nationality
-                    except:
-                        nationality = None
-                    rtable = s3db.cr_shelter_registration
-                    reg = db(rtable.person_id == person_id).select(rtable.shelter_unit_id,
-                                                                   limitby=(0, 1)
-                                                                   ).first()
-                    try:
-                        shelter_unit_id = reg.shelter_unit_id
-                    except:
-                        shelter_unit_id = None
-                    profile_header = DIV(H2(s3_fullname(record)),
-                                         TABLE(TR(TD(T("ID")),
-                                                  TD(record.pe_label)
-                                                  ),
-                                               TR(TD(table.last_name.label),
-                                                  TD(record.last_name)
-                                                  ),
-                                               TR(TD(table.first_name.label),
-                                                  TD(record.first_name)
-                                                  ),
-                                               TR(TD(table.date_of_birth.label),
-                                                  TD(record.date_of_birth)
-                                                  ),
-                                               TR(TD(dtable.nationality.label),
-                                                  TD(nationality)
-                                                  ),
-                                               TR(TD(rtable.shelter_unit_id.label),
-                                                  TD(shelter_unit_id)
-                                                  ),
-                                               ),
-                                         _class="profile-header",
-                                         )
-                    notes_widget = dict(label = "Security Notes",
-                                        label_create = "Add Note",
-                                        type = "datatable",
-                                        tablename = "dvr_note",
-                                        filter = ((FS("note_type_id$name") == "Security") & \
-                                                  (FS("person_id") == person_id)),
-                                        #icon = "report",
-                                        create_controller = "dvr",
-                                        create_function = "note",
-                                        )
-                    profile_widgets = [notes_widget]
-                else:
-                    profile_header = None
-                    profile_widgets = None
-
-                resource.configure(crud_form = crud_form,
-                                   list_fields = list_fields,
-                                   profile_header = profile_header,
-                                   profile_widgets = profile_widgets,
-                                   )
-
-            elif controller == "dvr":
+            if r.controller == "dvr":
 
                 from gluon import Field, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY
 
+                resource = r.resource
                 configure = resource.configure
+
                 table = r.table
                 ctable = s3db.dvr_case
-
-                if r.representation in ("html", "iframe", "aadata"):
-                    # Delivers HTML, so restrict to GUI:
-                    configure(extra_fields = ["shelter_registration.registration_status",
-                                              "shelter_registration.check_out_date",
-                                              ],
-                              )
 
                 if not r.component:
 
                     configure_person_tags()
 
-                    configure = resource.configure
                     if r.interactive and r.method != "import":
-
-                        # Registration status effective dates not manually updateable
-                        if r.id:
-                            rtable = s3db.cr_shelter_registration
-                            field = rtable.check_in_date
-                            field.writable = False
-                            field.label = T("Last Check-in")
-                            field = rtable.check_out_date
-                            field.writable = False
-                            field.label = T("Last Check-out")
 
                         # Make marital status mandatory, remove "other"
                         dtable = s3db.pr_person_details
@@ -667,167 +308,84 @@ def config(settings):
                         field = table.last_name
                         field.requires = IS_NOT_EMPTY()
 
-                        # Check whether the shelter registration shall be cancelled
-                        cancel = False
-                        if r.http == "POST":
-                            post_vars = r.post_vars
-                            archived = post_vars.get("sub_dvr_case_archived")
-                            status_id = post_vars.get("sub_dvr_case_status_id")
-                            if archived:
-                                cancel = True
-                            if not cancel and status_id:
-                                stable = s3db.dvr_case_status
-                                status = db(stable.id == status_id).select(stable.is_closed,
-                                                                           limitby = (0, 1),
-                                                                           ).first()
-                                try:
-                                    if status.is_closed:
-                                        cancel = True
-                                except:
-                                    pass
-
-                        if cancel:
-                            # Ignore registration data in form if the registration
-                            # is to be cancelled - otherwise a new registration is
-                            # created by the subform-processing right after
-                            # dvr_case_onaccept deletes the current one:
-                            reg_shelter = None
-                            reg_status = None
-                            reg_unit_id = None
-                            reg_check_in_date = None
-                            reg_check_out_date = None
-                        else:
-                            reg_shelter = "cr_shelter_registration.shelter_id"
-                            reg_status = (T("Presence"),
-                                          "cr_shelter_registration.registration_status",
-                                          )
-                            reg_unit_id = "cr_shelter_registration.shelter_unit_id"
-                            reg_check_in_date = "cr_shelter_registration.check_in_date"
-                            reg_check_out_date = "cr_shelter_registration.check_out_date"
-
                         # Custom CRUD form
                         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-                        if privileged():
-                            # Extended form
-                            crud_form = S3SQLCustomForm(
+                        crud_form = S3SQLCustomForm(
 
-                                    # Case Details ----------------------------
-                                    (T("Case Status"), "dvr_case.status_id"),
-                                    S3SQLInlineLink("case_flag",
-                                                    label = T("Flags"),
-                                                    field = "flag_id",
-                                                    help_field = "comments",
-                                                    cols = 4,
-                                                    ),
-
-                                    # Person Details --------------------------
-                                    (T("ID"), "pe_label"),
-                                    "last_name",
-                                    "first_name",
-                                    "person_details.nationality",
-                                    "date_of_birth",
-                                    "gender",
-                                    "person_details.marital_status",
-
-                                    # Process Data ----------------------------
-                                    # Will always default & be hidden
-                                    "dvr_case.organisation_id",
-                                    # Will always default & be hidden
-                                    "dvr_case.site_id",
-                                    (T("BFV Arrival"), "dvr_case.date"),
-                                    "dvr_case.origin_site_id",
-                                    "dvr_case.destination_site_id",
-                                    S3SQLInlineComponent(
-                                            "eo_number",
-                                            fields = [("", "value"),
-                                                      ],
-                                            filterby = {"field": "tag",
-                                                        "options": "EONUMBER",
-                                                        },
-                                            label = T("EasyOpt Number"),
-                                            multiple = False,
-                                            name = "eo_number",
+                            # Case Details ----------------------------
+                            (T("Case Status"), "dvr_case.status_id"),
+                            S3SQLInlineLink("case_flag",
+                                            label = T("Flags"),
+                                            field = "flag_id",
+                                            help_field = "comments",
+                                            cols = 4,
                                             ),
-                                    S3SQLInlineComponent(
-                                            "bamf",
-                                            fields = [("", "value"),
-                                                      ],
-                                            filterby = {"field": "tag",
-                                                        "options": "BAMF",
-                                                        },
-                                            label = T("BAMF Reference Number"),
-                                            multiple = False,
-                                            name = "bamf",
-                                            ),
-                                    "dvr_case.valid_until",
-                                    "dvr_case.stay_permit_until",
 
-                                    # Shelter Data ----------------------------
-                                    # Will always default & be hidden
-                                    #"cr_shelter_registration.site_id",
-                                    reg_shelter,
-                                    # @ ToDo: Automate this from the Case Status?
-                                    reg_unit_id,
-                                    reg_status,
-                                    reg_check_in_date,
-                                    reg_check_out_date,
+                            # Person Details --------------------------
+                            (T("ID"), "pe_label"),
+                            "last_name",
+                            "first_name",
+                            "person_details.nationality",
+                            "date_of_birth",
+                            "gender",
+                            "person_details.marital_status",
 
-                                    # Other Details ---------------------------
-                                    "person_details.occupation",
-                                    S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value"),
-                                                        ],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "SMS",
-                                                        },
-                                            label = T("Mobile Phone"),
-                                            multiple = False,
-                                            name = "phone",
-                                            ),
-                                    "person_details.literacy",
-                                    S3SQLInlineComponent(
-                                            "case_language",
-                                            fields = ["language",
-                                                      "quality",
-                                                      "comments",
-                                                      ],
-                                            label = T("Language / Communication Mode"),
-                                            ),
-                                    "dvr_case.comments",
+                            # Process Data ----------------------------
+                            "dvr_case.organisation_id",
+                            "dvr_case.site_id",
+                            (T("Date of Arrival"), "dvr_case.date"),
+                            #S3SQLInlineComponent(
+                            #        "eo_number",
+                            #        fields = [("", "value"),
+                            #                  ],
+                            #        filterby = {"field": "tag",
+                            #                    "options": "EONUMBER",
+                            #                    },
+                            #        label = T("EasyOpt Number"),
+                            #        multiple = False,
+                            #        name = "eo_number",
+                            #        ),
+                            S3SQLInlineComponent(
+                                    "bamf",
+                                    fields = [("", "value"),
+                                              ],
+                                    filterby = {"field": "tag",
+                                                "options": "BAMF",
+                                                },
+                                    label = T("BAMF Reference Number"),
+                                    multiple = False,
+                                    name = "bamf",
+                                    ),
+                            "dvr_case.valid_until",
+                            "dvr_case.stay_permit_until",
 
-                                    # Archived-flag ---------------------------
-                                    (T("Invalid"), "dvr_case.archived"),
-                                    )
-                        else:
-                            # Reduced form
-                            crud_form = S3SQLCustomForm(
-                                    S3SQLInlineLink("case_flag",
-                                                    label = T("Flags"),
-                                                    field = "flag_id",
-                                                    help_field = "comments",
-                                                    cols = 4,
-                                                    ),
-                                    (T("ID"), "pe_label"),
-                                    "last_name",
-                                    "first_name",
-                                    "person_details.nationality",
-                                    "date_of_birth",
-                                    "gender",
-                                    reg_unit_id,
-                                    S3SQLInlineComponent(
-                                            "contact",
-                                            fields = [("", "value"),
-                                                        ],
-                                            filterby = {"field": "contact_method",
-                                                        "options": "SMS",
-                                                        },
-                                            label = T("Mobile Phone"),
-                                            multiple = False,
-                                            name = "phone",
-                                            ),
-                                    "dvr_case.comments",
-                                    )
+                            # Other Details ---------------------------
+                            "person_details.occupation",
+                            S3SQLInlineComponent(
+                                    "contact",
+                                    fields = [("", "value"),
+                                                ],
+                                    filterby = {"field": "contact_method",
+                                                "options": "SMS",
+                                                },
+                                    label = T("Mobile Phone"),
+                                    multiple = False,
+                                    name = "phone",
+                                    ),
+                            "person_details.literacy",
+                            S3SQLInlineComponent(
+                                    "case_language",
+                                    fields = ["language",
+                                              "quality",
+                                              "comments",
+                                              ],
+                                    label = T("Language / Communication Mode"),
+                                    ),
+                            "dvr_case.comments",
+
+                            # Archived-flag ---------------------------
+                            (T("Invalid"), "dvr_case.archived"),
+                            )
 
                         configure(crud_form = crud_form,
                                   )
@@ -859,29 +417,29 @@ def config(settings):
                             #dob_filter.operator = ["eq"]
                             filter_widgets.insert(1, dob_filter)
 
-                            # Additional filters for privileged roles
-                            if privileged():
-                                # Add filter for registration date
-                                reg_filter = S3DateFilter("dvr_case.date",
-                                                          hidden = True,
-                                                          )
-                                filter_widgets.append(reg_filter)
+                            ## Additional filters for privileged roles
+                            #if privileged():
+                            # Add filter for registration date
+                            reg_filter = S3DateFilter("dvr_case.date",
+                                                      hidden = True,
+                                                      )
+                            filter_widgets.append(reg_filter)
 
-                                # Add filter for registration status
-                                reg_filter = S3OptionsFilter("shelter_registration.registration_status",
-                                                             label = T("Presence"),
-                                                             options = s3db.cr_shelter_registration_status_opts,
-                                                             hidden = True,
-                                                             cols = 3,
-                                                             )
-                                filter_widgets.append(reg_filter)
+                            # Add filter for registration status
+                            reg_filter = S3OptionsFilter("shelter_registration.registration_status",
+                                                         label = T("Presence"),
+                                                         options = s3db.cr_shelter_registration_status_opts,
+                                                         hidden = True,
+                                                         cols = 3,
+                                                         )
+                            filter_widgets.append(reg_filter)
 
-                                # Add filter for BAMF Registration Number
-                                bamf_filter = S3TextFilter(["bamf.value"],
-                                                           label = T("BAMF Ref.No."),
-                                                           hidden = True,
-                                                           )
-                                filter_widgets.append(bamf_filter)
+                            # Add filter for BAMF Registration Number
+                            bamf_filter = S3TextFilter(["bamf.value"],
+                                                       label = T("BAMF Ref.No."),
+                                                       hidden = True,
+                                                       )
+                            filter_widgets.append(bamf_filter)
 
                             # Add filter for IDs
                             id_filter = S3TextFilter(["pe_label"],
@@ -894,94 +452,19 @@ def config(settings):
 
                     # Custom list fields (must be outside of r.interactive)
                     list_fields = [(T("ID"), "pe_label"),
-                                   #(T("EasyOpt No."), "eo_number.value"),
+                                   (T("EasyOpt No."), "eo_number.value"),
                                    "last_name",
                                    "first_name",
                                    "date_of_birth",
                                    "gender",
                                    "person_details.nationality",
-                                   #"dvr_case.date",
-                                   #"dvr_case.status_id",
+                                   "dvr_case.date",
+                                   "dvr_case.status_id",
                                    (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
 
-                    if privileged():
-                        # Additional list fields for privileged roles
-                        list_fields.insert(1, (T("EasyOpt No."), "eo_number.value"))
-                        list_fields[-1:-1] = ("dvr_case.date",
-                                              "dvr_case.status_id",
-                                              )
-
-                    if r.representation == "xls":
-                        # Extra list_fields for XLS export
-
-                        # Add appointment dates
-                        atypes = ["GU",
-                                  "X-Ray",
-                                  "Sent to RP",
-                                  ]
-                        COMPLETED = 4
-                        afields = []
-                        attable = s3db.dvr_case_appointment_type
-                        query = attable.name.belongs(atypes)
-                        rows = db(query).select(attable.id,
-                                                attable.name,
-                                                )
-                        add_components = s3db.add_components
-                        for row in rows:
-                            type_id = row.id
-                            name = "appointment%s" % type_id
-                            hook = {"name": name,
-                                    "joinby": "person_id",
-                                    "filterby": {"type_id": type_id,
-                                                 "status": COMPLETED,
-                                                 },
-                                    }
-                            add_components("pr_person",
-                                           dvr_case_appointment = hook,
-                                           )
-                            afields.append((T(row.name), "%s.date" % name))
-
-                        list_fields.extend(afields)
-
-                        # Add family key
-                        s3db.add_components("pr_person",
-                                            pr_group = {"name": "family",
-                                                        "link": "pr_group_membership",
-                                                        "joinby": "person_id",
-                                                        "key": "group_id",
-                                                        "filterby": {
-                                                            "group_type": 7,
-                                                            },
-                                                        },
-                                            )
-
-                        list_fields += [# Current check-in/check-out status
-                                        (T("Registration Status"),
-                                         "shelter_registration.registration_status",
-                                         ),
-                                        # Last Check-in date
-                                        "shelter_registration.check_in_date",
-                                        # Last Check-out date
-                                        "shelter_registration.check_out_date",
-                                        # Person UUID
-                                        ("UUID", "uuid"),
-                                        # Family Record ID
-                                        (T("Family ID"), "family.id"),
-                                        ]
                     configure(list_fields = list_fields)
 
-                elif r.component_name == "case_appointment":
-
-                    # Make appointments tab read-only even if the user is
-                    # permitted to create or update appointments (via event
-                    # registration), except for ADMINISTRATION/ADMIN_HEAD:
-                    if not has_role("ADMINISTRATION") and \
-                       not has_role("ADMIN_HEAD"):
-                        r.component.configure(insertable = False,
-                                              editable = False,
-                                              deletable = False,
-                                              )
             return result
         s3.prep = custom_prep
 
@@ -992,17 +475,17 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if QUARTIERMANAGER:
-                # Add Action Button to assign Housing Unit to the Resident
-                from gluon import URL
-                s3.actions = [dict(label=s3_str(T("Assign Shelter")),
-                                    _class="action-btn",
-                                    url=URL(c="cr",
-                                            f="shelter_registration",
-                                            args=["assign"],
-                                            vars={"person_id": "[id]"},
-                                            )),
-                               ]
+            #if QUARTIERMANAGER:
+                ## Add Action Button to assign Housing Unit to the Resident
+                #from gluon import URL
+                #s3.actions = [dict(label=s3_str(T("Assign Shelter")),
+                                    #_class="action-btn",
+                                    #url=URL(c="cr",
+                                            #f="shelter_registration",
+                                            #args=["assign"],
+                                            #vars={"person_id": "[id]"},
+                                            #)),
+                               #]
 
             return output
         s3.postp = custom_postp
@@ -1533,289 +1016,6 @@ def config(settings):
     settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
 
     # -------------------------------------------------------------------------
-    def customise_dvr_allowance_controller(**attr):
-
-        s3 = current.response.s3
-        s3db = current.s3db
-
-        # Custom prep
-        standard_prep = s3.prep
-        def custom_prep(r):
-
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
-
-            resource = r.resource
-
-            # Filter to active cases
-            if not r.record:
-                query = (FS("person_id$dvr_case.archived") == False) | \
-                        (FS("person_id$dvr_case.archived") == None)
-                resource.add_filter(query)
-
-            if not r.component:
-
-                if r.interactive and not r.id:
-                    # Custom filter widgets
-                    from s3 import S3TextFilter, \
-                                   S3OptionsFilter, \
-                                   S3DateFilter
-
-                    filter_widgets = [
-                        S3TextFilter(["person_id$pe_label",
-                                      "person_id$first_name",
-                                      "person_id$middle_name",
-                                      "person_id$last_name",
-                                      ],
-                                      label = T("Search"),
-                                      ),
-                        S3OptionsFilter("status",
-                                        default = 1,
-                                        cols = 4,
-                                        options = s3db.dvr_allowance_status_opts,
-                                        ),
-                        S3DateFilter("date"),
-                        S3DateFilter("paid_on"),
-                        S3DateFilter("entitlement_period",
-                                     hidden = True,
-                                     )
-                        ]
-                    resource.configure(filter_widgets = filter_widgets)
-
-                # Field Visibility
-                table = resource.table
-                field = table.case_id
-                field.readable = field.writable = False
-
-                # Can't change beneficiary
-                field = table.person_id
-                field.writable = False
-
-                # Custom list fields
-                list_fields = [(T("ID"), "person_id$pe_label"),
-                               "person_id",
-                               "entitlement_period",
-                               "date",
-                               "currency",
-                               "amount",
-                               "status",
-                               "paid_on",
-                               "comments",
-                               ]
-                if r.representation == "xls":
-                    list_fields.append(("UUID", "person_id$uuid"))
-
-                resource.configure(list_fields = list_fields,
-                                   insertable = False,
-                                   deletable = False,
-                                   #editable = False,
-                                   )
-
-            return result
-        s3.prep = custom_prep
-
-        # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
-
-            if r.method == "register":
-                from s3 import S3CustomController
-                S3CustomController._view("DRK", "register_case_event.html")
-            return output
-        s3.postp = custom_postp
-
-        return attr
-
-    settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
-
-    # -------------------------------------------------------------------------
-    def case_event_create_onaccept(form):
-        """
-            Custom onaccept-method for case events
-                - cascade FOOD events to other members of the same case group
-
-            @param form: the Form
-        """
-
-        # Get form.vars.id
-        formvars = form.vars
-        try:
-            record_id = formvars.id
-        except AttributeError:
-            record_id = None
-        if not record_id:
-            return
-
-        # Prevent recursion
-        try:
-            if formvars._cascade:
-                return
-        except AttributeError:
-            pass
-
-        db = current.db
-        s3db = current.s3db
-
-        # Get the person ID and event type code and interval
-        ttable = s3db.dvr_case_event_type
-        etable = s3db.dvr_case_event
-        query = (etable.id == record_id) & \
-                (ttable.id == etable.type_id)
-        row = db(query).select(etable.person_id,
-                               etable.type_id,
-                               etable.date,
-                               ttable.code,
-                               ttable.min_interval,
-                               limitby = (0, 1),
-                               ).first()
-        if not row:
-            return
-
-        # Extract the event attributes
-        event = row.dvr_case_event
-        person_id = event.person_id
-        event_type_id = event.type_id
-        event_date = event.date
-
-        # Extract the event type attributes
-        event_type = row.dvr_case_event_type
-        event_code = event_type.code
-        interval = event_type.min_interval
-
-        if event_code == "FOOD":
-
-            gtable = s3db.pr_group
-            mtable = s3db.pr_group_membership
-            ctable = s3db.dvr_case
-            stable = s3db.dvr_case_status
-
-            # Get all case groups this person belongs to
-            query = ((mtable.person_id == person_id) & \
-                    (mtable.deleted != True) & \
-                    (gtable.id == mtable.group_id) & \
-                    (gtable.group_type == 7))
-            rows = db(query).select(gtable.id)
-            group_ids = set(row.id for row in rows)
-
-            # Find all other members of these case groups, and
-            # the last FOOD event registration date/time for each
-            members = {}
-            if group_ids:
-                left = [ctable.on(ctable.person_id == mtable.person_id),
-                        stable.on(stable.id == ctable.status_id),
-                        etable.on((etable.person_id == mtable.person_id) & \
-                                  (etable.type_id == event_type_id) & \
-                                  (etable.deleted != True)),
-                        ]
-                query = (mtable.person_id != person_id) & \
-                        (mtable.group_id.belongs(group_ids)) & \
-                        (mtable.deleted != True) & \
-                        (ctable.archived != True) & \
-                        (ctable.deleted != True) & \
-                        (stable.is_closed != True)
-                latest = etable.date.max()
-                case_id = ctable._id.min()
-                rows = db(query).select(mtable.person_id,
-                                        case_id,
-                                        latest,
-                                        left = left,
-                                        groupby = mtable.person_id,
-                                        )
-                for row in rows:
-                    person = row[mtable.person_id]
-                    if person not in members:
-                        members[person] = (row[case_id], row[latest])
-
-            # For each case group member, replicate the event
-            now = current.request.utcnow
-            for member, details in members.items():
-
-                case_id, latest = details
-
-                # Check minimum waiting interval
-                passed = True
-                if interval and latest:
-                    earliest = latest + datetime.timedelta(hours=interval)
-                    if earliest > now:
-                        passed = False
-                if not passed:
-                    continue
-
-                # Replicate the event for this member
-                data = {"person_id": member,
-                        "case_id": case_id,
-                        "type_id": event_type_id,
-                        "date": event_date,
-                        }
-                event_id = etable.insert(**data)
-                if event_id:
-                    # Set record owner
-                    auth = current.auth
-                    auth.s3_set_record_owner(etable, event_id)
-                    auth.s3_make_session_owner(etable, event_id)
-                    # Execute onaccept
-                    # => set _cascade flag to prevent recursion
-                    data["id"] = event_id
-                    data["_cascade"] = True
-                    s3db.onaccept(etable, data, method="create")
-
-    # -------------------------------------------------------------------------
-    def customise_dvr_case_event_resource(r, tablename):
-
-        resource = current.s3db.resource("dvr_case_event")
-
-        # Get the current create_onaccept setting
-        hook = "create_onaccept"
-        callback = resource.get_config(hook)
-
-        # Fall back to generic onaccept
-        if not callback:
-            hook = "onaccept"
-            callback = resource.get_config(hook)
-
-        # Extend with custom onaccept
-        custom_onaccept = case_event_create_onaccept
-        if callback:
-            if isinstance(callback, (tuple, list)):
-                if custom_onaccept not in callback:
-                    callback = list(callback) + [custom_onaccept]
-            else:
-                callback = [callback, custom_onaccept]
-        else:
-            callback = custom_onaccept
-        resource.configure(**{hook: callback})
-
-    settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
-
-    # -------------------------------------------------------------------------
-    def customise_dvr_case_event_controller(**attr):
-
-        s3 = current.response.s3
-
-        # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
-
-            if r.method == "register":
-                from s3 import S3CustomController
-                S3CustomController._view("DRK", "register_case_event.html")
-            return output
-        s3.postp = custom_postp
-
-        return attr
-
-    settings.customise_dvr_case_event_controller = customise_dvr_case_event_controller
-
-    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         s3db = current.s3db
@@ -2297,50 +1497,6 @@ def drk_org_rheader(r, tabs=[]):
             rheader_fields = [["name", "email"],
                               ["organisation_id", "phone1"],
                               ["location_id", "phone2"],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
-                                                         )
-    return rheader
-
-# =============================================================================
-def drk_cr_rheader(r, tabs=[]):
-    """ CR custom resource headers """
-
-    if r.representation != "html":
-        # Resource headers only used in interactive views
-        return None
-
-    from s3 import s3_rheader_resource, S3ResourceHeader
-
-    tablename, record = s3_rheader_resource(r)
-    if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
-    else:
-        resource = r.resource
-
-    rheader = None
-    rheader_fields = []
-
-    if record:
-        T = current.T
-
-        if tablename == "cr_shelter":
-
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        (T("Housing Units"), "shelter_unit"),
-                        (T("Client Registration"), "shelter_registration"),
-                        ]
-
-            rheader_fields = [["name",
-                               ],
-                              ["organisation_id",
-                               ],
-                              ["location_id",
-                               ],
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,

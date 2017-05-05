@@ -1,81 +1,41 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-ADMIN_HEAD,Head of Administration,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,dvr,case_event,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
-ADMIN_HEAD,Head of Administration,,dvr,site_activity,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update site activity reports"
-ADMIN_HEAD,Head of Administration,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,hrm,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module index controller
-ADMIN_HEAD,Head of Administration,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff data
-ADMIN_HEAD,Head of Administration,,hrm,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module
-ADMIN_HEAD,Head of Administration,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
-ADMIN_HEAD,Head of Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to task management
-ADMIN_HEAD,Head of Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,security,seized_item,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
-ADMIN_HEAD,Head of Administration,,security,seized_item_type,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
-ADMIN_HEAD,Head of Administration,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
-ADMIN_HEAD,Head of Administration,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
-ADMIN_HEAD,Head of Administration,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
-ADMIN_HEAD,Head of Administration,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
-ADMIN_HEAD,Head of Administration,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter flags
-ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
-ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
-ADMIN_HEAD,Head of Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
-ADMIN_HEAD,Head of Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
-ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to case appointments
-ADMIN_HEAD,Head of Administration,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_case_event,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
-ADMIN_HEAD,Head of Administration,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete case notes"
-ADMIN_HEAD,Head of Administration,,,,dvr_site_activity,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete site activity reports"
-ADMIN_HEAD,Head of Administration,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facilities
-ADMIN_HEAD,Head of Administration,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility types
-ADMIN_HEAD,Head of Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
-ADMIN_HEAD,Head of Administration,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility type links
-ADMIN_HEAD,Head of Administration,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage family members
-ADMIN_HEAD,Head of Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage profile pictures
-ADMIN_HEAD,Head of Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
-ADMIN_HEAD,Head of Administration,,,,security_seized_item,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
-ADMIN_HEAD,Head of Administration,,,,security_seized_item_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
-ADMINISTRATION,Administration,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
-ADMINISTRATION,Administration,,dvr,site_activity,,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
-ADMINISTRATION,Administration,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
-ADMINISTRATION,Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Administration has unrestricted access to task management
-ADMINISTRATION,Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,security,seized_item,,CREATE|READ|UPDATE,DELETE,,,,"Administration can manage seized items, but delete only the ones they created"
-ADMINISTRATION,Administration,,security,seized_item_type,,READ,,,,,Administration can read seized item types
-ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
-ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
-ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
-ADMINISTRATION,Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to allowance information
-ADMINISTRATION,Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage activities
-ADMINISTRATION,Administration,,,,dvr_case_appointment,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to case appointments
-ADMINISTRATION,Administration,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
-ADMINISTRATION,Administration,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,UPDATE,,,,"Administration can create and read notes, and update the notes they created"
-ADMINISTRATION,Administration,,,,dvr_site_activity,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
-ADMINISTRATION,Administration,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage facilities
-ADMINISTRATION,Administration,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage facility types
-ADMINISTRATION,Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
-ADMINISTRATION,Administration,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage facility type links
-ADMINISTRATION,Administration,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage family members
-ADMINISTRATION,Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage profile pictures
-ADMINISTRATION,Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
-ADMINISTRATION,Administration,,,,security_seized_item,CREATE|READ|UPDATE,DELETE,,,,"Administration can manage seized items, but delete only the ones they created"
-ADMINISTRATION,Administration,,,,security_seized_item_type,READ,,,,,Administration can read seized item types
+ORG_ADMIN,Organization Administrator,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,dvr,case_event,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
+ORG_ADMIN,Organization Administrator,,dvr,site_activity,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update site activity reports"
+ORG_ADMIN,Organization Administrator,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,hrm,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module index controller
+ORG_ADMIN,Organization Administrator,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff data
+ORG_ADMIN,Organization Administrator,,hrm,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module
+ORG_ADMIN,Organization Administrator,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
+ORG_ADMIN,Organization Administrator,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to task management
+ORG_ADMIN,Organization Administrator,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
+ORG_ADMIN,Organization Administrator,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
+ORG_ADMIN,Organization Administrator,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
+ORG_ADMIN,Organization Administrator,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
+ORG_ADMIN,Organization Administrator,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter flags
+ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
+ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
+ORG_ADMIN,Organization Administrator,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
+ORG_ADMIN,Organization Administrator,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
+ORG_ADMIN,Organization Administrator,,,,dvr_case_appointment,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to case appointments
+ORG_ADMIN,Organization Administrator,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,dvr_case_event,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
+ORG_ADMIN,Organization Administrator,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete case notes"
+ORG_ADMIN,Organization Administrator,,,,dvr_site_activity,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete site activity reports"
+ORG_ADMIN,Organization Administrator,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facilities
+ORG_ADMIN,Organization Administrator,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility types
+ORG_ADMIN,Organization Administrator,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
+ORG_ADMIN,Organization Administrator,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility type links
+ORG_ADMIN,Organization Administrator,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage family members
+ORG_ADMIN,Organization Administrator,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage profile pictures
+ORG_ADMIN,Organization Administrator,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organization Administrator,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
@@ -100,187 +60,6 @@ AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,But need 
 AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete contact information
 AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete emergency contact information
 AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-FOOD_STATS,Food Statistics,,dvr,case_event,,READ,,,,,FoodStats role can read case events
-FOOD_STATS,Food Statistics,,dvr,index,,NONE,,,,,FoodStats role can not access DVR index controller
-FOOD_STATS,Food Statistics,,dvr,person,,NONE,,,,,FoodStats role can not access case list
-FOOD_STATS,Food Statistics,,dvr,site_activity,,NONE,,,,,FoodStats role can not access site activity reports
-FOOD_STATS,Food Statistics,,,,dvr_case_event,READ,,,,,FoodStats role can read all case events
-FOOD_STATS,Food Statistics,,,,pr_person,READ,,,,,FoodStats role can look up persons
-MEDICAL,Medical,,cr,,,READ,,,,,
-MEDICAL,Medical,,dvr,case_event,,CREATE|READ,,,,,Medical can create and read in tables required for case event registration
-MEDICAL,Medical,,dvr,site_activity,,NONE,,,,,Medical can not access site activity reports
-MEDICAL,Medical,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-MEDICAL,Medical,,inv,,,NONE,,,,,
-MEDICAL,Medical,,project,,,NONE,,,,,
-MEDICAL,Medical,,,,cr_shelter,READ,,,,,Medical can read shelter info
-MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
-MEDICAL,Medical,,,,cr_shelter_unit,READ,,,,,
-MEDICAL,Medical,,,,dvr_allowance,NONE,,,,,Medical can not see allowance details
-MEDICAL,Medical,,,,dvr_case,READ|UPDATE,,,,,
-MEDICAL,Medical,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Medical can read and update activities
-MEDICAL,Medical,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Medical can manage appointments
-MEDICAL,Medical,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-MEDICAL,Medical,,,,dvr_case_event,CREATE,READ,,,,Medical can register case events and read those they created
-MEDICAL,Medical,,,,dvr_case_language,READ,,,,,
-MEDICAL,Medical,,,,dvr_note,CREATE|READ,UPDATE,,,,Medical can create notes and update their own notes
-MEDICAL,Medical,,,,pr_contact,READ,,,,,
-MEDICAL,Medical,,,,pr_group_membership,READ,,,,,Medical can see family members
-MEDICAL,Medical,,,,pr_image,READ,,,,,Medical can see profile pictures
-MEDICAL,Medical,,,,pr_person,READ|UPDATE,,,,,Medical can look up persons
-MEDICAL,Medical,,,,pr_person_details,READ,,,,,
-MEDICAL,Medical,,,,pr_person_tag,READ,,,,,
-MEDICAL,Medical,,,,security_seized_item,NONE,,,,,
-MEDICAL,Medical,,,,security_seized_item_type,NONE,,,,,
-POLICE,Police,,cr,,,READ,,,,,
-POLICE,Police,,dvr,allowance,,NONE,,,,,
-POLICE,Police,,dvr,case_activity,,NONE,,,,,Police can not access case activity controller
-POLICE,Police,,dvr,case_appointment,,NONE,,,,,Police can not access case appointment controller
-POLICE,Police,,dvr,case_event,,NONE,,,,,Police do not see event registration and reports
-POLICE,Police,,dvr,site_activity,,NONE,,,,,
-POLICE,Police,,dvr,,,CREATE|READ|UPDATE,,,,,
-POLICE,Police,,inv,,,NONE,,,,,
-POLICE,Police,,project,,,NONE,,,,,
-POLICE,Police,,,,cr_shelter,READ,,,,,
-POLICE,Police,,,,cr_shelter_registration,NONE,,,,,
-POLICE,Police,,,,cr_shelter_unit,READ,,,,,Police can see shelter units (required for map layer on dashboard!)
-POLICE,Police,,,,dvr_allowance,READ,,,,,
-POLICE,Police,,,,dvr_case,READ,,,,,
-POLICE,Police,,,,dvr_case_activity,NONE,,,,,
-POLICE,Police,,,,dvr_case_appointment,READ,,,,,
-POLICE,Police,,,,dvr_case_event,READ,,,,,
-POLICE,Police,,,,dvr_case_flag_case,READ,,,,,
-POLICE,Police,,,,dvr_case_language,READ,,,,,
-POLICE,Police,,,,dvr_note,READ,,,,,
-POLICE,Police,,,,pr_contact,READ,,,,,
-POLICE,Police,,,,pr_group_membership,READ,,,,,
-POLICE,Police,,,,pr_image,CREATE|READ|UPDATE,,,,,Police can create and update photos
-POLICE,Police,,,,pr_person,READ|UPDATE,,,,,
-POLICE,Police,,,,pr_person_details,READ,,,,,
-POLICE,Police,,,,pr_person_tag,READ,,,,,
-POLICE,Police,,,,security_seized_item,NONE,,,,,
-POLICE,Police,,,,security_seized_item_type,NONE,,,,,
-RP,Regierungspräsidium,,cr,,,READ,,,,,
-RP,Regierungspräsidium,,dvr,allowance,,READ,,,,,
-RP,Regierungspräsidium,,dvr,case_activity,,NONE,,,,,
-RP,Regierungspräsidium,,dvr,case_appointment,,READ,,,,,
-RP,Regierungspräsidium,,dvr,case_event,,READ,,,,,
-RP,Regierungspräsidium,,dvr,site_activity,,READ,,,,,
-RP,Regierungspräsidium,,dvr,,,READ,,,,,
-RP,Regierungspräsidium,,inv,,,NONE,,,,,
-RP,Regierungspräsidium,,project,,,NONE,,,,,
-RP,Regierungspräsidium,,,,cr_shelter,READ,,,,,
-RP,Regierungspräsidium,,,,cr_shelter_registration,READ,,,,,
-RP,Regierungspräsidium,,,,cr_shelter_unit,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_allowance,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_case,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_case_activity,NONE,,,,,
-RP,Regierungspräsidium,,,,dvr_case_appointment,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_case_event,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_case_flag_case,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_case_language,READ,,,,,
-RP,Regierungspräsidium,,,,dvr_note,NONE,,,,,
-RP,Regierungspräsidium,,,,dvr_site_activity,READ,,,,,"Head of administration can create, read, update and delete site activity reports"
-RP,Regierungspräsidium,,,,pr_contact,READ,,,,,
-RP,Regierungspräsidium,,,,pr_group_membership,READ,,,,,
-RP,Regierungspräsidium,,,,pr_image,READ,,,,,
-RP,Regierungspräsidium,,,,pr_person,READ,,,,,
-RP,Regierungspräsidium,,,,pr_person_details,READ,,,,,
-RP,Regierungspräsidium,,,,pr_person_tag,READ,,,,,
-RP,Regierungspräsidium,,,,security_seized_item,READ,,,,,RP can read seized items
-RP,Regierungspräsidium,,,,security_seized_item_type,READ,,,,,RP can read seized item types
-QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
-QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can create and read in tables required for case event registration
-QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
-QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not access site activity reports
-QUARTIER,Quartiermanager,,security,person_search,,READ,,,,,Quartiermanager can look up persons
-QUARTIER,Quartiermanager,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Quartiermanager can register seized items, and update/delete the ones they created"
-QUARTIER,Quartiermanager,,security,seized_item_type,,READ,,,,,Quartiermanager can read seized item types
-QUARTIER,Quartiermanager,,,,cr_shelter_flag,READ,,,,,Quartiermanager can read shelter flags
-QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
-QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
-QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
-QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
-QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
-QUARTIER,Quartiermanager,,,,dvr_case_language,READ,,,,,
-QUARTIER,Quartiermanager,,,,pr_contact,READ,,,,,
-QUARTIER,Quartiermanager,,,,pr_group_membership,READ,,,,,Quartiermanager can see family members
-QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,Quartiermanager can look up persons
-QUARTIER,Quartiermanager,,,,pr_person_details,READ,,,,,
-QUARTIER,Quartiermanager,,,,pr_person_tag,READ,,,,,
-QUARTIER,Quartiermanager,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Quartiermanager can register seized items, and update/delete the ones they created"
-QUARTIER,Quartiermanager,,,,security_seized_item_type,READ,,,,,Quartiermanager can read seized item types
-SCAN,Scan,,dvr,case_appointment,,NONE,,,,,Scan role can not access the list of appointments
-SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
-SCAN,Scan,,dvr,group_membership,,READ,,,,,Scan role can read family members
-SCAN,Scan,,dvr,index,,NONE,,,,,Scan role can not access DVR index controller
-SCAN,Scan,,dvr,person,,NONE,,,,,Scan role can not access case list
-SCAN,Scan,,dvr,site_activity,,NONE,,,,,Scan role can not access site activity reports
-SCAN,Scan,,security,seized_item,,NONE,,,,,
-SCAN,Scan,,security,seized_item_type,,NONE,,,,,
-SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
-SCAN,Scan,,,,cr_shelter_unit,READ,,,,,
-SCAN,Scan,,,,dvr_case,READ,,,,,
-SCAN,Scan,,,,dvr_case_appointment,CREATE|UPDATE,,,,,Scan role can create or update appointments
-SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
-SCAN,Scan,,,,dvr_case_language,READ,,,,,
-SCAN,Scan,,,,pr_contact,READ,,,,,
-SCAN,Scan,,,,pr_group_membership,READ,,,,,Scan role can see family members
-SCAN,Scan,,,,pr_image,READ,,,,,Scan role can see profile images
-SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
-SCAN,Scan,,,,pr_person_details,READ,,,,,
-SCAN,Scan,,,,pr_person_tag,READ,,,,,
-SCAN,Scan,,,,security_seized_item,NONE,,,,,
-SCAN,Scan,,,,security_seized_item_type,NONE,,,,,
-SECURITY,Security,,cr,shelter,,READ,,,,,
-SECURITY,Security,,dvr,case_event,,CREATE|READ,,,,,Security can create and read in tables required for case event registration
-SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
-SECURITY,Security,,dvr,site_activity,,NONE,,,,,Security can not access site activity reports
-SECURITY,Security,,security,person,,CREATE|READ,,,,,
-SECURITY,Security,,security,person_search,,READ,,,,,Security can look up persons
-SECURITY,Security,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Security can register seized items, and update/delete the ones they created"
-SECURITY,Security,,security,seized_item_type,,READ,,,,,Security can read seized item types
-SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
-SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
-SECURITY,Security,,,,cr_shelter_unit,READ,,,,,
-SECURITY,Security,,,,dvr_case,READ,,,,,
-SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
-SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
-SECURITY,Security,,,,dvr_case_language,READ,,,,,
-SECURITY,Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
-SECURITY,Security,,,,pr_contact,READ,,,,,
-SECURITY,Security,,,,pr_group_membership,READ,,,,,
-SECURITY,Security,,,,pr_image,READ,,,,,Security can see profile pictures
-SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
-SECURITY,Security,,,,pr_person_details,READ,,,,,
-SECURITY,Security,,,,pr_person_tag,READ,,,,,
-SECURITY,Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Security can register seized items, and update/delete the ones they created"
-SECURITY,Security,,,,security_seized_item_type,READ,,,,,Security can read seized item types
-SECURITY_HEAD,Head of Security,,cr,,,READ,,,,,
-SECURITY_HEAD,Head of Security,,dvr,case_event,,CREATE|READ,,,,,
-SECURITY_HEAD,Head of Security,,dvr,site_activity,,NONE,,,,,Head of security can not access site activity reports
-SECURITY_HEAD,Head of Security,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-SECURITY_HEAD,Head of Security,,security,person_search,,READ,,,,,Head of security can look up persons
-SECURITY_HEAD,Head of Security,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Head of security can register seized items, and update/delete the ones they created"
-SECURITY_HEAD,Head of Security,,security,seized_item_type,,READ,,,,,Head of security can read seized item types
-SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
-SECURITY_HEAD,Head of Security,,,,cr_shelter_unit,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_allowance,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case,READ|UPDATE,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_activity,NONE,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_event,CREATE,READ,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_case_language,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
-SECURITY_HEAD,Head of Security,,,,pr_contact,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,pr_group_membership,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,pr_image,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,pr_person,READ|UPDATE,,,,,
-SECURITY_HEAD,Head of Security,,,,pr_person_details,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,pr_person_tag,READ,,,,,
-SECURITY_HEAD,Head of Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Head of security can register seized items, and update/delete the ones they created"
-SECURITY_HEAD,Head of Security,,,,security_seized_item_type,READ,,,,,Head of security can read seized item types
 STAFF,General Staff,,cr,,,READ,,,,,
 STAFF,General Staff,,dvr,case_activity,,NONE,,,,,Staff can not access case activity controller
 STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
@@ -289,9 +68,6 @@ STAFF,General Staff,,dvr,site_activity,,NONE,,,,,
 STAFF,General Staff,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 STAFF,General Staff,,inv,,,NONE,,,,,Staff can not access inv module
 STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
-STAFF,General Staff,,security,person_search,,READ,,,,,Staff can look up persons
-STAFF,General Staff,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
-STAFF,General Staff,,security,seized_item_type,,NONE,,,,,Staff can not access seized item types controller
 STAFF,General Staff,,,,cr_shelter,READ,,,,,
 STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
 STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
@@ -310,5 +86,3 @@ STAFF,General Staff,,,,pr_image,READ,,,,,
 STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
 STAFF,General Staff,,,,pr_person_details,READ,,,,,
 STAFF,General Staff,,,,pr_person_tag,READ,,,,,
-STAFF,General Staff,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
-STAFF,General Staff,,,,security_seized_item_type,READ,,,,,Staff can read seized item types

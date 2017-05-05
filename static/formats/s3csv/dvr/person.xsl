@@ -377,14 +377,14 @@
 
             <!-- Case record -->
             <resource name="dvr_case">
-                <xsl:if test="col[@field='Case']!=''">
-                    <data field="reference"><xsl:value-of select="col[@field='Case']"/></data>
+                <xsl:if test="col[@field='Case']/text()!=''">
+                    <data field="reference"><xsl:value-of select="col[@field='Case']/text()"/></data>
                 </xsl:if>
-                <xsl:if test="col[@field='Registration Date']!=''">
-                    <data field="date"><xsl:value-of select="col[@field='Registration Date']"/></data>
+                <xsl:if test="col[@field='Registration Date']/text()!=''">
+                    <data field="date"><xsl:value-of select="col[@field='Registration Date']/text()"/></data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Status']!=''">
+                <xsl:if test="col[@field='Status']/text()!=''">
                     <reference field="status_id" resource="dvr_case_status">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat('Status:',col[@field='Status'])"/>
@@ -426,17 +426,17 @@
             </resource>
 
             <!-- Person record -->
-            <data field="pe_label"><xsl:value-of select="col[@field='Label']"/></data>
-            <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
-            <xsl:if test="col[@field='Middle Name']!=''">
-                <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
+            <data field="pe_label"><xsl:value-of select="col[@field='Label']/text()"/></data>
+            <data field="first_name"><xsl:value-of select="col[@field='First Name']/text()"/></data>
+            <xsl:if test="col[@field='Middle Name']/text()!=''">
+                <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']/text()"/></data>
             </xsl:if>
-            <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
-            <xsl:if test="col[@field='Initials']!=''">
-                <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
+            <data field="last_name"><xsl:value-of select="col[@field='Last Name']/text()"/></data>
+            <xsl:if test="col[@field='Initials']/text()!=''">
+                <data field="initials"><xsl:value-of select="col[@field='Initials']/text()"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='DOB']!=''">
-                <data field="date_of_birth"><xsl:value-of select="col[@field='DOB']"/></data>
+            <xsl:if test="col[@field='DOB']/text()!=''">
+                <data field="date_of_birth"><xsl:value-of select="col[@field='DOB']/text()"/></data>
             </xsl:if>
             <xsl:if test="$gender!=''">
                 <data field="gender">
@@ -450,7 +450,7 @@
             </xsl:for-each>
 
             <!-- Family -->
-            <xsl:if test="col[@field='Family']!=''">
+            <xsl:if test="col[@field='Family']/text()!=''">
                 <resource name="pr_group_membership">
                     <xsl:if test="col[@field='Head of Family']/text()='true'">
                         <data field="group_head" value="true"/>
@@ -464,7 +464,7 @@
             </xsl:if>
 
             <!-- Shelter Registration -->
-            <xsl:if test="col[@field='Shelter Unit']!=''">
+            <xsl:if test="col[@field='Shelter Unit']/text()!=''">
                 <resource name="cr_shelter_registration">
                     <reference field="shelter_unit_id" resource="cr_shelter_unit">
                         <xsl:attribute name="tuid">
@@ -500,20 +500,20 @@
                             </xsl:choose>
                     </data>
                 </xsl:if>
-                <xsl:if test="col[@field='Father Name']!=''">
-                    <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
+                <xsl:if test="col[@field='Father Name']/text()!=''">
+                    <data field="father_name"><xsl:value-of select="col[@field='Father Name']/text()"/></data>
                 </xsl:if>
-                <xsl:if test="col[@field='Mother Name']!=''">
-                    <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+                <xsl:if test="col[@field='Mother Name']/text()!=''">
+                    <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']/text()"/></data>
                 </xsl:if>
-                <xsl:if test="col[@field='Grandfather Name']!=''">
-                    <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']"/></data>
+                <xsl:if test="col[@field='Grandfather Name']/text()!=''">
+                    <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']/text()"/></data>
                 </xsl:if>
-                <xsl:if test="col[@field='Grandmother Name']!=''">
-                    <data field="grandmother_name"><xsl:value-of select="col[@field='Grandmother Name']"/></data>
+                <xsl:if test="col[@field='Grandmother Name']/text()!=''">
+                    <data field="grandmother_name"><xsl:value-of select="col[@field='Grandmother Name']/text()"/></data>
                 </xsl:if>
-                <xsl:if test="col[@field='Number of Children']!=''">
-                    <data field="number_children"><xsl:value-of select="col[@field='Number of Children']"/></data>
+                <xsl:if test="col[@field='Number of Children']/text()!=''">
+                    <data field="number_children"><xsl:value-of select="col[@field='Number of Children']/text()"/></data>
                 </xsl:if>
                 <xsl:if test="$Illiterate!=''">
                     <xsl:choose>
@@ -546,17 +546,17 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:if>
-                <xsl:if test="col[@field='Religion']!=''">
+                <xsl:if test="col[@field='Religion']/text()!=''">
                     <data field="religion">
                         <xsl:call-template name="lowercase">
                             <xsl:with-param name="string">
-                                <xsl:value-of select="col[@field='Religion']"/>
+                                <xsl:value-of select="col[@field='Religion']/text()"/>
                             </xsl:with-param>
                         </xsl:call-template>
                     </data>
                 </xsl:if>
-                <xsl:if test="col[@field='Religion other']!=''">
-                    <data field="religion_other"><xsl:value-of select="col[@field='Religion other']"/></data>
+                <xsl:if test="col[@field='Religion other']/text()!=''">
+                    <data field="religion_other"><xsl:value-of select="col[@field='Religion other']/text()"/></data>
                 </xsl:if>
 
                 <xsl:variable name="Nationality" select="col[@field='Nationality']/text()"/>
@@ -601,30 +601,30 @@
                     </xsl:choose>
                 </data>
 
-                <xsl:if test="col[@field='Place of Birth']!=''">
-                    <data field="place_of_birth"><xsl:value-of select="col[@field='Place of Birth']"/></data>
+                <xsl:if test="col[@field='Place of Birth']/text()!=''">
+                    <data field="place_of_birth"><xsl:value-of select="col[@field='Place of Birth']/text()"/></data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Year of Birth']!=''">
-                    <data field="year_of_birth"><xsl:value-of select="col[@field='Year of Birth']"/></data>
+                <xsl:if test="col[@field='Year of Birth']/text()!=''">
+                    <data field="year_of_birth"><xsl:value-of select="col[@field='Year of Birth']/text()"/></data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Occupation']!=''">
-                    <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
+                <xsl:if test="col[@field='Occupation']/text()!=''">
+                    <data field="occupation"><xsl:value-of select="col[@field='Occupation']/text()"/></data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Company']!=''">
-                    <data field="company"><xsl:value-of select="col[@field='Company']"/></data>
+                <xsl:if test="col[@field='Company']/text()!=''">
+                    <data field="company"><xsl:value-of select="col[@field='Company']/text()"/></data>
                 </xsl:if>
 
-                <xsl:if test="col[@field='Affiliations']!=''">
-                    <data field="affiliations"><xsl:value-of select="col[@field='Affiliations']"/></data>
+                <xsl:if test="col[@field='Affiliations']/text()!=''">
+                    <data field="affiliations"><xsl:value-of select="col[@field='Affiliations']/text()"/></data>
                 </xsl:if>
             </resource>
 
-            <xsl:if test="col[@field='Blood Type']!=''">
+            <xsl:if test="col[@field='Blood Type']/text()!=''">
                 <resource name="pr_physical_description">
-                    <data field="blood_type"><xsl:value-of select="col[@field='Blood Type']"/></data>
+                    <data field="blood_type"><xsl:value-of select="col[@field='Blood Type']/text()"/></data>
                 </resource>
             </xsl:if>
 
@@ -635,13 +635,13 @@
             <xsl:call-template name="ContactInformation"/>
 
             <!-- Addresses -->
-            <xsl:if test="$home!='' or col[@field='Home Postcode']!='' or col[@field='Home L4']!='' or col[@field='Home L3']!='' or col[@field='Home L2']!='' or col[@field='Home L1']!=''">
+            <xsl:if test="$home!='' or col[@field='Home Postcode']/text()!='' or col[@field='Home L4']/text()!='' or col[@field='Home L3']/text()!='' or col[@field='Home L2']/text()!='' or col[@field='Home L1']/text()!=''">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="type">1</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
-            <xsl:if test="col[@field='Permanent Address']!='' or col[@field='Permanent Postcode']!='' or col[@field='Permanent L4']!='' or col[@field='Permanent L3']!='' or col[@field='Permanent L2']!='' or col[@field='Permanent L1']!=''">
+            <xsl:if test="col[@field='Permanent Address']/text()!='' or col[@field='Permanent Postcode']/text()!='' or col[@field='Permanent L4']/text()!='' or col[@field='Permanent L3']/text()!='' or col[@field='Permanent L2']/text()!='' or col[@field='Permanent L1']/text()!=''">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="type">2</xsl:with-param>
                 </xsl:call-template>
@@ -649,15 +649,15 @@
 
             <!-- Education -->
             <xsl:call-template name="Education">
-                <xsl:with-param name="level" select="col[@field='Education Level']"/>
-                <xsl:with-param name="name" select="col[@field='Degree Name']"/>
-                <xsl:with-param name="major" select="col[@field='Major']"/>
-                <xsl:with-param name="grade" select="col[@field='Grade']"/>
-                <xsl:with-param name="year" select="col[@field='Year']"/>
-                <xsl:with-param name="institute" select="col[@field='Institute']"/>
+                <xsl:with-param name="level" select="col[@field='Education Level']/text()"/>
+                <xsl:with-param name="name" select="col[@field='Degree Name']/text()"/>
+                <xsl:with-param name="major" select="col[@field='Major']/text()"/>
+                <xsl:with-param name="grade" select="col[@field='Grade']/text()"/>
+                <xsl:with-param name="year" select="col[@field='Year']/text()"/>
+                <xsl:with-param name="institute" select="col[@field='Institute']/text()"/>
             </xsl:call-template>
 
-            <xsl:if test="col[@field='Photo']!=''">
+            <xsl:if test="col[@field='Photo']/text()!=''">
                 <resource name="pr_image">
                     <!-- Set as Profile image -->
                     <data field="profile">true</data>
@@ -665,7 +665,7 @@
                     <data field="type">1</data>
                     <data field="image">
                         <xsl:attribute name="url">
-                            <xsl:value-of select="col[@field='Photo']"/>
+                            <xsl:value-of select="col[@field='Photo']/text()"/>
                         </xsl:attribute>
                     </data>
                 </resource>
@@ -679,7 +679,7 @@
         </resource>
 
         <!-- Locations -->
-        <xsl:if test="$home!='' or col[@field='Home Postcode']!='' or col[@field='Home L4']!='' or col[@field='Home L3']!='' or col[@field='Home L2']!='' or col[@field='Home L1']!=''">
+        <xsl:if test="$home!='' or col[@field='Home Postcode']/text()!='' or col[@field='Home L4']/text()!='' or col[@field='Home L3']/text()!='' or col[@field='Home L2']/text()!='' or col[@field='Home L1']/text()!=''">
             <xsl:call-template name="Locations">
                 <xsl:with-param name="address" select="$home"/>
                 <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
@@ -694,7 +694,7 @@
                 <xsl:with-param name="lon" select="col[@field='Home Lon']/text()"/>
             </xsl:call-template>
         </xsl:if>
-        <xsl:if test="col[@field='Permanent Address']!='' or col[@field='Permanent Postcode']!='' or col[@field='Permanent L4']!='' or col[@field='Permanent L3']!='' or col[@field='Permanent L2']!='' or col[@field='Permanent L1']!=''">
+        <xsl:if test="col[@field='Permanent Address']/text()!='' or col[@field='Permanent Postcode']/text()!='' or col[@field='Permanent L4']/text()!='' or col[@field='Permanent L3']/text()!='' or col[@field='Permanent L2']/text()!='' or col[@field='Permanent L1']/text()!=''">
             <xsl:call-template name="Locations">
                 <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
                 <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>
@@ -713,14 +713,14 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="IdentityInformation">
-        <xsl:if test="col[@field='National ID']!=''">
+        <xsl:if test="col[@field='National ID']/text()!=''">
             <resource name="pr_identity">
                 <data field="type" value="2"/>
                 <data field="value"><xsl:value-of select="col[@field='National ID']/text()"/></data>
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Passport No']!=''">
+        <xsl:if test="col[@field='Passport No']/text()!=''">
             <resource name="pr_identity">
                 <data field="type" value="1"/>
                 <data field="value"><xsl:value-of select="col[@field='Passport No']/text()"/></data>
@@ -756,11 +756,11 @@
     <xsl:template name="ContactInformation">
 
         <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="col[@field='Email']"/></xsl:with-param>
+            <xsl:with-param name="list"><xsl:value-of select="col[@field='Email']/text()"/></xsl:with-param>
             <xsl:with-param name="arg">email</xsl:with-param>
         </xsl:call-template>
 
-        <xsl:if test="col[@field='Mobile Phone']!=''">
+        <xsl:if test="col[@field='Mobile Phone']/text()!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="SMS"/>
                 <data field="value">
@@ -769,7 +769,7 @@
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Home Phone']!=''">
+        <xsl:if test="col[@field='Home Phone']/text()!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="HOME_PHONE"/>
                 <data field="value">
@@ -778,7 +778,7 @@
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Office Phone']!=''">
+        <xsl:if test="col[@field='Office Phone']/text()!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="WORK_PHONE"/>
                 <data field="value">
@@ -787,7 +787,7 @@
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Skype']!=''">
+        <xsl:if test="col[@field='Skype']/text()!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="SKYPE"/>
                 <data field="value">
@@ -796,7 +796,7 @@
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Callsign']!=''">
+        <xsl:if test="col[@field='Callsign']/text()!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="RADIO"/>
                 <data field="value">
@@ -805,7 +805,7 @@
             </resource>
         </xsl:if>
 
-        <xsl:if test="col[@field='Emergency Contact Name']!=''">
+        <xsl:if test="col[@field='Emergency Contact Name']/text()!=''">
             <resource name="pr_contact_emergency">
                 <data field="name">
                     <xsl:value-of select="col[@field='Emergency Contact Name']/text()"/>
@@ -1141,7 +1141,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="EducationLevel">
-        <xsl:variable name="Level" select="col[@field='Education Level']"/>
+        <xsl:variable name="Level" select="col[@field='Education Level']/text()"/>
 
         <xsl:if test="$Level!=''">
             <resource name="pr_education_level">
@@ -1223,7 +1223,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Family">
-        <xsl:variable name="Family" select="col[@field='Family']"/>
+        <xsl:variable name="Family" select="col[@field='Family']/text()"/>
 
         <xsl:if test="$Family!=''">
             <resource name="pr_group">
@@ -1239,7 +1239,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="ShelterUnit">
-        <xsl:variable name="ShelterUnit" select="col[@field='Shelter Unit']"/>
+        <xsl:variable name="ShelterUnit" select="col[@field='Shelter Unit']/text()"/>
 
         <xsl:if test="$ShelterUnit!=''">
             <resource name="cr_shelter_unit">
@@ -1254,7 +1254,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Status">
-        <xsl:variable name="Status" select="col[@field='Status']"/>
+        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
 
         <xsl:if test="$Status!=''">
             <resource name="dvr_case_status">
