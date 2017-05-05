@@ -49,11 +49,11 @@
             // S3: DRY by calling refresh()
             this.__$containerElement = container;
             options = $.extend({}, this.__defaultOptions, options);
-            this.__refresh(options);
+            this.refresh(options);
         },
 
         // S3: Refresh method added
-        __refresh: function(options) {
+        refresh: function(options) {
             if (!isUndefined(this.__selectCursors)) {
                 // Not 1st run, so clean-up 1st
                 if (this.__selectCursors.length > 1) {

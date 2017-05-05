@@ -2,7 +2,8 @@
    Malagasy localisation for Gregorian/Julian calendars for jQuery.
    Fran Boon (fran@aidiq.com). */
 (function($) {
-	$.calendars.calendars.gregorian.prototype.regionalOptions['mg'] = {
+	'use strict';
+	$.calendars.calendars.gregorian.prototype.regionalOptions.mg = {
 		name: 'Gregorian',
 		epochs: ['BCE', 'CE'],
 		monthNames: ['Janoary','Febroary','Martsa','Aprily','Mey','Jona',
@@ -12,12 +13,13 @@
 		dayNames: ['Alahady','Alatsinainy','Talata','Alarobia','Alakamisy','Zoma','Sabotsy'],
 		dayNamesShort: ['Alah','Alat','Tal','Alar','Alak','Zom','Sab'],
 		dayNamesMin: ['Ah','At','Ta','Ar','Ak','Zo','Sa'],
+		digits: null,
 		dateFormat: 'dd/mm/yyyy',
 		firstDay: 1,
 		isRTL: false
 	};
 	if ($.calendars.calendars.julian) {
-		$.calendars.calendars.julian.prototype.regionalOptions['mg'] =
-			$.calendars.calendars.gregorian.prototype.regionalOptions['mg'];
+		$.calendars.calendars.julian.prototype.regionalOptions.mg =
+			$.calendars.calendars.gregorian.prototype.regionalOptions.mg;
 	}
 })(jQuery);

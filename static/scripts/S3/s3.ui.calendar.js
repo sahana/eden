@@ -6,6 +6,9 @@
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
+ * requires jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
+ * requires jQuery UI Timepicker-addon if using times: http://trentrichardson.com/examples/timepicker
+ * requires Calendars for non-Gregorian calendars: http://keith-wood.name/calendars.html
  */
 (function($, undefined) {
 

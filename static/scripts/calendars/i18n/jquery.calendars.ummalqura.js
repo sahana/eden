@@ -1,23 +1,24 @@
 ﻿/* http://keith-wood.name/calendars.html
-   UmmAlQura calendar for jQuery v2.0.0.
+   UmmAlQura calendar for jQuery v2.1.0.
    Written by Amro Osama March 2013.
    Modified by Binnooh.com & www.elm.sa - 2014 - Added dates back to 1276 Hijri year.
-   Available under the MIT (https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt) license. 
+   Available under the MIT (http://keith-wood.name/licence.html) license. 
    Please attribute the author if you use it. */
 
 (function ($) { // Hide scope, no $ conflict
+	'use strict';
 
 	/** Implementation of the UmmAlQura or 'saudi' calendar.
 		See also <a href="http://en.wikipedia.org/wiki/Islamic_calendar#Saudi_Arabia.27s_Umm_al-Qura_calendar">http://en.wikipedia.org/wiki/Islamic_calendar#Saudi_Arabia.27s_Umm_al-Qura_calendar</a>.
 		<a href="http://www.ummulqura.org.sa/About.aspx">http://www.ummulqura.org.sa/About.aspx</a>
 		<a href="http://www.staff.science.uu.nl/~gent0113/islam/ummalqura.htm">http://www.staff.science.uu.nl/~gent0113/islam/ummalqura.htm</a>
 		@class UmmAlQuraCalendar
-		@param [language=''] {string} The language code (default English) for localisation. */
+		@param {string} [language=''] The language code (default English) for localisation. */
 	function UmmAlQuraCalendar(language) {
 		this.local = this.regionalOptions[language || ''] || this.regionalOptions[''];
 	}
 
-	UmmAlQuraCalendar.prototype = new $.calendars.baseCalendar;
+	UmmAlQuraCalendar.prototype = new $.calendars.baseCalendar();
 
 	$.extend(UmmAlQuraCalendar.prototype, {
 		/** The calendar name.
@@ -42,17 +43,17 @@
 			Entries are objects indexed by the language code ('' being the default US/English).
 			Each object has the following attributes.
 			@memberof UmmAlQuraCalendar
-			@property name {string} The calendar name.
-			@property epochs {string[]} The epoch names.
-			@property monthNames {string[]} The long names of the months of the year.
-			@property monthNamesShort {string[]} The short names of the months of the year.
-			@property dayNames {string[]} The long names of the days of the week.
-			@property dayNamesShort {string[]} The short names of the days of the week.
-			@property dayNamesMin {string[]} The minimal names of the days of the week.
-			@property dateFormat {string} The date format for this calendar.
+			@property {string} name The calendar name.
+			@property {string[]} epochs The epoch names (before/after year 0).
+			@property {string[]} monthNames The long names of the months of the year.
+			@property {string[]} monthNamesShort The short names of the months of the year.
+			@property {string[]} dayNames The long names of the days of the week.
+			@property {string[]} dayNamesShort The short names of the days of the week.
+			@property {string[]} dayNamesMin The minimal names of the days of the week.
+			@property {string} dateFormat The date format for this calendar.
 					See the options on <a href="BaseCalendar.html#formatDate"><code>formatDate</code></a> for details.
-			@property firstDay {number} The number of the first day of the week, starting at 0.
-			@property isRTL {number} <code>true</code> if this localisation reads right-to-left. */
+			@property {number} firstDay The number of the first day of the week, starting at 0.
+			@property {boolean} isRTL <code>true</code> if this localisation reads right-to-left. */
 		regionalOptions: { // Localisations
 			'': {
 				name: 'Umm al-Qura',
@@ -61,7 +62,9 @@
 				'Rajab', 'Sha\'aban', 'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'],
 				monthNamesShort: ['Muh', 'Saf', 'Rab1', 'Rab2', 'Jum1', 'Jum2', 'Raj', 'Sha\'', 'Ram', 'Shaw', 'DhuQ', 'DhuH'],
 				dayNames: ['Yawm al-Ahad', 'Yawm al-Ithnain', 'Yawm al-Thalāthā’', 'Yawm al-Arba‘ā’', 'Yawm al-Khamīs', 'Yawm al-Jum‘a', 'Yawm al-Sabt'],
+				dayNamesShort: ['Ahd', 'Ith', 'Thu', 'Arb', 'Khm', 'Jum', 'Sbt'],
 				dayNamesMin: ['Ah', 'Ith', 'Th', 'Ar', 'Kh', 'Ju', 'Sa'],
+				digits: null,
 				dateFormat: 'yyyy/mm/dd',
 				firstDay: 6,
 				isRTL: true
@@ -70,7 +73,7 @@
 
 		/** Determine whether this date is in a leap year.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to examine or the year to examine.
+			@param {CDate|number} year The date to examine or the year to examine.
 			@return {boolean} <code>true</code> if this is a leap year, <code>false</code> if not.
 			@throws Error if an invalid year or a different calendar used. */
 		leapYear: function (year) {
@@ -80,9 +83,9 @@
 
 		/** Determine the week of the year for a date.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to examine or the year to examine.
-			@param [month] {number} The month to examine.
-			@param [day] {number} The day to examine.
+			@param {CDate|number} year The date to examine or the year to examine.
+			@param {number} [month] The month to examine (if only <code>year</code> specified above).
+			@param {number} [day] The day to examine (if only <code>year</code> specified above).
 			@return {number} The week of the year.
 			@throws Error if an invalid date or a different calendar used. */
 		weekOfYear: function (year, month, day) {
@@ -94,7 +97,7 @@
 
 		/** Retrieve the number of days in a year.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to examine or the year to examine.
+			@param {CDate|number} year The date to examine or the year to examine.
 			@return {number} The number of days.
 			@throws Error if an invalid year or a different calendar used. */
 		daysInYear: function (year) {
@@ -107,18 +110,18 @@
 
 		/** Retrieve the number of days in a month.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to examine or the year of the month.
-			@param [month] {number} The month.
+			@param {CDate|number} year The date to examine or the year of the month.
+			@param {number} [month] The month (if only <code>year</code> specified above).
 			@return {number} The number of days in this month.
 			@throws Error if an invalid month/year or a different calendar used. */
 		daysInMonth: function (year, month) {
 			var date = this._validate(year, month, this.minDay, $.calendars.local.invalidMonth);
 			var mcjdn = date.toJD() - 2400000 + 0.5; // Modified Chronological Julian Day Number (MCJDN)
-			// the MCJDN's of the start of the lunations in the Umm al-Qura calendar are stored in the 'ummalqura_dat' array
+			// the MCJDN's of the start of the lunations in the Umm al-Qura calendar are stored in the 'ummalquraData' array
 			var index = 0;
-			for (var i = 0; i < ummalqura_dat.length; i++) {
-				if (ummalqura_dat[i] > mcjdn) {
-					return (ummalqura_dat[index] - ummalqura_dat[index - 1]);
+			for (var i = 0; i < ummalquraData.length; i++) {
+				if (ummalquraData[i] > mcjdn) {
+					return (ummalquraData[index] - ummalquraData[index - 1]);
 				}
 				index++;
 			}
@@ -127,9 +130,9 @@
 
 		/** Determine whether this date is a week day.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to examine or the year to examine.
-			@param [month] {number} The month to examine.
-			@param [day] {number} The day to examine.
+			@param {CDate|number} year The date to examine or the year to examine.
+			@param {number} [month] The month to examine (if only <code>year</code> specified above).
+			@param {number} [day] The day to examine (if only <code>year</code> specified above).
 			@return {boolean} <code>true</code> if a week day, <code>false</code> if not.
 			@throws Error if an invalid date or a different calendar used. */
 		weekDay: function (year, month, day) {
@@ -139,49 +142,51 @@
 		/** Retrieve the Julian date equivalent for this date,
 			i.e. days since January 1, 4713 BCE Greenwich noon.
 			@memberof UmmAlQuraCalendar
-			@param year {CDate|number} The date to convert or the year to convert.
-			@param [month] {number} The month to convert.
-			@param [day] {number} The day to convert.
+			@param {CDate|number} year The date to convert or the year to convert.
+			@param {number} [month] The month to convert (if only <code>year</code> specified above).
+			@param {number} [day] The day to convert (if only <code>year</code> specified above).
 			@return {number} The equivalent Julian date.
 			@throws Error if an invalid date or a different calendar used. */
 		toJD: function (year, month, day) {
 			var date = this._validate(year, month, day, $.calendars.local.invalidDate);
 			var index = (12 * (date.year() - 1)) + date.month() - 15292;
-			var mcjdn = date.day() + ummalqura_dat[index - 1] - 1;
+			var mcjdn = date.day() + ummalquraData[index - 1] - 1;
 			return mcjdn + 2400000 - 0.5; // Modified Chronological Julian Day Number (MCJDN)
 		},
 
 		/** Create a new date from a Julian date.
 			@memberof UmmAlQuraCalendar
-			@param jd {number} The Julian date to convert.
+			@param {number} jd The Julian date to convert.
 			@return {CDate} The equivalent date. */
 		fromJD: function (jd) {
 			var mcjdn = jd - 2400000 + 0.5; // Modified Chronological Julian Day Number (MCJDN)
 			// the MCJDN's of the start of the lunations in the Umm al-Qura calendar 
-			// are stored in the 'ummalqura_dat' array
+			// are stored in the 'ummalquraData' array
 			var index = 0;
-			for (var i = 0; i < ummalqura_dat.length; i++) {
-				if (ummalqura_dat[i] > mcjdn) break;
+			for (var i = 0; i < ummalquraData.length; i++) {
+				if (ummalquraData[i] > mcjdn) {
+					break;
+				}
 				index++;
 			}
 			var lunation = index + 15292; //UmmAlQura Lunation Number
 			var ii = Math.floor((lunation - 1) / 12);
 			var year = ii + 1;
 			var month = lunation - 12 * ii;
-			var day = mcjdn - ummalqura_dat[index - 1] + 1;
+			var day = mcjdn - ummalquraData[index - 1] + 1;
 			return this.newDate(year, month, day);
 		},
 
 		/** Determine whether a date is valid for this calendar.
 			@memberof UmmAlQuraCalendar
-			@param year {number} The year to examine.
-			@param month {number} The month to examine.
-			@param day {number} The day to examine.
+			@param {number} year The year to examine.
+			@param {number} month The month to examine.
+			@param {number} day The day to examine.
 			@return {boolean} <code>true</code> if a valid date, <code>false</code> if not. */
-		isValid: function(year, month, day) {
+		isValid: function(year, month, day) { // jshint unused:false
 			var valid = $.calendars.baseCalendar.prototype.isValid.apply(this, arguments);
 			if (valid) {
-				year = (year.year != null ? year.year : year);
+				year = (typeof year.year !== 'undefined' && year.year !== null ? year.year : year);
 				valid = (year >= 1276 && year <= 1500);
 			}
 			return valid;
@@ -190,10 +195,10 @@
 		/** Check that a candidate date is from the same calendar and is valid.
 			@memberof UmmAlQuraCalendar
 			@private
-			@param year {CDate|number} The date to validate or the year to validate.
-			@param month {number} The month to validate.
-			@param day {number} The day to validate.
-			@param error {string} Error message if invalid.
+			@param {CDate|number} year The date to validate or the year to validate.
+			@param {number} month The month to validate (if only <code>year</code> specified above).
+			@param {number} day The day to validate (if only <code>year</code> specified above).
+			@param {string} error Error message if invalid.
 			@throws Error if different calendars used or invalid date. */
 		_validate: function(year, month, day, error) {
 			var date = $.calendars.baseCalendar.prototype._validate.apply(this, arguments);
@@ -207,7 +212,7 @@
 	// UmmAlQura calendar implementation
 	$.calendars.calendars.ummalqura = UmmAlQuraCalendar;
 
-	var ummalqura_dat = [
+	var ummalquraData = [
 		20,    50,    79,    109,   138,   168,   197,   227,   256,   286,   315,   345,   374,   404,   433,   463,   492,   522,   551,   581, 
 		611,   641,   670,   700,   729,   759,   788,   818,   847,   877,   906,   936,   965,   995,   1024,  1054,  1083,  1113,  1142,  1172,
 		1201,  1231,  1260,  1290,  1320,  1350,  1379,  1409,  1438,  1468,  1497,  1527,  1556,  1586,  1615,  1645,  1674,  1704,  1733,  1763,
@@ -345,6 +350,7 @@
 		78217, 78247, 78277, 78307, 78336, 78366, 78395, 78425, 78454, 78483, 78513, 78542, 78572, 78601, 78631, 78661, 78690, 78720, 78750, 78779,
 		78808, 78838, 78867, 78897, 78926, 78956, 78985, 79015, 79044, 79074, 79104, 79133, 79163, 79192, 79222, 79251, 79281, 79310, 79340, 79369,
 		79399, 79428, 79458, 79487, 79517, 79546, 79576, 79606, 79635, 79665, 79695, 79724, 79753, 79783, 79812, 79841, 79871, 79900, 79930, 79960,
-		79990];
+		79990
+	];
 
 })(jQuery);

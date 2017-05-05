@@ -707,7 +707,6 @@ class S3DateFilter(S3RangeFilter):
         fields = self.field
         if type(fields) is list:
             # Separate start_date & end_date
-            separate = True
             # Q: How should we handle NULL end_date?
             # A: Ignore & just provide constraints that provide differentiation?
             # B: Allow scrolling arbitrarily into the end space?
@@ -715,6 +714,7 @@ class S3DateFilter(S3RangeFilter):
             # If wanting to do (B) then can coalesce a long end_date to the NULLs:
             # http://stackoverflow.com/questions/21286215/how-can-i-include-null-values-in-a-min-or-max
             # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
+            # or can simply do a 2nd query to check for NULLs
             start_field = S3ResourceField(resource, fields[0]).field
             end_field = S3ResourceField(resource, fields[1]).field
             row = current.db(query).select(start_field.min(),
@@ -792,7 +792,7 @@ class S3DateFilter(S3RangeFilter):
         slider = opts_get("slider", False)
         if slider:
             # Load Moment into Browser
-            # @ToDo: locale support
+            # @ToDo: Set Moment locale
             # NB This will probably get used more widely in future, so maybe need to abstract this somewhere else
             s3 = current.response.s3
             if s3.debug:

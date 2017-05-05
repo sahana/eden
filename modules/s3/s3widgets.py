@@ -1349,6 +1349,11 @@ class S3CalendarWidget(FormWidget):
         @note: this widget must be combined with the IS_UTC_DATE or
                IS_UTC_DATETIME validators to have the value properly
                converted from/to local timezone and format.
+
+        - control script is s3.ui.calendar.js
+        - uses jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
+        - uses jQuery UI Timepicker-addon if using times: http://trentrichardson.com/examples/timepicker
+        - uses Calendars for non-Gregorian calendars: http://keith-wood.name/calendars.html
     """
 
     def __init__(self,

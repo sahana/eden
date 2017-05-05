@@ -2014,9 +2014,9 @@ S3.search = {};
             $this.on('resize', function(e, min, max) {
                 $this.data('min', min);
                 $this.data('max', max);
-                rangePicker.__refresh({'startValue': moment(min).format(fmt),
-                                       'endValue': moment(max).format(fmt)//,
-                                       });
+                rangePicker.refresh({'startValue': moment(min).format(fmt),
+                                     'endValue': moment(max).format(fmt)//,
+                                     });
             });
         });
 

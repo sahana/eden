@@ -7,6 +7,7 @@
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
  * requires D3.js 3.4.9+
+ * requires NVD3.js
  *
  */
 
@@ -796,25 +797,28 @@
             pt.chartOptions.currentDataIndex = null;
             var onhoverTooltip = function(e) {
 
-                if (pt.chartOptions.currentDataIndex == e.pointIndex) {
+                var index = e.index;
+
+                if (pt.chartOptions.currentDataIndex == index) {
                     // Already open
                     return;
                 }
                 // Close any open tooltip
                 pt._removeChartTooltip();
-                pt.chartOptions.currentDataIndex = e.pointIndex;
+                pt.chartOptions.currentDataIndex = index;
 
                 // Get the data point data
-                var value = e.value;
+                var data = e.data;
+                var value = data.value;
                 var percent = Math.round((value / total) * 100);
 
                 // Create the tooltip
-                var tooltip = '<div class="pt-tooltip-label">' + e.label + '</div>';
+                var tooltip = '<div class="pt-tooltip-label">' + data.label + '</div>';
                 tooltip += '<div class="pt-tooltip-text">' + value + ' (' + percent + '%)</div>';
-                pt._renderChartTooltip(e.pos[0], e.pos[1], tooltip);
+                pt._renderChartTooltip(d3.event.x, d3.event.y, tooltip);
 
                 $('.pt-tooltip-label').css({
-                    color: nv.utils.defaultColor()({}, e.pointIndex)
+                    color: nv.utils.defaultColor()({}, index)
                 });
             };
 
@@ -823,12 +827,13 @@
                 var reportChart = nv.models.pieChart()
                                            .x(function(d) { return d.label; })
                                            .y(function(d) { return d.value; })
-                                           .pieLabelsOutside(false)
+                                           .labelsOutside(false)
                                            .labelType('percent')
                                            .labelThreshold(0.03)
-                                           .showLegend(true)
-                                           .tooltips(false);
+                                           .showLegend(true);
 
+                // Disbale tooltip as using onhoverTooltip instead
+                reportChart.tooltip.enabled(false);
                 reportChart.legend.align(true)
                                   .rightAlign(false);
 
@@ -841,7 +846,7 @@
 
                 if (pt.options.exploreChart && selector) {
                     reportChart.pie.dispatch.on('elementClick', function(e) {
-                        var data = e.point;
+                        var data = e.data;
                         var index = data.index,
                             key = data.key,
                             fvar;
@@ -919,10 +924,9 @@
             }
 
             // On-hover data point tooltip
-            var tooltipContent = function(series, label, value, dataPoint) {
-
-                var data = dataPoint.point,
-                    color = nv.utils.defaultColor()({}, dataPoint.pointIndex);
+            var tooltipContent = function(data) {
+                var data = data.data,
+                    color = nv.utils.defaultColor()({}, data.index);
 
                 var tooltip = '<div class="pt-tooltip">' +
                               '<div class="pt-tooltip-label" style="color:' + color + '">' + data.label + '</div>' +
@@ -941,18 +945,16 @@
                                            .x(function(d) { return d.label; })
                                            .y(function(d) { return d.value; })
                                            .staggerLabels(true)
-                                           .tooltips(true)
-                                           .tooltipContent(tooltipContent)
                                            .showControls(false);
+                    reportChart.tooltip.contentGenerator(tooltipContent);
                     dispatch = reportChart.multibar;
                 } else {
                     reportChart = nv.models.discreteBarChart()
                                            .x(function(d) { return d.label; })
                                            .y(function(d) { return d.value; })
                                            .staggerLabels(true)
-                                           .tooltips(true)
-                                           .tooltipContent(tooltipContent)
                                            .showValues(true);
+                    reportChart.tooltip.contentGenerator(tooltipContent);
                     reportChart.valueFormat(valueFormat);
                     dispatch = reportChart.discretebar;
                 }
@@ -977,12 +979,12 @@
                 if (pt.options.exploreChart && selector) {
                     // Click on a bar forwards to a filtered view
                     dispatch.dispatch.on('elementClick', function(e) {
-                        var filterKey = e.point.filterKey;
+                        var filterKey = e.data.filterKey;
                         if (filterKey === null) {
                             filterKey = 'None';
                         }
                         var filterVar = selector;
-                        if (e.point.filterIndex == '__other__') {
+                        if (e.data.filterIndex == '__other__') {
                             filterVar += '__belongs';
                         }
                         pt._chartExplore([[filterVar, filterKey]]);
@@ -1094,12 +1096,12 @@
             }
 
             // Callback function to render the chart tooltip
-            var tooltipContent = function(series, label, value, dataPoint) {
-                var data = dataPoint.point,
-                    color = nv.utils.defaultColor()({}, dataPoint.seriesIndex);
+            var tooltipContent = function(data) {
+                var data = data.data,
+                    color = nv.utils.defaultColor()({}, data.index);
 
                 var tooltip = '<div class="pt-tooltip">' +
-                              '<div class="pt-tooltip-label" style="color:' + color + '">' + series + '</div>' +
+                              '<div class="pt-tooltip-label" style="color:' + color + '">' + data.series + '</div>' +
                               '<div class="pt-tooltip-text">' + data.label + ': <span class="pt-tooltip-value">' + data.value + '</span></div>' +
                               '</div>';
                 return tooltip;
@@ -1118,11 +1120,10 @@
                                            .y(function(d) { return d.value })
                                            .margin({top: 20, right: 20, bottom: 20, left: 175})
                                            .showValues(true)
-                                           .tooltips(true)
-                                           .tooltipContent(tooltipContent)
-                                           .transitionDuration(350)
+                                           .duration(350)
                                            .showControls(true);
 
+                reportChart.tooltip.contentGenerator(tooltipContent);
                 // Set value and tick formatters
                 reportChart.valueFormat(valueFormat);
                 reportChart.yAxis
@@ -1143,22 +1144,24 @@
                 if (pt.options.exploreChart && rowsSelector && colsSelector) {
                     // Click on a bar forwards to a filtered view
                     reportChart.multibar.dispatch.on('elementClick', function(e) {
-                        var columnKey = e.series.filterKey,
+                        var data = e.data,
+                            series = d3.event.currentTarget.parentElement.__data__,
+                            columnKey = series.filterKey,
                             columnFilter;
                         if (columnKey === null) {
                             columnKey = 'None';
                         }
-                        if (e.series.filterIndex == '__other__') {
+                        if (series.filterIndex == '__other__') {
                             columnFilter = colsSelector + '__belongs';
                         } else {
                             columnFilter = colsSelector;
                         }
-                        var rowKey = e.point.filterKey,
+                        var rowKey = data.filterKey,
                             rowFilter;
                         if (rowKey === null) {
                             rowKey = 'None';
                         }
-                        if (e.point.filterIndex == '__other__') {
+                        if (data.filterIndex == '__other__') {
                             rowFilter = rowsSelector + '__belongs';
                         } else {
                             rowFilter = rowsSelector;
@@ -1266,7 +1269,8 @@
             };
 
             // Read the xAxis headers
-            var xHeaders = [], total = 0;
+            var xHeaders = [],
+                total = 0;
             for (var i=0; i<xAxis.length; i++) {
                 var item = getData(i, null);
                 if (!item[1] && item[2][0] >= 0) {
@@ -1285,25 +1289,28 @@
             pt.chartOptions.currentDataIndex = null;
             var onhoverTooltip = function(e) {
 
-                if (pt.chartOptions.currentDataIndex == e.pointIndex) {
+                var index = e.index;
+
+                if (pt.chartOptions.currentDataIndex == index) {
                     // Already open
                     return;
                 }
                 // Close any open tooltip
                 pt._removeChartTooltip();
-                pt.chartOptions.currentDataIndex = e.pointIndex;
+                pt.chartOptions.currentDataIndex = index;
 
                 // Get the data point data
-                var value = e.value;
+                var data = e.data;
+                var value = data.value;
                 var percent = Math.round((value / total) * 100);
 
                 // Create the tooltip
-                var tooltip = '<div class="pt-tooltip-label">' + e.label + '</div>';
+                var tooltip = '<div class="pt-tooltip-label">' + data.label + '</div>';
                 tooltip += '<div class="pt-tooltip-text">' + value + ' (' + percent + '%)</div>';
-                pt._renderChartTooltip(e.pos[0], e.pos[1], tooltip);
+                pt._renderChartTooltip(d3.event.x, d3.event.y, tooltip);
 
                 $('.pt-tooltip-label').css({
-                    color: nv.utils.defaultColor()({}, e.pointIndex)
+                    color: nv.utils.defaultColor()({}, index)
                 });
             };
 
@@ -1325,8 +1332,8 @@
                 truncateLabel = this._truncateLabel;
 
             // On-hover data point tooltip
-            var barChartTooltip = function(series, label, value, dataPoint) {
-                var data = dataPoint.point,
+            var barChartTooltip = function(data) {
+                var data = data.data,
                     color = data.color || [defaultColor];
 
                 var tooltip = '<div class="pt-tooltip">' +
@@ -1340,10 +1347,9 @@
                                     .y(function(d) { return d.value })
                                     .color([defaultColor])
                                     .staggerLabels(true)
-                                    .tooltips(true)
-                                    .tooltipContent(barChartTooltip)
                                     .showValues(true);
 
+            barChart.tooltip.contentGenerator(barChartTooltip);
             // Set value and tick formatters
             barChart.valueFormat(valueFormat);
             barChart.yAxis
@@ -1356,7 +1362,7 @@
                                       .attr('class', 'nv')
 
             // Define the pie chart
-            var pieWidth = Math.floor(pieArea.width()/2) - 30;
+            var pieWidth = Math.floor(pieArea.width() / 2) - 30;
             var pieChart = nv.models.pieChart()
                                     .x(function(d) { return d.label })
                                     .y(function(d) { return d.value })
@@ -1367,8 +1373,10 @@
                                     .labelThreshold(0.10)
                                     .showLegend(false)
                                     .donut(true)
-                                    .donutRatio(0.35)
-                                    .tooltips(false);
+                                    .donutRatio(0.35);
+
+            // Disbale tooltip as using onhoverTooltip instead
+            pieChart.tooltip.enabled(false);
 
             pieChart.legend.align(true)
                            .rightAlign(false);
@@ -1504,10 +1512,12 @@
                 if (pt.options.exploreChart && xSelector && ySelector) {
                     // Click on a bar forwards to a filtered view
                     barChart.discretebar.dispatch.on('elementClick', function(e) {
-                        var xIndex = e.series.filterIndex,
-                            xKey = e.series.filterKey,
-                            yIndex = e.point.filterIndex,
-                            yKey = e.point.filterKey,
+                        var data = e.data,
+                            series = d3.event.currentTarget.parentElement.__data__,
+                            xIndex = series.filterIndex,
+                            xKey = series.filterKey,
+                            yIndex = data.filterIndex,
+                            yKey = data.filterKey,
                             filters = [];
 
                         var filterExpression = function(selector, index, key) {
