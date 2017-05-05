@@ -552,13 +552,12 @@ class S3RangeFilter(S3FilterWidget):
                                        field.max(),
                                        join=join,
                                        left=left,
-                                       limitby = (0, 1)
                                        ).first()
 
-        min = row[field.min()]
-        max = row[field.max()]
+        minimum = row[field.min()]
+        maximum = row[field.max()]
 
-        return min, max
+        return minimum, maximum
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):
@@ -718,26 +717,25 @@ class S3DateFilter(S3RangeFilter):
             # http://www.web2py.com/books/default/chapter/29/06/the-database-abstraction-layer#Default-values-with-coalesce-and-coalesce_zero
             start_field = S3ResourceField(resource, fields[0]).field
             end_field = S3ResourceField(resource, fields[1]).field
-            fields = (start_field.min(),
-                      start_field.max(),
-                      end_field.max(),
-                      )
+            row = current.db(query).select(start_field.min(),
+                                           start_field.max(),
+                                           end_field.max(),
+                                           join = join,
+                                           left = left,
+                                           ).first()
+            minimum = row[start_field.min()]
+            maximum = row[start_field.max()]
+            end_max = row[end_field.max()]
+            if end_max:
+                maximum = max(maximum, end_max)
         else:
-            separate = False
             rfield = S3ResourceField(resource, fields)
             field = rfield.field
-            fields = (field.min(),
-                      field.max(),
-                      )
-
-        row = current.db(query).select(join = join,
-                                       left = left,
-                                       *fields).first()
-
-        if separate:
-            minimum = row[start_field.min()]
-            maximum = max(row[start_field.max()], row[end_field.max()])
-        else:
+            row = current.db(query).select(field.min(),
+                                           field.max(),
+                                           join = join,
+                                           left = left,
+                                           ).first()
             minimum = row[field.min()]
             maximum = row[field.max()]
 
@@ -794,7 +792,8 @@ class S3DateFilter(S3RangeFilter):
         slider = opts_get("slider", False)
         if slider:
             # Load Moment into Browser
-            # NB This will probably get used more widely in future
+            # @ToDo: locale support
+            # NB This will probably get used more widely in future, so maybe need to abstract this somewhere else
             s3 = current.response.s3
             if s3.debug:
                 if s3.cdn:

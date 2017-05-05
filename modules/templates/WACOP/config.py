@@ -1110,8 +1110,8 @@ def config(settings):
         record_id = r.id
         def task_name(row):
             return A(row["project_task.name"],
-                     _href = URL(c="event", f="event",
-                                 args=[event_id, "task", row["project_task.id"], "profile"],
+                     _href = URL(c="event", f=f,
+                                 args=[record_id, "task", row["project_task.id"], "profile"],
                                  ),
                      )
         s3db.project_task.name_click = s3_fieldmethod("name_click",
