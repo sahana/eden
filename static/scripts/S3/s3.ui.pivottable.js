@@ -779,7 +779,7 @@
 
             // Generate the items
             var items = [], total = 0;
-            for (var i=0; i<data.length; i++) {
+            for (var i=0; i < data.length; i++) {
                 var item = data[i];
                 if (!item[1] && item[2][0] >= 0) {
                     items.push({
@@ -846,8 +846,8 @@
 
                 if (pt.options.exploreChart && selector) {
                     reportChart.pie.dispatch.on('elementClick', function(e) {
-                        var data = e.data;
-                        var index = data.index,
+                        var data = e.data,
+                            index = data.index,
                             key = data.key,
                             fvar;
                         if (index == '__other__') {
@@ -946,7 +946,6 @@
                                            .y(function(d) { return d.value; })
                                            .staggerLabels(true)
                                            .showControls(false);
-                    reportChart.tooltip.contentGenerator(tooltipContent);
                     dispatch = reportChart.multibar;
                 } else {
                     reportChart = nv.models.discreteBarChart()
@@ -954,10 +953,10 @@
                                            .y(function(d) { return d.value; })
                                            .staggerLabels(true)
                                            .showValues(true);
-                    reportChart.tooltip.contentGenerator(tooltipContent);
                     reportChart.valueFormat(valueFormat);
                     dispatch = reportChart.discretebar;
                 }
+                reportChart.tooltip.contentGenerator(tooltipContent);
 
                 // Set value and tick formatters
                 reportChart.yAxis
