@@ -9,6 +9,7 @@
  * requires jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
  * requires jQuery UI Timepicker-addon if using times: http://trentrichardson.com/examples/timepicker
  * requires Calendars for non-Gregorian calendars: http://keith-wood.name/calendars.html
+ * (ensure that calendars/ui-smoothness.calendars.picker.css is in css.cfg for that)
  */
 (function($, undefined) {
 

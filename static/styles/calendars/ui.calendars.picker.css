@@ -4,7 +4,7 @@
 }
 #ui-datepicker-div,
 .ui-datepicker-inline {
-	min-width: 17em;
+	width: 17em;
 	font-size: 75%;
 }
 #ui-datepicker-div {
@@ -76,7 +76,7 @@ button.ui-datepicker-cmd {
 }
 .ui-datepicker-group {
 	float: left;
-	min-width: 17em;
+	width: 17em;
 }
 .ui-datepicker-group .ui-datepicker-header {
 	height: 1.5em;
