@@ -10552,12 +10552,12 @@ nv.models.pie = function() {
         donut:              {get: function(){return donut;}, set: function(_){donut=_;}},
         growOnHover:        {get: function(){return growOnHover;}, set: function(_){growOnHover=_;}},
 
-        // depreciated after 1.7.1
+        // deprecated after 1.7.1
         pieLabelsOutside: {get: function(){return labelsOutside;}, set: function(_){
             labelsOutside=_;
             nv.deprecated('pieLabelsOutside', 'use labelsOutside instead');
         }},
-        // depreciated after 1.7.1
+        // deprecated after 1.7.1
         donutLabelsOutside: {get: function(){return labelsOutside;}, set: function(_){
             labelsOutside=_;
             nv.deprecated('donutLabelsOutside', 'use labelsOutside instead');
@@ -10798,6 +10798,8 @@ nv.models.pieChart = function() {
     // use Object get/set functionality to map between vars and chart functions
     chart._options = Object.create({}, {
         // simple options, just get/set the necessary values
+        width:          {get: function(){return width;},          set: function(_){width=_;}}, // S3, but also in trunk NVD3
+        height:         {get: function(){return height;},         set: function(_){height=_;}}, // S3, but also in trunk NVD3
         noData:         {get: function(){return noData;},         set: function(_){noData=_;}},
         showLegend:     {get: function(){return showLegend;},     set: function(_){showLegend=_;}},
         legendPosition: {get: function(){return legendPosition;}, set: function(_){legendPosition=_;}},

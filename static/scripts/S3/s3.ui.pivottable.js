@@ -815,7 +815,10 @@
                 // Create the tooltip
                 var tooltip = '<div class="pt-tooltip-label">' + data.label + '</div>';
                 tooltip += '<div class="pt-tooltip-text">' + value + ' (' + percent + '%)</div>';
-                pt._renderChartTooltip(d3.event.x, d3.event.y, tooltip);
+                var d3_event = d3.event,
+                    x = d3_event.pageX,
+                    y = d3_event.pageY;
+                pt._renderChartTooltip(x, y, tooltip);
 
                 $('.pt-tooltip-label').css({
                     color: nv.utils.defaultColor()({}, index)
@@ -1306,7 +1309,10 @@
                 // Create the tooltip
                 var tooltip = '<div class="pt-tooltip-label">' + data.label + '</div>';
                 tooltip += '<div class="pt-tooltip-text">' + value + ' (' + percent + '%)</div>';
-                pt._renderChartTooltip(d3.event.x, d3.event.y, tooltip);
+                var d3_event = d3.event,
+                    x = d3_event.pageX,
+                    y = d3_event.pageY;
+                pt._renderChartTooltip(x, y, tooltip);
 
                 $('.pt-tooltip-label').css({
                     color: nv.utils.defaultColor()({}, index)
