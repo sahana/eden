@@ -1740,7 +1740,7 @@ class DVRCaseActivityModel(S3Model):
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
                      service_id(label = T("Service Type"),
-                                ondelete = "SET NULL",
+                                ondelete = "RESTRICT",
                                 readable = service_type,
                                 writable = service_type,
                                 ),
@@ -1956,11 +1956,13 @@ class DVRCaseActivityModel(S3Model):
                      s3_date("start_date",
                              label = T("Registered on"),
                              default = "now",
+                             set_min = "#dvr_case_activity_end_date",
                              ),
                      s3_date("end_date",
                              label = T("Completed on"),
                              readable = False,
                              writable = False,
+                             set_max = "#dvr_case_activity_start_date",
                              ),
                      self.dvr_need_id(readable = not multiple_needs,
                                       writable = not multiple_needs,
@@ -2014,7 +2016,7 @@ class DVRCaseActivityModel(S3Model):
                                 writable = False,
                                 ),
                      service_id(label = T("Service Type"),
-                                ondelete = "SET NULL",
+                                ondelete = "RESTRICT",
                                 readable = service_type,
                                 writable = service_type,
                                 ),
@@ -2196,6 +2198,7 @@ class DVRCaseActivityModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.case_activity_onaccept,
+                  onvalidation = self.case_activity_onvalidation,
                   orderby = "dvr_case_activity.start_date desc",
                   report_options = report_options,
                   super_entity = "doc_entity",
@@ -2298,6 +2301,26 @@ class DVRCaseActivityModel(S3Model):
                 "dvr_case_activity_id": lambda name="case_activity_id", **attr: \
                                                dummy(name, **attr),
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_activity_onvalidation(form):
+        """
+            Validate case activity form:
+                - end date must be after start date
+        """
+
+        T = current.T
+
+        form_vars = form.vars
+        try:
+            start = form_vars.start_date
+            end = form_vars.end_date
+        except AttributeError:
+            return
+
+        if start and end and end < start:
+            form.errors["end_date"] = T("End date must be after start date")
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -1207,7 +1207,7 @@ class S3SQLCustomForm(S3SQLForm):
             try:
                 callback(onvalidation, form, tablename=self.tablename)
             except:
-                error = "onvalidation failed: %s" % onvalidation
+                error = "onvalidation failed: %s" % str(onvalidation)
                 current.log.error(error)
                 raise
 
@@ -1245,7 +1245,7 @@ class S3SQLCustomForm(S3SQLForm):
                     callback(subonvalidation, subform,
                              tablename = subtable._tablename)
                 except:
-                    error = "onvalidation failed: %s" % subonvalidation
+                    error = "onvalidation failed: %s" % str(subonvalidation)
                     current.log.error(error)
                     raise
                 for fn in subform.errors:

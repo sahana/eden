@@ -44,7 +44,7 @@
             <!-- Is active -->
 
             <xsl:variable name="is_active" select="col[@field='Active']/text()"/>
-            <data field="is_active">
+            <data field="active">
                 <xsl:attribute name="value">
                     <xsl:choose>
                         <xsl:when test="$is_active='true'">

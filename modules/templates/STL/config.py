@@ -218,6 +218,49 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
+    def dvr_activity_update_onaccept(form):
+        """
+            Onaccept of group activity:
+                - propagate the service_id to all case activities
+                  linked to it
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        if record_id:
+
+            # Get the service ID
+            atable = s3db.dvr_activity
+            row = db(atable.id == record_id).select(atable.service_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+            if row:
+                service_id = row.service_id
+                if service_id:
+                    # Update the service_id of all case activities
+                    # linked to this group activity
+                    catable = s3db.dvr_case_activity
+                    query = (catable.activity_id == record_id) & \
+                            (catable.service_id != service_id)
+                    db(query).update(service_id = service_id)
+
+        # Also execute standard onaccept, if any
+        onaccept = s3db.get_config("dvr_activity", "onaccept")
+        if onaccept:
+            from gluon.tools import callback
+            callback(onaccept, form, tablename="dvr_activity")
+
+    # -------------------------------------------------------------------------
     def customise_dvr_activity_controller(**attr):
 
         db = current.db
@@ -561,6 +604,12 @@ def config(settings):
                 script = "/%s/static/themes/STL/js/activity.js" % r.application
                 if script not in scripts:
                     scripts.append(script)
+
+            s3db.configure("dvr_activity",
+                           # Custom update-onaccept to propagate
+                           # service_id changes to case activities:
+                           update_onaccept = dvr_activity_update_onaccept,
+                           )
 
             return result
         s3.prep = custom_prep
@@ -1041,8 +1090,20 @@ def config(settings):
                 table = r.component.table
                 component = r.component
 
+            # Extend onvalidation with custom validation for
+            # mandatory vulnerability type categories
+            onvalidation = component.get_config("onvalidation")
+            if isinstance(onvalidation, (tuple, list)):
+                if vulnerability_type_validation not in onvalidation:
+                   onvalidation = list(onvalidation)
+                   onvalidation.append(vulnerability_type_validation)
+            elif onvalidation:
+                onvalidation = (onvalidation, vulnerability_type_validation)
+            else:
+                onvalidation = vulnerability_type_validation
+
             component.configure(orderby = ~table.start_date,
-                                onvalidation = vulnerability_type_validation,
+                                onvalidation = onvalidation,
                                 )
 
             # Expose "Project Code" and "Person responsible" (both mandatory)
@@ -1199,6 +1260,12 @@ def config(settings):
                                             ),
                                         "comments",
                                         )
+
+            scripts = s3.scripts
+            script = "/%s/static/themes/STL/js/case_activity.js" % r.application
+            if script not in scripts:
+                scripts.append(script)
+
             list_fields = ["person_id",
                            "service_id",
                            "human_resource_id",

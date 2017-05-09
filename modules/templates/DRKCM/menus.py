@@ -176,7 +176,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M(follow_up_label, f="due_followups"),
                         M("All Activities"),
-                        #M("Report", m="report"),
+                        M("Report", m="report"),
                         ),
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
@@ -196,9 +196,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars={"archived": "1"},
                           ),
                         ),
-                    M("Administration", restrict=(ADMIN, "ADMIN_HEAD"))(
-                        M("Flags", f="case_flag"),
+                    M("Administration", restrict=(ADMIN,))(
+                        #M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
+                        M("Need Types", f="need"),
+                        M("Intervention Types", f="response_type"),
                         M("Appointment Types", f="case_appointment_type"),
                         ),
                     )
@@ -211,18 +213,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="org")(
-                    #M("Organizations", f="organisation")(
-                        #M("Create", m="create"),
+                    M("Organizations", f="organisation")(
+                        M("Hierarchy", m="hierarchy"),
+                        M("Create", m="create"),
                         #M("Import", m="import")
-                    #),
+                    ),
                     M("Facilities", f="facility")(
                         M("Create", m="create"),
                     ),
-                    #M("Organization Types", f="organisation_type",
-                      #restrict=[ADMIN])(
-                        #M("Create", m="create"),
-                    #),
                     M("Facility Types", f="facility_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                    M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
