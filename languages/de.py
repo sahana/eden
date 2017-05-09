@@ -3076,6 +3076,7 @@
 'Number of Activities': 'Zahl der Aktivitäten',
 'Number of Activities per': 'Zahl der Aktivitäten pro',
 'Number of Barges': 'Zahl der Lastschiffe',
+'Number of Cases': 'Anzahl Fälle',
 'Number of Children': 'Anzahl Kinder',
 'Number of Columns': 'Anzahl der Spalten',
 'Number of Families': 'Anzahl Familien',

@@ -176,7 +176,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M(follow_up_label, f="due_followups"),
                         M("All Activities"),
-                        #M("Report", m="report"),
+                        M("Report", m="report"),
                         ),
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
