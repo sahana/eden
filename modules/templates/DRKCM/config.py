@@ -119,6 +119,11 @@ def config(settings):
     settings.hrm.teams_orgs = False
 
     # -------------------------------------------------------------------------
+    # Organisations Module Settings
+    #
+    settings.org.branches = True
+
+    # -------------------------------------------------------------------------
     # Persons Module Settings
     #
     settings.pr.hide_third_gender = False
@@ -355,6 +360,17 @@ def config(settings):
 
                             # Process Data ----------------------------
                             "dvr_case.site_id",
+                            S3SQLInlineComponent(
+                                    "address",
+                                    label = T("Current Address"),
+                                    fields = [("", "location_id"),
+                                              ],
+                                    filterby = {"field": "type",
+                                                "options": "1",
+                                                },
+                                    link = False,
+                                    multiple = False,
+                                    ),
                             (T("Date of Arrival"), "dvr_case.date"),
                             S3SQLInlineComponent(
                                     "bamf",

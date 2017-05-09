@@ -1499,3 +1499,8 @@ body.rtl .event-type-header {
 .clear-btn .fa {
   color: #B0B0B0;
 }
+
+/* line 206, ../scss/custom/_misc.scss */
+#sub-defaultaddress table tr td {
+  padding: 0.3rem;
+}

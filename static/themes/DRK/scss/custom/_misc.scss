@@ -201,3 +201,8 @@ body.rtl {
         color: #B0B0B0;
     }
 }
+
+// Address fields in beneficiary form
+#sub-defaultaddress table tr td {
+    padding: 0.3rem;
+}
