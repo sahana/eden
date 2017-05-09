@@ -623,8 +623,7 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  list_fields = ["id",
-                                 "post_id",
+                  list_fields = ["post_id",
                                  "created_by",
                                  "modified_on"
                                  ],

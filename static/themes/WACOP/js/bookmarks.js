@@ -1,5 +1,5 @@
 // Bookmarks for Events/Incidents/Posts (Alerts/Updates)
-var wacop_bookmarks = function() {
+S3.wacop_bookmarks = function() {
     $('.bookmark').click(function() {
         $this = $(this);
         var c = $this.data('c');

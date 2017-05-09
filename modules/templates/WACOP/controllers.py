@@ -3,7 +3,10 @@
 from gluon import current#, Field, SQLFORM
 from gluon.html import *
 from gluon.storage import Storage
-from s3 import FS, ICON, S3CRUD, S3CustomController, S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter, S3OptionsFilter, S3Request, S3TextFilter#, S3URLQuery
+from s3 import FS, ICON, s3_auth_user_represent, \
+               S3CRUD, S3CustomController, \
+               S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter,\
+               S3OptionsFilter, S3Request, S3TextFilter#, S3URLQuery
 
 THEME = "WACOP"
 
@@ -832,11 +835,19 @@ class custom_WACOP(S3CRUD):
         else:
             output["create_post_button"] = ""
 
+        appname = current.request.application
+
+        # Comments for Updates
+        s3.scripts.append("/%s/static/themes/WACOP/js/update_comments.js" % appname)
+        script = '''S3.wacop_comments()
+S3.redraw_fns.push('wacop_comments')'''
+        s3.jquery_ready.append(script)
+
         # Tags for Updates
         if s3.debug:
-            s3.scripts.append("/%s/static/scripts/tag-it.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/tag-it.js" % appname)
         else:
-            s3.scripts.append("/%s/static/scripts/tag-it.min.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/tag-it.min.js" % appname)
         if has_permission("update", s3db.cms_tag_post):
             readonly = '''afterTagAdded:function(event,ui){
 if(ui.duringInitialization){return}
@@ -873,7 +884,8 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
 
         s3 = current.response.s3
         s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % current.request.application)
-        s3.jquery_ready.append('''wacop_bookmarks()''')
+        s3.jquery_ready.append('''S3.wacop_bookmarks()
+S3.redraw_fns.push('wacop_bookmarks')''')
 
         # System-wide Message
         output["system_wide"] = self._system_wide_html()
@@ -1740,6 +1752,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     date = record["cms_post.date"]
+    title = record["cms_post.title"]
     body = record["cms_post.body"]
     series_id = raw["cms_post.series_id"]
 
@@ -1788,10 +1801,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     table = db.cms_post
-    updateable = permit("update", table, record_id=record_id)
 
     # Toolbar
-    if updateable:
+    if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
                      SPAN("edit",
                           _class = "show-for-sr",
@@ -1926,6 +1938,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                  _class="controls",
                  )
 
+    # Tags
     #if settings.get_cms_show_tags():
     tag_list = UL(_class="left inline-list s3-tags",
                   )
@@ -1940,47 +1953,136 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                  ),
                                ))
 
-    item = TAG["ARTICLE"](TAG["HEADER"](UL(# post priority icon
-                                           LI(_class="item icon",
-                                              ),
-                                           # post type title
-                                           LI(series_title,
-                                              _class="item primary",
-                                              ),
-                                           # post status
-                                           LI(status,
-                                              _class="item secondary border status",
-                                              ),
-                                           # post visibility
-                                           # @ToDo: Read the visibility
-                                           LI(T("Public"),
-                                              _class="item secondary border visibility",
-                                              ),
-                                           _class="status-bar-left"
-                                           ),
-                                        toolbar,
-                                        _class="status-bar",
+    # Comments
+    comment_list = UL()
+    cappend = comment_list.append
+
+    #if settings.get_cms_comments():
+    # Add existing comments (oldest 1st)
+    comment_ids = raw["cms_comment.id"]
+    ncomments = 0
+    if comment_ids:
+        # Read extra data (can't have this as separate list_fields since come in unsorted & unable to match whole records
+        ctable = s3db.cms_comment
+        if isinstance(comment_ids, list):
+            comments = db(ctable.id.belongs(comment_ids)).select(ctable.body,
+                                                                 ctable.created_on,
+                                                                 ctable.created_by,
+                                                                 # Will sort by default by ID which is equivalent to oldest first
+                                                                 # orderby
+                                                                 )
+        else:
+            comment = db(ctable.id == comment_ids).select(ctable.body,
+                                                          ctable.created_on,
+                                                          ctable.created_by,
+                                                          limitby=(0, 1)
+                                                          ).first()
+            comments = [comment]
+        for comment in comments:
+            author = s3_auth_user_represent(comment.created_by)
+            cdate = comment.created_on
+            ctime = cdate.time().strftime("%H:%M")
+            cdate = cdate.date().strftime("%b %d, %Y")
+            comment = LI(TAG["ASIDE"](P(T("Updated %(date)s @ %(time)s by %(author)s") % \
+                                                dict(date = cdate,
+                                                     time = ctime,
+                                                     author = author,
+                                                     ),
+                                        _class="meta",
                                         ),
-                          DIV(P(TAG["TIME"](date),
-                                " by ",
-                                person,
-                                " – ",
-                                # @ToDo: Make comments work
-                                A("0 Comments",
-                                  #_href="#update-1-comments",
-                                  ),
-                                _class="dl-meta",
-                                ),
-                              P(body),
-                              _class="dl-body",
-                              ),
-                          docs,
-                          TAG["FOOTER"](tag_list,
-                                        _class="footer",
+                                      DIV(comment.body,
+                                          _class="desc",
+                                          ),
+                                      TAG["FOOTER"](P(A(T("More Info"),
+                                                        _class="more",
+                                                        )
+                                                      ),
+                                                    _class="footer",
+                                                    ),
+                                      _class="card-post-comment",
+                                      ))
+            cappend(comment)
+            ncomments += 1
+
+    if ncomments == 1:
+        num_comments = "1 Comment"
+    else:
+        num_comments = T("%(num)s Comments") % dict(num = ncomments)
+
+    if user:
+        add_comment = A(T("Add Comment"),
+                        _class="add-comment",
+                        )
+        add_comment["_data-l"] = list_id
+        add_comment["_data-i"] = record_id
+        add_comment = P(add_comment)
+        comment_input = LI(TAG["ASIDE"](TEXTAREA(_class="desc",
+                                                 _placeholder=T("comment here"),
+                                                 ),
+                                        TAG["FOOTER"](P(A("Submit Comment",
+                                                          _class="submit",
+                                                          ),
+                                                        ),
+                                                      ),
+                                        _class="card-post-comment",
                                         ),
-                          _class="card-post",
-                          _id=item_id,
+                          _class="comment-form hide",
                           )
+        cappend(comment_input)
+    else:
+        add_comment = ""
+
+    item = TAG["ASIDE"](TAG["HEADER"](UL(# post priority icon
+                                         LI(_class="item icon",
+                                            ),
+                                         # post type title
+                                         LI(series_title,
+                                            _class="item primary",
+                                            ),
+                                         # post status
+                                         LI(status,
+                                            _class="item secondary border status",
+                                            ),
+                                         # post visibility
+                                         # @ToDo: Read the visibility
+                                         LI(T("Public"),
+                                            _class="item secondary border visibility",
+                                            ),
+                                         _class="status-bar-left"
+                                         ),
+                                      toolbar,
+                                      _class="status-bar",
+                                      ),
+                        DIV(DIV(SPAN("Updated ", # @ToDo: i18n
+                                     TAG["TIME"](date),
+                                     " by ",
+                                     person,
+                                     _class="meta-update",
+                                     ),
+                                SPAN(num_comments,
+                                     _class="meta-comments",
+                                     ),
+                                _class="meta",
+                                ),
+                            H4(title,
+                               _class="title",
+                               ),
+                            DIV(body,
+                                _class="desc",
+                                ),
+                            _class="body",
+                            ),
+                        docs,
+                        TAG["FOOTER"](P(tag_list,
+                                        _class="tags",
+                                        ),
+                                      add_comment,
+                                      _class="footer",
+                                      ),
+                        comment_list,
+                        _class="card-post",
+                        _id=item_id,
+                        )
 
     return item
 

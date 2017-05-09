@@ -717,6 +717,12 @@ def newsfeed():
 # =============================================================================
 # Comments
 # =============================================================================
+def comment():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def discuss(r, **attr):
     """ Custom Method to manage the discussion of a Post """
 
