@@ -3131,7 +3131,8 @@ class S3CAPAlertingAuthorityModel(S3Model):
                                                 ondelete = "CASCADE",
                                                 represent = alerting_authority_represent,
                                                 requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "cap_alerting_authority.id",
+                                                    IS_ONE_OF(current.db,
+                                                              "cap_alerting_authority.id",
                                                               alerting_authority_represent)
                                                 ))
 
