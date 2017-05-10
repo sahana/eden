@@ -5008,7 +5008,7 @@ def dvr_get_household_size(person_id, dob=False, formatted=True):
     now = current.request.utcnow.date()
 
     # Default result
-    adults, children = 1, 0
+    adults, children, children_u1 = 1, 0, 0
 
     # Count the person in question
     if dob is False:
@@ -5022,6 +5022,8 @@ def dvr_get_household_size(person_id, dob=False, formatted=True):
         age = relativedelta(now, dob).years
         if age < 18:
             adults, children = 0, 1
+            if age < 1:
+                children_u1 = 1
 
     # Household members which have already been counted
     members = set([person_id])
@@ -5058,12 +5060,14 @@ def dvr_get_household_size(person_id, dob=False, formatted=True):
                 age = relativedelta(now, dob).years if dob else None
                 if age is not None and age < 18:
                     children += 1
+                    if age < 1:
+                        children_u1 += 1
                 else:
                     adults += 1
                 counted(person)
 
     if not formatted:
-        return adults, children
+        return adults, children, children_u1
 
     T = current.T
     template = "%(number)s %(label)s"
@@ -5078,7 +5082,20 @@ def dvr_get_household_size(person_id, dob=False, formatted=True):
         details.append(template % {"number": children,
                                    "label": label,
                                    })
-    return ", ".join(details)
+    details = ", ".join(details)
+
+    if children_u1:
+        if children_u1 == 1:
+            label = T("Child under 1 year")
+        else:
+            label = T("Children under 1 year")
+        details = "%s (%s)" % (details,
+                               template % {"number": children_u1,
+                                           "label": label,
+                                           },
+                               )
+
+    return details
 
 # =============================================================================
 class DVRRegisterCaseEvent(S3Method):
