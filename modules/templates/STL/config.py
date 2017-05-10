@@ -763,6 +763,64 @@ def config(settings):
                 break
 
     # -------------------------------------------------------------------------
+    def case_activity_validation(form):
+        """
+            Custom validation for case activities:
+                - prevent linking the same beneficiary twice to the
+                  same group activity
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        # Get the person_id and the activity_id
+        table = s3db.dvr_case_activity
+        load = []
+        values = {}
+        for fieldname in ("person_id", "activity_id"):
+            if fieldname in form_vars:
+                value = form_vars[fieldname]
+            elif record_id:
+                load.append(fieldname)
+                continue
+            else:
+                value = table[fieldname].default
+            values[fieldname] = value
+
+        # Load missing values from existing record
+        if record_id and load:
+            fields = [table[fieldname] for fieldname in load]
+            query = (table.id == record_id)
+            row = db(query).select(limitby = (0, 1), *fields).first()
+            for fieldname in load:
+                values[fieldname] = row[fieldname]
+
+        person_id = values.get("person_id")
+        activity_id = values.get("activity_id")
+
+        # Check whether another link already exists
+        if person_id and activity_id:
+            query = (table.person_id == person_id) & \
+                    (table.activity_id == activity_id) & \
+                    (table.deleted == False)
+            if record_id:
+                query &= (table.id != record_id)
+            row = db(query).select(table.id, limitby=(0, 1)).first()
+            if row:
+                error = T("Beneficiary is already registered for this activity")
+                for fieldname in ("person_id", "activity_id"):
+                    if fieldname in form_vars:
+                        form.errors[fieldname] = error
+
+    # -------------------------------------------------------------------------
     def pss_case_activity_onaccept(form):
         """
             PSS Case Activities inherit the project ID from
@@ -1092,18 +1150,12 @@ def config(settings):
 
             # Extend onvalidation with custom validation for
             # mandatory vulnerability type categories
-            onvalidation = component.get_config("onvalidation")
-            if isinstance(onvalidation, (tuple, list)):
-                if vulnerability_type_validation not in onvalidation:
-                   onvalidation = list(onvalidation)
-                   onvalidation.append(vulnerability_type_validation)
-            elif onvalidation:
-                onvalidation = (onvalidation, vulnerability_type_validation)
-            else:
-                onvalidation = vulnerability_type_validation
+            s3db.add_custom_callback("dvr_case_activity",
+                                     "onvalidation",
+                                     vulnerability_type_validation,
+                                     )
 
             component.configure(orderby = ~table.start_date,
-                                onvalidation = onvalidation,
                                 )
 
             # Expose "Project Code" and "Person responsible" (both mandatory)
@@ -1293,17 +1345,10 @@ def config(settings):
 
             # Configure custom onaccept to inherit
             # project ID from group activity
-            component = r.component
-            onaccept = component.get_config("onaccept")
-            if onaccept:
-                if isinstance(onaccept, (tuple, list)):
-                    if pss_case_activity_onaccept not in onaccept:
-                        onaccept = tuple(onaccept) + (pss_case_activity_onaccept,)
-                elif onaccept and onaccept != pss_case_activity_onaccept:
-                    onaccept = (onaccept, pss_case_activity_onaccept)
-                elif not onaccept:
-                    onaccept = pss_case_activity_onaccept
-            component.configure(onaccept=onaccept)
+            s3db.add_custom_callback("dvr_case_activity",
+                                     "onaccept",
+                                     pss_case_activity_onaccept,
+                                     )
 
             # Get service root types
             stable = s3db.org_service
@@ -1565,6 +1610,10 @@ def config(settings):
                        list_fields = list_fields,
                        owner_group = stl_case_activity_owner_group,
                        )
+        s3db.add_custom_callback("dvr_case_activity",
+                                 "onvalidation",
+                                 case_activity_validation,
+                                 )
 
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 

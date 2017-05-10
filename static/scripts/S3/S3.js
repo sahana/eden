@@ -1331,7 +1331,7 @@ S3.openPopup = function(url, center) {
                 if (widget.hasClass('groupedopts-widget')) {
                     visible = widget.groupedopts('visible');
                 } else {
-                    visible = widget.is(':visible');
+                    visible = widget.data('visible') || widget.is(':visible');
                 }
                 if (visible) {
                     widget.data('visible', true);
@@ -1401,7 +1401,7 @@ S3.openPopup = function(url, center) {
             if (widget.hasClass('groupedopts-widget')) {
                 visible = widget.groupedopts('visible');
             } else {
-                visible = widget.is(':visible');
+                visible = widget.data('visible') || widget.is(':visible');
             }
             if (visible) {
                 show_widget = true;
