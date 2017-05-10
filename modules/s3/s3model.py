@@ -447,6 +447,69 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def add_custom_callback(cls, tablename, hook, cb, method=None):
+        """
+            Generic method to append a custom onvalidation|onaccept
+            callback to the originally configured callback chain,
+            for use in customise_* in templates
+
+            @param tablename: the table name
+            @param hook: the main hook ("onvalidation"|"onaccept")
+            @param cb: the custom callback function
+            @param method: the sub-hook ("create"|"update"|None)
+
+            @example:
+                # Add a create-onvalidation callback for the pr_person
+                # table, while retaining any existing onvalidation:
+                s3db.add_custom_callback("pr_person",
+                                         "onvalidation",
+                                         my_create_onvalidation,
+                                         method = "create",
+                                         )
+        """
+
+        def extend(this, new):
+            if isinstance(this, (tuple, list)):
+                this = list(this)
+            elif this is not None:
+                this = [this]
+            else:
+                this = []
+            if new not in this:
+                this.append(new)
+            return this
+
+        callbacks = {}
+        for m in ("create", "update", None):
+            key = "%s_%s" % (m, hook) if m else hook
+            callbacks[m] = cls.get_config(tablename, key)
+
+        if method is None:
+            generic_cb = callbacks[None]
+            if generic_cb:
+                callbacks[None] = extend(generic_cb, cb)
+            else:
+                callbacks[None] = cb
+            for m in ("create", "update"):
+                current_cb = callbacks[m]
+                if current_cb:
+                    callbacks[m] = extend(current_cb, cb)
+        else:
+            current_cb = callbacks[m]
+            if current_cb:
+                callbacks[method] = extend(current_cb, cb)
+            else:
+                callbacks[method] = extend(callbacks[None], cb)
+
+        settings = {}
+        for m, setting in callbacks.items():
+            if setting:
+                key = "%s_%s" % (m, hook) if m else hook
+                settings[key] = setting
+        cls.configure(tablename, **settings)
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def virtual_reference(cls, field):
         """
             Reverse-lookup of virtual references which are declared for
