@@ -2579,6 +2579,15 @@ class S3Config(Storage):
 
         return self.cap.get("alert_hub_title", current.T("SAMBRO Alert Hub Common Operating Picture"))
 
+    def get_cap_area_default(self):
+        """
+            During importing from XML, which element(s) to use for the
+            record in cap_area_location table
+            elements are <polygon> and <geocode>
+        """
+
+        return self.cap.get("area_default", ["geocode", "polygon"])
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
