@@ -576,9 +576,9 @@ def config(settings):
                 filter_widgets = [
                     S3TextFilter(["facilitator",
                                   "comments",
-                                 ],
+                                  ],
                                  label = T("Search"),
-                                ),
+                                 ),
                     S3HierarchyFilter("service_id",
                                       lookup = "org_service",
                                       filter = (FS("root_service").belongs(root_service_ids)),
