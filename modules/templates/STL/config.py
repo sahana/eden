@@ -291,6 +291,7 @@ def config(settings):
                            S3Represent, \
                            S3SQLCustomForm, \
                            S3SQLInlineComponent, \
+                           S3TextFilter, \
                            s3_get_filter_opts
 
             # Expose organisation_id
@@ -573,6 +574,11 @@ def config(settings):
 
                 # Custom filter widgets
                 filter_widgets = [
+                    S3TextFilter(["facilitator",
+                                  "comments",
+                                 ],
+                                 label = T("Search"),
+                                ),
                     S3HierarchyFilter("service_id",
                                       lookup = "org_service",
                                       filter = (FS("root_service").belongs(root_service_ids)),
