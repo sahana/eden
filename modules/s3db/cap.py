@@ -2097,7 +2097,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
     @staticmethod
     def cap_area_location_onaccept(form):
         """
-            Link alert_id for non-template area
+            - Link alert_id for non-template area
+            - for external alerts (from import feed or rss), make sure the
+              locations are only imported if we set polygons to be imported
         """
 
         form_vars = form.vars
@@ -2117,7 +2119,15 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         if alert_id:
             # This is not template area
             # NB Template area are not linked with alert_id
-            db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
+            location_default = current.deployment_settings.get_cap_area_default()
+            if "polygon" not in location_default:
+                table = current.s3db.cap_alert
+                row = db(table.id == alert_id).select(table.external,
+                                                      limitby=(0, 1)).first()
+                if row.external:
+                    db(db.cap_area_location.id == form_vars["id"]).delete()
+            else:
+                db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2142,36 +2152,47 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         arow = db(atable.id == area_id).select(atable.alert_id,
                                                limitby=(0, 1)).first()
         alert_id = arow.alert_id
-
-        if tag and same_code:
+        location_default = current.deployment_settings.get_cap_area_default()
+        import_location = False
+        if "geocode" in location_default and tag and same_code:
             if tag == "SAME":
-                # SAME tag referes to some location_id in CAP
-                s3db = current.s3db
-                ttable = s3db.gis_location_tag
-                gtable = s3db.gis_location
+                table = current.s3db.cap_alert
+                row = db(table.id == alert_id).select(table.external,
+                                                      limitby=(0, 1)).first()
+                if row.external:
+                    import_location = True
+        else:
+            # For system alert
+            import_location = True
 
-                # It is possible for there to be two polygons for the same SAME
-                # code since polygon change over time, even if the code remains
-                # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
-                tquery = (ttable.tag == same_code) & \
-                         (ttable.value == form_vars.get("value")) & \
-                         (ttable.deleted != True) & \
-                         (ttable.location_id == gtable.id) & \
-                         (gtable.end_date == None) & \
-                         (gtable.deleted != True)
-                trows = db(tquery).select(ttable.location_id)
-                for trow in trows:
-                    # Match
-                    ltable = db.cap_area_location
-                    ldata = {"area_id": area_id,
-                             "alert_id": alert_id or None,
-                             "location_id": trow.location_id,
-                             }
-                    lid = ltable.insert(**ldata)
-                    current.auth.s3_set_record_owner(ltable, lid)
-                    # Uncomment this when required
-                    #ldata["id"] = lid
-                    #s3db.onaccept(ltable, ldata)
+        if import_location:
+            # SAME tag referes to some location_id in CAP
+            s3db = current.s3db
+            ttable = s3db.gis_location_tag
+            gtable = s3db.gis_location
+
+            # It is possible for there to be two polygons for the same SAME
+            # code since polygon change over time, even if the code remains
+            # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
+            tquery = (ttable.tag == same_code) & \
+                     (ttable.value == form_vars.get("value")) & \
+                     (ttable.deleted != True) & \
+                     (ttable.location_id == gtable.id) & \
+                     (gtable.end_date == None) & \
+                     (gtable.deleted != True)
+            trow = db(tquery).select(ttable.location_id, limitby=(0, 1)).first()
+            if trow and trow.location_id:
+                # Match
+                ltable = db.cap_area_location
+                ldata = {"area_id": area_id,
+                         "alert_id": alert_id or None,
+                         "location_id": trow.location_id,
+                         }
+                lid = ltable.insert(**ldata)
+                current.auth.s3_set_record_owner(ltable, lid)
+                # Uncomment this when required
+                #ldata["id"] = lid
+                #s3db.onaccept(ltable, ldata)
 
         if alert_id:
             # This is not template area
