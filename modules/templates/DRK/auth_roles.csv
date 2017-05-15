@@ -283,7 +283,7 @@ SECURITY_HEAD,Head of Security,,,,pr_person_tag,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Head of security can register seized items, and update/delete the ones they created"
 SECURITY_HEAD,Head of Security,,,,security_seized_item_type,READ,,,,,Head of security can read seized item types
 STAFF,General Staff,,cr,,,READ,,,,,
-STAFF,General Staff,,dvr,case_activity,,NONE,,,,,Staff can not access case activity controller
+STAFF,General Staff,,dvr,case_activity,,READ|UPDATE,,,,,Staff can read and update case activities
 STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
 STAFF,General Staff,,dvr,case_event,,CREATE|READ,,,,,
 STAFF,General Staff,,dvr,site_activity,,NONE,,,,,
@@ -299,7 +299,7 @@ STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
 STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,
-STAFF,General Staff,,,,dvr_case_activity,READ,,,,,
+STAFF,General Staff,,,,dvr_case_activity,READ|UPDATE,,,,,Staff can read and update case activities
 STAFF,General Staff,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,
 STAFF,General Staff,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 STAFF,General Staff,,,,dvr_case_event,CREATE,,,,,
