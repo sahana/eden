@@ -163,6 +163,12 @@
 
   @include fieldset();
 
+  .controls {
+    .ui-multiselect {
+      max-width: 100%;
+    }
+  }
+
   // Filter s3 widgets
   .s3-groupedopts-widget {
     margin-bottom: 0;
