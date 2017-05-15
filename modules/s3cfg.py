@@ -2329,6 +2329,17 @@ class S3Config(Storage):
         """
         return self.search.get("max_results", 200)
 
+    def get_search_dates_auto_range(self):
+        """
+            Date filters to apply introspective range limits (by
+            looking up actual minimum/maximum dates from the records)
+
+            NB has scalability problems, so disabled by default =>
+               can be overridden per-widget using the "auto_range"
+               option (S3DateFilter)
+        """
+        return self.search.get("dates_auto_range", False)
+
     # -------------------------------------------------------------------------
     # Filter Manager Widget
     def get_search_filter_manager(self):
