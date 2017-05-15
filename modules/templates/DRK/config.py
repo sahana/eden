@@ -2093,6 +2093,35 @@ def config(settings):
                             fw.field.append("person_id$eo_number.value")
                             break
 
+                if r.interactive:
+                    # Represent person_id as link (including ID)
+                    table = resource.table
+                    field = table.person_id
+                    fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+                    field.represent = s3db.pr_PersonRepresent(fields = ("pe_label",
+                                                                        "last_name",
+                                                                        "first_name",
+                                                                        ),
+                                                              labels = fmt,
+                                                              show_link = True,
+                                                              )
+
+                    # Custom form (excluding case reference)
+                    from s3 import S3SQLCustomForm
+                    crud_form = S3SQLCustomForm("person_id",
+                                                "start_date",
+                                                "need_id",
+                                                "need_details",
+                                                "emergency",
+                                                "activity_details",
+                                                "followup",
+                                                "followup_date",
+                                                "outcome",
+                                                "completed",
+                                                "comments",
+                                                )
+                    resource.configure(crud_form=crud_form)
+
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id$first_name",
@@ -2105,9 +2134,7 @@ def config(settings):
                                "followup_date",
                                "completed",
                                ]
-
-                r.resource.configure(list_fields = list_fields,
-                                    )
+                resource.configure(list_fields=list_fields)
 
             return result
         s3.prep = custom_prep
