@@ -1933,6 +1933,52 @@ S3.search = {};
                 var maxDate = moment().subtract(5, 'minutes');
                 $this.data('max', maxDate.format());
             }
+            var widget_name = $this.parent().attr('id');
+
+            // Coarse Filters
+            // @ToDo: widget setting
+            // Options: All months between minDate & maxDate
+            var cfmt = 'MMM YYYY',
+                year = minDate.format('YYYY'),
+                optDate = moment(minDate), // Clone
+                optgroups = '', // Concat faster than join in modern browsers
+                years = [{'year': year,
+                          'months': []
+                          }],
+                i = 0,
+                j,
+                months,
+                new_year;
+            while (maxDate > optDate || optDate.format('M') === maxDate.format('M')) {
+                new_year = optDate.format('YYYY');
+                if (new_year != year) {
+                    years.push({'year': new_year,
+                                'months': []
+                                });
+                    year = new_year;
+                    i++;
+                }
+                years[i]['months'].push(optDate.format(cfmt));
+                optDate.add(1, 'month');
+            }
+            for (i = 0; i < years.length; i++) {
+                year = years[i];
+                months = year['months'];
+                year = year['year'];
+                optgroups += '<optgroup label="' + year + '">';
+                for (j = 0; j < months.length; j++) {
+                    optgroups += '<option value="' + months[j] + '">' + months[j] + '</option>';
+                }
+                optgroups += '</optgroup>';
+            }
+            // @ToDo: i18n
+            $this.before('<div class="range-coarse">From:<select id="' + widget_name + '-cs">' + optgroups + '</select>to:<select id="' + widget_name + '-ce">' + optgroups + '</select></div>');
+            var coarseStart = $('#' + widget_name + '-cs');
+            var coarseEnd = $('#' + widget_name + '-ce');
+            coarseStart.val(minDate.format(cfmt));
+            coarseEnd.val(maxDate.format(cfmt));
+
+            // Range-Picker
             var offset,
                 timeOffset,
                 currentDate;
@@ -1949,17 +1995,19 @@ S3.search = {};
                     return moment(currentDate).format(fmt);
                 }
             });
-            var widget_name = $this.parent().attr('id');
-            var startField = $('#' + widget_name + '-ge');
-            var endField = $('#' + widget_name + '-le');
+
+            // Events
             // minuteStep handled server-side by extending widget ranges in _options
             //var startStep = startField.calendarWidget('option', 'minuteStep');
-            var values,
+            var startField = $('#' + widget_name + '-ge'),
+                endField = $('#' + widget_name + '-le'),
+                values,
                 totalPosition,
                 startValue,
                 endValue,
                 startDate,
                 endDate;
+
             // If the slider is updated then update the INPUTs & trigger a form refresh
             $this.on('update', function(e) {
                 values = rangePicker.getSelectValue();
@@ -1977,9 +2025,31 @@ S3.search = {};
                 endField.val(moment(endDate).format(fmt));
                 $this.closest('form').trigger('optionChanged');
             });
+
+            // If the Coarse Filters are updated then update the slider min/max & the INPUTs & trigger a form refresh
+            coarseStart.on('change', function(e) {
+                minDate = moment($(this).val(), cfmt);
+                $this.data('min', minDate.format());
+                startDate = minDate.format(fmt);
+                rangePicker.refresh({'startValue': startDate
+                                     });
+                startField.val(startDate);
+                $this.closest('form').trigger('optionChanged');
+            });
+            coarseEnd.on('change', function(e) {
+                maxDate = moment($(this).val(), cfmt).endOf('month');
+                $this.data('max', maxDate.format());
+                endDate = maxDate.format(fmt);
+                rangePicker.refresh({'endValue': endDate
+                                     });
+                endField.val(endDate);
+                $this.closest('form').trigger('optionChanged');
+            });
+
             // If the INPUTs are updated then update the slider
             function updatePosition() {
                 startValue = startField.val();
+                endValue = endField.val();
                 minDate = new Date($this.data('min'));
                 maxDate = new Date($this.data('max'));
                 offset = maxDate - minDate;
@@ -1990,26 +2060,27 @@ S3.search = {};
                 } else {
                     startValue = '0%';
                 }
-                endValue = endField.val();
                 if (endValue) {
-                    endDate = moment(endField.val(), fmt);
+                    endDate = moment(endValue, fmt);
                     timeOffset = endDate - minDate;
                     endValue = ((timeOffset / offset) * 100) + '%';
                 } else {
                     endValue = '100%';
                 }
                 rangePicker.updatePosition(endValue, startValue);
-            }
+            };
             startField.on('change', function(e) {
                 updatePosition();
             });
             endField.on('change', function(e) {
                 updatePosition();
             });
+
             // Handle clear
             $this.on('clear', function(e) {
                 rangePicker.updatePosition('100%', '0%');
             });
+
             // Allow resizing by updateOptions
             $this.on('resize', function(e, min, max) {
                 $this.data('min', min);

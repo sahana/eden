@@ -90,6 +90,9 @@ def config(settings):
     # Uncomment this to Translate Location Names
     #settings.L10n.translate_gis_location = True
 
+    # Has scalability issues, but should be OK with our number of records
+    settings.search.dates_auto_range = True
+
     # -------------------------------------------------------------------------
     # GIS settings
     #
