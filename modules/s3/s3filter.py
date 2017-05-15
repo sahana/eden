@@ -783,7 +783,15 @@ class S3DateFilter(S3RangeFilter):
         opts_get = self.opts.get
         hide_time = opts_get("hide_time", False)
 
-        minimum, maximum = self._options(resource, as_str=False)
+        # Introspective range
+        auto_range = opts_get("auto_range")
+        if auto_range is None:
+            # Not specified for widget => apply global setting
+            auto_range = current.deployment_settings.get_search_dates_auto_range()
+        if auto_range:
+            minimum, maximum = self._options(resource, as_str=False)
+        else:
+            minimum = maximum = None
 
         # Generate the input elements
         filter_widget = DIV(_id=_id, _class=_class)
