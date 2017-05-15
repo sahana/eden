@@ -59,8 +59,9 @@ select {
 input,
 textarea {
   @include input-placeholder {
-    opacity: 1;
+    @include meta-label;
     color: lighten($body-font-color, 40%);
+    opacity: 1;
   }
 }
 
@@ -103,11 +104,44 @@ ul.dl {
   }
 }
 
+div.dl { border: 0; }
+
 .data-list,
 .dl {
-  .dl-item {
-
+  .dl-row {
+    border: 0;
+    &.odd,
+    &.odd .dl-item {
+      background-color: #FFF;
+    }
   }
+}
+
+// -------------------------------------
+// Widgets
+
+// tagit
+ul.tagit {
+  box-shadow: $input-box-shadow;
+  padding: 5px;
+  li.tagit-choice {
+    margin-right: 5px;
+  }
+  li.tagit-new {
+    padding: 0;
+    margin-right:0;
+    input[type="text"] {
+      height: auto;
+      line-height: inherit;
+      padding: .25em 4px;
+    }
+  }
+}
+
+// Multiselect
+body.ltr .ui-multiselect {
+  font-size: $input-font-size;
+  padding: $form-spacing / 2;
 }
 
 // -------------------------------------
@@ -115,8 +149,6 @@ ul.dl {
 
 .filter-form {
    @include filter;
-   // Done server-side now
-   //.no-options-available { display: none; }
 }
 
 // -------------------------------------
@@ -288,20 +320,34 @@ ul.dl {
   @include card($bkg:#FFF);
   padding: 0;
   float: none;
+  width:100%;
   .body {
     .meta-update {
       width: 50%;
     }
     .meta-comments {
+      &::before {
+        content: "\00a0\00a0";
+      }
       white-space: nowrap;
     }
   }
-
+  .card-post-comments {
+    margin-left: 0;
+  }
   .card-post-comment {
     background-color: $silver;
+    margin-bottom: $global-padding / 2;
     padding: $global-padding;
+    textarea {
+      min-height: 10em;
+    }
     p:last-child {
       margin-bottom: 0;
     }
+  }
+  .add-comment,
+  .submit {
+    @include meta-label;
   }
 }

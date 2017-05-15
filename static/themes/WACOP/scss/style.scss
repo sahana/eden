@@ -14,6 +14,7 @@ $include-html-global-classes: false;
 @import "custom/variables";
 @import "custom/colors";
 @import "custom/mixins";
+@import "custom/jquery-ui";
 
 // CUSTOM MODULES
 
@@ -25,7 +26,7 @@ $include-html-global-classes: false;
 @import "custom/menus";
 @import "custom/tables";
 @import "custom/charts";
-@import "custom/widgets";
+// @import "custom/widgets";
 @import "custom/misc";
 @import "custom/wacop";
 
