@@ -2097,7 +2097,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
     @staticmethod
     def cap_area_location_onaccept(form):
         """
-            Link alert_id for non-template area
+            - Link alert_id for non-template area
+            - for external alerts (from import feed or rss), make sure the
+              locations are only imported if we set polygons to be imported
         """
 
         form_vars = form.vars
@@ -2117,6 +2119,19 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         if alert_id:
             # This is not template area
             # NB Template area are not linked with alert_id
+            location_default = current.deployment_settings.get_cap_area_default()
+            if "polygon" not in location_default:
+                # Use-case for PH
+                table = current.s3db.cap_alert
+                row = db(table.id == alert_id).select(table.external,
+                                                      limitby=(0, 1)).first()
+                if row.external:
+                    # If "polygon" is not in deployment_settings (eg. in PH) and
+                    # if it is a external alert (coming from RSS and import_feed),
+                    # don't use this for displaying map in area
+                    db(db.cap_area_location.id == form_vars["id"]).delete()
+                    return
+            # For alerts generated from SAMBRO, link area to the alert_id
             db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
@@ -2136,20 +2151,40 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
         db = current.db
         atable = db.cap_area
-        same_code = current.deployment_settings.get_cap_same_code()
-        tag = form_vars.get("tag")
 
         arow = db(atable.id == area_id).select(atable.alert_id,
                                                limitby=(0, 1)).first()
         alert_id = arow.alert_id
 
-        if tag and same_code:
-            if tag == "SAME":
-                # SAME tag referes to some location_id in CAP
-                s3db = current.s3db
+        if alert_id:
+            # This is not template area
+            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
+
+            s3db = current.s3db
+            tag = form_vars.get("tag")
+            same_code = current.deployment_settings.get_cap_same_code()
+            import_location = False
+            if tag and same_code:
+                # Check if tag and same_code exist. If neither one or none
+                # exists, do not import location
+                if tag == "SAME":
+                    # If tag is "SAME" then check other conditions, otherwise
+                    # do not import location
+                    if "geocode" in current.deployment_settings.get_cap_area_default():
+                        import_location = True
+                    else:
+                        # Check internal alert
+                        table = s3db.cap_alert
+                        row = db(table.id == alert_id).select(table.external,
+                                                              limitby=(0, 1)).first()
+                        if not row.external:
+                            import_location = True
+    
+            if import_location:
+                # SAME tag refers to some location_id in CAP
                 ttable = s3db.gis_location_tag
                 gtable = s3db.gis_location
-
+    
                 # It is possible for there to be two polygons for the same SAME
                 # code since polygon change over time, even if the code remains
                 # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
@@ -2159,8 +2194,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                          (ttable.location_id == gtable.id) & \
                          (gtable.end_date == None) & \
                          (gtable.deleted != True)
-                trows = db(tquery).select(ttable.location_id)
-                for trow in trows:
+                trow = db(tquery).select(ttable.location_id, limitby=(0, 1)).first()
+                if trow and trow.location_id:
                     # Match
                     ltable = db.cap_area_location
                     ldata = {"area_id": area_id,
@@ -2172,10 +2207,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                     # Uncomment this when required
                     #ldata["id"] = lid
                     #s3db.onaccept(ltable, ldata)
-
-        if alert_id:
-            # This is not template area
-            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
