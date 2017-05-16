@@ -34,6 +34,9 @@ def config(settings):
     # NB Alert Hub is home page for Philippines
     settings.cap.alert_hub_title = T("PAGASA Alert Hub Common Alerting Picture")
 
+    # Default location from geocode
+    settings.cap.area_default = ["geocode"]
+
     # UI Settings
     settings.ui.menu_logo = URL(c = "static",
                                 f = "themes",

@@ -407,26 +407,17 @@
                     <xsl:value-of select="cap:ceiling" />
                 </data>
             </xsl:if>
-	        <xsl:choose>
-		        <!-- if (polygon or circle) and geocode are present, import from geocodes
-			         use-case for Philippines
-		        -->
-		        <xsl:when test="cap:geocode!=''">
-			        <xsl:apply-templates select="cap:geocode" />
-		        </xsl:when>
-		        <xsl:otherwise>
-			        <xsl:if test="cap:polygon!=''">
-				        <xsl:apply-templates select="cap:polygon">
-					        <xsl:with-param name="name" select="$areaDesc"/>
-				        </xsl:apply-templates>
-			        </xsl:if>
-			        <xsl:if test="cap:circle!=''">
-				        <xsl:apply-templates select="cap:circle">
-					        <xsl:with-param name="name" select="$areaDesc"/>
-				        </xsl:apply-templates>
-			        </xsl:if>
-		        </xsl:otherwise>
-	        </xsl:choose>
+	     <xsl:if test="cap:polygon!=''">
+                 <xsl:apply-templates select="cap:polygon">
+		     <xsl:with-param name="name" select="$areaDesc"/>
+		 </xsl:apply-templates>
+	     </xsl:if>
+	     <xsl:if test="cap:circle!=''">
+	         <xsl:apply-templates select="cap:circle">
+	             <xsl:with-param name="name" select="$areaDesc"/>
+	         </xsl:apply-templates>
+	     </xsl:if>
+            <xsl:apply-templates select="cap:geocode" />
         </resource>
     </xsl:template>
 
