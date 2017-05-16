@@ -681,6 +681,32 @@ class S3DateFilter(S3RangeFilter):
         return elements
 
     # -------------------------------------------------------------------------
+    def ajax_options(self, resource):
+        """
+            Method to Ajax-retrieve the current options of this widget
+
+            @param resource: the S3Resource
+        """
+
+        # Introspective range?
+        auto_range = opts_get("auto_range")
+        if auto_range is None:
+            # Not specified for widget => apply global setting
+            auto_range = current.deployment_settings.get_search_dates_auto_range()
+
+        if auto_range:
+            min, max = self._options(resource)
+
+            attr = self._attr(resource)
+            options = {attr["_id"]: {"min": min,
+                                     "max": max,
+                                     }}
+        else:
+            options = {}
+
+        return options
+
+    # -------------------------------------------------------------------------
     def _options(self, resource, as_str=True):
         """
             Helper function to retrieve the current options for this
@@ -783,7 +809,7 @@ class S3DateFilter(S3RangeFilter):
         opts_get = self.opts.get
         hide_time = opts_get("hide_time", False)
 
-        # Introspective range
+        # Introspective range?
         auto_range = opts_get("auto_range")
         if auto_range is None:
             # Not specified for widget => apply global setting
@@ -799,20 +825,31 @@ class S3DateFilter(S3RangeFilter):
 
         slider = opts_get("slider", False)
         if slider:
-            # Load Moment into Browser
+            # Load Moment & D3/NVD3 into Browser
             # @ToDo: Set Moment locale
             # NB This will probably get used more widely in future, so maybe need to abstract this somewhere else
+            appname = current.request.application
             s3 = current.response.s3
+            scripts_append = s3.scripts.append
             if s3.debug:
                 if s3.cdn:
-                    s3.scripts.append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js")
+                    scripts_append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js")
+                    scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js")
+                    # We use a patched v1.8.5 currently, so can't use the CDN version
+                    #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.js")
                 else:
-                    s3.scripts.append("/%s/static/scripts/moment.js" % current.request.application)
+                    scripts_append("/%s/static/scripts/moment.js" % appname)
+                    scripts_append("/%s/static/scripts/d3/d3.js" % appname)
+                scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
             else:
                 if s3.cdn:
-                    s3.scripts.append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js")
+                    scripts_append("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js")
+                    scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js")
+                    #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js")
                 else:
-                    s3.scripts.append("/%s/static/scripts/moment.min.js" % current.request.application)
+                    scripts_append("/%s/static/scripts/moment.min.js" % appname)
+                    scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
+                scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
             range_picker = DIV(_class="range-picker")
             ISO = "%Y-%m-%dT%H:%M:%S"
             if minimum:
