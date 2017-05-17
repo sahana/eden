@@ -550,7 +550,6 @@ $.filterOptionsS3({
                          (T("Source"), "source"),
                          (T("Scope"), "scope"),
                          (T("Restriction"), "restriction"),
-                         (T("Note"), "note"),
                          (T("Category"), "info.category"),
                          (T("Event"), "info.event_type_id"),
                          (T("Response type"), "info.response_type"),
@@ -1624,20 +1623,25 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                         limitby=(0, 1),
                         orderby=~table.id).first()
 
-        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y%m%d")
+        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y.%m.%d")
         if r:
             next_id = int(r.id) + 1
         else:
             next_id = 1
 
-        # Format: prefix-time+-timezone+sequence-suffix
+        # Format: prefix:oid.time.alert_id
         settings = current.deployment_settings
-        prefix = settings.get_cap_identifier_prefix() or current.xml.domain
+        prefix = "urn:oid"
         oid = settings.get_cap_identifier_oid()
-        suffix = settings.get_cap_identifier_suffix()
+        # In Organization ID, the organization is identified with a 0
+        # but the 0 should be changed to 1 when it is used in an alert message
+        # OID is normally of the form 2.49.0.1.104.xx.(yy)
+        oid_split = oid.split(".")
+        if len(oid_split) >= 6 and oid_split[5] == str(0):
+            oid_split[5] = str(1)
+        oid = ".".join(oid_split)
 
-        return "%s-%s-%s-%03d-%s" % \
-                    (prefix, oid, _time, next_id, suffix)
+        return "%s:%s.%s.%03d" % (prefix, oid, _time, next_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1736,15 +1740,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             user = current.auth.user
             if user:
                 db(table.id == form_vars.id).update(approved_by = user.id)
-
-        if not current.deployment_settings.get_cap_identifier_suffix():
-            row = db(table.id == form_vars.id).select(table.identifier,
-                                                      table.external,
-                                                      limitby=(0, 1)).first()
-            if not row.external:
-                db(table.id == form_vars.id).update(identifier = "%s%s" % \
-                                                            (row.identifier,
-                                                             form_vars.msg_type))
 
     # -------------------------------------------------------------------------
     @staticmethod

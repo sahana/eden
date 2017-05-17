@@ -2416,12 +2416,6 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #
-    def get_cap_identifier_prefix(self):
-        """
-            Prefix to be prepended to identifiers of CAP alerts
-        """
-        return self.cap.get("identifier_prefix", "")
-
     def get_cap_identifier_oid(self):
         """
             OID for the CAP issuing authority
@@ -2441,12 +2435,6 @@ class S3Config(Storage):
 
         # Else fallback to the default OID
         return self.cap.get("identifier_oid", "")
-
-    def get_cap_identifier_suffix(self):
-        """
-            Suffix to be appended to identifiers of CAP alerts
-        """
-        return self.cap.get("identifier_suffix", "")
 
     def get_cap_expire_offset(self):
         """
