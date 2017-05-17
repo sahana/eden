@@ -38,11 +38,18 @@ body.rtl #list-btn-add {
 .ui-tabs .ui-tabs-panel {
     padding: 0.5em;
 }
+.ui-widget-header a.ui-tabs-anchor {
+    font-weight: normal;
+}
 #summary-tabs {
     margin-top: 10px;
     &.ui-widget-content {
         background: none;
+        font-family: inherit;
         border: none;
+        a {
+            color: #20579a;
+        }
     }
 }
 #summary-tab-headers {

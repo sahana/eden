@@ -859,6 +859,50 @@ def config(settings):
         db(query).update(project_id = row.project_id)
 
     # -------------------------------------------------------------------------
+    def expose_project_id(table, mandatory=False):
+        """
+            Helper function to expose "Project Code"
+        """
+
+        from s3 import IS_ONE_OF
+
+        field = table.project_id
+        field.label = current.T("Project Code")
+        field.comment = None
+        field.readable = field.writable = True
+
+        # Represent as code
+        field.represent = stl_project_id_represent
+        requires = IS_ONE_OF(current.db, "project_project.id",
+                             stl_project_id_represent,
+                             )
+
+        # Mandatory or not?
+        if mandatory:
+            field.requires = requires
+        else:
+            field.requires = IS_EMPTY_OR(requires)
+
+    def expose_human_resource_id(table, mandatory=False):
+        """
+            Helper function to expose "Person Responsible"
+        """
+
+        field = table.human_resource_id
+        field.label = current.T("Person Responsible")
+        field.widget = None
+        field.comment = None
+        field.readable = field.writable = True
+
+        # Mandatory or not?
+        requires = field.requires
+        if isinstance(requires, IS_EMPTY_OR):
+            if mandatory:
+                field.requires = requires.other
+        elif not mandatory:
+            field.requires = IS_EMPTY_OR(requires)
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
         from s3 import FS, \
@@ -869,59 +913,35 @@ def config(settings):
                        S3SQLInlineLink, \
                        s3_comments_widget
 
+        T = current.T
         db = current.db
         s3db = current.s3db
 
         s3 = current.response.s3
 
-        T = current.T
+        args = r.args
+        if r.tablename == "dvr_case_activity" and \
+           args and args[0] == "count_due_followups":
 
-        component_name = r.component_name
+            # Just counting due follow-ups
 
-        def expose_project_id(table, mandatory=False):
-            """
-                Helper function to expose "Project Code"
-            """
+            # Get service root type
+            stable = s3db.org_service
+            query = (stable.parent == None) & \
+                    (stable.name == INDIVIDUAL_SUPPORT) & \
+                    (stable.deleted != True)
+            service = db(query).select(stable.id, limitby=(0, 1)).first()
+            root_service_id = service.id if service else None
 
-            field = table.project_id
-            field.label = T("Project Code")
-            field.comment = None
-            field.readable = field.writable = True
+            # Filter activities by root service
+            query = (FS("service_id$root_service") == root_service_id)
+            r.resource.add_filter(query)
 
-            # Represent as code
-            field.represent = stl_project_id_represent
-            requires = IS_ONE_OF(db, "project_project.id",
-                                 stl_project_id_represent,
-                                 )
-
-            # Mandatory or not?
-            if mandatory:
-                field.requires = requires
-            else:
-                field.requires = IS_EMPTY_OR(requires)
-
-        def expose_human_resource_id(table, mandatory=False):
-            """
-                Helper function to expose "Person Responsible"
-            """
-
-            field = table.human_resource_id
-            field.label = T("Person Responsible")
-            field.widget = None
-            field.comment = None
-            field.readable = field.writable = True
-
-            # Mandatory or not?
-            requires = field.requires
-            if isinstance(requires, IS_EMPTY_OR):
-                if mandatory:
-                    field.requires = requires.other
-            elif not mandatory:
-                field.requires = IS_EMPTY_OR(requires)
+            return
 
         # Different representations of service_id:
-        # - lists use hierarchical
-        # - hierarchy-widgets use non-hierarchical
+        #   - lists use hierarchical
+        #   - hierarchy-widgets use non-hierarchical
         service_represent = S3Represent(lookup = "org_service",
                                         hierarchy = False,
                                         translate = True,
@@ -934,10 +954,10 @@ def config(settings):
         # Custom labels
         COMPLAINT_TYPE = T("MH Complaint Type")
 
+        component_name = r.component_name
         if r.tablename == "dvr_activity":
-            # "Beneficiaries" tab of group activities
 
-            from s3 import S3PersonAutocompleteWidget
+            # "Beneficiaries" tab of PSS or MH group activities
 
             catable = s3db.dvr_case_activity
 
@@ -945,6 +965,7 @@ def config(settings):
             field = catable.person_id
             field.readable = field.writable = True
             field.represent = s3db.pr_PersonRepresent(show_link=True)
+            from s3 import S3PersonAutocompleteWidget
             field.widget = S3PersonAutocompleteWidget(
                                controller = "dvr",
                                function = "person_search",
@@ -1126,9 +1147,19 @@ def config(settings):
                            extra_fields = "person_id$date_of_birth",
                            )
 
-        elif r.component_name == "case_activity" or r.function == "due_followups":
+        elif r.tablename == "dvr_case_activity" or \
+             r.component_name == "case_activity" or \
+             r.function == "due_followups":
 
-            # "Individual Support" tab of Beneficiary, or "Due Follow-ups"
+            # "Individual Support" perspectives, incl. due follow-ups
+
+            # Get service root type
+            stable = s3db.org_service
+            query = (stable.parent == None) & \
+                    (stable.name == INDIVIDUAL_SUPPORT) & \
+                    (stable.deleted != True)
+            service = db(query).select(stable.id, limitby=(0, 1)).first()
+            root_service_id = service.id if service else None
 
             # CRUD Strings use "Protection Response"
             s3.crud_strings["dvr_case_activity"] = Storage(
@@ -1144,21 +1175,60 @@ def config(settings):
                 msg_list_empty = T("No Protection Responses currently registered"),
                 )
 
-            # Get service root type
-            stable = s3db.org_service
-            query = (stable.parent == None) & \
-                    (stable.name == INDIVIDUAL_SUPPORT) & \
-                    (stable.deleted != True)
-            service = db(query).select(stable.id, limitby=(0, 1)).first()
-            root_service_id = service.id if service else None
+            if r.tablename == "dvr_case_activity" or \
+               r.function == "due_followups":
 
-            if r.function == "due_followups":
+                # Master perspective
                 table = r.table
                 component = r.resource
+
                 # Filter activities by root service
                 query = (FS("service_id$root_service") == root_service_id)
                 component.add_filter(query)
+
+                # Configure summary
+                summary = ({"name": "table",
+                            "label": "Table",
+                            "widgets": [{"method": "datatable"}]
+                            },
+                           {"name": "charts",
+                            "label": "Report",
+                            "widgets": [{"method": "report",
+                                         "ajax_init": True}]
+                            },
+                           )
+
+                # Configure report options
+                report_axes = ["person_id$gender",
+                               "person_id$person_details.nationality",
+                               "project_id",
+                               "organisation_id",
+                               "service_id",
+                               (T("Interventions Required"),
+                                   "response_type__link.response_type_id",
+                                   ),
+                               "need__link.need_id",
+                               ]
+
+                report_options = {
+                    "rows": report_axes,
+                    "cols": report_axes,
+                    "fact": [(T("Number of Beneficiaries"), "count(person_id)"),
+                             (T("Number of Activities"), "count(id)"),
+                             ],
+                    "defaults": {"rows": "service_id",
+                                 "cols": "project_id",
+                                 "fact": "count(person_id)",
+                                 "totals": True,
+                                 },
+                    }
+
+                component.configure(report_options = report_options,
+                                    summary = summary,
+                                    )
+
             else:
+                # Component tab
                 table = r.component.table
                 component = r.component
 
@@ -1618,11 +1688,8 @@ def config(settings):
                            ]
 
         else:
-
-            # Case activity list (or counting due follow-ups)
-
+            # Other perspective (currently unused)
             expose_project_id(s3db.dvr_case_activity)
-
             crud_form = S3SQLCustomForm("person_id",
                                         "project_id",
                                         "service_id",
@@ -1669,14 +1736,14 @@ def config(settings):
             else:
                 result = True
 
+            # Show person_id as link to case
+            table = r.resource.table
+            table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+
             if r.function == "due_followups":
 
                 crud_strings = s3.crud_strings["dvr_case_activity"]
                 crud_strings["title_list"] = T("Interventions to follow-up")
-
-                # Show person_id as link to case
-                table = r.resource.table
-                table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
 
                 # Custom list fields
                 list_fields = [(T("Ref.No."), "person_id$pe_label"),
@@ -1701,11 +1768,42 @@ def config(settings):
                                                hidden = True,
                                                ),
                                   ]
+            else:
+                # Custom list fields
+                list_fields = ["person_id",
+                               "service_id",
+                               "human_resource_id",
+                               "project_id",
+                               "need__link.need_id",
+                               "start_date",
+                               (T("Interventions Required"),
+                                    "response_type__link.response_type_id"),
+                               "priority",
+                               "followup",
+                               "followup_date",
+                               "completed",
+                               "end_date",
+                               ]
 
-                r.resource.configure(filter_widgets = filter_widgets,
-                                     list_fields = list_fields,
-                                     )
+                # Custom filter widgets
+                from s3 import S3TextFilter, S3DateFilter
+                filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                                "person_id$first_name",
+                                                "person_id$last_name",
+                                                "case_activity_need.need_id$name",
+                                                "service_id$name",
+                                                ],
+                                                label = T("Search"),
+                                                ),
+                                  S3DateFilter("followup_date",
+                                               cols = 2,
+                                               hidden = True,
+                                               ),
+                                  ]
 
+            r.resource.configure(filter_widgets = filter_widgets,
+                                 list_fields = list_fields,
+                                 )
 
             return result
         s3.prep = custom_prep

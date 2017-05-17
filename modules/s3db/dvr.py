@@ -4501,7 +4501,10 @@ def dvr_due_followups():
     """ Number of due follow-ups """
 
     # Generate a request for case activities and customise it
-    r = S3Request("dvr", "case_activity", args=[], get_vars={})
+    r = S3Request("dvr", "case_activity",
+                  args = ["count_due_followups"],
+                  get_vars = {},
+                  )
     r.customise_resource()
     resource = r.resource
 

@@ -149,8 +149,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("All Beneficiaries", vars = {}),
                         M("Beneficiary Report", m="report"),
-                        M(follow_up_label, f="due_followups"),
                         ),
+                    M("Protection Response",
+                      c="dvr", f="case_activity", link=False)(
+                          M("Summary", m="summary"),
+                          M(follow_up_label, f="due_followups"),
+                      ),
                     M("Activities", link=False,
                       restrict = ("ORG_ADMIN", "GROUP_ACTIVITIES", "MENTAL_HEALTH"))(
                         M("Group Activities", f="activity",
