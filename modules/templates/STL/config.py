@@ -181,6 +181,8 @@ def config(settings):
                                 args = ["STL", "img", "stl_menu_logo.png"],
                                 )
 
+    settings.ui.hierarchy_cascade_option_in_tree = False
+
     # =========================================================================
     # DVR Case Management
     #
@@ -1786,19 +1788,46 @@ def config(settings):
                                ]
 
                 # Custom filter widgets
-                from s3 import S3TextFilter, S3DateFilter
+                #Project Code,
+                #Person Responsible,
+                #Protection Assesment,
+                #Service Type,
+                #Protection Response Sector,
+                #Interventions required
+
+                from s3 import S3HierarchyFilter, \
+                               S3OptionsFilter, \
+                               S3TextFilter, \
+                               s3_get_filter_opts
+
                 filter_widgets = [S3TextFilter(["person_id$pe_label",
                                                 "person_id$first_name",
                                                 "person_id$last_name",
-                                                "case_activity_need.need_id$name",
-                                                "service_id$name",
                                                 ],
                                                 label = T("Search"),
                                                 ),
-                                  S3DateFilter("followup_date",
-                                               cols = 2,
-                                               hidden = True,
-                                               ),
+                                  S3HierarchyFilter("person_id$dvr_case.organisation_id",
+                                                    leafonly = False,
+                                                    cascade_select = True,
+                                                    ),
+                                  S3OptionsFilter("human_resource_id",
+                                                  ),
+                                  S3OptionsFilter("project_id",
+                                                  options = s3_get_filter_opts("project_project"),
+                                                  ),
+                                  S3HierarchyFilter("service_id",
+                                                    hidden = True,
+                                                    ),
+                                  S3HierarchyFilter("vulnerability_type_case_activity.vulnerability_type_id",
+                                                    label = T("Protection Assessment"),
+                                                    hidden = True,
+                                                    ),
+                                  S3HierarchyFilter("case_activity_need.need_id",
+                                                    hidden = True,
+                                                    ),
+                                  S3HierarchyFilter("response_type_case_activity.response_type_id",
+                                                    hidden = True,
+                                                    ),
                                   ]
 
             r.resource.configure(filter_widgets = filter_widgets,
@@ -1955,6 +1984,7 @@ def config(settings):
                                            "contact_emergency",
                                            "presence",
                                            ),
+                       update_realm = True,
                        )
 
         # Custom components

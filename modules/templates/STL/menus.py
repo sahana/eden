@@ -152,7 +152,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Protection Response",
                       c="dvr", f="case_activity", link=False)(
-                          M("Summary", m="summary"),
+                          M("Overview", m="summary", p="read"),
                           M(follow_up_label, f="due_followups"),
                       ),
                     M("Activities", link=False,
