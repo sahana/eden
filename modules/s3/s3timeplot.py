@@ -928,7 +928,7 @@ class S3TimeSeries(object):
                 end_dt = dtparse(end, start=relative_to)
             else:
                 if isinstance(end, datetime.datetime):
-                    ent_dt = tp_tzsafe(end)
+                    end_dt = tp_tzsafe(end)
                 else:
                     # Date only => end at midnight
                     end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal()))

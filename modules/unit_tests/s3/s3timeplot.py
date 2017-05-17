@@ -1554,6 +1554,22 @@ class TimeSeriesTests(unittest.TestCase):
         # ~14 days => reasonable intervall length: days
         assertEqual(ef.slots, "days")
 
+        # Check with manual start date
+        query = FS("event_type") == "STARTEND"
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          start = "2011-02-15",
+                          end = tp_datetime(2011, 2, 28, 12, 53, 0),
+                          )
+        ef = ts.event_frame
+        # falls back to first start date
+        assertEqual(ef.start, tp_datetime(2011, 2, 15, 0, 0, 0))
+        assertEqual(ef.end, tp_datetime(2011, 2, 28, 12, 53, 0))
+        # ~14 days => reasonable intervall length: days
+        assertEqual(ef.slots, "days")
+
     # -------------------------------------------------------------------------
     def testEventDataAggregation(self):
         """ Test aggregation of event data """
