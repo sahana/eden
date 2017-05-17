@@ -930,9 +930,8 @@ class S3TimeSeries(object):
                 if isinstance(end, datetime.datetime):
                     ent_dt = tp_tzsafe(end)
                 else:
-                    # Date only => include the entire day
-                    end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal())) + \
-                             datetime.timedelta(days=1)
+                    # Date only => end at midnight
+                    end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal()))
 
         # Fall back to now if end is not specified
         if not end_dt:
