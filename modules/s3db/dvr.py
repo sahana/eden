@@ -1877,6 +1877,11 @@ class DVRCaseActivityModel(S3Model):
         #
         tablename = "dvr_termination_type"
         define_table(tablename,
+                     service_id(label = T("Service Type"),
+                                ondelete = "CASCADE",
+                                readable = service_type,
+                                writable = service_type,
+                                ),
                      Field("name", notnull=True,
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
@@ -1886,7 +1891,9 @@ class DVRCaseActivityModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(),
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("service_id",),
+                                            ),
                   )
 
         # CRUD Strings

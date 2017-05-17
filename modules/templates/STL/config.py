@@ -1031,6 +1031,14 @@ def config(settings):
                 field.label = T("Type of Exit")
                 field.readable = field.writable = True
 
+                # Filter termination types
+                tttable = s3db.dvr_termination_type
+                query = (tttable.service_id == root_service_id)
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query),
+                                                       "dvr_termination_type.id",
+                                                       field.represent,
+                                                       ))
+
                 crud_form = S3SQLCustomForm("person_id",
                                             S3SQLInlineLink("need",
                                                             label = COMPLAINT_TYPE,
@@ -1265,6 +1273,19 @@ def config(settings):
             field = ftable.approved
             field.label = T("SNF Assistance Approved by Committee")
 
+            # Expose termination type field
+            field = table.termination_type_id
+            field.label = T("Closure Reason")
+            field.readable = field.writable = True
+
+            # Filter termination types
+            tttable = s3db.dvr_termination_type
+            query = (tttable.service_id == root_service_id)
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query),
+                                                   "dvr_termination_type.id",
+                                                   field.represent,
+                                                   ))
+
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
                                         "human_resource_id",
@@ -1306,6 +1327,7 @@ def config(settings):
                                         "completed",
                                         "end_date",
                                         (T("Result of Protection Response"), "outcome"),
+                                        "termination_type_id",
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "file",
@@ -1547,6 +1569,14 @@ def config(settings):
             field = table.termination_type_id
             field.label = T("Type of Exit")
             field.readable = field.writable = True
+
+            # Filter termination types
+            tttable = s3db.dvr_termination_type
+            query = (tttable.service_id == root_service_id)
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query),
+                                                   "dvr_termination_type.id",
+                                                   field.represent,
+                                                   ))
 
             # Custom CRUD form
             crud_form = S3SQLCustomForm("person_id",
