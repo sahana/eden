@@ -1047,7 +1047,6 @@ def config(settings):
         description = row["_row"]["cap_info.description"] if system else row["cap_info.description"]
         status = row["cap_alert.status"]
         msg_type = row["cap_alert.msg_type"]
-        note = row["cap_alert.note"]
 
         if event_type_id and event_type_id != current.messages["NONE"]:
             if not isinstance(event_type_id, lazyT) and \
@@ -1085,13 +1084,6 @@ def config(settings):
                          H2(T(s3_str(get_formatted_value(row["cap_info.headline"],
                                                          system=system)))),
                          BR(),
-                         XML("%(label)s: %(note)s" %
-                         {"label": B(T("Note")),
-                          "note": s3_str(note),
-                          })
-                         if note else "",
-                         BR() if note else "",
-                         BR() if note else "",
                          XML("%(label)s: %(identifier)s" %
                          {"label": B(T("ID")),
                           "identifier": s3_str(row["cap_alert.identifier"])
