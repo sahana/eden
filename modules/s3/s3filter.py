@@ -57,6 +57,7 @@ from gluon.tools import callback
 from s3datetime import s3_decode_iso_datetime, S3DateTime
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3rest import S3Method
+from s3timeplot import S3TimeSeries
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import ICON, \
@@ -689,17 +690,18 @@ class S3DateFilter(S3RangeFilter):
         """
 
         # Introspective range?
-        auto_range = opts_get("auto_range")
+        auto_range = self.opts.get("auto_range")
         if auto_range is None:
             # Not specified for widget => apply global setting
             auto_range = current.deployment_settings.get_search_dates_auto_range()
 
         if auto_range:
-            min, max = self._options(resource)
+            min, max, ts = self._options(resource)
 
             attr = self._attr(resource)
             options = {attr["_id"]: {"min": min,
                                      "max": max,
+                                     "ts": ts,
                                      }}
         else:
             options = {}
@@ -767,10 +769,39 @@ class S3DateFilter(S3RangeFilter):
 
         # Ensure that we can select the extreme values
         minute_step = 5
+        timedelta = datetime.timedelta
         if minimum:
-            minimum -= datetime.timedelta(minutes = minute_step)
+            minimum -= timedelta(minutes = minute_step)
         if maximum:
-            maximum += datetime.timedelta(minutes = minute_step)
+            maximum += timedelta(minutes = minute_step)
+
+        # @ToDo: separate widget/deployment_setting
+        if self.opts.get("slider"):
+            if type(fields) is list:
+                event_start = fields[0]
+                event_end = fields[0]
+            else:
+                event_start = event_end = fields
+            ts = S3TimeSeries(resource,
+                              start = minimum,
+                              end = maximum,    # Should we add 1 slot to the end as currently we aren't getting the last data
+                                                # - since we intropsect inside s3timeplot, then we should do it there
+                              slots = None,     # Introspect the data
+                              event_start = event_start,
+                              event_end = event_end,
+                              rows = None,
+                              cols = None,
+                              facts = None,     # Default to Count id
+                              baseline = None,  # No baseline
+                              )
+            # Extract aggregated results as JSON-serializable dict
+            data = ts.as_dict()
+            # We just want the dates & values
+            data = data["p"]
+            #ts = [(v["t"][0], v["t"][1], v["v"][0]) for v in data] # If we send start & end of slots
+            ts = [(v["t"][0], v["v"][0]) for v in data]
+        else:
+            ts = []
 
         if as_str:
             ISO = "%Y-%m-%dT%H:%M:%S"
@@ -779,7 +810,7 @@ class S3DateFilter(S3RangeFilter):
             if maximum:
                 maximum = maximum.strftime(ISO)
 
-        return minimum, maximum
+        return minimum, maximum, ts
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):
@@ -810,12 +841,18 @@ class S3DateFilter(S3RangeFilter):
         hide_time = opts_get("hide_time", False)
 
         # Introspective range?
-        auto_range = opts_get("auto_range")
-        if auto_range is None:
-            # Not specified for widget => apply global setting
-            auto_range = current.deployment_settings.get_search_dates_auto_range()
+        slider = opts_get("slider", False)
+        if slider:
+            # Default to True
+            auto_range = opts_get("auto_range", True)
+        else:
+            auto_range = opts_get("auto_range")
+            if auto_range is None:
+                # Not specified for widget => apply global setting
+                auto_range = current.deployment_settings.get_search_dates_auto_range()
+
         if auto_range:
-            minimum, maximum = self._options(resource, as_str=False)
+            minimum, maximum, ts = self._options(resource, as_str=False)
         else:
             minimum = maximum = None
 
@@ -823,7 +860,6 @@ class S3DateFilter(S3RangeFilter):
         filter_widget = DIV(_id=_id, _class=_class)
         append = filter_widget.append
 
-        slider = opts_get("slider", False)
         if slider:
             # Load Moment & D3/NVD3 into Browser
             # @ToDo: Set Moment locale
@@ -856,6 +892,8 @@ class S3DateFilter(S3RangeFilter):
                 range_picker["_data-min"] = minimum.strftime(ISO)
             if maximum:
                 range_picker["_data-max"] = maximum.strftime(ISO)
+            if ts:
+                range_picker["_data-ts"] = json.dumps(ts, separators=SEPARATORS)
             if hide_time:
                 # @ToDo: Translate Settings from Python to Moment
                 # http://momentjs.com/docs/#/displaying/

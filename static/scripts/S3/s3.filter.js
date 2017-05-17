@@ -1054,7 +1054,8 @@ S3.search = {};
                                                                          .option('maxDateTime', max)
                                                                          .refresh();
                     widget.find('.range-picker').each(function() {
-                        $(this).trigger('resize', min, max);
+                        var ts = newopts.ts;
+                        $(this).trigger('resize', [min, max, ts]);
                     });
                 } else {
                     // @todo: other filter types (e.g. S3LocationFilter)
@@ -1998,51 +1999,76 @@ S3.search = {};
 
             // Line Graph
             // @ToDo: widget & deployment settings
+            //gfmt = 'YYYY-MM-DD HH:MM';
             function graphData() {
-                var values = [];
+                var v,
+                    label,
+                    values = [],
+                    ts = $this.data('ts');
 
                 // Data is represented as an array of {x,y} pairs.
-                for (var i = 0; i < 100; i++) {
-                    values.push({x: i, y: Math.sin(i/10)});
+                for (var i = 0; i < ts.length; i++) {
+                    v = ts[i];
+                    // Axes cannot be Text strings
+                    // so we hook into tooltip to add fmt there
+                    //label = moment(v[0]).format(fmt) + ' - ' + moment(v[1]).format(fmt);
+                    label = moment(v[0]);
+                    //values.push({x: label, y: v[2]}); // If pulling back start & end of slot
+                    values.push({x: label, y: v[1]});
                 }
 
                 // Line chart data should be sent as an array of series objects.
                 return [{values: values,   // values - represents the array of {x,y} data points
-                         key: 'Series',    // key  - the name of the series.
+                         key: '',          // key  - the name of the series.
                          color: '#9eb5d5', // color - optional: choose your own line color.
                          area: true        // area - set to true if you want this line to turn into a filled area chart.
                          },
                         ];
             }
             $this.before('<div id="' + widget_name + '-chart"><svg></svg></div>');
-            nv.addGraph(function() {
-                var chart = nv.models.lineChart()
-                              //.margin({left: 100})  // Adjust chart margins to give the x-axis some breathing room.
-                              //.useInteractiveGuideline(true)  // We want nice looking tooltips and a guideline!
-                              //.transitionDuration(350)  // how fast do you want the lines to transition?
-                              .showLegend(false)       // Hide the legend (would allow users to turn on/off line series)
-                              .showYAxis(false)        // Hide the y-axis
-                              .showXAxis(false)        // Show the x-axis
+            // On-hover data point tooltip
+            var tooltipContent = function(data) {
+                var point = data.point;
 
-                //chart.xAxis     // Chart x-axis settings
-                //     .axisLabel('Time (ms)')
-                //     .tickFormat(d3.format(',r'));
+                var tooltip = '<div class="pt-tooltip">' +
+                              '<div class="pt-tooltip-label" style="color:' + point.color + '">' + point.x.format(fmt) + '</div>' +
+                              '<div class="pt-tooltip-text">' + point.y + '</div>' +
+                              '</div>';
+                return tooltip;
+            }
+            rangePicker.graph = function() {
+                nv.addGraph(function() {
+                    var chart = nv.models.lineChart()
+                                  //.margin({left: 100})  // Adjust chart margins to give the x-axis some breathing room.
+                                  //.useInteractiveGuideline(true)  // We want nice looking tooltips and a guideline!
+                                  //.transitionDuration(350)  // how fast do you want the lines to transition?
+                                  .showLegend(false)       // Hide the legend (would allow users to turn on/off line series)
+                                  .showYAxis(false)        // Hide the y-axis
+                                  .showXAxis(false)        // Show the x-axis
 
-                //chart.yAxis     // Chart y-axis settings
-                //     .axisLabel('Voltage (v)')
-                //     .tickFormat(d3.format('.02f'));
+                     chart.tooltip.contentGenerator(tooltipContent);
 
-                // Done setting the chart up? Time to render it!
-                var myData = graphData();   // You need data...
+                    //chart.xAxis     // Chart x-axis settings
+                    //     .axisLabel('Time (ms)')
+                    //     .tickFormat(d3.format(',r'));
 
-                d3.select('#' + widget_name + '-chart svg')  // Select the <svg> element you want to render the chart in.   
-                  .datum(myData)         // Populate the <svg> element with chart data...
-                  .call(chart);          // Finally, render the chart!
+                    //chart.yAxis     // Chart y-axis settings
+                    //     .axisLabel('Voltage (v)')
+                    //     .tickFormat(d3.format('.02f'));
 
-                // Update the chart when window resizes.
-                nv.utils.windowResize(function() { chart.update() });
-                return chart;
-            });
+                    // Done setting the chart up? Time to render it!
+                    var myData = graphData();   // You need data...
+
+                    d3.select('#' + widget_name + '-chart svg')  // Select the <svg> element you want to render the chart in.   
+                      .datum(myData)         // Populate the <svg> element with chart data...
+                      .call(chart);          // Finally, render the chart!
+
+                    // Update the chart when window resizes.
+                    nv.utils.windowResize(function() { chart.update() });
+                    return chart;
+                });
+            };
+            rangePicker.graph();
 
             // Events
             // minuteStep handled server-side by extending widget ranges in _options
@@ -2130,12 +2156,14 @@ S3.search = {};
             });
 
             // Allow resizing by updateOptions
-            $this.on('resize', function(e, min, max) {
+            $this.on('resize', function(e, min, max, ts) {
                 $this.data('min', min);
                 $this.data('max', max);
                 rangePicker.refresh({'startValue': moment(min).format(fmt),
                                      'endValue': moment(max).format(fmt)//,
                                      });
+                $this.data('ts', ts);
+                rangePicker.graph();
             });
         });
 
