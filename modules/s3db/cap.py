@@ -2,7 +2,7 @@
 
 """ Sahana Eden Common Alerting Protocol (CAP) Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -536,7 +536,7 @@ $.filterOptionsS3({
                            ),
                      *s3_meta_fields())
 
-        list_fields = ["info.event_type_id",
+        list_fields = ["event_type_id",
                        "msg_type",
                        (T("Sent"), "sent"),
                        "info.headline",
@@ -1830,6 +1830,30 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
+
+            irows = db(itable.alert_id == alert_id).select(itable.language)
+            # An alert can contain two info segments, one in English and one in
+            # local language
+            if len(irows) > 2:
+                # Check if there are more than two alerts
+                db(itable.id == info_id).delete()
+                current.session.error = current.T("An alert can contain maximum of two info segments! Please edit already created info segments!")
+                redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+            else:
+                if len(irows) == 2:
+                    # Check if both info segments are for same language
+                    if irows[0]["language"] == irows[1]["language"]:
+                        db(itable.id == info_id).delete()
+                        current.session.error = current.T("Please edit already created info segment with same language!")
+                        redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                if not all(language in [key for key in current.deployment_settings.get_L10n_languages()] for language in [irow.language for irow in irows]):
+                    # Check if created info segment contain other than allowed
+                    # language for the deployment
+                    db(itable.id == info_id).delete()
+                    current.session.error = current.T("An alert cannot contain other than English and Local Language! Check your selection!")
+                    redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                
+
             set_ = db(itable.id == info_id)
             if alert_id and cap_alert_is_template(alert_id):
                 set_.update(is_template = True)
