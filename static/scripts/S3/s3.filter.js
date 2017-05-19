@@ -1979,6 +1979,13 @@ S3.search = {};
             coarseStart.val(minDate.format(cfmt));
             coarseEnd.val(maxDate.format(cfmt));
 
+            // Play Button
+            // @ToDo: widget & deployment settings
+            // @ToDo: Make this sensitive to changing of Icon sets
+            // @ToDo: i18n
+            $this.before('<a class="button secondary tiny play"><i class="fa fa-play"></i> Play</a>');
+            var play = $('#' + widget_name + ' .play');
+
             // Range-Picker
             var offset,
                 timeOffset,
@@ -1999,7 +2006,6 @@ S3.search = {};
 
             // Line Graph
             // @ToDo: widget & deployment settings
-            //gfmt = 'YYYY-MM-DD HH:MM';
             function graphData() {
                 var v,
                     label,
@@ -2165,6 +2171,36 @@ S3.search = {};
                 $this.data('ts', ts);
                 rangePicker.graph();
             });
+
+            // Play button
+            // @ToDo: Make wait time configurable (use same setting as on/off)
+            var slots,
+                slot_wait = 4000;
+            function playSlot(i) {
+                var start = slots[i].x;
+                try {
+                    var end = slots[i + 1].x;
+                } catch(e) {
+                    // Final slot
+                    var end =  moment($this.data('max'));
+                }
+                var timeout = i * slot_wait; // 1st will happen immediately
+                setTimeout(function() {
+                    setSlot(start, end);
+                }, timeout);
+            }
+            function setSlot(start, end) {
+                startField.val(start.format(fmt));
+                endField.val(end.format(fmt));
+                startField.trigger('change');
+            }
+            play.on('click', function() {
+                // Move the slider through each of the slots at the defined interval
+                slots = graphData()[0].values;
+                for (var i = 0; i < slots.length; i++) {
+                    playSlot(i);
+                }
+            })
         });
 
         // Don't submit if pressing Enter
