@@ -784,8 +784,7 @@ class S3DateFilter(S3RangeFilter):
                 event_start = event_end = fields
             ts = S3TimeSeries(resource,
                               start = minimum,
-                              end = maximum,    # Should we add 1 slot to the end as currently we aren't getting the last data
-                                                # - since we intropsect inside s3timeplot, then we should do it there
+                              end = maximum,
                               slots = None,     # Introspect the data
                               event_start = event_start,
                               event_end = event_end,

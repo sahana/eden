@@ -788,7 +788,15 @@ class S3LocationModel(S3Model):
 
         table = item.table
 
-        code = current.deployment_settings.get_gis_lookup_code()
+        settings = current.deployment_settings
+        if settings.get_database_type() == "postgres":
+            # None is last
+            orderby = ~table.end_date
+        else:
+            # None is 1st
+            orderby = table.end_date
+
+        code = settings.get_gis_lookup_code()
         if code:
             # The name is a Code
             kv_table = current.s3db.gis_location_tag
@@ -798,7 +806,7 @@ class S3LocationModel(S3Model):
             duplicate = current.db(query).select(table.id,
                                                  table.name,
                                                  table.level,
-                                                 orderby=~table.end_date,
+                                                 orderby=orderby,
                                                  limitby=(0, 1)).first()
 
             if duplicate:
@@ -833,7 +841,7 @@ class S3LocationModel(S3Model):
                     (table.level == level)
         else :
             query = (table.name.lower() == name.lower()) & \
-                (table.level == level)
+                    (table.level == level)
 
         if parent:
             query &= (table.parent == parent)
@@ -845,7 +853,7 @@ class S3LocationModel(S3Model):
 
         duplicate = current.db(query).select(table.id,
                                              table.level,
-                                             orderby=~table.end_date,
+                                             orderby=orderby,
                                              limitby=(0, 1)).first()
         if duplicate:
             # @ToDo: Import Log
@@ -871,7 +879,7 @@ class S3LocationModel(S3Model):
             duplicate = current.db(query).select(table.id,
                                                  table.name,
                                                  table.level,
-                                                 orderby=~table.end_date,
+                                                 orderby=orderby,
                                                  limitby=(0, 1)).first()
             if duplicate:
                 # @ToDo: Import Log

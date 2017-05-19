@@ -5488,7 +5488,8 @@ class S3LocationSelector(S3Selector):
 
         db = current.db
         if query is not None:
-            query &= (gtable.deleted == False)
+            query &= (gtable.deleted == False) & \
+                     (gtable.end_date == None)
             fields = [gtable.id,
                       gtable.name,
                       gtable.level,
