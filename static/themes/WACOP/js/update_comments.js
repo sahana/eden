@@ -3,15 +3,25 @@ S3.wacop_comments = function() {
     var url = S3.Ap.concat('/cms/comment.s3json');
     $('.add-comment').click(function(e) {
         $this = $(this);
-        var list_id = $this.data('l');
-        var record_id = $this.data('i');
+        var list_id = $this.data('l'),
+            record_id = $this.data('i'),
+            card_selector = '#' + list_id + '-' + record_id
+            form_selector = card_selector + ' .comment-form',
+            form = $(form_selector);
+        // Hide the 'Add Comment' button
+        $(card_selector + ' .add-comment').hide();
         // Show the new comment form & force focus to it
-        $('#' + list_id + '-' + record_id + ' .comment-form').removeClass('hide')
-                                                             .show();
-        var formField = $('#' + list_id + '-' + record_id + ' .comment-form textarea');
+        form.removeClass('hide')
+            .show();
+        var formField = $(form_selector + ' textarea');
         formField.focus();
         // Bind Submit handler
-        $('#' + list_id + '-' + record_id + ' .comment-form .submit').click(function(e) {
+        $(form_selector + ' .submit').click(function(e) {
+            // Hide the Edit box & Submit Button
+            form.hide();
+            // Show Spinner
+            form.after('<div class="throbber"></div>');
+            // Submit Data
             var data = {
                 '$_cms_comment': [{
                     'post_id': record_id,

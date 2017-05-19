@@ -1993,12 +1993,13 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                       DIV(comment.body,
                                           _class="desc",
                                           ),
-                                      TAG["FOOTER"](P(A(T("More Info"),
-                                                        _class="more",
-                                                        )
-                                                      ),
-                                                    _class="footer",
-                                                    ),
+                                      # @ToDo: Show this if more than x chars?
+                                      #TAG["FOOTER"](P(A(T("More Info"),
+                                      #                  _class="more",
+                                      #                  )
+                                      #                ),
+                                      #              _class="footer",
+                                      #              ),
                                       _class="card-post-comment",
                                       ))
             cappend(comment)
