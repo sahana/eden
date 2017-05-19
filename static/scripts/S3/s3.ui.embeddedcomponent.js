@@ -1,7 +1,7 @@
 /**
  * jQuery UI EmbeddedComponent Widget (used by S3EmbeddedComponentWidget)
  *
- * @copyright 2015-2016 (c) Sahana Software Foundation
+ * @copyright 2015-2017 (c) Sahana Software Foundation
  * @license MIT
  */
 (function($, undefined) {

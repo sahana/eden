@@ -2,7 +2,7 @@
 
 """ Sahana Eden Simple Volunteer Jobs Management
 
-    @copyright: 2015-2016 (c) Sahana Software Foundation
+    @copyright: 2015-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

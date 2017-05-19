@@ -2,7 +2,7 @@
 
 """ S3 Hierarchy Toolkit
 
-    @copyright: 2013-2016 (c) Sahana Software Foundation
+    @copyright: 2013-2017 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
