@@ -2521,6 +2521,7 @@ def config(settings):
                                    "first_name",
                                    #"middle_name",
                                    "last_name",
+                                   (T("Phone"), "phone.value"),
                                    "date_of_birth",
                                    "gender",
                                    "person_details.nationality",
@@ -2529,9 +2530,7 @@ def config(settings):
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
-                    if r.representation == "xls":
-                        list_fields.append(("Phone","phone.value"))
-
+                                                       
                     resource.configure(list_fields = list_fields,
                                        )
 
