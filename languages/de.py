@@ -2224,6 +2224,7 @@
 'inv Home Page': 'inv Homepage',
 'Invalid Case': 'Ungültiger Fall',
 'Invalid Cases': 'Ungültige Fälle',
+'Invalid event type: %s': 'Ungültiger Ereignistyp: %s',
 'Invalid Query': 'Ungültige Abfrage',
 'Invalid request!': 'Ungültige Anfrage!',
 'Invalid ticket': 'Ungültiges Ticket',

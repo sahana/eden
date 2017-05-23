@@ -3504,6 +3504,16 @@ class DVRCaseEventModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("is_inactive", "boolean",
+                           default = False,
+                           label = T("Inactive"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Inactive"),
+                                                             T("This event type can not currently be registered"),
+                                                             ),
+                                         ),
+                           ),
                      Field("is_default", "boolean",
                            default = False,
                            label = T("Default Event Type"),
@@ -5611,7 +5621,7 @@ class DVRRegisterCaseEvent(S3Method):
                 else:
                     event_type = self.get_event_type(event_code)
                     if not event_type:
-                        alert = T("Invalid event type %s" % event_code)
+                        alert = T("Invalid event type: %s") % event_code
                     else:
                         type_id = event_type.id
 
@@ -5803,7 +5813,8 @@ class DVRRegisterCaseEvent(S3Method):
             event_types = {}
             table = current.s3db.dvr_case_event_type
 
-            query = (table.deleted != True)
+            query = (table.is_inactive == False) & \
+                    (table.deleted == False)
 
             sr = current.auth.get_system_roles()
             roles = current.session.s3.roles
