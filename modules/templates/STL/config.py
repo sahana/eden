@@ -1401,6 +1401,16 @@ def config(settings):
                                         (T("Result of Protection Response"), "outcome"),
                                         "termination_type_id",
                                         S3SQLInlineComponent(
+                                            "case_effort",
+                                            label = T("Efforts"),
+                                            fields = ["date",
+                                                      (T("Name of Meeting"), "name"),
+                                                      #"human_resource_id",
+                                                      "hours",
+                                                      "comments",
+                                                      ]
+                                            ),
+                                        S3SQLInlineComponent(
                                             "document",
                                             name = "file",
                                             label = T("Attachments"),
@@ -2481,15 +2491,15 @@ def config(settings):
                             S3DateFilter("dvr_case.date",
                                          #label = T("Registration Date"),
                                          hidden = True,
-                                        ),
+                                         ),
                             S3DateFilter("dvr_case_activity.activity_id$start_date",
                                          label = T("Activity Start Date"),
                                          hidden = True,
-                                        ),
+                                         ),
                             S3DateFilter("dvr_case_activity.activity_id$end_date",
                                          label = T("Activity End Date"),
                                          hidden = True,
-                                        ),
+                                         ),
                             ]
 
                         if "closed" not in r.get_vars:

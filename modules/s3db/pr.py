@@ -1047,6 +1047,7 @@ class S3PersonModel(S3Model):
                             dvr_case_details = {"joinby": "person_id",
                                                 "multiple": False,
                                                 },
+                            dvr_case_effort = "person_id",
                             dvr_case_event = "person_id",
                             dvr_case_flag = {"link": "dvr_case_flag_case",
                                              "joinby": "person_id",

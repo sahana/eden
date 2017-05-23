@@ -35,6 +35,7 @@ __all__ = ("DVRCaseModel",
            "DVRHouseholdModel",
            "DVRHouseholdMembersModel",
            "DVRCaseEconomyInformationModel",
+           "DVRCaseEffortModel",
            "DVRCaseEventModel",
            "DVRCaseEvaluationModel",
            "DVRActivityFundingModel",
@@ -2092,6 +2093,7 @@ class DVRCaseActivityModel(S3Model):
                                 "joinby": "case_activity_id",
                                 "multiple": False,
                                 },
+                            dvr_case_effort = "case_activity_id",
                             dvr_need = {
                                 "link": "dvr_case_activity_need",
                                 "joinby": "case_activity_id",
@@ -2366,6 +2368,134 @@ class DVRCaseActivityModel(S3Model):
                 row.update_record(end_date = current.request.utcnow.date())
         elif row.end_date:
             row.update_record(end_date = None)
+
+# =============================================================================
+class DVRCaseEffortModel(S3Model):
+    """ Effort Log for Case / Case Activities """
+
+    names = ("dvr_case_effort",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Effort log
+        #
+        tablename = "dvr_case_effort"
+        define_table(tablename,
+                     self.pr_person_id(
+                         ondelete = "CASCADE",
+                         ),
+                     self.dvr_case_activity_id(
+                         ondelete = "SET NULL",
+                         readable = False,
+                         writable = False,
+                         ),
+                     s3_datetime(
+                         default = "now"
+                         ),
+                     Field("name",
+                           label = T("Short Description"),
+                           ),
+                     self.hrm_human_resource_id(
+                         comment = None,
+                         ),
+                     Field("hours", "double",
+                           requires = IS_FLOAT_IN_RANGE(0.0, None),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       onaccept = self.case_effort_onaccept,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Effort"),
+            title_display = T("Effort Details Details"),
+            title_list = T("Efforts"),
+            title_update = T("Edit Effort"),
+            label_list_button = T("List Efforts"),
+            label_delete_button = T("Delete Effort"),
+            msg_record_created = T("Effort added"),
+            msg_record_modified = T("Effort updated"),
+            msg_record_deleted = T("Effort deleted"),
+            msg_list_empty = T("No Efforts currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_effort_onaccept(form):
+        """
+            Onaccept-callback for dvr_case_effort:
+                - inherit person_id from case_activity, unless specified
+                  in form or default
+
+            @param form: the FORM
+        """
+
+        # Read form data
+        formvars = form.vars
+
+        # Get the record ID
+        if "id" in formvars:
+            record_id = formvars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+        if not record_id:
+            return
+
+        s3db = current.s3db
+
+        etable = s3db.dvr_case_effort
+        field = etable.person_id
+
+        if "person_id" not in formvars and not field.default:
+
+            # Inherit person_id from the case activity
+            atable = s3db.dvr_case_activity
+            query = (etable.id == record_id) & \
+                    (atable.id == etable.case_activity_id)
+            row = current.db(query).select(etable.id,
+                                           etable.person_id,
+                                           atable.person_id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                effort = row.dvr_case_effort
+                activity = row.dvr_case_activity
+
+                if not effort.person_id:
+                    effort.update_record(person_id = activity.person_id)
 
 # =============================================================================
 class DVRCaseAppointmentModel(S3Model):
