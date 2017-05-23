@@ -2481,7 +2481,15 @@ def config(settings):
                             S3DateFilter("dvr_case.date",
                                          #label = T("Registration Date"),
                                          hidden = True,
-                                         ),
+                                        ),
+                            S3DateFilter("dvr_case_activity.activity_id$start_date",
+                                         label = T("Activity Start Date"),
+                                         hidden = True,
+                                        ),
+                            S3DateFilter("dvr_case_activity.activity_id$end_date",
+                                         label = T("Activity End Date"),
+                                         hidden = True,
+                                        ),
                             ]
 
                         if "closed" not in r.get_vars:
