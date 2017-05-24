@@ -842,7 +842,7 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
 
     size = (50, 50)
     if image:
-        image = s3db.pr_image_represent(image, size=size)
+        image = s3db.pr_image_library_represent(image, size=size)
         size = s3db.pr_image_size(image, size)
         url = URL(c="default", f="download",
                   args=image)
