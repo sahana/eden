@@ -151,6 +151,49 @@ body.ltr .ui-multiselect {
    @include filter;
 }
 
+// Date filter & timeline
+.date-filter {
+  .range-picker-wrapper {
+    margin-bottom: $global-padding;
+  }
+  .range-picker {
+    .process {
+      background-color: $primary-color;
+    }
+    .select-label {
+      background-color: $primary-color;
+      box-shadow: 1px 1px 6px rgba(0,0,0,.25);
+      margin-bottom: 10px;
+      &::before {
+        content: "";
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        width: 16px;
+        height: 16px;
+        margin-left: -8px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        border-top-color: inherit;
+        background-color: #fff;
+      }
+      &::after {
+        border-top-color: $primary-color;
+      }
+    }
+  }
+
+  .range-coarse,
+  .range-filter {
+    @include grid-row($behavior: nest);
+  }
+  .range-coarse-start,
+  .range-coarse-end,
+  .range-filter-field {
+    @include grid-column(6);
+  }
+}
+
 // -------------------------------------
 // Data Table
 
