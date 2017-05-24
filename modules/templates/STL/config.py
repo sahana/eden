@@ -1401,6 +1401,16 @@ def config(settings):
                                         (T("Result of Protection Response"), "outcome"),
                                         "termination_type_id",
                                         S3SQLInlineComponent(
+                                            "case_effort",
+                                            label = T("Efforts"),
+                                            fields = ["date",
+                                                      (T("Name of Meeting"), "name"),
+                                                      #"human_resource_id",
+                                                      "hours",
+                                                      "comments",
+                                                      ]
+                                            ),
+                                        S3SQLInlineComponent(
                                             "document",
                                             name = "file",
                                             label = T("Attachments"),
@@ -2395,6 +2405,10 @@ def config(settings):
                                                         field = "level_id",
                                                         multiple = False,
                                                         ),
+                                        S3SQLInlineLink("occupation_type",
+                                                        label = T("Current Occupation"),
+                                                        field = "occupation_type_id",
+                                                        ),
                                         S3SQLInlineComponent(
                                                 "case_language",
                                                 fields = ["language",
@@ -2482,6 +2496,14 @@ def config(settings):
                                          #label = T("Registration Date"),
                                          hidden = True,
                                          ),
+                            S3DateFilter("dvr_case_activity.activity_id$start_date",
+                                         label = T("Activity Start Date"),
+                                         hidden = True,
+                                         ),
+                            S3DateFilter("dvr_case_activity.activity_id$end_date",
+                                         label = T("Activity End Date"),
+                                         hidden = True,
+                                         ),
                             ]
 
                         if "closed" not in r.get_vars:
@@ -2503,6 +2525,7 @@ def config(settings):
                                    "first_name",
                                    #"middle_name",
                                    "last_name",
+                                   (T("Phone"), "phone.value"),
                                    "date_of_birth",
                                    "gender",
                                    "person_details.nationality",
@@ -2511,8 +2534,6 @@ def config(settings):
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
-                    if r.representation == "xls":
-                        list_fields.append(("Phone","phone.value"))
 
                     resource.configure(list_fields = list_fields,
                                        )

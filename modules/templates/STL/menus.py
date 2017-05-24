@@ -177,6 +177,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", c="dvr", link=False,
                       restrict = (ADMIN, "ORG_ADMIN"))(
                         M("Education Levels", c="pr", f="education_level"),
+                        M("Occupation Types", c="pr", f="occupation_type"),
                         M("Beneficiary Types", f="beneficiary_type"),
                         #M("Evaluation Questions", f="evaluation_question"),
                         M("Housing Types", f="housing_type"),
@@ -197,8 +198,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def pr(cls):
+        """ PR - use DVR menu """
+
+        return cls.dvr()
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def project(cls):
-        """ PROJECT - use DVR menu """
+        """ PROJECT - use ORG menu """
 
         return cls.org()
 

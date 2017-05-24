@@ -9,9 +9,12 @@
 
          Code........................string..........Type Code
          Name........................string..........Type Name
+         Inactive....................string..........is currently not selectable
+                                                     true|false
          Default.....................string..........is default type
                                                      true|false
          Minimum Interval............number..........minimum interval (hours)
+         Maximum per Day.............integer.........maximum number per day
          Presence required...........string..........requires personal presence
                                                      true|false
          Comments....................string..........Comments
@@ -42,6 +45,22 @@
                 <xsl:value-of select="$Name"/>
             </data>
 
+            <xsl:variable name="is_inactive" select="col[@field='Inactive']/text()"/>
+            <xsl:if test="$is_inactive!=''">
+                <data field="is_inactive">
+                    <xsl:attribute name="value">
+                        <xsl:choose>
+                            <xsl:when test="$is_inactive='true'">
+                                <xsl:value-of select="'true'"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
+
             <xsl:variable name="is_default" select="col[@field='Default']/text()"/>
             <data field="is_default">
                 <xsl:attribute name="value">
@@ -60,6 +79,13 @@
             <xsl:if test="$MinimumInterval!=''">
                 <data field="min_interval">
                     <xsl:value-of select="$MinimumInterval"/>
+                </data>
+            </xsl:if>
+
+            <xsl:variable name="MaxPerDay" select="col[@field='Maximum per Day']/text()"/>
+            <xsl:if test="$MaxPerDay!=''">
+                <data field="max_per_day">
+                    <xsl:value-of select="$MaxPerDay"/>
                 </data>
             </xsl:if>
 

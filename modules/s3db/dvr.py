@@ -35,6 +35,7 @@ __all__ = ("DVRCaseModel",
            "DVRHouseholdModel",
            "DVRHouseholdMembersModel",
            "DVRCaseEconomyInformationModel",
+           "DVRCaseEffortModel",
            "DVRCaseEventModel",
            "DVRCaseEvaluationModel",
            "DVRActivityFundingModel",
@@ -55,6 +56,8 @@ __all__ = ("DVRCaseModel",
            "dvr_rheader",
            "dvr_update_last_seen",
            )
+
+import datetime
 
 from collections import OrderedDict
 
@@ -2092,6 +2095,7 @@ class DVRCaseActivityModel(S3Model):
                                 "joinby": "case_activity_id",
                                 "multiple": False,
                                 },
+                            dvr_case_effort = "case_activity_id",
                             dvr_need = {
                                 "link": "dvr_case_activity_need",
                                 "joinby": "case_activity_id",
@@ -2366,6 +2370,134 @@ class DVRCaseActivityModel(S3Model):
                 row.update_record(end_date = current.request.utcnow.date())
         elif row.end_date:
             row.update_record(end_date = None)
+
+# =============================================================================
+class DVRCaseEffortModel(S3Model):
+    """ Effort Log for Case / Case Activities """
+
+    names = ("dvr_case_effort",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Effort log
+        #
+        tablename = "dvr_case_effort"
+        define_table(tablename,
+                     self.pr_person_id(
+                         ondelete = "CASCADE",
+                         ),
+                     self.dvr_case_activity_id(
+                         ondelete = "SET NULL",
+                         readable = False,
+                         writable = False,
+                         ),
+                     s3_datetime(
+                         default = "now"
+                         ),
+                     Field("name",
+                           label = T("Short Description"),
+                           ),
+                     self.hrm_human_resource_id(
+                         comment = None,
+                         ),
+                     Field("hours", "double",
+                           requires = IS_FLOAT_IN_RANGE(0.0, None),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       onaccept = self.case_effort_onaccept,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Effort"),
+            title_display = T("Effort Details Details"),
+            title_list = T("Efforts"),
+            title_update = T("Edit Effort"),
+            label_list_button = T("List Efforts"),
+            label_delete_button = T("Delete Effort"),
+            msg_record_created = T("Effort added"),
+            msg_record_modified = T("Effort updated"),
+            msg_record_deleted = T("Effort deleted"),
+            msg_list_empty = T("No Efforts currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_effort_onaccept(form):
+        """
+            Onaccept-callback for dvr_case_effort:
+                - inherit person_id from case_activity, unless specified
+                  in form or default
+
+            @param form: the FORM
+        """
+
+        # Read form data
+        formvars = form.vars
+
+        # Get the record ID
+        if "id" in formvars:
+            record_id = formvars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+        if not record_id:
+            return
+
+        s3db = current.s3db
+
+        etable = s3db.dvr_case_effort
+        field = etable.person_id
+
+        if "person_id" not in formvars and not field.default:
+
+            # Inherit person_id from the case activity
+            atable = s3db.dvr_case_activity
+            query = (etable.id == record_id) & \
+                    (atable.id == etable.case_activity_id)
+            row = current.db(query).select(etable.id,
+                                           etable.person_id,
+                                           atable.person_id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                effort = row.dvr_case_effort
+                activity = row.dvr_case_activity
+
+                if not effort.person_id:
+                    effort.update_record(person_id = activity.person_id)
 
 # =============================================================================
 class DVRCaseAppointmentModel(S3Model):
@@ -3504,6 +3636,16 @@ class DVRCaseEventModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("is_inactive", "boolean",
+                           default = False,
+                           label = T("Inactive"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Inactive"),
+                                                             T("This event type can not currently be registered"),
+                                                             ),
+                                         ),
+                           ),
                      Field("is_default", "boolean",
                            default = False,
                            label = T("Default Event Type"),
@@ -3547,6 +3689,15 @@ class DVRCaseEventModel(S3Model):
                                                              ),
                                          ),
                            requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           ),
+                     Field("max_per_day", "integer",
+                           label = T("Maximum Number per Day"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Maximum Number per Day"),
+                                                             T("Maximum number of occurences of this event type for the same person on the same day"),
+                                                             ),
+                                         ),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      Field("presence_required", "boolean",
                            default = True,
@@ -5611,7 +5762,7 @@ class DVRRegisterCaseEvent(S3Method):
                 else:
                     event_type = self.get_event_type(event_code)
                     if not event_type:
-                        alert = T("Invalid event type %s" % event_code)
+                        alert = T("Invalid event type: %s") % event_code
                     else:
                         type_id = event_type.id
 
@@ -5803,7 +5954,8 @@ class DVRRegisterCaseEvent(S3Method):
             event_types = {}
             table = current.s3db.dvr_case_event_type
 
-            query = (table.deleted != True)
+            query = (table.is_inactive == False) & \
+                    (table.deleted == False)
 
             sr = current.auth.get_system_roles()
             roles = current.session.s3.roles
@@ -5816,6 +5968,7 @@ class DVRRegisterCaseEvent(S3Method):
                                             table.name,
                                             table.is_default,
                                             table.min_interval,
+                                            table.max_per_day,
                                             table.comments,
                                             )
             for row in rows:
@@ -5839,9 +5992,12 @@ class DVRRegisterCaseEvent(S3Method):
                      {type_id: (error_message, blocked_until_datetime)}
         """
 
-        s3db = current.s3db
-        db = current.db
         T = current.T
+
+        db = current.db
+        s3db = current.s3db
+
+        now = current.request.utcnow
 
         output = {}
 
@@ -5850,53 +6006,105 @@ class DVRRegisterCaseEvent(S3Method):
 
         # Get event types to check
         event_types = self.get_event_types()
-        if not type_id:
-            check = set(type_id for type_id, row in event_types.items()
-                        if row.min_interval and type_id != "_default"
-                        )
-            if len(check) == 1:
-                type_query = (event_type_id == list(check)[0])
-            elif check:
-                type_query = event_type_id.belongs(check)
+
+        def type_query(items):
+            if len(items) == 1:
+                return (event_type_id == items[0])
+            elif items:
+                return (event_type_id.belongs(set(items)))
             else:
-                # No types to check
-                return output
-        else:
+                return None
+
+        # Check maximum occurences per day
+        q = None
+        if type_id:
             event_type = event_types.get(type_id)
-            if event_type and event_type.min_interval:
-                # Check single event type
-                type_query = (event_type_id == type_id)
-            else:
-                return output
+            if event_type and event_type.max_per_day:
+                q = type_query((type_id,))
+        else:
+            check = [tid for tid, row in event_types.items()
+                     if row.max_per_day and tid != "_default"
+                     ]
+            q = type_query(check)
 
-        # Get the last events for these types for this person
-        query = (table.person_id == person_id) & \
-                type_query & \
-                (table.deleted != True)
-        timestamp = table.date.max()
-        rows = db(query).select(event_type_id,
-                                timestamp,
-                                groupby = event_type_id,
-                                )
+        if q is not None:
 
-        # Check intervals
-        import datetime
-        now = current.request.utcnow
-        represent = table.date.represent
+            # Get number of events per type for this person today
+            day_start = now.replace(hour=0,
+                                    minute=0,
+                                    second=0,
+                                    microsecond=0,
+                                    )
+            cnt = table.id.count()
+            query = (table.person_id == person_id) & q & \
+                    (table.date >= day_start) & \
+                    (table.deleted != True)
+            rows = db(query).select(event_type_id,
+                                    cnt,
+                                    groupby = event_type_id,
+                                    )
 
-        for row in rows:
-            type_id_ = row[event_type_id]
-            event_type = event_types[type_id_]
-            interval = event_type.min_interval
-            latest = row[timestamp]
-            if latest:
-                earliest = latest + datetime.timedelta(hours=interval)
-                if earliest > now:
-                    msg = T("%(event)s already registered on %(timestamp)s") % \
-                                {"event": T(event_type.name),
-                                 "timestamp": represent(latest),
-                                 }
-                    output[type_id_] = (msg, earliest)
+            # Check limit
+            next_day = day_start + datetime.timedelta(days=1)
+            for row in rows:
+
+                number = row[cnt]
+
+                tid = row[event_type_id]
+                event_type = event_types[tid]
+                limit = event_type.max_per_day
+
+                if number >= limit:
+                    msg = T("%(event)s already registered %(number)s times today") % \
+                            {"event": T(event_type.name),
+                             "number": number,
+                             }
+                    output[tid] = (msg, next_day)
+
+        # Check minimum intervals
+        q = None
+        if type_id:
+            event_type = event_types.get(type_id)
+            if event_type and \
+               event_type.min_interval and \
+               type_id not in output:
+                q = type_query((type_id,))
+        else:
+            check = [tid for tid, row in event_types.items()
+                     if row.min_interval and \
+                        tid != "_default" and tid not in output
+                     ]
+            q = type_query(check)
+
+        if q is not None:
+
+            # Get the last events for these types for this person
+            query = (table.person_id == person_id) & q & \
+                    (table.deleted != True)
+            timestamp = table.date.max()
+            rows = db(query).select(event_type_id,
+                                    timestamp,
+                                    groupby = event_type_id,
+                                    )
+
+            # Check intervals
+            represent = table.date.represent
+            for row in rows:
+
+                latest = row[timestamp]
+
+                tid = row[event_type_id]
+                event_type = event_types[tid]
+                interval = event_type.min_interval
+
+                if latest:
+                    earliest = latest + datetime.timedelta(hours=interval)
+                    if earliest > now:
+                        msg = T("%(event)s already registered on %(timestamp)s") % \
+                                    {"event": T(event_type.name),
+                                     "timestamp": represent(latest),
+                                     }
+                        output[tid] = (msg, earliest)
 
         return output
 

@@ -1428,3 +1428,8 @@ body.rtl .event-type-header {
 .check-in-warning i {
   margin-right: 0.3rem;
 }
+
+/* line 175, ../scss/custom/_misc.scss */
+input[id^="sub_defaultcase_effort_defaultcase_effort_i_hours"] {
+  max-width: 4rem;
+}

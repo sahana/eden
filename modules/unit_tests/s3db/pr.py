@@ -470,8 +470,8 @@ class ContactValidationTests(unittest.TestCase):
         current.deployment_settings \
                .msg.require_international_phone_numbers = False
 
-        from s3db.pr import S3ContactModel
-        onvalidation = S3ContactModel.pr_contact_onvalidation
+        from s3db.pr import PRContactModel
+        onvalidation = PRContactModel.pr_contact_onvalidation
 
         form = Storage(
             vars = Storage(
@@ -500,8 +500,8 @@ class ContactValidationTests(unittest.TestCase):
         current.deployment_settings \
                .msg.require_international_phone_numbers = True
 
-        from s3db.pr import S3ContactModel
-        onvalidation = S3ContactModel.pr_contact_onvalidation
+        from s3db.pr import PRContactModel
+        onvalidation = PRContactModel.pr_contact_onvalidation
 
         form = Storage(
             vars = Storage(
