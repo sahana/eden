@@ -57,6 +57,8 @@ __all__ = ("DVRCaseModel",
            "dvr_update_last_seen",
            )
 
+import datetime
+
 from collections import OrderedDict
 
 from gluon import *
@@ -3688,6 +3690,15 @@ class DVRCaseEventModel(S3Model):
                                          ),
                            requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
                            ),
+                     Field("max_per_day", "integer",
+                           label = T("Maximum Number per Day"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Maximum Number per Day"),
+                                                             T("Maximum number of occurences of this event type for the same person on the same day"),
+                                                             ),
+                                         ),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
                      Field("presence_required", "boolean",
                            default = True,
                            label = T("Presence required"),
@@ -5957,6 +5968,7 @@ class DVRRegisterCaseEvent(S3Method):
                                             table.name,
                                             table.is_default,
                                             table.min_interval,
+                                            table.max_per_day,
                                             table.comments,
                                             )
             for row in rows:
@@ -5980,9 +5992,12 @@ class DVRRegisterCaseEvent(S3Method):
                      {type_id: (error_message, blocked_until_datetime)}
         """
 
-        s3db = current.s3db
-        db = current.db
         T = current.T
+
+        db = current.db
+        s3db = current.s3db
+
+        now = current.request.utcnow
 
         output = {}
 
@@ -5991,53 +6006,105 @@ class DVRRegisterCaseEvent(S3Method):
 
         # Get event types to check
         event_types = self.get_event_types()
-        if not type_id:
-            check = set(type_id for type_id, row in event_types.items()
-                        if row.min_interval and type_id != "_default"
-                        )
-            if len(check) == 1:
-                type_query = (event_type_id == list(check)[0])
-            elif check:
-                type_query = event_type_id.belongs(check)
+
+        def type_query(items):
+            if len(items) == 1:
+                return (event_type_id == items[0])
+            elif items:
+                return (event_type_id.belongs(set(items)))
             else:
-                # No types to check
-                return output
-        else:
+                return None
+
+        # Check maximum occurences per day
+        q = None
+        if type_id:
             event_type = event_types.get(type_id)
-            if event_type and event_type.min_interval:
-                # Check single event type
-                type_query = (event_type_id == type_id)
-            else:
-                return output
+            if event_type and event_type.max_per_day:
+                q = type_query((type_id,))
+        else:
+            check = [tid for tid, row in event_types.items()
+                     if row.max_per_day and tid != "_default"
+                     ]
+            q = type_query(check)
 
-        # Get the last events for these types for this person
-        query = (table.person_id == person_id) & \
-                type_query & \
-                (table.deleted != True)
-        timestamp = table.date.max()
-        rows = db(query).select(event_type_id,
-                                timestamp,
-                                groupby = event_type_id,
-                                )
+        if q is not None:
 
-        # Check intervals
-        import datetime
-        now = current.request.utcnow
-        represent = table.date.represent
+            # Get number of events per type for this person today
+            day_start = now.replace(hour=0,
+                                    minute=0,
+                                    second=0,
+                                    microsecond=0,
+                                    )
+            cnt = table.id.count()
+            query = (table.person_id == person_id) & q & \
+                    (table.date >= day_start) & \
+                    (table.deleted != True)
+            rows = db(query).select(event_type_id,
+                                    cnt,
+                                    groupby = event_type_id,
+                                    )
 
-        for row in rows:
-            type_id_ = row[event_type_id]
-            event_type = event_types[type_id_]
-            interval = event_type.min_interval
-            latest = row[timestamp]
-            if latest:
-                earliest = latest + datetime.timedelta(hours=interval)
-                if earliest > now:
-                    msg = T("%(event)s already registered on %(timestamp)s") % \
-                                {"event": T(event_type.name),
-                                 "timestamp": represent(latest),
-                                 }
-                    output[type_id_] = (msg, earliest)
+            # Check limit
+            next_day = day_start + datetime.timedelta(days=1)
+            for row in rows:
+
+                number = row[cnt]
+
+                tid = row[event_type_id]
+                event_type = event_types[tid]
+                limit = event_type.max_per_day
+
+                if number >= limit:
+                    msg = T("%(event)s already registered %(number)s times today") % \
+                            {"event": T(event_type.name),
+                             "number": number,
+                             }
+                    output[tid] = (msg, next_day)
+
+        # Check minimum intervals
+        q = None
+        if type_id:
+            event_type = event_types.get(type_id)
+            if event_type and \
+               event_type.min_interval and \
+               type_id not in output:
+                q = type_query((type_id,))
+        else:
+            check = [tid for tid, row in event_types.items()
+                     if row.min_interval and \
+                        tid != "_default" and tid not in output
+                     ]
+            q = type_query(check)
+
+        if q is not None:
+
+            # Get the last events for these types for this person
+            query = (table.person_id == person_id) & q & \
+                    (table.deleted != True)
+            timestamp = table.date.max()
+            rows = db(query).select(event_type_id,
+                                    timestamp,
+                                    groupby = event_type_id,
+                                    )
+
+            # Check intervals
+            represent = table.date.represent
+            for row in rows:
+
+                latest = row[timestamp]
+
+                tid = row[event_type_id]
+                event_type = event_types[tid]
+                interval = event_type.min_interval
+
+                if latest:
+                    earliest = latest + datetime.timedelta(hours=interval)
+                    if earliest > now:
+                        msg = T("%(event)s already registered on %(timestamp)s") % \
+                                    {"event": T(event_type.name),
+                                     "timestamp": represent(latest),
+                                     }
+                        output[tid] = (msg, earliest)
 
         return output
 
