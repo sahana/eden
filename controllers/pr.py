@@ -487,6 +487,12 @@ def education_level():
     return s3_rest_controller("pr", "education_level")
 
 # -----------------------------------------------------------------------------
+def occupation_type():
+    """ Occupation Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 #def contact():
 #    """ RESTful CRUD controller """
 #

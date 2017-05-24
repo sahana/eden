@@ -2405,6 +2405,10 @@ def config(settings):
                                                         field = "level_id",
                                                         multiple = False,
                                                         ),
+                                        S3SQLInlineLink("occupation_type",
+                                                        label = T("Current Occupation"),
+                                                        field = "occupation_type_id",
+                                                        ),
                                         S3SQLInlineComponent(
                                                 "case_language",
                                                 fields = ["language",
@@ -2530,7 +2534,7 @@ def config(settings):
                                    "dvr_case.date",
                                    "dvr_case.status_id",
                                    ]
-                                                       
+
                     resource.configure(list_fields = list_fields,
                                        )
 
