@@ -3110,6 +3110,7 @@ Thank you"""
             settings.project.indicators = True
             settings.project.outcomes = True
             settings.project.outputs = True
+            table.human_resource_id.label = T("Coordinator")
             # Use Budget module instead of ProjectAnnualBudget
             settings.project.multiple_budgets = False
             settings.project.budget_monitoring = True

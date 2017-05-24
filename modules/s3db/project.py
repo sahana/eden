@@ -5527,7 +5527,15 @@ class project_SummaryReport(S3Method):
         """
 
         if r.name == "project":
-            if r.representation == "pdf":
+            representation = r.representation
+            if representation == "html":
+                # @ToDo: Page with Filters:
+                # - Time Period
+                # - Indicators
+                # - Objectives
+                # - Activities
+                pass
+            elif representation == "pdf":
                 output = self.pdf(r, **attr)
                 return output
         raise HTTP(405, current.ERROR.BAD_METHOD)
@@ -5776,12 +5784,19 @@ class project_SummaryReport(S3Method):
         otable = s3db.project_organisation
         query = (otable.project_id == project_id) & \
                 (otable.organisation_id != organisation_id)
-        partners = db(query).select(otable.organisation_id)
+        partners = db(query).select(otable.organisation_id,
+                                    otable.role,
+                                    )
         if partners:
             org_represent = s3db.org_OrganisationRepresent() # show_link=False
-            partners = org_represent.bulk([row.organisation_id for row in partners])
+            donors = org_represent.bulk([row.organisation_id for row in partners if row.role == 3])
+            del donors[None]
+            donors = donors.values()
+            partners = org_represent.bulk([row.organisation_id for row in partners if row.role != 3])
             del partners[None]
             partners = partners.values()
+        else:
+            donors = []
 
         gtable = s3db.project_location
         query = (gtable.project_id == project_id)
@@ -5792,76 +5807,60 @@ class project_SummaryReport(S3Method):
             del locations[None]
             locations = locations.values()
 
+        # @ToDo: deployment_setting to separate per Location?
         btable = s3db.project_beneficiary
         query = (btable.project_id == project_id)
         beneficiaries = db(query).select(btable.parameter_id,
-                                         btable.value,
+                                         btable.value, # Beneficiaries Reached
                                          )
         if beneficiaries:
             ben_represent = S3Represent(lookup="stats_parameter",
                                         translate=True,
                                         )
-            benef_types = ben_represent.bulk([row.parameter_id for row in beneficiaries])
+            benef_types = ben_represent.bulk(list(set([row.parameter_id for row in beneficiaries])))
+            # Sum per Type
             del benef_types[None]
             benefs = []
-            bappend = benefs.append
-            for row in beneficiaries:
-                # @ToDo: Add Location?
-                bappend("%s %s" % (row.value, benef_types.get(row.parameter_id)))
+            sums = {}
+            for t in benef_types:
+                sums[t] = 0
+                for row in beneficiaries:
+                    if row.parameter_id == t:
+                        sums[t] += row.value
+                benefs.append("%s %s" % (sums[t], benef_types.get(t)))
             beneficiaries = benefs
 
-        report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
-        filename = "%s_%s.pdf" % (report_title, s3_unicode(project_title).encode("utf8"))
+        report_title = s3_str(T("Project Summary Report"))
+        filename = "%s_%s.pdf" % (report_title, s3_str(project_title))
 
         header = DIV(s3db.org_organisation_logo(organisation_id),
                      date_represent(r.utcnow),
                      # @ToDo: This is overflowing
                      )
 
-        narrative = TABLE(TR(TD(T("Project Name")),
-                             TD(record.name),
-                             ),
-                          TR(TD(T("Program")),
-                             TD(program),
-                             ),
-                          TR(TD(T("Description")),
-                             TD(record.description),
-                             ),
-                          TR(TD(T("Status")),
-                             TD(status),
-                             ),
-                          TR(TD(T("Budget")),
-                             TD(budget),
-                             ),
-                          TR(TD(T("Start Date")),
-                             TD(date_represent(record.start_date)),
-                             ),
-                          TR(TD(T("End Date")),
-                             TD(date_represent(record.end_date)),
-                             ),
-                          TR(TD(T("Hazards")),
-                             TD(hazards),
-                             ),
-                          TR(TD(T("Sectors")),
-                             TD(sectors),
-                             ),
-                          TR(TD(T("Themes")),
-                             TD(themes),
-                             ),
-                          TR(TD(T("Contact Person")),
-                             TD(table.human_resource_id.represent(record.human_resource_id)),
-                             ),
-                          TR(TD(T("Partner Organizations"),
-                                _colspan=2,
-                                ),
-                             ),
-                          )
-        nappend = narrative.append
-
-        for p in partners:
-            nappend(TR(TD(),
-                       TD(p),
-                       ))
+        narrative_rows= [TR(TD(T("General Project Information")),
+                            _colspan=2,
+                            ),
+                         TR(TD(T("Project")),
+                            TD(record.name),
+                            ),
+                         #TR(TD(T("Program")),
+                         #   TD(program),
+                         #   ),
+                         #TR(TD(T("Status")),
+                         #   TD(status),
+                         #   ),
+                         TR(TD(T("Description")),
+                            TD(record.description),
+                            ),
+                         TR(TD(T("Start Date")),
+                            TD(date_represent(record.start_date)),
+                            ),
+                         TR(TD(T("End Date")),
+                            TD(date_represent(record.end_date)),
+                            ),
+                         ]
+        nappend = narrative_rows.append
 
         nappend(TR(TD(T("Locations"),
                       _colspan=2,
@@ -5872,7 +5871,33 @@ class project_SummaryReport(S3Method):
                        TD(l),
                        ))
 
-        nappend(TR(TD(T("Beneficiaries"),
+        nappend(TR(TD(T("Donors"),
+                      _colspan=2,
+                      ),
+                   ))
+        for d in donors:
+            nappend(TR(TD(),
+                       TD(d),
+                       ))
+
+        narrative_rows += (TR(TD(table.human_resource_id.label),
+                              TD(table.human_resource_id.represent(record.human_resource_id)), # @ToDo: person_represent?
+                              ),
+                           TR(TD(T("Budget")),
+                              TD(budget),
+                              ),
+                           TR(TD(T("Hazards")),
+                              TD(hazards),
+                              ),
+                           TR(TD(T("Sectors")),
+                              TD(sectors),
+                              ),
+                           TR(TD(T("Themes")),
+                              TD(themes),
+                              ),
+                           )
+
+        nappend(TR(TD(T("Beneficiaries Reached"),
                       _colspan=2,
                       ),
                    ))
@@ -5881,125 +5906,82 @@ class project_SummaryReport(S3Method):
                        TD(b),
                        ))
 
-        status_table = TABLE(#TR(TD(T("Current Planned Status"),
-                             #      ),
-                             #   TD(
-                             #      ),
-                             #   ),
-                             #TR(TD(T("Overall Planned Status"),
-                             #      ),
-                             #   TD(
-                             #      ),
-                             #   ),
-                             TR(TD(T("Current Status"),
+        nappend(TR(TD(T("Partner Organizations"),
+                      _colspan=2,
+                      ),
+                   ))
+        for p in partners:
+            nappend(TR(TD(),
+                       TD(p),
+                       ))
+
+        narrative = TABLE(*narrative_rows)
+
+        status_table = TABLE(TR(TD(T("Current Status of Project"),
+                                   _rowspan=2,
                                    ),
-                                # @ToDo: Colours?
-                                TD(project_status_represent(record.current_status_by_indicators),
-                                   ),
+                                TD(T("Current")), # Current Status currently...should be Current Value?
+                                TD(T("Overall")), # Overall Status currently...needs to change to Planned
                                 ),
-                             TR(TD(T("Overall Status"),
-                                   ),
-                                TD(project_status_represent(record.overall_status_by_indicators),
-                                   ),
+                             TR(#TD(),
+                                TD(project_status_represent(record.current_status_by_indicators)),
+                                TD(project_status_represent(record.overall_status_by_indicators)), # Should change to Planned...
                                 ),
                              )
         sappend = status_table.append
 
         for goal_id in goals:
             goal = goals[goal_id]
-            row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
+            row = TR(TD("%s %s: %s" % (T("Goal"), goal["code"], goal["name"]),
                         ),
-                     TD(goal["name"]),
+                     TD(project_status_represent(goal["current_status"])),
+                     TD(project_status_represent(goal["overall_status"])), # Should change to Planned...
                      _class="project_goal",
-                     )
-            sappend(row)
-            row = TR(TD(T("Current Status"),
-                        ),
-                     TD(project_status_represent(goal["current_status"]))
-                     )
-            sappend(row)
-            row = TR(TD(T("Overall Status"),
-                        ),
-                     TD(project_status_represent(goal["overall_status"]))
                      )
             sappend(row)
             outcomes = goal["outcomes"]
             for outcome_id in outcomes:
                 outcome = outcomes[outcome_id]
-                row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                row = TR(TD("%s %s: %s" % (T("Outcome"), outcome["code"], outcome["name"]),
                             ),
-                         TD(outcome["name"]),
+                         TD(project_status_represent(outcome["current_status"])),
+                         TD(project_status_represent(outcome["overall_status"])), # Should change to Planned...
                          _class="project_outcome",
-                         )
-                sappend(row)
-                row = TR(TD(T("Current Status"),
-                            ),
-                         TD(project_status_represent(outcome["current_status"]))
-                         )
-                sappend(row)
-                row = TR(TD(T("Overall Status"),
-                            ),
-                         TD(project_status_represent(outcome["overall_status"]))
                          )
                 sappend(row)
                 outputs = outcome["outputs"]
                 for output_id in outputs:
                     output = outputs[output_id]
-                    row = TR(TD("%s: %s" % (T("Output"), output["code"]),
+                    row = TR(TD("%s %s: %s" % (T("Output"), output["code"], output["name"]),
                                 ),
-                             TD(output["name"]),
+                             TD(project_status_represent(output["current_status"])),
+                             TD(project_status_represent(output["overall_status"])), # Should change to Planned...
                              _class="project_output",
-                             )
-                    sappend(row)
-                    row = TR(TD(T("Current Status"),
-                                ),
-                             TD(project_status_represent(output["current_status"]))
-                             )
-                    sappend(row)
-                    row = TR(TD(T("Overall Status"),
-                                ),
-                             TD(project_status_represent(output["overall_status"]))
                              )
                     sappend(row)
                     indicators = output["indicators"]
                     for i in indicators:
                         indicator = indicators[i]
-                        row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                        row = TR(TD("%s %s: %s" % (T("Indicator"), indicator["code"], indicator["name"]),
                                     ),
-                                 TD(indicator["name"]),
+                                 TD(project_status_represent(indicator["current_status"])),
+                                 #TD(project_status_represent(indicator["overall_status"])),
+                                 # Already is Planned:
+                                 TD(indicator["current_target"]),
+                                 #TD(indicator["overall_target"]),
                                  _class="project_indicator",
                                  )
                         sappend(row)
-                        row = TR(TD(T("Current Target"),
-                                    ),
-                                 TD(indicator["current_target"])
-                                 )
-                        sappend(row)
-                        row = TR(TD(T("Overall Target"),
-                                    ),
-                                 TD(indicator["overall_target"])
-                                 )
-                        sappend(row)
-                        row = TR(TD(T("Current Status"),
-                                    ),
-                                 TD(project_status_represent(indicator["current_status"]))
-                                 )
-                        sappend(row)
-                        row = TR(TD(T("Overall Status"),
-                                    ),
-                                 TD(project_status_represent(indicator["overall_status"]))
-                                 )
-                        sappend(row)
-                        row = TR(TD(T("Justification"),
-                                    ),
-                                 TD(indicator["comments"])
-                                 )
-                        sappend(row)
+                        #row = TR(TD(T("Justification"),
+                        #            ),
+                        #         TD(indicator["comments"])
+                        #         )
+                        #sappend(row)
 
         body = DIV(H1(T("Narrative Report")),
                    H3("%s: %s" % (T("Up To Date"), date_represent(date))),
                    narrative,
-                   H1(T("Current Status of Project")),
+                   P(""),
                    status_table,
                    )
 

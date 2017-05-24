@@ -1979,34 +1979,8 @@ S3.search = {};
             coarseStart.val(minDate.format(cfmt));
             coarseEnd.val(maxDate.format(cfmt));
 
-            // Play Button
-            // @ToDo: widget & deployment settings
-            // @ToDo: Make this sensitive to changing of Icon sets
-            // @ToDo: i18n
-            $this.before('<a class="button secondary tiny play"><i class="fa fa-play"></i> Play</a>');
-            var play = $('#' + widget_name + ' .play');
-
-            // Range-Picker
-            var offset,
-                timeOffset,
-                currentDate;
-            var rangePicker = $this.rangepicker({
-                type: 'double',
-                startValue: minDate.format(fmt),
-                endValue: maxDate.format(fmt),
-                translateSelectLabel: function(currentPosition, totalPosition) {
-                    minDate = new Date($this.data('min'));
-                    maxDate = new Date($this.data('max'));
-                    offset = maxDate - minDate;
-                    timeOffset = offset * (currentPosition / totalPosition);
-                    currentDate = new Date(+minDate + parseInt(timeOffset));
-                    return moment(currentDate).format(fmt);
-                }
-            });
-
-            // Line Graph
-            // @ToDo: widget & deployment settings
-            function graphData() {
+            // Function used by both LineGraph & Play button
+            function slotsData() {
                 var v,
                     label,
                     values = [],
@@ -2031,6 +2005,39 @@ S3.search = {};
                          },
                         ];
             }
+
+            // Play Button
+            // @ToDo: widget & deployment settings
+            // @ToDo: Make this sensitive to changing of Icon sets
+            // @ToDo: i18n
+            $this.before('<a class="button secondary tiny play"><i class="fa fa-play"></i> Play</a>');
+            var play = $('#' + widget_name + ' .play'),
+                slots = slotsData()[0].values;
+            if (slots.length < 3) {
+                // Hide the Play button as it doesn't work for such a small number of values
+                play.hide();
+            }
+
+            // Range-Picker
+            var offset,
+                timeOffset,
+                currentDate;
+            var rangePicker = $this.rangepicker({
+                type: 'double',
+                startValue: minDate.format(fmt),
+                endValue: maxDate.format(fmt),
+                translateSelectLabel: function(currentPosition, totalPosition) {
+                    minDate = new Date($this.data('min'));
+                    maxDate = new Date($this.data('max'));
+                    offset = maxDate - minDate;
+                    timeOffset = offset * (currentPosition / totalPosition);
+                    currentDate = new Date(+minDate + parseInt(timeOffset));
+                    return moment(currentDate).format(fmt);
+                }
+            });
+
+            // Line Graph
+            // @ToDo: widget & deployment settings
             $this.before('<div id="' + widget_name + '-chart"><svg></svg></div>');
             // On-hover data point tooltip
             var tooltipContent = function(data) {
@@ -2063,7 +2070,7 @@ S3.search = {};
                     //     .tickFormat(d3.format('.02f'));
 
                     // Done setting the chart up? Time to render it!
-                    var myData = graphData();   // You need data...
+                    var myData = slotsData();   // You need data...
 
                     d3.select('#' + widget_name + '-chart svg')  // Select the <svg> element you want to render the chart in.   
                       .datum(myData)         // Populate the <svg> element with chart data...
@@ -2170,12 +2177,19 @@ S3.search = {};
                                      });
                 $this.data('ts', ts);
                 rangePicker.graph();
+                slots = slotsData()[0].values;
+                if (slots.length > 2) {
+                    // Ensure Play button is visible in case it was previously hidden
+                    play.show();
+                 } else {
+                    // Hide the Play button as it doesn't work for such a small number of values
+                    play.hide();
+                }
             });
 
             // Play button
             // @ToDo: Make wait time configurable (use same setting as on/off)
-            var slots,
-                slot_wait = 4000;
+            var slot_wait = 4000;
             function playSlot(i) {
                 var start = slots[i].x;
                 try {
@@ -2196,7 +2210,7 @@ S3.search = {};
             }
             play.on('click', function() {
                 // Move the slider through each of the slots at the defined interval
-                slots = graphData()[0].values;
+                slots = slotsData()[0].values;
                 for (var i = 0; i < slots.length; i++) {
                     playSlot(i);
                 }
