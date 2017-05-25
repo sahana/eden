@@ -2961,6 +2961,16 @@ class S3Config(Storage):
         """
         return self.dvr.get("event_registration_show_picture", True)
 
+    def get_dvr_event_registration_exclude_codes(self):
+        """
+            List of case event type codes to exclude from
+            the event registration UI; can use * as wildcard
+
+            Example:
+                settings.dvr.event_registration_exclude_codes = ("FOOD*",)
+        """
+        return self.dvr.get("event_registration_exclude_codes", None)
+
     def get_dvr_activity_use_service_type(self):
         """
             Use service type in case activities

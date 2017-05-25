@@ -5954,9 +5954,21 @@ class DVRRegisterCaseEvent(S3Method):
             event_types = {}
             table = current.s3db.dvr_case_event_type
 
+            # Active event types
             query = (table.is_inactive == False) & \
                     (table.deleted == False)
 
+            # Excluded event codes
+            excluded = current.deployment_settings \
+                              .get_dvr_event_registration_exclude_codes()
+            if excluded:
+                for code in excluded:
+                    if "*" in code:
+                        query &= (~(table.code.like(code.replace("*", "%"))))
+                    else:
+                        query &= (table.code != code)
+
+            # Roles required
             sr = current.auth.get_system_roles()
             roles = current.session.s3.roles
             if sr.ADMIN not in roles:
