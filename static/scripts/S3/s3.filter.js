@@ -939,7 +939,7 @@ S3.search = {};
      * updateOptions: Update the options of all filter widgets
      */
     var updateOptions = function(options) {
-        
+
         var filter_id;
         for (filter_id in options) {
             var widget = $('#' + filter_id);
@@ -1973,7 +1973,7 @@ S3.search = {};
                 optgroups += '</optgroup>';
             }
             // @ToDo: i18n
-            $this.before('<div class="range-coarse">From:<select id="' + widget_name + '-cs">' + optgroups + '</select>to:<select id="' + widget_name + '-ce">' + optgroups + '</select></div>');
+            $this.before('<div class="range-coarse"><div class="range-coarse-start"><label for="' + widget_name + '-cs">From:</label><select id="' + widget_name + '-cs">' + optgroups + '</select></div><div class="range-coarse-end"><label for="' + widget_name + '-ce">to:</label><select id="' + widget_name + '-ce">' + optgroups + '</select></div></div>');
             var coarseStart = $('#' + widget_name + '-cs');
             var coarseEnd = $('#' + widget_name + '-ce');
             coarseStart.val(minDate.format(cfmt));
@@ -2000,7 +2000,7 @@ S3.search = {};
                 // Line chart data should be sent as an array of series objects.
                 return [{values: values,   // values - represents the array of {x,y} data points
                          key: '',          // key  - the name of the series.
-                         color: '#9eb5d5', // color - optional: choose your own line color.
+                         color: '#3b6596', // color - optional: choose your own line color.
                          area: true        // area - set to true if you want this line to turn into a filled area chart.
                          },
                         ];
@@ -2052,7 +2052,7 @@ S3.search = {};
             rangePicker.graph = function() {
                 nv.addGraph(function() {
                     var chart = nv.models.lineChart()
-                                  //.margin({left: 100})  // Adjust chart margins to give the x-axis some breathing room.
+                                  .margin({left: 0,right: 0})  // Adjust chart margins to give the x-axis some breathing room.
                                   //.useInteractiveGuideline(true)  // We want nice looking tooltips and a guideline!
                                   //.transitionDuration(350)  // how fast do you want the lines to transition?
                                   .showLegend(false)       // Hide the legend (would allow users to turn on/off line series)
@@ -2072,7 +2072,7 @@ S3.search = {};
                     // Done setting the chart up? Time to render it!
                     var myData = slotsData();   // You need data...
 
-                    d3.select('#' + widget_name + '-chart svg')  // Select the <svg> element you want to render the chart in.   
+                    d3.select('#' + widget_name + '-chart svg')  // Select the <svg> element you want to render the chart in.
                       .datum(myData)         // Populate the <svg> element with chart data...
                       .call(chart);          // Finally, render the chart!
 
