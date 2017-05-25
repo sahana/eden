@@ -2000,6 +2000,7 @@ S3.search = {};
                 // Line chart data should be sent as an array of series objects.
                 return [{values: values,   // values - represents the array of {x,y} data points
                          key: '',          // key  - the name of the series.
+                         // @ToDo: deployment_setting: use same as the one that enables...or copy from another CSS element?
                          color: '#3b6596', // color - optional: choose your own line color.
                          area: true        // area - set to true if you want this line to turn into a filled area chart.
                          },
@@ -2052,12 +2053,12 @@ S3.search = {};
             rangePicker.graph = function() {
                 nv.addGraph(function() {
                     var chart = nv.models.lineChart()
-                                  .margin({left: 0,right: 0})  // Adjust chart margins to give the x-axis some breathing room.
+                                  .margin({left: 0, right: 0})      // Adjust chart margins to give the x-axis some breathing room.
                                   //.useInteractiveGuideline(true)  // We want nice looking tooltips and a guideline!
-                                  //.transitionDuration(350)  // how fast do you want the lines to transition?
+                                  //.transitionDuration(350)        // how fast do you want the lines to transition?
                                   .showLegend(false)       // Hide the legend (would allow users to turn on/off line series)
                                   .showYAxis(false)        // Hide the y-axis
-                                  .showXAxis(false)        // Show the x-axis
+                                  .showXAxis(false);       // Show the x-axis
 
                      chart.tooltip.contentGenerator(tooltipContent);
 
