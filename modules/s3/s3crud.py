@@ -2180,7 +2180,8 @@ class S3CRUD(S3Method):
                     value, error = widget.validate(value,
                                                    requires=field.requires,
                                                    )
-                    validated["value"] = widget.serialize(value)
+                    validated["value"] = widget.serialize(value) \
+                                         if not error else value
                     # Use widget-represent instead of standard represent
                     widget_represent = widget.represent
                 else:
@@ -2189,7 +2190,8 @@ class S3CRUD(S3Method):
                         value, error = s3_validate(table, fname, value, original)
                     except AttributeError:
                         error = "invalid field"
-                    validated["value"] = field.formatter(value)
+                    validated["value"] = field.formatter(value) \
+                                         if not error else value
                     widget_represent = None
 
                 # Handle errors, update the validated item

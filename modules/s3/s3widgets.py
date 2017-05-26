@@ -1500,7 +1500,8 @@ class S3CalendarWidget(FormWidget):
         c = current.calendar if not self.calendar else S3Calendar(self.calendar)
         firstDOW = c.first_dow
 
-        extremes = self.extremes(time_format=time_format)
+        dtformat = separator.join([date_format, time_format])
+        extremes = self.extremes(dtformat=dtformat)
 
         T = current.T
         options = {"calendar": calendar,
@@ -1537,12 +1538,12 @@ class S3CalendarWidget(FormWidget):
                        )
 
     # -------------------------------------------------------------------------
-    def extremes(self, time_format=None):
+    def extremes(self, dtformat=None):
         """
             Compute the minimum/maximum selectable date/time, as well as
             the default time (=the minute-step closest to now)
 
-            @param time_format: the user time format
+            @param dtformat: the user datetime format
 
             @return: a dict {minDateTime, maxDateTime, defaultValue, yearRange}
                      with the min/max options as ISO-formatted strings, and the
@@ -1605,7 +1606,7 @@ class S3CalendarWidget(FormWidget):
             extremes["maxDateTime"] = latest.isoformat()
 
         # Default date/time
-        if self.timepicker and time_format:
+        if self.timepicker and dtformat:
             # Pick a start date/time
             if earliest <= now <= latest:
                 start = now
@@ -1629,8 +1630,8 @@ class S3CalendarWidget(FormWidget):
             # Translate into local time
             if offset:
                 rounded += datetime.timedelta(seconds=offset)
-            # Convert into user format (time part only)
-            default = rounded.strftime(time_format)
+            # Convert into user format
+            default = rounded.strftime(dtformat)
             extremes["defaultValue"] = default
 
         # Year range

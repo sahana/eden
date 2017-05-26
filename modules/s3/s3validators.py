@@ -2698,13 +2698,13 @@ class IS_UTC_DATETIME(Validator):
         T = current.T
         if error_message is None:
             if minimum is None and maximum is None:
-                error_message = T("Date is required!")
+                error_message = T("Date/Time is required!")
             elif minimum is None:
-                error_message = T("Date must be %(max)s or earlier!")
+                error_message = T("Date/Time must be %(max)s or earlier!")
             elif maximum is None:
-                error_message = T("Date must be %(min)s or later!")
+                error_message = T("Date/Time must be %(min)s or later!")
             else:
-                error_message = T("Date must be between %(min)s and %(max)s!")
+                error_message = T("Date/Time must be between %(min)s and %(max)s!")
         if offset_error is None:
             offset_error = T("Invalid UTC offset!")
 
@@ -2762,7 +2762,11 @@ class IS_UTC_DATETIME(Validator):
                                               local=True,
                                               )
             if dt is None:
-                return(value, self.error_message)
+                # Try parsing as date
+                dt_ = self.calendar.parse_date(dtstr)
+                if dt_ is None:
+                    return(value, self.error_message)
+                dt = datetime.datetime.combine(dt_, datetime.datetime.min.time())
         elif isinstance(value, datetime.datetime):
             dt = value
             utc_offset = None
