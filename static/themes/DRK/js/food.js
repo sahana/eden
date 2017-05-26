@@ -1,7 +1,8 @@
 /**
- * jQuery UI Widget for DVR Case Event Registration / Payment Registration
+ * jQuery UI Widget for DRK Food Event Registration
+ * (=> custom variant of dvr.eventRegistration, s3.dvr.js)
  *
- * @copyright 2016 (c) Sahana Software Foundation
+ * @copyright 2017 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -11,12 +12,12 @@
 
     "use strict";
 
-    var eventRegistrationID = 0;
+    var foodRegistrationID = 0;
 
     /**
-     * eventRegistration, instantiate on event registration form
+     * foodRegistration, instantiate on event registration form
      */
-    $.widget('dvr.eventRegistration', {
+    $.widget('dvr.foodRegistration', {
 
         /**
          * Default options
@@ -29,6 +30,7 @@
          *                               false=show profile picture on demand
          * @prop {string} showPictureText - button label for "Show Picture"
          * @prop {string} hidePictureText - button label for "Hide Picture"
+         * @prop {string} selectAllText - button label for "Select All"
          */
         options: {
 
@@ -37,8 +39,10 @@
             ajaxURL: '',
 
             showPicture: true,
+
             showPictureText: 'Show Picture',
-            hidePictureText: 'Hide Picture'
+            hidePictureText: 'Hide Picture',
+            selectAllText: 'Select All'
         },
 
         /**
@@ -46,11 +50,11 @@
          */
         _create: function() {
 
-            this.id = eventRegistrationID;
-            eventRegistrationID += 1;
+            this.id = foodRegistrationID;
+            foodRegistrationID += 1;
 
             // Namespace for events
-            this.eventNamespace = '.eventRegistration';
+            this.eventNamespace = '.foodRegistration';
         },
 
         /**
@@ -64,13 +68,18 @@
             // Hidden input fields
             var form = $(this.element);
 
+            this.eventType = form.find('input[type=hidden][name=event]');
+
             this.flagInfo = form.find('input[type=hidden][name=flags]');
+            this.familyInfo = form.find('input[type=hidden][name=family]');
+            this.blockingInfo = form.find('input[type=hidden][name=intervals]');
+            this.imageURL = form.find('input[type=hidden][name=image]');
+
             this.permissionInfo = form.find('input[type=hidden][name=permitted]');
             this.actionableInfo = form.find('input[type=hidden][name=actionable]');
-            this.eventType = form.find('input[type="hidden"][name="event"]');
-            this.blockingInfo = form.find('input[type="hidden"][name="intervals"]');
-            this.actionDetails = form.find('input[type="hidden"][name="actions"]');
-            this.imageURL = form.find('input[type="hidden"][name="image"]');
+
+            // Submit label
+            this.submitLabel = form.find('.submit-btn').first().val();
 
             // Get blocked events from hidden input
             var intervals = this.blockingInfo.val();
@@ -107,6 +116,16 @@
                 opts.ajax = true;
             }
 
+            // Hide family details if no person-data
+            var hasPersonInfo = $(prefix + '_person__row .controls').text();
+            if (hasPersonInfo) {
+                // Retain the details (showing empty-message)
+                $(prefix + '_details__row').show();
+            } else {
+                // Hide the details if there are no person data
+                $(prefix + '_details__row').hide();
+            }
+
             // Show flag info at start
             this._showFlagInfo();
 
@@ -114,19 +133,8 @@
             this._showProfilePicture();
 
             // Enable styles on details row
-            $(this.element).find(prefix + '_details__row .controls').addClass('has-details');
-
-            // Show action details, if any
-            if (this.actionDetails.length) {
-                var actionData = JSON.parse(this.actionDetails.val());
-                if (actionData.length) {
-                    this._showDetails(true);
-                } else {
-                    this._hideDetails();
-                }
-            } else {
-                this._hideDetails();
-            }
+            $(this.element).find(prefix + '_details__row .controls')
+                           .addClass('has-details');
 
             // Check blocked events at start
             if (!this._checkBlockedEvents()) {
@@ -170,8 +178,14 @@
             // Remove profile picture
             this._removeProfilePicture();
 
-            // Clear action details
+            // Remove family info
+            this._removeFamily();
+
+            // Clear details
             this._clearDetails();
+
+            // Reset submit-button label
+            $('.submit-btn').val(this.submitLabel);
 
             // Send the ajax request
             $.ajaxS3({
@@ -233,6 +247,11 @@
                             self._showProfilePicture();
                         }
 
+                        // Family
+                        var family = data.x || [];
+                        self.familyInfo.val(JSON.stringify(family));
+                        self._showFamily();
+
                         // Update blocked events
                         self.blockedEvents = data.i || {};
                         self.blockingInfo.val(JSON.stringify(self.blockedEvents));
@@ -282,28 +301,35 @@
                 return;
             }
 
-            var input = {'l': label, 't': event},
-                ajaxURL = this.options.ajaxURL,
-                // Don't clear the person info just yet
-                personInfo = $(prefix + '_person__row .controls'),
-                // Show a throbber
-                throbber = $('<div class="inline-throbber">').insertAfter(personInfo),
-                self = this;
+            // Show a throbber
+            var personInfo = $(prefix + '_person__row .controls'),
+                throbber = $('<div class="inline-throbber">').insertAfter(personInfo);
 
-            // Add action data (if any) to request JSON
-            var actionDetails = this.actionDetails;
-            if (actionDetails.length) {
-                actionDetails = actionDetails.val();
-                if (actionDetails) {
-                    input.d = JSON.parse(actionDetails);
-                } else {
-                    input.d = [];
-                }
+            // Collect data for submission
+            var input = {'l': label, 't': event};
+
+            // Check family member selection
+            var family = $('#family-members');
+            if (family.length) {
+
+                // Selecting family members individually
+                var familyIDs = [];
+
+                family.find('.family-member').each(function() {
+                    var $this = $(this),
+                        selected = $this.find('input.member-select').prop('checked');
+                    if (selected) {
+                        var memberID = $this.data('member').l;
+                        if (memberID) {
+                            familyIDs.push(memberID);
+                        }
+                    }
+                });
+                input.x = familyIDs;
             }
 
-            // Add comments to request JSON
-            input.c = $(prefix + 'comments').val();
-
+            var ajaxURL = this.options.ajaxURL,
+                self = this;
             $.ajaxS3({
                 'url': ajaxURL,
                 'type': 'POST',
@@ -357,21 +383,30 @@
             if (this.blockingMessage) {
                 this.blockingMessage.remove();
             }
-            if (info) {
-                // Check the date
-                var message = $('<h6>').addClass('event-registration-blocked')
-                                       .html(info[0]),
-                    date = new Date(info[1]),
-                    now = new Date();
-                if (date > now) {
-                    // Event registration is blocked, show message and return
-                    this.blockingMessage = $('<div>').addClass('small-12-columns')
-                                                     .append(message)
-                                                     .prependTo($('#submit_record__row'));
-                    return false;
+
+            var selectable = true;
+            if ($('#family-members').length) {
+
+                return !!this._updateFamilyStatus();
+
+            } else {
+
+                if (info) {
+                    // Check the date
+                    var message = $('<h6>').addClass('event-registration-blocked')
+                                           .html(info[0]),
+                        date = new Date(info[1]),
+                        now = new Date();
+                    if (date > now) {
+                        // Event registration is blocked for main ID, show message and return
+                        this.blockingMessage = $('<div>').addClass('small-12-columns')
+                                                         .append(message)
+                                                         .prependTo($('#submit_record__row'));
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         },
 
         /**
@@ -413,6 +448,212 @@
         },
 
         /**
+         * Show family members
+         */
+        _showFamily: function() {
+
+            var opts = this.options,
+                family = this.familyInfo,
+                prefix = this.idPrefix,
+                familyContainer = $(prefix + '_family__row .controls').empty();
+
+            if (family.length) {
+                family = JSON.parse(family.val());
+
+                if (family.length) {
+
+                    var table = $('<table id="family-members">').hide(),
+                        trow;
+                    family.forEach(function(member) {
+
+                        var memberInfo = $('<div class="member-info row">');
+                        memberInfo.append($('<div class="medium-4 small-12 columns member-id">' + member.l + '</div>'))
+                                  .append($('<div class="medium-8 small-12 columns member-name">' + member.n + ' (' + member.d + ')</div>'));
+
+                        trow = $('<tr class="family-member">').data('member', member);
+                        trow.append($('<td><input class="member-select" type="checkbox"/></td>'))
+                            .append($('<td class="member-info">').append(memberInfo))
+                            .appendTo(table);
+
+                        var showPictureColumn = $('<td>').appendTo(trow),
+                            showPictureWrapper = $('<div class="member-show-picture">').appendTo(showPictureColumn);
+                        if (member.p) {
+                            $('<button class="tiny secondary button fright member-show-picture" type="button">' + opts.showPictureText + '</button>').appendTo(showPictureWrapper);
+                        }
+                    });
+
+                    // Select-all row
+                    trow = $('<tr class="family-all">');
+                    trow.append($('<td><input class="member-select-all" type="checkbox"/></td>'))
+                        .append($('<td colspan="2">' + opts.selectAllText + '</td>'))
+                        .appendTo(table);
+
+                    table.appendTo(familyContainer).slideDown();
+                }
+            }
+        },
+
+        /**
+         * Update status for family members (selectable or not)
+         *
+         * @returns {integer} - the number of selectable family members
+         */
+        _updateFamilyStatus: function() {
+
+            var family = $('#family-members'),
+                event = this.eventType.val(),
+                selectable = 0,
+                now = new Date();
+
+            family.find('.family-member').each(function() {
+
+                var trow = $(this),
+                    member = trow.data('member'),
+                    rules = member.r,
+                    blocked = false,
+                    message;
+
+                if (rules && rules.hasOwnProperty(event)) {
+
+                    var rule = rules[event],
+                        date = new Date(rule[1]);
+
+                    if (date > now) {
+                        blocked = true;
+                        message = $('<div class="member-message">' + rule[0] + '</div>');
+                    }
+                }
+
+                // => remove blocking-message
+                trow.find('.member-message').remove();
+
+                if (blocked) {
+                    // Event is blocked for this member
+
+                    trow.removeClass('member-selected');
+
+                    trow.find('.member-select').each(function() {
+                        $(this).prop('checked', false)
+                               .prop('disabled', true);
+                    });
+
+                    // => set blocked-class for row
+                    trow.addClass("member-blocked");
+
+                    // => show blocking message
+                    var alertRow = $('<div class="member-message row">'),
+                        alert = $('<div class="columns">').append(message)
+                                                          .appendTo(alertRow);
+                    trow.find('.member-info.row').after(alertRow);
+
+
+                } else {
+
+                    selectable++;
+
+                    // => remove blocked-class for row
+                    trow.removeClass("member-blocked");
+
+                    // => enable and select checkbox
+                    trow.find('.member-select').each(function() {
+                        $(this).prop('disabled', false)
+                               .prop('checked', true);
+                        trow.addClass('member-selected');
+                    });
+                }
+
+            });
+
+            this._updateSelectAll();
+            this._updatePictureButtons();
+
+            return selectable;
+        },
+
+        /**
+         * Update the status of bulk-select checkbox according to
+         * the status of the individual select boxes
+         */
+        _updateSelectAll: function() {
+
+            var selectable = 0,
+                selected = 0,
+                allSelected = true;
+
+            // Count selectable and selected members
+            $('.member-select').each(function() {
+                var $this = $(this);
+                if (!$this.prop('disabled')) {
+                    selectable++;
+                    if (!$this.prop('checked')) {
+                        allSelected = false;
+                    } else {
+                        selected++;
+                    }
+                }
+            });
+
+            // Update select-all checkbox
+            var selectAll = $('.member-select-all');
+            if (!selectable) {
+                selectAll.prop('checked', false)
+                         .prop('disabled', true);
+            } else {
+                selectAll.prop('disabled', false)
+                         .prop('checked', allSelected);
+            }
+
+            // Update submit-button label
+            if ($('.member-select').length) {
+                var submitBtn = $('.submit-btn');
+                submitBtn.val(this.submitLabel + ' (' + selected + ')');
+                if (selected) {
+                    submitBtn.prop('disabled', false);
+                } else {
+                    submitBtn.prop('disabled', true);
+                }
+            }
+        },
+
+        /**
+         * Select/de-select all family members
+         *
+         * @param {boolean} select - true to select, false to de-select
+         */
+        _selectAll: function(select) {
+
+            var selected = 0;
+
+            $('.member-select').each(function() {
+
+                var $this = $(this);
+
+                if (!$this.prop('disabled')) {
+                    if (select) {
+                        $this.prop('checked', true)
+                             .closest('tr.family-member').addClass('member-selected');
+                        selected++;
+                    } else {
+                        $this.prop('checked', false)
+                             .closest('tr.family-member').removeClass('member-selected');
+                    }
+                }
+            });
+
+            this._updateSelectAll();
+        },
+
+        /**
+         * Remove family info
+         */
+        _removeFamily: function() {
+
+            this.familyInfo.val('[]');
+            $(this.idPrefix + '_family__row .controls').empty();
+        },
+
+
+        /**
          * Render a panel to show the profile picture (automatically loads
          * the picture if options.showPicture is true)
          */
@@ -440,6 +681,7 @@
             if (opts.showPicture) {
                 this._togglePicture();
             }
+            this._updatePictureButtons();
         },
 
         /**
@@ -449,6 +691,8 @@
 
             this.imageURL.val('');
             $(this.element).find('.panel.profile-picture').remove();
+
+            this._updatePictureButtons();
         },
 
         /**
@@ -462,13 +706,16 @@
 
             if (container.length) {
                 var imageRow = container.find('.image-row'),
+                    captionRow = container.find('.member-caption'),
                     imageURL = container.data('url'),
                     toggle = container.find('button.toggle-picture');
 
                 if (imageRow.length) {
                     imageRow.remove();
+                    captionRow.hide();
                     toggle.text(opts.showPictureText);
                 } else {
+                    captionRow.show();
                     if (imageURL) {
                         var image = $('<img>').attr('src', imageURL);
                         imageRow = $('<div class="image-row">').append(image);
@@ -476,6 +723,34 @@
                         toggle.text(opts.hidePictureText);
                     }
                 }
+            }
+        },
+
+        /**
+         * Update buttons to show family member pictures:
+         *  - set "showing" class on button if picture is currently shown
+         *  - add caption to picture
+         */
+        _updatePictureButtons: function() {
+
+            var el = $(this.element),
+                container = el.find('.panel.profile-picture'),
+                pictureShown = container.data('url');
+
+            $('button.member-show-picture').removeClass('showing');
+            $('.member-caption').remove();
+
+            if (pictureShown) {
+                $('.family-member').each(function() {
+                    var $this = $(this),
+                        memberInfo = $this.data('member');
+                    if (memberInfo.p == pictureShown) {
+                        $this.find('button.member-show-picture').addClass('showing');
+                        container.find('.button-row')
+                                 .before($('<div class="member-caption">' + memberInfo.n + '</div>'));
+
+                    }
+                });
             }
         },
 
@@ -494,10 +769,6 @@
                 // Hide the details if there are no person data
                 $(prefix + '_details__row').hide();
             }
-
-            // Hide all other details
-            $(prefix + '_date__row').hide();
-            $(prefix + '_comments__row').hide();
         },
 
         /**
@@ -510,10 +781,6 @@
             var prefix = this.idPrefix;
 
             $(prefix + '_details__row').show();
-            if (actionable) {
-                $(prefix + '_date__row').show();
-                $(prefix + '_comments__row').show();
-            }
         },
 
         /**
@@ -528,19 +795,8 @@
                 detailsContainer = $(prefix + '_details__row .controls'),
                 dateContainer = $(prefix + '_date__row .controls');
 
-            // Update the hidden input
-            var actionDetails = this.actionDetails;
-            if (actionDetails.length) {
-                if (data.h !== '') {
-                    actionDetails.val(JSON.stringify(data.h));
-                } else {
-                    actionDetails.val('[]');
-                }
-            }
-
             // Update the visible form fields
             $(prefix + '_details__row .controls').html(data.d);
-            $(prefix + '_date__row .controls').html(data.t);
 
             // Show the form fields
             this._showDetails(actionable);
@@ -562,8 +818,6 @@
 
             // Remove action details, date and comments
             $(prefix + '_details__row .controls').empty();
-            $(prefix + '_date__row .controls').empty();
-            $(prefix + '_comments').val('');
 
             // Remove blocked events and message
             this.blockedEvents = {};
@@ -667,11 +921,18 @@
             // Remove profile picture
             this._removeProfilePicture();
 
+            // Remove family info
+            this._removeFamily();
+
             // Clear details
             this._clearDetails();
 
+            // Reset submit-button label
+            $('.submit-btn').val(this.submitLabel);
+
             // Disable submit
             this._toggleSubmit(false);
+
         },
 
         /**
@@ -785,6 +1046,58 @@
                         break;
                     default:
                         break;
+                }
+            });
+
+            // Family member selection
+            form.delegate('.member-select', 'change' + ns, function() {
+                var $this = $(this),
+                    trow = $this.closest('tr.family-member');
+                if ($this.is(':checked')) {
+                    trow.addClass('member-selected');
+                } else {
+                    trow.removeClass('member-selected');
+                }
+                self._updateSelectAll();
+            });
+            form.delegate('.member-info', 'click' + ns, function(e) {
+                e.preventDefault();
+                var checkbox = $(this).closest('tr.family-member')
+                                      .find('.member-select').first();
+                if (!checkbox.prop('disabled')) {
+                    checkbox.prop('checked', !checkbox.prop('checked')).change();
+                }
+                return false;
+            });
+
+            // Family member bulk-selection
+            form.delegate('.member-select-all', 'change' + ns, function() {
+                if ($(this).is(':checked')) {
+                    self._selectAll(true);
+                } else {
+                    self._selectAll(false);
+                }
+            });
+            form.delegate('tr.family-all', 'click' + ns, function(e) {
+                if (!$(e.target).hasClass('member-select-all')) {
+                    e.preventDefault();
+                    var checkbox = $(this).find('.member-select-all').first();
+                    if (!checkbox.prop('disabled')) {
+                        checkbox.prop('checked', !checkbox.prop('checked')).change();
+                    }
+                    return false;
+                }
+            });
+
+            // Family member show picture
+            form.delegate('button.member-show-picture', 'click' + ns, function() {
+                var member = $(this).closest('.family-member'),
+                    memberInfo = member.data('member');
+                if (memberInfo.p) {
+                    self.imageURL.val(memberInfo.p);
+                    self._showProfilePicture();
+                } else {
+                    self._removeProfilePicture();
                 }
             });
 

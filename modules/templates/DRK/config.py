@@ -863,7 +863,7 @@ def config(settings):
     # Issue a "not checked-in" warning in case event registration
     settings.dvr.event_registration_checkin_warning = True
     # Exclude FOOD events from event registration
-    #settings.dvr.event_registration_exclude_codes = ("FOOD*",)
+    settings.dvr.event_registration_exclude_codes = ("FOOD*",)
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -2366,6 +2366,8 @@ def config(settings):
             Custom onaccept-method for case events
                 - cascade FOOD events to other members of the same case group
 
+            @todo: currently unused => remove?
+
             @param form: the Form
         """
 
@@ -2494,28 +2496,19 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_event_resource(r, tablename):
 
-        resource = current.s3db.resource("dvr_case_event")
+        s3db = current.s3db
 
-        # Get the current create_onaccept setting
-        hook = "create_onaccept"
-        callback = resource.get_config(hook)
+        from food import DRKRegisterFoodEvent
+        s3db.set_method("dvr", "case_event",
+                        method = "register_food",
+                        action = DRKRegisterFoodEvent,
+                        )
 
-        # Fall back to generic onaccept
-        if not callback:
-            hook = "onaccept"
-            callback = resource.get_config(hook)
-
-        # Extend with custom onaccept
-        custom_onaccept = case_event_create_onaccept
-        if callback:
-            if isinstance(callback, (tuple, list)):
-                if custom_onaccept not in callback:
-                    callback = list(callback) + [custom_onaccept]
-            else:
-                callback = [callback, custom_onaccept]
-        else:
-            callback = custom_onaccept
-        resource.configure(**{hook: callback})
+        #s3db.add_custom_callback("dvr_case_event",
+        #                         "onaccept",
+        #                         case_event_create_onaccept,
+        #                         method = "create",
+        #                         )
 
     settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
     # -------------------------------------------------------------------------
@@ -2623,7 +2616,7 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.method == "register":
+            if r.method in ("register", "register_food"):
                 from s3 import S3CustomController
                 S3CustomController._view("DRK", "register_case_event.html")
             return output

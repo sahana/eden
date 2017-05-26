@@ -160,6 +160,15 @@ body.rtl {
     padding: 0.2rem 0.5rem;
     margin: 0.2rem 0.6rem;
 }
+.event-type-name {
+    font-size: 1.1rem;
+    padding: 0.3rem;
+}
+.event-type-name.placeholder {
+    font-size: 0.8rem;
+    background-color: #fff0f0;
+    border: 2px solid red;
+}
 .check-in-warning {
     color: red;
     font-weight: bold;
@@ -200,6 +209,59 @@ body.rtl {
     .fa {
         color: #B0B0B0;
     }
+}
+
+// Food Registration UI
+#case_event_family__row .controls {
+    width: 100%;
+}
+#family-members {
+    width: 100%;
+    border-collapse: collapse;
+    div.member-show-picture {
+        height: 2.7rem;
+    }
+    .member-id {
+        color: #808080;
+        font-size: 0.8rem;
+        margin-bottom: 0.1rem;
+    }
+    .member-message {
+        margin: 0;
+        color: #e0767a;
+        font-size: 0.8rem;
+        font-style: normal;
+        .columns {
+            padding: 0;
+        }
+    }
+    .family-member {
+        td {
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+        }
+        &.member-blocked td {
+            background-color: #f6f6f6;
+            .member-id, .member-name {
+                color: #b0b0b0;
+            }
+        }
+    }
+    .family-all {
+        td {
+            background-color: #f0f8f6;
+            color: #505050;
+            font-style: italic;
+            height: 2.7rem;
+        }
+    }
+    button.member-show-picture.showing {
+        border: 1px solid black;
+    }
+}
+.member-caption {
+    padding: 0.2rem 0;
+    font-size: 1rem;
 }
 
 // Address fields in beneficiary form

@@ -5661,10 +5661,13 @@ class DVRRegisterCaseEvent(S3Method):
 
                     {l: the actual PE label (to update the input field),
                      p: the person details,
+                     d: the family details,
                      f: [{n: the flag name
                           i: the flag instructions
                           },
                          ...],
+                     b: profile picture URL,
+                     i: {<event_code>: [<msg>, <blocked_until_datetime>]},
 
                      s: whether the action is permitted or not
 
@@ -5851,11 +5854,13 @@ class DVRRegisterCaseEvent(S3Method):
         # Event type header
         if event_type:
             event_type_name = T(event_type.name)
+            name_class = "event-type-name"
         else:
-            event_type_name = current.messages["NONE"]
+            event_type_name = T("Please select an event type")
+            name_class = "event-type-name placeholder"
 
         event_type_header = DIV(H4(SPAN(T(event_type_name),
-                                        _class = "event-type-name",
+                                        _class = name_class,
                                         ),
                                    SPAN(ICON("settings"),
                                         _class = "event-type-setting",
@@ -6067,10 +6072,15 @@ class DVRRegisterCaseEvent(S3Method):
                 limit = event_type.max_per_day
 
                 if number >= limit:
-                    msg = T("%(event)s already registered %(number)s times today") % \
-                            {"event": T(event_type.name),
-                             "number": number,
-                             }
+                    if number > 1:
+                        msg = T("%(event)s already registered %(number)s times today") % \
+                                {"event": T(event_type.name),
+                                 "number": number,
+                                 }
+                    else:
+                        msg = T("%(event)s already registered today") % \
+                                {"event": T(event_type.name),
+                                 }
                     output[tid] = (msg, next_day)
 
         # Check minimum intervals
