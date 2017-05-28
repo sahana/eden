@@ -863,7 +863,7 @@ def config(settings):
     # Issue a "not checked-in" warning in case event registration
     settings.dvr.event_registration_checkin_warning = True
     # Exclude FOOD events from event registration
-    settings.dvr.event_registration_exclude_codes = ("FOOD*",)
+    #settings.dvr.event_registration_exclude_codes = ("FOOD*",)
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -2625,6 +2625,36 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_event_controller = customise_dvr_case_event_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_event_type_resource(r, tablename):
+
+        T = current.T
+        s3db = current.s3db
+
+        from s3 import S3SQLCustomForm, \
+                       S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm("code",
+                                    "name",
+                                    "is_inactive",
+                                    "is_default",
+                                    "role_required",
+                                    "appointment_type_id",
+                                    "min_interval",
+                                    "max_per_day",
+                                    S3SQLInlineLink("excluded_by",
+                                                    field = "excluded_by_id",
+                                                    label = T("Not Combinable With"),
+                                                    ),
+                                    "presence_required",
+                                    )
+
+        s3db.configure("dvr_case_event_type",
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_dvr_case_event_type_resource = customise_dvr_case_event_type_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_site_activity_resource(r, tablename):

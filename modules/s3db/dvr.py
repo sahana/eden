@@ -3712,6 +3712,20 @@ class DVRCaseEventModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Components
+        self.add_components(tablename,
+                            dvr_case_event = {"name": "excluded_by",
+                                              "link": "dvr_case_event_exclusion",
+                                              "joinby": "type_id",
+                                              "key": "excluded_by_id",
+                                              },
+                            )
+
+        # Table Configuration
+        configure(tablename,
+                  onaccept = self.case_event_type_onaccept,
+                  )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Event Type"),
@@ -3725,11 +3739,6 @@ class DVRCaseEventModel(S3Model):
             msg_record_deleted = T("Event Type deleted"),
             msg_list_empty = T("No Event Types currently defined"),
         )
-
-        # Table Configuration
-        configure(tablename,
-                  onaccept = self.case_event_type_onaccept,
-                  )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
@@ -3746,6 +3755,21 @@ class DVRCaseEventModel(S3Model):
                                                               tooltip = T("Create a new event type"),
                                                               ),
                                         )
+
+        # ---------------------------------------------------------------------
+        # Case Event Types, Impermissible Combinations
+        #
+        tablename = "dvr_case_event_exclusion"
+        define_table(tablename,
+                     event_type_id(comment = None,
+                                   ondelete = "CASCADE",
+                                   ),
+                     event_type_id("excluded_by_id",
+                                   comment = None,
+                                   label = T("Not Combinable With"),
+                                   ondelete = "CASCADE",
+                                   ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Case Events
@@ -6015,6 +6039,12 @@ class DVRRegisterCaseEvent(S3Method):
         s3db = current.s3db
 
         now = current.request.utcnow
+        day_start = now.replace(hour=0,
+                                minute=0,
+                                second=0,
+                                microsecond=0,
+                                )
+        next_day = day_start + datetime.timedelta(days=1)
 
         output = {}
 
@@ -6024,6 +6054,49 @@ class DVRRegisterCaseEvent(S3Method):
         # Get event types to check
         event_types = self.get_event_types()
 
+        # Check for impermissible combinations
+        etable = s3db.dvr_case_event_exclusion
+        query = (table.person_id == person_id) & \
+                (table.date >= day_start) & \
+                (table.deleted == False) & \
+                (etable.excluded_by_id == table.type_id) & \
+                (etable.deleted == False)
+        if type_id and event_types.get(type_id):
+            query &= etable.type_id == type_id
+
+        rows = db(query).select(etable.type_id,
+                                etable.excluded_by_id,
+                                )
+        excluded = {}
+        for row in rows:
+            tid = row.type_id
+            if tid in excluded:
+                excluded[tid].append(row.excluded_by_id)
+            else:
+                excluded[tid] = [row.excluded_by_id]
+
+        for tid, excluded_by_ids in excluded.items():
+            event_type = event_types.get(tid)
+            if not event_type:
+                continue
+            excluded_by_names = []
+            seen = set()
+            for excluded_by_id in excluded_by_ids:
+                if excluded_by_id in seen:
+                    continue
+                else:
+                    seen.add(excluded_by_id)
+                excluded_by_type = event_types.get(excluded_by_id)
+                if not excluded_by_type:
+                    continue
+                excluded_by_names.append(s3_str(T(excluded_by_type.name)))
+            if excluded_by_names:
+                msg = T("%(event)s already registered today, not combinable") % \
+                        {"event": ", ".join(excluded_by_names)
+                         }
+                output[tid] = (msg, next_day)
+
+        # Helper function to build event type sub-query
         def type_query(items):
             if len(items) == 1:
                 return (event_type_id == items[0])
@@ -6036,22 +6109,20 @@ class DVRRegisterCaseEvent(S3Method):
         q = None
         if type_id:
             event_type = event_types.get(type_id)
-            if event_type and event_type.max_per_day:
+            if event_type and \
+               event_type.max_per_day and \
+               type_id not in output:
                 q = type_query((type_id,))
         else:
             check = [tid for tid, row in event_types.items()
-                     if row.max_per_day and tid != "_default"
+                     if row.max_per_day and \
+                        tid != "_default" and tid not in output
                      ]
             q = type_query(check)
 
         if q is not None:
 
             # Get number of events per type for this person today
-            day_start = now.replace(hour=0,
-                                    minute=0,
-                                    second=0,
-                                    microsecond=0,
-                                    )
             cnt = table.id.count()
             query = (table.person_id == person_id) & q & \
                     (table.date >= day_start) & \
@@ -6062,7 +6133,6 @@ class DVRRegisterCaseEvent(S3Method):
                                     )
 
             # Check limit
-            next_day = day_start + datetime.timedelta(days=1)
             for row in rows:
 
                 number = row[cnt]

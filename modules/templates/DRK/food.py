@@ -426,6 +426,12 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
         s3db = current.s3db
 
         now = current.request.utcnow
+        day_start = now.replace(hour=0,
+                                minute=0,
+                                second=0,
+                                microsecond=0,
+                                )
+        next_day = day_start + datetime.timedelta(days=1)
 
         output = {}
 
@@ -436,8 +442,68 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
         # Get event types to check
         event_types = self.get_event_types()
 
+        # Check impermissible combinations
+        etable = s3db.dvr_case_event_exclusion
+        query = (table.person_id.belongs(person_ids)) & \
+                (table.date >= day_start) & \
+                (table.deleted == False) & \
+                (etable.excluded_by_id == table.type_id) & \
+                (etable.deleted == False)
+
+        rows = db(query).select(table.person_id,
+                                etable.type_id,
+                                etable.excluded_by_id,
+                                )
+        collisions = {}
+        for row in rows:
+            event = row.dvr_case_event
+            exclusion = row.dvr_case_event_exclusion
+
+            pid = event.person_id
+            if pid in collisions:
+                excluded = collisions[pid]
+            else:
+                excluded = collisions[pid] = {}
+
+            tid = exclusion.type_id
+            if tid in excluded:
+                excluded[tid].append(exclusion.excluded_by_id)
+            else:
+                excluded[tid] = [exclusion.excluded_by_id]
+
+        for pid, excluded in collisions.items():
+
+            if pid not in output:
+                rules = output[pid] = {}
+            else:
+                rules = output[pid]
+
+            for tid, excluded_by_ids in excluded.items():
+
+                event_type = event_types.get(tid)
+                if not event_type:
+                    continue
+
+                excluded_by_names = []
+                seen = set()
+                for excluded_by_id in excluded_by_ids:
+                    if excluded_by_id in seen:
+                        continue
+                    else:
+                        seen.add(excluded_by_id)
+                    excluded_by_type = event_types.get(excluded_by_id)
+                    if not excluded_by_type:
+                        continue
+                    excluded_by_names.append(s3_str(T(excluded_by_type.name)))
+
+                if excluded_by_names:
+                    msg = T("%(event)s already registered today, not combinable") % \
+                            {"event": ", ".join(excluded_by_names)
+                             }
+                    rules[tid] = (msg, next_day)
+
+        # Helper function to build event type sub-query
         def type_query(items):
-            """ Helper to build the event type query """
             if len(items) == 1:
                 return (event_type_id == items[0])
             elif items:
@@ -453,11 +519,6 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
         if q is not None:
 
             # Get number of events per type and person today
-            day_start = now.replace(hour=0,
-                                    minute=0,
-                                    second=0,
-                                    microsecond=0,
-                                    )
             cnt = table.id.count()
             query = (table.person_id.belongs(person_ids)) & q & \
                     (table.date >= day_start) & \
@@ -469,7 +530,6 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
                                     )
 
             # Check limit
-            next_day = day_start + datetime.timedelta(days=1)
             for row in rows:
 
                 number = row[cnt]
@@ -481,6 +541,9 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
                     rules = output[pid]
 
                 tid = row[event_type_id]
+                if tid in rules:
+                    continue
+
                 event_type = event_types[tid]
                 limit = event_type.max_per_day
 
