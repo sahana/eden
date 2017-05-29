@@ -336,6 +336,8 @@
                 'dataType': 'json',
                 'contentType': 'application/json; charset=utf-8',
                 'data': JSON.stringify(input),
+                'retryLimit': 0,
+                'timeout': 30000,
                 'success': function(data) {
 
                     // Remove the throbber
