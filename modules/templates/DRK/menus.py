@@ -80,7 +80,7 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 MM("Food Distribution Statistics", c="dvr", f="case_event",
                    m = "report",
-                   vars = {"code": "FOOD"},
+                   vars = {"code": "FOOD*"},
                    restrict = ("FOOD_STATS",),
                    # Show only if not authorized to see "Residents"
                    check = lambda this: not this.preceding()[-3].check_permission(),
@@ -280,7 +280,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Food Distribution Statistics", c="dvr", f="case_event",
                           m = "report",
                           restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD", "SECURITY_HEAD", "RP"),
-                          vars = {"code": "FOOD"},
+                          vars = {"code": "FOOD*"},
                           ),
                         ),
                     M("Activities", f="case_activity")(

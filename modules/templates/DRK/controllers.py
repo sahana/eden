@@ -314,7 +314,7 @@ class surplus_meals(S3CustomController):
 
         def prep(r):
 
-            FOOD = "FOOD"
+            SURPLUS_MEALS = "SURPLUS-MEALS"
 
             T = current.T
             db = current.db
@@ -322,18 +322,18 @@ class surplus_meals(S3CustomController):
 
             resource = r.resource
 
-            # Set default FOOD event type
+            # Set default SURPLUS_MEALS event type
             ttable = s3db.dvr_case_event_type
-            query = (ttable.code == FOOD) & \
+            query = (ttable.code == SURPLUS_MEALS) & \
                     (ttable.deleted != True)
             event_type = db(query).select(ttable.id,
                                           limitby = (0, 1),
                                           ).first()
             if not event_type:
-                r.error("No event type with code %s defined" % FOOD)
+                r.error(400, "No event type with code %s defined" % SURPLUS_MEALS)
             event_type_id = event_type.id
 
-            # Filter to FOOD events without person_id
+            # Filter to SURPLUS_MEALS events without person_id
             query = (FS("type_id") == event_type_id) & \
                     (FS("person_id") == None)
             resource.add_filter(query)

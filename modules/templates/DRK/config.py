@@ -862,8 +862,8 @@ def config(settings):
     settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
     # Issue a "not checked-in" warning in case event registration
     settings.dvr.event_registration_checkin_warning = True
-    # Exclude FOOD events from event registration
-    #settings.dvr.event_registration_exclude_codes = ("FOOD*",)
+    # Exclude FOOD and SURPLUS-MEALS events from event registration
+    settings.dvr.event_registration_exclude_codes = ("FOOD*", "SURPLUS-MEALS")
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -2523,14 +2523,22 @@ def config(settings):
 
         if event_code:
             ttable = current.s3db.dvr_case_event_type
-            query = (ttable.code == event_code) & \
-                    (ttable.deleted != True)
-            row = current.db(query).select(ttable.id,
-                                           limitby = (0, 1),
-                                           ).first()
-            if row:
+
+            if event_code[-1] == "*":
+                query = (ttable.code.like("%s%%" % event_code[:-1])) & \
+                        (ttable.is_inactive == False)
+                if event_code[:-1] == "FOOD":
+                    # Include SURPLUS-MEALS events
+                    query |= (ttable.code == "SURPLUS-MEALS")
+            else:
+                query = (ttable.code == event_code)
+            query &= (ttable.deleted == False)
+
+            rows = current.db(query).select(ttable.id)
+            event_ids = [row.id for row in rows]
+            if event_ids:
                 s3_set_default_filter("~.type_id",
-                                      row.id,
+                                      event_ids,
                                       tablename = "dvr_case_event",
                                       )
 
@@ -2581,13 +2589,20 @@ def config(settings):
                                     )
 
                 # Pivot axis options
-                report_axes = [(T("Date"), "date_day"),
+                report_axes = ["type_id",
+                               (T("Date"), "date_day"),
                                (T("Time of Day"), "date_tod"),
-                               "type_id",
                                "created_by",
                                ]
 
                 # Configure report options
+                code = r.get_vars.get("code")
+                if code and code[-1] != "*":
+                    # Single event type => group by ToD (legacy)
+                    default_cols = "date_tod"
+                else:
+                    # Group by type (standard behavior)
+                    default_cols = "type_id"
                 report_options = {
                     "rows": report_axes,
                     "cols": report_axes,
@@ -2595,7 +2610,7 @@ def config(settings):
                              #(T("Number of Events"), "count(id)"),
                              ],
                     "defaults": {"rows": "date_day",
-                                 "cols": "date_tod",
+                                 "cols": default_cols,
                                  "fact": "sum(quantity)",
                                  "totals": True,
                                  },
@@ -3569,12 +3584,14 @@ class DRKCaseEventDateAxes(object):
                 date = date.replace(tzinfo=self.UTC).astimezone(self.LOCAL)
                 hour = date.time().hour
 
-                if 7 <= hour < 11:
-                    tod = "07:00 - 11:00"
-                elif 11 <= hour < 15:
-                    tod = "11:00 - 15:00"
+                if 7 <= hour < 13:
+                    tod = "07:00 - 13:00"
+                elif 13 <= hour < 17:
+                    tod = "13:00 - 17:00"
+                elif 17 <= hour < 20:
+                    tod = "17:00 - 20:00"
                 else:
-                    tod = "15:00 - 07:00"
+                    tod = "20:00 - 07:00"
         else:
             tod = "-"
         return tod

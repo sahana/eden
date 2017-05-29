@@ -15,6 +15,12 @@
                                                      true|false
          Minimum Interval............number..........minimum interval (hours)
          Maximum per Day.............integer.........maximum number per day
+         Excluded By.................string..........comma-separated list of event
+                                                     type codes that exclude the
+                                                     registration of this event type
+                                                     for the same person on the same
+                                                     day (NB this will not remove
+                                                     any existing exclusion rules)
          Presence required...........string..........requires personal presence
                                                      true|false
          Comments....................string..........Comments
@@ -36,6 +42,10 @@
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
 
         <resource name="dvr_case_event_type">
+
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('TYPE:', $Code)"/>
+            </xsl:attribute>
 
             <data field="code">
                 <xsl:value-of select="$Code"/>
@@ -75,6 +85,7 @@
                 </xsl:attribute>
             </data>
 
+            <!-- Minimum time interval between occurences -->
             <xsl:variable name="MinimumInterval" select="col[@field='Minimum Interval']/text()"/>
             <xsl:if test="$MinimumInterval!=''">
                 <data field="min_interval">
@@ -82,6 +93,7 @@
                 </data>
             </xsl:if>
 
+            <!-- Maximum number of occurences per day -->
             <xsl:variable name="MaxPerDay" select="col[@field='Maximum per Day']/text()"/>
             <xsl:if test="$MaxPerDay!=''">
                 <data field="max_per_day">
@@ -89,8 +101,15 @@
                 </data>
             </xsl:if>
 
-            <!-- Requires personal presence -->
+            <!-- Exclusions through other event types -->
+            <xsl:variable name="ExcludedBy" select="col[@field='Excluded By']/text()"/>
+            <xsl:if test="$ExcludedBy!=''">
+                <xsl:call-template name="Exclusions">
+                    <xsl:with-param name="ExcludedBy" select="$ExcludedBy"/>
+                </xsl:call-template>
+            </xsl:if>
 
+            <!-- Requires personal presence -->
             <xsl:variable name="presence_required" select="col[@field='Presence required']/text()"/>
             <data field="presence_required">
                 <xsl:attribute name="value">
@@ -110,6 +129,47 @@
             </data>
 
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Exclusions">
+
+        <xsl:param name="ExcludedBy"/>
+
+        <xsl:choose>
+            <xsl:when test="contains($ExcludedBy,',')">
+                <xsl:variable name="head" select="normalize-space(substring-before($ExcludedBy, ','))"/>
+                <xsl:call-template name="Exclusion">
+                    <xsl:with-param name="Code" select="$head"/>
+                </xsl:call-template>
+                <xsl:call-template name="Exclusions">
+                    <xsl:with-param name="ExcludedBy" select="substring-after($ExcludedBy, ',')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="Exclusion">
+                    <xsl:with-param name="Code" select="$ExcludedBy"/>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Exclusion">
+
+        <xsl:param name="Code"/>
+
+        <xsl:if test="//row[col[@field='Code']/text()=$Code]">
+            <resource name="dvr_case_event_exclusion" alias="excluded_by">
+                <reference field="excluded_by_id" resource="dvr_case_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('TYPE:', $Code)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

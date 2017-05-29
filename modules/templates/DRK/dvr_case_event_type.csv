@@ -1,9 +1,3 @@
-Code,Name,Inactive,Default,Minimum Interval,Maximum per Day,Presence required,Comments
-SEEN,Seen,false,true,,,true,Person has been registered at a checkpoint
-FOOD,Food Distribution,true,false,1.0,3,false,Person has received food distribution
-SUPM,Supermarket,false,false,,,true,Person has been present at the supermarket
-FOOD-1,Breakfast,false,false,1.0,1,,
-FOOD-2,Lunch,false,false,1.0,1,,
-FOOD-3,Supper,false,false,1.0,1,,
-FOOD-IFTAR,Iftar (Ramadan),false,false,1.0,1,,
-FOOD-SUHUR,Suhur (Ramadan),true,false,1.0,1,,
+Code,Name,Inactive,Default,Minimum Interval,Maximum per Day,Excluded By,Presence required,Comments
+SEEN,Seen,false,true,,,,true,Person has been registered at a checkpoint
+SUPM,Supermarket,false,false,,,,true,Person has been present at the supermarket

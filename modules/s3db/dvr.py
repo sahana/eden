@@ -3771,6 +3771,14 @@ class DVRCaseEventModel(S3Model):
                                    ),
                      *s3_meta_fields())
 
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("type_id",
+                                                       "excluded_by_id",
+                                                       ),
+                                            ),
+                  )
+
         # ---------------------------------------------------------------------
         # Case Events
         #

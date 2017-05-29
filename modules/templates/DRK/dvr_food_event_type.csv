@@ -1,0 +1,8 @@
+Code,Name,Inactive,Default,Minimum Interval,Maximum per Day,Excluded By,Presence required,Comments
+FOOD,Food Distribution,true,false,1.0,3,,false,Person has received food (legacy event type)
+FOOD-1,Breakfast,false,false,1.0,1,"FOOD-SUHUR,FOOD-IFTAR",false,Person has received breakfast
+FOOD-2,Lunch,false,false,1.0,1,"FOOD-SUHUR,FOOD-IFTAR",false,Person has received lunch
+FOOD-3,Supper,false,false,1.0,1,"FOOD-SUHUR,FOOD-IFTAR",false,Person has received supper
+FOOD-IFTAR,Iftar (Ramadan),false,false,1.0,1,"FOOD-1,FOOD-2,FOOD-3",false,Person has participated in iftar
+FOOD-SUHUR,Suhur (Ramadan),true,false,1.0,1,"FOOD-1,FOOD-2,FOOD-3",false,Person has participated in suhur
+SURPLUS-MEALS,Surplus Meals,false,false,,,,false,Special event type to register surplus meals
