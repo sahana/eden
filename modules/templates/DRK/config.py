@@ -894,14 +894,23 @@ def config(settings):
         etable = s3db.dvr_case_event
 
         # Get event type ID
-        query = (ttable.code == code) & \
-                (ttable.deleted != True)
-        row = db(query).select(ttable.id, limitby=(0, 1)).first()
-        if row:
-            type_id = row.id
+        if code[-1] == "*":
+            # Prefix
+            query = (ttable.code.like("%s%%" % code[:-1]))
+            limitby = None
         else:
-            # No such event
+            query = (ttable.code == code)
+            limitby = (0, 1)
+        query &= (ttable.deleted == False)
+
+        rows = db(query).select(ttable.id, limitby=limitby)
+        if not rows:
+            # No such event type
             return set()
+        elif limitby:
+            type_query = (etable.type_id == rows.first().id)
+        else:
+            type_query = (etable.type_id.belongs(set(row.id for row in rows)))
 
         # Determine deadline
         now = current.request.utcnow
@@ -913,10 +922,10 @@ def config(settings):
 
         # Join only events after the deadline
         left = etable.on((etable.person_id == ctable.person_id) & \
-                         (etable.type_id == type_id) & \
+                         type_query & \
                          (etable.date != None) & \
                          (etable.date >= then) & \
-                         (etable.deleted != True))
+                         (etable.deleted == False))
 
         # ...and then select the rows which don't have any
         query = (ctable.archived == False) & \

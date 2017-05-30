@@ -273,7 +273,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Food Distribution overdue", c=("dvr", "pr"), f="person",
                           restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
-                          vars = {"closed": "0", "overdue": "food"},
+                          vars = {"closed": "0", "overdue": "FOOD*"},
                           ),
                         M("Residents Reports", c="dvr", f="site_activity",
                           ),
