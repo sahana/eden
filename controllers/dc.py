@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-    Data Collection
+    Data Collection:
+    - a front-end UI to manage Assessments which uses the Dynamic Tables back-end
 """
 
 module = request.controller
@@ -19,29 +20,44 @@ def index():
 
 # -----------------------------------------------------------------------------
 def template():
-    """ Manage Data Collection Templates """
+    """ RESTful CRUD controller """
 
     def prep(r):
 
         if r.record and r.component_name == "question":
 
-            # Allow adding of new questions if they are not linked
-            # to this template yet
-            qtable = s3db.dc_question
-            ltable = s3db.dc_template_question
-            left = ltable.on((ltable.question_id == qtable.id) & \
-                             (ltable.deleted != True))
-            query = (qtable.deleted != True) & \
-                    ((ltable.template_id != r.id) | \
-                     (ltable.template_id == None))
+            # If the template has responses then we should make the Questions read-only
+            # @ToDo: Allow Editing unanswered questions?
+            rtable = s3db.dc_response
+            query = (rtable.template_id == r.id) & \
+                    (rtable.deleted == False)
+            if db(query).select(rtable.id,
+                                limitby=(0, 1)
+                                ):
+                s3db.configure("dc_question",
+                               deletable = False,
+                               editable = False,
+                               )
+            else:
+                # Sections for this template only
+                f = s3db.dc_question.section_id
+                f.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(db, "dc_section.id",
+                                          f.represent,
+                                          filterby="template_id",
+                                          filter_opts=[r.id],
+                                          ))
 
-            # Restrict field options accordingly
-            db = current.db
-            field = ltable.question_id
-            field.requires = IS_ONE_OF(db(query),
-                                       "dc_question.id",
-                                       field.represent,
-                                       left=left)
+                # Add JS
+                scripts_append = s3.scripts.append
+                if s3.debug:
+                    scripts_append("/%s/static/scripts/tag-it.js" % appname)
+                    scripts_append("/%s/static/scripts/S3/s3.dc.js" % appname)
+                else:
+                    scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
+                    scripts_append("/%s/static/scripts/S3/s3.dc.min.js" % appname)
+                # Add CSS
+                s3.stylesheets.append("plugins/jquery.tagit.css")
 
         return True
     s3.prep = prep
@@ -50,122 +66,264 @@ def template():
 
 # -----------------------------------------------------------------------------
 def question():
-    """ Manage Data Collection Questions """
-
-    def prep(r):
-        record = r.record
-        if record and r.component_name == "question_l10n":
-            ttable = r.component.table
-            if r.method != "update":
-                ttable.question.default = record.question
-                ttable.options.default = record.options
-
-            # Remove language options for which we already have
-            # a translation of this question
-            requires = ttable.language.requires
-            if isinstance(requires, IS_ISO639_2_LANGUAGE_CODE):
-                all_options = dict(requires.language_codes())
-                selectable = requires._select
-                if not selectable:
-                    selectable = all_options
-                selectable = dict(selectable)
-                query = (ttable.question_id == r.id) & \
-                        (ttable.deleted != True)
-                if r.component_id:
-                    query &= (ttable.id != r.component_id)
-                rows = db(query).select(ttable.language)
-                for row in rows:
-                    selectable.pop(row.language, None)
-                if len(selectable) == 0 or \
-                    not any(opt in all_options for opt in selectable):
-                    # No more languages to translate into
-                    # => hide create form
-                    r.component.configure(insertable = False)
-                requires._select = selectable
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller(rheader = s3db.dc_rheader)
-
-# -----------------------------------------------------------------------------
-def collection():
-    """ Manage Data Collections """
-
-    def prep(r):
-
-        if r.record and r.component_name == "answer":
-
-            # Allow only unanswered questions
-            atable = s3db.dc_answer
-            qtable = s3db.dc_question
-            left = [atable.on((atable.question_id == qtable.id) & \
-                              (atable.collection_id == r.id) & \
-                              (atable.deleted != True))]
-            if r.component_id:
-                query = (atable.id == None) | (atable.id == r.component_id)
-            else:
-                query = (atable.id == None)
-
-            # Allow only questions from the selected template
-            template_id = r.record.template_id
-            if template_id:
-                ltable = s3db.dc_template_question
-                left.append(ltable.on((ltable.question_id == qtable.id) & \
-                                      (ltable.deleted != True)))
-                query &= (ltable.template_id == template_id)
-
-            # Restrict field options accordingly
-            db = current.db
-            field = atable.question_id
-            field.requires = IS_ONE_OF(db(query),
-                                       "dc_question.id",
-                                       field.represent,
-                                       left=left)
-
-            # Hide create form when all questions have been answered
-            if r.method != "update":
-                count = qtable.id.count()
-                row = db(query).select(count,
-                                       left=left,
-                                       limitby=(0, 1)).first()
-                if not row or not row[count]:
-                    r.component.configure(insertable=False)
-
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller(rheader = s3db.dc_rheader)
-
-# -----------------------------------------------------------------------------
-def template_question():
     """
-        RESTful CRUD controller for options.s3json lookups
-        - needed for adding questions to a template
+        RESTful CRUD controller
+        - just used for imports
     """
-
-    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def target():
-    """
-        RESTful CRUD controller
-    """
+    """ RESTful CRUD controller """
 
     # Pre-process
     def prep(r):
         if r.interactive:
-            if r.component_name == "collection":
+            if r.component_name == "response":
                 # Default component values from master record
                 record = r.record
-                table = s3db.dc_collection
+                table = s3db.dc_response
                 table.location_id.default = record.location_id
-                table.template_id.default = record.template_id
-                
+                f = table.template_id
+                f.default = record.template_id
+                f.writable = False
+                f.comment = None
+
+                # Open in native controller (cannot just set native as can't call this 'response')
+                s3db.configure("dc_response",
+                               linkto = lambda record_id: URL(f="respnse", args=[record_id, "read"]),
+                               linkto_update = lambda record_id: URL(f="respnse", args=[record_id, "update"]),
+                               )
+
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.dc_rheader)
+    return s3_rest_controller(rheader = s3db.dc_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def respnse(): # Cannot call this 'response' or it will clobber the global
+    """ RESTful CRUD controller """
+
+    # All templates use the same component name for answers so need to add the right component manually
+    try:
+        response_id = int(request.args(0))
+    except:
+        # Multiple record method
+        pass
+    else:
+        dtable = s3db.s3_table
+        rtable = s3db.dc_response
+        ttable = s3db.dc_template
+        query = (rtable.id == response_id) & \
+                (rtable.template_id == ttable.id) & \
+                (ttable.table_id == dtable.id)
+        template = db(query).select(dtable.name,
+                                    limitby=(0, 1),
+                                    ).first()
+        dtablename = template.name
+        components = {dtablename: {"name": "answer",
+                                   "joinby": "response_id",
+                                   "multiple": False,
+                                   }
+                      }
+        s3db.add_components("dc_response", **components)
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "answer":
+                # CRUD Strings
+                tablename = r.component.tablename
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Create Responses"),
+                    title_display = T("Response Details"),
+                    title_list = T("Responses"),
+                    title_update = T("Edit Response"),
+                    label_list_button = T("List Responses"),
+                    label_delete_button = T("Clear Response"),
+                    msg_record_created = T("Response created"),
+                    msg_record_modified = T("Response updated"),
+                    msg_record_deleted = T("Response deleted"),
+                    msg_list_empty = T("No Responses currently defined"),
+                )
+
+                # Custom Form with Questions & Subheadings sorted correctly
+                from s3 import S3SQLCustomForm
+                crud_fields = []
+                cappend = crud_fields.append
+                template_id = r.record.template_id
+                stable = db.dc_section
+
+                # Extract the Sections
+                query = (stable.template_id == template_id) & \
+                        (stable.deleted == False)
+                sections = db(query).select(stable.id,
+                                            stable.parent,
+                                            stable.name,
+                                            stable.posn,
+                                            distinct = True,
+                                            )
+
+                # Put them into the hierarchy
+                root_sections = {}
+                subsections = {}
+                for section in sections:
+                    parent = section.parent
+                    if parent:
+                        # Store this for next parse
+                        if parent in subsections:
+                            subsections[parent].append(section)
+                        else:
+                            subsections[parent] = [section]
+                    else:
+                        # Root section
+                        root_sections[section.id] = {"id": section.id,
+                                                     "name": section.name,
+                                                     "posn": section.posn,
+                                                     "questions": [],
+                                                     "subsections": {},
+                                                     }
+
+                # Add the subsections
+                subsubsections = {}
+                for parent in subsections:
+                    _subsections = subsections[parent]
+                    if parent in root_sections:
+                        # SubSections
+                        for sub in _subsections:
+                            root_sections[parent]["subsections"][sub.id] = {"id": sub.id,
+                                                                            "name": sub.name,
+                                                                            "posn": sub.posn,
+                                                                            "questions": [],
+                                                                            "subsubsections": {},
+                                                                            }
+                    else:
+                        # SubSubSections - store for next parse
+                        subsubsections[parent] = _subsections
+
+                # Add the subsubsections
+                for parent in subsubsections:
+                    for root in root_sections:
+                        subsections = root_sections[root]["subsections"]
+                        if parent in subsections:
+                            _subsubsections = subsubsections[parent]
+                            for subsub in _subsubsections:
+                                subsections[parent]["subsubsections"][subsub.id] = {"id": subsub.id,
+                                                                                    "name": subsub.name,
+                                                                                    "posn": subsub.posn,
+                                                                                    "questions": [],
+                                                                                    }
+
+                # Add the Questions
+                qtable = s3db.dc_question
+                ftable = db.s3_field
+                query = (qtable.template_id == r.record.template_id) & \
+                        (qtable.deleted == False) & \
+                        (qtable.field_id == ftable.id)
+                left = stable.on(stable.id == qtable.section_id)
+                questions = db(query).select(stable.id,
+                                             qtable.posn,
+                                             ftable.name,
+                                             left = left,
+                                             )
+                root_questions = []
+                for question in questions:
+                    section_id = question["dc_section.id"]
+                    question = {question["dc_question.posn"]: question["s3_field.name"]}
+                    if not section_id:
+                        root_questions.append(question)
+                        continue
+                    if section_id in root_sections:
+                        root_sections[section_id]["questions"].append(question)
+                        continue
+                    for section in root_sections:
+                        if section_id in root_sections[section]["subsections"]:
+                            root_sections[section]["subsections"][section_id]["questions"].append(question)
+                            continue
+                        for subsection in root_sections[section]["subsections"]:
+                            if section_id in root_sections[section]["subsections"][subsection]["subsubsections"]:
+                                root_sections[section]["subsections"][subsection]["subsubsections"][section_id]["questions"].append(question)
+
+                # Sort them by Position
+                root_questions.sort()
+                sections = [{v["posn"]: v} for k, v in root_sections.items()]
+                sections.sort()
+                for s in sections:
+                    section = s[s.items()[0][0]]
+                    subsections = [{v["posn"]: v} for k, v in section["subsections"].items()]
+                    subsections.sort()
+                    section["subsections"] = subsections
+                    section["questions"].sort()
+                    for sub in subsections:
+                        _sub = sub[sub.items()[0][0]]
+                        subsubsections = [{v["posn"]: v} for k, v in _sub["subsubsections"].items()]
+                        subsubsections.sort()
+                        _sub["subsubsections"] = subsubsections
+                        _sub["questions"].sort()
+                        for subsub in subsubsections:
+                            subsub[subsub.items()[0][0]]["questions"].sort()
+
+                # Append questions to the form, with subheadings
+                # 1st add those questions without a section (likely the only questions then)
+                for question in root_questions:
+                    cappend(question["name"])
+                # Next add those questions with a section (likely the only questions then)
+                subheadings = {}
+                for s in sections:
+                    section = s[s.items()[0][0]]
+                    section_name = section["name"]
+                    # 1st add those questions without a subsection
+                    _subheadings = {"fields": [],
+                                    "subheadings": {},
+                                    }
+                    subheadings[section_name] = _subheadings
+                    questions = section["questions"]
+                    for question in questions:
+                        fname = question.items()[0][1]
+                        _subheadings["fields"].append(fname)
+                        cappend(fname)
+                    # Next add those questions in a subsection
+                    subsections = section["subsections"]
+                    for sub in subsections:
+                        _sub = sub[sub.items()[0][0]]
+                        section_name = _sub["name"]
+                        __subheadings = {"fields": [],
+                                         "subheadings": {},
+                                         }
+                        _subheadings["subheadings"][section_name] = __subheadings
+                        questions = _sub["questions"]
+                        for question in questions:
+                            fname = question.items()[0][1]
+                            __subheadings["fields"].append(fname)
+                            cappend(fname)
+                        # Next add those questions in a subsection
+                        subsubsections = _sub["subsubsections"]
+                        for subsub in subsubsections:
+                            _subsub = subsub[subsub.items()[0][0]]
+                            section_name = _subsub["name"]
+                            ___subheadings = {"fields": [],
+                                              "subheadings": {},
+                                              }
+                            __subheadings["subheadings"][section_name] = ___subheadings
+                            questions = _subsub["questions"]
+                            for question in questions:
+                                fname = question.items()[0][1]
+                                ___subheadings["fields"].append(fname)
+                                cappend(fname)
+
+                crud_form = S3SQLCustomForm(*crud_fields)
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               subheadings = subheadings,
+                               )
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("dc", "response",
+                              rheader = s3db.dc_rheader,
+                              )
 
 # END =========================================================================

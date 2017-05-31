@@ -21,7 +21,9 @@ def index_alt():
     # Just redirect to the person list
     s3_redirect_default(URL(f="person"))
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Beneficiaries
+#
 def person():
     """ Persons: RESTful CRUD Controller """
 
@@ -79,6 +81,16 @@ def person():
         else:
             archived = False
             status_opts = s3db.dvr_case_status_filter_opts
+
+            # Set default for dvr_case_effort.person_id and hide it
+            etable = s3db.dvr_case_effort
+            field = etable.person_id
+            field.default = r.record.id
+            field.readable = field.writable = False
+
+            # Set default for dvr_case_effort.human_resource_id
+            field = etable.human_resource_id
+            field.default = auth.s3_logged_in_human_resource()
 
         # Should not be able to delete records in this view
         resource.configure(deletable = False)
@@ -139,6 +151,12 @@ def person():
 
             if not r.component:
 
+                from s3 import S3SQLCustomForm, \
+                               S3SQLInlineComponent, \
+                               S3TextFilter, \
+                               S3OptionsFilter, \
+                               s3_get_filter_opts
+
                 # Expose the "archived"-flag? (update forms only)
                 if r.record and r.method != "read":
                     ctable = s3db.dvr_case
@@ -149,7 +167,6 @@ def person():
                 # NB: this assumes single case per person, must use
                 #     case perspective (dvr/case) for multiple cases
                 #     per person!
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
                                 "dvr_case.organisation_id",
@@ -199,7 +216,6 @@ def person():
                                 )
 
                 # Module-specific filter widgets
-                from s3 import s3_get_filter_opts, S3TextFilter, S3OptionsFilter
                 filter_widgets = [
                     S3TextFilter(["pe_label",
                                   "first_name",
@@ -249,6 +265,7 @@ def person():
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,
                                    )
+
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
 
@@ -271,8 +288,10 @@ def person():
                             field = table[fn]
                             field.writable = False
                             field.comment = None
+
             elif r.component_name == "evaluation":
-                S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+                from s3 import S3SQLInlineComponent
 
                 crud_fields = [#"person_id",
                                #"case_id",
@@ -337,6 +356,26 @@ def person():
     s3.prep = prep
 
     return s3_rest_controller("pr", "person", rheader = s3db.dvr_rheader)
+
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        RESTful controller for autocomplete-searches
+    """
+
+    def prep(r):
+
+        if r.method != "search_ac":
+            return False
+
+        # Filter to persons who have a case registered
+        resource = r.resource
+        resource.add_filter(FS("dvr_case.id") != None)
+        return True
+
+    s3.prep = prep
+
+    return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
 def group_membership():
@@ -436,6 +475,15 @@ def group_membership():
                               rheader = s3db.dvr_rheader,
                               )
 
+# =============================================================================
+# Activities
+#
+def activity():
+    """ Activities: RESTful CRUD Controller """
+
+    return s3_rest_controller(rheader = s3db.dvr_rheader,
+                              )
+
 # -----------------------------------------------------------------------------
 def activity_age_group():
     """ Activity Age Groups: RESTful CRUD Controller """
@@ -449,13 +497,42 @@ def activity_group_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def activity():
-    """ Activities: RESTful CRUD Controller """
+def activity_focus():
+    """ Activity Focuses: RESTful CRUD Controller """
 
-    return s3_rest_controller(rheader = s3db.dvr_rheader,
-                              )
+    return s3_rest_controller()
+
+# =============================================================================
+# Cases
+#
+def case():
+    """ Cases: RESTful CRUD Controller """
+
+    s3db.dvr_case_default_status()
+
+    return s3_rest_controller(rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
+def case_flag():
+    """ Case Flags: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_status():
+    """ Case Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_type():
+    """ Case Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Case Activities
+#
 def case_activity():
     """ Case Activities: RESTful CRUD Controller """
 
@@ -468,7 +545,7 @@ def case_activity():
                        "need_id",
                        "need_details",
                        "emergency",
-                       "referral_details",
+                       "activity_details",
                        "followup",
                        "followup_date",
                        "completed",
@@ -504,7 +581,7 @@ def due_followups():
                        "need_id",
                        "need_details",
                        "emergency",
-                       "referral_details",
+                       "activity_details",
                        "followup_date",
                        "completed",
                        ]
@@ -519,24 +596,77 @@ def due_followups():
     return s3_rest_controller("dvr", "case_activity")
 
 # -----------------------------------------------------------------------------
-def case_flag():
-    """ Case Flags: RESTful CRUD Controller """
+def activity_funding():
+    """ Activity Funding Proposals: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def case_status():
-    """ Case Statuses: RESTful CRUD Controller """
+def provider_type():
+    """ Provider Types for Case Activities: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def case_type():
-    """ Case Types: RESTful CRUD Controller """
+def referral_type():
+    """ Referral Types: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def response_type():
+    """ Response Types: RESTful CRUD Controller """
+
+    def prep(r):
+        field = r.table.parent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % r.tablename,
+                                               field.represent,
+                                               ))
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def termination_type():
+    """ Termination Types: RESTful CRUD Controller """
+
+    def prep(r):
+
+        if settings.get_dvr_activity_use_service_type() and \
+           settings.get_org_services_hierarchical():
+
+            # Limit the selection to root services (case activity
+            # threads are usually per root service type, and all
+            # sub-categories should use a common exit type taxonomy)
+            field = r.table.service_id
+            query = (db.org_service.parent == None)
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(db(query),
+                                                   "org_service.id",
+                                                   field.represent,
+                                                   ))
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def vulnerability_type():
+    """ Vulnerability Types: RESTful CRUD Controller """
+
+    def prep(r):
+        field = r.table.parent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % r.tablename,
+                                               field.represent,
+                                               ))
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Allowance
+#
 def allowance():
     """ Allowances: RESTful CRUD Controller """
 
@@ -615,7 +745,9 @@ def allowance():
                                                 ],
                               )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Appointments
+#
 def case_appointment():
     """ Appointments: RESTful CRUD Controller """
 
@@ -650,15 +782,37 @@ def case_appointment_type():
 
     return s3_rest_controller()
 
+# =============================================================================
+# Case Events
+#
+def case_event():
+    """ Case Event Types: RESTful CRUD Controller """
+
+    def prep(r):
+        if not r.component:
+            list_fields = ["date",
+                           (T("ID"), "person_id$pe_label"),
+                           "person_id",
+                           "type_id",
+                           (T("Registered by"), "created_by"),
+                           "comments",
+                           ]
+            r.resource.configure(list_fields = list_fields,
+                                 )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
-def case():
-    """ Cases: RESTful CRUD Controller """
+def case_event_type():
+    """ Case Event Types: RESTful CRUD Controller """
 
-    s3db.dvr_case_default_status()
+    return s3_rest_controller()
 
-    return s3_rest_controller(rheader = s3db.dvr_rheader)
-
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Needs
+#
 def need():
     """ Needs: RESTful CRUD Controller """
 
@@ -682,7 +836,9 @@ def need():
 
     return s3_rest_controller()
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Notes
+#
 def note():
     """ Notes: RESTful CRUD Controller """
 
@@ -695,18 +851,33 @@ def note():
 
     return s3_rest_controller()
 
-# -----------------------------------------------------------------------------
-def housing():
-    """ Housing: RESTful CRUD Controller for option lookups """
+def note_type():
+    """ Note Types: RESTful CRUD Controller """
 
-    s3.prep = lambda r: r.method == "options" and \
-                        r.representation == "s3json"
+    return s3_rest_controller()
+
+# =============================================================================
+# Household
+#
+def beneficiary_type():
+    """ Beneficiary Types: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def beneficiary_data():
     """ Beneficiary Data: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Economy
+#
+def housing():
+    """ Housing: RESTful CRUD Controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and \
+                        r.representation == "s3json"
 
     return s3_rest_controller()
 
@@ -722,63 +893,9 @@ def income_source():
 
     return s3_rest_controller()
 
-# -----------------------------------------------------------------------------
-def beneficiary_type():
-    """ Beneficiary Types: RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def case_event_type():
-    """ Case Event Types: RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def case_event():
-    """ Case Event Types: RESTful CRUD Controller """
-
-    def prep(r):
-        if not r.component:
-            list_fields = ["date",
-                           (T("ID"), "person_id$pe_label"),
-                           "person_id",
-                           "type_id",
-                           (T("Registered by"), "created_by"),
-                           "comments",
-                           ]
-            r.resource.configure(list_fields = list_fields,
-                                 )
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def activity_funding_reason():
-    """ Activity Funding Reasons: RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def activity_funding():
-    """ Activity Funding Proposals: RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def site_activity():
-    """ Site Activity Reports: RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def evaluation_question():
-    """ RESTful CRUD Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Evaluations
+#
 def evaluation():
     """
         RESTful CRUD Controller
@@ -836,8 +953,22 @@ def evaluation():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def evaluation_question():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def evaluation_data():
     """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Site Activities (in connection with CR module)
+#
+def site_activity():
+    """ Site Activity Reports: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

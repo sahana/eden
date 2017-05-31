@@ -23,6 +23,11 @@
 .ui-widget-header .ui-state-active {
     border-color: #ADA6A0;
 }
+.ui-multiselect-checkboxes li label input {
+    margin-left: 0.2rem;
+    margin-right: 0.3rem;
+}
+
 #list-btn-add {
     float: right;
     margin-right: 1.0rem;
@@ -107,6 +112,17 @@ input.date.hasDatepicker {
 .s3-groupedopts-widget table {
     margin-left: 0;
     margin-bottom: 0.5rem;
+}
+table.s3-groupedopts-widget {
+    td {
+        white-space: nowrap;
+        input {
+            vertical-align: top;
+        }
+        label {
+            white-space: pre-wrap;
+        }
+    }
 }
 
 /* ImageCropWidget */
@@ -220,4 +236,9 @@ h4.profile-sub-header {
 .s3-truncate-less:before {
     font-style: italic;
     content: "...";
+}
+
+/* S3SQLInlineLink read-only list representation */
+ul.s3-inline-link {
+    font-size: inherit;
 }

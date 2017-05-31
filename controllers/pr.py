@@ -10,7 +10,8 @@ resourcename = request.function
 # -----------------------------------------------------------------------------
 # Options Menu (available in all Functions' Views)
 def s3_menu_postp():
-    # @todo: rewrite this for new framework
+    # Unused
+    # @todo: rewrite this for new framework?
     menu_selected = []
     group_id = s3base.s3_get_last_record_id("pr_group")
     if group_id:
@@ -484,6 +485,12 @@ def education_level():
     """ RESTful CRUD controller """
 
     return s3_rest_controller("pr", "education_level")
+
+# -----------------------------------------------------------------------------
+def occupation_type():
+    """ Occupation Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 #def contact():

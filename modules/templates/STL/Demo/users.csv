@@ -1,2 +1,15 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Case,Administrator,case_admin@example.com,eden,CASE_ADMIN,
+Staff,Member,staff@example.com,eden,STAFF/0,Support To Life
+Case Management,Staff,case_management@example.com,eden,CASE_MANAGEMENT/0,Support To Life
+Group Activities,Staff,group_activities@example.com,eden,GROUP_ACTIVITIES/0,Support To Life
+Mental Health,Staff,mental_health@example.com,eden,MENTAL_HEALTH/0,Support To Life
+Adana,Staff,adana_staff@example.com,eden,STAFF,STL Adana
+Adana,Admin,adana_admin@example.com,eden,ORG_ADMIN,STL Adana
+Adana,CaseManager,adana_cm@example.com,eden,CASE_MANAGEMENT,STL Adana
+Adana,Group Activities,adana_ga@example.com,eden,GROUP_ACTIVITIES,STL Adana
+Adana,Mental Health,adana_mh@example.com,eden,MENTAL_HEALTH,STL Adana
+Hatay,Staff,hatay_staff@example.com,eden,STAFF,STL Hatay
+Hatay,Admin,hatay_admin@example.com,eden,ORG_ADMIN,STL Hatay
+Hatay,CaseManager,hatay_cm@example.com,eden,CASE_MANAGEMENT,STL Hatay
+Hatay,Group Activities,hatay_ga@example.com,eden,GROUP_ACTIVITIES,STL Hatay
+Hatay,Mental Health,hatay_mh@example.com,eden,MENTAL_HEALTH,STL Hatay

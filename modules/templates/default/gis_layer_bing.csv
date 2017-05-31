@@ -1,4 +1,4 @@
-Name,Type,Enabled
-Bing Aerial,aerial,False
-Bing Hybrid,hybrid,False
-Bing Road,road,False
+Name,Type,Enabled,Default
+Bing Aerial,aerial,False,
+Bing Hybrid,hybrid,False,
+Bing Road,road,False,

@@ -1,0 +1,13 @@
+First Name,Last Name,Email,Password,Role,Organisation,Language
+FN,Admin,fn_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Bodenseekreis,de
+FN,Staff,fn_staff@example.com,eden,STAFF,DRK Kreisverband Bodenseekreis,de
+KA,Admin,ka_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Karlsruhe,de
+KA,Staff,ka_staff@example.com,eden,STAFF,DRK Kreisverband Karlsruhe,de
+HD,Admin,hd_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rhein-Neckar / Heidelberg,de
+HD,Staff,hd_staff@example.com,eden,STAFF,DRK Kreisverband Rhein-Neckar / Heidelberg,de
+S,Admin,s_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Stuttgart,de
+S,Staff,s_staff@example.com,eden,STAFF,DRK Kreisverband Stuttgart,de
+BL,Admin,bl_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Zolleralb,de
+BL,Staff,bl_staff@example.com,eden,STAFF,DRK Kreisverband Zolleralb,de
+LV,Admin,lv_admin@example.com,eden,ORG_ADMIN,DRK Landesverband Baden-Württemberg,de
+LV,Staff,lv_staff@example.com,eden,STAFF,DRK Landesverband Baden-Württemberg,de

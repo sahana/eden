@@ -147,7 +147,9 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('branch', concat(col[@field='Organisation'], '/',
                                                                                         col[@field='Branch']))[1])]">
                 <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName"></xsl:with-param>
+                    <xsl:with-param name="OrgName">
+                        <xsl:value-of select="col[@field='Organisation']/text()"/>
+                    </xsl:with-param>
                     <xsl:with-param name="BranchName">
                         <xsl:value-of select="col[@field='Branch']/text()"/>
                     </xsl:with-param>
@@ -213,15 +215,15 @@
                 <!-- This is the Branch -->
                 <resource name="org_organisation">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                        <xsl:value-of select="concat($OrgName,$BranchName)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$BranchName"/></data>
                     <!-- Don't create Orgs as Branches of themselves -->
-                    <xsl:if test="col[@field='Organisation']!=$BranchName">
+                    <xsl:if test="$OrgName!=$BranchName">
                         <resource name="org_organisation_branch" alias="parent">
                             <reference field="organisation_id" resource="org_organisation">
                                 <xsl:attribute name="tuid">
-                                    <xsl:value-of select="col[@field='Organisation']"/>
+                                    <xsl:value-of select="$OrgName"/>
                                 </xsl:attribute>
                             </reference>
                         </resource>

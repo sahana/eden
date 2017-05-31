@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for S3GroupedItemsReport
  *
- * @copyright 2015-2016 (c) Sahana Software Foundation
+ * @copyright 2015-2017 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

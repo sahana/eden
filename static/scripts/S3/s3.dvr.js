@@ -724,7 +724,7 @@
                 $('input[type="hidden"][name="event"]').val(code);
 
                 // Update event type in header
-                $('.event-type-name').text(name);
+                $('.event-type-name').text(name).removeClass('placeholder');
 
                 // Enable submit if we have a person
                 if ($(prefix + '_person__row .controls').text()) {

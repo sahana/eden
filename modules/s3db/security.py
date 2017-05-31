@@ -2,7 +2,7 @@
 
 """ Sahana Eden Security Model
 
-    @copyright: 2012-2016 (c) Sahana Software Foundation
+    @copyright: 2012-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SecurityModel",)
+__all__ = ("SecurityZonesModel",
+           "SecuritySeizedItemsModel",
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -35,9 +37,8 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3SecurityModel(S3Model):
-    """
-    """
+class SecurityZonesModel(S3Model):
+    """ Model for security zones """
 
     names = ("security_level",
              "security_zone_type",
@@ -333,5 +334,219 @@ class S3SecurityModel(S3Model):
             else:
                 vals = len(vals) and vals[0] or ""
         return vals
+
+# =============================================================================
+class SecuritySeizedItemsModel(S3Model):
+    """
+        Model for the tracking of seized items (e.g. in connection
+        with security procedures at shelters, borders or transport
+        hubs)
+    """
+
+    names = ("security_seized_item_type",
+             "security_seized_item",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        crud_strings = s3.crud_strings
+
+        define_table = self.define_table
+        configure = self.configure
+
+        person_id = self.pr_person_id
+
+        # ---------------------------------------------------------------------
+        # Seized Item Types
+        #
+        tablename = "security_seized_item_type"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Item Type"),
+            title_display = T("Item Type Details"),
+            title_list = T("Item Types"),
+            title_update = T("Edit Item Type"),
+            label_list_button = T("List Item Types"),
+            label_delete_button = T("Delete Item Type"),
+            msg_record_created = T("Item Type created"),
+            msg_record_modified = T("Item Type updated"),
+            msg_record_deleted = T("Item Type deleted"),
+            msg_list_empty = T("No Item Types currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        item_type_id = S3ReusableField("item_type_id", "reference %s" % tablename,
+                                       label = T("Type"),
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                   IS_ONE_OF(db, "%s.id" % tablename,
+                                                             represent,
+                                                             )),
+                                       sortby = "name",
+                                       comment = S3PopupLink(c="security",
+                                                             f="seized_item_type",
+                                                             tooltip=T("Create new item type"),
+                                                             ),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Seized Items
+        #
+        tablename = "security_seized_item"
+        define_table(tablename,
+                     # Owner
+                     person_id(empty = False,
+                               label = T("Owner"),
+                               ondelete = "CASCADE",
+                               # Autocomplete using security controller
+                               widget = S3PersonAutocompleteWidget(
+                                           controller = "security",
+                                           function = "person_search",
+                                           ),
+                               comment = None,
+                               ),
+                     # Type and number of items
+                     item_type_id(empty = False,
+                                  ondelete = "RESTRICT",
+                                  ),
+                     Field("number", "integer",
+                           label = T("Count"),
+                           requires = IS_INT_IN_RANGE(1, None),
+                           ),
+                     # Confiscated on and by whom
+                     s3_date(default = "now",
+                             label = T("Confiscated on"),
+                             ),
+                     person_id("confiscated_by",
+                               label = T("Confiscated by"),
+                               default = current.auth.s3_logged_in_person(),
+                               comment = None,
+                               ),
+                     # Returned to owner
+                     Field("returned", "boolean",
+                           default = False,
+                           label = T("Returned"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_date("returned_on",
+                             label = T("Returned on"),
+                             # Set onaccept when returned=True
+                             writable = False,
+                             ),
+                     person_id("returned_by",
+                               label = T("Returned by"),
+                               # Set onaccept when returned=True
+                               writable = False,
+                               comment = None,
+                               ),
+                     s3_comments(represent = s3_text_represent,
+                                 ),
+                     *s3_meta_fields())
+
+        # List Fields
+        list_fields = ("person_id",
+                       "date",
+                       "number",
+                       "item_type_id",
+                       "confiscated_by",
+                       "returned",
+                       "returned_on",
+                       "returned_by",
+                       "comments",
+                       )
+
+        # Table Configuration
+        configure(tablename,
+                  list_fields = list_fields,
+                  onaccept = self.seized_item_onaccept,
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Seized Item"),
+            title_display = T("Seized Item Details"),
+            title_list = T("Seized Items"),
+            title_update = T("Edit Seized Item"),
+            label_list_button = T("List Seized Items"),
+            label_delete_button = T("Delete Seized Item"),
+            msg_record_created = T("Seized Item created"),
+            msg_record_modified = T("Seized Item updated"),
+            msg_record_deleted = T("Seized Item deleted"),
+            msg_list_empty = T("No Seized Items currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def seized_item_onaccept(form):
+        """
+            Onaccept-routine for seized items:
+                - set returned_on and returned_by if returned=True
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get record ID
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+
+        # Get record
+        table = s3db.security_seized_item
+        query = (table.id == record_id) & \
+                (table.deleted == False)
+        record = db(query).select(table.id,
+                                  table.returned,
+                                  table.returned_on,
+                                  table.returned_by,
+                                  limitby = (0, 1),
+                                  ).first()
+
+        if not record:
+            return
+
+        if record.returned:
+            if not record.returned_on and not record.returned_by:
+                now = current.request.utcnow.date()
+                logged_in_person = current.auth.s3_logged_in_person()
+                record.update_record(returned_on = now,
+                                     returned_by = logged_in_person,
+                                     )
+        else:
+            record.update_record(returned_on = None,
+                                 returned_by = None,
+                                 )
 
 # END =========================================================================

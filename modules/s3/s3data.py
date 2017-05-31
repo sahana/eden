@@ -2,7 +2,7 @@
 
 """ S3 Data Views
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -88,17 +88,17 @@ class S3DataTable(object):
         self.colnames = colnames
         self.heading = heading
 
-        max = len(data)
+        data_len = len(data)
         if start < 0:
             start = 0
-        if start > max:
-            start = max
+        if start > data_len:
+            start = data_len
         if limit == None:
-            end = max
+            end = data_len
         else:
             end = start + limit
-            if end > max:
-                end = max
+            if end > data_len:
+                end = data_len
         self.start = start
         self.end = end
         self.filterString = filterString
@@ -235,7 +235,6 @@ class S3DataTable(object):
             real_end = self.end
             self.end = self.start + 1
         table = self.table(id, flist, action_col)
-        cache = None
         if pagination:
             self.end = real_end
             aadata = self.aadata(totalrows,
@@ -250,6 +249,8 @@ class S3DataTable(object):
                      "cacheUpper": self.end if filteredrows > self.end else filteredrows,
                      "cacheLastJson": aadata,
                      }
+        else:
+            cache = None
 
         html = self.htmlConfig(table,
                                id,
@@ -508,7 +509,8 @@ class S3DataTable(object):
                      _href=permalink,
                      _class="permalink")
             export_options.append(link)
-            export_options.append(" | ")
+            if len(icons):
+                export_options.append(" | ")
 
         # Append the icons
         export_options.append(icons)
@@ -797,7 +799,7 @@ class S3DataTable(object):
     def table(self, id, flist=None, action_col=0):
         """
             Method to render the data as an html table. This is of use if
-            and html table is required without the dataTable goodness. However
+            an html table is required without the dataTable goodness. However
             if you want html for a dataTable then use the html() method
 
             @param id: The id of the table
@@ -901,7 +903,7 @@ class S3DataTable(object):
                 else:
                     details.append(s3_unicode(row[field]))
             aadata.append(details)
-        structure["dataTable_id"] = id
+        structure["dataTable_id"] = id # Is this used anywhere? Can't see it used, so could be removed?
         structure["dataTable_filter"] = self.filterString
         structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
         structure["dataTable_sort"] = self.orderby
@@ -917,7 +919,10 @@ class S3DataTable(object):
 
 # =============================================================================
 class S3DataList(object):
-    """ Class representing a data list """
+    """
+        Class representing a list of data cards
+        -clien-side implementation in static/scripts/S3/s3.dataLists.js
+    """
 
     # -------------------------------------------------------------------------
     # Standard API
@@ -987,6 +992,7 @@ class S3DataList(object):
             @param pagesize: maximum number of items per page
             @param rowsize: number of items per row
             @param ajaxurl: the URL to Ajax-update the datalist
+            @param empty: message to display if the list is empty
             @param popup_url: the URL for the modal used for the 'more'
                               button (=> we deactivate InfiniteScroll)
             @param popup_title: the title for the modal

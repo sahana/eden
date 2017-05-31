@@ -7,7 +7,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -541,6 +541,9 @@ class S3CRUD(S3Method):
                 s3.cancel = cancel
 
                 if form is not None:
+                    form_postp = r.resource.get_config("form_postp")
+                    if form_postp:
+                        form_postp(form)
                     output["form"] = form
                     output["showadd_btn"] = self.crud_button(tablename=tablename,
                                                              name="label_create",
@@ -1204,7 +1207,7 @@ class S3CRUD(S3Method):
                                            _class = "filter-form",
                                            _id = "%s-filter-form" % target
                                            )
-                fresource = current.s3db.resource(resource.tablename)
+                fresource = current.s3db.resource(resource.tablename) # Use a clean resource
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               get_vars,
@@ -1302,8 +1305,8 @@ class S3CRUD(S3Method):
 
             get_vars = self.request.get_vars
 
-            # Start/limit
-            start, limit = self._limits(get_vars)
+            # Start/limit (no default limit)
+            start, limit = self._limits(get_vars, default_limit=None)
 
             # Render extra "_tooltip" field for each row?
             tooltip = get_vars.get("tooltip", None)
@@ -2177,7 +2180,8 @@ class S3CRUD(S3Method):
                     value, error = widget.validate(value,
                                                    requires=field.requires,
                                                    )
-                    validated["value"] = widget.serialize(value)
+                    validated["value"] = widget.serialize(value) \
+                                         if not error else value
                     # Use widget-represent instead of standard represent
                     widget_represent = widget.represent
                 else:
@@ -2186,7 +2190,8 @@ class S3CRUD(S3Method):
                         value, error = s3_validate(table, fname, value, original)
                     except AttributeError:
                         error = "invalid field"
-                    validated["value"] = field.formatter(value)
+                    validated["value"] = field.formatter(value) \
+                                         if not error else value
                     widget_represent = None
 
                 # Handle errors, update the validated item
@@ -3152,23 +3157,28 @@ class S3CRUD(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _limits(get_vars):
+    def _limits(get_vars, default_limit=0):
         """
             Extract page limits (start and limit) from GET vars
 
             @param get_vars: the GET vars
+            @param default_limit: the default limit, explicit value or:
+                                  0 => response.s3.ROWSPERPAGE
+                                  None => no default limit
         """
 
         start = get_vars.get("start", None)
-        limit = get_vars.get("limit", 0)
+        limit = get_vars.get("limit", default_limit)
+
         # Deal with overrides (pagination limits come last)
         if isinstance(start, list):
             start = start[-1]
         if isinstance(limit, list):
             limit = limit[-1]
+
         if limit:
             # Ability to override default limit to "Show All"
-            if limit.lower() == "none":
+            if isinstance(limit, basestring) and limit.lower() == "none":
                 #start = None # needed?
                 limit = None
             else:
@@ -3177,12 +3187,13 @@ class S3CRUD(S3Method):
                     limit = int(limit)
                 except (ValueError, TypeError):
                     # Fall back to defaults
-                    start, limit = None, 0
+                    start, limit = None, default_limit
+
         else:
             # Use defaults, assume sspag because this is a
             # pagination request by definition
             start = None
-            limit = 0
+            limit = default_limit
 
         return start, limit
 

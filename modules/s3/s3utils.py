@@ -55,22 +55,6 @@ URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
 
 RCVARS = "rcvars"
 
-class S3ModuleDebug(object):
-    """ Helper class to debug modules """
-
-    @staticmethod
-    def on(msg, *args):
-        print >> sys.stderr, msg % args if args else msg
-
-    off = staticmethod(lambda msg, *args: None)
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3UTILS: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
-
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -79,7 +63,7 @@ def s3_debug(message, value=None):
        Provide an easy, safe, systematic way of handling Debug output
        (print to stdout doesn't work with WSGI deployments)
 
-       @ToDo: Should be using current.log.warning instead?
+       @ToDo: Deprecate & replace with current.log.debug
     """
 
     output = "S3 Debug: %s" % s3_unicode(message)
@@ -858,7 +842,7 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
 
     size = (50, 50)
     if image:
-        image = s3db.pr_image_represent(image, size=size)
+        image = s3db.pr_image_library_represent(image, size=size)
         size = s3db.pr_image_size(image, size)
         url = URL(c="default", f="download",
                   args=image)
@@ -2561,38 +2545,6 @@ class S3MultiPath:
                 return True
             else:
                 return False
-
-# =============================================================================
-def s3_fieldmethod(name, f, represent=None):
-    """
-        Helper to attach a representation method to a Field.Method.
-
-        @param name: the field name
-        @param f: the field method
-        @param represent: the representation function
-    """
-
-    from gluon import Field
-
-    if represent is not None:
-
-        class Handler(object):
-            def __init__(self, method, row):
-                self.method=method
-                self.row=row
-            def __call__(self, *args, **kwargs):
-                return self.method(self.row, *args, **kwargs)
-        if hasattr(represent, "bulk"):
-            Handler.represent = represent
-        else:
-            Handler.represent = staticmethod(represent)
-
-        fieldmethod = Field.Method(name, f, handler=Handler)
-
-    else:
-        fieldmethod = Field.Method(name, f)
-
-    return fieldmethod
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):

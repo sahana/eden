@@ -2,7 +2,7 @@
 
 """ Sahana Eden Organisation Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -778,6 +778,7 @@ class S3OrganisationModel(S3Model):
                                   "joinby": "organisation_id",
                                   "key": "area_id",
                                   },
+                       po_organisation_area = "organisation_id",
                        po_organisation_household = "organisation_id",
                        po_referral_organisation = "organisation_id",
                        )
@@ -1151,20 +1152,25 @@ class S3OrganisationModel(S3Model):
                               )
                 if acronym:
                     record["acronym"] = acronym
+
                 if "org_parent_organisation" in row:
                     parent = object.__getattribute__(row, "org_parent_organisation")
                     if parent.name is not None:
                         record["parent"] = parent.name
 
-                # Determine if input is org hit or acronym hit
+                # Determine if input matches the organisation name or
+                # the acronym, or neither (e.g. input matching the
+                # parent organisation)
                 value_len = len(value)
-                orgNameHit = name[:value_len].lower() == value
-                if orgNameHit:
+                name_match = s3_unicode(name)[:value_len].lower() == value
+                acronym_match = acronym and \
+                                s3_unicode(acronym)[:value_len].lower() == value
+                if name_match:
                     nextString = name[value_len:]
                     if nextString != "":
                         record["matchString"] = name[:value_len]
                         record["nextString"] = nextString
-                else:
+                elif acronym_match:
                     nextString = acronym[value_len:]
                     if nextString != "":
                         record["matchString"] = acronym[:value_len]
@@ -5072,7 +5078,7 @@ def org_organisation_logo(id,
         #if type == "bmp":
         #    format = "bmp"
         size = (None, 60)
-        image = s3db.pr_image_represent(record.logo, size=size)
+        image = s3db.pr_image_library_represent(record.logo, size=size)
         url_small = URL(c="default", f="download", args=image)
         if record.acronym is None or record.acronym == "":
             alt = "%s logo" % record.name
@@ -6343,6 +6349,12 @@ def org_rheader(r, tabs=[]):
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
                             ]
+                else:
+                    if type_filter == "Training Center":
+                        # e.g.RMSAmericas
+                        skip_branches = True
+                    tabs = [(T("Basic Details"), None, {"native": 1}),
+                            ]
             else:
                 if settings.get_org_facilities_tab():
                     facilities =  (T("Facilities"), "facility")
@@ -6785,7 +6797,7 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     # Need to be explicit since can also come from Project controller
+                                     # Need to be explicit since can also come from HRM or Project controllers
                                      csv_stylesheet = ("org", "organisation.xsl"),
                                      csv_template = ("org", "organisation"),
                                      # Don't allow components with components (such as document) to breakout from tabs
@@ -8283,7 +8295,7 @@ def org_logo_represent(org = None,
             if logo:
                 # Select resized version if-available
                 size = (width, None)
-                image = s3db.pr_image_represent(logo, size=size)
+                image = s3db.pr_image_library_represent(logo, size=size)
                 url_small = URL(c="default", f="download", args=image)
                 alt = "%s logo" % org
                 logo = IMG(_src=url_small, _alt=alt, _width=width)

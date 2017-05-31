@@ -45,6 +45,7 @@ class S3MainMenu(default.S3MainMenu):
             #homepage("hrm"),
             MM("Staff", c="hrm", f="staff"),
             #homepage("cr"),
+            MM("Distributions", c="supply", f="distribution_item"),
         ]
 
     # -------------------------------------------------------------------------
@@ -140,48 +141,72 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                        due_followups,
                                        )
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c=("dvr", "pr"))(
                     M("Current Beneficiaries", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
                         M("All Beneficiaries", vars = {}),
-                        M(follow_up_label, f="due_followups"),
+                        M("Beneficiary Report", m="report"),
                         ),
-                    M("Activities", link=False)(
+                    M("Protection Response",
+                      c="dvr", f="case_activity", link=False)(
+                          M("Overview", m="summary", p="read"),
+                          M(follow_up_label, f="due_followups"),
+                      ),
+                    M("Activities", link=False,
+                      restrict = ("ORG_ADMIN", "GROUP_ACTIVITIES", "MENTAL_HEALTH"))(
                         M("Group Activities", f="activity",
-                          vars={"service_type": "PSS"},
+                          vars = {"service_type": "PSS"},
+                          restrict = ("ORG_ADMIN", "GROUP_ACTIVITIES",),
                           ),
                         M("Mental Health Support", f="activity",
-                          vars={"service_type": "MH"},
+                          vars = {"service_type": "MH"},
+                          restrict = ("ORG_ADMIN", "MENTAL_HEALTH",),
                           ),
                         ),
                     M("Archive", link=False)(
                         M("Former Beneficiaries", f="person",
-                          vars={"closed": "1"},
+                          vars = {"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
-                          vars={"archived": "1"},
+                          vars = {"archived": "1"},
                           ),
                         ),
                     M("Administration", c="dvr", link=False,
-                      restrict = [ADMIN])(
+                      restrict = (ADMIN, "ORG_ADMIN"))(
+                        M("Education Levels", c="pr", f="education_level"),
+                        M("Occupation Types", c="pr", f="occupation_type"),
                         M("Beneficiary Types", f="beneficiary_type"),
-                        M("Evaluation Questions", f="evaluation_question"),
+                        #M("Evaluation Questions", f="evaluation_question"),
                         M("Housing Types", f="housing_type"),
                         M("Income Sources", f="income_source"),
-                        M("Need Types", f="need"),
-                        M("SNF Justifications", f="activity_funding_reason"),
-                        M("Activity Group Types", f="activity_group_type"),
+                        SEP(),
+                        M("Intervention Types", f="response_type"),
+                        M("Need Types", f="need", m="hierarchy"),
+                        M("Protection Assessment", f="vulnerability_type", m="hierarchy"),
+                        M("Provider Types", f="provider_type"),
+                        M("Referral Types", f="referral_type"),
+                        M("Termination Types", f="termination_type"),
+                        SEP(),
                         M("Activity Age Groups", f="activity_age_group"),
+                        M("Activity Group Types", f="activity_group_type"),
+                        M("Activity Focuses", f="activity_focus"),
                         ),
                 )
 
     # -------------------------------------------------------------------------
     @classmethod
+    def pr(cls):
+        """ PR - use DVR menu """
+
+        return cls.dvr()
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def project(cls):
-        """ PROJECT - use DVR menu """
+        """ PROJECT - use ORG menu """
 
         return cls.org()
 
@@ -190,8 +215,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        settings = current.deployment_settings
-        ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c=("org", "project"))(
                     M("Organizations", f="organisation")(
@@ -208,9 +232,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        #M("Import", m="import"),
                     ),
                     M("Administration", c=("org", "project"), link=False,
-                      restrict = [ADMIN])(
+                      restrict = (ADMIN, "ORG_ADMIN"))(
                         M("Organization Types", f="organisation_type"),
-                        M("Service Types", f="service"),
+                        M("Service Types", f="service", m="hierarchy"),
                         M("Facility Types", f="facility_type"),
                         M("Projects", c="project", f="project"),
                     ),
@@ -226,26 +250,37 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ HRM / Human Resources Management """
 
         settings = current.deployment_settings
-
-        session_s3 = current.session.s3
-        ADMIN = session_s3.system_roles.ADMIN
-
-        manager_mode = lambda i: session_s3.hrm.mode is None
-        #personal_mode = lambda i: session_s3.hrm.mode is not None
+        ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff", #m="summary",
-                      check = manager_mode)(
+                    M(settings.get_hrm_staff_label(), f="staff")(
                         M("Create", m="create"),
                         M("Import", f="person", m="import", p="create",
                           vars = {"group": "staff"},
                           ),
                       ),
-                    M("Job Title Catalog", f="job_title",
-                      check = manager_mode,
-                      restrict = [ADMIN])(
+                    M("Job Title Catalog", f="job_title", restrict=[ADMIN])(
                         M("Create", m="create"),
                       ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def supply():
+        """ SUPPLY / Supply Item Distribution """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M(c="supply")(
+                    M("Distribution Items", f="distribution_item")(
+                        M("Create", m="create"),
+                        ),
+                    M("Administration", link=False,
+                      restrict = (ADMIN, "ORG_ADMIN"))(
+                        M("Items", f="item"),
+                        M("Catalogs", f="catalog"),
+                        M("Item Categories", f="item_category"),
+                        )
                     )
 
 # END =========================================================================

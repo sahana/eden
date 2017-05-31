@@ -2,7 +2,7 @@
 
 """ Sahana Eden Stats Model
 
-    @copyright: 2012-2016 (c) Sahana Software Foundation
+    @copyright: 2012-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -100,10 +100,10 @@ class S3StatsModel(S3Model):
                      Field("description",
                            label = T("Description"),
                            ),
+                     on_define = lambda table: \
+                        [table.instance_type.set_attributes(readable = True),
+                         ],
                      )
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.instance_type.readable = True
 
         # ---------------------------------------------------------------------
         # Super entity: stats_data
@@ -1319,7 +1319,7 @@ class S3StatsImpactModel(S3Model):
                                      ondelete = "CASCADE",
                                      represent = S3Represent(lookup=tablename),
                                      requires = IS_EMPTY_OR(
-                                        IS_ONE_OF_EMPTY(db, "stats_impact.id")),
+                                        IS_ONE_OF_EMPTY(current.db, "stats_impact.id")),
                                      )
 
         configure(tablename,

@@ -2084,6 +2084,7 @@ class ResourceSelectTests(unittest.TestCase):
     def testSelectExtraFilter(self):
         """ Test selection with extra filter """
 
+        db = current.db
         s3db = current.s3db
 
         assertTrue = self.assertTrue
@@ -2428,6 +2429,7 @@ class ResourceSelectTests(unittest.TestCase):
     def testSelectSubsetExtraFilter(self):
         """ Test selection of subset (pagination) with extra filter """
 
+        db = current.db
         s3db = current.s3db
 
         assertTrue = self.assertTrue

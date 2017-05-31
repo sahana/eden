@@ -2,7 +2,7 @@
 
 """ Sahana Eden GIS Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -271,30 +271,30 @@ class S3LocationModel(S3Model):
                   readable = False,
                   writable = False,
                   ),
-            *meta_spatial_fields)
+            *meta_spatial_fields,
+            on_define = lambda table: \
+                [# Doesn't set parent properly when field is defined inline as the table isn't yet in db
+                 table._create_references(),
 
-        # Would be nice if this table could be Lazy but it probably can't
-        table = db[tablename]
-        # Doesn't set parent properly when field is defined inline as the table isn't yet in db
-        table._create_references()
+                 # Default the owning role to Authenticated. This can be used to allow the site
+                 # to control whether authenticated users get to create / update locations, or
+                 # just read them. Having an owner and using ACLs also allows us to take away
+                 # privileges from generic Authenticated users for particular locations (like
+                 # hierarchy or region locations) by changing the owner on those locations, e.g.
+                 # to MapAdmin.
+                 table.owned_by_group.set_attributes(default = current.session.s3.system_roles.AUTHENTICATED),
 
-        # Default the owning role to Authenticated. This can be used to allow the site
-        # to control whether authenticated users get to create / update locations, or
-        # just read them. Having an owner and using ACLs also allows us to take away
-        # privileges from generic Authenticated users for particular locations (like
-        # hierarchy or region locations) by changing the owner on those locations, e.g.
-        # to MapAdmin.
-        table.owned_by_group.default = current.session.s3.system_roles.AUTHENTICATED
-
-        # Can't be defined in-line as otherwise get a circular reference
-        table.parent.requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db, "gis_location.id",
-                                              gis_location_represent,
-                                              # @ToDo: If level is known, filter on higher than that?
-                                              # If strict, filter on next higher level?
-                                              filterby="level",
-                                              filter_opts=hierarchy_level_keys,
-                                              orderby="gis_location.name"))
+                 # Can't be defined in-line as otherwise get a circular reference
+                 table.parent.set_attributes(requires = IS_EMPTY_OR(
+                                               IS_ONE_OF(db, "gis_location.id",
+                                                         gis_location_represent,
+                                                         # @ToDo: If level is known, filter on higher than that?
+                                                         # If strict, filter on next higher level?
+                                                         filterby="level",
+                                                         filter_opts=hierarchy_level_keys,
+                                                         orderby="gis_location.name"))),
+                 ]
+            )
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -406,6 +406,9 @@ class S3LocationModel(S3Model):
 
                             # Sites
                             org_site = "location_id",
+
+                            # Tenures
+                            stdm_tenure = "location_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -488,6 +491,7 @@ class S3LocationModel(S3Model):
         auth = current.auth
         response = current.response
         settings = current.deployment_settings
+        s3 = response.s3
 
         form_vars = form.vars
         vars_get = form_vars.get
@@ -498,7 +502,7 @@ class S3LocationModel(S3Model):
         lon = vars_get("lon", None)
         addr_street = vars_get("addr_street", None)
 
-        bulk = response.s3.bulk
+        bulk = s3.bulk
 
         if addr_street and lat is None and lon is None and bulk:
 
@@ -784,7 +788,15 @@ class S3LocationModel(S3Model):
 
         table = item.table
 
-        code = current.deployment_settings.get_gis_lookup_code()
+        settings = current.deployment_settings
+        if settings.get_database_type() == "postgres":
+            # None is last
+            orderby = ~table.end_date
+        else:
+            # None is 1st
+            orderby = table.end_date
+
+        code = settings.get_gis_lookup_code()
         if code:
             # The name is a Code
             kv_table = current.s3db.gis_location_tag
@@ -794,7 +806,7 @@ class S3LocationModel(S3Model):
             duplicate = current.db(query).select(table.id,
                                                  table.name,
                                                  table.level,
-                                                 orderby=~table.end_date,
+                                                 orderby=orderby,
                                                  limitby=(0, 1)).first()
 
             if duplicate:
@@ -829,7 +841,7 @@ class S3LocationModel(S3Model):
                     (table.level == level)
         else :
             query = (table.name.lower() == name.lower()) & \
-                (table.level == level)
+                    (table.level == level)
 
         if parent:
             query &= (table.parent == parent)
@@ -841,7 +853,7 @@ class S3LocationModel(S3Model):
 
         duplicate = current.db(query).select(table.id,
                                              table.level,
-                                             orderby=~table.end_date,
+                                             orderby=orderby,
                                              limitby=(0, 1)).first()
         if duplicate:
             # @ToDo: Import Log
@@ -867,7 +879,7 @@ class S3LocationModel(S3Model):
             duplicate = current.db(query).select(table.id,
                                                  table.name,
                                                  table.level,
-                                                 orderby=~table.end_date,
+                                                 orderby=orderby,
                                                  limitby=(0, 1)).first()
             if duplicate:
                 # @ToDo: Import Log
@@ -1910,12 +1922,6 @@ class S3GISConfigModel(S3Model):
 
                      # This should be turned off for Offline deployments or expensive SatComms, such as BGAN
                      Field("geocoder", "boolean"),
-                     # Whether the config is just temporary for taking a screenshot
-                     Field("temp", "boolean",
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
                      Field("wmsbrowser_url"),
                      Field("wmsbrowser_name",
                            default = "Web Map Service",
@@ -1952,7 +1958,16 @@ class S3GISConfigModel(S3Model):
                            #writable = False,
                            #widget = S3ImageCropWidget((820, 410)),
                            ),
-
+                     # Whether the config should be merged with the default config
+                     Field("merge", "boolean",
+                           default = True,
+                           ),
+                     # Whether the config is just temporary for taking a screenshot
+                     Field("temp", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # Reusable field - used by Events & Scenarios

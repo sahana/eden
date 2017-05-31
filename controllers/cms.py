@@ -64,6 +64,12 @@ def series():
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
 # -----------------------------------------------------------------------------
+def status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def tag():
     """ RESTful CRUD controller """
 
@@ -711,6 +717,12 @@ def newsfeed():
 # =============================================================================
 # Comments
 # =============================================================================
+def comment():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def discuss(r, **attr):
     """ Custom Method to manage the discussion of a Post """
 

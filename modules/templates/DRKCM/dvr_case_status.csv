@@ -1,0 +1,5 @@
+Position,Code,Status,Default,Closed,Not Transferable,Comments
+1,OPEN,In Progress,true,false,false,Case in progress
+2,CLOSED,Case Closed,false,true,false,Case closed
+3,INACTIVE,Inactive/Disappeared,false,true,false,"Confirmed disappeared, no longer entitled to benefits, case closed"
+4,DEPARTED,Left Voluntarily,false,true,false,"Returned to country of origin, case closed"

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Request Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -195,13 +195,6 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         self.define_table(tablename,
                           super_link("doc_id", "doc_entity"),
-                          # @ToDo: Replace with Link Table
-                          self.event_event_id(
-                               default = session.s3.event,
-                               ondelete = "SET NULL",
-                               readable = False,
-                               writable = False,
-                               ),
                           Field("type", "integer",
                                 default = default_type,
                                 label = T("Request Type"),
@@ -512,7 +505,6 @@ class S3RequestModel(S3Model):
                        "date_required",
                        "site_id",
                        "requester_id",
-                       #"event_id",
                        ]
 
         # @ToDo: Allow a single column to support different components based on type
@@ -540,8 +532,7 @@ class S3RequestModel(S3Model):
             list_fields.append((T("Committed By"), "commit.site_id"))
 
         self.configure(tablename,
-                       context = {"event": "event_id",
-                                  "location": "site_id$location_id",
+                       context = {"location": "site_id$location_id",
                                   "organisation": "site_id$organisation_id",
                                   "site": "site_id",
                                   },
@@ -644,7 +635,8 @@ class S3RequestModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(req_req_ref = lambda **attr: dummy("req_ref"),
+        return dict(req_req_id = lambda **attr: dummy("req_id"),
+                    req_req_ref = lambda **attr: dummy("req_ref"),
                     )
 
     # -------------------------------------------------------------------------
@@ -1559,11 +1551,11 @@ class S3RequestItemModel(S3Model):
                      Field.Method("pack_quantity",
                                   self.supply_item_pack_quantity(tablename=tablename)),
                      s3_comments(),
-                     *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.site_id.label = T("Requested From")
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.site_id.set_attributes(label = T("Requested From")),
+                         ]
+                     )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1598,7 +1590,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/req/req_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
@@ -1893,11 +1885,11 @@ class S3RequestSkillModel(S3Model):
                                  #              _title="%s|%s" % (T("Task Details"),
                                  #                                T("Include any special requirements such as equipment which they need to bring.")))
                                  ),
-                     *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = current.db[tablename]
-        table.site_id.label = T("Requested From")
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.site_id.set_attributes(label = T("Requested From")),
+                         ]
+                     )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2634,8 +2626,7 @@ class S3CommitModel(S3Model):
                         ]
 
         self.configure(tablename,
-                       context = {"event": "req_id$event_id",
-                                  "location": "location_id",
+                       context = {"location": "location_id",
                                   "organisation": "organisation_id",
                                   "request": "req_id",
                                   # We want 'For Sites XX' not 'From Site XX'

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Synchronization
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -270,6 +270,12 @@ class SyncDataModel(S3Model):
                                                 T("Keep Source Data"),
                                                 T("Stores the data sent from the peer in the local file system (if supported by the adapter), for testing purposes. Enable only temporarily if and when required!"))),
                            ),
+                     # User-visible field for Admin
+                     s3_datetime("last_connected",
+                                 label = T("Last Connected"),
+                                 writable = False,
+                                 ),
+                     # System fields
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
                      Field.Method("last_push_time",
@@ -294,8 +300,9 @@ class SyncDataModel(S3Model):
                   deduplicate = S3Duplicate(),
                   list_fields = ["name",
                                  "uuid",
-                                 (T("Last Pull"), "last_pull_time"),
-                                 (T("Last Push"), "last_push_time"),
+                                 "last_connected",
+                                 #(T("Last Pull"), "last_pull_time"),
+                                 #(T("Last Push"), "last_push_time"),
                                  ],
                   onaccept = self.sync_repository_onaccept,
                   ondelete = self.sync_repository_ondelete,
@@ -386,11 +393,20 @@ class SyncDataModel(S3Model):
         define_table(tablename,
                      repository_id(),
                      Field("resource_name", notnull = True,
+                           label = T("Resource Name"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (
                                                 T("Resource Name"),
                                                 T("Table name of the resource to synchronize"))),
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("components", "boolean",
+                           default = False,
+                           label = T("Include Components?"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Include Components?"),
+                                                T("For Eden repositories: Whether components of the resource should be included or not"))),
                            ),
                      Field("infile_pattern",
                            label = T("Input File Name"),

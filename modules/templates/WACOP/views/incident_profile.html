@@ -1,194 +1,172 @@
 {{extend "layout.html"}}
-{{if ADMIN or system_wide:}}
-<div role='complementary' class='row panel callout'>
- <div class='row'>
-  <div class='large-9 small-12 columns'>
-   <p>{{if system_wide:}}{{=system_wide}}{{pass}}</p>
+{{=system_wide}}
+{{if event:}}
+<div class='row'>
+ <div role='complementary' class='callout event-parent'>
+  <div class='callout-left'>
+   <h6 class='meta'>This incident is part of the event</h6>
+   <h1 class='title'>{{=event.name}}</h1>
+   <a href='{{=event.url}}' class='button radius small'>Go to Event</a>
   </div>
-  {{if ADMIN:}}
-  <p class='large-3 small-12 columns text-right'><a href='{{=URL(c="cms", f="post", args="update", vars={"page": "SYSTEM_WIDE"})}}' class='button button-info tiny'>Edit System-wide Alert</a></p>
-  {{pass}}
+  <div class='callout-right meta'>
+   <p>
+    <span class='date-label'>Zero hour:</span> <span class='date'>{{=event.start_date}}</span>
+    <span class='location adr'>
+     {{=event.location}}
+    </span>
+   </p>
+   <p>
+    {{=event.incidents}}
+    {{=event.resources}}
+    {{=event.updates}}
+   </p>
+   <span class='label {{=event.status}}'>{{=event.status}}</span>
+  </div>
  </div>
 </div>
 {{pass}}
-<div class='row panel incident-profile'>
- <div class='large-8 columns'>
-  <div class='incident panel'>
-   <header class='row incident-header active'>
-    <div class='incident-control clearfix'>
-     <p class='left'>
-     {{if active:}}Active{{else:}}Inactive{{pass}} <small>(<a href='#modal-incident-status' data-reveal-id='modal-incident-status'>change status</a>)</small>
-     </p>
-     <ul class='inline-list right'>
-      <li class='item'><a href='#' class='button secondary tiny'><span class='fa fa-share-alt'></span> Share</a></li>
-      <li class='item'><a href='#' title='flag this'><i class='fa fa-flag'></i><span class='show-for-sr'>flag this</span></a></li>
-      <li class='item'>{{=bookmark_btn}}</li>
-      <li class='item'><a href='#' title='comment'><i class='fa fa-comment'><span class='show-for-sr'>comment</span></i></a></li>
-      {{if updateable:}}
-      <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
-      <li aria-hidden='true'>|</li>
-      <li class='item'><a href='#' title='edit'><i class='fa fa-edit'><span class='show-for-sr'>edit</span></i></a></li>
-      <li class='item'><a href='#' title='delete'><i class='fa fa-trash'><span class='show-for-sr'>delete</span></i></a></li>
-      {{pass}}
-     </ul>
-    </div>
-    <div id='modal-incident-status' class='reveal-modal' data-reveal aria-labelledby='modalIncidentStatus' aria-hidden='true' role='dialog'>
-     <h4 id='modalIncidentStatusTitle'>Change Status of Incident</h4>
-     <form>
-      <select name='incident-status'>
-       <option value='active'{{if active:}} 'selected'{{pass}}>active</option>
-       <option value='inactive'{{if not active:}} 'selected'{{pass}}>inactive</option>
-       <!--<option value='pending'>pending</option>-->
-      </select>
-      <input class='button' type='submit' name='incident-status-submit' value='Change Status'>
-     </form>
-     <a class='close-reveal-modal' aria-label='Close'>&#215;</a>
-    </div>
-   </header>
-   <div class='row incident-content'>
-    <div class='clearfix'>
-     <div class='incident-content-summary large-10 columns'>
-      <h4>{{=name}}</h4>
-      <p>Last updated on {{=modified_on}}</p>
-      <p class='incident-labels'>
-       {{if incident_type:}}<span class='label info'>{{=incident_type}}</span>{{pass}}
-      </p>
-      {{=incident_tags}}
-     </div>
-     <!--
-     <figure class='large-2 columns organization-logo'>
-      <img src='img/spd.png' alt='' />
-      <figcaption>Seattle Police Department</figcaption>
-     </figure>-->
-    </div>
-    <div class='incident-description'>
-     <div class='incident-updates row'>
-      <p class='zero-hour small-6 columns'>Zero hour: <i class='fa fa-calendar'></i> <input type='date' name='closedat' value='{{=start_date}}' disabled></p>
-      <p class='small-6 columns'>Closed at: <input type='date' name='closedat' value='{{=end_date}}'></p>
-     </div>
-     <p>
-      <i class='fa fa-marker'></i> Street address: <input type='text' name='incident-street' value='{{=addr_street}}'>
-     </p>
-     <div class='row'>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> City: <input type='text' name='incident-city' value='{{=L3}}' disabled>
-      </p>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> State:
-       <select name='incident-state'>
-        <option>{{=L1}}</option>
-       </select>
-      </p>
-      <p class='small-4 columns'>
-       <i class='fa fa-marker'></i> ZIP Code: <input type='text' name='incident-zip' value='{{=postcode}}'>
-      </p>
-     </div>
-     <div class='row'>
-      <p class='small-6 columns'>Latitude: <i class='fa fa-marker'></i> <input type='text' name='latitude' value='{{=lat}}' disabled></p>
-      <p class='small-6 columns'>Longitude: <i class='fa fa-marker'></i> <input type='text' name='longitude' value='{{=lon}}' disabled></p>
-     </div>
-     <h5>Incident Description:</h5>
-     <p>{{=description}}</p>
-    </div>
-   </div>
-  </div>
- </div>
- <div class='large-4 columns'>
-  <h3 class='show-for-sr'>This incident on the map:</h3>
+<div class='row'>
+ <div class='small-12 large-6 large-push-6 columns'>
+  <h6 class='show-for-sr'>This incident on the map:</h6>
   <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
  </div>
- <div class='large-4 columns'>
-  <section>
-   <h3>Resources</h3>
-   <div class='row collapse prefix-radius'>
-    <div class='large-3 columns'>
-     <label for='event_team-search' class='prefix'>Search:</label>
+ <div class='small-12 large-6 large-pull-6 columns'>
+  <section class='incident-profile'>
+   <header class='status-bar {{if active:}}active{{pass}}'>
+    <ul class='status-bar-left'>
+     <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
+    </ul>
+    <ul class='right'>
+     <li class='item flag'><a href='#'><i class='fa-flag fa'></i></a></li>
+     <li class='item bookmark'>{{=bookmark_btn}}</li>
+     <!--<li class='item share'><a href='#'><i class='fa-share-alt fa'></i></a></li>-->
+    {{if updateable:}}
+     <li class='item edit'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"])}}' class='s3_modal'><i class='fa-pencil fa'></i></a></li>
+     <li class='item delete'><a href='{{=URL(c="event", f="incident", args=[incident_id, "delete"])}}'><i class='fa-trash fa'></i></a></li>
+    {{pass}}
+     <li class='item'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"], vars={"set_event": 1})}}' class='s3_modal' title='add to event'><i class='fa fa-calendar'><span class='show-for-sr'>add to event</span></i></a></li>
+    </ul>
+   </header>
+   <div class='body'>
+    <h1 class='title'>{{=name}}</h1>
+    <p class='meta'>updated {{=modified_on}} by {{#modified_by}}</p>
+    <div class='tag-wrapper clearfix'>{{=incident_tags}}</div>
+    <div class='incident-data' data-equalizer>
+     <div class='incident-location adr'>
+      <div class='box' data-equalizer-watch>
+       <div class='street-address'>{{=addr_street}}</div>
+       <!-- <div class='extended-address'>Suite 207</div> -->
+       <span class='locality'>{{=L3}}</span>,
+       <span class='region'>{{=L1}}</span>
+       <span class='postal-code'>{{=postcode}}</span>
+       <div class='geo-location'>{{=lat}}, {{=lon}}</div>
+      </div>
+     </div>
+     <div class='incident-date'>
+      <div class='box' data-equalizer-watch>
+       <span class='date-label'>Zero hour:</span>
+       <div class='date'>{{=start_date}}</div>
+      {{if end_date:}}
+       <span class='date-label'>Closed at:</span>
+       <div class='date'>{{=end_date}}</div>
+      {{pass}}
+      </div>
+     </div>
     </div>
-    <div class='large-6 columns' id='dt-search-event_team'></div>
-    <div class='large-3 columns'>
-     {{=create_event_team_popup}}
+    <p class='desc'>{{=description}}</p>
+    <h4>Resources</h4>
+    <div class='incident-resources'>
+     <div class='incident-resources-rail'>
+      <div class='search-wrapper'>
+       <div id='dt-search-event_team'></div>
+       <span class='search-icon'><i class='fa fa-search'></i></span>
+      </div>
+      {{=create_event_team_popup}}
+     </div>
+     <div class='incident-resources-data'>
+      {{=event_team_datatable}}
+     </div>
     </div>
-   </div>
-   <div id='dt-event_team'>
-    {{=event_team_datatable}}
    </div>
   </section>
  </div>
 </div>
 <hr>
 <div class='row'>
- <ul class='tabs tab-navigation' data-tab>
-  <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-  <li class='tab-title'><a href='#panel2'>Directories</a></li>
-  <li class='tab-title'><a href='#panel3'>Tasks</a></li>
- </ul>
- <div class='tabs-content panel'>
-  <div class='content active' id='panel1'>
-   <div class='row'>
-    <div class='large-3 columns'>
-     {{=filter_form}}
+ <div class='small-12 column'>
+  <ul class='tabs tab-navigation' data-tab>
+   <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+   <li class='tab-title'><a href='#panel2'>Directories</a></li>
+   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+  </ul>
+  <div class='tabs-content'>
+   <div class='content active' id='panel1'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_post_button}}
+      {{=filter_form}}
+     </div>
+     <div class='large-9 columns'>
+      <ul class='dl' id='updates_datalist'>
+       {{=updates_datalist}}
+      </ul>
+     </div>
     </div>
-    <div class='large-9 columns'>
-     {{if create_post_form:}}
-        {{=create_post_form}}
-        <hr>
-      {{pass}}
-     <ul class='no-bullet'>
-      {{=updates_datalist}}
+   </div>
+   <section class='staff content' id='panel2'>
+    <div class='row'>
+     <ul class='large-3 columns tabs vertical' data-tab>
+      <li class='tab-title active'><a href='#staff'>Staff</a></li>
+      <li class='tab-title'><a href='#organisations'>Organizations</a></li>
      </ul>
+     <div class='large-9 columns'>
+      <div class='tabs-content'>
+       <div class='row collapse prefix-radius content active' id='staff'>
+        <div class='large-2 columns'>
+         <label for='event_human_resource-search' class='prefix'>Search</label>
+        </div>
+        <div class='large-6 columns' id='dt-search-event_human_resource'></div>
+        <div class='large-4 columns'>
+         {{=create_event_human_resource_popup}}
+        </div>
+        <div id='dt-event_human_resource'>
+         {{=event_human_resource_datatable}}
+        </div>
+       </div>
+       <div class='row collapse prefix-radius content' id='organisations'>
+        <div class='large-2 columns'>
+         <label for='event_organisation-search' class='prefix'>Search</label>
+        </div>
+        <div class='large-6 columns' id='dt-search-event_organisation'></div>
+        <div class='large-4 columns'>
+         {{=create_event_organisation_popup}}
+        </div>
+        <div id='dt-event_organisation'>
+         {{=event_organisation_datatable}}
+        </div>
+       </div>
+      </div>
+     </div>
     </div>
-   </div>
+   </section>
+   <section class='tasks content' id='panel3'>
+    <div class='row collapse prefix-radius'>
+     <div class='large-2 columns'>
+      <label for='project_task-search' class='prefix'>Search</label>
+     </div>
+     <div class='large-6 columns' id='dt-search-project_task'></div>
+     <div class='large-4 columns'>
+      {{=create_project_task_popup}}
+     </div>
+     <div id='dt-project_task'>
+      {{=project_task_datatable}}
+     </div>
+    </div>
+   </section>
   </div>
-  <section class='staff content' id='panel2'>
-   <div class='row'>
-    <ul class='large-3 columns tabs vertical' data-tab>
-     <li class='tab-title active'><a href='#staff'>Staff</a></li>
-     <li class='tab-title'><a href='#organisations'>Organizations</a></li>
-    </ul>
-    <div class='tabs-content large-9 columns'>
-     <div class='row collapse prefix-radius content active' id='staff'>
-      <div class='large-2 columns'>
-       <label for='event_human_resource-search' class='prefix'>Search</label>
-      </div>
-      <div class='large-6 columns' id='dt-search-event_human_resource'></div>
-      <div class='large-4 columns'>
-       {{=create_event_human_resource_popup}}
-      </div>
-      <div id='dt-event_human_resource'>
-       {{=event_human_resource_datatable}}
-      </div>
-     </div>
-     <div class='row collapse prefix-radius content' id='organisations'>
-      <div class='large-2 columns'>
-       <label for='event_organisation-search' class='prefix'>Search</label>
-      </div>
-      <div class='large-6 columns' id='dt-search-event_organisation'></div>
-      <div class='large-4 columns'>
-       {{=create_event_organisation_popup}}
-      </div>
-      <div id='dt-event_organisation'>
-       {{=event_organisation_datatable}}
-      </div>
-     </div>
-    </div>
-   </div>
-  </section>
-  <section class='tasks content' id='panel3'>
-   <div class='row collapse prefix-radius'>
-    <div class='large-2 columns'>
-     <label for='project_task-search' class='prefix'>Search</label>
-    </div>
-    <div class='large-6 columns' id='dt-search-project_task'></div>
-    <div class='large-4 columns'>
-     {{=create_project_task_popup}}
-    </div>
-    <div id='dt-project_task'>
-     {{=project_task_datatable}}
-    </div>
-   </div>
-  </section>
  </div>
 </div>
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % appname)}}
 {{s3.scripts.append("/%s/static/themes/WACOP/js/incident_profile.js" % appname)}}

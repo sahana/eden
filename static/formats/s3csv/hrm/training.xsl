@@ -17,24 +17,52 @@
          Hours
          Grade
          Trainee Organisation
+         HR Type
          Certificate Number
          First Name
-         Middle Name
-         Last Name
+         Middle Name (Apellido Paterno in Spanish)
+         Last Name   (Apellido Materno in Spanish)
          Sex
          Email
          DoB
          National ID
 
+         If wanting to create Users:
+         #Password
+         Language
+
          Column headers looked up in labels.xml:
 
          PersonGender...................optional.....person gender
+         MiddleName.....................optional.....person Middle Name (Apellido Paterno in Spanish)
+         LastName.......................optional.....person Last Name   (Apellido Materno in Spanish)
 
     *********************************************************************** -->
     <xsl:import href="person.xsl"/>
     <xsl:import href="../commons.xsl"/>
 
     <xsl:output method="xml"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="PersonGender">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="MiddleName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MiddleName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="LastName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">LastName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
 
     <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
@@ -243,13 +271,31 @@
     <!-- Person Record -->
     <xsl:template name="Person">
         <xsl:variable name="FirstName" select="col[@field='First Name']/text()"/>
-        <xsl:variable name="MiddleName" select="col[@field='Middle Name']/text()"/>
-        <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
         <xsl:variable name="DoB" select="col[@field='DoB']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
+        <xsl:variable name="Email" select="col[@field='Email']/text()"/>
         <xsl:variable name="Organisation" select="col[@field='Trainee Organisation']/text()"/>
+        <xsl:variable name="HRType">
+            <xsl:call-template name="lowercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='HR Type']/text()"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
+        <!--<xsl:variable name="Password" select="col[@field='Password']/text()"/>-->
+        <xsl:variable name="Language" select="col[@field='Language']/text()"/>
         <xsl:variable name="Certification" select="col[@field='Certificate Number']/text()"/>
 
+        <xsl:variable name="MiddleName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MiddleName"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="LastName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$LastName"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$PersonGender"/>
@@ -263,7 +309,7 @@
                                              $LastName, '/',
                                              $DoB, '/',
                                              $NationalID, '/',
-                                             col[@field='Email'])"/>
+                                             $Email)"/>
             </xsl:attribute>
             <data field="first_name"><xsl:value-of select="$FirstName"/></data>
             <xsl:if test="$MiddleName!=''">
@@ -286,7 +332,13 @@
                     <data field="value"><xsl:value-of select="$NationalID"/></data>
                 </resource>
             </xsl:if>
+            <xsl:if test="$Language!=''">
+                <resource name="pr_person_details">
+                    <data field="language"><xsl:value-of select="$Language"/></data>
+                </resource>
+            </xsl:if>
 
+            <!-- Email -->
             <xsl:call-template name="ContactInformation"/>
 
             <xsl:if test="$Organisation!=''">
@@ -297,8 +349,63 @@
                             <xsl:value-of select="$Organisation"/>
                         </xsl:attribute>
                     </reference>
+                    <xsl:if test="$HRType!=''">
+                        <xsl:choose>
+                            <xsl:when test="$HRType='volunteer'">
+                                <data field="type" value="2"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <!-- Default to Staff -->
+                                <data field="type" value="1"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:if>
                 </resource>
             </xsl:if>
+
+            <!-- Can't reliably link to persons as these are imported in random order
+                 - do this postimport if desired (see RMSAmericas)
+            <xsl:if test="$Password!=''">
+                <!- - User Account
+                <resource name="pr_person_user">
+                    <reference field="user_id" resource="auth_user">
+                        <resource name="auth_user">
+                            <data field="first_name"><xsl:value-of select="$FirstName"/></data>
+                            <xsl:choose>
+                                <xsl:when test="$LastName!=''">
+                                    <data field="last_name"><xsl:value-of select="$LastName"/></data>
+                                </xsl:when>
+                                <xsl:when test="$MiddleName!=''">
+                                    <!- - e.g. Apellido Paterno
+                                    <data field="last_name"><xsl:value-of select="$MiddleName"/></data>
+                                </xsl:when>
+                            </xsl:choose>
+                            <data field="email"><xsl:value-of select="$Email"/></data>
+                            <!- - This will overwrite password for existing users :/
+                            <data field="password">
+                                <xsl:attribute name="value">
+                                    <xsl:value-of select="$Password"/>
+                                </xsl:attribute>
+                            </data>
+                            <xsl:if test="col[@field='Language']!=''">
+                                <data field="language"><xsl:value-of select="col[@field='Language']"/></data>
+                            </xsl:if>
+                            <xsl:if test="$HRType!=''">
+                                <data field="link_user_to"><xsl:value-of select="$HRType"/></data>
+                            </xsl:if>
+
+                            <!- - Link to Organisation
+                            <xsl:if test="$Organisation!=''">
+                                <reference field="organisation_id" resource="org_organisation">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="$Organisation"/>
+                                    </xsl:attribute>
+                                </reference>
+                            </xsl:if>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:if>-->
 
             <!-- @ToDo: Allow multiple Certifications for the same person! -->
             <xsl:if test="$Certification!=''">

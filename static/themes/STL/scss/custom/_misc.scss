@@ -170,3 +170,8 @@ body.rtl {
         margin-right: 0.3rem;
     }
 }
+
+// Case activity effort log
+input[id^="sub_defaultcase_effort_defaultcase_effort_i_hours"] {
+  max-width: 4rem;
+}

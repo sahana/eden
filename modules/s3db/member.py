@@ -2,7 +2,7 @@
 
 """ Sahana Eden Members Model
 
-    @copyright: 2012-2016 (c) Sahana Software Foundation
+    @copyright: 2012-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -158,6 +158,7 @@ class S3MembersModel(S3Model):
                             ),
                       self.pr_person_id(
                         comment = None,
+                        ondelete = "CASCADE",
                         requires = IS_ADD_PERSON_WIDGET2(),
                         widget = S3AddPersonWidget2(controller="member"),
                       ),

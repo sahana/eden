@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1349,6 +1349,12 @@ class S3CalendarWidget(FormWidget):
         @note: this widget must be combined with the IS_UTC_DATE or
                IS_UTC_DATETIME validators to have the value properly
                converted from/to local timezone and format.
+
+        - control script is s3.ui.calendar.js
+        - uses jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
+        - uses jQuery UI Timepicker-addon if using times: http://trentrichardson.com/examples/timepicker
+        - uses Calendars for non-Gregorian calendars: http://keith-wood.name/calendars.html
+            (ensure that calendars/ui-smoothness.calendars.picker.css is in css.cfg for that)
     """
 
     def __init__(self,
@@ -1494,7 +1500,8 @@ class S3CalendarWidget(FormWidget):
         c = current.calendar if not self.calendar else S3Calendar(self.calendar)
         firstDOW = c.first_dow
 
-        extremes = self.extremes(time_format=time_format)
+        dtformat = separator.join([date_format, time_format])
+        extremes = self.extremes(dtformat=dtformat)
 
         T = current.T
         options = {"calendar": calendar,
@@ -1531,12 +1538,12 @@ class S3CalendarWidget(FormWidget):
                        )
 
     # -------------------------------------------------------------------------
-    def extremes(self, time_format=None):
+    def extremes(self, dtformat=None):
         """
             Compute the minimum/maximum selectable date/time, as well as
             the default time (=the minute-step closest to now)
 
-            @param time_format: the user time format
+            @param dtformat: the user datetime format
 
             @return: a dict {minDateTime, maxDateTime, defaultValue, yearRange}
                      with the min/max options as ISO-formatted strings, and the
@@ -1599,7 +1606,7 @@ class S3CalendarWidget(FormWidget):
             extremes["maxDateTime"] = latest.isoformat()
 
         # Default date/time
-        if self.timepicker and time_format:
+        if self.timepicker and dtformat:
             # Pick a start date/time
             if earliest <= now <= latest:
                 start = now
@@ -1623,8 +1630,8 @@ class S3CalendarWidget(FormWidget):
             # Translate into local time
             if offset:
                 rounded += datetime.timedelta(seconds=offset)
-            # Convert into user format (time part only)
-            default = rounded.strftime(time_format)
+            # Convert into user format
+            default = rounded.strftime(dtformat)
             extremes["defaultValue"] = default
 
         # Year range
@@ -1690,7 +1697,7 @@ class S3CalendarWidget(FormWidget):
             #    # Urdu uses Arabic
             #    language = "ar"
             if "-" in language:
-                parts = language.split("_", 1)
+                parts = language.split("-", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
 
             # datePicker regional
@@ -2569,7 +2576,9 @@ class S3GroupedOptionsWidget(FormWidget):
                  help_field=None,
                  none=None,
                  sort=True,
-                 orientation=None):
+                 orientation=None,
+                 table=True,
+                 ):
         """
             Constructor
 
@@ -2586,6 +2595,7 @@ class S3GroupedOptionsWidget(FormWidget):
             @param none: True to render "None" as normal option
             @param sort: sort the options (only effective if size==None)
             @param orientation: the ordering orientation, "columns"|"rows"
+            @param table: whether to render options inside a table or not
         """
 
         self.options = options
@@ -2596,6 +2606,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.none = none
         self.sort = sort
         self.orientation = orientation
+        self.table = table
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2633,9 +2644,10 @@ class S3GroupedOptionsWidget(FormWidget):
 
         widget.add_class("groupedopts-widget")
         widget_opts = {"columns": self.cols,
-                       "emptyText": str(current.T("No options available")),
+                       "emptyText": s3_str(current.T("No options available")),
                        "orientation": self.orientation or "columns",
                        "sort": self.sort,
+                       "table": self.table,
                        }
         script = '''$('#%s').groupedopts(%s)''' % \
                  (_id, json.dumps(widget_opts, separators=SEPARATORS))
@@ -5112,7 +5124,7 @@ class S3LocationSelector(S3Selector):
         if show_address:
             address = values.get("address")
             if show_address is True:
-                label = T("Street Address")
+                label = gtable.addr_street.label
             else:
                 label = show_address
             components["address"] = manual_input(fieldname,
@@ -5477,7 +5489,8 @@ class S3LocationSelector(S3Selector):
 
         db = current.db
         if query is not None:
-            query &= (gtable.deleted == False)
+            query &= (gtable.deleted == False) & \
+                     (gtable.end_date == None)
             fields = [gtable.id,
                       gtable.name,
                       gtable.level,
@@ -7913,14 +7926,15 @@ class S3TimeIntervalWidget(FormWidget):
 # =============================================================================
 class S3UploadWidget(UploadWidget):
     """
-        Subclassed to not show the delete checkbox when field is mandatory
-            - This now been included as standard within Web2Py from r2867
-            - Leaving this unused example in the codebase so that we can easily
-              amend this if we wish to later
+        Subclass for use in inline-forms
+
+        - always renders all widget elements (even when empty), so that
+          they can be updated from JavaScript
+        - adds CSS selectors for widget elements
     """
 
-    @staticmethod
-    def widget(field, value, download_url=None, **attributes):
+    @classmethod
+    def widget(cls, field, value, download_url=None, **attributes):
         """
         generates a INPUT file tag.
 
@@ -7933,33 +7947,77 @@ class S3UploadWidget(UploadWidget):
 
         """
 
-        default=dict(
-            _type="file",
-            )
-        attr = UploadWidget._attributes(field, default, **attributes)
+        T = current.T
 
-        inp = INPUT(**attr)
+        # File input
+        default = {"_type": "file",
+                   }
+        attr = cls._attributes(field, default, **attributes)
 
+        # File URL
+        base_url = "/default/download"
         if download_url and value:
-            url = "%s/%s" % (download_url, value)
-            (br, image) = ("", "")
-            if UploadWidget.is_image(value):
-                br = BR()
-                image = IMG(_src = url, _width = UploadWidget.DEFAULT_WIDTH)
-
-            requires = attr["requires"]
-            if requires == [] or isinstance(requires, IS_EMPTY_OR):
-                inp = DIV(inp, "[",
-                          A(UploadWidget.GENERIC_DESCRIPTION, _href = url),
-                          "|",
-                          INPUT(_type="checkbox",
-                                _name=field.name + UploadWidget.ID_DELETE_SUFFIX),
-                          UploadWidget.DELETE_FILE,
-                          "]", br, image)
+            if callable(download_url):
+                url = download_url(value)
             else:
-                inp = DIV(inp, "[",
-                          A(UploadWidget.GENERIC_DESCRIPTION, _href = url),
-                          "]", br, image)
+                base_url = download_url
+                url = download_url + "/" + value
+        else:
+            url = None
+
+        # Download-link
+        link = SPAN("[",
+                    A(T(cls.GENERIC_DESCRIPTION),
+                      _href = url,
+                      ),
+                    _class = "s3-upload-link",
+                    _style = "white-space:nowrap",
+                    )
+
+        # Delete-checkbox
+        requires = attr["requires"]
+        if requires == [] or isinstance(requires, IS_EMPTY_OR):
+            name = field.name + cls.ID_DELETE_SUFFIX
+            delete_checkbox = TAG[""]("|",
+                                      INPUT(_type = "checkbox",
+                                            _name = name,
+                                            _id = name,
+                                            ),
+                                      LABEL(T(cls.DELETE_FILE),
+                                            _for = name,
+                                            _style = "display:inline",
+                                            ),
+                                      )
+            link.append(delete_checkbox)
+
+        # Complete link-element
+        link.append("]")
+        if not url:
+            link.add_class("hide")
+
+        # Image preview
+        preview_class = "s3-upload-preview"
+        if value and cls.is_image(value):
+            preview_url = url
+        else:
+            preview_url = None
+            preview_class = "%s hide" % preview_class
+        image = DIV(IMG(_alt = T("Loading"),
+                        _src = preview_url,
+                        _width = cls.DEFAULT_WIDTH,
+                        ),
+                    _class = preview_class,
+                    )
+
+        # Construct the widget
+        inp = DIV(INPUT(**attr),
+                  link,
+                  image,
+                  _class="s3-upload-widget",
+                  data = {"base": base_url,
+                          },
+                  )
+
         return inp
 
 # =============================================================================
@@ -8744,6 +8802,8 @@ class ICON(I):
     # - "_base" can be used to define a common CSS class for all icons
     #
     icons = {
+        # Font-Awesome 4
+        # http://fontawesome.io/icons/
         "font-awesome": {
             "_base": "fa",
             "active": "fa-check",
@@ -8761,6 +8821,7 @@ class ICON(I):
             "bookmark-empty": "fa-bookmark-o",
             "briefcase": "fa-briefcase",
             "calendar": "fa-calendar",
+            "caret-right": "fa-caret-right",
             "certificate": "fa-certificate",
             "comment-alt": "fa-comment-o",
             "commit": "fa-check-square-o",
@@ -8800,7 +8861,9 @@ class ICON(I):
             "org-network": "fa-umbrella",
             "other": "fa-circle",
             "paper-clip": "fa-paperclip",
+            "pencil": "fa-pencil",
             "phone": "fa-phone",
+            "play": "fa-play",
             "plus": "fa-plus",
             "plus-sign": "fa-plus-sign",
             "project": "fa-dashboard",
@@ -8833,6 +8896,8 @@ class ICON(I):
             "zoomin": "fa-zoomin",
             "zoomout": "fa-zoomout",
         },
+        # Foundation Icon Fonts 3
+        # http://zurb.com/playground/foundation-icon-fonts-3
         "foundation": {
             "active": "fi-check",
             "activity": "fi-price-tag",
@@ -8844,6 +8909,7 @@ class ICON(I):
             "bookmark": "fi-bookmark",
             "bookmark-empty": "fi-bookmark-empty",
             "calendar": "fi-calendar",
+            "caret-right": "fi-play",
             "certificate": "fi-burst",
             "comment-alt": "fi-comment",
             "commit": "fi-check",
@@ -8874,7 +8940,9 @@ class ICON(I):
             "org-network": "fi-asterisk",
             "other": "fi-asterisk",
             "paper-clip": "fi-paperclip",
+            "pencil": "fi-pencil",
             "phone": "fi-telephone",
+            "play": "fi-play",
             "plus": "fi-plus",
             "plus-sign": "fi-plus",
             "print": "fi-print",
@@ -8901,6 +8969,8 @@ class ICON(I):
             "zoomin": "fi-zoom-in",
             "zoomout": "fi-zoom-out",
         },
+        # Font-Awesome 3
+        # http://fontawesome.io/3.2.1/icons/
         "font-awesome3": {
             "_base": "icon",
             "active": "icon-check",
@@ -8915,6 +8985,7 @@ class ICON(I):
             "bookmark-empty": "icon-bookmark-empty",
             "briefcase": "icon-briefcase",
             "calendar": "icon-calendar",
+            "caret-right": "icon-caret-right",
             "certificate": "icon-certificate",
             "comment-alt": "icon-comment-alt",
             "commit": "icon-truck",
@@ -8946,7 +9017,9 @@ class ICON(I):
             "org-network": "icon-umbrella",
             "other": "icon-circle",
             "paper-clip": "icon-paper-clip",
+            "pencil": "icon-pencil",
             "phone": "icon-phone",
+            "play": "icon-play",
             "plus": "icon-plus",
             "plus-sign": "icon-plus-sign",
             "print": "icon-print",

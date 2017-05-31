@@ -409,9 +409,14 @@ select {
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
+/* line 212, ../scss/custom/_forms.scss */
+.filter-form label.inline {
+  line-height: normal;
+  padding-top: 0.2rem;
+}
 
 /* Login/Registration box */
-/* line 215, ../scss/custom/_forms.scss */
+/* line 219, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -419,13 +424,13 @@ select {
 }
 
 /* Help Popup */
-/* line 222, ../scss/custom/_forms.scss */
+/* line 226, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 226, ../scss/custom/_forms.scss */
+/* line 230, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -434,7 +439,7 @@ select {
   padding: 0;
   width: 60px;
 }
-/* line 234, ../scss/custom/_forms.scss */
+/* line 238, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -951,12 +956,18 @@ body.rtl .list_formats div {
 }
 
 /* line 26, ../scss/custom/_widgets.scss */
+.ui-multiselect-checkboxes li label input {
+  margin-left: 0.2rem;
+  margin-right: 0.3rem;
+}
+
+/* line 31, ../scss/custom/_widgets.scss */
 #list-btn-add {
   float: right;
   margin-right: 1.0rem;
 }
 
-/* line 31, ../scss/custom/_widgets.scss */
+/* line 36, ../scss/custom/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-left: 1.0rem;
@@ -964,78 +975,78 @@ body.rtl #list-btn-add {
 }
 
 /* Summary tabs */
-/* line 38, ../scss/custom/_widgets.scss */
+/* line 43, ../scss/custom/_widgets.scss */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
 }
 
-/* line 41, ../scss/custom/_widgets.scss */
+/* line 46, ../scss/custom/_widgets.scss */
 #summary-tabs {
   margin-top: 10px;
 }
-/* line 43, ../scss/custom/_widgets.scss */
+/* line 48, ../scss/custom/_widgets.scss */
 #summary-tabs.ui-widget-content {
   background: none;
   border: none;
 }
 
-/* line 49, ../scss/custom/_widgets.scss */
+/* line 54, ../scss/custom/_widgets.scss */
 #summary-tab-headers .ui-tabs-nav {
   border: none;
   margin: 0 10px;
 }
-/* line 53, ../scss/custom/_widgets.scss */
+/* line 58, ../scss/custom/_widgets.scss */
 #summary-tab-headers a {
   border-color: #CCC;
 }
-/* line 56, ../scss/custom/_widgets.scss */
+/* line 61, ../scss/custom/_widgets.scss */
 #summary-tab-headers .ui-tabs-active a {
   border-bottom: 1px solid white;
 }
-/* line 59, ../scss/custom/_widgets.scss */
+/* line 64, ../scss/custom/_widgets.scss */
 #summary-tab-headers li {
   margin-right: 5px;
   box-shadow: none;
 }
 
-/* line 66, ../scss/custom/_widgets.scss */
+/* line 71, ../scss/custom/_widgets.scss */
 #summary-sections .x-panel-body {
   border: none;
   border-radius: 4px;
 }
 
 /* Date picker */
-/* line 73, ../scss/custom/_widgets.scss */
+/* line 78, ../scss/custom/_widgets.scss */
 input.date.hasDatepicker {
   display: inline-block;
 }
 
-/* line 76, ../scss/custom/_widgets.scss */
+/* line 81, ../scss/custom/_widgets.scss */
 .ui-datepicker-trigger {
   background-color: transparent;
   background-image: url("../../img/bootstrap/calendar.gif");
   margin-left: 10px;
 }
 
-/* line 81, ../scss/custom/_widgets.scss */
+/* line 86, ../scss/custom/_widgets.scss */
 .ui-datepicker.ui-widget {
   z-index: 1000 !important;
 }
 
 /* Range filter widgets */
-/* line 86, ../scss/custom/_widgets.scss */
+/* line 91, ../scss/custom/_widgets.scss */
 .range-filter-label label {
   font-size: 1.0em;
 }
 
-/* line 90, ../scss/custom/_widgets.scss */
+/* line 95, ../scss/custom/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
   float: left;
   margin-right: 2px;
 }
 
-/* line 96, ../scss/custom/_widgets.scss */
+/* line 101, ../scss/custom/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
@@ -1043,20 +1054,33 @@ input.date.hasDatepicker {
 }
 
 /* GroupedOptions widget */
-/* line 103, ../scss/custom/_widgets.scss */
+/* line 108, ../scss/custom/_widgets.scss */
 .s3-groupedopts-label {
   float: none;
   margin-bottom: 0.3rem;
 }
 
-/* line 107, ../scss/custom/_widgets.scss */
+/* line 112, ../scss/custom/_widgets.scss */
 .s3-groupedopts-widget table {
   margin-left: 0;
   margin-bottom: 0.5rem;
 }
 
+/* line 117, ../scss/custom/_widgets.scss */
+table.s3-groupedopts-widget td {
+  white-space: nowrap;
+}
+/* line 119, ../scss/custom/_widgets.scss */
+table.s3-groupedopts-widget td input {
+  vertical-align: top;
+}
+/* line 122, ../scss/custom/_widgets.scss */
+table.s3-groupedopts-widget td label {
+  white-space: pre-wrap;
+}
+
 /* ImageCropWidget */
-/* line 113, ../scss/custom/_widgets.scss */
+/* line 129, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1064,36 +1088,36 @@ input.date.hasDatepicker {
 }
 
 /* pr_Contacts widgets */
-/* line 120, ../scss/custom/_widgets.scss */
+/* line 136, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 124, ../scss/custom/_widgets.scss */
+/* line 140, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 127, ../scss/custom/_widgets.scss */
+/* line 143, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 131, ../scss/custom/_widgets.scss */
+/* line 147, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 135, ../scss/custom/_widgets.scss */
+/* line 151, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 139, ../scss/custom/_widgets.scss */
+/* line 155, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1104,7 +1128,7 @@ input.date.hasDatepicker {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 148, ../scss/custom/_widgets.scss */
+/* line 164, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1112,46 +1136,46 @@ input.date.hasDatepicker {
 }
 
 /* Data Lists (including profile) */
-/* line 157, ../scss/custom/_widgets.scss */
+/* line 173, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 161, ../scss/custom/_widgets.scss */
+/* line 177, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 164, ../scss/custom/_widgets.scss */
+/* line 180, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 167, ../scss/custom/_widgets.scss */
+/* line 183, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 170, ../scss/custom/_widgets.scss */
+/* line 186, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 175, ../scss/custom/_widgets.scss */
+/* line 191, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 179, ../scss/custom/_widgets.scss */
+/* line 195, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 183, ../scss/custom/_widgets.scss */
+/* line 199, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 189, ../scss/custom/_widgets.scss */
+/* line 205, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1159,41 +1183,47 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 196, ../scss/custom/_widgets.scss */
+/* line 212, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 201, ../scss/custom/_widgets.scss */
+/* line 217, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 206, ../scss/custom/_widgets.scss */
+/* line 222, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Text representation */
-/* line 212, ../scss/custom/_widgets.scss */
+/* line 228, ../scss/custom/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
-/* line 215, ../scss/custom/_widgets.scss */
+/* line 231, ../scss/custom/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 219, ../scss/custom/_widgets.scss */
+/* line 235, ../scss/custom/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
   content: "...";
+}
+
+/* S3SQLInlineLink read-only list representation */
+/* line 242, ../scss/custom/_widgets.scss */
+ul.s3-inline-link {
+  font-size: inherit;
 }
 
 /* line 1, ../scss/custom/_misc.scss */
@@ -1417,55 +1447,135 @@ body.rtl .event-type-header {
 }
 
 /* line 163, ../scss/custom/_misc.scss */
+.event-type-name {
+  font-size: 1.1rem;
+  padding: 0.3rem;
+}
+
+/* line 167, ../scss/custom/_misc.scss */
+.event-type-name.placeholder {
+  font-size: 0.8rem;
+  background-color: #fff0f0;
+  border: 2px solid red;
+}
+
+/* line 172, ../scss/custom/_misc.scss */
 .check-in-warning {
   color: red;
   font-weight: bold;
   margin-left: 0.5rem;
 }
-/* line 167, ../scss/custom/_misc.scss */
+/* line 176, ../scss/custom/_misc.scss */
 .check-in-warning i {
   margin-right: 0.3rem;
 }
 
-/* line 171, ../scss/custom/_misc.scss */
+/* line 180, ../scss/custom/_misc.scss */
 .profile-picture {
   margin-top: 1rem;
 }
-/* line 173, ../scss/custom/_misc.scss */
+/* line 182, ../scss/custom/_misc.scss */
 .profile-picture .image-row {
   margin-bottom: 1rem;
 }
 
-/* line 179, ../scss/custom/_misc.scss */
+/* line 188, ../scss/custom/_misc.scss */
 #site_check_in_info__row .controls {
   width: 100%;
 }
 
-/* line 182, ../scss/custom/_misc.scss */
+/* line 191, ../scss/custom/_misc.scss */
 #site_check_in_status__row .controls {
   padding-top: 0.3rem;
   width: 100%;
 }
 
-/* line 187, ../scss/custom/_misc.scss */
+/* line 196, ../scss/custom/_misc.scss */
 #check-in-form .status-label {
   font-size: 0.9rem;
 }
-/* line 190, ../scss/custom/_misc.scss */
+/* line 199, ../scss/custom/_misc.scss */
 #check-in-form .status-message {
   font-size: 0.9rem;
   font-weight: bold;
 }
-/* line 194, ../scss/custom/_misc.scss */
+/* line 203, ../scss/custom/_misc.scss */
 #check-in-form .person-details {
   font-size: 1rem;
 }
 
-/* line 198, ../scss/custom/_misc.scss */
+/* line 207, ../scss/custom/_misc.scss */
 .clear-btn {
   cursor: pointer;
 }
-/* line 200, ../scss/custom/_misc.scss */
+/* line 209, ../scss/custom/_misc.scss */
 .clear-btn .fa {
   color: #B0B0B0;
+}
+
+/* line 215, ../scss/custom/_misc.scss */
+#case_event_family__row .controls {
+  width: 100%;
+}
+
+/* line 218, ../scss/custom/_misc.scss */
+#family-members {
+  width: 100%;
+  border-collapse: collapse;
+}
+/* line 221, ../scss/custom/_misc.scss */
+#family-members div.member-show-picture {
+  height: 2.7rem;
+}
+/* line 224, ../scss/custom/_misc.scss */
+#family-members .member-id {
+  color: #808080;
+  font-size: 0.8rem;
+  margin-bottom: 0.1rem;
+}
+/* line 229, ../scss/custom/_misc.scss */
+#family-members .member-message {
+  margin: 0;
+  color: #e0767a;
+  font-size: 0.8rem;
+  font-style: normal;
+}
+/* line 234, ../scss/custom/_misc.scss */
+#family-members .member-message .columns {
+  padding: 0;
+}
+/* line 239, ../scss/custom/_misc.scss */
+#family-members .family-member td {
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+}
+/* line 243, ../scss/custom/_misc.scss */
+#family-members .family-member.member-blocked td {
+  background-color: #f6f6f6;
+}
+/* line 245, ../scss/custom/_misc.scss */
+#family-members .family-member.member-blocked td .member-id, #family-members .family-member.member-blocked td .member-name {
+  color: #b0b0b0;
+}
+/* line 251, ../scss/custom/_misc.scss */
+#family-members .family-all td {
+  background-color: #f0f8f6;
+  color: #505050;
+  font-style: italic;
+  height: 2.7rem;
+}
+/* line 258, ../scss/custom/_misc.scss */
+#family-members button.member-show-picture.showing {
+  border: 1px solid black;
+}
+
+/* line 262, ../scss/custom/_misc.scss */
+.member-caption {
+  padding: 0.2rem 0;
+  font-size: 1rem;
+}
+
+/* line 268, ../scss/custom/_misc.scss */
+#sub-defaultaddress table tr td {
+  padding: 0.3rem;
 }

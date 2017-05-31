@@ -1,0 +1,4 @@
+Name,Type,Enabled,Default
+Bing Aerial,aerial,False,
+Bing Hybrid,hybrid,True,True
+Bing Road,road,False,

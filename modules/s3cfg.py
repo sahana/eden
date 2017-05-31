@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -811,7 +811,13 @@ class S3Config(Storage):
         """
             The Public URL for the site - for use in email links, etc
         """
-        return self.base.get("public_url", "http://127.0.0.1:8000")
+        public_url = self.base.get("public_url")
+        if not public_url:
+            env = current.request.env
+            scheme = env.get("wsgi_url_scheme", "http").lower()
+            host = env.get("http_host") or "127.0.0.1:8000"
+            self.base.public_url = public_url = "%s://%s" % (scheme, host)
+        return public_url
 
     def get_base_cdn(self):
         """
@@ -1564,6 +1570,7 @@ class S3Config(Storage):
             e.g. Apellido Paterno in Hispanic names
 
             Setting this means that auth_user.last_name matches with pr_person.middle_name
+            e.g. RMSAmericas
         """
         return self.__lazy("L10n", "mandatory_middlename", False)
 
@@ -2289,10 +2296,10 @@ class S3Config(Storage):
         """
             Custom function that returns the list of document_ids to be sent
             as attachment in email
-            
+
             The function may be of the form:
             custom_msg_notify_attachment(resource, data, meta_data), where
-            resource is the S3Resource, data: the data returned from 
+            resource is the S3Resource, data: the data returned from
             S3Resource.select and meta_data: the meta data for the notification
             (see s3notify for the metadata)
         """
@@ -2321,6 +2328,17 @@ class S3Config(Storage):
             Lower this number to get extra performance from an overloaded server.
         """
         return self.search.get("max_results", 200)
+
+    def get_search_dates_auto_range(self):
+        """
+            Date filters to apply introspective range limits (by
+            looking up actual minimum/maximum dates from the records)
+
+            NB has scalability problems, so disabled by default =>
+               can be overridden per-widget using the "auto_range"
+               option (S3DateFilter)
+        """
+        return self.search.get("dates_auto_range", False)
 
     # -------------------------------------------------------------------------
     # Filter Manager Widget
@@ -2398,12 +2416,6 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #
-    def get_cap_identifier_prefix(self):
-        """
-            Prefix to be prepended to identifiers of CAP alerts
-        """
-        return self.cap.get("identifier_prefix", "")
-
     def get_cap_identifier_oid(self):
         """
             OID for the CAP issuing authority
@@ -2423,12 +2435,6 @@ class S3Config(Storage):
 
         # Else fallback to the default OID
         return self.cap.get("identifier_oid", "")
-
-    def get_cap_identifier_suffix(self):
-        """
-            Suffix to be appended to identifiers of CAP alerts
-        """
-        return self.cap.get("identifier_suffix", "")
 
     def get_cap_expire_offset(self):
         """
@@ -2560,6 +2566,15 @@ class S3Config(Storage):
         """
 
         return self.cap.get("alert_hub_title", current.T("SAMBRO Alert Hub Common Operating Picture"))
+
+    def get_cap_area_default(self):
+        """
+            During importing from XML, which element(s) to use for the
+            record in cap_area_location table
+            elements are <polygon> and <geocode>
+        """
+
+        return self.cap.get("area_default", ["geocode", "polygon"])
 
     # -------------------------------------------------------------------------
     # CMS: Content Management System
@@ -2712,17 +2727,49 @@ class S3Config(Storage):
         """
         return self.cr.get("tags", False)
 
+    def get_cr_shelter_inspection_tasks(self):
+        """
+            Generate tasks from shelter inspections (requires project module)
+        """
+        if self.has_module("project"):
+            return self.cr.get("shelter_inspection_tasks", False)
+        else:
+            return False
+
+    def get_cr_shelter_inspection_task_active_statuses(self):
+        """
+            List of active statuses of shelter inspection tasks
+            (subset of project_task_status_opts)
+        """
+        default = (1, 2, 3, 4, 5, 6, 11)
+        return self.cr.get("shelter_inspection_tasks_active_statuses", default)
+
+    def get_cr_shelter_inspection_task_completed_status(self):
+        """
+            Completed-status for shelter inspection tasks (one value
+            of project_task_status_opts), will be set when inspection
+            flag is marked as resolved
+        """
+        return self.cr.get("shelter_inspection_tasks_completed_status", 12)
+
     # -------------------------------------------------------------------------
     # DC: Data Collection
     #
-    def get_dc_collection_label(self):
+    def get_dc_response_label(self):
         """
-            Label for Data Collections
-            - default: 'Data Collection'
-            - 'Survey'
+            Label for Responses
             - 'Assessment;
+            - 'Response' (default if set to None)
+            - 'Survey'
         """
-        return self.dc.get("collection_label", "Assessment")
+        return self.dc.get("response_label", "Assessment")
+
+    def get_dc_mobile_data(self):
+        """
+            Whether Mobile Clients should download Assessments
+            - e.g. when these are created through Targetting
+        """
+        return self.dc.get("mobile_data", False)
 
     # -------------------------------------------------------------------------
     # Deployments
@@ -2817,6 +2864,20 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_transferability", False)
 
+    def get_dvr_case_activity_needs_multiple(self):
+        """
+            Whether Case Activities link to Multiple Needs
+            - e.g. DRK: False
+            - e.g. STL: True
+        """
+        return self.dvr.get("case_activity_needs_multiple", False)
+
+    def get_dvr_case_events_close_appointments(self):
+        """
+            Whether case events automatically close appointments
+        """
+        return self.dvr.get("case_events_close_appointments", False)
+
     def get_dvr_case_flags(self):
         """
             Enable features to manage case flags
@@ -2853,12 +2914,6 @@ class S3Config(Storage):
             status when set to "completed"
         """
         return self.dvr.get("appointments_update_case_status", False)
-
-    def get_dvr_case_events_close_appointments(self):
-        """
-            Whether case events automatically close appointments
-        """
-        return self.dvr.get("case_events_close_appointments", False)
 
     def get_dvr_payments_update_last_seen_on(self):
         """
@@ -2897,6 +2952,25 @@ class S3Config(Storage):
         """
         return self.dvr.get("event_registration_checkin_warning", False)
 
+    def get_dvr_event_registration_show_picture(self):
+        """
+            Event registration UI to show profile picture
+            by default (True), or only on demand (False):
+            - can be set to False (selectively) in order to improve
+              responsiveness of the UI and reduce network traffic
+        """
+        return self.dvr.get("event_registration_show_picture", True)
+
+    def get_dvr_event_registration_exclude_codes(self):
+        """
+            List of case event type codes to exclude from
+            the event registration UI; can use * as wildcard
+
+            Example:
+                settings.dvr.event_registration_exclude_codes = ("FOOD*",)
+        """
+        return self.dvr.get("event_registration_exclude_codes", None)
+
     def get_dvr_activity_use_service_type(self):
         """
             Use service type in case activities
@@ -2914,6 +2988,18 @@ class S3Config(Storage):
             Need types are hierarchical
         """
         return self.dvr.get("needs_hierarchical", False)
+
+    def get_dvr_vulnerability_types_hierarchical(self):
+        """
+            Vulnerability types are hierarchical
+        """
+        return self.dvr.get("vulnerability_types_hierarchical", False)
+
+    def get_dvr_response_types_hierarchical(self):
+        """
+            Response types are hierarchical
+        """
+        return self.dvr.get("response_types_hierarchical", False)
 
     # -------------------------------------------------------------------------
     # Education
@@ -2964,17 +3050,17 @@ class S3Config(Storage):
         """
         return self.event.get("incident_types_hierarchical", False)
 
-    def get_event_collection_tab(self):
+    def get_event_dc_response_tab(self):
         """
-            Whether to show the DC collection tab for events
+            Whether to show the DC response tab for events
         """
-        return self.event.get("collection_tab", True)
+        return self.event.get("dc_response_tab", True)
 
-    def get_event_target_tab(self):
+    def get_event_dc_target_tab(self):
         """
             Whether to show the DC target tab for events
         """
-        return self.event.get("target_tab", True)
+        return self.event.get("dc_target_tab", True)
 
     def get_event_impact_tab(self):
         """
@@ -3308,6 +3394,7 @@ class S3Config(Storage):
     def get_hrm_record_label(self):
         """
             Label to use for the HR record tab
+            - string not LazyT
         """
         label = self.__lazy("hrm", "record_label", default=None)
         if not label:
@@ -3699,6 +3786,12 @@ class S3Config(Storage):
                 settings.mobile.forms = [("Request", "req_req")]
         """
         return self.__lazy("mobile", "forms", [])
+
+    def get_mobile_dynamic_tables(self):
+        """
+            Expose mobile forms for dynamic tables
+        """
+        return self.mobile.get("dynamic_tables", True)
 
     # -------------------------------------------------------------------------
     # Organisations
@@ -4444,6 +4537,12 @@ class S3Config(Storage):
             Whether to use hours logging for tasks
         """
         return self.project.get("task_time", True)
+
+    def get_project_my_tasks_include_team_tasks(self):
+        """
+            "My Open Tasks" to include team tasks
+        """
+        return self.project.get("my_tasks_include_team_tasks", False)
 
     # -------------------------------------------------------------------------
     # Requests Management Settings

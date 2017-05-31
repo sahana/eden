@@ -2,7 +2,7 @@
 
 """ Sahana Eden Supply Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,6 +29,7 @@
 
 __all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
+           "S3SupplyDistributionDVRActivityModel",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -247,6 +248,12 @@ class S3SupplyModel(S3Model):
         else:
             parent_represent = item_category_represent
 
+        item_category_requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "supply_item_category.id",
+                                              item_category_represent_nocodes,
+                                              sort=True)
+                                    )
+
         tablename = "supply_item_category"
         define_table(tablename,
                      catalog_id(),
@@ -287,7 +294,11 @@ class S3SupplyModel(S3Model):
                            writable = vehicle,
                            ),
                      s3_comments(),
-                     *s3_meta_fields())
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.parent_item_category_id.set_attributes(requires = item_category_requires),
+                         ]
+                     )
 
         # CRUD strings
         ADD_ITEM_CATEGORY = T("Create Item Category")
@@ -304,22 +315,12 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Item Categories currently registered"))
 
         # Reusable Field
-        item_category_requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db, "supply_item_category.id",
-                                              item_category_represent_nocodes,
-                                              sort=True)
-                                    )
-
         item_category_comment = S3PopupLink(c = "supply",
                                             f = "item_category",
                                             label = ADD_ITEM_CATEGORY,
                                             title = T("Item Category"),
                                             tooltip = ADD_ITEM_CATEGORY,
                                             )
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.parent_item_category_id.requires = item_category_requires
 
         item_category_id = S3ReusableField("item_category_id", "reference %s" % tablename,
                                            comment = item_category_comment,
@@ -1211,6 +1212,8 @@ class S3SupplyDistributionModel(S3Model):
 
     names = ("supply_distribution_item",
              "supply_distribution",
+             "supply_distribution_id",
+             "supply_distribution_person",
              )
 
     def model(self):
@@ -1344,8 +1347,16 @@ class S3SupplyDistributionModel(S3Model):
         #represent = S3Represent(lookup=tablename,
         #                        field_sep = " ",
         #                        fields=["value", "parameter_id"])
+        distribution_id = S3ReusableField("distribution_id",
+                                          "reference %s" % tablename,
+                                          ondelete = "CASCADE",
+                                          #represent = represent,
+                                          requires = IS_ONE_OF(db,
+                                                        "%s.id" % tablename,
+                                                        #represent,
+                                                        ),
+                                          )
 
-        # Resource Configuration
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1521,10 +1532,52 @@ class S3SupplyDistributionModel(S3Model):
                   super_entity = "stats_data",
                   )
 
-        # Pass names back to global scope (s3.*)
-        return {}
+        # ---------------------------------------------------------------------
+        # Supply Distributions <> Named Beneficiaries Link Table
+        #
+        tablename = "supply_distribution_person"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       label = T("Head of Household"),
+                                       ondelete = "CASCADE",
+                                       ),
+                     Field("supply_distribution_id", "reference supply_distribution",
+                           label = T("Item"),
+                           ondelete = "CASCADE",
+                           #represent = represent,
+                           #requires = IS_ONE_OF(current.db, "supply_distribution.id",
+                           #                     #represent,
+                           #                     sort=True)),
+                           requires = IS_IN_DB(db, "supply_distribution.id"),
+                           ),
+                     Field("received", "boolean",
+                           default = True,
+                           label = T("Received?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
-    # ---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"supply_distribution_id": distribution_id}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"supply_distribution_id": lambda name="distribution_id", **attr: \
+                                                 dummy(name, **attr),
+                }
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_item_onaccept(form):
         """
@@ -1546,7 +1599,7 @@ class S3SupplyDistributionModel(S3Model):
             db(dtable.id == record_id).update(name = item[ltable.name])
         return
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_onaccept(form):
         """
@@ -1610,7 +1663,7 @@ class S3SupplyDistributionModel(S3Model):
             # Update Distribution details
             db(dtable.id == record_id).update(**data)
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def supply_distribution_year(row):
         """ Virtual field for the supply_distribution table """
@@ -1635,6 +1688,42 @@ class S3SupplyDistributionModel(S3Model):
             return [end_date.year]
         else:
             return list(xrange(date.year, end_date.year + 1))
+
+# =============================================================================
+class S3SupplyDistributionDVRActivityModel(S3Model):
+    """
+        Model to link distributions to DVR activities / case activities
+    """
+
+    names = ("supply_distribution_case_activity",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Supply Distributions <=> Case Activity Link Table
+        #
+        tablename = "supply_distribution_case_activity"
+        self.define_table(tablename,
+                          self.dvr_activity_id(ondelete = "CASCADE",
+                                               ),
+                          self.dvr_case_activity_id(ondelete = "CASCADE",
+                                                    ),
+                          self.supply_distribution_id(empty = False,
+                                                      ondelete = "CASCADE",
+                                                      ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class supply_ItemRepresent(S3Represent):
@@ -2064,7 +2153,7 @@ def supply_item_entity_category(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_country(row):
     """ Virtual field: country """
 
@@ -2130,7 +2219,7 @@ def supply_item_entity_country(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_organisation(row):
     """ Virtual field: organisation """
 
@@ -2193,7 +2282,7 @@ def supply_item_entity_organisation(row):
     else:
         return current.messages["NONE"]
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_contacts(row):
     """ Virtual field: contacts (site_id) """
 
@@ -2276,7 +2365,7 @@ def supply_item_entity_contacts(row):
         return default
 
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_item_entity_status(row):
     """ Virtual field: status """
 
@@ -2656,7 +2745,7 @@ $('#organisation_dropdown').change(function(){
                                     )
     return output
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def supply_get_shipping_code(type, site_id, field):
 
     db = current.db

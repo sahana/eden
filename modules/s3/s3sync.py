@@ -2,7 +2,7 @@
 
 """ S3 Synchronization
 
-    @copyright: 2011-2016 (c) Sahana Software Foundation
+    @copyright: 2011-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -43,14 +43,6 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
-from s3utils import S3ModuleDebug
-
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-    _debug = S3ModuleDebug.on
-else:
-    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -224,11 +216,12 @@ class S3Sync(S3Method):
 
         mixed =  attr.get("mixed", False)
         get_vars = r.get_vars
+        vars_get = get_vars.get
 
         resource = r.resource
 
         # Identify the requesting repository
-        repository_uuid = get_vars.get("repository")
+        repository_uuid = vars_get("repository")
         connector = None
 
         if repository_uuid:
@@ -250,19 +243,19 @@ class S3Sync(S3Method):
                                                         connector.apitype))
 
         # Additional export parameters
-        start = get_vars.get("start", None)
+        start = vars_get("start", None)
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = get_vars.get("limit", None)
+        limit = vars_get("limit", None)
         if limit is not None:
             try:
                 limit = int(limit)
             except ValueError:
                 limit = None
-        msince = get_vars.get("msince", None)
+        msince = vars_get("msince", None)
         if msince is not None:
             msince = s3_parse_datetime(msince)
 
@@ -284,6 +277,12 @@ class S3Sync(S3Method):
                     filters[tablename] = f
         if not filters:
             filters = None
+
+        # Should we include Components?
+        # @ToDo: Option to specify components?
+        components = vars_get("components", None)
+        if components and components.lower() == "none":
+            resource.components = Storage()
 
         try:
             result = connector.send(resource,
@@ -447,6 +446,7 @@ class S3Sync(S3Method):
         current.log.debug("S3Sync: synchronize %s" % repository.url)
 
         log = self.log
+        repository_id = repository.id
 
         error = None
         if repository.apitype == "filesync":
@@ -456,7 +456,7 @@ class S3Sync(S3Method):
             if not repository.url:
                 error = "No URL set for repository"
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = None,
                       mode = log.NONE,
@@ -467,15 +467,17 @@ class S3Sync(S3Method):
                       )
             return False
 
-        ttable = current.s3db.sync_task
-        query = (ttable.repository_id == repository.id) & \
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.sync_task
+        query = (ttable.repository_id == repository_id) & \
                 (ttable.deleted != True)
-        tasks = current.db(query).select()
+        tasks = db(query).select()
 
         connector = S3SyncRepository(repository)
         error = connector.login()
         if error:
-            log.write(repository_id = repository.id,
+            log.write(repository_id = repository_id,
                       resource_name = None,
                       transmission = log.OUT,
                       mode = log.LOGIN,
@@ -522,6 +524,7 @@ class S3Sync(S3Method):
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
         s3.synchronise_uuids = False
+        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.utcnow())
 
         return success
 
@@ -537,14 +540,15 @@ class S3Sync(S3Method):
         """
 
         s3db = current.s3db
+        _debug = current.log.debug
 
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s", resource.tablename)
-        _debug("Repository: %s", repository.name)
-        _debug("Conflicting item: %s", item)
-        _debug("Method: %s", item.method)
+        _debug("Resolving conflict in %s" % resource.tablename)
+        _debug("Repository: %s" % repository.name)
+        _debug("Conflicting item: %s" % item)
+        _debug("Method: %s" % item.method)
 
         if resolver:
             _debug("Applying custom rule")

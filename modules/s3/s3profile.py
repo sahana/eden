@@ -2,7 +2,7 @@
 
 """ S3 Profile
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -845,7 +845,8 @@ class S3Profile(S3CRUD):
                         _class="profile-sub-header"),
                      DIV(form,
                          _class="form-container thumbnail"),
-                     _class=_class)
+                     _class=_class,
+                     )
 
         return output
 

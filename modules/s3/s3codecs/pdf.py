@@ -3,7 +3,7 @@
 """
     S3 Adobe PDF codec
 
-    @copyright: 2011-2016 (c) Sahana Software Foundation
+    @copyright: 2011-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1399,24 +1399,30 @@ class S3html2pdf():
             point to a static resource, directly to a file, or to an upload.
         """
 
-        from reportlab.platypus import Image
-
         I = None
-        if "_src" in html.attributes:
-            src = html.attributes["_src"]
-            sep = os.path.sep
-            root_dir = "%s%s%s" % (sep, current.request.application, sep)
+        src = html.attributes.get("_src")
+        if src:
             if uploadfolder:
+                # Assume that src is a filename directly off the uploadfolder
                 src = src.rsplit("/", 1) # Don't use os.sep here
                 src = os.path.join(uploadfolder, src[1])
-            elif src.startswith("%sstatic" % root_dir):
-                src = src.split(root_dir)[-1]
-                src = os.path.join(current.request.folder, src)
             else:
-                src = src.rsplit("/", 1) # Don't use os.sep here
-                src = os.path.join(current.request.folder,
-                                   "uploads%s" % sep, src[1])
+                request = current.request
+                base_url = "/%s/" % request.application
+                STATIC = "%sstatic" % base_url 
+                if src.startswith(STATIC):
+                    # Assume that filename is specified as a URL in static
+                    src = src.split(base_url)[-1]
+                    src = src.replace("/", os.sep)
+                    src = os.path.join(request.folder, src)
+                else:
+                    # Assume that filename is in root of main uploads folder
+                    # @ToDo: Allow use of subfolders!
+                    src = src.rsplit("/", 1) # Don't use os.sep here
+                    src = os.path.join(request.folder,
+                                       "uploads", src[1])
             if os.path.exists(src):
+                from reportlab.platypus import Image
                 I = Image(src)
 
         if not I:
@@ -1540,6 +1546,8 @@ class S3html2pdf():
         if row_count is None:
             row_count = 0
 
+        rowspans = []
+
         exclude_tag = self.exclude_tag
         parse_tr = self.parse_tr
         parse = self.parse_table_components
@@ -1558,7 +1566,7 @@ class S3html2pdf():
                                            )
 
             elif isinstance(component, TR):
-                result = parse_tr(component, style, row_count)
+                result = parse_tr(component, style, row_count, rowspans)
                 row_count += 1
 
             if result != None:
@@ -1567,13 +1575,14 @@ class S3html2pdf():
         return content, row_count
 
     # -------------------------------------------------------------------------
-    def parse_tr (self, html, style, rowCnt):
+    def parse_tr(self, html, style, rowCnt, rowspans):
         """
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element  to convert
             @param style: the default style
             @param rowCnt: the row counter
+            @param rowspans: the remaining rowspans (if any)
 
             @return: a list containing text that ReportLab can use
         """
@@ -1594,15 +1603,33 @@ class S3html2pdf():
         exclude_tag = self.exclude_tag
 
         colCnt = 0
+        rspan_index = -1
         for component in html.components:
 
             if not isinstance(component, (TH, TD)) or \
                exclude_tag(component):
                 continue
 
+            rspan_index += 1
+
+            if len(rowspans) < (rspan_index + 1):
+                rowspans.append(0)
+
+            if rowspans[rspan_index]:
+                rappend("")
+                rowspans[rspan_index] -= 1
+                cell = (colCnt, rowCnt)
+                sappend(("LINEABOVE", cell, cell, 0, colors.white))
+                colCnt += 1
+
             if component.components == []:
                 rappend("")
                 continue
+
+            rowspan = component.attributes.get("_rowspan")
+            if rowspan:
+                # @ToDo: Centre the text across the rows
+                rowspans[rspan_index] = rowspan - 1
 
             colspan = component.attributes.get("_colspan", 1)
             for detail in component.components:
@@ -1637,7 +1664,10 @@ class S3html2pdf():
                 else:
                     colCnt += 1
 
-        return None if row == [] else row
+        if row == []:
+            return None
+        else:
+            return row
 
     # -------------------------------------------------------------------------
     def _styles(self, element):

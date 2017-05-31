@@ -2,7 +2,7 @@
 
 """ Sahana Eden Assets Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -199,7 +199,7 @@ class S3AssetModel(S3Model):
  'lookupResource':'site',
  'lookupPrefix':'org',
  'lookupField':'site_id',
- 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org.json/')
 })''',
                                      ),
                      # This is a component, so needs to be a super_link

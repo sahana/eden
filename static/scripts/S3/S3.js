@@ -1331,7 +1331,7 @@ S3.openPopup = function(url, center) {
                 if (widget.hasClass('groupedopts-widget')) {
                     visible = widget.groupedopts('visible');
                 } else {
-                    visible = widget.is(':visible');
+                    visible = widget.data('visible') || widget.is(':visible');
                 }
                 if (visible) {
                     widget.data('visible', true);
@@ -1401,7 +1401,7 @@ S3.openPopup = function(url, center) {
             if (widget.hasClass('groupedopts-widget')) {
                 visible = widget.groupedopts('visible');
             } else {
-                visible = widget.is(':visible');
+                visible = widget.data('visible') || widget.is(':visible');
             }
             if (visible) {
                 show_widget = true;
@@ -1475,8 +1475,13 @@ S3.openPopup = function(url, center) {
             var value = triggerField.val();
             if (value) {
                 value = JSON.parse(value);
-                if (value.length) {
-                    triggerValue = value[0];
+                if (value.constructor === Array) {
+                    if (value.length) {
+                        triggerValue = value[0];
+                    }
+                } else
+                if (!!value) {
+                    triggerValue = value;
                 }
             }
         } else if (triggerField.length == 1) {
@@ -1980,6 +1985,9 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             inputLabel = $('[for=' + inputId + ']');
             try {
                 window.scrollTo(0, inputLabel.offset().top);
+                // Prevent first-field focus from scrolling back to
+                // the top of the form again:
+                S3.FocusOnFirstField = false;
             } catch(e) {}
         }
 

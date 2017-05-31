@@ -1,0 +1,4 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Gardens,,stdm,garden,marker_red,Forest,{name} (T('Garden')),name,,,False,,"{'fill':'00FF00','fillOpacity':0.5}",,,False,,0,
+Parcels,,stdm,parcel,marker_red,Private Field,{name} (T('Parcel')),name,,,False,,"{'fill':'0000FF','fillOpacity':0.5}",,,False,,0,
+Structures,,stdm,structure,marker_red,Building,{name} (T('Structure')),name,,,False,,"{'fill':'AAAA00','fillOpacity':0.5}",,,False,,0,

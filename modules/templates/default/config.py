@@ -315,6 +315,8 @@ def config(settings):
     #settings.gis.search_geonames = False
     # Uncomment to modify the Simplify Tolerance
     #settings.gis.simplify_tolerance = 0.001
+    # Uncomment this for highly-zoomed maps showing buildings
+    #settings.gis.precision = 5
     # Uncomment to Hide the Toolbar from the main Map
     #settings.gis.toolbar = False
     # Uncomment to show Catalogue Layers in Map Widgets (e.g. Profile & Summary pages)
@@ -482,6 +484,10 @@ def config(settings):
     #settings.cr.people_registration = False
     # Uncomment to use Tags for Shelters
     #settings.cr.tags = True
+    # Uncomment to generate tasks from shelter inspections (requires project module)
+    #settings.cr.shelter_inspection_tasks = True
+    # Configure active statuses for shelter inspection tasks (subset of project.task_status_opts)
+    #settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
 
     # -------------------------------------------------------------------------
     # Disaster Victim Registry / Case Management
@@ -513,10 +519,18 @@ def config(settings):
     #settings.dvr.activity_types = True
     # Uncomment this to use hierarchical case activity types
     #settings.dvr.activity_types_hierarchical = True
+    # Uncomment this if Case activities use multiple Needs
+    #settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to use service types for needs
     #settings.dvr_needs_use_service_type = True
     # Uncomment this to use hierarchical need types
     #settings.dvr.needs_hierarchical = True
+    # Uncomment this to use hierarchical vulnerability types
+    #settings.dvr.vulnerability_types_hierarchical = True
+    # Uncomment this to show a warning during event registration if the person is not currently checked-in
+    #settings.dvr.event_registration_checkin_warning = True
+    # Uncomment this to show profile pictures in event registration UI only on demand
+    #settings.dvr.event_registration_show_picture = False
 
     # -------------------------------------------------------------------------
     # Events
@@ -563,6 +577,7 @@ def config(settings):
     #settings.pr.lookup_duplicates = True
     # Uncomment to hide fields in S3AddPersonWidget[2]
     #settings.pr.request_dob = False
+    #settings.pr.request_email = False
     #settings.pr.request_gender = False
     # Uncomment to show field in S3AddPersonWidget
     #settings.pr.request_home_phone = True
@@ -968,6 +983,8 @@ def config(settings):
     #settings.mobile.forms = [
     #    ("Beneficiaries", "pr_person", {"c": "dvr", "f": "person"}),
     #]
+    # Disable mobile forms for dynamic tables:
+    #settings.mobile.dynamic_tables = False
 
     # -----------------------------------------------------------------------------
     # XForms

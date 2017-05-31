@@ -1,0 +1,17 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,,,"Authenticated users can see the Map"
+AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,,,"But need to be able to add/edit addresses"
+AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+INFORMAL_SETTLEMENT,Informal Settlement,,stdm,,,"READ|CREATE|UPDATE|DELETE",,
+INFORMAL_SETTLEMENT,Informal Settlement,,stdm,ownership_type,,"READ",,
+LOCAL_GOVERNMENT,Local Government,,stdm,,,"READ|CREATE|UPDATE|DELETE",,
+LOCAL_GOVERNMENT,Local Government,,stdm,parcel_type,,"READ",,
+LOCAL_GOVERNMENT,Local Government,,stdm,landuse,,"READ",,
+LOCAL_GOVERNMENT,Local Government,,stdm,dispute,,"READ",,
+RURAL_AGRICULTURE,Rural Agriculture,,stdm,,,"READ|CREATE|UPDATE|DELETE",,
+RURAL_AGRICULTURE,Rural Agriculture,,stdm,socioeconomic_impact,,"READ",,
+RURAL_AGRICULTURE,Rural Agriculture,,stdm,input_service,,"READ",,

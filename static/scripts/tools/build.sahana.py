@@ -112,7 +112,7 @@ def dojs(dogis = False, warnings = True):
         print "using local Closure Compiler"
     except Exception, E:
         print "No closure (%s)" % E
-        print "Download from http://closure-compiler.googlecode.com/files/compiler-latest.zip"
+        print "Download from http://dl.google.com/closure-compiler/compiler-latest.zip"
         try:
             import closure_ws
             use_compressor = "closure_ws"
@@ -352,6 +352,7 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ("add_person",
                      "cap",
+                     "dc",
                      "dvr",
                      "gis",
                      "gis.feature_crud",
@@ -364,6 +365,7 @@ def dojs(dogis = False, warnings = True):
                      "popup",
                      "register_validation",
                      "select_person",
+                     "shelter_inspection",
                      "sync",
                      "timeline",
                      "ui.contacts",
@@ -535,7 +537,7 @@ def dojs(dogis = False, warnings = True):
                 pass
             shutil.move(outputFilename, "../gis/gxp/plugins")
 
-        for filename in ("GoogleEarthPanel",
+        for filename in (#"GoogleEarthPanel",
                          "GoogleStreetViewPanel",
                          ):
             inputFilename = os.path.join("..", "gis", "gxp", "widgets", "%s.js" % filename)

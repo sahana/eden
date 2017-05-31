@@ -2,7 +2,7 @@
 
 """ S3 TimePlot Reports Method
 
-    @copyright: 2013-2016 (c) Sahana Software Foundation
+    @copyright: 2013-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -917,19 +917,21 @@ class S3TimeSeries(object):
             if isinstance(start, basestring):
                 start_dt = dtparse(start, start=now)
             else:
-                if isinstance(start, datetime.date):
-                    start_dt = tp_tzsafe(datetime.datetime.fromordinal(start.toordinal()))
-                else:
+                if isinstance(start, datetime.datetime):
                     start_dt = tp_tzsafe(start)
+                else:
+                    # Date only => start at midnight
+                    start_dt = tp_tzsafe(datetime.datetime.fromordinal(start.toordinal()))
         if end:
             if isinstance(end, basestring):
                 relative_to = start_dt if start_dt else now
                 end_dt = dtparse(end, start=relative_to)
             else:
-                if isinstance(end, datetime.date):
-                    end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal()))
+                if isinstance(end, datetime.datetime):
+                    end_dt = tp_tzsafe(end)
                 else:
-                    ent_dt = tp_tzsafe(end)
+                    # Date only => end at midnight
+                    end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal()))
 
         # Fall back to now if end is not specified
         if not end_dt:

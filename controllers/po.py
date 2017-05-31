@@ -30,9 +30,12 @@ def index():
     total_referrals = define_resource("po_organisation_household").count()
 
     # => Number of agencies involved
-    filter = (FS("organisation_id") == s3db.po_organisation_household.organisation_id)
-    total_agencies = define_resource("po_referral_organisation",
-                                     filter=filter).count(distinct=True)
+    # This version shows all agencies for all Branches (only master query is filtered)
+    #filter = (FS("organisation_id") == s3db.po_organisation_household.organisation_id)
+    #total_agencies = define_resource("po_referral_organisation",
+    #                                 filter=filter).count(distinct=True)
+    total_agencies = define_resource("po_organisation_household").select(fields=["organisation_id"])
+    total_agencies = len(set([o["po_organisation_household.organisation_id"] for o in total_agencies.rows]))
 
     # => Number of follow ups (broken down into pending/completed)
     # Option 1
@@ -319,7 +322,8 @@ def organisation():
         # Create referral_organisation record onaccept
         onaccept = s3db.get_config("org_organisation", "onaccept")
         s3db.configure("org_organisation",
-                       onaccept = (onaccept, s3db.po_organisation_onaccept))
+                       onaccept = (onaccept, s3db.po_organisation_onaccept),
+                       )
 
         # Filter households to areas served (if any areas defined)
         # @todo: suppress this filter per deployment setting
@@ -336,6 +340,16 @@ def organisation():
                 table.household_id.requires.set_filter(filterby="area_id",
                                                        filter_opts=area_ids,
                                                        )
+        elif not r.component:
+            list_fields = ["name",
+                           "name",
+                           (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Areas"), "organisation_area.area_id"),
+                           "website",
+                           ]
+            s3db.configure("org_organisation",
+                           list_fields = list_fields,
+                           )
 
         if r.interactive:
             # Adapt CRUD Strings
@@ -361,9 +375,21 @@ def organisation():
 
 # -----------------------------------------------------------------------------
 def organisation_area():
-    """ @todo: docstring """
+    """ RESTful CRUD COntroller """
 
     s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def emotional_need():
+    """ RESTful CRUD COntroller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def practical_need():
+    """ RESTful CRUD COntroller """
+
     return s3_rest_controller()
 
 # END =========================================================================

@@ -391,7 +391,7 @@ def alert():
                             s3.filter = ((FS("info.id") != None) & (FS("area.id") != None)) & \
                                         (FS("external") != True)
                             s3.crud_strings["cap_alert"].title_list = T("Review Alerts")
-                        list_fields = ["info.event_type_id",
+                        list_fields = ["event_type_id",
                                        "msg_type",
                                        (T("Sent"), "sent"),
                                        "info.headline",
@@ -867,7 +867,21 @@ def alert():
                                                   limitby=(0, 1)).first()
             iquery = (itable.alert_id == alert.template_id) & \
                      (itable.deleted != True)
-            irows = db(iquery).select(itable.id)
+            irows = db(iquery).select(itable.id, itable.language)
+            # An alert can contain two info segments, one in English and one in
+            # local language
+            if len(irows) > 2:
+                session.error = T("An alert can contain maximum of two info segments! Check your template!")
+                redirect(URL(c="cap", f="alert", args=[lastid, "info"]))
+            else:
+                if len(irows) == 2:
+                    # Check if both info segments are for same language
+                    if irows[0]["language"] == irows[1]["language"]:
+                        session.error = T("Please edit already created info segment with same language!")
+                        redirect(URL(c="cap", f="alert", args=[lastid, "info"]))
+                if not all(language in [key for key in settings.get_L10n_languages()] for language in [irow.language for irow in irows]):
+                    session.error = T("An alert cannot contain other than English and Local Language! Check your template!")
+                    redirect(URL(c="cap", f="alert", args=[lastid, "info"]))
             iquery_ = (itable.alert_id == lastid) & \
                       (itable.deleted != True)
             irows_ = db(iquery_).select(itable.template_info_id)

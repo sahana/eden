@@ -1,7 +1,7 @@
 /**
  * jQuery UI InlineComponent Widget
  *
- * @copyright 2015-2016 (c) Sahana Software Foundation
+ * @copyright 2015-2017 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -396,9 +396,12 @@
          * Collect the data from the form
          *
          * @param {object} data - the de-serialized JSON data
-         * @param {string|number} rowindex - the row index
+         * @param {string|integer} rowindex - the index of the input row,
+         *                                    usually '0' for the edit-row,
+         *                                    and 'none' for the add-row
+         * @param {string|integer} editIndex - the index of the edited read-row
          */
-        _collectData: function(data, rowindex) {
+        _collectData: function(data, rowindex, editIndex) {
 
             var formname = this.formname,
                 rows = data['data'],
@@ -445,44 +448,55 @@
                 fields = data['fields'],
                 upload_index;
             for (var i=0; i < fields.length; i++) {
+
                 fieldname = fields[i]['name'];
                 selector = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+
                 input = $(selector);
                 if (input.length) {
+
                     // Field is Writable
                     value = input.val();
+
                     if (input.attr('type') == 'file') {
-                        // Clone the Input ready to accept new files
-                        var cloned = input.clone();
-                        cloned.insertAfter(input);
-                        // Store the original input at the end of the form
-                        // - we move the original input as it doesn't contain the file otherwise on IE, etc
-                        // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
-                        var add_button = $('#add-' + formname + '-' + rowindex),
-                            multiple;
-                        if (add_button.length) {
-                            multiple = true;
-                        } else {
-                            // Only one row can exist & this must be added during form submission
-                            multiple = false;
-                        }
+
+                        // Clone the file input ready to accept new files
+                        var cloned = input.clone().insertAfter(input);
+
+                        // Can the sub-form have multiple rows?
+                        // => check if Add-button is present
+                        var add_button = $('#add-' + formname + '-none'),
+                            multiple = !!add_button.length;
+
+                        // Determine the new upload field ID
                         if (!multiple && rowindex == 'none') {
+                            // Single row => upload index is always 0
                             upload_index = '0';
                         } else {
-                            upload_index = rowindex;
+                            // Multiple rows => index of the currently edited row,
+                            // or the add-row index (='none')
+                            upload_index = editIndex || rowindex;
                         }
                         var upload_id = 'upload_' + formname + '_' + fieldname + '_' + upload_index;
+
                         // Remove any old upload for this index
                         $('#' + upload_id).remove();
+
+                        // Store the original input at the end of the form
+                        // - we move the original input as it doesn't contain the file
+                        //   otherwise on IE, etc
+                        // - see http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
                         var form = input.closest('form');
                         input.css({display: 'none'})
-                            .attr('id', upload_id)
-                            .attr('name', upload_id)
-                            .appendTo(form);
+                             .attr('id', upload_id)
+                             .attr('name', upload_id)
+                             .appendTo(form);
+
                         if (value.match(/fakepath/)) {
                             // IE, etc: Remove 'fakepath' from filename
                             value = value.replace(/(c:\\)*fakepath\\/i, '');
                         }
+
                     } else if (input.attr('type') == 'checkbox') {
                         value = input.prop('checked');
                     } else if (input.hasClass('s3-hierarchy-input')) {
@@ -686,6 +700,60 @@
         // Form Actions -------------------------------------------------------
 
         /**
+         * Update an S3UploadWidget (i.e. file-link and image preview) with
+         * a new value
+         *
+         * @param {jQuery} input - the file input element of the upload widget
+         * @param {string} value - the file name
+         */
+        _updateUploadWidget: function(input, value) {
+
+            var pendingUpload = input.val(),
+                widget = input.closest('.s3-upload-widget'),
+                baseURL = widget.data('base'),
+                fileURL;
+
+            if (baseURL) {
+                fileURL = baseURL.concat('/', value);
+            } else {
+                fileURL = S3.Ap.concat('/default/download', value);
+            }
+
+            widget.find('.s3-upload-link').each(function() {
+
+                var $this = $(this),
+                    anchor = $this.find('a');
+                if (value && !pendingUpload) {
+                    anchor.attr('href', fileURL);
+                    $this.removeClass('hide').show();
+                } else {
+                    anchor.removeAttr('href');
+                    $this.hide();
+                }
+            });
+
+            var isImage = false;
+            if (value) {
+                var ext = value.substr(value.lastIndexOf('.') + 1).toLowerCase();
+                if (['gif', 'png', 'jpg', 'jpeg', 'bmp'].indexOf(ext) != -1) {
+                    isImage = true;
+                }
+            }
+            widget.find('.s3-upload-preview').each(function() {
+
+                var $this = $(this),
+                    img = $this.find('img');
+                if (isImage && !pendingUpload) {
+                    img.attr('src', fileURL);
+                    $this.removeClass('hide').show();
+                } else {
+                    img.attr('src', '');
+                    $this.hide();
+                }
+            });
+        },
+
+        /**
          * Edit a row
          *
          * @param {string|number} rowindex - the row index
@@ -722,10 +790,13 @@
                 text,
                 value,
                 i;
+
             for (i=0; i < fields.length; i++) {
+
                 fieldname = fields[i]['name'];
                 value = row[fieldname]['value'];
                 element = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+
                 // If the element is a select then we may need to add the option we're choosing
                 var select = $('select' + element);
                 if (select.length !== 0) {
@@ -737,13 +808,20 @@
                         select.append('<option value="' + value + '">-</option>');
                     }
                 }
+
                 input = $(element);
                 if (!input.length) {
+
                     // Read-only field
                     this._updateColumn($('#edit-row-' + formname), i, row[fieldname]['text']);
+
                 } else {
+
                     if (input.attr('type') == 'file') {
-                        // Update the existing upload item, if there is one
+
+                        // If there is an existing file input for this field+row,
+                        // then move it into the edit row in place of the cloned
+                        // default input, and update its ID
                         var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
                         if (upload.length) {
                             var id = input.attr('id');
@@ -752,11 +830,23 @@
                             upload.attr('id', id)
                                   .attr('name', name)
                                   .css({display: ''});
+                            input = upload;
                         }
+
+                        // Update the upload-widget (i.e. link and image preview)
+                        this._updateUploadWidget(input, value);
+
                     } else if (input.attr('type') == 'checkbox') {
+
+                        // Set checked-property from boolean value
                         input.prop('checked', value);
+
                     } else {
+
+                        // Set input to current value
                         input.val(value);
+
+                        // Refresh widgets
                         if (input.hasClass('multiselect-widget') && input.multiselect('instance')) {
                             input.multiselect('refresh');
                         } else if (input.hasClass('groupedopts-widget') && input.groupedopts('instance')) {
@@ -773,6 +863,7 @@
                             text = row[fieldname]['text'];
                             $(element).val(text);
                         }
+
                     }
                 }
             }
@@ -911,33 +1002,45 @@
                         default_value;
                     for (i=0; i < fields.length; i++) {
                         field = fields[i]['name'];
-                        // Update all uploads to the new index
+
+                        // Update all file inputs of the add-row to the new row index
                         upload = $('#upload_' + formname + '_' + field + '_none');
                         if (upload.length) {
                             var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
                             $('#' + upload_id).remove();
                             upload.attr('id', upload_id)
-                                .attr('name', upload_id);
+                                  .attr('name', upload_id);
                         }
+
+                        // Store the text representation for the read-row
                         items.push(new_row[field]['text']);
+
                         // Reset add-field to default value
                         d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                         f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
+
                         if (f.attr('type') == 'file') {
+
+                            // Clone the default file input
+                            // (because we cannot set the value for file inputs)
                             var self = this,
                                 emptyWidget = d.clone();
                             emptyWidget.attr('id', f.attr('id'))
                                        .attr('name', f.attr('name'))
-                                       // Set event onto new input to Mark row changed when new files uploaded
                                        .change(function() {
-                                self._markChanged(this);
-                                self._catchSubmit(this);
-                            });
+                                            // Re-attach change event handler to the clone
+                                            self._markChanged(this);
+                                            self._catchSubmit(this);
+                                        });
                             f.replaceWith(emptyWidget);
+
                         } else {
+
+                            // Set the input to the default value
                             default_value = d.val();
                             f.val(default_value);
-                            // Update widgets
+
+                            // Refresh widgets
                             if (f.attr('type') == 'checkbox') {
                                 f.prop('checked', d.prop('checked'));
                             } else if (f.hasClass('multiselect-widget') && f.multiselect('instance')) {
@@ -948,6 +1051,8 @@
                                 f.locationselector('refresh');
                             }
                         }
+
+                        // Copy default value for dummy input
                         default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                         $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
                     }
@@ -1013,7 +1118,7 @@
 
             // Collect the values from the edit-row
             var data = this._deserialize();
-            var row_data = this._collectData(data, '0');
+            var row_data = this._collectData(data, '0', rowindex);
             if (null === row_data) {
                 // Data collection failed (e.g. client-side validation error)
                 if (multiple) {
@@ -1054,24 +1159,36 @@
                         for (i=0; i < fields.length; i++) {
                             var field = fields[i]['name'];
                             items.push(new_row[field]['text']);
+
                             // Reset edit-field to default value
                             var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                             var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
+
                             if (f.attr('type') == 'file') {
-                                var empty = d.clone(),
-                                    self = this;
-                                empty.attr('id', f.attr('id'))
-                                    .attr('name', f.attr('name'))
-                                    // Set event onto new input to Mark row changed when new files uploaded
-                                    .change(function() {
-                                    self._markChanged(this);
-                                    self._catchSubmit(this);
-                                });
-                                f.replaceWith(empty);
+
+                                // Clone the default file input
+                                // (because we cannot set the value for file inputs)
+                                var self = this,
+                                    emptyWidget = d.clone();
+                                emptyWidget.attr('id', f.attr('id'))
+                                           .attr('name', f.attr('name'))
+                                           .change(function() {
+                                                // Re-attach change event handler to the clone
+                                                self._markChanged(this);
+                                                self._catchSubmit(this);
+                                            });
+                                f.replaceWith(emptyWidget);
+
                             } else {
+
+                                // Set input to default value
                                 default_value = d.val();
                                 f.val(default_value);
+
+                                // @todo: shouldn't we update widgets here too?
                             }
+
+                            // Copy default value for dummy input
                             default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                             $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
                         }

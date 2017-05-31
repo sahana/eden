@@ -23,6 +23,9 @@
          Phone...................pr_contact.value
          Mobile Phone............pr_contact.value
          Email...................pr_contact.value
+         Sticker.................po_household_dwelling.sticker
+         Emotional Needs.........po_emotional_need.name
+         Practical Needs.........po_practical_need.name
          Dwelling Type...........po_household_dwelling.dwelling_type
                                  Unit|House|Apartment|Supervised House|Other
          Type of Use.............po_household_dwelling.type_of_use
@@ -288,6 +291,20 @@
                     </resource>
                 </xsl:if>
 
+                <!-- Emotional Needs -->
+                <xsl:variable name="EmotionalNeeds" select="col[@field='Emotional Needs']/text()"/>
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$EmotionalNeeds"/>
+                    <xsl:with-param name="arg">emotional_need</xsl:with-param>
+                </xsl:call-template>
+
+                <!-- Practical Needs -->
+                <xsl:variable name="PracticalNeeds" select="col[@field='Practical Needs']/text()"/>
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$PracticalNeeds"/>
+                    <xsl:with-param name="arg">practical_need</xsl:with-param>
+                </xsl:call-template>
+
                 <!-- Social Information -->
                 <xsl:variable name="MainLanguage" select="col[@field='Main Language']/text()"/>
                 <xsl:variable name="Community" select="col[@field='Community Connections']/text()"/>
@@ -320,11 +337,24 @@
                 </xsl:if>
 
                 <!-- Dwelling Information -->
+                <xsl:variable name="Sticker" select="col[@field='Sticker']/text()"/>
                 <xsl:variable name="DwellingType" select="col[@field='Dwelling Type']/text()"/>
                 <xsl:variable name="TypeOfUse" select="col[@field='Type of Use']/text()"/>
                 <xsl:variable name="RepairStatus"  select="col[@field='Stage of Repair']/text()"/>
-                <xsl:if test="$DwellingType!='' or $TypeOfUse!='' or $RepairStatus!=''">
+                <xsl:if test="$Sticker!='' or $DwellingType!='' or $TypeOfUse!='' or $RepairStatus!=''">
                     <resource name="po_household_dwelling">
+                        <xsl:if test="$Sticker!=''">
+                            <data field="sticker">
+                                <xsl:choose>
+                                    <xsl:when test="$Sticker='White'">W</xsl:when>
+                                    <xsl:when test="$Sticker='Yellow'">Y</xsl:when>
+                                    <xsl:when test="$Sticker='Red'">R</xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:value-of select="$Sticker"/>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </data>
+                        </xsl:if>
                         <xsl:if test="$DwellingType!=''">
                             <data field="dwelling_type">
                                 <xsl:choose>
@@ -466,6 +496,38 @@
             </resource>
         </xsl:if>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+
+        <xsl:choose>
+
+            <!-- Emotional Needs -->
+            <xsl:when test="$arg='emotional_need'">
+                <resource name="po_household_emotional_need">
+                    <reference field="emotional_need_id" resource="po_emotional_need">
+                        <resource name="po_emotional_need">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+
+            <!-- Practical Needs -->
+            <xsl:when test="$arg='practical_need'">
+                <resource name="po_household_practical_need">
+                    <reference field="practical_need_id" resource="po_practical_need">
+                        <resource name="po_practical_need">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

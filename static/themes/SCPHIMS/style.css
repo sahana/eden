@@ -1,7 +1,7 @@
-/* Menu Logo */
+/* Menu Logo: now done via settings.ui.menu_logo
 .S3menulogo {
   background: url(img/logo.png) left top no-repeat;
-}
+} /*
 /* Cards on homepage
 .date-title,
 .location-title,

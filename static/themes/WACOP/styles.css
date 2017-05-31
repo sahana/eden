@@ -39,6 +39,10 @@ p .label {
   vertical-align: middle;
 }
 
+.item.bookmark {
+  cursor: pointer;
+}
+
 /**
  * Forms
  */
@@ -61,63 +65,6 @@ fieldset {
     padding-bottom: 0;
 }
 
-/* Incident Summary page */
-#incident-summary h2 {
-    color: #112e51;
-    font-family: "Merriweather",serif;
-    font-size: 2.3125rem;
-    font-family: "Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
-    font-style: normal;
-    font-weight: normal;
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
-    margin-top: 0.2rem;
-    text-rendering: optimizelegibility;
-}
-#incident-summary .callout {
-    background-color: #dce4ef;
-    border-color: #8ba6ca;
-    margin-top: 1.5rem;
-}
-#incident-summary table.s3-groupedopts-widget {
-    border: 0;
-}
-
-#summary-tab-headers .ui-tabs-nav {
-    margin: 0;
-}
-.ui-tabs .ui-tabs-nav {
-    padding: 0;
-}
-#summary-tab-headers li {
-    margin-right: 0;
-}
-#summary-tab-headers li a {
-    background-color: #d6d7d9;
-    color: #5b616b;
-    padding: 1em 6em;
-}
-#summary-tab-headers li.ui-state-active > a {
-    background-color: #fff;
-    color: #5b616b;
-    cursor: default;
-}
-.dataTables_length option {
-    margin-right: 5px;
-}
-
-.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
-    border-bottom-right-radius: 0;
-}
-.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl {
-    border-bottom-left-radius: 0;
-}
-.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr {
-    border-top-right-radius: 0;
-}
-.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl {
-    border-top-left-radius: 0;
-}
 /* Map */
 .x-toolbar table {
     width: auto;
@@ -324,6 +271,33 @@ table tr td {
   padding: 0.25rem 0.625rem;
 }
 
+/* jquery.dataTables.responsive.css uses + / - to expand the row
+   - we want a caret instead
+*/
+table.dataTable tbody td:first-child,
+table.dataTable thead th:first-child {
+  display: none; /* Hide empty column by default */
+}
+table.dataTable.dtr-inline.collapsed tbody td:first-child,
+table.dataTable.dtr-inline.collapsed thead th:first-child {
+  display: block;
+}
+table.dataTable.dtr-inline.collapsed tbody td:first-child:before,
+table.dataTable.dtr-inline.collapsed tbody th:first-child:before {
+  color: inherit;
+  background-color: inherit;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 0 0 0;
+  font: normal normal normal 14px/1 FontAwesome;
+  content: '\f0da'; /* fa-caret-right */
+}
+table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child:before,
+table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
+  background-color: inherit;
+  content: '\f0d7'; /* fa-caret-down */
+}
+
 /**
  * Footer
  */
@@ -360,97 +334,6 @@ table tr td {
 .label-controls a:hover {
   color: #3e94cf;
 }
-
-
-/**
- * Tab Navigation
- */
-
-.tab-navigation {
-  display: inline-block;
-}
-
-.tabs .tab-title > a {
-  background-color: #d6d7d9;
-  color: #5b616b;
-  padding: 1em;
-  border-top: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-}
-
-.tabs .tab-title:first-child > a {
-  border-left: 1px solid #ccc;
-  border-top-left-radius: 3px;
-}
-
-.tabs .tab-title:last-child > a {
-  border-top-right-radius: 3px;
-}
-
-@media (min-width: 768px) {
-  .tabs .tab-title > a {
-    padding: 1em 6em;
-  }
-}
-
-.tabs .tab-title:not(.active) > a:hover {
-  background-color: #ccc;
-  color: #5b616b;
-}
-
-.tabs .tab-title.active > a {
-  background-color: #fff;
-  color: #5b616b;
-  cursor: default;
-}
-
-.tabs-content {
-  margin-top: -0.5em;
-  padding: 1em;
-  border: 1px solid #ccc;
-  background-color: #fff;
-}
-
-/* Side Nav */
-
-.tabs.vertical ~ .tabs-content {
-  width: 75%;
-  margin-bottom: 1em;
-}
-
-.tabs.vertical li {
-  margin: 0;
-}
-
-.tabs.vertical li:not(:first-child) {
-  border-top: 1px solid #aeb0b5;
-}
-
-.tabs.vertical li a:not(.button) {
-  padding: 0.5em 2em;
-  background-color: transparent;
-  border: 0;
-  border-left: 4px solid transparent;
-  transition: all 150ms ease-in-out;
-}
-
-.tabs.vertical li.active > a:first-child:not(.button),
-.tabs.vertical li.active a:not(.button) {
-  background-color: transparent;
-  font-weight: bold;
-  border-left-color: #008CBA;
-  color: #008CBA;
-}
-
-.tabs.vertical li a:first-child:hover:not(.button),
-.tabs.vertical li a:hover:not(.button),
-.tabs.vertical li a:focus:not(.button) {
-  font-weight: bold;
-  background-color: #d6d7d9;
-  border-left-color: #4773aa;
-  color: #4773aa;
-}
-
 
 /* Compose Update */
 

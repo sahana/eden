@@ -2,7 +2,7 @@
 
 """ Resource Summary Pages
 
-    @copyright: 2013-2016 (c) Sahana Software Foundation
+    @copyright: 2013-2017 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -189,7 +189,8 @@ class S3Summary(S3Method):
                     active_map = content
                 s.append(DIV(content,
                              _id="%s-container" % widget_id,
-                             _class="widget-container"))
+                             _class="widget-container",
+                             ))
                 widget_idx += 1
 
             if common:

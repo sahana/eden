@@ -98,7 +98,7 @@ def config(settings):
                                 hrm_credential = PID,
                                 hrm_experience = PID,
                                 hrm_human_resource = SID,
-                                hrm_training = PID,
+                                hrm_training = PID, # Also see-below
                                 pr_contact = [("org_organisation", EID),
                                               ("po_household", EID),
                                               ("pr_person", EID),
@@ -118,7 +118,7 @@ def config(settings):
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
                                 org_capacity_assessment_data = "assessment_id",
-                                po_area = EID,
+                                po_area = OID,
                                 po_household = "area_id",
                                 po_organisation_area = "area_id",
                                 req_req_item = "req_id",
@@ -176,7 +176,7 @@ def config(settings):
                 query = (table.id == row.id) & \
                         (table[fk] == ftable.id)
             record = db(query).select(ftable.realm_entity,
-                                        limitby=(0, 1)).first()
+                                      limitby=(0, 1)).first()
             if record:
                 realm_entity = record.realm_entity
                 break
@@ -184,55 +184,60 @@ def config(settings):
             # Continue to loop through the rest of the default_fks
             # Fall back to default get_realm_entity function
 
+        auth = current.auth
         use_user_organisation = False
         #use_user_root_organisation = False
 
-        if realm_entity == 0 and tablename == "org_organisation":
-            # Suppliers & Partners are owned by the user's organisation
-            # @note: when the organisation record is first written, no
-            #        type-link would exist yet, so this needs to be
-            #        called again every time the type-links for an
-            #        organisation change in order to be effective
-            ottable = s3db.org_organisation_type
-            ltable = db.org_organisation_organisation_type
-            query = (ltable.organisation_id == row.id) & \
-                    (ottable.id == ltable.organisation_type_id) & \
-                    (ottable.name == "Red Cross / Red Crescent")
-            rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
-            if not rclink:
+        if tablename in ("org_facility", "req_req"):
+            # Facilities & Requisitions are in the user organisation's realm
+            use_user_organisation = True
+
+        elif realm_entity == 0:
+            if tablename == "org_organisation":
+                if current.request.controller == "po":
+                    # Referral Agencies to be in the root_org realm
+                    realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                     auth.root_org())
+                else:
+                    # Suppliers & Partners are in the user organisation's realm
+                    # @note: when the organisation record is first written, no
+                    #        type-link would exist yet, so this needs to be
+                    #        called again every time the type-links for an
+                    #        organisation change in order to be effective
+                    ottable = s3db.org_organisation_type
+                    ltable = db.org_organisation_organisation_type
+                    query = (ltable.organisation_id == row.id) & \
+                            (ottable.id == ltable.organisation_type_id) & \
+                            (ottable.name == "Red Cross / Red Crescent")
+                    rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
+                    if not rclink:
+                        use_user_organisation = True
+
+            elif tablename == "hrm_training":
+                # Inherit realm entity from the related HR record if none set on the person record
+                htable = s3db.hrm_human_resource
+                query = (table.id == row.id) & \
+                        (htable.person_id == table.person_id) & \
+                        (htable.deleted != True)
+                rows = db(query).select(htable.realm_entity, limitby=(0, 2))
+                if len(rows) == 1:
+                    realm_entity = rows.first().realm_entity
+                else:
+                    # Ambiguous => try course organisation
+                    ctable = s3db.hrm_course
+                    otable = s3db.org_organisation
+                    query = (table.id == row.id) & \
+                            (ctable.id == table.course_id) & \
+                            (otable.id == ctable.organisation_id)
+                    row = db(query).select(otable.pe_id,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        realm_entity = row.pe_id
+
+            elif tablename == "pr_group":
+                # Groups are in the user organisation's realm if not linked to an Organisation directly
                 use_user_organisation = True
 
-        elif tablename in ("org_facility", "req_req"):
-            # Facilities & Requisitions are owned by the user's organisation
-            use_user_organisation = True
-
-        elif tablename == "hrm_training":
-            # Inherit realm entity from the related HR record
-            htable = s3db.hrm_human_resource
-            query = (table.id == row.id) & \
-                    (htable.person_id == table.person_id) & \
-                    (htable.deleted != True)
-            rows = db(query).select(htable.realm_entity, limitby=(0, 2))
-            if len(rows) == 1:
-                realm_entity = rows.first().realm_entity
-            else:
-                # Ambiguous => try course organisation
-                ctable = s3db.hrm_course
-                otable = s3db.org_organisation
-                query = (table.id == row.id) & \
-                        (ctable.id == table.course_id) & \
-                        (otable.id == ctable.organisation_id)
-                row = db(query).select(otable.pe_id,
-                                       limitby=(0, 1)).first()
-                if row:
-                    realm_entity = row.pe_id
-                # otherwise: inherit from the person record
-
-        elif realm_entity == 0 and tablename == "pr_group":
-            # Groups are owned by the user's organisation if not linked to an Organisation directly
-            use_user_organisation = True
-
-        auth = current.auth
         user = auth.user
         if user:
             if use_user_organisation:
@@ -1459,7 +1464,7 @@ def config(settings):
                                         label = T("Team"),
                                         fields = [("", "group_id")],
                                         filterby = dict(field = "group_type",
-                                                        options = 3
+                                                        options = 3,
                                                         ),
                                         multiple = False,
                                         ),
@@ -2721,7 +2726,7 @@ def config(settings):
             is_admin = auth.s3_has_role("ADMIN")
             if is_admin:
                 # Remove Location Filter to improve performance
-                # @ToDo: Restore this once performance issues in widget fixed
+                # @ToDo: Restore this now that performance issues in widget fixed
                 filters = []
                 append_widget = filters.append
                 filter_widgets = get_config("filter_widgets")
@@ -2750,8 +2755,9 @@ def config(settings):
             if controller == "vol":
                 if arcs:
                     # ARCS have a custom Volunteer form
+                    from gluon import IS_EMPTY_OR
                     #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import IS_ONE_OF, S3LocationSelector, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
 
                     # Go back to Create form after submission
                     current.session.s3.rapid_data_entry = True
@@ -2807,6 +2813,17 @@ def config(settings):
                                            filter_opts = (organisation_id,),
                                            sort = True,
                                            )
+
+                    # Translate Programmes
+                    #represent = S3Represent(lookup="hrm_programme", translate=True)
+                    #f = s3db.hrm_programme_hours.programme_id
+                    #f.represent = represent
+                    #f.requires = IS_EMPTY_OR(
+                    #                IS_ONE_OF(db, "hrm_programme.id",
+                    #                          represent,
+                    #                          filterby="organisation_id",
+                    #                          filter_opts=(organisation_id,)
+                    #                          ))
 
                     s3db.add_components(tablename,
                                         #hrm_training = {"name": "vol_training",
@@ -2867,17 +2884,24 @@ def config(settings):
 
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
+                                                S3SQLInlineComponent("programme_hours",
+                                                                     label = "",
+                                                                     fields = ["programme_id",
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 "person_id",
                                                 S3SQLInlineComponent("perm_address",
-                                                             label = T("Address"),
-                                                             fields = (("", "location_id"),),
-                                                             filterby = {"field": "type",
-                                                                         "options": 2,
-                                                                         },
-                                                             link = False,
-                                                             update_link = False,
-                                                             multiple = False,
-                                                             ),
+                                                                     label = T("Address"),
+                                                                     fields = (("", "location_id"),),
+                                                                     filterby = {"field": "type",
+                                                                                 "options": 2,
+                                                                                 },
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 S3SQLInlineComponent("current_education",
                                                                      label = T("School / University"),
                                                                      fields = [("", "institute"),
@@ -3125,6 +3149,10 @@ def config(settings):
                     deploying_orgs = [o.organisation_id for o in deploying_orgs]
                     if organisation_id in deploying_orgs:
                         r.resource.add_filter(FS("application.organisation_id") == organisation_id)
+
+                    if auth.s3_has_role("RDRT_ADMIN"):
+                        # Allow selection of any Organisation for HRs
+                        s3db.hrm_human_resource.organisation_id.requires = s3db.org_organisation_requires(required=True)
 
                 AP = _is_asia_pacific()
                 if AP:
@@ -4409,12 +4437,6 @@ def config(settings):
                                            )
                     elif r.controller == "po":
                         # Referral Agencies in PO module
-                        list_fields = ("name",
-                                       "acronym",
-                                       "organisation_organisation_type.organisation_type_id",
-                                       "website",
-                                       )
-                        resource.configure(list_fields=list_fields)
 
                         # Default country
                         root_org = current.auth.root_org_name()
@@ -5049,7 +5071,8 @@ def config(settings):
                 #f = s3db.pr_phone_contact.value
                 #f.represent = s3_phone_represent
                 #f.widget = S3PhoneWidget()
-                s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
+                s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
+                                                                        show_map = False)
                 etable = s3db.pr_education
                 etable.level_id.comment = None # Don't Add Education Levels inline
                 organisation_id = current.auth.root_org()
@@ -5063,6 +5086,7 @@ def config(settings):
                 s3db.add_components("pr_person",
                                     pr_address = {"name": "perm_address",
                                                   "joinby": "pe_id",
+                                                  "pkey": "pe_id",
                                                   "filterby": {
                                                       "type": 2,
                                                       },
@@ -5135,13 +5159,13 @@ def config(settings):
                                                 (T("Gender"), "gender"),
                                                 (T("Job"), "person_details.occupation"),
                                                 S3SQLInlineComponent("perm_address",
-                                                             label = T("Address"),
-                                                             fields = (("", "location_id"),),
-                                                             filterby = {"field": "type",
-                                                                         "options": 2,
-                                                                         },
-                                                             multiple = False,
-                                                             ),
+                                                                     label = T("Address"),
+                                                                     fields = (("", "location_id"),),
+                                                                     filterby = {"field": "type",
+                                                                                 "options": 2,
+                                                                                 },
+                                                                     multiple = False,
+                                                                     ),
                                                 S3SQLInlineComponent("current_education",
                                                                      label = T("School / University"),
                                                                      fields = [("", "institute"),
@@ -5243,6 +5267,7 @@ def config(settings):
                                         #                },
                                         pr_address = {"name": "temp_address",
                                                       "joinby": "pe_id",
+                                                      "pkey": "pe_id",
                                                       "filterby": {
                                                           "type": 1,
                                                           },
@@ -5724,9 +5749,7 @@ def config(settings):
         if controller == "member":
             return current.s3db.member_rheader(r)
         else:
-            s3db = current.s3db
-            s3db.hrm_vars()
-            return s3db.hrm_rheader(r)
+            return current.s3db.hrm_rheader(r)
 
     # -------------------------------------------------------------------------
     def customise_survey_series_controller(**attr):
@@ -5822,9 +5845,6 @@ def config(settings):
                     if records:
                         record = records[0]
                 household_inject_form_script(r, record)
-            else:
-                f = r.table.organisation_id
-                f.readable = f.writable = False
             return result
         s3.prep = custom_prep
 

@@ -5015,6 +5015,23 @@
 'Weight': 'Poids',
 'Welcome to the Sahana Eden Disaster Management System': 'Bienvenue au système de gestion des catastrophes Sahana EDEN',
 'Welcome to the Sahana Portal at': 'Bienvenue sur le portail Sahana à',
+'Welcome to %(system_name)s': 'Bienvenue sur %(system_name)s',
+"""Welcome to %(system_name)s
+ - You can start using %(system_name)s at: %(url)s
+ - To edit your profile go to: %(url)s%(profile)s
+Thank you""" : """Bienvenue sur %(system_name)s
+ - Vous pouvez commencer à utiliser %(system_name)s depuis: %(url)s
+ - Pour modifier votre profil entrer à: %(url)s%(profile)s
+Merci""",
+"""Welcome to %(system_name)s
+ - You can start using %(system_name)s at: %(url)s
+ - Your password is: %(password)s
+ - To edit your profile go to: %(url)s%(profile)s
+Thank you""" : """Bienvenue sur %(system_name)s
+ - Vous pouvez commencer à utiliser %(system_name)s depuis: %(url)s
+ - Votre mot de passe est: %(password)s
+ - Pour modifier votre profil entrer à: %(url)s%(profile)s
+Merci""",
 'Well-Known Text': 'Texte bien connu',
 'What order to be contacted in.': 'Dans quel ordre être contacté.',
 'Wheat': 'Froment',

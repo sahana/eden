@@ -2,7 +2,7 @@
 
 """ Sahana Eden GUI Layouts (HTML Renderers)
 
-    @copyright: 2012-2016 (c) Sahana Software Foundation
+    @copyright: 2012-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -276,6 +276,12 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
 
                     if item.components:
                         # Submenu
+                        items = item.render_components()
+
+                        # Hide submenus which have no active links
+                        if not items and not item.link:
+                            return None
+
                         _class = ""
                         if item.parent.parent is None and item.selected:
                             _class = "active"
@@ -287,7 +293,6 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                                       ),
                                    ]
 
-                        items = item.render_components()
                         if items:
                             section.append(UL(items))
                         return section

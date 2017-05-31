@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -48,12 +48,6 @@ from s3navigation import S3ScriptItem
 from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from s3widgets import S3CalendarWidget, S3DateWidget
-
-try:
-    db = current.db
-except:
-    # Running from 000_1st_run
-    db = None
 
 # =============================================================================
 class FieldS3(Field):
@@ -134,6 +128,36 @@ class QueryS3(Query):
             Query.__init__(self, left, op, right)
         else:
             self.sql = "CAST(TRIM(%s,"|") AS INTEGER)=%s" % (left, right)
+
+# =============================================================================
+def s3_fieldmethod(name, f, represent=None):
+    """
+        Helper to attach a representation method to a Field.Method.
+
+        @param name: the field name
+        @param f: the field method
+        @param represent: the representation function
+    """
+
+    if represent is not None:
+
+        class Handler(object):
+            def __init__(self, method, row):
+                self.method=method
+                self.row=row
+            def __call__(self, *args, **kwargs):
+                return self.method(self.row, *args, **kwargs)
+        if hasattr(represent, "bulk"):
+            Handler.represent = represent
+        else:
+            Handler.represent = staticmethod(represent)
+
+        fieldmethod = Field.Method(name, f, handler=Handler)
+
+    else:
+        fieldmethod = Field.Method(name, f)
+
+    return fieldmethod
 
 # =============================================================================
 class S3ReusableField(object):

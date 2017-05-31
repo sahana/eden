@@ -2,7 +2,7 @@
 
 """ Sahana Eden Common Alerting Protocol (CAP) Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -536,7 +536,7 @@ $.filterOptionsS3({
                            ),
                      *s3_meta_fields())
 
-        list_fields = ["info.event_type_id",
+        list_fields = ["event_type_id",
                        "msg_type",
                        (T("Sent"), "sent"),
                        "info.headline",
@@ -1623,20 +1623,25 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                         limitby=(0, 1),
                         orderby=~table.id).first()
 
-        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y%m%d")
+        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y.%m.%d")
         if r:
             next_id = int(r.id) + 1
         else:
             next_id = 1
 
-        # Format: prefix-time+-timezone+sequence-suffix
+        # Format: prefix:oid.time.alert_id
         settings = current.deployment_settings
-        prefix = settings.get_cap_identifier_prefix() or current.xml.domain
+        prefix = "urn:oid"
         oid = settings.get_cap_identifier_oid()
-        suffix = settings.get_cap_identifier_suffix()
+        # In Organization ID, the organization is identified with a 0
+        # but the 0 should be changed to 1 when it is used in an alert message
+        # OID is normally of the form 2.49.0.1.104.xx.(yy)
+        oid_split = oid.split(".")
+        if len(oid_split) >= 6 and oid_split[5] == str(0):
+            oid_split[5] = str(1)
+        oid = ".".join(oid_split)
 
-        return "%s-%s-%s-%03d-%s" % \
-                    (prefix, oid, _time, next_id, suffix)
+        return "%s:%s.%s.%03d" % (prefix, oid, _time, next_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1736,15 +1741,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             if user:
                 db(table.id == form_vars.id).update(approved_by = user.id)
 
-        if not current.deployment_settings.get_cap_identifier_suffix():
-            row = db(table.id == form_vars.id).select(table.identifier,
-                                                      table.external,
-                                                      limitby=(0, 1)).first()
-            if not row.external:
-                db(table.id == form_vars.id).update(identifier = "%s%s" % \
-                                                            (row.identifier,
-                                                             form_vars.msg_type))
-
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_alert_onvalidation(form):
@@ -1834,6 +1830,30 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
+
+            irows = db(itable.alert_id == alert_id).select(itable.language)
+            # An alert can contain two info segments, one in English and one in
+            # local language
+            if len(irows) > 2:
+                # Check if there are more than two alerts
+                db(itable.id == info_id).delete()
+                current.session.error = current.T("An alert can contain maximum of two info segments! Please edit already created info segments!")
+                redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+            else:
+                if len(irows) == 2:
+                    # Check if both info segments are for same language
+                    if irows[0]["language"] == irows[1]["language"]:
+                        db(itable.id == info_id).delete()
+                        current.session.error = current.T("Please edit already created info segment with same language!")
+                        redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                if not all(language in [key for key in current.deployment_settings.get_L10n_languages()] for language in [irow.language for irow in irows]):
+                    # Check if created info segment contain other than allowed
+                    # language for the deployment
+                    db(itable.id == info_id).delete()
+                    current.session.error = current.T("An alert cannot contain other than English and Local Language! Check your selection!")
+                    redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
+                
+
             set_ = db(itable.id == info_id)
             if alert_id and cap_alert_is_template(alert_id):
                 set_.update(is_template = True)
@@ -2096,7 +2116,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
     @staticmethod
     def cap_area_location_onaccept(form):
         """
-            Link alert_id for non-template area
+            - Link alert_id for non-template area
+            - for external alerts (from import feed or rss), make sure the
+              locations are only imported if we set polygons to be imported
         """
 
         form_vars = form.vars
@@ -2116,6 +2138,19 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         if alert_id:
             # This is not template area
             # NB Template area are not linked with alert_id
+            location_default = current.deployment_settings.get_cap_area_default()
+            if "polygon" not in location_default:
+                # Use-case for PH
+                table = current.s3db.cap_alert
+                row = db(table.id == alert_id).select(table.external,
+                                                      limitby=(0, 1)).first()
+                if row.external:
+                    # If "polygon" is not in deployment_settings (eg. in PH) and
+                    # if it is a external alert (coming from RSS and import_feed),
+                    # don't use this for displaying map in area
+                    db(db.cap_area_location.id == form_vars["id"]).delete()
+                    return
+            # For alerts generated from SAMBRO, link area to the alert_id
             db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
@@ -2135,20 +2170,40 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
         db = current.db
         atable = db.cap_area
-        same_code = current.deployment_settings.get_cap_same_code()
-        tag = form_vars.get("tag")
 
         arow = db(atable.id == area_id).select(atable.alert_id,
                                                limitby=(0, 1)).first()
         alert_id = arow.alert_id
 
-        if tag and same_code:
-            if tag == "SAME":
-                # SAME tag referes to some location_id in CAP
-                s3db = current.s3db
+        if alert_id:
+            # This is not template area
+            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
+
+            s3db = current.s3db
+            tag = form_vars.get("tag")
+            same_code = current.deployment_settings.get_cap_same_code()
+            import_location = False
+            if tag and same_code:
+                # Check if tag and same_code exist. If neither one or none
+                # exists, do not import location
+                if tag == "SAME":
+                    # If tag is "SAME" then check other conditions, otherwise
+                    # do not import location
+                    if "geocode" in current.deployment_settings.get_cap_area_default():
+                        import_location = True
+                    else:
+                        # Check internal alert
+                        table = s3db.cap_alert
+                        row = db(table.id == alert_id).select(table.external,
+                                                              limitby=(0, 1)).first()
+                        if not row.external:
+                            import_location = True
+    
+            if import_location:
+                # SAME tag refers to some location_id in CAP
                 ttable = s3db.gis_location_tag
                 gtable = s3db.gis_location
-
+    
                 # It is possible for there to be two polygons for the same SAME
                 # code since polygon change over time, even if the code remains
                 # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
@@ -2158,8 +2213,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                          (ttable.location_id == gtable.id) & \
                          (gtable.end_date == None) & \
                          (gtable.deleted != True)
-                trows = db(tquery).select(ttable.location_id)
-                for trow in trows:
+                trow = db(tquery).select(ttable.location_id, limitby=(0, 1)).first()
+                if trow and trow.location_id:
                     # Match
                     ltable = db.cap_area_location
                     ldata = {"area_id": area_id,
@@ -2171,10 +2226,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                     # Uncomment this when required
                     #ldata["id"] = lid
                     #s3db.onaccept(ltable, ldata)
-
-        if alert_id:
-            # This is not template area
-            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3130,7 +3181,8 @@ class S3CAPAlertingAuthorityModel(S3Model):
                                                 ondelete = "CASCADE",
                                                 represent = alerting_authority_represent,
                                                 requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "cap_alerting_authority.id",
+                                                    IS_ONE_OF(current.db,
+                                                              "cap_alerting_authority.id",
                                                               alerting_authority_represent)
                                                 ))
 

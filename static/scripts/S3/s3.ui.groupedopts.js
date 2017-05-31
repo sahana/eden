@@ -1,7 +1,7 @@
 /**
  * jQuery UI GroupedOpts Widget for S3GroupedOptionsWidget
  *
- * @copyright 2013-2016 (c) Sahana Software Foundation
+ * @copyright 2013-2017 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -33,7 +33,8 @@
             columns: 3,
             emptyText: 'No options available',
             orientation: 'columns',
-            sort: true
+            sort: true,
+            table: true
         },
 
         /**
@@ -76,7 +77,8 @@
          */
         refresh: function() {
 
-            var el = this.element;
+            var el = this.element,
+                opts = this.options;
 
             this.index = 0;
             this.name = 's3-groupedopts-' + this.id;
@@ -90,7 +92,7 @@
                 this.grouped = true;
                 this.menu = $('<div class="s3-groupedopts-widget">' +
                               '<span class="no-options-available">' +
-                              this.options.emptyText +
+                              opts.emptyText +
                               '</span></div>');
             } else
             if (groups.length) {
@@ -101,7 +103,11 @@
                 }
             } else {
                 this.grouped = false;
-                this.menu = $('<table class="s3-groupedopts-widget"/>');
+                if (opts.table) {
+                    this.menu = $('<table class="s3-groupedopts-widget"/>');
+                } else {
+                    this.menu = $('<div class="s3-groupedopts-widget"/>');
+                }
                 var items = el.find('option');
                 this._renderRows(items, this.menu);
             }
@@ -146,7 +152,11 @@
             if (items.length) {
                 var group_label = $('<div class="s3-groupedopts-label">' + label + '</div>');
                 this.menu.append(group_label);
-                var group = $('<table class="s3-groupedopts-widget">');
+                if (this.options.table) {
+                    var group = $('<table class="s3-groupedopts-widget">');
+                } else {
+                    var group = $('<div class="s3-groupedopts-widget">');
+                }
                 this._renderRows(items, group);
                 $(group).hide();
                 this.menu.append(group);
@@ -161,10 +171,11 @@
          */
         _renderRows: function(items, group) {
 
-            var numcols = this.options.columns,
+            var opts = this.options,
+                numcols = opts.columns,
                 tail = $.makeArray(items);
 
-            if (this.options.sort) {
+            if (opts.sort) {
                 tail.sort(function(x, y) {
                     if ($(x).text() < $(y).text()) {
                         return -1;
@@ -175,7 +186,7 @@
             }
 
             var rows = [], i, j;
-            if (this.options.orientation == 'columns') {
+            if (opts.orientation == 'columns') {
                 // Order items as columns=>rows
                 var numrows = Math.ceil(tail.length / numcols);
                 for (i = 0; i < numcols; i++) {
@@ -192,7 +203,7 @@
                 // Order items as rows=>columns
                 while(tail.length) {
                     var row = [];
-                    for (i=0; i<numcols; i++) {
+                    for (i=0; i < numcols; i++) {
                         if (!tail.length) {
                             break;
                         }
@@ -202,10 +213,15 @@
                 }
             }
             // Render the rows
-            for (i = 0; i<rows.length; i++) {
-                var tr = $('<tr/>');
-                for (j = 0; j<rows[i].length; j++) {
-                    this._renderItem(rows[i][j], tr);
+            var table = opts.table;
+            for (i = 0; i < rows.length; i++) {
+                if (table) {
+                    var tr = $('<tr/>');
+                } else {
+                    var tr = $('<div/>');
+                }
+                for (j = 0; j < rows[i].length; j++) {
+                    this._renderItem(rows[i][j], tr, table);
                 }
                 group.append(tr);
             }
@@ -215,9 +231,10 @@
          * Render one checkbox/radio item
          *
          * @param {jQuery} item - the option element
-         * @param {jQuery} row - the target tr element
+         * @param {jQuery} row - the target element (e.g. tr)
+         * @param {jQuery} table - whether to render as a table or not
          */
-        _renderItem: function(item, row) {
+        _renderItem: function(item, row, table) {
 
             var multiple = this.multiple;
 
@@ -259,7 +276,11 @@
                 $(oinput).prop('checked', true);
             }
 
-            var widget = $('<td>').append(oinput).append($(olabel));
+            if (table) {
+                var widget = $('<td>').append(oinput).append($(olabel));
+            } else {
+                var widget = $('<div>').append(oinput).append($(olabel));
+            }
             row.append(widget);
         },
 

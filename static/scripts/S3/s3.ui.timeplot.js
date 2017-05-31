@@ -1,12 +1,13 @@
 /**
  * jQuery UI timeplot Widget for S3TimePlot
  *
- * @copyright 2013-2016 (c) Sahana Software Foundation
+ * @copyright 2013-2017 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
  * requires D3.js 3.4.9+
+ * requires NVD3.js
  *
  */
 
@@ -330,17 +331,17 @@
                                       .append('svg')
                                       .attr('class', 'nv');
 
-                // @todo: show tooltips instead of values (needs tooltipContent renderer)
+                // @todo: show tooltips instead of values (needs contentGenerator)
                 barChart = nv.models.discreteBarChart()
                                     .x(function(d) { return d.start; })
                                     .y(function(d) { return d.value; })
                                     .color([defaultColor])
                                     .staggerLabels(true)
-                                    .tooltips(false)
-                                    //.tooltipContent(barChartTooltip)
                                     .showValues(true)
                                     .forceY([0, 1]);
 
+                barChart.tooltip.enabled(false);
+                //barChart.tooltip.contentGenerator(barChartTooltip);
                 var valueFormat = this.options.numberFormatter;
 
                 // Set value and tick formatters
@@ -442,12 +443,12 @@
                                        .attr('class', 'nv');
 
                 // @todo: make legend use label
-                // @todo: tooltipContent renderer to use fact label
+                // @todo: tooltip.contentGenerator to use fact label
                 lineChart = nv.models.lineChart()
                                      .x(function(d) { return d.start; })
                                      .y(function(d) { return d.value; })
                                      .margin({right: 50})
-                                     .transitionDuration(250)
+                                     .duration(250)
                                      .showLegend(true)
                                      .useInteractiveGuideline(true)
                                      .forceY([0, 1]);

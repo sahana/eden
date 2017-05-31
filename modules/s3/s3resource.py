@@ -2,7 +2,7 @@
 
 """ S3 Resources
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -2865,15 +2865,30 @@ class S3Resource(object):
             import_info["deleted"] = deleted
 
         if success is True:
+            # 2nd phase of 2-phase import
+            # Execute postimport if-defined
+            postimport = self.get_config("postimport")
+            if postimport:
+                #try:
+                callback(postimport, import_info, tablename=self.tablename)
+                #except:
+                #    error = "postimport failed: %s" % postimport
+                #    current.log.error(error)
+                #    raise RuntimeError
+
             return xml.json_message(message=self.error, tree=tree,
                                     **import_info)
+
         elif success and hasattr(success, "job_id"):
+            # 1st phase of 2-phase import
+            # NB import_info is meaningless here as IDs have been rolled-back
             self.job = success
             return xml.json_message(message=self.error, tree=tree,
                                     **import_info)
-        else:
-            return xml.json_message(False, 400,
-                                    message=self.error, tree=tree)
+
+        # Failure
+        return xml.json_message(False, 400,
+                                message=self.error, tree=tree)
 
     # -------------------------------------------------------------------------
     def import_tree(self, id, tree,
@@ -3621,6 +3636,18 @@ class S3Resource(object):
         """
 
         return current.s3db.get_config(self.tablename, key, default=default)
+
+    # -------------------------------------------------------------------------
+    def clear_config(self, *keys):
+        """
+            Clear configuration settings for this resource
+
+            @param keys: keys to remove (can be multiple)
+
+            @note: no keys specified removes all settings for this resource
+        """
+
+        current.s3db.clear_config(self.tablename, *keys)
 
     # -------------------------------------------------------------------------
     def limitby(self, start=0, limit=0):

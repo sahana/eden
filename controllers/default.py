@@ -169,7 +169,7 @@ def index():
         HM("Assessments", c="survey", f="series", icon="assessment"),
     )
     org_menu = HM("Who is doing What and Where")(
-        HM("Organisations", c="org", f="organisation", icon="organisation"),
+        HM("Organizations", c="org", f="organisation", icon="organisation"),
         HM("Facilities", c="org", f="facility", icon="facility"),
         HM("Activities", c="project", f="activity", icon="activity"),
         HM("Projects", c="project", f="project", icon="project"),
@@ -577,11 +577,27 @@ def user():
         title = response.title = T("Change Password")
         form = auth()
         # Add client-side validation
+        js_global = []
+        js_append = js_global.append
+        js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
+        js_append('''i18n.password_min_chars="%s"''' % T("You must enter a minimum of %d characters"))
+        js_append('''i18n.weak="%s"''' % T("Weak"))
+        js_append('''i18n.normal="%s"''' % T("Normal"))
+        js_append('''i18n.medium="%s"''' % T("Medium"))
+        js_append('''i18n.strong="%s"''' % T("Strong"))
+        js_append('''i18n.very_strong="%s"''' % T("Very Strong"))
+        script = '''\n'''.join(js_global)
+        s3.js_global.append(script)
         if s3.debug:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
         else:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
-        s3.jquery_ready.append("$('.password:eq(1)').pstrength()")
+        s3.jquery_ready.append(
+'''$('.password:eq(1)').pstrength({
+ 'minChar': S3.password_min_length,
+ 'minCharText': i18n.password_min_chars,
+ 'verdicts': [i18n.weak, i18n.normal, i18n.medium, i18n.strong, i18n.very_strong]
+})''')
 
     elif arg == "retrieve_password":
         title = response.title = T("Retrieve Password")
@@ -687,13 +703,13 @@ def person():
                     )
 
     set_method("pr", "person",
-               method="user_profile",
-               action=auth_profile_method)
+               method = "user_profile",
+               action = auth_profile_method)
 
     # Custom Method for Contacts
     set_method("pr", "person",
-               method="contacts",
-               action=s3db.pr_Contacts)
+               method = "contacts",
+               action = s3db.pr_Contacts)
 
     #if settings.has_module("asset"):
     #    # Assets as component of people
@@ -709,7 +725,7 @@ def person():
             table = s3db[tablename]
 
             # Users can not delete their own person record
-            r.resource.configure(deletable=False)
+            r.resource.configure(deletable = False)
 
             s3.crud_strings[tablename].update(
                 title_display = T("Personal Profile"),
@@ -816,7 +832,8 @@ def person():
                 output["add_btn"] = A(T("Assign Asset"),
                                       _href=URL(c="asset", f="asset"),
                                       _id="add-btn",
-                                      _class="action-btn")
+                                      _class="action-btn",
+                                      )
         return output
     s3.postp = postp
 
@@ -901,17 +918,16 @@ def person():
             (T("My Maps"), "config"),
             ]
 
-    output = s3_rest_controller("pr", "person",
-                                rheader = lambda r, tabs=tabs: \
-                                          s3db.pr_rheader(r, tabs=tabs))
-    return output
+    return s3_rest_controller("pr", "person",
+                              rheader = lambda r, tabs=tabs: \
+                                                s3db.pr_rheader(r, tabs=tabs))
 
 # -----------------------------------------------------------------------------
 def group():
     """
         RESTful CRUD controller
         - needed when group add form embedded in default/person
-        - only create method is allowed, when opened in a inline form.
+        - only create method is allowed, when opened in an inline form.
     """
 
     # Check if it is called from a inline form
@@ -925,9 +941,7 @@ def group():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("pr", "group")
-
-    return output
+    return s3_rest_controller("pr", "group")
 
 # -----------------------------------------------------------------------------
 def skill():
@@ -948,9 +962,7 @@ def skill():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("hrm", "skill")
-
-    return output
+    return s3_rest_controller("hrm", "skill")
 
 # -----------------------------------------------------------------------------
 def facebook():
@@ -1434,9 +1446,39 @@ def audit():
     return s3_rest_controller("s3", "audit")
 
 # -----------------------------------------------------------------------------
+def tables():
+    """
+        RESTful CRUD Controller for Dynamic Table Models
+    """
+
+    return s3_rest_controller("s3", "table",
+                              rheader = s3db.s3_table_rheader,
+                              csv_template = ("s3", "table"),
+                              csv_stylesheet = ("s3", "table.xsl"),
+                              )
+
+# -----------------------------------------------------------------------------
+def table():
+    """
+        RESTful CRUD Controller for Dynamic Table Contents
+
+        NB: first argument is the resource name, i.e. the name of
+            the dynamic table without prefix, e.g.:
+            default/table/test to access s3dt_test table
+    """
+
+    args = request.args
+    if len(args):
+        return s3_rest_controller(dynamic = args[0].rsplit(".", 1)[0])
+    else:
+        raise HTTP(400, "No resource specified")
+
+# -----------------------------------------------------------------------------
 def get_settings():
     """
-       Function to respond to get requests. Requires admin permissions
+       Function to lookup the value of a deployment_setting
+       Responds to GET requests.
+       Requires admin permissions
     """
 
     # Check if the request has a valid authorization header with admin cred.

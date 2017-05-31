@@ -10,8 +10,6 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3db.hrm_vars()
-
 # -----------------------------------------------------------------------------
 def index():
     """ Customisable module homepage """

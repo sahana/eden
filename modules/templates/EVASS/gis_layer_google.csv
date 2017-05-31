@@ -2,5 +2,4 @@
 "Google Maps","Streets","maps","True",,
 "Google Hybrid","Streets over Satellite imagery","hybrid","True",,
 "Google Terrain","Streets over topography","terrain","True",,
-"Google Earth","Earth allows access to a 3D satellite view.","earth","True",,
 "Google Streetview","Streetview allows access to a 3D photographic panorama. It is incompatible with MapMaker layers.","streetview","True",,

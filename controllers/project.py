@@ -724,10 +724,6 @@ def activity():
                     f = dtable.date
                     f.default = r.record.date
                     f.readable = f.writable = False
-                elif component_name == "case":
-                    # Use Assign to add new entries
-                    s3db.configure("project_case_activity",
-                                   listadd = False)
                 elif component_name == "document":
                     dtable = s3db.doc_document
                     dtable.organisation_id.readable = dtable.organisation_id.writable = False
@@ -735,6 +731,11 @@ def activity():
                     f = dtable.location_id
                     f.default = r.record.location_id
                     f.readable = f.writable = False
+                    s3db.configure("doc_document",
+                                   list_fields = ["name",
+                                                  "date",
+                                                  ],
+                                   )
         return True
     s3.prep = prep
 

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Messaging Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -114,11 +114,10 @@ class S3ChannelModel(S3Model):
                           #      label = T("Inbound?")),
                           #Field("outbound", "boolean",
                           #      label = T("Outbound?")),
+                          on_define = lambda table: \
+                            [table.instance_type.set_attributes(readable = True),
+                             ],
                           )
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.instance_type.readable = True
 
         # Reusable Field
         channel_id = S3ReusableField("channel_id", "reference %s" % tablename,
@@ -415,12 +414,13 @@ class S3MessageModel(S3Model):
                                             (direction and [T("In")] or \
                                                            [T("Out")])[0],
                                 ),
-                          )
+                          on_define = lambda table: \
+                            [table.instance_type.set_attributes(readable = True,
+                                                                writable = True,
+                                                                ),
 
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.instance_type.readable = True
-        table.instance_type.writable = True
+                             ],
+                          )
 
         configure(tablename,
                   list_fields = ["instance_type",
@@ -1448,7 +1448,7 @@ class S3RSSModel(S3ChannelModel):
                                  ondelete = "CASCADE",
                                  represent = rss_represent,
                                  requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "msg_rss.id",
+                                                IS_ONE_OF(current.db, "msg_rss.id",
                                                           rss_represent)),
                                  )
 

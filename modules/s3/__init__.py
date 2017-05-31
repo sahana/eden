@@ -11,7 +11,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -70,7 +70,7 @@ from s3hierarchy import *
 # Core Framework ==============================================================
 
 # Model Extensions
-from s3model import S3Model
+from s3model import DYNAMIC_PREFIX, S3Model
 
 # Resource Framework
 from s3query import *

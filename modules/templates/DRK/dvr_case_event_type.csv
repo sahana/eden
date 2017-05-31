@@ -1,4 +1,3 @@
-Code,Name,Default,Minimum Interval,Presence required,Comments
-SEEN,Seen,true,,true,Person has been registered at a checkpoint
-FOOD,Food Distribution,false,1.0,false,Person has received food distribution
-SUPM,Supermarket,false,,true,Person has been present at the supermarket
+Code,Name,Inactive,Default,Minimum Interval,Maximum per Day,Excluded By,Presence required,Comments
+SEEN,Seen,false,true,,,,true,Person has been registered at a checkpoint
+SUPM,Supermarket,false,false,,,,true,Person has been present at the supermarket

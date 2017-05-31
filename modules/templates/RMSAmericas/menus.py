@@ -42,8 +42,12 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         auth = current.auth
+        has_role = auth.s3_has_role
+        s3 = current.session.s3
 
-        if len(current.session.s3.roles) <= 2:
+        len_roles = len(s3.roles)
+        if (len_roles <= 2) or \
+           (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
             # No specific Roles
             # Just show Profile on main menu
             return [MM("Profile", c="hrm", f="person",
@@ -52,10 +56,9 @@ class S3MainMenu(default.S3MainMenu):
                        ),
                     ]
 
-        has_role = auth.s3_has_role
         #root_org = auth.root_org_name()
-        system_roles = current.session.s3.system_roles
-        ADMIN = system_roles.ADMIN
+        system_roles = s3.system_roles
+        #ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
 
         s3db = current.s3db
@@ -262,8 +265,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def pr(self):
         """ Person Registry """
 
-        if current.request.function == "person": 
-            # Training Center access to external Trainees (not Staff/Volunteers) 
+        if current.request.function == "person":
+            # Training Center access to external Trainees (not Staff/Volunteers)
             return self.hrm()
         else:
             return super(S3OptionsMenu, self).pr()
@@ -273,26 +276,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm():
         """ HRM Human Talent """
 
-        if "profile" in current.request.get_vars:
+        request = current.request
+        if "profile" in request.get_vars:
             # No Side Menu
             return
 
-        has_role = current.auth.s3_has_role
+        auth = current.auth
+        has_role = auth.s3_has_role
         s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
+
+        len_roles = len(s3.roles)
+        if (len_roles <= 2) or \
+           (len_roles == 3 and has_role("RIT_MEMBER") and not has_role("ADMIN")):
+            # No Side Menu
+            return
+
+        #ADMIN = s3.system_roles.ADMIN
         ORG_ADMIN = s3.system_roles.ORG_ADMIN
-        settings = current.deployment_settings
 
-        if "hrm" not in s3:
-            current.s3db.hrm_vars()
-        hrm_vars = s3.hrm
-
-        manager_mode = lambda i: hrm_vars.mode is None
-        personal_mode = lambda i: hrm_vars.mode is not None
-
-        #use_certs = settings.get_hrm_use_certificates
-
-        request = current.request
         if request.function in ("certificate", "course", "course_certificate",
                                 "facility", "training", "training_center",
                                 "training_event") or \
@@ -303,102 +304,72 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Create", m="create"),
                             M("Import", m="import", p="create",
                               restrict=[ORG_ADMIN]),
-                            M("Certificates", f="certificate",
-                              check=manager_mode),
+                            M("Certificates", f="certificate"),
                             # Just access this via Tabs of Courses & Certificates
                             #M("Course Certificates", f="course_certificate"),
                         ),
                         M("Training Events", c="hrm", f="training_event")(
-                            M("Create", m="create",
-                              check=manager_mode),
-                            M("Search Training Participants", f="training",
-                              check=manager_mode),
-                            M("Import Participant List", f="training", m="import",
-                              check=manager_mode),
+                            M("Create", m="create"),
+                            M("Search Training Participants", f="training"),
+                            M("Import Participant List", f="training", m="import"),
                         ),
-                        M("External Trainees", c="pr", f="person",
-                          check=manager_mode)(
+                        M("External Trainees", c="pr", f="person")(
                             M("Create", m="create"),
                         ),
-                        M("Report", c="hrm", f="training", m="report",
-                          check=manager_mode)(
+                        M("Report", c="hrm", f="training", m="report")(
                         ),
-                        #M("Certificate Catalog", c="hrm", f="certificate",
-                        #  check=[manager_mode, use_certs])(
-                        #    M("Create", m="create"),
-                        #    M("Import", m="import", p="create",
-                        #      restrict=[ORG_ADMIN]),
-                        #    #M("Skill Equivalence", f="certificate_skill"),
-                        #),
                     )
         else:
             return M()(
-                        M("Human Talent", c="hrm", f="human_resource", m="summary",
-                          check=manager_mode)(
+                        M("Human Talent", c="hrm", f="human_resource", m="summary")(
                             M("Create", m="create"),
                             M("Import", f="person", m="import",
                               restrict=[ORG_ADMIN]),
                         ),
-                        M("Report", c="hrm", f="human_resource", m="report",
-                          check=manager_mode)(
+                        M("Report", c="hrm", f="human_resource", m="report")(
                             #M("Staff Report", m="report"),
                             #M("Expiring Staff Contracts Report",
                             #  vars=dict(expiring="1")),
                         ),
-                        #M("Teams", c="hrm", f="group",
-                        #  check=manager_mode)(
+                        #M("Teams", c="hrm", f="group")(
                         #    M("Create", m="create"),
                         #    M("Search Members", f="group_membership"),
                         #    M("Import", f="group_membership", m="import"),
                         #),
-                        M("National Societies", c="org",
-                                                f="organisation",
-                                                vars=red_cross_filter,
-                          check=manager_mode)(
+                        M("National Societies", c="org", f="organisation",
+                          vars=red_cross_filter)(
                             M("Create", m="create",
                               vars=red_cross_filter
                               ),
                             M("Import", m="import", p="create",
                               restrict=[ORG_ADMIN])
                         ),
-                        #M("Offices", c="org", f="office",
-                        #  check=manager_mode)(
+                        #M("Offices", c="org", f="office")(
                         #    M("Create", m="create"),
                         #    M("Import", m="import", p="create"),
                         #),
-                        #M("Department Catalog", c="hrm", f="department",
-                        #  check=manager_mode)(
+                        #M("Department Catalog", c="hrm", f="department")(
                         #    M("Create", m="create"),
                         #),
-                        M("Position Catalog", c="hrm", f="job_title",
-                          check=manager_mode)(
+                        M("Position Catalog", c="hrm", f="job_title")(
                             M("Create", m="create"),
                             M("Import", m="import", p="create",
                               restrict=[ORG_ADMIN]),
                         ),
                         #M("Organization Types", c="org", f="organisation_type",
-                        #  restrict=[ADMIN],
-                        #  check=manager_mode)(
+                        #  restrict=[ADMIN])(
                         #    M("Create", m="create"),
                         #),
                         #M("Office Types", c="org", f="office_type",
-                        #  restrict=[ADMIN],
-                        #  check=manager_mode)(
+                        #  restrict=[ADMIN])(
                         #    M("Create", m="create"),
                         #),
                         #M("Facility Types", c="org", f="facility_type",
-                        #  restrict=[ADMIN],
-                        #  check=manager_mode)(
+                        #  restrict=[ADMIN])(
                         #    M("Create", m="create"),
                         #),
-                        #M("My Profile", c="hrm", f="person",
-                        #  check=personal_mode, vars=dict(access="personal")),
-                        # This provides the link to switch to the manager mode:
-                        #M("Human Resources", c="hrm", f="index",
-                        #  check=[personal_mode, is_org_admin]),
-                        # This provides the link to switch to the personal mode:
                         #M("Personal Profile", c="hrm", f="person",
-                        #  check=manager_mode, vars=dict(access="personal"))
+                        #  vars=dict(access="personal"))
                     )
 
     # -------------------------------------------------------------------------

@@ -7,7 +7,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -845,7 +845,9 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    # Always single
+                    # Always single...except with spatial DB
+                    if type(geojson) is list:
+                        geojson = geojson[-1]
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
@@ -1375,7 +1377,7 @@ class S3XML(S3Codec):
     @classmethod
     def record(cls, table, element,
                original=None,
-               files=[],
+               files=None,
                skip=[],
                postprocess=None):
         """
@@ -1383,10 +1385,9 @@ class S3XML(S3Codec):
             it
 
             @param table: the database table
-
             @param element: the element
             @param original: the original record
-            @param files: list of attached upload files
+            @param files: dict of attached upload files
             @param postprocess: post-process hook (xml_post_parse)
             @param skip: fields to skip
         """
@@ -1507,27 +1508,22 @@ class S3XML(S3Codec):
             if field_type in ("id", "blob"):
                 continue
             elif field_type == "upload":
+
                 download_url = child.get(ATTRIBUTE["url"])
                 filename = child.get(ATTRIBUTE["filename"])
+
                 upload = None
-                if filename and filename in files:
-                    # We already have the file cached
+
+                if filename and files and filename in files:
+                    # We already have the file cached (attachment)
                     upload = files[filename]
+
                 elif download_url == "local":
-                    # File is already in-place
+                    # File is already in-place (i.e. in the local upload folder)
                     value = filename
-                    # Read from the filesystem
-                    # uploadfolder = table[f].uploadfolder
-                    # if not uploadfolder:
-                        # uploadfolder = os.path.join(current.request.folder,
-                                                    # "uploads")
-                    # filepath = os.path.join(uploadfolder, filename)
-                    # try:
-                        # upload = open(filepath, r)
-                    # except IOError:
-                        # continue
+
                 elif download_url:
-                    # Download file from Internet
+                    # Download file from network location
                     if not isinstance(download_url, str):
                         try:
                             download_url = download_url.encode("utf-8")
@@ -1539,6 +1535,7 @@ class S3XML(S3Codec):
                         upload = urllib2.urlopen(download_url)
                     except IOError:
                         continue
+
                 if upload:
                     if not isinstance(filename, str):
                         try:
@@ -1547,6 +1544,7 @@ class S3XML(S3Codec):
                             continue
                     field = table[f]
                     value = field.store(upload, filename)
+
                 elif download_url != "local":
                     continue
             else:
@@ -2216,12 +2214,21 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def tree2json(cls, tree, pretty_print=False, native=False):
+    def tree2json(cls, tree, pretty_print=False, native=False, as_dict=False):
         """
             Converts an element tree into JSON
 
             @param tree: the element tree
-            @param pretty_print: provide pretty formatted output
+            @param pretty_print: indent and insert line breaks into
+                                 the JSON string to make it human-readable
+                                 (useful for debug)
+            @param native: tree is S3XML
+            @param as_dict: return a JSON-serializable object instead of
+                            a string, useful for embedding the data in
+                            other structures
+
+            @return: a JSON string (with as_dict=False),
+                     or a JSON-serializable object (with as_dict=True)
         """
 
         if isinstance(tree, etree._ElementTree):
@@ -2242,8 +2249,10 @@ class S3XML(S3Codec):
             else:
                 root_dict["s3"] = json.loads(root_dict["s3"])
 
-        if pretty_print:
-            js = json.dumps(root_dict, indent=4)
+        if as_dict:
+            return root_dict
+        elif pretty_print:
+            js = json.dumps(root_dict, indent=2)
             return "\n".join([l.rstrip() for l in js.splitlines()])
         else:
             return json.dumps(root_dict, separators=SEPARATORS)

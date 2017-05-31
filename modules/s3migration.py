@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-2016 (c) Sahana Software Foundation
+    @copyright: 2012-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -96,7 +96,6 @@ class S3Migration(object):
         from information_schema.KEY_COLUMN_USAGE
         where TABLE_NAME = 'module_resourcename';
 
-        @ToDo: Function to ensure that roles match those in prepop
         @ToDo: Function to do selective additional prepop
     """
 
@@ -492,6 +491,35 @@ class S3Migration(object):
         current.s3db.load_all_models()
 
     # -------------------------------------------------------------------------
+    def refresh_roles(self):
+        """
+            Refresh the Permissions
+        """
+
+        # Clear the Permissions table
+        current.s3db.s3_permission.truncate()
+
+        # Add Anonymous permissions from zzz_1st_run
+        auth = current.auth
+        acl = auth.permission
+        auth.s3_update_acls(
+                "ANONYMOUS",
+                {"t": "org_organisation", "uacl": acl.READ},
+                {"c": "org", "f": "sites_for_org", "uacl": acl.READ},
+        )
+
+        # Allow loading of Org model w/o crashing
+        current.response.s3.crud_strings = Storage()
+
+        # Import the new ACLs
+        from s3 import S3BulkImporter
+        bi = S3BulkImporter()
+        template = current.deployment_settings.get_template()
+        filename = os.path.join(current.request.folder, "modules", "templates", template, "auth_roles.csv")
+        bi.import_role(filename)
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
     def post(self, moves=None,
                    news=None,
                    strbools=None,
@@ -797,18 +825,40 @@ class S3Migration(object):
                 sql = "ALTER TABLE `%(tablename)s` DROP FOREIGN KEY `%(fk)s`, ALTER TABLE %(tablename)s ADD CONSTRAINT %(fk)s FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fk=fk, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot amend ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
             elif db_engine == "postgres":
                 # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
-                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey, ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s ON DELETE %(ondelete)s;" % \
+                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey;" % \
+                    dict(tablename=tablename, fieldname=fieldname)
+
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot remove old ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
+                sql = "ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
-            try:
-                executesql(sql)
-            except:
-                print "Error: Table %s with FK %s" % (tablename, fk)
-                import sys
-                e = sys.exc_info()[1]
-                print >> sys.stderr, e
+                try:
+                    executesql(sql)
+                except:
+                    print "Error: Cannot add new ondelete for Table %s and Field %s" % (tablename, fieldname)
+                    import sys
+                    e = sys.exc_info()[1]
+                    print >> sys.stderr, e
+
+            else:
+                raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def remove_foreign(self, tablename, fieldname):
@@ -994,7 +1044,7 @@ class S3Migration(object):
             db.executesql(sql)
 
         elif db_engine == "postgres":
-            sql = "ALTER TABLE %s RENAME COLUMN %s TO %s" % \
+            sql = "ALTER TABLE %s RENAME COLUMN %s TO %s;" % \
                 (tablename, fieldname_old, fieldname_new)
             db.executesql(sql)
 

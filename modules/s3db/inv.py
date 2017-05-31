@@ -2,7 +2,7 @@
 
 """ Sahana Eden Inventory Model
 
-    @copyright: 2009-2016 (c) Sahana Software Foundation
+    @copyright: 2009-2017 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -557,7 +557,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
@@ -1441,7 +1441,7 @@ class S3InventoryTrackingModel(S3Model):
                                   sortby = "date",
                                   )
 
-        # Search Method
+        # Filter Widgets
         if settings.get_inv_shipment_name() == "order":
             recv_search_comment = T("Search for an order by looking for text in any field.")
             recv_search_date_field = "eta"
@@ -1451,8 +1451,6 @@ class S3InventoryTrackingModel(S3Model):
             recv_search_date_field = "date"
             recv_search_date_comment = T("Search for a shipment received between these dates")
 
-        # @todo: make lazy_table
-        table = db[tablename]
         filter_widgets = [
             S3TextFilter(["sender_id$first_name",
                           "sender_id$middle_name",
@@ -1471,7 +1469,8 @@ class S3InventoryTrackingModel(S3Model):
                          comment = recv_search_comment,
                         ),
             S3DateFilter(recv_search_date_field,
-                         label = table[recv_search_date_field].label,
+                         # This will be the default
+                         #label = table[recv_search_date_field].label,
                          comment = recv_search_date_comment,
                          hidden = True,
                         ),
@@ -1724,7 +1723,7 @@ $.filterOptionsS3({
  'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
- 'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
+ 'lookupURL':S3.Ap.concat('/inv/inv_item_packs.json/'),
  'msgNoRecords':i18n.no_packs,
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem

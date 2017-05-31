@@ -169,6 +169,7 @@
                 self = this;
 
             // Config mode switches
+            // @ToDo: Replace bind() with on() as bind deprecated: http://api.jquery.com/bind/
             $('.db-config-on').bind('click' + ns, function() {
                 self.configMode(true);
             });

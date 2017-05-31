@@ -1,0 +1,38 @@
+{{extend "layout.html"}}
+<div class='row home-top' style='margin-top:20px'>
+ <div class='large-4 large-offset-1 columns'>
+  <div class="row hide-for-small">
+   <div id='site-title' class='small-12 columns'>
+     <img src='{{=URL(c="static", f="themes", args=["DRK", "img", "logo_small.png"])}}' alt='DEUTSCHES ROTES KREUZ' />
+     <h2>{{=settings.get_system_name()}}</h3>
+   </div>
+  </div>
+ </div>
+ <div class='large-5 columns end'>
+  {{if contact_form:}}
+  <div id='intro' class='callout panel'>
+   <h4>Coordinating Refugee Support with Sahana</h4>
+   {{=H4("%s:" % T("Fill in the form below for more information"))}}
+   {{=contact_form}}
+   {{if AUTHENTICATED not in session.s3.roles:}}
+   {{=login_buttons}}
+   {{pass}}
+  </div>
+  {{pass}}
+  {{if AUTHENTICATED not in session.s3.roles:}}
+  <div id='login_box' class='panel' {{if contact_form:}}style='display:none'{{pass}}>
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+   {{if self_registration:}}
+    <div id='register_form' {{if not contact_form:}}style='display:none'{{pass}}>
+     {{=register_div}}
+     {{include "auth/_register.html"}}
+    </div>
+   {{pass}}
+   {{if contact_form:}}<a id='show-mailform' class='tiny secondary button'>Contact Form</a>{{pass}}
+  </div>
+  {{pass}}
+ </div>
+</div>

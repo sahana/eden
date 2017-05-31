@@ -73,14 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_str, s3_unicode #, S3ModuleDebug
-
-#DEBUG = False
-#if DEBUG:
-#    print >> sys.stderr, "S3GIS: DEBUG MODE"
-#    _debug = S3ModuleDebug.on
-#else:
-#    _debug = S3ModuleDebug.off
+from s3utils import s3_include_ext, s3_str, s3_unicode
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -1307,6 +1300,7 @@ class GIS(object):
                   ctable.wmsbrowser_url,
                   ctable.wmsbrowser_name,
                   ctable.zoom_levels,
+                  ctable.merge,
                   mtable.image,
                   mtable.height,
                   mtable.width,
@@ -1424,14 +1418,19 @@ class GIS(object):
 
         if rows and not row:
             # Merge Configs
+            merge = True
             cache["ids"] = []
             for row in rows:
+                if not merge:
+                    break
                 config = row["gis_config"]
+                if config.merge is False: # Backwards-compatibility
+                    merge = False
                 if not config_id:
                     config_id = config.id
                 cache["ids"].append(config.id)
                 for key in config:
-                    if key in ["delete_record", "gis_layer_config", "gis_menu", "update_record"]:
+                    if key in ("delete_record", "gis_layer_config", "gis_menu", "update_record", "merge"):
                         continue
                     if key not in cache or cache[key] is None:
                         cache[key] = config[key]
@@ -1443,13 +1442,13 @@ class GIS(object):
                 if "marker_image" not in cache or \
                    cache["marker_image"] is None:
                     marker = row["gis_marker"]
-                    for key in ["image", "height", "width"]:
+                    for key in ("image", "height", "width"):
                         cache["marker_%s" % key] = marker[key] if key in marker \
                                                                else None
             # Add NULL values for any that aren't defined, to avoid KeyErrors
-            for key in ["epsg", "units", "proj4js", "maxExtent",
+            for key in ("epsg", "units", "proj4js", "maxExtent",
                         "marker_image", "marker_height", "marker_width",
-                        ]:
+                        ):
                 if key not in cache:
                     cache[key] = None
 
@@ -1477,9 +1476,9 @@ class GIS(object):
             marker = row["gis_marker"]
             for key in config:
                 cache[key] = config[key]
-            for key in ["epsg", "maxExtent", "proj4js", "units"]:
+            for key in ("epsg", "maxExtent", "proj4js", "units"):
                 cache[key] = projection[key] if key in projection else None
-            for key in ["image", "height", "width"]:
+            for key in ("image", "height", "width"):
                 cache["marker_%s" % key] = marker[key] if key in marker \
                                                        else None
 
@@ -2878,7 +2877,7 @@ class GIS(object):
         map_id = "default_map"
 
         #from selenium import webdriver
-        # Custom version which is patched to access native PhantomJS functions added to GhostDriver/PhantomJS in:
+        # We include a Custom version which is patched to access native PhantomJS functions from:
         # https://github.com/watsonmw/ghostdriver/commit/d9b65ed014ed9ff8a5e852cc40e59a0fd66d0cf1
         from webdriver import WebDriver
         from selenium.common.exceptions import TimeoutException, WebDriverException
@@ -2896,7 +2895,7 @@ class GIS(object):
                                   (cachepath, os_error)
                 current.log.error(error)
                 current.session.error = error
-                redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
+                redirect(URL(c="gis", f="index", vars={"config": config_id}))
 
         # Copy the current working directory to revert back to later
         cwd = os.getcwd()
@@ -2927,10 +2926,10 @@ class GIS(object):
                               request.application)
         driver.get(base_url)
 
+        response = current.response
+        session_id = response.session_id
         if not current.auth.override:
             # Reuse current session to allow access to ACL-controlled resources
-            response = current.response
-            session_id = response.session_id
             driver.add_cookie({"name":  response.session_id_name,
                                "value": session_id,
                                "path":  "/",
@@ -6465,6 +6464,15 @@ class MAP(DIV):
             map_width = settings.get_gis_map_width()
         options["map_width"] = map_width
 
+        zoom = get_vars.get("zoom", None)
+        if zoom is not None:
+            zoom = int(zoom)
+        else:
+            zoom = opts.get("zoom", None)
+        if not zoom:
+            zoom = config.zoom
+        options["zoom"] = zoom or 1
+
         # Bounding Box or Center/Zoom
         bbox = opts.get("bbox", None)
         if (bbox
@@ -6475,6 +6483,9 @@ class MAP(DIV):
             ):
             # We have sane Bounds provided, so we should use them
             pass
+        elif zoom is None:
+            # Build Bounds from Config
+            bbox = config
         else:
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
@@ -6504,15 +6515,6 @@ class MAP(DIV):
         else:
             options["lat"] = lat
             options["lon"] = lon
-
-        zoom = get_vars.get("zoom", None)
-        if zoom is not None:
-            zoom = int(zoom)
-        else:
-            zoom = opts.get("zoom", None)
-        if not zoom:
-            zoom = config.zoom
-        options["zoom"] = zoom or 1
 
         options["numZoomLevels"] = config.zoom_levels
 
@@ -8211,7 +8213,7 @@ class LayerGoogle(Layer):
         sublayers = self.sublayers
         if sublayers:
             T = current.T
-            epsg = (Projection().epsg == 900913)
+            spherical_mercator = (Projection().epsg == 900913)
             settings = current.deployment_settings
             apikey = settings.get_gis_api_google()
             s3 = current.response.s3
@@ -8221,24 +8223,26 @@ class LayerGoogle(Layer):
 
             ldict = {}
 
-            for sublayer in sublayers:
-                # Attributes which are defaulted client-side if not set
-                if sublayer.type == "earth":
-                    ldict["Earth"] = str(T("Switch to 3D"))
-                    #{"modules":[{"name":"earth","version":"1"}]}
-                    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
-                    if script not in s3_scripts:
-                        s3_scripts.append(script)
-                    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
-                    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
-                    if debug:
-                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
-                    else:
-                        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
-                    s3.js_global.append('''S3.public_url="%s"''' % settings.get_base_public_url())
-                elif epsg:
-                    # Earth is the only layer which can run in non-Spherical Mercator
-                    # @ToDo: Warning?
+            if spherical_mercator:
+                # Earth was the only layer which can run in non-Spherical Mercator
+                # @ToDo: Warning?
+                for sublayer in sublayers:
+                    # Attributes which are defaulted client-side if not set
+                    #if sublayer.type == "earth":
+                    #    # Deprecated:
+                    #    # https://maps-apis.googleblog.com/2014/12/announcing-deprecation-of-google-earth.html
+                    #    ldict["Earth"] = str(T("Switch to 3D"))
+                    #    #{"modules":[{"name":"earth","version":"1"}]}
+                    #    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
+                    #    if script not in s3_scripts:
+                    #        s3_scripts.append(script)
+                    #    # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
+                    #    #s3.jquery_ready.append('''try{google.load('earth','1')catch(e){}''')
+                    #    if debug:
+                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.js")
+                    #    else:
+                    #        self.scripts.append("gis/gxp/widgets/GoogleEarthPanel.min.js")
+                    #    s3.js_global.append('''S3.public_url="%s"''' % settings.get_base_public_url())
                     if sublayer._base:
                         # Set default Base layer
                         ldict["Base"] = sublayer.type
@@ -8263,26 +8267,27 @@ class LayerGoogle(Layer):
                         ldict["MapMakerHybrid"] = {"name": sublayer.name or "Google MapMaker Hybrid",
                                                    "id": sublayer.layer_id}
 
-            if "MapMaker" in ldict or "MapMakerHybrid" in ldict:
-                # Need to use v2 API
-                # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
-                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
-                script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
-                if script not in s3_scripts:
-                    s3_scripts.append(script)
-            else:
-                # v3 API (3.16 is frozen, 3.17 release & 3.18 is nightly)
-                script = "//maps.google.com/maps/api/js?v=3.17&sensor=false"
-                if script not in s3_scripts:
-                    s3_scripts.append(script)
-                if "StreetviewButton" in ldict:
-                    # Streetview doesn't work with v2 API
-                    ldict["StreetviewButton"] = str(T("Click where you want to open Streetview"))
-                    ldict["StreetviewTitle"] = str(T("Street View"))
-                    if debug:
-                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
-                    else:
-                        self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
+                if "MapMaker" in ldict or "MapMakerHybrid" in ldict:
+                    # Need to use v2 API
+                    # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
+                    # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
+                    script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
+                    if script not in s3_scripts:
+                        s3_scripts.append(script)
+                else:
+                    # v3 API (3.26 is frozen, 3.27 is release & 3.28 is experimental)
+                    # https://developers.google.com/maps/documentation/javascript/versions
+                    script = "//maps.google.com/maps/api/js?v=3.26&key=%s" % apikey
+                    if script not in s3_scripts:
+                        s3_scripts.append(script)
+                    if "StreetviewButton" in ldict:
+                        # Streetview doesn't work with v2 API
+                        ldict["StreetviewButton"] = str(T("Click where you want to open Streetview"))
+                        ldict["StreetviewTitle"] = str(T("Street View"))
+                        if debug:
+                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.js")
+                        else:
+                            self.scripts.append("gis/gxp/widgets/GoogleStreetViewPanel.min.js")
 
             if options:
                 # Used by Map._setup()

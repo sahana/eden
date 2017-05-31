@@ -1,0 +1,396 @@
+// More link
+a.more {
+  @include read-more;
+}
+
+// External link
+a[href^="//"], a[href*="://"] {
+  @include icon(fa-external-link,after)
+}
+
+// Meta text
+.meta {
+  @include meta-label;
+}
+
+// -------------------------------------
+// Table Elements
+
+table {
+  tbody {
+    tr {
+      &.odd,
+      &:nth-of-type(odd) { background: $table-odd-row-bg; }
+    }
+  }
+}
+
+// -------------------------------------
+// Buttons
+
+.button {
+  @include button($bg:$blue,$radius:3px);
+  &.disabled, &[disabled] {
+    @include button-style($bg:lighten($blue,30%), $disabled:true);
+    &:hover { color: inherit; }
+  }
+
+  // Form postfix
+  &.postfix {
+    padding: $form-spacing / 2;
+    margin-left: $form-spacing / 2;
+  }
+}
+
+// -------------------------------------
+// Form Elements
+
+form label {
+  @include meta-label;
+}
+
+select {
+  background-color: $gainsboro;
+  border-color: $gainsboro;
+  border-radius: $global-radius;
+}
+
+// Placeholder text
+input,
+textarea {
+  @include input-placeholder {
+    @include meta-label;
+    color: lighten($body-font-color, 40%);
+    opacity: 1;
+  }
+}
+
+.search-wrapper {
+  @include search;
+}
+
+// -------------------------------------
+// Tabs
+.tabs {
+  .tab-title:not(:last-child) {
+    margin-right: 1.5rem;
+  }
+  .tab-title a {
+    border-bottom-style: solid;
+    border-bottom-width: 4px;
+    border-bottom-color: transparent;
+    padding: 0 rem-calc(4);
+    &:hover {
+      border-bottom-color: inherit;
+    }
+  }
+  .tab-title.active a {
+    border-bottom-color: inherit;
+    font-weight: bold;
+  }
+}
+
+// -------------------------------------
+// Data List
+// list of data
+ul.data-list,
+ul.dl {
+  list-style-type: none;
+  margin: 0;
+  li,
+  ol {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+div.dl { border: 0; }
+
+.data-list,
+.dl {
+  .dl-row {
+    border: 0;
+    &.odd,
+    &.odd .dl-item {
+      background-color: #FFF;
+    }
+  }
+}
+
+// -------------------------------------
+// Widgets
+
+// tagit
+ul.tagit {
+  box-shadow: $input-box-shadow;
+  padding: 5px;
+  li.tagit-choice {
+    margin-right: 5px;
+  }
+  li.tagit-new {
+    padding: 0;
+    margin-right:0;
+    input[type="text"] {
+      height: auto;
+      line-height: inherit;
+      padding: .25em 4px;
+    }
+  }
+}
+
+// Multiselect
+body.ltr .ui-multiselect {
+  font-size: $input-font-size;
+  padding: $form-spacing / 2;
+}
+
+// -------------------------------------
+// Filter form
+
+.filter-form {
+   @include filter;
+}
+
+// Date filter & timeline
+.date-filter {
+  .range-picker-wrapper {
+    margin-bottom: $global-padding;
+  }
+  .range-picker {
+    .process {
+      background-color: $primary-color;
+    }
+    .select-label {
+      background-color: $primary-color;
+      box-shadow: 1px 1px 6px rgba(0,0,0,.25);
+      margin-bottom: 10px;
+      &::before {
+        content: "";
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        width: 16px;
+        height: 16px;
+        margin-left: -8px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        border-top-color: inherit;
+        background-color: #fff;
+      }
+      &::after {
+        border-top-color: $primary-color;
+      }
+    }
+  }
+
+  .range-coarse,
+  .range-filter {
+    @include grid-row($behavior: nest);
+  }
+  .range-coarse-start,
+  .range-coarse-end,
+  .range-filter-field {
+    @include grid-column(6);
+  }
+}
+
+// -------------------------------------
+// Data Table
+
+// .dt-wrapper {
+//   @include data-table();
+//   .dt-export-options {
+//     z-index: 1;
+//     position: relative;
+//   }
+//   .dataTables_wrapper {
+//     clear: none;
+//     .dataTables_info {
+//       clear: none;
+//       float: left;
+//     }
+//     .dataTables_length {
+//       float: left;
+//       margin: rem-calc(-6) 0  rem-calc(6) rem-calc(10);
+//     }
+//   }
+//   .dataTable_table {
+//     margin-bottom: rem-calc(10);
+//     table.dataTable thead th {
+//       border-bottom: none;
+//     }
+//   }
+//   .paging_full_numbers a.paginate_button {
+//     @include meta-label();
+//     background-color: $blue;
+//     color: $white !important;
+//     border:none;
+//     border-radius: $global-radius;
+//     padding: 3px 5px;
+//     &:hover {
+//       background-color: lighten($blue, 10%);
+//     }
+//   }
+// }
+
+// -------------------------------------
+// Well
+
+.well {
+  padding-top: $global-padding;
+  .well-title {
+    @include grid-column(12);
+    small {
+      margin-left: 20px;
+    }
+  }
+  &.blue {
+    background-color: $blue;
+    .well-title {
+      color: white;
+      a {
+        @include meta-label($color:white)
+      }
+    }
+  }
+}
+
+// -------------------------------------
+// Callout
+
+.callout {
+  @include callout();
+}
+
+// -------------------------------------
+// Event Parent Callout
+.callout.event-parent {
+  @include callout($blue);
+  .callout-right {
+    text-align-last: right;
+  }
+  .meta .date::after {
+    content: "|";
+    margin: 0 rem-calc(6);
+  }
+  .button {
+    margin: 0;
+  }
+}
+
+// -------------------------------------
+// Event Card
+.card-event {
+  @include card;
+  .event-date-location {
+    @include box-date-location($padding:$global-padding);
+    margin: 0 (-$global-padding) $global-padding;
+    .adr,
+    .date {
+      font-size: $h4-font-size;
+      font-weight: bold;
+    }
+  }
+}
+
+// -------------------------------------
+// Alert Card
+
+.card-alert {
+  @include card;
+  .title {
+    font-size: $h3-font-size;
+  }
+  .meta-location {
+    @include location-inline;
+    @include meta-label;
+  }
+}
+
+// -------------------------------------
+// Incident Profile Card
+
+.incident-profile {
+  @include card;
+  .incident-data {
+    @include grid-row($behavior:'nest');
+    font-size: $h5-font-size;
+    font-weight: bold;
+    margin-bottom: $paragraph-margin-bottom;
+    .incident-location {
+      @include grid-column(6);
+      .box {
+        @include box-location($padding:$global-padding / 2);
+      }
+    }
+    .incident-date {
+      @include grid-column(6);
+      .box {
+        @include box-date($padding:$global-padding / 2);
+      }
+    }
+  }
+
+  .incident-resources {
+    @include grid-row($behavior:'nest');
+    .incident-resources-rail {
+      @include grid-column(4);
+    }
+    .incident-resources-data {
+      @include grid-column(8);
+    }
+
+  }
+}
+
+// -------------------------------------
+// Notification Card
+
+.card-notification {
+  @include card($bkg:#FFF);
+  .body .desc .img {
+    max-width: 40%;
+    height: auto;
+    float: left;
+    margin: 0 rem-calc(8) rem-calc(8) 0;
+  }
+}
+
+// -------------------------------------
+// Post Card
+
+.card-post {
+  @include card($bkg:#FFF);
+  padding: 0;
+  float: none;
+  width:100%;
+  .body {
+    .meta-update {
+      width: 50%;
+    }
+    .meta-comments {
+      &::before {
+        content: "\00a0\00a0";
+      }
+      white-space: nowrap;
+    }
+  }
+  .card-post-comments {
+    margin-left: 0;
+  }
+  .card-post-comment {
+    background-color: $silver;
+    margin-bottom: $global-padding / 2;
+    padding: $global-padding;
+    textarea {
+      min-height: 10em;
+    }
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .add-comment,
+  .submit {
+    @include meta-label;
+  }
+}

@@ -1,5 +1,5 @@
-First Name,Last Name,Email,Password,Role,Organisation
-Humanitarian,Manager,hru@example.com,eden,HUM_MANAGER,Save the Children
-Logistics,Manager,logs@example.com,eden,LOGISTICS,Save the Children
-ERT,Leader,ert@example.com,eden,ERT_LEADER,Save the Children
-Comms,,comms@example.com,eden,COMMS,Save the Children
+First Name,Last Name,Email,Password,Role,Organisation,Link
+Humanitarian,Manager,hru@example.com,eden,HUM_MANAGER,Save the Children,Staff
+Logistics,Manager,logs@example.com,eden,LOGISTICS,Save the Children,Staff
+ERT,Leader,ert@example.com,eden,ERT_LEADER,Save the Children,Staff
+ERT,Member,staff@example.com,eden,,Save the Children,Staff
