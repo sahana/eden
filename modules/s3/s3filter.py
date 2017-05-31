@@ -58,7 +58,7 @@ from s3datetime import s3_decode_iso_datetime, S3DateTime
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3rest import S3Method
 from s3timeplot import S3TimeSeries
-from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
+from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import ICON, \
                       S3CalendarWidget, \
@@ -2417,11 +2417,11 @@ class S3FilterForm(object):
         # Prevent issues with Webkit-based browsers & Back buttons
         attr["_autocomplete"] = "off"
 
-        opts = self.opts
+        opts_get = self.opts.get
         settings = current.deployment_settings
 
         # Form style
-        formstyle = opts.get("formstyle", None)
+        formstyle = opts_get("formstyle", None)
         if not formstyle:
             formstyle = settings.get_ui_filter_formstyle()
 
@@ -2437,12 +2437,12 @@ class S3FilterForm(object):
             rows.append(formstyle(None, "", controls, ""))
 
         # Submit elements
-        ajax = opts.get("ajax", False)
-        submit = opts.get("submit", False)
+        ajax = opts_get("ajax", False)
+        submit = opts_get("submit", False)
         if submit:
             # Auto-submit?
             auto_submit = settings.get_ui_filter_auto_submit()
-            if auto_submit and opts.get("auto_submit", True):
+            if auto_submit and opts_get("auto_submit", True):
                 script = '''S3.search.filterFormAutoSubmit('%s',%s)''' % \
                          (form_id, auto_submit)
                 current.response.s3.jquery_ready.append(script)
@@ -2460,16 +2460,14 @@ class S3FilterForm(object):
             submit_button = INPUT(_type="button",
                                   _value=label,
                                   _class="filter-submit")
-            #if auto_submit:
-                #submit_button.add_class("hide")
             if _class:
                 submit_button.add_class(_class)
 
             # Where to request filtered data from:
-            submit_url = opts.get("url", URL(vars={}))
+            submit_url = opts_get("url", URL(vars={}))
 
             # Where to request updated options from:
-            ajax_url = opts.get("ajaxurl", URL(args=["filter.options"], vars={}))
+            ajax_url = opts_get("ajaxurl", URL(args=["filter.options"], vars={}))
 
             # Submit row elements
             submit = TAG[""](submit_button,
@@ -2492,7 +2490,7 @@ class S3FilterForm(object):
 
         # Filter Manager (load/apply/save filters)
         fm = settings.get_search_filter_manager()
-        if fm and opts.get("filter_manager", resource is not None):
+        if fm and opts_get("filter_manager", resource is not None):
             filter_manager = self._render_filters(resource, form_id)
             if filter_manager:
                 fmrow = formstyle(None, "", filter_manager, "")
@@ -2736,7 +2734,7 @@ class S3FilterForm(object):
 
         # JSON-serializable translator
         T = current.T
-        _t = lambda s: str(T(s))
+        _t = lambda s: s3_str(T(s))
 
         # Configure the widget
         settings = current.deployment_settings
@@ -2757,7 +2755,7 @@ class S3FilterForm(object):
 
             # Hints
             titleHint = _t("Enter a title..."),
-            selectHint = str(SELECT_FILTER),
+            selectHint = s3_str(SELECT_FILTER),
             emptyHint = _t("No saved filters"),
 
             # Confirm update + confirmation text

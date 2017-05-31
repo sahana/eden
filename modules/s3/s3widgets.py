@@ -8874,6 +8874,7 @@ class ICON(I):
             "play": "fa-play",
             "plus": "fa-plus",
             "plus-sign": "fa-plus-sign",
+            "print": "fa-print",
             "project": "fa-dashboard",
             "radio": "fa-microphone",
             "remove": "fa-remove",

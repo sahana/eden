@@ -5529,12 +5529,8 @@ class project_SummaryReport(S3Method):
         if r.name == "project":
             representation = r.representation
             if representation == "html":
-                # @ToDo: Page with Filters:
-                # - Time Period
-                # - Indicators
-                # - Objectives
-                # - Activities
-                pass
+                output = self.html(r, **attr)
+                return output
             elif representation == "pdf":
                 output = self.pdf(r, **attr)
                 return output
@@ -5544,8 +5540,9 @@ class project_SummaryReport(S3Method):
     def _extract(self, r, **attr):
         """
             Extract the Data
-        """
 
+            @ToDo: Read the filters from the HTML view
+        """
 
         db = current.db
         s3db = current.s3db
@@ -5553,17 +5550,29 @@ class project_SummaryReport(S3Method):
         NONE = current.messages["NONE"]
 
         project_id = r.id
+        vars_get = r.get_vars.get
 
         # Goals
+        limitby = None
         goals = {}
         table = s3db.project_goal
-        query = (table.project_id == project_id) & \
-                (table.deleted == False)
+        goal_ids = vars_get("goal_id__belongs")
+        if goal_ids:
+            goal_ids = goal_ids.split(",")
+            if len(goal_ids) == 1:
+                query = (table.id == goal_ids[0])
+                limitby = (0, 1)
+            else:
+                query = (table.id.belongs(goal_ids))
+        else:
+            query = (table.project_id == project_id) & \
+                    (table.deleted == False)
         rows = db(query).select(table.id,
                                 table.code,
                                 table.name,
                                 table.current_status,
                                 table.overall_status,
+                                limitby = limitby
                                 )
         for row in rows:
             goals[row.id] = dict(code = row.code,
@@ -5575,8 +5584,14 @@ class project_SummaryReport(S3Method):
 
         # Outcomes
         table = s3db.project_outcome
-        query = (table.project_id == project_id) & \
-                (table.deleted == False)
+        if goal_ids:
+            if len(goal_ids) == 1:
+                query = (table.goal_id == goal_ids[0])
+            else:
+                query = (table.goal_id.belongs(goal_ids))
+        else:
+            query = (table.project_id == project_id)
+        query &= (table.deleted == False)
         rows = db(query).select(table.id,
                                 table.goal_id,
                                 table.code,
@@ -5594,8 +5609,14 @@ class project_SummaryReport(S3Method):
 
         # Outputs
         table = s3db.project_output
-        query = (table.project_id == project_id) & \
-                (table.deleted == False)
+        if goal_ids:
+            if len(goal_ids) == 1:
+                query = (table.goal_id == goal_ids[0])
+            else:
+                query = (table.goal_id.belongs(goal_ids))
+        else:
+            query = (table.project_id == project_id)
+        query &= (table.deleted == False)
         rows = db(query).select(table.id,
                                 table.goal_id,
                                 table.outcome_id,
@@ -5614,10 +5635,27 @@ class project_SummaryReport(S3Method):
                      )
 
         # Indicators
+        limitby = None
         indicators = {}
         table = s3db.project_indicator
-        query = (table.project_id == project_id) & \
-                (table.deleted == False)
+        indicator_ids = vars_get("indicator_id__belongs", [])
+        if indicator_ids:
+            indicator_ids = indicator_ids.split(",")
+            if len(indicator_ids) == 1:
+                query = (table.id == indicator_ids[0])
+                limitby = (0, 1)
+            else:
+                query = (table.id.belongs(indicator_ids))
+        elif goal_ids:
+            if len(goal_ids) == 1:
+                query = (table.goal_id == goal_ids[0]) & \
+                        (table.deleted == False)
+            else:
+                query = (table.goal_id.belongs(goal_ids)) & \
+                        (table.deleted == False)
+        else:
+            query = (table.project_id == project_id) & \
+                    (table.deleted == False)
         rows = db(query).select(table.id,
                                 table.goal_id,
                                 table.outcome_id,
@@ -5626,9 +5664,15 @@ class project_SummaryReport(S3Method):
                                 table.name,
                                 table.current_status,
                                 table.overall_status,
+                                limitby = limitby
                                 )
+        if not indicator_ids:
+            iappend = indicator_ids.append
+        else:
+            iappend = lambda i: i
         for row in rows:
             indicator_id = row.id
+            iappend(indicator_id)
             goal_id = row.goal_id
             outcome_id = row.outcome_id
             output_id = row.output_id
@@ -5651,9 +5695,17 @@ class project_SummaryReport(S3Method):
         # Indicator Data
         date = None
         table = s3db.project_indicator_data
-        query = (table.project_id == project_id) & \
-                (table.end_date <= current.request.utcnow) & \
-                (table.deleted == False)
+        if len(indicator_ids) == 1:
+            query = (table.indicator_id == indicator_ids[0]) & \
+                    (table.deleted == False)
+        else:
+            query = (table.indicator_id.belongs(indicator_ids)) & \
+                    (table.deleted == False)
+        start_date = vars_get("date__ge")
+        if start_date:
+            query &= (table.end_date >= start_date)
+        end_date = vars_get("date__le", current.request.utcnow)
+        query &= (table.end_date <= end_date)
         rows = db(query).select(table.indicator_id,
                                 table.end_date,
                                 table.target_value,
@@ -5690,7 +5742,80 @@ class project_SummaryReport(S3Method):
                 outcomes[outcome]["outputs"] = outputs
             goals[goal]["outcomes"] = outcomes
 
-        return date, goals
+        return start_date, date, goals
+
+    # -------------------------------------------------------------------------
+    def html(self, r, **attr):
+        """
+            HTML Representation
+            - page with Filters
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        project_id = r.id
+
+        goals = {}
+        table = s3db.project_goal
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.code,
+                                table.name,
+                                )
+        for row in rows:
+            goals[row.id] = "%s: %s" % (row.code, row.name)
+
+        indicators = {}
+        table = s3db.project_indicator
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.code,
+                                table.name,
+                                )
+        for row in rows:
+            indicators[row.id] = "%s: %s" % (row.code, row.name)
+
+        filter_widgets = [S3DateFilter("date",
+                                       _name = "date",
+                                       label = T("Time Period"),
+                                       hide_time = True,
+                                       ),
+                          S3OptionsFilter("goal_id",
+                                          _name = "goal_id",
+                                          label = T("Goals"),
+                                          options = goals,
+                                          ),
+                          S3OptionsFilter("indicator_id",
+                                          _name = "indicator_id",
+                                          label = T("Indicators"),
+                                          options = indicators,
+                                          ),
+                          # @ToDo: Activities
+                          #S3OptionsFilter("activity_id",
+                          #                _name = "activity_id",
+                          #                label = T("Activities"),
+                          #                options = activities,
+                          #                ),
+                          ]
+
+        current.deployment_settings.ui.filter_auto_submit = False
+        form = S3FilterForm(filter_widgets,
+                            #auto_submit = False, # I think this should completely over-ride setting, whereas currently the submit button is hidden
+                            submit = T("Generate PDF"),
+                            url = r.url(representation="pdf"),
+                            )
+        form = form.html(None)
+
+        output = {"item": form,
+                  "title": T("Project Summary Report"),
+                  }
+
+        current.response.view = "simple.html"
+        return output
 
     # -------------------------------------------------------------------------
     def pdf(self, r, **attr):
@@ -5707,7 +5832,7 @@ class project_SummaryReport(S3Method):
         NONE = current.messages["NONE"]
 
         # Extract Data
-        date, goals = self._extract(r, **attr)
+        start_date, end_date, goals = self._extract(r, **attr)
 
         record = r.record
         organisation_id = record.organisation_id
@@ -5920,12 +6045,12 @@ class project_SummaryReport(S3Method):
         status_table = TABLE(TR(TD(T("Current Status of Project"),
                                    _rowspan=2,
                                    ),
-                                TD(T("Current")), # Current Status currently...should be Current Value?
-                                TD(T("Overall")), # Overall Status currently...needs to change to Planned
+                                TD(T("Current")), # Current Status currently...needs to change to % Actual
+                                TD(T("Overall")), # Overall Status currently...needs to change to % Planned
                                 ),
                              TR(#TD(),
-                                TD(project_status_represent(record.current_status_by_indicators)),
-                                TD(project_status_represent(record.overall_status_by_indicators)), # Should change to Planned...
+                                TD(project_status_represent(record.current_status_by_indicators)), # needs to change to % Actual
+                                TD(project_status_represent(record.overall_status_by_indicators)), # needs to change to % Planned
                                 ),
                              )
         sappend = status_table.append
@@ -5978,8 +6103,12 @@ class project_SummaryReport(S3Method):
                         #         )
                         #sappend(row)
 
+        if start_date:
+            start_date = H3("%s: %s" % (T("From Date"), date_represent(s3_decode_iso_datetime(start_date))))
+
         body = DIV(H1(T("Narrative Report")),
-                   H3("%s: %s" % (T("Up To Date"), date_represent(date))),
+                   start_date,
+                   H3("%s: %s" % (T("Up To Date"), date_represent(end_date))),
                    narrative,
                    P(""),
                    status_table,
@@ -9991,8 +10120,9 @@ def project_rheader(r):
 
         if indicators:
             rfooter = DIV(A(ICON("print"),
+                            " ",
                             T("Project Summary Report"),
-                            _href=URL(args=[r.id, "summary_report"], extension="pdf"),
+                            _href=URL(args=[r.id, "summary_report"]),#, extension="pdf"),
                             _class="action-btn",
                             ),
                           A(T("Summary of Progress by Indicator"),
@@ -10000,6 +10130,7 @@ def project_rheader(r):
                             _class="action-btn",
                             ),
                           A(ICON("table"),
+                            " ",
                             T("Summary of Progress by Indicator"),
                             _href=URL(args=[r.id, "indicator_summary_report"], extension="xls"),
                             _class="action-btn",
