@@ -1575,7 +1575,7 @@ class S3CRUD(S3Method):
         layout = get_config("list_layout", None)
 
         # List ID
-        list_id = get_vars.get("list_id",
+        list_id = get_vars.get("list_id", # Could we check for refresh here? (Saves extra get_var)
                                attr.get("list_id", "datalist"))
 
         # List fields

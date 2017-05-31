@@ -380,7 +380,8 @@ def config(settings):
                                           #"comment.created_on",
                                           ],
                            list_layout = cms_post_list_layout,
-                           orderby = "cms_post.date desc",
+                           # Default
+                           #orderby = "cms_post.date desc",
                            )
 
             if method in ("custom", "filter"):

@@ -730,7 +730,8 @@ class custom_WACOP(S3CRUD):
         s3 = current.response.s3
 
         list_id = "updates_datalist"
-        ajax_vars = {"refresh": list_id,
+        ajax_vars = {"list_id": list_id,
+                     "refresh": list_id,
                      }
 
         tablename = "cms_post"
@@ -755,7 +756,8 @@ class custom_WACOP(S3CRUD):
                                                    start=None,
                                                    limit=5,
                                                    list_id=list_id,
-                                                   orderby="date desc",
+                                                   # This is the default but needs specifying when talking direct to the back-end
+                                                   orderby="cms_post.date desc",
                                                    layout=cms_post_list_layout)
 
         s3.dl_no_header = True
@@ -791,6 +793,7 @@ class custom_WACOP(S3CRUD):
         # Widgets defined in customise() to be visible to filter.options
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
 
+        ajax_vars.pop("list_id")
         ajax_vars.pop("refresh")
         filter_form = S3FilterForm(filter_widgets,
                                    formstyle = filter_formstyle_profile,
