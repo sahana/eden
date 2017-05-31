@@ -1977,6 +1977,48 @@ def config(settings):
     settings.customise_pr_education_level_resource = customise_pr_education_level_resource
 
     # -------------------------------------------------------------------------
+    def person_tag_onvalidation(form):
+        """
+            Custom onvalidation callback for person tags
+            => INDIVIDUAL_ID must be unique
+        """
+
+        formvars = form.vars
+
+        tag = formvars.tag
+        value = formvars.value
+
+        if tag != "INDIVIDUAL_ID" or value is None:
+            return
+
+        # Is this an update?
+        if "id" in formvars:
+            record_id = formvars.id
+        elif "_id" in formvars:
+            # Inline component
+            record_id = formvars._id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            # New record
+            record_id = None
+
+        # Find a duplicate
+        table = current.s3db.pr_person_tag
+        query = (table.tag == "INDIVIDUAL_ID") & \
+                (table.value == value) & \
+                (table.deleted == False)
+        if record_id:
+            query &= (table.id != record_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby = (0, 1),
+                                             ).first()
+
+        # Reject if duplicate exists
+        if duplicate:
+            form.errors["value"] = current.T("ID already in database")
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -2072,6 +2114,12 @@ def config(settings):
             requires = field.requires
             if isinstance(requires, IS_EMPTY_OR):
                 field.requires = requires.other
+
+            # Custom validator for person tags
+            s3db.add_custom_callback("pr_person_tag",
+                                     "onvalidation",
+                                     person_tag_onvalidation,
+                                     )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 

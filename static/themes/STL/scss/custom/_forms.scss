@@ -73,8 +73,13 @@ form {
             }
         }
         tr.inline-form {
-            &.single td {
-                padding: 0;
+            &.single {
+                td {
+                    padding: 0;
+                }
+                .error {
+                    margin-bottom: 0;
+                }
             }
             select {
                 max-width: 18rem;
