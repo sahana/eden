@@ -6609,7 +6609,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     current.log.error(error)
             if form.errors:
                 errors = form.errors
-                error = "\n".join(errors[fn] for fn in errors)
+                error = "\n".join(s3_str(errors[fn]) for fn in errors)
                 return (values, error)
             elif feature:
                 # gis_location_onvalidation adds/updates form vars (e.g.
