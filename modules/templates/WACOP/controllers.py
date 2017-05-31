@@ -929,6 +929,7 @@ class event_Browse(custom_WACOP):
                                    label = "",
                                    #hide_time = True,
                                    slider = True,
+                                   clear_text = "X",
                                    )
         date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 
@@ -1042,6 +1043,7 @@ class incident_Browse(custom_WACOP):
                                    label = "",
                                    #hide_time = True,
                                    slider = True,
+                                   clear_text = "X",
                                    )
         date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
 

@@ -837,6 +837,7 @@ class S3DateFilter(S3RangeFilter):
 
         # Picker options
         opts_get = self.opts.get
+        clear_text = opts_get("clear_text", None)
         hide_time = opts_get("hide_time", False)
 
         # Introspective range?
@@ -980,6 +981,7 @@ class S3DateFilter(S3RangeFilter):
                                           maximum = maximum,
                                           set_min = set_min,
                                           set_max = set_max,
+                                          clear_text = clear_text,
                                           )
 
                 # Populate with the value, if given
