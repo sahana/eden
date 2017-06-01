@@ -4555,8 +4555,8 @@ class S3ProjectPlanningModel(S3Model):
                 else:
                     # Add this data to Totals
                     i = indicators[indicator_id]
-                    i["total_target"] = i["total_target"] + target_value
-                    i["total_value"] = i["total_value"] + value
+                    i["total_target"] += target_value
+                    i["total_value"] += value
                     # Should never happen due to the orderby:
                     #if end_date > i["current_date"]:
                     #    # Replace the Current data
@@ -5547,10 +5547,13 @@ class project_SummaryReport(S3Method):
         db = current.db
         s3db = current.s3db
 
-        NONE = current.messages["NONE"]
+        #NONE = current.messages["NONE"]
 
         project_id = r.id
         vars_get = r.get_vars.get
+
+        project_actual = 0
+        project_target = 0
 
         # Goals
         limitby = None
@@ -5570,16 +5573,18 @@ class project_SummaryReport(S3Method):
         rows = db(query).select(table.id,
                                 table.code,
                                 table.name,
-                                table.current_status,
-                                table.overall_status,
+                                #table.current_status,
+                                #table.overall_status,
                                 limitby = limitby
                                 )
         for row in rows:
             goals[row.id] = dict(code = row.code,
                                  name = row.name,
                                  outcomes = {},
-                                 current_status = row.current_status,
-                                 overall_status = row.overall_status,
+                                 #current_status = row.current_status,
+                                 #overall_status = row.overall_status,
+                                 actual = 0,
+                                 target = 0,
                                  )
 
         # Outcomes
@@ -5596,15 +5601,17 @@ class project_SummaryReport(S3Method):
                                 table.goal_id,
                                 table.code,
                                 table.name,
-                                table.current_status,
-                                table.overall_status,
+                                #table.current_status,
+                                #table.overall_status,
                                 )
         for row in rows:
             goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
                                                           name = row.name,
                                                           outputs = {},
-                                                          current_status = row.current_status,
-                                                          overall_status = row.overall_status,
+                                                          #current_status = row.current_status,
+                                                          #overall_status = row.overall_status,
+                                                          actual = 0,
+                                                          target = 0,
                                                           )
 
         # Outputs
@@ -5622,16 +5629,18 @@ class project_SummaryReport(S3Method):
                                 table.outcome_id,
                                 table.code,
                                 table.name,
-                                table.current_status,
-                                table.overall_status,
+                                #table.current_status,
+                                #table.overall_status,
                                 )
         for row in rows:
             goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
                 dict(code = row.code,
                      name = row.name,
                      indicators = {},
-                     current_status = row.current_status,
-                     overall_status = row.overall_status,
+                     #current_status = row.current_status,
+                     #overall_status = row.overall_status,
+                     actual = 0,
+                     target = 0,
                      )
 
         # Indicators
@@ -5662,8 +5671,8 @@ class project_SummaryReport(S3Method):
                                 table.output_id,
                                 table.code,
                                 table.name,
-                                table.current_status,
-                                table.overall_status,
+                                #table.current_status,
+                                #table.overall_status,
                                 limitby = limitby
                                 )
         if not indicator_ids:
@@ -5683,13 +5692,12 @@ class project_SummaryReport(S3Method):
             goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
                 dict(code = row.code,
                      name = row.name,
-                     comments = NONE,
-                     current_status = row.current_status,
-                     overall_status = row.overall_status,
-                     current_target = NONE,
-                     overall_target = 0,
-                     #current_actual = NONE,
-                     #overall_actual = 0,
+                     #comments = NONE,
+                     #current_status = row.current_status,
+                     #overall_status = row.overall_status,
+                     actual = 0,
+                     target = 0,
+                     total_target = 0,
                      )
 
         # Indicator Data
@@ -5703,46 +5711,103 @@ class project_SummaryReport(S3Method):
                     (table.deleted == False)
         start_date = vars_get("date__ge")
         if start_date:
-            query &= (table.end_date >= start_date)
-        end_date = vars_get("date__le", current.request.utcnow)
-        query &= (table.end_date <= end_date)
+            query &= (table.end_date >= s3_decode_iso_datetime(start_date))
+            start_date = start_date.date()
+        end_date = vars_get("date__le")
+        if end_date:
+            end_date = s3_decode_iso_datetime(end_date)
+        else:
+            end_date = current.request.utcnow
+        #query &= (table.end_date <= end_date)
+        end_date = end_date.date()
         rows = db(query).select(table.indicator_id,
                                 table.end_date,
+                                table.value,
                                 table.target_value,
-                                #table.value,
-                                table.comments,
-                                orderby=table.end_date,
+                                #table.comments,
+                                #orderby=table.end_date,
                                 )
         for row in rows:
-            date = row.end_date # We just want to store the last
+            date = row.end_date # Old: We just want to store the last
             indicator_id = row.indicator_id
+            actual = row.value
             target = row.target_value
-            #actual = row.value
             i = indicators[indicator_id]
-            indicator = goals[i["goal"]]["outcomes"][i["outcome"]]["outputs"][i["output"]]["indicators"][indicator_id]
+            goal = goals[i["goal"]]
+            outcome = goal["outcomes"][i["outcome"]]
+            output = outcome["outputs"][i["output"]]
+            indicator = output["indicators"][indicator_id]
+            if actual:
+                #indicator["current_actual"] = actual # We just want to store the last per Indicator
+                #indicator["overall_actual"] += actual
+                #if start_date is None or \
+                #   date >= start_date:
+                if date <= end_date:
+                    indicator["actual"] += actual
             if target:
-                indicator["current_target"] = target # We just want to store the last per Indicator
-                indicator["overall_target"] += target
-            #if actual:
-            #    indicator["current_actual"] = actual # We just want to store the last per Indicator
-            #    indicator["overall_actual"] += actual
-            comments = row.comments
-            if comments:
-                indicator["comments"] = comments # We just want to store the last per Indicator
+                #indicator["current_target"] = target # We just want to store the last per Indicator
+                #indicator["overall_target"] += target
+                #if start_date is None or \
+                #   date >= start_date:
+                indicator["total_target"] += target
+                if date <= end_date:
+                    indicator["target"] += target
 
-        # Sort
+            #comments = row.comments
+            #if comments:
+            #    indicator["comments"] = comments # We just want to store the last per Indicator
+
+        # Sort & Convert to percentages and Sum upwards
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
-            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
+            goal = goals[goal]
+            outcomes = OrderedDict(sorted(goal["outcomes"].items(), key=lambda x: x[1]["code"]))
             for outcome in outcomes:
-                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
+                outcome = outcomes[outcome]
+                outputs = OrderedDict(sorted(outcome["outputs"].items(), key=lambda x: x[1]["code"]))
                 for output in outputs:
-                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
-                    outputs[output]["indicators"] = indicators
-                outcomes[outcome]["outputs"] = outputs
-            goals[goal]["outcomes"] = outcomes
+                    output = outputs[output]
+                    indicators = OrderedDict(sorted(output["indicators"].items(), key=lambda x: x[1]["code"]))
+                    for indicator in indicators:
+                        indicator = indicators[indicator]
+                        total_target = indicator["total_target"]
+                        if total_target:
+                            indicator["actual"] = actual = (indicator["actual"] / total_target) * 100
+                            indicator["target"] = target = (indicator["target"] / total_target) * 100
+                            output["actual"] += actual
+                            output["target"] += target
+                        else:
+                            # Can't Divide by Zero
+                            indicator["actual"] = 0
+                            indicator["target"] = 0
+                    output["indicators"] = indicators
+                    count = len(indicators)
+                    if count:
+                        output["actual"] = actual = output["actual"] / count
+                        output["target"] = target = output["target"] / count
+                        outcome["actual"] += actual
+                        outcome["target"] += target
+                outcome["outputs"] = outputs
+                count = len(outputs)
+                if count:
+                    outcome["actual"] = actual = outcome["actual"] / count
+                    outcome["target"] = target = outcome["target"] / count
+                    goal["actual"] += actual
+                    goal["target"] += target
+            goal["outcomes"] = outcomes
+            count = len(outcomes)
+            if count:
+                goal["actual"] = actual = goal["actual"] / count
+                goal["target"] = target = goal["target"] / count
+                project_actual += actual
+                project_target += target
 
-        return start_date, date, goals
+        count = len(goals)
+        if count:
+            project_actual = project_actual / count
+            project_target = project_target / count
+
+        return start_date, end_date, project_actual, project_target, goals
 
     # -------------------------------------------------------------------------
     def html(self, r, **attr):
@@ -5821,6 +5886,7 @@ class project_SummaryReport(S3Method):
     def pdf(self, r, **attr):
         """
             PDF Representation
+            -the actual report
         """
 
         from ..s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
@@ -5832,7 +5898,7 @@ class project_SummaryReport(S3Method):
         NONE = current.messages["NONE"]
 
         # Extract Data
-        start_date, end_date, goals = self._extract(r, **attr)
+        start_date, end_date, actual, target, goals = self._extract(r, **attr)
 
         record = r.record
         organisation_id = record.organisation_id
@@ -6045,12 +6111,12 @@ class project_SummaryReport(S3Method):
         status_table = TABLE(TR(TD(T("Current Status of Project"),
                                    _rowspan=2,
                                    ),
-                                TD(T("Current")), # Current Status currently...needs to change to % Actual
-                                TD(T("Overall")), # Overall Status currently...needs to change to % Planned
+                                TD(T("Actual")),
+                                TD(T("Planned")),
                                 ),
                              TR(#TD(),
-                                TD(project_status_represent(record.current_status_by_indicators)), # needs to change to % Actual
-                                TD(project_status_represent(record.overall_status_by_indicators)), # needs to change to % Planned
+                                TD(project_status_represent(actual)),
+                                TD(project_status_represent(target)),
                                 ),
                              )
         sappend = status_table.append
@@ -6059,8 +6125,8 @@ class project_SummaryReport(S3Method):
             goal = goals[goal_id]
             row = TR(TD("%s %s: %s" % (T("Goal"), goal["code"], goal["name"]),
                         ),
-                     TD(project_status_represent(goal["current_status"])),
-                     TD(project_status_represent(goal["overall_status"])), # Should change to Planned...
+                     TD(project_status_represent(goal["actual"])),
+                     TD(project_status_represent(goal["target"])),
                      _class="project_goal",
                      )
             sappend(row)
@@ -6069,8 +6135,8 @@ class project_SummaryReport(S3Method):
                 outcome = outcomes[outcome_id]
                 row = TR(TD("%s %s: %s" % (T("Outcome"), outcome["code"], outcome["name"]),
                             ),
-                         TD(project_status_represent(outcome["current_status"])),
-                         TD(project_status_represent(outcome["overall_status"])), # Should change to Planned...
+                         TD(project_status_represent(outcome["actual"])),
+                         TD(project_status_represent(outcome["target"])),
                          _class="project_outcome",
                          )
                 sappend(row)
@@ -6079,8 +6145,8 @@ class project_SummaryReport(S3Method):
                     output = outputs[output_id]
                     row = TR(TD("%s %s: %s" % (T("Output"), output["code"], output["name"]),
                                 ),
-                             TD(project_status_represent(output["current_status"])),
-                             TD(project_status_represent(output["overall_status"])), # Should change to Planned...
+                             TD(project_status_represent(output["actual"])),
+                             TD(project_status_represent(output["target"])),
                              _class="project_output",
                              )
                     sappend(row)
@@ -6089,11 +6155,8 @@ class project_SummaryReport(S3Method):
                         indicator = indicators[i]
                         row = TR(TD("%s %s: %s" % (T("Indicator"), indicator["code"], indicator["name"]),
                                     ),
-                                 TD(project_status_represent(indicator["current_status"])),
-                                 #TD(project_status_represent(indicator["overall_status"])),
-                                 # Already is Planned:
-                                 TD(indicator["current_target"]),
-                                 #TD(indicator["overall_target"]),
+                                 TD(project_status_represent(indicator["actual"])),
+                                 TD(project_status_represent(indicator["target"])),
                                  _class="project_indicator",
                                  )
                         sappend(row)

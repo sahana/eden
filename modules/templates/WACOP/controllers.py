@@ -731,7 +731,7 @@ class custom_WACOP(S3CRUD):
 
         list_id = "updates_datalist"
         ajax_vars = {"list_id": list_id,
-                     "refresh": list_id,
+                     #"refresh": list_id,
                      }
 
         tablename = "cms_post"
@@ -794,7 +794,7 @@ class custom_WACOP(S3CRUD):
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
 
         ajax_vars.pop("list_id")
-        ajax_vars.pop("refresh")
+        #ajax_vars.pop("refresh")
         filter_form = S3FilterForm(filter_widgets,
                                    formstyle = filter_formstyle_profile,
                                    submit = True,
@@ -809,7 +809,7 @@ class custom_WACOP(S3CRUD):
                                    )
 
         output["filter_form"] = filter_form.html(resource, r.get_vars,
-                                                 target="updates_datalist",
+                                                 target=list_id,
                                                  alias=None)
 
         #  Create Form for Updates
@@ -818,12 +818,12 @@ class custom_WACOP(S3CRUD):
             if event_id:
                 url = URL(c="event", f="event",
                           args = [event_id, "post", "create.popup"],
-                          vars={"refresh": "updates_datalist"},
+                          vars={"refresh": list_id},
                           )
             elif incident_id:
                 url = URL(c="event", f="incident",
                           args = [incident_id, "post", "create.popup"],
-                          vars={"refresh": "updates_datalist"},
+                          vars={"refresh": list_id},
                           )
             else:
                 # Update doesn't make sense here
