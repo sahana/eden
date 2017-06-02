@@ -2035,22 +2035,19 @@ class S3TypeConverter(object):
         if isinstance(b, datetime.date):
             return b
         elif isinstance(b, basestring):
-            try:
-                # Try ISO format first (e.g. S3DateFilter)
-                timetuple = time.strptime(b, "%Y-%m-%d")
-            except ValueError:
+            from s3validators import IS_UTC_DATE
+            # Try ISO format first (e.g. S3DateFilter)
+            value, error = IS_UTC_DATE(format="%Y-%m-%d")(b)
+            if error:
                 # Try L10n format
-                from s3validators import IS_UTC_DATE
                 value, error = IS_UTC_DATE()(b)
-                if error:
-                    # Maybe specified as datetime-string?
-                    # NB: converting from string (e.g. URL query) assumes
-                    #     the string is specified for the local time zone,
-                    #     specify an ISOFORMAT date/time with explicit time zone
-                    #     (e.g. trailing Z) to override this assumption
-                    value = cls._datetime(b).date()
-            else:
-                value = datetime.date(*timetuple[:3])
+            if error:
+                # Maybe specified as datetime-string?
+                # NB: converting from string (e.g. URL query) assumes
+                #     the string is specified for the local time zone,
+                #     specify an ISOFORMAT date/time with explicit time zone
+                #     (e.g. trailing Z) to override this assumption
+                value = cls._datetime(b).date()
             return value
         else:
             raise TypeError
