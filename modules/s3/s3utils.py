@@ -2044,6 +2044,10 @@ class S3TypeConverter(object):
                 value, error = IS_UTC_DATE()(b)
                 if error:
                     # Maybe specified as datetime-string?
+                    # NB: converting from string (e.g. URL query) assumes
+                    #     the string is specified for the local time zone,
+                    #     specify an ISOFORMAT date/time with explicit time zone
+                    #     (e.g. trailing Z) to override this assumption
                     value = cls._datetime(b).date()
             else:
                 value = datetime.date(*timetuple[:3])
