@@ -2149,6 +2149,60 @@ def config(settings):
         return value, error
 
     # -------------------------------------------------------------------------
+    def set_default_pe_label():
+        """
+            Attempt to auto-generate a beneficiary reference number
+            for the logged-in staff member, using the Staff ID (code)
+            plus a 3-digit number as pattern
+        """
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+
+        ptable = s3db.pr_person
+        htable = s3db.hrm_human_resource
+
+        # Get the staff ID of the logged-in user
+        code = None
+        if auth.s3_logged_in() and auth.user:
+            query = (ptable.pe_id == auth.user.pe_id) & \
+                    (htable.person_id == ptable.id) & \
+                    (htable.deleted == False)
+            row = db(query).select(htable.code,
+                                   orderby = ~htable.modified_on,
+                                   limitby = (0, 1),
+                                   ).first()
+            if row:
+                code = row.code
+
+        if not code:
+            # No staff ID => can not auto-generate reference number
+            return
+
+        # Get the highest reference number with that staff code
+        query = (ptable.pe_label.like("%s___" % code)) & \
+                (ptable.pe_label >= "%s001" % code) & \
+                (ptable.pe_label <= "%s999" % code) & \
+                (ptable.deleted == False)
+        highest = ptable.pe_label.max()
+        row = db(query).select(highest).first()
+        if not row:
+            # No such reference number yet => start with 001
+            next_id = 1
+        else:
+            try:
+                last_id = int(row[highest][-3:])
+            except ValueError:
+                next_id = None
+            else:
+                # Increment it
+                next_id = last_id + 1 if last_id < 999 else None
+
+        if next_id:
+            ptable.pe_label.default = "%s%03d" % (code, next_id)
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
@@ -2258,6 +2312,10 @@ def config(settings):
                 if not r.component:
 
                     from s3 import IS_ONE_OF, S3HierarchyWidget
+
+                    if r.interactive and not r.record and \
+                       r.method == "create" or not r.method:
+                        set_default_pe_label()
 
                     ctable = s3db.dvr_case
 
