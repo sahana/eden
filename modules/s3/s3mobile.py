@@ -241,6 +241,9 @@ class S3MobileSchema(object):
         # Initialize the form description
         self._form = None
 
+        # Initialize subheadings
+        self._subheadings = DEFAULT
+
     # -------------------------------------------------------------------------
     def serialize(self):
         """
@@ -295,6 +298,22 @@ class S3MobileSchema(object):
             self.serialize()
 
         return self._form
+
+    # -------------------------------------------------------------------------
+    @property
+    def subheadings(self):
+        """
+            The subheadings for the mobile form (lazy property)
+        """
+
+        subheadings = self._subheadings
+
+        if subheadings is DEFAULT:
+            setting = self.resource.get_config("subheadings")
+            subheadings = self._subheadings \
+                        = self.subheadings_l10n(setting)
+
+        return subheadings
 
     # -------------------------------------------------------------------------
     # Introspection methods
@@ -608,10 +627,6 @@ class S3MobileSchema(object):
             # Fallback
             form = resource.get_config("crud_form")
 
-        # @todo: if resource is a dynamic table, establish
-        #        the mobile form from the "form" table setting
-        #        before falling back to all readable fields
-
         if not form:
             # No mobile form configured, or is a S3SQLDefaultForm
             # => construct a custom form that includes all readable fields
@@ -650,6 +665,35 @@ class S3MobileSchema(object):
                                        ).first()
 
         return row.uuid or None if row else None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def subheadings_l10n(cls, setting):
+        """
+            Helper to translate form subheadings
+
+            @param setting: the subheadings-setting (a dict)
+
+            @return: the subheadings dict with translated headers
+        """
+
+        if setting is None:
+            return None
+
+        T = current.T
+        output = {}
+
+        for header, fields in setting.items():
+            if isinstance(fields, dict):
+                # Nested format => recurse
+                subheadings = fields.get("subheadings")
+                fields = {"fields": fields.get("fields"),
+                          }
+                if subheadings:
+                    fields["subheadings"] = cls.subheadings_l10n(subheadings)
+            output[s3_str(T(header))] = fields
+
+        return output
 
 # =============================================================================
 class S3MobileForm(object):
@@ -743,6 +787,11 @@ class S3MobileForm(object):
         strings = self.strings()
         if strings:
             main["strings"] = strings
+
+        # Add subheadings
+        subheadings = ms.subheadings
+        if subheadings:
+            main["subheadings"] = subheadings
 
         # Required and provided schemas
         required = set(ms.references.keys())

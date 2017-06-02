@@ -1661,11 +1661,14 @@ class S3DynamicModel(object):
             Configure the table (e.g. CRUD strings)
         """
 
+        s3db = current.s3db
+
         # Load table configuration settings
-        ttable = current.s3db.s3_table
+        ttable = s3db.s3_table
         query = (ttable.name == tablename) & \
                 (ttable.deleted != True)
         row = current.db(query).select(ttable.title,
+                                       ttable.settings,
                                        limitby = (0, 1),
                                        ).first()
         if row:
@@ -1675,6 +1678,31 @@ class S3DynamicModel(object):
                 current.response.s3.crud_strings[tablename] = Storage(
                     title_list = current.T(title),
                     )
+
+            # Table Configuration
+            settings = row.settings
+            if settings:
+
+                config = {}
+
+                # CRUD Form
+                crud_fields = settings.get("form")
+                if crud_fields:
+                    try:
+                        crud_form = S3SQLCustomForm(**crud_fields)
+                    except:
+                        pass
+                    else:
+                        config["crud_form"] = crud_form
+
+                # Sub-headings for CRUD Form
+                subheadings = settings.get("subheadings")
+                if subheadings:
+                    config["subheadings"] = subheadings
+
+                # Apply config
+                if config:
+                    s3db.configure(tablename, **config)
 
     # -------------------------------------------------------------------------
     @classmethod
