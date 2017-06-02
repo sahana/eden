@@ -2661,6 +2661,7 @@ def config(settings):
     # =========================================================================
     # Staff Module
     #
+    settings.hrm.use_code = True
     settings.hrm.use_skills = False
     settings.hrm.use_address = False
     settings.hrm.use_certificates = False
@@ -2707,6 +2708,7 @@ def config(settings):
 
                 # Custom list fields
                 list_fields = ["person_id",
+                               "code",
                                "job_title_id",
                                "organisation_id",
                                (T("Email"), "email.value"),
