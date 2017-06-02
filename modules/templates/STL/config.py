@@ -2187,7 +2187,8 @@ def config(settings):
                 (ptable.deleted == False)
         highest = ptable.pe_label.max()
         row = db(query).select(highest).first()
-        if not row:
+
+        if not row or not row[highest]:
             # No such reference number yet => start with 001
             next_id = 1
         else:
