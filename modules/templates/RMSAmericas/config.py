@@ -3296,7 +3296,54 @@ Thank you"""
             else:
                 result = True
 
-            if r.component:
+            if r.method == "grouped":
+
+                grouped = {"default":
+                        {"title": T("Global Report of Projects Status"),
+                         "fields": [(T("Project"), "name"),
+                                    (T("Program"), "programme.name"),
+                                    (T("Donor"), "donor.organisation_id"),
+                                    (T("Budget"), "budget.total_budget"),
+                                    (T("Location"), "location.location_id"),
+                                    "start_date",
+                                    "end_date",
+                                    ],
+                         "orderby": ["name",
+                                     ],
+                         "aggregate": [("sum", "budget.total_budget"),
+                                       ],
+                         },
+                       }
+
+                from s3 import S3DateFilter, S3OptionsFilter
+
+                filter_widgets = [S3DateFilter("date",
+                                               label = T("Time Period"),
+                                               hide_time = True,
+                                               ),
+                                  S3OptionsFilter("programme_project.programme_id",
+                                                  label = T("Programs"),
+                                                  ),
+                                  S3OptionsFilter("theme_project.theme_id",
+                                                  label = T("Themes"),
+                                                  ),
+                                  S3OptionsFilter("sector_project.sector_id",
+                                                  label = T("Sectors"),
+                                                  ),
+                                  S3OptionsFilter("beneficiary.parameter_id",
+                                                  label = T("Beneficiaries"),
+                                                  ),
+                                  S3OptionsFilter("hazard_project.hazard_id",
+                                                  label = T("Hazards"),
+                                                  ),
+                                  ]
+
+                s3db.configure(tablename,
+                               filter_widgets = filter_widgets,
+                               grouped = grouped,
+                               )
+
+            elif r.component:
                 if r.component_name == "organisation":
                     component_id = r.component_id
                     if component_id:

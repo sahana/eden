@@ -578,7 +578,7 @@ class S3ProjectModel(S3Model):
                                      "key": "sector_id",
                                      "actuate": "hide",
                                      },
-                       # Format needed by S3Filter
+                       # Format needed by S3Filter (unless using $link)
                        project_sector_project = ("project_id",
                                                  {"joinby": "project_id",
                                                   "multiple": False,
@@ -597,7 +597,7 @@ class S3ProjectModel(S3Model):
                                             "actuate": "hide",
                                             "multiple": False,
                                             },
-                       # Format needed by S3Filter
+                       # Format needed by S3Filter (unless using $link)
                        project_theme_project = "project_id",
 
                        # Project Needs (e.g. Funding, Volunteers)
@@ -5552,9 +5552,6 @@ class project_SummaryReport(S3Method):
         project_id = r.id
         vars_get = r.get_vars.get
 
-        project_actual = 0
-        project_target = 0
-
         # Goals
         limitby = None
         goals = {}
@@ -5758,6 +5755,9 @@ class project_SummaryReport(S3Method):
             #    indicator["comments"] = comments # We just want to store the last per Indicator
 
         # Sort & Convert to percentages and Sum upwards
+        project_actual = 0
+        project_target = 0
+
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
             goal = goals[goal]
@@ -5803,7 +5803,7 @@ class project_SummaryReport(S3Method):
                 project_target += target
 
         count = len(goals)
-        if count:
+        if count > 1:
             project_actual = project_actual / count
             project_target = project_target / count
 

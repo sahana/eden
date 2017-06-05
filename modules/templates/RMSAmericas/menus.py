@@ -571,6 +571,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 #  check=indicators,
                 #  ),
                 M("Funding", f="organisation", m="report"),
+                M("Global Report of Projects Status", f="project", m="grouped"),
              ),
              M("Import", f="project", m="import", p="create", restrict=[ORG_ADMIN])(
                 M("Import Projects", m="import", p="create"),

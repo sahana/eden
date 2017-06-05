@@ -45,7 +45,7 @@ from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_unicode
+from ..s3utils import s3_strip_markup, s3_unicode
 
 # Import the specialist libraries
 try:
@@ -1324,6 +1324,8 @@ class S3html2pdf():
         elif isinstance(html, DIV):
             return self.parse_div(html)
         elif (isinstance(html, basestring) or isinstance(html, lazyT)):
+            if "<" in html:
+                html = s3_strip_markup(html)
             if title:
                 para = [Paragraph(biDiText(html), self.boldstyle)]
             else:
