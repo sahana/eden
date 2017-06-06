@@ -4381,6 +4381,12 @@ class S3Config(Storage):
         """
         return self.project.get("indicators", False)
 
+    def get_project_indicator_criteria(self):
+        """
+            Use Indicator Criteria in Projects
+        """
+        return self.project.get("indicator_criteria", False)
+
     #def get_project_locations_from_countries(self):
     #    """
     #        Create a project_location for each country that a Project is
