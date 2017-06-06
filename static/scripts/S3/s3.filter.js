@@ -1850,6 +1850,26 @@ S3.search = {};
     };
 
     /**
+     * Event handler for the dataChanged event: data of a filter
+     * target have changed => update filter options accordingly
+     *
+     * @param {string} targetID - the filter target ID
+     */
+    var dataChanged = function(targetID) {
+
+        if (targetID) {
+
+            var target = $(this).find('input.filter-submit-target').val();
+            if (target) {
+                targets = target.split(' ');
+                if (targets.length && $.inArray(targetID + '', targets) != -1) {
+                    S3.search.ajaxUpdateOptions(this);
+                }
+            }
+        }
+    };
+
+    /**
      * document-ready script
      */
     $(document).ready(function() {
@@ -1891,6 +1911,14 @@ S3.search = {};
         // Manual form submission
         $('.filter-submit').click(function() {
             filterSubmit($(this).closest('.filter-form'));
+        });
+
+        // Handle external target data updates
+        // (e.g. add/update popups, or jeditable-Ajax)
+        $('.filter-form').on('dataChanged', function(e, targetID) {
+            dataChanged.call(this, targetID);
+            // No need (currently) to let this bubble up:
+            return false;
         });
 
         // Advanced button

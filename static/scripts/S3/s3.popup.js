@@ -62,11 +62,11 @@ function s3_popup_refresh_caller(popupData) {
                 }
             }
         }
-        // Also update the options in the filter-form for this target (if any)
-        var filterform = self.parent.$('#' + refresh + '-filter-form');
-        if (filterform.length) {
-            self.parent.S3.search.ajaxUpdateOptions(filterform);
-        }
+
+        // Notify all filter forms that target data have changed
+        // and filter options may need to be updated accordingly
+        self.parent.$('.filter-form').trigger('dataChanged', refresh);
+
         // Remove popup
         self.parent.S3.popup_remove();
         return;

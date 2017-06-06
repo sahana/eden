@@ -800,17 +800,23 @@ class custom_WACOP(S3CRUD):
                                    submit = True,
                                    ajax = True,
                                    url = ajaxurl,
-                                   # Ensure that Filter options update when entries are added/modified
+                                   # Ensure that Filter options update when
+                                   # entries are added/modified
+                                   # => done through target-parameter in html() now,
+                                   #    but /a/ form ID is still required for other
+                                   #    scripts and styles
                                    _id = "%s-filter-form" % list_id,
-                                   ajaxurl = URL(c="cms", f="post",
-                                                 args=["filter.options"],
-                                                 vars=ajax_vars, # manually applied to s3.filter in customise()
+                                   ajaxurl = URL(c = "cms",
+                                                 f = "post",
+                                                 args = ["filter.options"],
+                                                 vars = ajax_vars, # manually applied to s3.filter in customise()
                                                  ),
                                    )
 
         output["filter_form"] = filter_form.html(resource, r.get_vars,
-                                                 target=list_id,
-                                                 alias=None)
+                                                 target = list_id,
+                                                 alias = None,
+                                                 )
 
         #  Create Form for Updates
         has_permission = current.auth.s3_has_permission
