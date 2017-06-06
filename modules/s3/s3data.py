@@ -644,7 +644,7 @@ class S3DataTable(object):
                    dt_text_maximum_len: The maximum length of text before it is condensed
                    dt_text_condense_len: The length displayed text is condensed down to
                    dt_shrink_groups: If set then the rows within a group will be hidden
-                                     two types are supported, 'individulal' and 'accordion'
+                                     two types are supported, 'individual' and 'accordion'
                    dt_group_types: The type of indicator for groups that can be 'shrunk'
                                    Permitted valies are: 'icon' (the default) 'text' and 'none'
                    dt_base_url: base URL to construct export format URLs, resource
