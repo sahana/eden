@@ -2153,7 +2153,7 @@ def config(settings):
         """
             Attempt to auto-generate a beneficiary reference number
             for the logged-in staff member, using the Staff ID (code)
-            plus a 3-digit number as pattern
+            plus a n-digit number as pattern
         """
 
         db = current.db
@@ -2162,6 +2162,9 @@ def config(settings):
 
         ptable = s3db.pr_person
         htable = s3db.hrm_human_resource
+
+        # Number of trailing digits
+        DIGITS = 4
 
         # Get the staff ID of the logged-in user
         code = None
@@ -2181,27 +2184,28 @@ def config(settings):
             return
 
         # Get the highest reference number with that staff code
-        query = (ptable.pe_label.like("%s___" % code)) & \
-                (ptable.pe_label >= "%s001" % code) & \
-                (ptable.pe_label <= "%s999" % code) & \
+        query = (ptable.pe_label.like("%s%s" % (code, "_" * DIGITS))) & \
+                (ptable.pe_label >= "%s%s1" % (code, "0" * (DIGITS -1))) & \
+                (ptable.pe_label <= "%s%s" % (code, "9" * DIGITS)) & \
                 (ptable.deleted == False)
         highest = ptable.pe_label.max()
         row = db(query).select(highest).first()
 
         if not row or not row[highest]:
-            # No such reference number yet => start with 001
+            # No such reference number yet => start with 1
             next_id = 1
         else:
             try:
-                last_id = int(row[highest][-3:])
+                last_id = int(row[highest][-DIGITS:])
             except ValueError:
                 next_id = None
             else:
                 # Increment it
-                next_id = last_id + 1 if last_id < 999 else None
+                next_id = last_id + 1 if last_id < (10 ** DIGITS - 1) else None
 
         if next_id:
-            ptable.pe_label.default = "%s%03d" % (code, next_id)
+            template = "%%s%%0%sd" % DIGITS
+            ptable.pe_label.default = template % (code, next_id)
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
