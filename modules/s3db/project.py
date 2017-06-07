@@ -4451,6 +4451,9 @@ class S3ProjectPlanningModel(S3Model):
                            represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
+                     Field("unit",
+                           label = T("Unit"),
+                           ),
                      Field.Method("percentage", self.project_indicator_percentage),
                      s3_comments(),
                      *s3_meta_fields())

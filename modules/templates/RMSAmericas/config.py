@@ -3504,13 +3504,18 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_project_indicator_data_resource(r, tablename):
 
+        table = current.s3db.project_indicator_data
+        f = table.start_date
+        f.readable = f.writable = True
+        f.label = T("Start Date")
+        table.end_date.label = T("End Date")
+
         if r.method == "update":
             has_role = current.auth.s3_has_role
             if has_role("monitoring_evaluation") or has_role("ORG_ADMIN"):
                 # Normal Access
                 return
             # Project Manager
-            table = current.s3db.project_indicator_data
             if r.tablename == "project_indicator_data":
                 record_id = r.id
             else:
