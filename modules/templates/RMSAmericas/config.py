@@ -3101,19 +3101,21 @@ Thank you"""
         if root_org == HNRC:
             # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             # @ToDo: Add 'Business Line' (when extending to Zone office)
-            settings.project.details_tab = True
-            #settings.project.community_volunteers = True
+            project_settings = settings.project
+            project_settings.details_tab = True
+            #project_settings.community_volunteers = True
             # Done in a more structured way instead
             objectives = None
             outputs = None
-            settings.project.goals = True
-            settings.project.indicators = True
-            settings.project.outcomes = True
-            settings.project.outputs = True
+            project_settings.goals = True
+            project_settings.outcomes = True
+            project_settings.outputs = True
+            project_settings.indicators = True
+            project_settings.indicator_criteria = True
             table.human_resource_id.label = T("Coordinator")
             # Use Budget module instead of ProjectAnnualBudget
-            settings.project.multiple_budgets = False
-            settings.project.budget_monitoring = True
+            project_settings.multiple_budgets = False
+            project_settings.budget_monitoring = True
             # Require start/end dates
             table.start_date.requires = table.start_date.requires.other
             table.end_date.requires = table.end_date.requires.other
@@ -3491,13 +3493,13 @@ Thank you"""
     #settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
     # -------------------------------------------------------------------------
-    def customise_project_indicator_resource(r, tablename):
+    #def customise_project_indicator_resource(r, tablename):
 
-        table = current.s3db.project_indicator
-        table.definition.label = T("Indicator Definition")
-        table.measures.label = T("Indicator Criteria")
+    #    table = current.s3db.project_indicator
+    #    table.definition.label = T("Indicator Definition")
+    #    table.measures.label = T("Indicator Criteria")
 
-    settings.customise_project_indicator_resource = customise_project_indicator_resource
+    #settings.customise_project_indicator_resource = customise_project_indicator_resource
 
     # -------------------------------------------------------------------------
     def customise_project_indicator_data_resource(r, tablename):

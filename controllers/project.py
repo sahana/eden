@@ -275,6 +275,26 @@ def project():
                 #    filter_widgets = None
                 #r.component.configure(filter_widgets = filter_widgets)
 
+            elif component_name == "indicator_criteria":
+                ctable = r.component.table
+                # Filter to just those for this Project & make mandatory
+                ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
+                                                         s3db.project_indicator_represent,
+                                                         sort=True,
+                                                         filterby="project_id",
+                                                         filter_opts=[r.id],
+                                                         )
+
+            elif component_name == "criteria_activity":
+                ctable = r.component.table
+                # Filter to just those for this Project & make mandatory
+                ctable.criteria_id.requires = IS_ONE_OF(db, "project_indicator_criteria.id",
+                                                        s3db.project_criteria_represent,
+                                                        sort=True,
+                                                        filterby="project_id",
+                                                        filter_opts=[r.id],
+                                                        )
+
             elif component_name == "task":
                 if not auth.s3_has_role("STAFF"):
                     # Hide fields which are meant for staff members
