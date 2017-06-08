@@ -1,3 +1,5 @@
 Position,Code,Status,Default,Closed,Comments
-1,OPEN,Open,true,false,Case in progress
-2,CLOSED,Closed,false,true,Case closed
+1,NEW,New,true,false,New case without activities
+2,OPEN,Open,false,false,Case in progress
+3,REVIEW,Review,false,false,"All activities completed, case to be reviewed"
+4,CLOSED,Closed,false,true,Case closed
