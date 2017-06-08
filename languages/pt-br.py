@@ -2654,7 +2654,7 @@
 'Organization deleted': 'Organização excluída',
 'Organization updated': 'Organização atualizada',
 'Organization': 'Organização',
-'Organizations': 'Organizações',
+'Organisations': 'Organizações',
 'Origin of the separated children': 'Origem das crianças separadas',
 'Origin': 'Origem',
 'Other (describe)': 'Outros (descreva)',
