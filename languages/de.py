@@ -3988,6 +3988,7 @@
 'Search Warehouses': 'Warenlager suchen',
 'Search and Edit Group': 'Suchen und Bearbeiten von Gruppen',
 'Search and Edit Individual': 'Suchen und Bearbeiten von einzelnen Personen',
+'Search by owner ID, name or comments': 'Nach Eigentümer-ID, -Name oder Kommentaren suchen',
 'Search by Skills': 'Suche nach Fähigkeiten',
 'Search by skills': 'Suche nach Fähigkeiten',
 'Search for Staff or Volunteers': 'Suche nach Mitarbeitern oder Freiwilligen',

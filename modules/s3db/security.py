@@ -512,22 +512,53 @@ class SecuritySeizedItemsModel(S3Model):
                                  ),
                      *s3_meta_fields())
 
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "status_comment",
+                                        "comments",
+                                        ],
+                                        label = T("Search"),
+                                       ),
+                          S3OptionsFilter("item_type_id",
+                                          options = s3_get_filter_opts(
+                                              "security_seized_item_type"),
+                                          ),
+                          S3OptionsFilter("status",
+                                          options = seized_item_status,
+                                          cols = 2,
+                                          default = "DEP",
+                                          ),
+                          S3OptionsFilter("depository_id",
+                                          options = s3_get_filter_opts(
+                                              "security_seized_item_depository"),
+                                          ),
+                          S3DateFilter("date",
+                                       hidden = True,
+                                       ),
+                          ]
+
         # List Fields
         list_fields = ("person_id",
                        "date",
                        "number",
                        "item_type_id",
-                       "confiscated_by",
+                       #"confiscated_by",
                        "status",
-                       "returned_on",
-                       "returned_by",
+                       "depository_id",
+                       #"returned_on",
+                       #"returned_by",
                        "comments",
                        )
 
         # Table Configuration
         configure(tablename,
+                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.seized_item_onaccept,
+                  orderby = "%s.date desc" % tablename,
                   )
 
         # CRUD Strings

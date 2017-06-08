@@ -2859,7 +2859,11 @@ def config(settings):
         """
 
         from gluon import IS_IN_SET
-        from s3 import S3Represent
+        from s3 import S3DateFilter, \
+                       S3OptionsFilter, \
+                       S3Represent, \
+                       S3TextFilter, \
+                       s3_get_filter_opts
 
         s3db = current.s3db
 
@@ -2899,6 +2903,44 @@ def config(settings):
         # Confiscated by not writable (always default)
         field = table.confiscated_by
         field.writable = False
+
+        # Custom filter Widgets
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "status_comment",
+                                        "comments",
+                                        ],
+                                        label = T("Search"),
+                                        comment = T("Search by owner ID, name or comments"),
+                                       ),
+                          S3OptionsFilter("item_type_id",
+                                          options = s3_get_filter_opts(
+                                              "security_seized_item_type",
+                                              translate = True,
+                                              ),
+                                          ),
+                          S3OptionsFilter("status",
+                                          options = status_opts,
+                                          cols = 2,
+                                          default = "DEP",
+                                          ),
+                          S3OptionsFilter("depository_id",
+                                          options = s3_get_filter_opts(
+                                              "security_seized_item_depository"),
+                                          ),
+                          S3DateFilter("date",
+                                       hidden = True,
+                                       ),
+                          S3DateFilter("person_id$dvr_case.closed_on",
+                                       hidden = True,
+                                       ),
+                          ]
+
+        s3db.configure("security_seized_item",
+                       filter_widgets = filter_widgets,
+                       )
 
     settings.customise_security_seized_item_resource = customise_security_seized_item_resource
 
