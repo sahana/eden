@@ -187,8 +187,8 @@ class DRKRegisterFoodEvent(DVRRegisterCaseEvent):
                             if rules and event_code in rules:
                                 # Event type is currently blocked for this
                                 # family member
-                                alerts.append(": ".join((member["n"],
-                                                         rules[event_code][0],
+                                alerts.append(": ".join((s3_str(member["n"]),
+                                                         s3_str(rules[event_code][0]),
                                                          )))
                             else:
                                 # Ok - register the event
