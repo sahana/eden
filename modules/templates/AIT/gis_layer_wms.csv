@@ -1,0 +1,4 @@
+"Name","Description","URL","Layers","Folder","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Flood - High",,"http://cap.aidiq.com:8080/geoserver/gwc/service/wms","ph:olongapo_flood_high",Olongapo,"True","False","False","True",0.8,"image/png","False",,,
+"Flood - Moderate",,"http://cap.aidiq.com:8080/geoserver/gwc/service/wms","ph:olongapo_flood_moderate",Olongapo,"True","False","False","True",0.8,"image/png","False",,,
+"Flood - Low",,"http://cap.aidiq.com:8080/geoserver/gwc/service/wms","ph:olongapo_flood_low",Olongapo,"True","False","False","True",0.8,"image/png","False",,,
