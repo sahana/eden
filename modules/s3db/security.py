@@ -344,7 +344,9 @@ class SecuritySeizedItemsModel(S3Model):
     """
 
     names = ("security_seized_item_type",
+             "security_seized_item_depository",
              "security_seized_item",
+             "security_seized_item_status_opts",
              )
 
     def model(self):
@@ -408,8 +410,51 @@ class SecuritySeizedItemsModel(S3Model):
                                        )
 
         # ---------------------------------------------------------------------
+        # Depositories
+        #
+        tablename = "security_seized_item_depository"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Depository"),
+            title_display = T("Depository Details"),
+            title_list = T("Depositories"),
+            title_update = T("Edit Depository"),
+            label_list_button = T("List Depositories"),
+            label_delete_button = T("Delete Depository"),
+            msg_record_created = T("Depository created"),
+            msg_record_modified = T("Depository updated"),
+            msg_record_deleted = T("Depository deleted"),
+            msg_list_empty = T("No Depositories currently registered"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        depository_id = S3ReusableField("depository_id", "reference %s" % tablename,
+                                        label = T("Depository"),
+                                        represent = represent,
+                                        requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              )),
+                                        sortby = "name",
+                                        )
+
+        # ---------------------------------------------------------------------
         # Seized Items
         #
+        seized_item_status = {"DEP": T("deposited"),
+                              "RET": T("returned to owner"),
+                              "DIS": T("disposed of/destroyed"),
+                              "FWD": T("forwarded"),
+                              #"OTH": T("other"),
+                              }
         tablename = "security_seized_item"
         define_table(tablename,
                      # Owner
@@ -431,7 +476,7 @@ class SecuritySeizedItemsModel(S3Model):
                            label = T("Count"),
                            requires = IS_INT_IN_RANGE(1, None),
                            ),
-                     # Confiscated on and by whom
+                     # Confiscated when and by whom
                      s3_date(default = "now",
                              label = T("Confiscated on"),
                              ),
@@ -440,12 +485,18 @@ class SecuritySeizedItemsModel(S3Model):
                                default = current.auth.s3_logged_in_person(),
                                comment = None,
                                ),
-                     # Returned to owner
-                     Field("returned", "boolean",
-                           default = False,
-                           label = T("Returned"),
-                           represent = s3_yes_no_represent,
+                     # Status
+                     Field("status",
+                           default = "DEP",
+                           requires = IS_IN_SET(seized_item_status, zero=None),
+                           represent = S3Represent(options=seized_item_status),
                            ),
+                     depository_id(ondelete="SET NULL",
+                                   ),
+                     Field("status_comment",
+                           label = T("Status Comment"),
+                           ),
+                     # Returned-date and person responsible
                      s3_date("returned_on",
                              label = T("Returned on"),
                              # Set onaccept when returned=True
@@ -467,7 +518,7 @@ class SecuritySeizedItemsModel(S3Model):
                        "number",
                        "item_type_id",
                        "confiscated_by",
-                       "returned",
+                       "status",
                        "returned_on",
                        "returned_by",
                        "comments",
@@ -496,21 +547,23 @@ class SecuritySeizedItemsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"security_seized_item_status_opts": seized_item_status,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return {"security_seized_item_status_opts": {},
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def seized_item_onaccept(form):
         """
             Onaccept-routine for seized items:
-                - set returned_on and returned_by if returned=True
+                - set returned_on and returned_by if status=="RET"
         """
 
         db = current.db
@@ -528,7 +581,7 @@ class SecuritySeizedItemsModel(S3Model):
         query = (table.id == record_id) & \
                 (table.deleted == False)
         record = db(query).select(table.id,
-                                  table.returned,
+                                  table.status,
                                   table.returned_on,
                                   table.returned_by,
                                   limitby = (0, 1),
@@ -537,7 +590,7 @@ class SecuritySeizedItemsModel(S3Model):
         if not record:
             return
 
-        if record.returned:
+        if record.status == "RET":
             if not record.returned_on and not record.returned_by:
                 now = current.request.utcnow.date()
                 logged_in_person = current.auth.s3_logged_in_person()

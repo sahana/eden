@@ -376,6 +376,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 M("Confiscation", f="seized_item")(
                     M("Create", m="create"),
                     M("Item Types", f="seized_item_type"),
+                    M("Depositories", f="seized_item_depository"),
                     ),
                 )
 

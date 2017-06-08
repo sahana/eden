@@ -12,6 +12,7 @@ ADMIN_HEAD,Head of Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Head 
 ADMIN_HEAD,Head of Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,security,seized_item,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
 ADMIN_HEAD,Head of Administration,,security,seized_item_type,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
+ADMIN_HEAD,Head of Administration,,security,seized_item_depository,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item depositories
 ADMIN_HEAD,Head of Administration,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
 ADMIN_HEAD,Head of Administration,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
 ADMIN_HEAD,Head of Administration,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
@@ -41,6 +42,7 @@ ADMIN_HEAD,Head of Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE
 ADMIN_HEAD,Head of Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,security_seized_item,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized items
 ADMIN_HEAD,Head of Administration,,,,security_seized_item_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item types
+ADMIN_HEAD,Head of Administration,,,,security_seized_item_depository,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage seized item depositories
 ADMINISTRATION,Administration,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,dvr,site_activity,,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
@@ -51,6 +53,7 @@ ADMINISTRATION,Administration,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Administr
 ADMINISTRATION,Administration,,security,,,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,security,seized_item,,CREATE|READ|UPDATE,DELETE,,,,"Administration can manage seized items, but delete only the ones they created"
 ADMINISTRATION,Administration,,security,seized_item_type,,READ,,,,,Administration can read seized item types
+ADMINISTRATION,Administration,,security,seized_item_depository,,READ,,,,,Administration can read seized item depositories
 ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
 ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
@@ -76,6 +79,7 @@ ADMINISTRATION,Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,
 ADMINISTRATION,Administration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,security_seized_item,CREATE|READ|UPDATE,DELETE,,,,"Administration can manage seized items, but delete only the ones they created"
 ADMINISTRATION,Administration,,,,security_seized_item_type,READ,,,,,Administration can read seized item types
+ADMINISTRATION,Administration,,,,security_seized_item_depository,READ,,,,,Administration can read seized item depositories
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
@@ -131,6 +135,7 @@ MEDICAL,Medical,,,,pr_person_details,READ,,,,,
 MEDICAL,Medical,,,,pr_person_tag,READ,,,,,
 MEDICAL,Medical,,,,security_seized_item,NONE,,,,,
 MEDICAL,Medical,,,,security_seized_item_type,NONE,,,,,
+MEDICAL,Medical,,,,security_seized_item_depository,NONE,,,,,
 POLICE,Police,,cr,,,READ,,,,,
 POLICE,Police,,dvr,allowance,,NONE,,,,,
 POLICE,Police,,dvr,case_activity,,NONE,,,,,Police can not access case activity controller
@@ -160,6 +165,7 @@ POLICE,Police,,,,pr_person_details,READ,,,,,
 POLICE,Police,,,,pr_person_tag,READ,,,,,
 POLICE,Police,,,,security_seized_item,NONE,,,,,
 POLICE,Police,,,,security_seized_item_type,NONE,,,,,
+POLICE,Police,,,,security_seized_item_depository,NONE,,,,,
 RP,Regierungspräsidium,,cr,,,READ,,,,,
 RP,Regierungspräsidium,,dvr,allowance,,READ,,,,,
 RP,Regierungspräsidium,,dvr,case_activity,,NONE,,,,,
@@ -189,6 +195,7 @@ RP,Regierungspräsidium,,,,pr_person_details,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person_tag,READ,,,,,
 RP,Regierungspräsidium,,,,security_seized_item,READ,,,,,RP can read seized items
 RP,Regierungspräsidium,,,,security_seized_item_type,READ,,,,,RP can read seized item types
+RP,Regierungspräsidium,,,,security_seized_item_depository,READ,,,,,RP can read seized item depositories
 QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can create and read in tables required for case event registration
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
@@ -196,6 +203,7 @@ QUARTIER,Quartiermanager,,dvr,site_activity,,NONE,,,,,Quartiermanager can not ac
 QUARTIER,Quartiermanager,,security,person_search,,READ,,,,,Quartiermanager can look up persons
 QUARTIER,Quartiermanager,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Quartiermanager can register seized items, and update/delete the ones they created"
 QUARTIER,Quartiermanager,,security,seized_item_type,,READ,,,,,Quartiermanager can read seized item types
+QUARTIER,Quartiermanager,,security,seized_item_depository,,READ,,,,,Quartiermanager can read seized item depositories
 QUARTIER,Quartiermanager,,,,cr_shelter_flag,READ,,,,,Quartiermanager can read shelter flags
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
@@ -210,6 +218,7 @@ QUARTIER,Quartiermanager,,,,pr_person_details,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_person_tag,READ,,,,,
 QUARTIER,Quartiermanager,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Quartiermanager can register seized items, and update/delete the ones they created"
 QUARTIER,Quartiermanager,,,,security_seized_item_type,READ,,,,,Quartiermanager can read seized item types
+QUARTIER,Quartiermanager,,,,security_seized_item_depository,READ,,,,,Quartiermanager can read seized item depositories
 SCAN,Scan,,dvr,case_appointment,,NONE,,,,,Scan role can not access the list of appointments
 SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
 SCAN,Scan,,dvr,group_membership,,READ,,,,,Scan role can read family members
@@ -218,6 +227,7 @@ SCAN,Scan,,dvr,person,,NONE,,,,,Scan role can not access case list
 SCAN,Scan,,dvr,site_activity,,NONE,,,,,Scan role can not access site activity reports
 SCAN,Scan,,security,seized_item,,NONE,,,,,
 SCAN,Scan,,security,seized_item_type,,NONE,,,,,
+SCAN,Scan,,security,seized_item_depository,,NONE,,,,,
 SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
 SCAN,Scan,,,,cr_shelter_unit,READ,,,,,
 SCAN,Scan,,,,dvr_case,READ,,,,,
@@ -232,6 +242,7 @@ SCAN,Scan,,,,pr_person_details,READ,,,,,
 SCAN,Scan,,,,pr_person_tag,READ,,,,,
 SCAN,Scan,,,,security_seized_item,NONE,,,,,
 SCAN,Scan,,,,security_seized_item_type,NONE,,,,,
+SCAN,Scan,,,,security_seized_item_depository,NONE,,,,,
 SECURITY,Security,,cr,shelter,,READ,,,,,
 SECURITY,Security,,dvr,case_event,,CREATE|READ,,,,,Security can create and read in tables required for case event registration
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
@@ -240,6 +251,7 @@ SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,security,person_search,,READ,,,,,Security can look up persons
 SECURITY,Security,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Security can register seized items, and update/delete the ones they created"
 SECURITY,Security,,security,seized_item_type,,READ,,,,,Security can read seized item types
+SECURITY,Security,,security,seized_item_depository,,READ,,,,,Security can read seized item depositories
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY,Security,,,,cr_shelter_unit,READ,,,,,
@@ -256,6 +268,7 @@ SECURITY,Security,,,,pr_person_details,READ,,,,,
 SECURITY,Security,,,,pr_person_tag,READ,,,,,
 SECURITY,Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Security can register seized items, and update/delete the ones they created"
 SECURITY,Security,,,,security_seized_item_type,READ,,,,,Security can read seized item types
+SECURITY,Security,,,,security_seized_item_depository,READ,,,,,Security can read seized item depositories
 SECURITY_HEAD,Head of Security,,cr,,,READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,case_event,,CREATE|READ,,,,,
 SECURITY_HEAD,Head of Security,,dvr,site_activity,,NONE,,,,,Head of security can not access site activity reports
@@ -263,6 +276,7 @@ SECURITY_HEAD,Head of Security,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 SECURITY_HEAD,Head of Security,,security,person_search,,READ,,,,,Head of security can look up persons
 SECURITY_HEAD,Head of Security,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Head of security can register seized items, and update/delete the ones they created"
 SECURITY_HEAD,Head of Security,,security,seized_item_type,,READ,,,,,Head of security can read seized item types
+SECURITY_HEAD,Head of Security,,security,seized_item_depository,,READ,,,,,Head of security can read seized item depositories
 SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_unit,READ,,,,,
@@ -282,6 +296,7 @@ SECURITY_HEAD,Head of Security,,,,pr_person_details,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person_tag,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Head of security can register seized items, and update/delete the ones they created"
 SECURITY_HEAD,Head of Security,,,,security_seized_item_type,READ,,,,,Head of security can read seized item types
+SECURITY_HEAD,Head of Security,,,,security_seized_item_depository,READ,,,,,Head of security can read seized item depositories
 STAFF,General Staff,,cr,,,READ,,,,,
 STAFF,General Staff,,dvr,case_activity,,READ|UPDATE,,,,,Staff can read and update case activities
 STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
@@ -293,6 +308,7 @@ STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 STAFF,General Staff,,security,person_search,,READ,,,,,Staff can look up persons
 STAFF,General Staff,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
 STAFF,General Staff,,security,seized_item_type,,NONE,,,,,Staff can not access seized item types controller
+STAFF,General Staff,,security,seized_item_depository,,NONE,,,,,Staff can not access seized itemdepository controller
 STAFF,General Staff,,,,cr_shelter,READ,,,,,
 STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
 STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
@@ -313,3 +329,4 @@ STAFF,General Staff,,,,pr_person_details,READ,,,,,
 STAFF,General Staff,,,,pr_person_tag,READ,,,,,
 STAFF,General Staff,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
 STAFF,General Staff,,,,security_seized_item_type,READ,,,,,Staff can read seized item types
+STAFF,General Staff,,,,security_seized_item_depository,READ,,,,,Staff can read seized item depositories

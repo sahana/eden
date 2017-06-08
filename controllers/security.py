@@ -79,6 +79,12 @@ def seized_item_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def seized_item_depository():
+    """ Seized item depositories: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def seized_item():
     """ Seized items: RESTful CRUD controller """
 

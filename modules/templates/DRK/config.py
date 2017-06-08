@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, SPAN
+from gluon import current, SPAN, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
@@ -2858,10 +2858,39 @@ def config(settings):
             Custom restrictions in seized items form
         """
 
-        table = current.s3db.security_seized_item
+        from gluon import IS_IN_SET
+        from s3 import S3Represent
 
+        s3db = current.s3db
+
+        table = s3db.security_seized_item
+
+        # Include ID in person field representation, and link to resident's
+        # file if permitted; +include ID in autocomplete-comment
         field = table.person_id
+        fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+        linkto = current.auth.permission.accessible_url(c = "dvr",
+                                                        f = "person",
+                                                        t = "pr_person",
+                                                        args = ["[id]"],
+                                                        )
+        show_link = linkto is not False
+        field.represent = s3db.pr_PersonRepresent(fields = ("pe_label",
+                                                            "last_name",
+                                                            "first_name",
+                                                            ),
+                                                  labels = fmt,
+                                                  show_link = show_link,
+                                                  linkto = linkto or None,
+                                                  )
         field.comment = T("Enter some characters of the ID or name to start the search, then select from the drop-down")
+
+        # Customise options for status field
+        field = table.status
+        status_opts = s3db.security_seized_item_status_opts
+        status_opts["FWD"] = current.T("forwarded to RP")
+        field.requires = IS_IN_SET(status_opts, zero=None)
+        field.represent = S3Represent(options=status_opts)
 
         # Can't add item type from item form
         field = table.item_type_id
