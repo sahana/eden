@@ -2877,6 +2877,7 @@ def config(settings):
                                                         f = "person",
                                                         t = "pr_person",
                                                         args = ["[id]"],
+                                                        extension = "",
                                                         )
         show_link = linkto is not False
         field.represent = s3db.pr_PersonRepresent(fields = ("pe_label",
