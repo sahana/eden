@@ -556,39 +556,43 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
     T = current.T
 
     s3 = current.response.s3
+
     scripts = s3.scripts
+    jquery_ready = s3.jquery_ready
+
     if s3.debug:
         script = "/%s/static/scripts/trunk8.js" % current.request.application
     else:
         script = "/%s/static/scripts/trunk8.min.js" % current.request.application
+
     if script not in scripts:
+
         scripts.append(script)
 
         # Toggle-script
         # - only required once per page
-        script = \
-"""$(document).on('click','.s3-truncate-more',function(event){
- $(this).parent()
-        .trunk8('revert')
-        .append(' <a class="s3-truncate-less" href="#">%(less)s</a>')
- return false
-})
-$(document).on('click','.s3-truncate-less',function(event){
- $(this).parent().trunk8()
- return false
-})""" % dict(less=T("less") if less is None else less)
+        script = """$(document).on('click','.s3-truncate-more',function(event){""" \
+                 """$(this).parent().trunk8('revert')""" \
+                 """.append(' <a class="s3-truncate-less" href="#">%(less)s</a>');""" \
+                 """return false});""" \
+                 """$(document).on('click','.s3-truncate-less',function(event){""" \
+                 """$(this).parent().trunk8();""" \
+                 """return false})""" % \
+                 {"less": T("less") if less is None else less}
         s3.jquery_ready.append(script)
 
     # Init-script
-    # - required separately for each selector
+    # - required separately for each selector (but do not repeat the
+    #   same statement if called multiple times => makes the page very
+    #   slow)
     script = """S3.trunk8('%(selector)s',%(lines)s,'%(more)s')""" % \
-             dict(selector = ".s3-truncate" if selector is None else selector,
-                  lines = "null" if lines is None else lines,
-                  more = T("more") if more is None else more,
-                  )
+             {"selector": ".s3-truncate" if selector is None else selector,
+              "lines": "null" if lines is None else lines,
+              "more": T("more") if more is None else more,
+              }
 
-    s3.jquery_ready.append(script)
-    return
+    if script not in jquery_ready:
+        jquery_ready.append(script)
 
 # =============================================================================
 def s3_text_represent(text, truncate=True, lines=5, _class=None):
@@ -599,7 +603,7 @@ def s3_text_represent(text, truncate=True, lines=5, _class=None):
         @param text: the text
         @param truncate: whether to truncate or not
         @param lines: maximum number of lines to show
-        @param _class: CSS class to use for truncation (otherwise usign
+        @param _class: CSS class to use for truncation (otherwise using
                        the text-body class itself)
     """
 
@@ -612,7 +616,8 @@ def s3_text_represent(text, truncate=True, lines=5, _class=None):
         selector = ".%s" % _class
         _class = "text-body %s" % _class
 
-    if truncate:
+    if truncate and \
+       current.auth.permission.format in ("html", "popup", "iframe"):
         s3_trunk8(selector = selector, lines = lines)
 
     return DIV(text, _class="text-body")
