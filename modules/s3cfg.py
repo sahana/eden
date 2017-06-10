@@ -1038,12 +1038,9 @@ class S3Config(Storage):
 
     def get_gis_api_google(self):
         """
-            API key for Google
-            - needed for Earth, MapMaker & GeoCoder
-            - defaults to localhost
+            API key for Google Maps
         """
-        return self.gis.get("api_google",
-                            "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
+        return self.gis.get("api_google", "")
 
     def get_gis_bbox_min_size(self):
         """
