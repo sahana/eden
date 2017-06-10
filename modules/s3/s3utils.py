@@ -571,14 +571,13 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
 
         # Toggle-script
         # - only required once per page
-        script = """$(document).on('click','.s3-truncate-more',function(event){""" \
-                 """$(this).parent().trunk8('revert')""" \
-                 """.append(' <a class="s3-truncate-less" href="#">%(less)s</a>');""" \
-                 """return false});""" \
-                 """$(document).on('click','.s3-truncate-less',function(event){""" \
-                 """$(this).parent().trunk8();""" \
-                 """return false})""" % \
-                 {"less": T("less") if less is None else less}
+        script = \
+"""$(document).on('click','.s3-truncate-more',function(event){
+$(this).parent().trunk8('revert').append(' <a class="s3-truncate-less" href="#">%(less)s</a>')
+return false})
+$(document).on('click','.s3-truncate-less',function(event){
+$(this).parent().trunk8()
+return false})""" % {"less": T("less") if less is None else less}
         s3.jquery_ready.append(script)
 
     # Init-script

@@ -2039,8 +2039,10 @@ S3.search = {};
             // @ToDo: widget & deployment settings
             // @ToDo: Make this sensitive to changing of Icon sets
             // @ToDo: i18n
-            $this.before('<a class="button secondary tiny play"><i class="fa fa-play"></i> Play</a>');
+            $this.before('<a class="button secondary tiny play"><i class="fa fa-play"></i> Play</a><a class="button secondary tiny hide pause"><i class="fa fa-pause"></i> Pause</a><a class="button secondary tiny hide stop"><i class="fa fa-stop"></i> Stop</a>');
             var play = $('#' + widget_name + ' .play'),
+                pause = $('#' + widget_name + ' .pause'),
+                stop = $('#' + widget_name + ' .stop'),
                 slots = slotsData()[0].values;
             if (slots.length < 3) {
                 // Hide the Play button as it doesn't work for such a small number of values
@@ -2218,32 +2220,69 @@ S3.search = {};
 
             // Play button
             // @ToDo: Make wait time configurable (use same setting as on/off)
-            var slot_wait = 4000;
-            function playSlot(i) {
-                var start = slots[i].x;
+            var slot_wait = 4000,
+                timers = [];
+            function playSlot(slot) {
+                var start = slots[slot].x;
                 try {
-                    var end = slots[i + 1].x;
+                    var end = slots[slot + 1].x;
                 } catch(e) {
                     // Final slot
                     var end =  moment($this.data('max'));
                 }
-                var timeout = i * slot_wait; // 1st will happen immediately
-                setTimeout(function() {
+                var timeout = slot * slot_wait; // 1st will happen immediately
+                var timer = setTimeout(function() {
                     setSlot(start, end);
                 }, timeout);
+                $this.data('slot', slot);
+                timers.push(timer);
             }
             function setSlot(start, end) {
                 startField.val(start.format(fmt));
                 endField.val(end.format(fmt));
                 startField.trigger('change');
             }
+            // First Play should start at the beginning
+            $this.data('slot', 0);
             play.on('click', function() {
+                // Start Play from the correct slot
+                var slot = $this.data('slot');
+                // Hide Play
+                play.hide();
+                // Unhide Pause & Stop
+                pause.removeClass('hide').show();
+                stop.removeClass('hide').show();
                 // Move the slider through each of the slots at the defined interval
                 slots = slotsData()[0].values;
-                for (var i = 0; i < slots.length; i++) {
-                    playSlot(i);
+                for (slot; slot < slots.length; slot++) {
+                    playSlot(slot);
                 }
-            })
+            });
+            pause.on('click', function() {
+                // Stop Playback
+                slots = slotsData()[0].values;
+                for (var i = 0; i < slots.length; i++) {
+                    clearTimeout(timers[i]);
+                }
+                // Hide Pause
+                pause.hide();
+                // Show Play
+                play.show();
+            });
+            stop.on('click', function() {
+                // Stop Playback
+                slots = slotsData()[0].values;
+                for (var i = 0; i < slots.length; i++) {
+                    clearTimeout(timers[i]);
+                }
+                // Future Plays should start at the beginning
+                $this.data('slot', 0);
+                // Hide Pause & Stop
+                pause.hide();
+                stop.hide();
+                // Show Play
+                play.show();
+            });
         });
 
         // Don't submit if pressing Enter
