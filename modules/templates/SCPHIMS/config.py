@@ -38,6 +38,7 @@ def config(settings):
     settings.gis.countries = ("PH",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
+    settings.gis.latlon_selector = True
     # Uncomment to Disable the Postcode selector in the LocationSelector
     settings.gis.postcode_selector = False
     # Uncomment to show the Print control:
