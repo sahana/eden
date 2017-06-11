@@ -1954,14 +1954,17 @@ Thank you"""
                 s3db = current.s3db
                 # Default to Volunteers
                 s3db.hrm_human_resource.type.default = 2
-                # Doesn't work as email created after human_resource
-                #s3db.configure("hrm_human_resource",
-                #               create_onaccept = hrm_human_resource_create_onaccept,
-                #               )
-                # Create User Accounts for those Persons without them
-                s3db.configure("hrm_training",
-                               postimport = hrm_training_postimport,
-                               )
+                has_role = current.auth.s3_has_role
+                if not has_role("ADMIN") and \
+                   (has_role("training_coordinator") or has_role("training_assistant")):
+                    # Doesn't work as email created after human_resource
+                    #s3db.configure("hrm_human_resource",
+                    #               create_onaccept = hrm_human_resource_create_onaccept,
+                    #               )
+                    # Create User Accounts for those Persons without them
+                    s3db.configure("hrm_training",
+                                   postimport = hrm_training_postimport,
+                                   )
 
             return True
         s3.prep = custom_prep
