@@ -630,6 +630,58 @@ def config(settings):
     settings.customise_dvr_activity_controller = customise_dvr_activity_controller
 
     # -------------------------------------------------------------------------
+    def reset_case_status(person_id):
+        """
+            Reset case status from OPEN to NEW if no case activities
+            exist; for all cases related to person_id
+
+            @param person_id: the person record ID
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get relevant status IDs
+        stable = s3db.dvr_case_status
+        query = (stable.code.belongs(("NEW", "OPEN"))) & \
+                (stable.deleted == False)
+        rows = db(query).select(stable.id,
+                                stable.code,
+                                limitby = (0, 2),
+                                )
+        status_ids = dict((row.code, row.id) for row in rows)
+
+        NEW = status_ids.get("NEW")
+        OPEN = status_ids.get("OPEN")
+        if NEW and OPEN:
+
+            # Count the number of case activities per OPEN case record
+            ctable = s3db.dvr_case
+            atable = s3db.dvr_case_activity
+
+            left = atable.on((atable.person_id == ctable.person_id) & \
+                             ((atable.case_id == None) | \
+                              (atable.case_id == ctable.id)) & \
+                             (atable.deleted == False))
+
+            query = (ctable.person_id == person_id) & \
+                    (ctable.status_id == OPEN) & \
+                    (ctable.deleted == False)
+
+            acount = atable.id.count()
+
+            rows = db(query).select(ctable.id,
+                                    acount,
+                                    groupby = ctable.id,
+                                    left = left,
+                                    )
+            for row in rows:
+                case = row.dvr_case
+                if row[acount] == 0:
+                    # Reset status to NEW
+                    case.update_record(status_id = NEW)
+
+    # -------------------------------------------------------------------------
     def dvr_case_onaccept(form):
         """
             Additional custom-onaccept for dvr_case to force-update the
@@ -640,6 +692,7 @@ def config(settings):
             - the case can be transferred to another organisation/branch,
               and then the person record needs to be transferred to that
               same realm as well
+            - Reset case status from OPEN to NEW if no case activities exist
         """
 
         form_vars = form.vars
@@ -659,6 +712,11 @@ def config(settings):
                 person_id = row.person_id
 
         if person_id:
+
+            # Reset case status depending on the existence
+            # of any related case activities:
+            reset_case_status(person_id)
+
             # Configure components to inherit realm_entity
             # from the person record
             s3db.configure("pr_person",
@@ -861,6 +919,77 @@ def config(settings):
         db(query).update(project_id = row.project_id)
 
     # -------------------------------------------------------------------------
+    def case_activity_onaccept(form):
+        """
+            Custom onaccept for case activities to
+                - update the case status depending on the total number
+                  of open case activities
+        """
+
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get relevant status IDs
+        stable = s3db.dvr_case_status
+        query = (stable.code.belongs(("NEW", "OPEN"))) & \
+                (stable.deleted == False)
+        rows = db(query).select(stable.id,
+                                stable.code,
+                                limitby = (0, 2),
+                                )
+        status_ids = dict((row.code, row.id) for row in rows)
+
+        NEW = status_ids.get("NEW")
+        OPEN = status_ids.get("OPEN")
+        if NEW and OPEN:
+
+            # Set all related NEW cases to OPEN
+            atable = s3db.dvr_case_activity
+            ctable = s3db.dvr_case
+            join = ctable.on((ctable.person_id == atable.person_id) & \
+                             (ctable.deleted == False) & \
+                             ((atable.case_id == None) | \
+                              (ctable.id == atable.case_id)))
+            query = (atable.id == record_id) & \
+                    (ctable.status_id == NEW)
+            cases = db(query).select(ctable.id, join=join)
+            for case in cases:
+                case.update_record(status_id = OPEN)
+
+    # -------------------------------------------------------------------------
+    def case_activity_ondelete(row):
+        """
+            Reset case status when the last case activity gets deleted
+        """
+
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+
+        db = current.db
+
+        # Extract the person ID
+        atable = current.s3db.dvr_case_activity
+        row = db(atable.id == record_id).select(atable.deleted_fk,
+                                                limitby = (0, 1),
+                                                ).first()
+        if row and row.deleted_fk:
+
+            import json
+            data = json.loads(row.deleted_fk)
+
+            person_id = data.get("person_id")
+            if person_id:
+                reset_case_status(person_id)
+
+    # -------------------------------------------------------------------------
     def expose_project_id(table, mandatory=False):
         """
             Helper function to expose "Project Code"
@@ -940,6 +1069,22 @@ def config(settings):
             r.resource.add_filter(query)
 
             return
+
+        # Custom onaccept callback to automatically update
+        # the case status depending on the number of open
+        # case activities in the case
+        s3db.add_custom_callback("dvr_case_activity",
+                                 "onaccept",
+                                 case_activity_onaccept,
+                                 )
+
+        # Custom ondelete callback to automatically reset
+        # the case status from OPEN to NEW if the last case
+        # activity gets deleted
+        s3db.add_custom_callback("dvr_case_activity",
+                                 "ondelete",
+                                 case_activity_ondelete,
+                                 )
 
         # Different representations of service_id:
         #   - lists use hierarchical
@@ -2537,6 +2682,25 @@ def config(settings):
                         opt_yes_no = {True: T("Yes"),
                                       False: T("No"),
                                       }
+
+                        # Retain (+adapt) the status-filter widget
+                        status_filter = None
+                        filter_widgets = resource.get_config("filter_widgets")
+                        if filter_widgets:
+                            for widget in filter_widgets:
+                                if widget.field == "dvr_case.status_id":
+                                    status_filter = widget
+                                    status_filter.opts.default = None
+                                    status_filter.opts.hidden = "closed" in r.get_vars
+                                    break
+
+                        # Limit HR filter options to selectable HRs
+                        requires = ctable.human_resource_id.requires
+                        if hasattr(requires, "options"):
+                            hr_filter_opts = dict(opt for opt in requires.options() if opt[0])
+                        else:
+                            hr_filter_opts = None
+
                         # Custom filter widgets
                         filter_widgets = [
 
@@ -2580,6 +2744,7 @@ def config(settings):
                                             hidden = True,
                                             ),
                             S3OptionsFilter("dvr_case.human_resource_id",
+                                            options = hr_filter_opts,
                                             hidden = True,
                                             ),
                             S3LocationFilter("address.location_id",
@@ -2617,14 +2782,8 @@ def config(settings):
                                          ),
                             ]
 
-                        if "closed" not in r.get_vars:
-                            filter_widgets.insert(2,
-                                S3OptionsFilter("dvr_case.status_id",
-                                                cols = 3,
-                                                label = T("Case Status"),
-                                                options = s3db.dvr_case_status_filter_opts,
-                                                sort = False,
-                                                ))
+                        if status_filter:
+                            filter_widgets.insert(2, status_filter)
 
                         # Update configuration
                         resource.configure(crud_form = crud_form,
@@ -2650,6 +2809,10 @@ def config(settings):
                                        )
 
                     if r.method == "report":
+
+                        # Representation of record IDs in ID aggregations
+                        resource.table.id.represent = s3db.pr_PersonRepresent()
+
                         report_fields = ("gender",
                                          "person_details.nationality",
                                          "dvr_case.status_id",
