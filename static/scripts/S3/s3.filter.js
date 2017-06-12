@@ -2025,6 +2025,9 @@ S3.search = {};
                     values.push({x: label, y: v[1]});
                 }
 
+                // Store the Values as used in multiple places
+                $this.data('slots', values);
+
                 // Line chart data should be sent as an array of series objects.
                 return [{values: values,   // values - represents the array of {x,y} data points
                          key: '',          // key  - the name of the series.
@@ -2034,6 +2037,8 @@ S3.search = {};
                          },
                         ];
             }
+            // Store the initial values for Play button
+            slotsData();
 
             // Play Button
             // @ToDo: widget & deployment settings
@@ -2043,7 +2048,7 @@ S3.search = {};
             var play = $('#' + widget_name + ' .play'),
                 pause = $('#' + widget_name + ' .pause'),
                 stop = $('#' + widget_name + ' .stop'),
-                slots = slotsData()[0].values;
+                slots = $this.data('slots');
             if (slots.length < 3) {
                 // Hide the Play button as it doesn't work for such a small number of values
                 play.hide();
@@ -2208,7 +2213,9 @@ S3.search = {};
                                      });
                 $this.data('ts', ts);
                 rangePicker.graph();
-                slots = slotsData()[0].values;
+                // Store the new values for Play button
+                //slotsData(); // If the .graph() is hidden by settings but Play is present then need to do this
+                slots = $this.data('slots');
                 if (slots.length > 2) {
                     // Ensure Play button is visible in case it was previously hidden
                     play.show();
@@ -2219,8 +2226,9 @@ S3.search = {};
             });
 
             // Play button
-            // @ToDo: Make wait time configurable (use same setting as on/off)
-            var slot_wait = 4000,
+            // @ToDo: Make slot_speed configurable (use same setting as on/off)
+            var slot_speed = 4000,
+                slot_wait = 0,    // 1st will happen immediately
                 timers = [];
             function playSlot(slot) {
                 var start = slots[slot].x;
@@ -2230,14 +2238,15 @@ S3.search = {};
                     // Final slot
                     var end =  moment($this.data('max'));
                 }
-                var timeout = slot * slot_wait; // 1st will happen immediately
+                var timeout = slot_wait;
+                slot_wait = slot_wait + slot_speed;
                 var timer = setTimeout(function() {
-                    setSlot(start, end);
+                    setSlot(slot, start, end);
                 }, timeout);
-                $this.data('slot', slot);
                 timers.push(timer);
             }
-            function setSlot(start, end) {
+            function setSlot(slot, start, end) {
+                $this.data('slot', slot);
                 startField.val(start.format(fmt));
                 endField.val(end.format(fmt));
                 startField.trigger('change');
@@ -2253,17 +2262,18 @@ S3.search = {};
                 pause.removeClass('hide').show();
                 stop.removeClass('hide').show();
                 // Move the slider through each of the slots at the defined interval
-                slots = slotsData()[0].values;
+                slots = $this.data('slots');
                 for (slot; slot < slots.length; slot++) {
                     playSlot(slot);
                 }
             });
             pause.on('click', function() {
                 // Stop Playback
-                slots = slotsData()[0].values;
-                for (var i = 0; i < slots.length; i++) {
-                    clearTimeout(timers[i]);
+                for (var i = 0; i < timers.length; i++) {
+                    clearTimeout(timers.pop());
                 }
+                // Reset Wait (so we don't have long pause for initial resume)
+                slot_wait = 0;
                 // Hide Pause
                 pause.hide();
                 // Show Play
@@ -2271,12 +2281,12 @@ S3.search = {};
             });
             stop.on('click', function() {
                 // Stop Playback
-                slots = slotsData()[0].values;
-                for (var i = 0; i < slots.length; i++) {
-                    clearTimeout(timers[i]);
+                for (var i = 0; i < timers.length; i++) {
+                    clearTimeout(timers.pop());
                 }
                 // Future Plays should start at the beginning
                 $this.data('slot', 0);
+                slot_wait = 0;
                 // Hide Pause & Stop
                 pause.hide();
                 stop.hide();
