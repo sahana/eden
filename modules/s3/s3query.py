@@ -1536,10 +1536,11 @@ class S3ResourceQuery(object):
             rfield = S3TypeConverter.convert(to_type, rfield)
 
         # Catch invalid data types for primary/foreign keys (PyDAL doesn't)
-        if (ftype == "id" or ftype[:9] == "reference") and rfield is not None:
+        if op == self.EQ and rfield is not None and \
+           (ftype == "id" or ftype[:9] == "reference"):
             try:
                 rfield = long(rfield)
-            except ValueError:
+            except (ValueError, TypeError):
                 # Right argument is an invalid key
                 # => treat as 0 to prevent crash in SQL expansion
                 rfield = 0
