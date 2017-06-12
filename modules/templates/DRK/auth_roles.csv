@@ -28,6 +28,7 @@ ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,CREATE|READ|UPDATE|DEL
 ADMIN_HEAD,Head of Administration,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_case_event,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+ADMIN_HEAD,Head of Administration,,,,dvr_need,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete case notes"
 ADMIN_HEAD,Head of Administration,,,,dvr_site_activity,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete site activity reports"
 ADMIN_HEAD,Head of Administration,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facilities
@@ -65,6 +66,7 @@ ADMINISTRATION,Administration,,,,dvr_case_appointment,CREATE|READ|UPDATE|DELETE,
 ADMINISTRATION,Administration,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+ADMINISTRATION,Administration,,,,dvr_need,CREATE|READ,UPDATE,,,,
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,UPDATE,,,,"Administration can create and read notes, and update the notes they created"
 ADMINISTRATION,Administration,,,,dvr_site_activity,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
 ADMINISTRATION,Administration,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage facilities
@@ -126,6 +128,7 @@ MEDICAL,Medical,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Medical can manag
 MEDICAL,Medical,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 MEDICAL,Medical,,,,dvr_case_event,CREATE,READ,,,,Medical can register case events and read those they created
 MEDICAL,Medical,,,,dvr_case_language,READ,,,,,
+MEDICAL,Medical,,,,dvr_need,READ,,,,,
 MEDICAL,Medical,,,,dvr_note,CREATE|READ,UPDATE,,,,Medical can create notes and update their own notes
 MEDICAL,Medical,,,,pr_contact,READ,,,,,
 MEDICAL,Medical,,,,pr_group_membership,READ,,,,,Medical can see family members
@@ -156,6 +159,7 @@ POLICE,Police,,,,dvr_case_appointment,READ,,,,,
 POLICE,Police,,,,dvr_case_event,READ,,,,,
 POLICE,Police,,,,dvr_case_flag_case,READ,,,,,
 POLICE,Police,,,,dvr_case_language,READ,,,,,
+POLICE,Police,,,,dvr_need,READ,,,,,
 POLICE,Police,,,,dvr_note,READ,,,,,
 POLICE,Police,,,,pr_contact,READ,,,,,
 POLICE,Police,,,,pr_group_membership,READ,,,,,
@@ -185,6 +189,7 @@ RP,Regierungspräsidium,,,,dvr_case_appointment,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case_event,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case_flag_case,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case_language,READ,,,,,
+RP,Regierungspräsidium,,,,dvr_need,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_note,NONE,,,,,
 RP,Regierungspräsidium,,,,dvr_site_activity,READ,,,,,"Head of administration can create, read, update and delete site activity reports"
 RP,Regierungspräsidium,,,,pr_contact,READ,,,,,
@@ -211,6 +216,7 @@ QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,dvr_case_language,READ,,,,,
+QUARTIER,Quartiermanager,,,,dvr_need,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_contact,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_group_membership,READ,,,,,Quartiermanager can see family members
 QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,Quartiermanager can look up persons
@@ -234,6 +240,7 @@ SCAN,Scan,,,,dvr_case,READ,,,,,
 SCAN,Scan,,,,dvr_case_appointment,CREATE|UPDATE,,,,,Scan role can create or update appointments
 SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
 SCAN,Scan,,,,dvr_case_language,READ,,,,,
+SCAN,Scan,,,,dvr_need,READ,,,,,
 SCAN,Scan,,,,pr_contact,READ,,,,,
 SCAN,Scan,,,,pr_group_membership,READ,,,,,Scan role can see family members
 SCAN,Scan,,,,pr_image,READ,,,,,Scan role can see profile images
@@ -259,6 +266,7 @@ SECURITY,Security,,,,dvr_case,READ,,,,,
 SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
 SECURITY,Security,,,,dvr_case_language,READ,,,,,
+SECURITY,Security,,,,dvr_need,READ,,,,,
 SECURITY,Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
 SECURITY,Security,,,,pr_contact,READ,,,,,
 SECURITY,Security,,,,pr_group_membership,READ,,,,,
@@ -287,6 +295,7 @@ SECURITY_HEAD,Head of Security,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_event,CREATE,READ,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_language,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,dvr_need,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
 SECURITY_HEAD,Head of Security,,,,pr_contact,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_group_membership,READ,,,,,
@@ -298,7 +307,7 @@ SECURITY_HEAD,Head of Security,,,,security_seized_item,CREATE|READ,UPDATE|DELETE
 SECURITY_HEAD,Head of Security,,,,security_seized_item_type,READ,,,,,Head of security can read seized item types
 SECURITY_HEAD,Head of Security,,,,security_seized_item_depository,READ,,,,,Head of security can read seized item depositories
 STAFF,General Staff,,cr,,,READ,,,,,
-STAFF,General Staff,,dvr,case_activity,,READ|UPDATE,,,,,Staff can read and update case activities
+STAFF,General Staff,,dvr,case_activity,,CREATE|READ|UPDATE,,,,,Staff can read and update case activities
 STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
 STAFF,General Staff,,dvr,case_event,,CREATE|READ,,,,,
 STAFF,General Staff,,dvr,site_activity,,NONE,,,,,
@@ -315,11 +324,12 @@ STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
 STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,
-STAFF,General Staff,,,,dvr_case_activity,READ|UPDATE,,,,,Staff can read and update case activities
+STAFF,General Staff,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Staff can read and update case activities
 STAFF,General Staff,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,
 STAFF,General Staff,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
 STAFF,General Staff,,,,dvr_case_event,CREATE,,,,,
 STAFF,General Staff,,,,dvr_case_language,READ,,,,,
+STAFF,General Staff,,,,dvr_need,READ,,,,,
 STAFF,General Staff,,,,dvr_note,CREATE|READ,UPDATE,,,,
 STAFF,General Staff,,,,pr_contact,READ,,,,,
 STAFF,General Staff,,,,pr_group_membership,READ,,,,,

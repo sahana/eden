@@ -322,6 +322,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", restrict=(ADMIN, "ADMIN_HEAD"))(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
+                        M("Need Types", f="need"),
                         M("Appointment Types", f="case_appointment_type"),
                         M("Event Types", f="case_event_type"),
                         M("Check Transferability", c="default", f="index",
