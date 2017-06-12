@@ -1273,7 +1273,7 @@ class S3XML(S3Codec):
                     attr = data.attrib
                     attr[FIELD] = f
                     attr[FILEURL] = fileurl
-                    attr[ATTRIBUTE.filename] = filename
+                    attr[ATTRIBUTE.filename] = s3_unicode(filename)
 
             elif fieldtype == "password":
                 data = SubElement(elem, DATA)
