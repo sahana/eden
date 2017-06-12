@@ -1531,12 +1531,18 @@ class S3ResourceQuery(object):
                 return query
 
         # Convert date(time) strings
-        if ftype  == "datetime" and \
-           isinstance(rfield, basestring):
-            rfield = S3TypeConverter.convert(datetime.datetime, rfield)
-        elif ftype  == "date" and \
-             isinstance(rfield, basestring):
-            rfield = S3TypeConverter.convert(datetime.date, rfield)
+        if ftype in ("date", "datetime") and isinstance(rfield, basestring):
+            to_type = datetime.date if ftype == "date" else datetime.datetime
+            rfield = S3TypeConverter.convert(to_type, rfield)
+
+        # Catch invalid data types for primary/foreign keys (PyDAL doesn't)
+        if (ftype == "id" or ftype[:9] == "reference") and rfield is not None:
+            try:
+                rfield = long(rfield)
+            except ValueError:
+                # Right argument is an invalid key
+                # => treat as 0 to prevent crash in SQL expansion
+                rfield = 0
 
         query = query_bare(op, lfield, rfield)
         if invert:
