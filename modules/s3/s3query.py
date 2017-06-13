@@ -115,6 +115,10 @@ class S3FieldSelector(object):
         return S3ResourceQuery(S3ResourceQuery.TYPEOF, self, value)
 
     # -------------------------------------------------------------------------
+    def intersects(self, value):
+        return S3ResourceQuery(S3ResourceQuery.INTERSECTS, self, value)
+
+    # -------------------------------------------------------------------------
     def lower(self):
         self.op = self.LOWER
         return self
@@ -1251,9 +1255,10 @@ class S3ResourceQuery(object):
     CONTAINS = "contains"
     ANYOF = "anyof"
     TYPEOF = "typeof"
+    INTERSECTS = "intersects"
 
     COMPARISON = [LT, LE, EQ, NE, GE, GT,
-                  LIKE, BELONGS, CONTAINS, ANYOF, TYPEOF]
+                  LIKE, BELONGS, CONTAINS, ANYOF, TYPEOF, INTERSECTS]
 
     OPERATORS = [NOT, AND, OR] + COMPARISON
 
@@ -1574,6 +1579,8 @@ class S3ResourceQuery(object):
                 q = S3AIRegex.like(l, r)
             else:
                 q = l.like(s3_unicode(r))
+        elif op == self.INTERSECTS:
+            q = self._query_intersects(l, r)
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
@@ -1595,8 +1602,8 @@ class S3ResourceQuery(object):
         """
             Translate TYPEOF into DAL expression
 
-            @param l: the left operator
-            @param r: the right operator
+            @param l: the left operand
+            @param r: the right operand
         """
 
         hierarchy, field, nodeset, none = self._resolve_hierarchy(l, r)
@@ -1638,8 +1645,8 @@ class S3ResourceQuery(object):
         """
             Resolve the hierarchical lookup in a typeof-query
 
-            @param l: the left operator
-            @param r: the right operator
+            @param l: the left operand
+            @param r: the right operand
         """
 
         from s3hierarchy import S3Hierarchy
@@ -1731,9 +1738,9 @@ class S3ResourceQuery(object):
             Resolve BELONGS into a DAL expression (or S3ResourceQuery if
             field is an S3FieldSelector)
 
-            @param l: the left operator
-            @param r: the right operator
-            @param field: alternative left operator
+            @param l: the left operand
+            @param r: the right operand
+            @param field: alternative left operand
         """
 
         if field is None:
@@ -1790,6 +1797,49 @@ class S3ResourceQuery(object):
                 expr |= (field == None)
         elif expr is None:
             expr = field.belongs(set())
+
+        return expr
+
+    # -------------------------------------------------------------------------
+    def _query_intersects(self, l, r):
+        """
+            Resolve INTERSECTS into a DAL expression;
+            will be ignored for non-spatial DBs
+
+            @param l: the left operand (Field)
+            @param r: the right operand
+        """
+
+        if current.deployment_settings.get_gis_spatialdb():
+
+            expr = None
+
+            if str(l.type)[:3] == "geo":
+
+                if isinstance(r, basestring):
+
+                    # Assume WKT => validate it before constructing the query
+                    #from shapely.geos import ReadingError as GEOSReadingError
+                    from shapely.wkt import loads as wkt_loads
+                    try:
+                        wkt_loads(r)
+                    except Exception: #GEOSReadingError:
+                        # Invalid WKT => log and let default
+                        current.log.error("INTERSECTS: %s" % sys.exc_info()[1])
+                    else:
+                        expr = l.st_intersects(r)
+
+                elif hasattr(r, type) and str(r.type)[:3] == "geo":
+
+                    expr = l.st_intersects(r)
+
+            if expr is None:
+                # Invalid operand => fail by default
+                return l.belongs(set())
+
+        else:
+            # Ignore sub-query for non-spatial DB
+            expr = False
 
         return expr
 

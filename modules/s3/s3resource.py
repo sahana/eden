@@ -4804,12 +4804,21 @@ class S3ResourceFilter(object):
 
             # Add to query
             rfltr = self.rfltr
-            if rfltr is not None:
-                if isinstance(rfltr, S3ResourceQuery):
-                    query &= rfltr.query(resource)
-                else:
-                    # Combination of virtual field filter and web2py Query
-                    query &= rfltr
+            if isinstance(rfltr, S3ResourceQuery):
+
+                # Resolve query against the resource
+                rq = rfltr.query(resource)
+
+                # False indicates that the subquery shall be ignored
+                # (e.g. if not supported by platform)
+                if rq is not False:
+                    print rq
+                    query &= rq
+
+            elif rfltr is not None:
+
+                # Combination of virtual field filter and web2py Query
+                query &= rfltr
 
         self.query = query
         return query
