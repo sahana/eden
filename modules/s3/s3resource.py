@@ -4812,7 +4812,6 @@ class S3ResourceFilter(object):
                 # False indicates that the subquery shall be ignored
                 # (e.g. if not supported by platform)
                 if rq is not False:
-                    print rq
                     query &= rq
 
             elif rfltr is not None:

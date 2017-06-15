@@ -539,6 +539,10 @@ def case_activity():
     def prep(r):
 
         resource = r.resource
+
+        query = (FS("person_id$dvr_case.archived") == False)
+        resource.add_filter(query)
+
         list_fields = ["case_id$reference",
                        "person_id$first_name",
                        "person_id$last_name",
