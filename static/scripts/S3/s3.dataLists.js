@@ -13,6 +13,90 @@
 (function($, undefined) {
 
     "use strict";
+
+    /**
+     * ajaxMethod: use $.searchS3 if available, fall back to $.ajaxS3
+     */
+    var ajaxMethod = $.ajaxS3;
+    if ($.searchS3 !== undefined) {
+        ajaxMethod = $.searchS3;
+    }
+
+    /**
+     * Custom wrapper for $.infinitescroll.beginAjax(), to inject $.searchS3
+     */
+    var beginAjaxS3 = function(opts) {
+
+        var method = 'html+callback';
+        if (opts.dataType === 'html' || opts.dataType === 'json') {
+            method = opts.dataType;
+            if (opts.appendCallback && opts.dataType === 'html') {
+                method += '+callback';
+            }
+        }
+
+        if (method == 'html') {
+
+            // increment the URL bit. e.g. /page/3/
+            opts.state.currPage++;
+
+            // Manually control maximum page
+            if (opts.maxPage != undefined && opts.state.currPage > opts.maxPage ) {
+                this.destroy();
+                return;
+            }
+
+            var path = opts.path,
+                desturl;
+            if (typeof path === 'function') {
+                desturl = path(opts.state.currPage);
+            } else {
+                desturl = path.join(opts.state.currPage);
+            }
+
+            var instance = this;
+            ajaxMethod({
+                // params
+                url: desturl,
+                type: 'GET', // explicit GET (to prevent $.searchS3 fall-through)
+                dataType: opts.dataType,
+                complete: function infscr_ajax_callback(jqXHR, textStatus) {
+
+                    var box;
+                    if ($(opts.contentSelector).is('table')) {
+                        box = $('<tbody/>');
+                    } else {
+                        box = $('<div/>');
+                    }
+
+                    var condition = (typeof (jqXHR.isResolved) !== 'undefined') ? (jqXHR.isResolved()) : (textStatus === "success" || textStatus === "notmodified");
+                    if (condition) {
+                        instance._loadcallback(box, jqXHR.responseText, desturl);
+                    } else {
+                        instance._error('end');
+                    }
+                }
+            });
+
+        } else {
+            this.prototype.beginAjax.call(this, opts);
+        }
+    };
+
+    /**
+     * Custom append-callback for $.infinitescroll,
+     * applied by setting behavior='append' and appendCallback=false
+     */
+    $.infinitescroll.prototype._callback_append = function(data, url) {
+
+        var frag = document.createDocumentFragment();
+
+        data.each(function() {
+            frag.appendChild(this);
+        })
+        $(this).get()[0].appendChild(frag);
+    };
+
     var datalistID = 0;
 
     /**
@@ -136,6 +220,9 @@
                 var dl = this;
                 $datalist.infinitescroll({
                     debug: false,
+                    // Use _callback_append instead of standard append-callback
+                    appendCallback: false,
+                    behavior: 'append',
                     loading: {
                         // @ToDo: i18n
                         finishedMsg: 'no more items to load',
@@ -153,10 +240,10 @@
                         var url = dl._urlAppend(ajaxURL, 'start=' + start + '&limit=' + limit);
                         return url;
                     },
+                    dataType: 'html',
                     maxPage: maxPage
-
                 },
-                // Function to be called after Ajax-loading new data
+                // Function to be called after Ajax-loading and appending new data
                 function(data) {
                     $datalist.find('.dl-row:last:in-viewport').each(function() {
                         // Last item is within the viewport, so try to
@@ -171,6 +258,11 @@
                     });
                     dl._bindItemEvents();
                 });
+
+                // Override beginAjax with custom method to inject $.searchS3 option
+                var inst = $datalist.data("infinitescroll");
+                inst.beginAjax = beginAjaxS3;
+
                 this.hasInfiniteScroll = true;
 
                 $datalist.find('.dl-row:last:in-viewport').each(function() {
@@ -214,8 +306,10 @@
 
             // Ajax-load the item
             var dl = this;
-            $.ajax({
+            ajaxMethod({
                 'url': dl._urlAppend(ajaxURL, 'record=' + recordID),
+                'type': 'GET',
+                'dataType': 'html',
                 'success': function(data) {
                     var itemData = $(data.slice(data.indexOf('<'))).find(itemID);
                     if (itemData.length) {
@@ -237,8 +331,7 @@
                         msg = request.responseText;
                     }
                     console.log(msg);
-                },
-                'dataType': 'html'
+                }
             });
         },
 
@@ -303,8 +396,10 @@
 
             // Ajax-load the list
             var dl = this;
-            $.ajax({
+            ajaxMethod({
                 'url': dl._urlAppend(ajaxURL, 'start=' + startIndex + '&limit=' + pageSize),
+                'type': 'GET',
+                'dataType': 'html',
                 'success': function(data) {
                     // Update the list
 
@@ -370,8 +465,7 @@
                         msg = request.responseText;
                     }
                     console.log(msg);
-                },
-                'dataType': 'html'
+                }
             });
             return;
         },
@@ -398,7 +492,7 @@
             var dlData = JSON.parse($(pagination).val());
 
             // Do we have an Ajax-URL?
-            var ajaxURL = dlData.ajaxurl;
+            var ajaxURL = this._stripFilters(dlData.ajaxurl);
             if (ajaxURL === null) {
                 return;
             }
@@ -407,8 +501,10 @@
 
             // Ajax-delete the item
             var dl = this;
-            $.ajax({
+            ajaxMethod({
                 'url': this._urlAppend(ajaxURL, 'delete=' + recordID),
+                'type': 'POST',
+                'dataType': 'json',
                 'success': function(data) {
                     // Remove the card
                     dl._removeItem(item, dlData);
@@ -421,9 +517,7 @@
                         msg = request.responseText;
                     }
                     console.log(msg);
-                },
-                'type': 'POST',
-                'dataType': 'json'
+                }
             });
 
             // Trigger auto-retrieve
@@ -488,8 +582,10 @@
                 numItems = $row.closest('.dl').find('.dl-item').length;
 
             var dl = this;
-            $.ajax({
+            ajaxMethod({
                 'url': dl._urlAppend(ajaxURL, 'start=' + numItems + '&limit=1'),
+                'type': 'GET',
+                'dataType': 'html',
                 'success': function(data) {
                     // @todo: reduce counters (total items, max items)
                     // and update header accordingly
@@ -508,8 +604,7 @@
                         msg = request.responseText;
                     }
                     console.log(msg);
-                },
-                'dataType': 'html'
+                }
             });
 
             // 5. Update dl-data totalitems/maxitems
@@ -591,6 +686,32 @@
                 }
                 return (newurl + q);
             }
+        },
+
+        /**
+         * Remove all filters from a URL
+         *
+         * @param {string} url - the URL
+         * @returns {string} - the URL without filters
+         */
+        _stripFilters: function(url) {
+
+            if (!url) {
+                return null;
+            }
+
+            var urlparts = url.split('?');
+            if (urlparts.length >= 2) {
+
+                var queries = urlparts[1].split(/[&;]/g);
+                for (var i = queries.length; i-- > 0;) {
+                    if (queries[i].split('=')[0].lastIndexOf('.', 1) != -1) {
+                        queries.splice(i, 1);
+                    }
+                }
+                url = urlparts[0] + (queries.length > 0 ? '?' + queries.join('&') : "");
+            }
+            return url;
         },
 
         /**
