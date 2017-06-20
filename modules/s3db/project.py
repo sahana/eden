@@ -6602,8 +6602,8 @@ class project_SummaryReport(S3Method):
 
             # Outcomes
             table = s3db.project_outcome
-            query = (table.project_id == project_id)
-            query &= (table.deleted == False)
+            query = (table.project_id == project_id) & \
+                    (table.deleted == False)
 
             fields = [table.id,
                       table.goal_id,
@@ -6642,7 +6642,8 @@ class project_SummaryReport(S3Method):
 
             # Outputs
             table = s3db.project_output
-            query &= (table.deleted == False)
+            query = (table.project_id == project_id) & \
+                    (table.deleted == False)
 
             fields = [table.id,
                       table.goal_id,
