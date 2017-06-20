@@ -4043,6 +4043,7 @@ class S3ProjectPlanningModel(S3Model):
              "project_indicator_criteria",
              "project_criteria_represent",
              "project_criteria_activity",
+             "project_planning_status_update",
              )
 
     def model(self):
@@ -4899,6 +4900,7 @@ class S3ProjectPlanningModel(S3Model):
                     #project_indicator_id = indicator_id,
                     project_indicator_represent = indicator_represent,
                     project_criteria_represent = criteria_represent,
+                    project_planning_status_update = self.project_planning_status_update,
                     )
 
     # -------------------------------------------------------------------------
