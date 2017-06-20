@@ -3115,6 +3115,7 @@ Thank you"""
             project_settings.outputs = True
             project_settings.indicators = True
             project_settings.indicator_criteria = True
+            project_settings.status_from_activities = True
             table.human_resource_id.label = T("Coordinator")
             # Use Budget module instead of ProjectAnnualBudget
             project_settings.multiple_budgets = False

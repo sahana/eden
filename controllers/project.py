@@ -177,80 +177,88 @@ def project():
                     ctable = r.component.table
                     field = ctable.weighting
                     field.readable = field.writable = False
-                    ctable.current_status.readable = False
-                    ctable.overall_status.readable = False
+                    ctable.current_status_by_indicators.readable = False
+                    ctable.overall_status_by_indicators.readable = False
+                    ctable.actual_progress_by_activities.readable = False
+                    ctable.planned_progress_by_activities.readable = False
 
             elif component_name == "outcome":
+                ctable = r.component.table
                 if r.method != "update":
-                    ctable = r.component.table
                     field = ctable.weighting
                     field.readable = field.writable = False
-                    ctable.current_status.readable = False
-                    ctable.overall_status.readable = False
+                    ctable.current_status_by_indicators.readable = False
+                    ctable.overall_status_by_indicators.readable = False
+                    ctable.actual_progress_by_activities.readable = False
+                    ctable.planned_progress_by_activities.readable = False
                 if settings.get_project_goals():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
-                                                                   s3db.project_goal_represent,
-                                                                   sort=True,
-                                                                   filterby="project_id",
-                                                                   filter_opts=[r.id],
-                                                                   )
+                    ctable.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
+                                                        s3db.project_goal_represent,
+                                                        sort=True,
+                                                        filterby="project_id",
+                                                        filter_opts=[r.id],
+                                                        )
 
             elif component_name == "output":
+                ctable = r.component.table
                 if r.method != "update":
-                    ctable = r.component.table
                     field = ctable.weighting
                     field.readable = field.writable = False
-                    ctable.current_status.readable = False
-                    ctable.overall_status.readable = False
+                    ctable.current_status_by_indicators.readable = False
+                    ctable.overall_status_by_indicators.readable = False
+                    ctable.actual_progress_by_activities.readable = False
+                    ctable.planned_progress_by_activities.readable = False
                 if settings.get_project_outcomes():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.outcome_id.requires = IS_ONE_OF(db, "project_outcome.id",
-                                                                      s3db.project_outcome_represent,
-                                                                      sort=True,
-                                                                      filterby="project_id",
-                                                                      filter_opts=[r.id],
-                                                                      )
+                    ctable.outcome_id.requires = IS_ONE_OF(db, "project_outcome.id",
+                                                           s3db.project_outcome_represent,
+                                                           sort=True,
+                                                           filterby="project_id",
+                                                           filter_opts=[r.id],
+                                                           )
                 elif settings.get_project_goals():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
-                                                                   s3db.project_goal_represent,
-                                                                   sort=True,
-                                                                   filterby="project_id",
-                                                                   filter_opts=[r.id],
-                                                                   )
+                    ctable.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
+                                                        s3db.project_goal_represent,
+                                                        sort=True,
+                                                        filterby="project_id",
+                                                        filter_opts=[r.id],
+                                                        )
 
             elif component_name == "indicator":
+                ctable = r.component.table
                 if r.method != "update":
-                    ctable = r.component.table
                     field = ctable.weighting
                     field.readable = field.writable = False
-                    ctable.current_status.readable = False
-                    ctable.overall_status.readable = False
+                    ctable.current_status_by_indicators.readable = False
+                    ctable.overall_status_by_indicators.readable = False
+                    ctable.actual_progress_by_activities.readable = False
+                    ctable.planned_progress_by_activities.readable = False
                 if settings.get_project_outputs():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.output_id.requires = IS_ONE_OF(db, "project_output.id",
-                                                                     s3db.project_output_represent,
-                                                                     sort=True,
-                                                                     filterby="project_id",
-                                                                     filter_opts=[r.id],
-                                                                     )
+                    ctable.output_id.requires = IS_ONE_OF(db, "project_output.id",
+                                                          s3db.project_output_represent,
+                                                          sort=True,
+                                                          filterby="project_id",
+                                                          filter_opts=[r.id],
+                                                          )
                 elif settings.get_project_outcomes():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.outcome_id.requires = IS_ONE_OF(db, "project_outcome.id",
-                                                                      s3db.project_outcome_represent,
-                                                                      sort=True,
-                                                                      filterby="project_id",
-                                                                      filter_opts=[r.id],
-                                                                      )
+                    ctable.outcome_id.requires = IS_ONE_OF(db, "project_outcome.id",
+                                                           s3db.project_outcome_represent,
+                                                           sort=True,
+                                                           filterby="project_id",
+                                                           filter_opts=[r.id],
+                                                           )
                 elif settings.get_project_goals():
                     # Filter to just those for this Project & make mandatory
-                    r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
-                                                                   s3db.project_goal_represent,
-                                                                   sort=True,
-                                                                   filterby="project_id",
-                                                                   filter_opts=[r.id],
-                                                                   )
+                    ctable.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
+                                                        s3db.project_goal_represent,
+                                                        sort=True,
+                                                        filterby="project_id",
+                                                        filter_opts=[r.id],
+                                                        )
 
             elif component_name == "indicator_data":
                 ctable = r.component.table
@@ -277,6 +285,11 @@ def project():
 
             elif component_name == "indicator_criteria":
                 ctable = r.component.table
+                if r.method != "update":
+                    field = ctable.weighting
+                    field.readable = field.writable = False
+                    ctable.actual_progress_by_activities.readable = False
+                    ctable.planned_progress_by_activities.readable = False
                 # Filter to just those for this Project & make mandatory
                 ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
                                                          s3db.project_indicator_represent,
@@ -286,7 +299,11 @@ def project():
                                                          )
 
             elif component_name == "criteria_activity":
+                s3db.project_activity.name.requires = IS_NOT_EMPTY()
                 ctable = r.component.table
+                if r.method != "update":
+                    field = ctable.weighting
+                    field.readable = field.writable = False
                 # Filter to just those for this Project & make mandatory
                 ctable.criteria_id.requires = IS_ONE_OF(db, "project_indicator_criteria.id",
                                                         s3db.project_criteria_represent,

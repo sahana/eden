@@ -4384,6 +4384,12 @@ class S3Config(Storage):
         """
         return self.project.get("indicator_criteria", False)
 
+    def get_project_status_from_activities(self):
+        """
+            Use Activity Statuses to build Project Status (instead of Indicator Data)
+        """
+        return self.project.get("status_from_activities", False)
+
     #def get_project_locations_from_countries(self):
     #    """
     #        Create a project_location for each country that a Project is

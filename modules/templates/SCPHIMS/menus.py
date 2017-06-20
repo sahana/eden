@@ -319,13 +319,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Create", m="create"),
                         M("Map", m="map"),
                      ),
-                     M("Activities", f="activity")(
+                     M("Activities", f="activity", m="summary")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                      ),
                      M("Reports", f="location", m="report")(
                         M("3W", f="location", m="report"),
                         M("Beneficiaries", f="beneficiary", m="report"),
+                        M("Distributions", c="supply", f="distribution", m="report"),
                         M("Funding", f="organisation", m="report"),
                      ),
                      M("Import", f="project", m="import", p="create")(
@@ -362,13 +363,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Create", m="create"),
                         M("Map", m="map"),
                      ),
-                     M("Activities", f="activity")(
+                     M("Activities", f="activity", m="summary")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                      ),
                      M("Reports", f="location", m="report")(
                         M("3W", f="location", m="report"),
                         M("Beneficiaries", f="beneficiary", m="report"),
+                        M("Distributions", c="supply", f="distribution", m="report"),
                         M("Funding", f="organisation", m="report"),
                      ),
                  )
@@ -397,19 +399,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
             # SC Staff inc Senior Managers
             return M(c="project")(
                      M("Projects", f="project"),
-                     M("Activities", f="activity")(
+                     M("Activities", f="activity", m="summary")(
                         M("Map", m="map"),
                      ),
                      M("Reports", f="location", m="report")(
                         M("3W", f="location", m="report"),
                         M("Beneficiaries", f="beneficiary", m="report"),
+                        M("Distributions", c="supply", f="distribution", m="report"),
                         M("Funding", f="organisation", m="report"),
                      ),
                  )
         else:
             # Anonymous - can just see 4W
             return M(c="project")(
-                     M("Activities", f="activity")(
+                     M("Activities", f="activity", m="summary")(
                         M("Map", m="map"),
                      ),
                      M("Reports", f="location", m="report")(
@@ -438,5 +441,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                     ),
                 )
+
+    # -------------------------------------------------------------------------
+    def supply():
+        """ Statistics """
+
+        if current.request.function == "distribution":
+            return self.project()
+        else:
+            return self.inv()
 
 # END =========================================================================
