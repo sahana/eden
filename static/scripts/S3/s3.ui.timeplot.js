@@ -27,12 +27,19 @@
          * @prop {string} ajaxURL - the URL to Ajax-load data from
          * @prop {number|bool} autoSubmit - auto-submit timeout, false to
          *                                  deactivate auto-submit
-         * @prop {string} emptyMessage - message to show when no data are
-         *                               available for the time interval
          * @prop {bool} burnDown - render as burnDown from baseline
          *                         rather than as burnUp from zero
+         * @prop {string} emptyMessage - message to show when no data are
+         *                               available for the time interval
          *
-         * @todo: complete documentation
+         * @prop {string} thousandSeparator: the thousands-separator
+         * @prop {string} thousandGrouping: number of digits per thousands-group
+         * @prop {integer} precision: number of decimal places for numbers,
+         *                            null for any, 0 for none
+         *
+         * @prop {string} defaultChartType - the default chart type,
+         *                                   'linechart'|'barchart'
+         * @prop {string} defaultChartAxis - the default Y-axis aspect
          */
         options: {
             ajaxURL: null,
@@ -189,7 +196,9 @@
         /**
          * Render the chart
          *
-         * @todo: parameter description
+         * @param {object} [chartOptions] - the chart options
+         * @prop {string} chartOptions.type - the chart type ('linechart'|'barchart')
+         * @prop {string} chartOptions.axis - the chart axis
          */
         _renderChart: function(chartOptions) {
 
@@ -289,7 +298,11 @@
         /**
          * Simple Bar Chart
          *
-         * @todo: parameter description
+         * @param {jQuery} chart - the chart container
+         * @param {Array} facts - array of facts to render (tuples, see
+         *                        S3TimeSeries.as_dict() for details), multiple
+         *                        series not supported yet (=>@todo)
+         * @param {Array} data - the aggregated period data
          */
         _renderBarChart: function(chart, facts, data) {
 
@@ -383,7 +396,11 @@
         /**
          * Simple Line Chart
          *
-         * @todo: parameter description
+         * @param {jQuery} chart - the chart container
+         * @param {Array} facts - array of facts to render (tuples, see
+         *                        S3TimeSeries.as_dict() for details), will
+         *                        render multiple series
+         * @param {Array} data - the aggregated period data
          */
         _renderLineChart: function(chart, facts, data) {
 
@@ -519,22 +536,35 @@
             if (needs_reload || force) {
 
                 // Reload data and refresh
-                var ajaxURL = this.options.ajaxURL;
-                $.ajax({
+
+                // Ajax URL and method
+                var ajaxURL = this.options.ajaxURL,
+                    ajaxMethod = $.ajaxS3;
+
+                // Use $.searchS3 if available
+                if ($.searchS3 !== undefined) {
+                    ajaxMethod = $.searchS3;
+                }
+
+                ajaxMethod({
                     'url': ajaxURL,
-                    'dataType': 'json'
-                }).done(function(data) {
-                    self.input.val(JSON.stringify(data));
-                    self.data = data;
-                    self.refresh();
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    if (errorThrown == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = jqXHR.responseText;
+                    'type': 'GET',
+                    'dataType': 'json',
+                    'success': function(data) {
+                        self.input.val(JSON.stringify(data));
+                        self.data = data;
+                        self.refresh();
+                    },
+                    'error': function(jqXHR, textStatus, errorThrown) {
+                        if (errorThrown == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = jqXHR.responseText;
+                        }
+                        console.log(msg);
                     }
-                    console.log(msg);
                 });
+
             } else {
                 // Refresh without reloading the data
                 self.refresh();
