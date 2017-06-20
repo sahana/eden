@@ -8933,9 +8933,7 @@ def project_progress_report(r, **attr):
                                     table.name,
                                     table.actual_progress_by_activities,
                                     )
-            number_of_goals = 0
             for row in rows:
-                number_of_goals += 1
                 goals[row.id] = dict(code = row.code,
                                      name = row.name,
                                      outcomes = {},
@@ -8953,13 +8951,18 @@ def project_progress_report(r, **attr):
                                     table.actual_progress_by_activities,
                                     )
             number_of_outcomes = 0
+            goals_with_outcomes = []
+            append = goals_with_outcomes.append
             for row in rows:
                 number_of_outcomes += 1
-                goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
-                                                              name = row.name,
-                                                              outputs = {},
-                                                              status = row.actual_progress_by_activities,
-                                                              )
+                goal_id = row.goal_id
+                append(goal_id)
+                goals[goal_id]["outcomes"][row.id] = dict(code = row.code,
+                                                          name = row.name,
+                                                          outputs = {},
+                                                          status = row.actual_progress_by_activities,
+                                                          )
+            goals_without_outcomes = len(goals) - len(set(goals_with_outcomes))
 
             # Outputs
             table = s3db.project_output
@@ -8973,14 +8976,19 @@ def project_progress_report(r, **attr):
                                     table.actual_progress_by_activities,
                                     )
             number_of_outputs = 0
+            outcomes_with_outputs = []
+            append = outcomes_with_outputs.append
             for row in rows:
                 number_of_outputs += 1
-                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
+                outcome_id = row.outcome_id
+                append(outcome_id)
+                goals[row.goal_id]["outcomes"][outcome_id]["outputs"][row.id] = \
                     dict(code = row.code,
                          name = row.name,
                          indicators = {},
                          status = row.actual_progress_by_activities,
                          )
+            outcomes_without_outputs = number_of_outcomes - len(set(outcomes_with_outputs))
 
             # Indicators
             table = s3db.project_indicator
@@ -8995,13 +9003,15 @@ def project_progress_report(r, **attr):
                                     table.actual_progress_by_activities,
                                     )
             number_of_indicators = 0
+            outputs_with_indicators = []
+            append = outputs_with_indicators.append
             for row in rows:
                 number_of_indicators += 1
-                indicator_id = row.id
                 goal_id = row.goal_id
                 outcome_id = row.outcome_id
                 output_id = row.output_id
-                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
+                append(output_id)
+                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][row.id] = \
                     dict(code = row.code,
                          name = row.name,
                          dates = {},
@@ -9009,6 +9019,7 @@ def project_progress_report(r, **attr):
                          target = 0,
                          actual = 0,
                          )
+            outputs_without_indicators = number_of_outputs - len(set(outputs_with_indicators))
 
         else:
             # Status by Indicators
@@ -9023,9 +9034,7 @@ def project_progress_report(r, **attr):
                                     table.name,
                                     table.overall_status_by_indicators,
                                     )
-            number_of_goals = 0
             for row in rows:
-                number_of_goals += 1
                 goals[row.id] = dict(code = row.code,
                                      name = row.name,
                                      outcomes = {},
@@ -9043,13 +9052,18 @@ def project_progress_report(r, **attr):
                                     table.overall_status_by_indicators,
                                     )
             number_of_outcomes = 0
+            goals_with_outcomes = []
+            append = goals_with_outcomes.append
             for row in rows:
                 number_of_outcomes += 1
-                goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
-                                                              name = row.name,
-                                                              outputs = {},
-                                                              status = row.overall_status_by_indicators,
-                                                              )
+                goal_id = row.goal_id
+                append(goal_id)
+                goals[goal_id]["outcomes"][row.id] = dict(code = row.code,
+                                                          name = row.name,
+                                                          outputs = {},
+                                                          status = row.overall_status_by_indicators,
+                                                          )
+            goals_without_outcomes = len(goals) - len(set(goals_with_outcomes))
 
             # Outputs
             table = s3db.project_output
@@ -9063,14 +9077,19 @@ def project_progress_report(r, **attr):
                                     table.overall_status_by_indicators,
                                     )
             number_of_outputs = 0
+            outcomes_with_outputs = []
+            append = outcomes_with_outputs.append
             for row in rows:
                 number_of_outputs += 1
-                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
+                outcome_id = row.outcome_id
+                append(outcome_id)
+                goals[row.goal_id]["outcomes"][outcome_id]["outputs"][row.id] = \
                     dict(code = row.code,
                          name = row.name,
                          indicators = {},
                          status = row.overall_status_by_indicators,
                          )
+            outcomes_without_outputs = number_of_outcomes - len(set(outcomes_with_outputs))
 
             # Indicators
             table = s3db.project_indicator
@@ -9085,13 +9104,15 @@ def project_progress_report(r, **attr):
                                     table.overall_status_by_indicators,
                                     )
             number_of_indicators = 0
+            outputs_with_indicators = []
+            append = outputs_with_indicators.append
             for row in rows:
                 number_of_indicators += 1
-                indicator_id = row.id
                 goal_id = row.goal_id
                 outcome_id = row.outcome_id
                 output_id = row.output_id
-                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
+                append(output_id)
+                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][row.id] = \
                     dict(code = row.code,
                          name = row.name,
                          dates = {},
@@ -9099,6 +9120,7 @@ def project_progress_report(r, **attr):
                          target = 0,
                          actual = 0,
                          )
+            outputs_without_indicators = number_of_outputs - len(set(outputs_with_indicators))
 
         # Sort
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
@@ -9113,7 +9135,7 @@ def project_progress_report(r, **attr):
             goals[goal]["outcomes"] = outcomes
 
         # Format Data
-        number_of_rows = max(number_of_indicators, number_of_outputs, number_of_outcomes, number_of_goals)
+        number_of_rows = number_of_indicators + outputs_without_indicators + outcomes_without_outputs + goals_without_outcomes + number_of_outputs - 1
         item = TABLE(_class="project_progress_report")
         rows = []
         row = TR(TD(T("Project"),
