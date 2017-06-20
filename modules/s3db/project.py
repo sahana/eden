@@ -1246,8 +1246,8 @@ class S3ProjectActivityModel(S3Model):
 
         # @ToDo: deployment_setting
         if settings.has_module("supply"):
+            rappend("distribution.parameter_id")
             # This has the wrong perspective to be meaningful, use supply/distribution/report instead
-            #rappend("distribution.parameter_id")
             #fact_fields.insert(0,
             #                   (T("Number of Items"), "sum(distribution.value)")
             #                   )
@@ -1263,8 +1263,8 @@ class S3ProjectActivityModel(S3Model):
 
         # @ToDo: deployment_setting
         if settings.has_module("stats"):
+            rappend("beneficiary.parameter_id")
             # This has the wrong perspective to be meaningful, use project/beneficiary/report instead
-            #rappend("beneficiary.parameter_id")
             #fact_fields.insert(0,
             #                   (T("Number of Beneficiaries"), "sum(beneficiary.value)")
             #                   )
