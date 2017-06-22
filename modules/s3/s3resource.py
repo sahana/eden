@@ -36,7 +36,6 @@ __all__ = ("S3AxisFilter",
            "S3ResourceFilter",
            )
 
-import datetime
 import json
 import sys
 
@@ -55,7 +54,6 @@ except ImportError:
 
 from gluon import current
 from gluon.html import A, TAG
-from gluon.http import HTTP
 from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -1598,11 +1596,11 @@ class S3Resource(object):
         new_id = ids.append
 
         self._uids = []
-        new_uid = self._uids.append
         self._rows = []
-        new_row = self._rows.append
 
         if rows:
+            new_uid = self._uids.append
+            new_row = self._rows.append
             pkey = table._id.name
             for row in rows:
                 if hasattr(row, tablename):
@@ -4638,10 +4636,10 @@ class S3ResourceFilter(object):
                 # @todo: Alternative concept (inconsistent?):
                 # Interpret all URL filters in the context of filter_component:
                 #if filter_component and \
-                   #filter_component in resource.components:
-                    #context = resource.components[filter_component]
+                #   filter_component in resource.components:
+                #    context = resource.components[filter_component]
                 #else:
-                    #context = resource
+                #    context = resource
                 #queries = S3URLQuery.parse(context, vars)
 
                 for alias in queries:

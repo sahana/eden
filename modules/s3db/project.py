@@ -2057,6 +2057,7 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Beneficiary Model needs Stats module enabling")
+            #return self.defaults()
             return {}
 
         T = current.T
@@ -2477,6 +2478,7 @@ class S3ProjectCampaignModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             # Campaigns Model needs Stats module enabling
+            #return self.defaults()
             return {}
 
         T = current.T
@@ -3093,6 +3095,7 @@ class S3ProjectIndicatorModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Indicator Model needs Stats module enabling")
+            #return self.defaults()
             return {}
 
         T = current.T

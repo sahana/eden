@@ -114,6 +114,9 @@ S3.search = {};
         s.url = ajaxURL;
     };
 
+    // Pass to global scope to be called by s3.gis.js
+    S3.search.searchRewriteAjaxOptions = searchRewriteAjaxOptions;
+
     /**
      * Default options for $.searchS3
      */
@@ -166,7 +169,7 @@ S3.search = {};
     $.searchDownloadS3 = function(url, target) {
 
         var options = $.extend({}, searchS3Defaults, {url: url}),
-            form = document.createElement("form");
+            form = document.createElement('form');
 
         options.type = 'GET';
         searchRewriteAjaxOptions(options, 'form');

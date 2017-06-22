@@ -1221,7 +1221,7 @@ class S3SupplyDistributionModel(S3Model):
         settings = current.deployment_settings
         if not settings.has_module("stats"):
             # Distribution Model needs Stats module enabling
-            return {}
+            return self.defaults()
 
         T = current.T
         db = current.db
@@ -1561,7 +1561,8 @@ class S3SupplyDistributionModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"supply_distribution_id": distribution_id}
+        return {"supply_distribution_id": distribution_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

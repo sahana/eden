@@ -1125,6 +1125,8 @@ class incident_Browse(custom_WACOP):
         #if customise:
         #    customise(r, tablename)
 
+        # For debugging Map, replace the dataTable with this:
+        #output["event_incident_datatable"] = ""
         self._datatable(output = output,
                         tablename = tablename,
                         updateable = False,

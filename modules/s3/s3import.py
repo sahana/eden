@@ -4430,14 +4430,13 @@ class S3BulkImporter(object):
         """
 
         if url == "unifont":
-            UNIFONT = True
+            #UNIFONT = True
             url = "http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf"
             # Rename to make version upgrades be transparent
             filename = "unifont.ttf"
             extension = "ttf"
         else:
-            UNIFONT = False
-
+            #UNIFONT = False
             filename = url.split("/")[-1]
             filename, extension = filename.rsplit(".", 1)
 

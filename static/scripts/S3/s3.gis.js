@@ -343,10 +343,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             for (i=0, len=layers.length; i < len; i++) {
                 layer = layers[i];
                 if (layer.s3_layer_id == layer_id) {
-                    url = layer.protocol.url;
                     // Apply any URL filters
-                    url = S3.search.filterURL(url, queries);
-                    layer.protocol.options.url = url;
+                    if (queries.length) {
+                        url = layer.protocol.url;
+                        url = S3.search.filterURL(url, queries);
+                        //layer.protocol.options.url = url;
+                        // Convert to POST
+                        var ajax_options = {data: [],
+                                            type: 'GET',
+                                            url: url,
+                                            };
+                        S3.search.searchRewriteAjaxOptions(ajax_options, 'form');
+                        var protocol_options = layer.protocol.options;
+                        protocol_options.params = ajax_options['data'];
+                        protocol_options.readWithPOST = true;
+                        protocol_options.url = ajax_options['url'];
+                    }
                     // If map is showing then refresh the layer
                     if (map.s3.mapWin.isVisible()) {
                         // Set an event to re-enable Clustering when the layer is reloaded
@@ -1976,6 +1988,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             s3.layers_nopopups.push(name);
         }
         var url = layer.url;
+        if (url.indexOf('$search') !== -1) {
+            // Use POSTs to retrieve data allowing arbitrary length of filter options as well as TLS encryption of filters
+            var readWithPOST = true;
+        } else {
+            var readWithPOST = false;
+        }
         if (undefined != layer.refresh) {
             var refresh = layer.refresh;
         } else {
@@ -2106,7 +2124,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 projection: projection,
                 protocol: new OpenLayers.Protocol.HTTP({
                     url: url,
-                    format: format_geojson
+                    format: format_geojson,
+                    readWithPOST: readWithPOST
                 }),
                 // This gets picked up after mapPanel instantiates & copied to it's layerRecords
                 legendURL: marker_url,

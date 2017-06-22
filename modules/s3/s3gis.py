@@ -7979,10 +7979,7 @@ class LayerFeature(Layer):
             if self.skip:
                 # Skip layer
                 return
-            if self.use_site:
-                maxdepth = 1
-            else:
-                maxdepth = 0
+            # @ToDo: Option to force all filters via POST?
             if self.aggregate:
                 # id is used for url_format
                 url = "%s.geojson?layer=%i&show_ids=true" % \
@@ -7991,6 +7988,10 @@ class LayerFeature(Layer):
                 # Use gis/location controller in all reports
                 url_format = "%s/{id}.plain" % URL(c="gis", f="location")
             else:
+                if self.use_site:
+                    maxdepth = 1
+                else:
+                    maxdepth = 0
                 _url = URL(self.controller, self.function)
                 # id is used for url_format
                 url = "%s.geojson?layer=%i&components=None&maxdepth=%s&show_ids=true" % \
