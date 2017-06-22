@@ -1579,6 +1579,8 @@ class S3Resource(object):
         if self._rows is not None:
             self.clear()
 
+        pagination = limit is not None or start
+
         rfilter = self.rfilter
         multiple = rfilter.multiple if rfilter is not None else True
         if not multiple and self.parent and self.parent.count() == 1:
@@ -1613,7 +1615,13 @@ class S3Resource(object):
                     new_row(row)
                     if load_uids:
                         new_uid(ogetattr(row, UID))
-            self._length = len(self._rows)
+
+        # If this is an unlimited load, or the first page with no
+        # rows, then the result length is equal to the total number
+        # of matching records => store length for subsequent count()s
+        length = len(self._rows)
+        if not pagination or not start and not length:
+            self._length = length
 
         return self._rows
 
