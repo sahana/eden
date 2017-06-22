@@ -535,9 +535,11 @@ class S3Request(object):
             self.http = "GET"
 
         # Retrieve filters from request body
-        if mode == "ajax" or (content_type[:10] != "multipart/"
-                              and content_type != "application/x-www-form-urlencoded"
-                              ):
+        if content_type == "application/x-www-form-urlencoded":
+            # Read POST vars (from S3.gis.refreshLayer)
+            filters = self.post_vars
+            decode = None
+        elif mode == "ajax" or content_type[:10] != "multipart/":
             # Read body JSON (from $.searchS3)
             s = self.body
             s.seek(0)
@@ -549,7 +551,7 @@ class S3Request(object):
                 filters = {}
             decode = None
         else:
-            # Read POST vars JSON (from $.searchDownloadS3 or S3.gis.refreshLayer)
+            # Read POST vars JSON (from $.searchDownloadS3)
             filters = self.post_vars
             decode = json.loads
 
@@ -565,9 +567,7 @@ class S3Request(object):
                 try:
                     value = decode(v) if decode else v
                 except ValueError:
-                    #continue
-                    # Assume simple string
-                    value = v
+                    continue
                 # Catch any non-str values
                 if type(value) is list:
                     value = [str(item)
