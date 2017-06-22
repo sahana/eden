@@ -443,7 +443,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def supply():
+    def supply(self):
         """ Statistics """
 
         if current.request.function == "distribution":
