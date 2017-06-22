@@ -73,18 +73,13 @@
     </xsl:template>
 
     <xsl:template match="s3xml">
-        <xsl:variable name="results">
-            <xsl:value-of select="@results"/>
-        </xsl:variable>
-        <xsl:variable name="s3">
-            <!-- S3 Extensions -->
-            <xsl:value-of select="@map"/>
-        </xsl:variable>
+        <!-- S3 Extensions -->
+        <xsl:variable name="s3" select="@map"/>
         <!-- Skip empty resources -->
-        <xsl:if test="$results &gt; 0">
-            <xsl:variable name="resource">
-                <xsl:value-of select="concat($prefix, '_', $name)"/>
-            </xsl:variable>
+        <xsl:variable name="results" select="@results"/>
+        <xsl:variable name="start" select="@start"/>
+        <xsl:if test="$results &gt; 0 and (not($start) or $start &lt; $results)">
+            <xsl:variable name="resource" select="concat($prefix, '_', $name)"/>
             <xsl:choose>
                 <xsl:when test="$resource='gis_layer_shapefile'">
                     <xsl:apply-templates select="./resource[@name='gis_layer_shapefile']"/>
