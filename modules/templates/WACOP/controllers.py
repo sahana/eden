@@ -6,7 +6,7 @@ from gluon.storage import Storage
 from s3 import FS, ICON, s3_auth_user_represent, \
                S3CRUD, S3CustomController, \
                S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter,\
-               S3OptionsFilter, S3Request, S3TextFilter#, S3URLQuery
+               S3MapFilter, S3OptionsFilter, S3Request, S3TextFilter
 
 THEME = "WACOP"
 
@@ -927,12 +927,16 @@ class event_Browse(custom_WACOP):
         events = self._events_html()
 
         # Map of Events
-        _map = self._map("Events")
+        #_map = self._map("Events")
+        # Now done through S3MapFilter
+        map_id = "event-gis_location_the_geom-map-filter-map"
+        # Move Map into the Design
+        current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
 
         # Output
         output = {"alerts": alerts,
                   "events": events,
-                  "map": _map,
+                  #"map": _map,
                   }
 
         # Filter Form
@@ -958,6 +962,9 @@ class event_Browse(custom_WACOP):
                                            #levels = ("L1", "L2", "L3"),
                                            levels = ("L3",),
                                            ),
+                          S3MapFilter("event_location.location_id$the_geom",
+                                      label = "",
+                                      ),
                           S3OptionsFilter("tag.tag_id",
                                           label = "",
                                           noneSelectedText = "Tag",
@@ -994,7 +1001,7 @@ class event_Browse(custom_WACOP):
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map & dataTable
-                                                 target="default_map custom-list-event_event",
+                                                 target="%s custom-list-event_event" % map_id,
                                                  alias=None)
 
         # Events dataTable
@@ -1041,12 +1048,16 @@ class incident_Browse(custom_WACOP):
         events = self._events_html()
 
         # Map of Incidents
-        _map = self._map("Incidents")
+        #_map = self._map("Incidents")
+        # Now done through S3MapFilter
+        map_id = "incident-gis_location_the_geom-map-filter-map"
+        # Move Map into the Design
+        current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
 
         # Output
         output = {"alerts": alerts,
                   "events": events,
-                  "map": _map,
+                  #"map": _map,
                   }
 
         # Filter Form
@@ -1072,6 +1083,9 @@ class incident_Browse(custom_WACOP):
                                            #levels = ("L1", "L2", "L3"),
                                            levels = ("L3",),
                                            ),
+                          S3MapFilter("location_id$the_geom",
+                                      label = "",
+                                      ),
                           S3OptionsFilter("tag.tag_id",
                                           label = "",
                                           noneSelectedText = "Tag",
@@ -1113,7 +1127,7 @@ class incident_Browse(custom_WACOP):
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map & dataTable
-                                                 target="default_map custom-list-event_incident",
+                                                 target="%s custom-list-event_incident" % map_id,
                                                  alias=None)
 
         # Incidents dataTable

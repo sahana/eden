@@ -6800,6 +6800,7 @@ class MAP(DIV):
 
         if opts.get("add_polygon", False):
             i18n["gis_draw_polygon"] = T("Add Polygon")
+            i18n["gis_draw_polygon_clear"] = T("Clear Polygon")
             if opts.get("add_polygon_active", False):
                 options["draw_polygon"] = "active"
             else:

@@ -279,6 +279,18 @@ S3.search = {};
                 hierarchical_location_change(this);
             }
         });
+        form.find('.map-filter').each(function() {
+            var $this = $(this);
+            $this.val('');
+            // Ensure that the button is off (so polygon removed)
+            var widget_name = $this.attr('id'),
+                map_id = widget_name + '-map',
+                s3 = S3.gis.maps[map_id].s3,
+                polygonButton = s3.polygonButton;
+            if (polygonButton.getIconClass() == 'drawpolygonclear-off') {
+                polygonButton.items[0].btnEl.dom.click();
+            }
+        });
         form.find('.range-filter-input').each(function() {
             $(this).val('');
         });
@@ -431,6 +443,21 @@ S3.search = {};
             }
         });
 
+        // Map widgets
+        form.find('.map-filter').each(function() {
+
+            $this = $(this),
+            id = $this.attr('id');
+            urlVar = $('#' + id + '-data').val();
+            value = $this.val();
+
+            if (value) {
+                queries.push([urlVar, value]);
+            } else {
+                queries.push([urlVar, null]);
+            }
+        });
+
         // Numerical range widgets -- each widget has two inputs.
         form.find('.range-filter-input:visible').each(function() {
 
@@ -514,7 +541,7 @@ S3.search = {};
             urlVar = $('#' + id + '-data').val();
             value = '';
 
-            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+            //operator = $("input:radio[name='" + id + "_filter']:checked").val();
 
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
@@ -692,6 +719,30 @@ S3.search = {};
                         $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
+                }
+            }
+        });
+
+        // Map widgets
+        form.find('.map-filter').each(function() {
+            $this = $(this);
+            id = $this.attr('id');
+            expression = $('#' + id + '-data').val();
+            if (q.hasOwnProperty(expression)) {
+                if (!$this.is(':visible') && !$this.hasClass('active')) {
+                    toggleAdvanced(form);
+                }
+                values = q[expression];
+                if (values) {
+                    $this.val(values[0]);
+                    var map_id = id + '-map';
+                    // Display the Polygon
+                    S3.gis.maps[map_id].s3.polygonButtonLoaded();
+                } else {
+                    $this.val('');
+                    var map_id = id + '-map';
+                    // Hide the Polygon
+                    S3.gis.maps[map_id].s3.layerRefreshed();
                 }
             }
         });
@@ -1418,10 +1469,12 @@ S3.search = {};
      * Initialise Map for an S3Map page
      * - in global scope as called from callback to Map Loader
      */
-    S3.search.s3map = function() {
-        var gis = S3.gis;
+    S3.search.s3map = function(map_id) {
         // Instantiate the map
-        var map_id = 'default_map';
+        var gis = S3.gis;
+        if (map_id === undefined) {
+            map_id = 'default_map';
+        }
         var options = gis.options[map_id];
         gis.show_map(map_id, options);
         // Get the current Filters
@@ -1938,11 +1991,82 @@ S3.search = {};
         $('.text-filter, .range-filter-input').on('input.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
-        $('.options-filter, .location-filter, .date-filter-input').on('change.autosubmit', function () {
+        $('.options-filter, .location-filter, .date-filter-input, .map-filter').on('change.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
         $('.hierarchy-filter').on('select.s3hierarchy', function() {
             $(this).closest('form').trigger('optionChanged');
+        });
+        $('.map-filter').each(function() {
+            var $this = $(this);
+            $.when(jsLoaded()).then(
+                function(status) {
+                    // Success: Add Callbacks
+                    var widget_name = $this.attr('id'),
+                        widget = $('#' + widget_name),
+                        map_id = widget_name + '-map',
+                        wkt,
+                        gis = S3.gis,
+                        map = gis.maps[map_id],
+                        s3 = map.s3;
+                    s3.pointPlaced = function(feature) {
+                        var out_options = {
+                            'internalProjection': map.getProjectionObject(),
+                            'externalProjection': gis.proj4326
+                            };
+                        wkt = new OpenLayers.Format.WKT(out_options).write(feature);
+                        // Store the data & trigger the autosubmit
+                        widget.val('"' + wkt + '"').trigger('change');
+                    }
+                    s3.polygonButtonOff = function() {
+                        // Clear the data & trigger the autosubmit
+                        widget.val('').trigger('change');
+                    }
+                    s3.layerRefreshed = function(layer) {
+                        var polygonButton = s3.polygonButton;
+                        if (polygonButton.getIconClass() == 'drawpolygonclear-off') {
+                            // Hide the Polygon
+                            if (s3.lastDraftFeature) {
+                                s3.lastDraftFeature.destroy();
+                            } else if (s3.draftLayer.features.length > 1) {
+                                // Clear the one from the Current Location in S3LocationSelector
+                                s3.draftLayer.features[0].destroy();
+                            }
+                            // Deactivate Control
+                            polygonButton.control.deactivate();
+                            polygonButton.items[0].pressed = true;
+                        }
+                    }
+                    s3.polygonButtonLoaded = function() {
+                        wkt = widget.val();
+                        if (wkt) {
+                            // Press Toolbar button
+                            s3.polygonButton.items[0].btnEl.dom.click();
+                            // Draw Polygon
+                            var geometry = OpenLayers.Geometry.fromWKT(wkt);
+                            geometry.transform(gis.proj4326, map.getProjectionObject());
+                            var feature = new OpenLayers.Feature.Vector(
+                                geometry,
+                                {}, // attributes
+                                null // Style
+                            );
+                            var draftLayer = s3.draftLayer;
+                            draftLayer.addFeatures([feature]);
+                            s3.lastDraftFeature = feature;
+                            map.zoomToExtent(draftLayer.getDataExtent());
+                        }
+                    }
+                    s3.polygonButtonLoaded();
+                },
+                function(status) {
+                    // Failed
+                    s3_debug(status);
+                },
+                function(status) {
+                    // Progress
+                    s3_debug(status);
+                }
+            );
         });
 
         // Range-Picker
