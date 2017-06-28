@@ -313,6 +313,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         ignore_errors = True
 
         # Import
+        # Flag to let audit know the repository
+        s3 = current.response.s3
+        s3.repository_id = self.repository.id
         output = resource.import_xml(tree,
                                      format = "xml",
                                      stylesheet = stylesheet,
@@ -324,6 +327,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                      onconflict = onconflict_callback,
                                      source_type = "adashi",
                                      )
+        s3.repository_id = None
 
         # Process validation errors, if any
         if resource.error_tree is not None:

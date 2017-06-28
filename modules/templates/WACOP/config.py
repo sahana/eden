@@ -56,6 +56,21 @@ def config(settings):
     settings.security.map = True
 
     # -------------------------------------------------------------------------
+    # Audit
+    #
+    def audit_write(method, tablename, form, record, representation):
+        if tablename in ("event_incident",
+                         "pr_group",
+                         ):
+            # Track the Source Repository for Incidents / Resources
+            return True
+        else:
+            # Don't Audit
+            return False
+
+    settings.security.audit_write = audit_write
+
+    # -------------------------------------------------------------------------
     # L10n (Localization) settings
     #
     settings.L10n.languages = OrderedDict([
@@ -753,6 +768,22 @@ def config(settings):
                     return current.messages["NONE"]
             #append(Field.Method("tags", incident_tags))
             itable.tags = s3_fieldmethod("tags", incident_tags)
+
+            atable = db.s3_audit
+            stable = s3db.sync_repository
+            def incident_source(row):
+                query = (atable.record_id == row["event_incident.id"]) & \
+                        (atable.tablename == "event_incident") & \
+                        (atable.repository_id == stable.id)
+                repo = db(query).select(stable.name,
+                                        limitby=(0, 1)
+                                        ).first()
+                if repo:
+                    return repo.name
+                else:
+                    return T("Internal")
+            #append(Field.Method("source", incident_source))
+            itable.source = s3_fieldmethod("source", incident_source)
 
             list_fields = [(T("Name"), "name_click"),
                            (T("Status"), "status"),

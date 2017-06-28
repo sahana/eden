@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Authentication, Authorization, Accouting
+""" Authentication, Authorization, Accounting
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -7078,6 +7078,7 @@ class S3Audit(object):
                             Field("old_value", "text"),
                             # List of Key:Values
                             Field("new_value", "text"),
+                            Field("repository_id", "integer"),
                             migrate=migrate,
                             fake_migrate=fake_migrate,
                             )
@@ -7172,6 +7173,7 @@ class S3Audit(object):
                          tablename = tablename,
                          record_id = record,
                          representation = representation,
+                         repository_id = current.response.s3.repository_id,
                          )
 
         elif method == "create":
@@ -7190,6 +7192,7 @@ class S3Audit(object):
                          record_id = record,
                          representation = representation,
                          new_value = new_value,
+                         repository_id = current.response.s3.repository_id,
                          )
 
         elif method == "update":
@@ -7216,6 +7219,7 @@ class S3Audit(object):
                          representation = representation,
                          old_value = old_value,
                          new_value = new_value,
+                         repository_id = current.response.s3.repository_id,
                          )
 
         elif method == "delete":
@@ -7233,6 +7237,7 @@ class S3Audit(object):
                          record_id = record,
                          representation = representation,
                          old_value = old_value,
+                         repository_id = current.response.s3.repository_id,
                          )
 
         return True

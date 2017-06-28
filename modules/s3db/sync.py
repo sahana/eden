@@ -675,7 +675,12 @@ class SyncDataModel(S3Model):
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        return {}
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(sync_repository_id = lambda **attr: dummy("repository_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
