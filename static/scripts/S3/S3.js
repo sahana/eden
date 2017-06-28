@@ -354,6 +354,41 @@ S3.confirmClick = function(ElementID, Message) {
 };
 
 // ============================================================================
+// Auto-Totals
+// - allow a field to default to the sum of a set of other fields, whilst still allowing manual entry
+S3.autoTotals = function(sumField, sourceFields, tablename) {
+    if (tablename === undefined) {
+        // Assume that fieldnames include the tablename
+        tablename = '';
+    } else {
+        // Prepend fieldnames with the tablename
+        tablename = tablename + '_';
+    }
+    sumField = $('#' + tablename + sumField);
+    var field,
+        value,
+        total;
+    for (var i = 0; i < sourceFields.length; i++) {
+        field = sourceFields[i];
+        $('#' + tablename + field).change(function() {
+             total = 0;
+             for (var j = 0; j < sourceFields.length; j++) {
+                field = sourceFields[j];
+                value = $('#' + tablename + field).val();
+                if (value) {
+                    total += parseInt(value);
+                }
+             }
+             sumField.val(total)
+                     .trigger('change'); // Cascade onwards
+        })
+    }
+    // @ToDo?: Clear the sourceFields when the sumField is entered manually?
+    // @ToDo?: Flag to show that the sumField has been set manually & so shouldn't be over-ridden by the source_fields
+    //sumField.data('manual', true);
+};
+
+// ============================================================================
 S3.trunk8 = function(selector, lines, more) {
     // Line-truncation, see s3utils.s3_trunk8
     var settings = {

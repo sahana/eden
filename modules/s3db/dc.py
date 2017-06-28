@@ -227,6 +227,18 @@ class DataCollectionTemplateModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("code",
+                           label = T("Code"),
+                           requires = IS_EMPTY_OR(
+                                        # Only really needs to be unique per Template
+                                        IS_NOT_IN_DB(db, "dc_question.code")
+                                        ),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Code"),
+                                                           T("Unique code for the field - required if using Auto-Totals"),
+                                                           ),
+                                         ),
+                           ),
                      # The Dynamic Field used to store the Question/Answers
                      self.s3_field_id(
                         readable = False,
@@ -254,6 +266,15 @@ class DataCollectionTemplateModel(S3Model):
                      #                                      ),
                      #                    ),
                      #      ),
+                     Field("totals", "json",
+                           label = T("Totals"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Totals"),
+                                                           T("List of fields (codes) which this one is the Total of"),
+                                                           ),
+                                         ),
+                           ),
                      Field("require_not_empty", "boolean",
                            default = False,
                            label = T("Required?"),

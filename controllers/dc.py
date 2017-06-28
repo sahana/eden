@@ -217,6 +217,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                                                                                     }
 
                 # Add the Questions
+                # Prep for Auto-Totals
                 qtable = s3db.dc_question
                 ftable = db.s3_field
                 query = (qtable.template_id == r.record.template_id) & \
@@ -225,13 +226,26 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 left = stable.on(stable.id == qtable.section_id)
                 questions = db(query).select(stable.id,
                                              qtable.posn,
+                                             qtable.code,
+                                             qtable.totals,
                                              ftable.name,
                                              left = left,
                                              )
                 root_questions = []
+                auto_totals = {}
+                codes = {}
                 for question in questions:
+                    field_name = question["s3_field.name"]
+                    code = question["dc_question.code"]
+                    if code:
+                        codes[code] = field_name
+                    totals = question["dc_question.totals"]
+                    if totals:
+                        auto_totals[field_name] = {"codes": totals,
+                                                   "fields": [],
+                                                   }
                     section_id = question["dc_section.id"]
-                    question = {question["dc_question.posn"]: question["s3_field.name"]}
+                    question = {question["dc_question.posn"]: field_name}
                     if not section_id:
                         root_questions.append(question)
                         continue
@@ -318,6 +332,17 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                                crud_form = crud_form,
                                subheadings = subheadings,
                                )
+
+                # Auto-Totals
+                # Compact JSON encoding
+                SEPARATORS = (",", ":")
+                jappend = s3.jquery_ready.append
+                for field in auto_totals:
+                    f = auto_totals[field]
+                    append = f["fields"].append
+                    for code in f["codes"]:
+                        append(codes.get(code))
+                    jappend('''S3.autoTotals('%s',%s,'%s')''' % (field, json.dumps(f["fields"], separators=SEPARATORS), dtablename))
 
         return True
     s3.prep = prep
