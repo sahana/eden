@@ -309,8 +309,8 @@ class custom_WACOP(S3CRUD):
                                    collapsed = True,
                                    callback='''S3.search.s3map()''',
                                    feature_resources = feature_resources,
-                                   toolbar = True,
-                                   add_polygon = True,
+                                   #toolbar = True,
+                                   #add_polygon = True,
                                    )
 
         return map
