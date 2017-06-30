@@ -211,6 +211,7 @@ class DataCollectionTemplateModel(S3Model):
                      6: T("Options"),
                      7: T("Date"),
                      #8: T("Date/Time"),
+                     9: T("Grid"), # Pseudo-question
                      #: T("Organization"),
                      #: T("Location"),
                      #: T("Person"),
@@ -235,7 +236,7 @@ class DataCollectionTemplateModel(S3Model):
                                         ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Code"),
-                                                           T("Unique code for the field - required if using Auto-Totals"),
+                                                           T("Unique code for the field - required if using Auto-Totals or Grids"),
                                                            ),
                                          ),
                            ),
@@ -266,6 +267,16 @@ class DataCollectionTemplateModel(S3Model):
                      #                                      ),
                      #                    ),
                      #      ),
+                     Field("grid", "json",
+                           label = T("Grid"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s%s" % (T("Grid"),
+                                                             T("For Grid Pseudo-Question, this is the Row labels & Column labels"),
+                                                             T("For Questions within the Grid, this is their position in the Grid, encoded as Grid,Row,Col"), # @ToDo: Widget?
+                                                             ),
+                                         ),
+                           ),
                      Field("totals", "json",
                            label = T("Totals"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -471,6 +482,9 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "date"
         elif field_type == 8:
             field_type = "datetime"
+        elif field_type == 9:
+            # Grid: Pseudo-question, no dynamic field
+            return
         else:
             current.log.debug(field_type)
             raise NotImplementedError

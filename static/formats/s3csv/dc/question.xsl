@@ -21,6 +21,7 @@
          Required....................dc_question.require_not_empty
          Code........................dc_question.code
          Totals......................dc_question.totals
+         Grid........................dc_question.grid
          Tooltip.....................dc_question.comments
 
     *********************************************************************** -->
@@ -89,6 +90,7 @@
             <data field="options"><xsl:value-of select="col[@field='Options']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="totals"><xsl:value-of select="col[@field='Totals']"/></data>
+            <data field="grid"><xsl:value-of select="col[@field='Grid']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Tooltip']"/></data>
 
             <!-- Sort Options
@@ -184,6 +186,9 @@
                 </xsl:when>
                 <xsl:when test="$Type='DATETIME'">
                     <data field="field_type">8</data>
+                </xsl:when>
+                <xsl:when test="$Type='GRID' or $Type='TABLE'">
+                    <data field="field_type">9</data>
                 </xsl:when>
                 <xsl:otherwise>
                     <!-- Default to String -->

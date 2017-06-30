@@ -29,6 +29,7 @@
 
 __all__ = ("S3SQLCustomForm",
            "S3SQLDefaultForm",
+           "S3SQLDummyField",
            "S3SQLSubFormLayout",
            "S3SQLVerticalSubFormLayout",
            "S3SQLInlineComponent",
@@ -232,6 +233,22 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def _insert_dummy_fields(form, formstyle, dummy_fields):
+        """
+            Insert dummy fields into forms
+            - these are simple DIVs placed into the correct place in the form
+              which are meant to be acted upon by custom JavaScript routines
+
+            @param form: the form
+            @param formstyle: the formstyle
+            @param dummy_fields:
+        """
+
+        if not dummy_fields:
+            return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def _insert_subheadings(form, tablename, formstyle, subheadings):
         """
             Insert subheadings into forms
@@ -254,134 +271,135 @@ class S3SQLForm(object):
                                }
         """
 
-        if subheadings:
-            if tablename in subheadings:
-                subheadings = subheadings.get(tablename)
-            if formstyle.__name__ in ("formstyle_table",
-                                      "formstyle_table_inline",
-                                      ):
-                def create_subheading(represent, tablename, f):
-                    return TR(TD(represent, _colspan=3,
-                                 _class="subheading",
-                                 ),
-                              _class = "subheading",
-                              _id = "%s_%s__subheading" % (tablename, f),
-                              )
-            else:
-                def create_subheading(represent, tablename, f):
-                    return DIV(represent,
-                               _class = "subheading",
-                               _id = "%s_%s__subheading" % (tablename, f),
-                               )
-            if "fields" in subheadings[subheadings.items()[0][0]]:
-                new_style = True
-                done = {1: [],
-                        2: [],
-                        3: [],
-                        }
-                fields = {}
-                for k, v in subheadings.items():
-                    for f in v["fields"]:
-                        fields[f] = {1: k}
-                    for _k, _v in v["subheadings"].items():
-                        for f in _v["fields"]:
+        if not subheadings:
+            return
+        if tablename in subheadings:
+            subheadings = subheadings.get(tablename)
+        if formstyle.__name__ in ("formstyle_table",
+                                  "formstyle_table_inline",
+                                  ):
+            def create_subheading(represent, tablename, f):
+                return TR(TD(represent, _colspan=3,
+                             _class="subheading",
+                             ),
+                          _class = "subheading",
+                          _id = "%s_%s__subheading" % (tablename, f),
+                          )
+        else:
+            def create_subheading(represent, tablename, f):
+                return DIV(represent,
+                           _class = "subheading",
+                           _id = "%s_%s__subheading" % (tablename, f),
+                           )
+        if "fields" in subheadings[subheadings.items()[0][0]]:
+            new_style = True
+            done = {1: [],
+                    2: [],
+                    3: [],
+                    }
+            fields = {}
+            for k, v in subheadings.items():
+                for f in v["fields"]:
+                    fields[f] = {1: k}
+                for _k, _v in v["subheadings"].items():
+                    for f in _v["fields"]:
+                        fields[f] = {1: k,
+                                     2: _k,
+                                     }
+                    for __k, __v in _v["subheadings"].items():
+                        for f in __v["fields"]:
                             fields[f] = {1: k,
                                          2: _k,
+                                         3: __k,
                                          }
-                        for __k, __v in _v["subheadings"].items():
-                            for f in __v["fields"]:
-                                fields[f] = {1: k,
-                                             2: _k,
-                                             3: __k,
-                                             }
-            else:
-                new_style = False
-                done = []
-            form_rows = iter(form[0])
-            tr = form_rows.next()
-            i = 0
-            while tr:
-                # @ToDo: We need a better way of working than this!
-                f = tr.attributes.get("_id", None)
-                if not f:
-                    try:
-                        # DIV-based form-style
-                        f = tr[0][0].attributes.get("_id", None)
-                        if not f:
-                            # DRRPP formstyle
-                            f = tr[0][0][1][0].attributes.get("_id", None)
-                            if not f:
-                                # Date fields are inside an extra TAG()
-                                f = tr[0][0][1][0][0].attributes.get("_id", None)
-                    except:
-                        # Something else
-                        f = None
-                if f:
-                    if f.endswith("__row"):
-                        f = f[:-5]
-                    if f.startswith(tablename):
-                        f = f[len(tablename) + 1:] # : -6
-                        if f.startswith("sub_"):
-                            # Component
-                            f = f[4:]
-                    elif f.startswith("sub-default"):
-                        # S3SQLInlineComponent[CheckBox]
-                        f = f[11:]
-                    elif f.startswith("sub_"):
-                        # S3GroupedOptionsWidget
-                        f = f[4:]
-                    if new_style:
-                        headings = fields.get(f)
-                        if not headings:
-                            try:
-                                tr = form_rows.next()
-                            except StopIteration:
-                                break
-                            else:
-                                i += 1
-                            continue
-                        inserted = 0
-                        for j in (1, 2, 3):
-                            heading = headings.get(j)
-                            if heading and heading not in done[j]:
-                                done[j].append(heading)
-                                if j in (1, 2):
-                                    # Clear lower level to avoid cross-section dupes
-                                    done[j + 1] = []
-                                subheading = create_subheading(heading, tablename, f)
-                                form[0].insert(i, subheading)
-                                i += 1
-                                inserted += 1
-                        if inserted:
-                            tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
-                            for _i in range(0, inserted):
-                                # Iterate over the rows we just created
-                                tr = form_rows.next()
-                    else:
-                        for k in subheadings.keys():
-                            if k in done:
-                                continue
-                            fields = subheadings[k]
-                            if not isinstance(fields, (list, tuple)):
-                                fields = [fields]
-                            if f in fields:
-                                done.append(k)
-                                if isinstance(k, int):
-                                    # Don't display a section title
-                                    represent = ""
-                                else:
-                                    represent = k
-                                subheading = create_subheading(represent, tablename, f)
-                                form[0].insert(i, subheading)
-                                tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
-                                tr = form_rows.next()
-                                i += 1
+        else:
+            new_style = False
+            done = []
+        form_rows = iter(form[0])
+        tr = form_rows.next()
+        i = 0
+        while tr:
+            # @ToDo: We need a better way of working than this!
+            f = tr.attributes.get("_id", None)
+            if not f:
                 try:
-                    tr = form_rows.next()
-                except StopIteration:
-                    break
+                    # DIV-based form-style
+                    f = tr[0][0].attributes.get("_id", None)
+                    if not f:
+                        # DRRPP formstyle
+                        f = tr[0][0][1][0].attributes.get("_id", None)
+                        if not f:
+                            # Date fields are inside an extra TAG()
+                            f = tr[0][0][1][0][0].attributes.get("_id", None)
+                except:
+                    # Something else
+                    f = None
+            if f:
+                if f.endswith("__row"):
+                    f = f[:-5]
+                if f.startswith(tablename):
+                    f = f[len(tablename) + 1:] # : -6
+                    if f.startswith("sub_"):
+                        # Component
+                        f = f[4:]
+                elif f.startswith("sub-default"):
+                    # S3SQLInlineComponent[CheckBox]
+                    f = f[11:]
+                elif f.startswith("sub_"):
+                    # S3GroupedOptionsWidget
+                    f = f[4:]
+                if new_style:
+                    headings = fields.get(f)
+                    if not headings:
+                        try:
+                            tr = form_rows.next()
+                        except StopIteration:
+                            break
+                        else:
+                            i += 1
+                        continue
+                    inserted = 0
+                    for j in (1, 2, 3):
+                        heading = headings.get(j)
+                        if heading and heading not in done[j]:
+                            done[j].append(heading)
+                            if j in (1, 2):
+                                # Clear lower level to avoid cross-section dupes
+                                done[j + 1] = []
+                            subheading = create_subheading(heading, tablename, f)
+                            form[0].insert(i, subheading)
+                            i += 1
+                            inserted += 1
+                    if inserted:
+                        tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
+                        for _i in range(0, inserted):
+                            # Iterate over the rows we just created
+                            tr = form_rows.next()
                 else:
-                    i += 1
+                    for k in subheadings.keys():
+                        if k in done:
+                            continue
+                        fields = subheadings[k]
+                        if not isinstance(fields, (list, tuple)):
+                            fields = [fields]
+                        if f in fields:
+                            done.append(k)
+                            if isinstance(k, int):
+                                # Don't display a section title
+                                represent = ""
+                            else:
+                                represent = k
+                            subheading = create_subheading(represent, tablename, f)
+                            form[0].insert(i, subheading)
+                            tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
+                            tr = form_rows.next()
+                            i += 1
+            try:
+                tr = form_rows.next()
+            except StopIteration:
+                break
+            else:
+                i += 1
 
 # =============================================================================
 class S3SQLDefaultForm(S3SQLForm):
@@ -1137,6 +1155,11 @@ class S3SQLCustomForm(S3SQLForm):
         if subheadings:
             self._insert_subheadings(form, tablename, formstyle, subheadings)
 
+        # Dummy Fields
+        dummy_fields = self.opts.get("dummy_fields", None)
+        if dummy_fields:
+            self._insert_dummy_fields(dummy_fields)
+
         # Process the form
         formname = "%s/%s" % (tablename, record_id)
         post_vars = request.post_vars
@@ -1771,6 +1794,51 @@ class S3SQLField(S3SQLFormElement):
                 return alias, field.name, renamed_field
 
             raise SyntaxError("Invalid subtable: %s" % tname)
+
+# =============================================================================
+class S3SQLDummyField(S3SQLFormElement):
+    """
+        A Dummy Field
+
+        A simple DIV which can then be acted upon with JavaScript
+    """
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        field = Field(self.selector,
+                      label = "",
+                      widget = self,
+                      )
+
+        return self, None, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            @return: the widget for this form element as HTML helper
+        """
+
+        return DIV(_class="s3-dummy-field",
+                   )
 
 # =============================================================================
 class S3SQLSubForm(S3SQLFormElement):

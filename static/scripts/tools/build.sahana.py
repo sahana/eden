@@ -352,7 +352,8 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ("add_person",
                      "cap",
-                     "dc",
+                     "dc_answer",
+                     "dc_question",
                      "dvr",
                      "gis",
                      "gis.feature_crud",

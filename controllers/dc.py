@@ -38,26 +38,26 @@ def template():
                                deletable = False,
                                editable = False,
                                )
-            else:
-                # Sections for this template only
-                f = s3db.dc_question.section_id
-                f.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(db, "dc_section.id",
-                                          f.represent,
-                                          filterby="template_id",
-                                          filter_opts=[r.id],
-                                          ))
 
-                # Add JS
-                scripts_append = s3.scripts.append
-                if s3.debug:
-                    scripts_append("/%s/static/scripts/tag-it.js" % appname)
-                    scripts_append("/%s/static/scripts/S3/s3.dc.js" % appname)
-                else:
-                    scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
-                    scripts_append("/%s/static/scripts/S3/s3.dc.min.js" % appname)
-                # Add CSS
-                s3.stylesheets.append("plugins/jquery.tagit.css")
+            # Sections for this template only
+            f = s3db.dc_question.section_id
+            f.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db, "dc_section.id",
+                                      f.represent,
+                                      filterby="template_id",
+                                      filter_opts=[r.id],
+                                      ))
+
+            # Add JS
+            scripts_append = s3.scripts.append
+            if s3.debug:
+                scripts_append("/%s/static/scripts/tag-it.js" % appname)
+                scripts_append("/%s/static/scripts/S3/s3.dc_question.js" % appname)
+            else:
+                scripts_append("/%s/static/scripts/tag-it.min.js" % appname)
+                scripts_append("/%s/static/scripts/S3/s3.dc_question.min.js" % appname)
+            # Add CSS
+            s3.stylesheets.append("plugins/jquery.tagit.css")
 
         return True
     s3.prep = prep
@@ -150,7 +150,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 )
 
                 # Custom Form with Questions & Subheadings sorted correctly
-                from s3 import S3SQLCustomForm
+                from s3 import S3SQLCustomForm, S3SQLDummyField
                 crud_fields = []
                 cappend = crud_fields.append
                 template_id = r.record.template_id
@@ -218,24 +218,29 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
 
                 # Add the Questions
                 # Prep for Auto-Totals
+                # Prep for Grids
                 qtable = s3db.dc_question
                 ftable = db.s3_field
                 query = (qtable.template_id == r.record.template_id) & \
-                        (qtable.deleted == False) & \
-                        (qtable.field_id == ftable.id)
-                left = stable.on(stable.id == qtable.section_id)
+                        (qtable.deleted == False)
+                left = [stable.on(stable.id == qtable.section_id),
+                        ftable.on(ftable.id == qtable.field_id),
+                        ]
                 questions = db(query).select(stable.id,
                                              qtable.posn,
                                              qtable.code,
                                              qtable.totals,
+                                             qtable.grid,
                                              ftable.name,
                                              left = left,
                                              )
-                root_questions = []
                 auto_totals = {}
                 codes = {}
+                grids = {}
+                grid_children = {}
+                root_questions = []
                 for question in questions:
-                    field_name = question["s3_field.name"]
+                    field_name = question.get("s3_field.name")
                     code = question["dc_question.code"]
                     if code:
                         codes[code] = field_name
@@ -244,8 +249,32 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                         auto_totals[field_name] = {"codes": totals,
                                                    "fields": [],
                                                    }
+                    grid = question["dc_question.grid"]
+                    if grid:
+                        len_grid = len(grid)
+                        if len_grid == 2:
+                            # Grid Pseudo-Question
+                            if not code:
+                                s3.error("Code required for Grid Questions") # @ToDo: Make mandatory in onvalidation
+                                raise
+                            rows = [s3_str(T(v)) for v in grid[0]]
+                            cols = [s3_str(T(v)) for v in grid[1]]
+                            fields = [[0 for x in range(len(rows))] for y in range(len(cols))] 
+                            grids[code] = {"r": rows,
+                                           "c": cols,
+                                           "f": fields,
+                                           }
+                        elif len_grid == 3:
+                            # Child Question
+                            grid_children[field_name] = grid
+                        else:
+                            s3.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+                    
                     section_id = question["dc_section.id"]
-                    question = {question["dc_question.posn"]: field_name}
+                    question = {question["dc_question.posn"]: {"name": field_name,
+                                                               "code": code,
+                                                               },
+                                }
                     if not section_id:
                         root_questions.append(question)
                         continue
@@ -282,7 +311,13 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                 # Append questions to the form, with subheadings
                 # 1st add those questions without a section (likely the only questions then)
                 for question in root_questions:
-                    cappend(question["name"])
+                    fname = question["name"]
+                    if fname:
+                        cappend(fname)
+                    else:
+                        # Grid Pseudo-Question
+                        fname = question["code"]
+                        cappend(S3SQLDummyField(fname))
                 # Next add those questions with a section (likely the only questions then)
                 subheadings = {}
                 for s in sections:
@@ -295,9 +330,15 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                     subheadings[section_name] = _subheadings
                     questions = section["questions"]
                     for question in questions:
-                        fname = question.items()[0][1]
+                        question = question.items()[0][1] 
+                        fname = question["name"]
+                        if fname:
+                            cappend(fname)
+                        else:
+                            # Grid Pseudo-Question
+                            fname = question["code"]
+                            cappend(S3SQLDummyField(fname))
                         _subheadings["fields"].append(fname)
-                        cappend(fname)
                     # Next add those questions in a subsection
                     subsections = section["subsections"]
                     for sub in subsections:
@@ -309,9 +350,15 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                         _subheadings["subheadings"][section_name] = __subheadings
                         questions = _sub["questions"]
                         for question in questions:
-                            fname = question.items()[0][1]
+                            question = question.items()[0][1] 
+                            fname = question["name"]
+                            if fname:
+                                cappend(fname)
+                            else:
+                                # Grid Pseudo-Question
+                                fname = question["code"]
+                                cappend(S3SQLDummyField(fname))
                             __subheadings["fields"].append(fname)
-                            cappend(fname)
                         # Next add those questions in a subsection
                         subsubsections = _sub["subsubsections"]
                         for subsub in subsubsections:
@@ -323,9 +370,15 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                             __subheadings["subheadings"][section_name] = ___subheadings
                             questions = _subsub["questions"]
                             for question in questions:
-                                fname = question.items()[0][1]
+                                question = question.items()[0][1] 
+                                fname = question["name"]
+                                if fname:
+                                    cappend(fname)
+                                else:
+                                    # Grid Pseudo-Question
+                                    fname = question["code"]
+                                    cappend(S3SQLDummyField(fname))
                                 ___subheadings["fields"].append(fname)
-                                cappend(fname)
 
                 crud_form = S3SQLCustomForm(*crud_fields)
                 s3db.configure(tablename,
@@ -333,16 +386,31 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                                subheadings = subheadings,
                                )
 
-                # Auto-Totals
                 # Compact JSON encoding
                 SEPARATORS = (",", ":")
                 jappend = s3.jquery_ready.append
+
+                # Auto-Totals
                 for field in auto_totals:
                     f = auto_totals[field]
                     append = f["fields"].append
                     for code in f["codes"]:
                         append(codes.get(code))
                     jappend('''S3.autoTotals('%s',%s,'%s')''' % (field, json.dumps(f["fields"], separators=SEPARATORS), dtablename))
+
+                # Grids
+                # Place the child fields in the correct places in their grids
+                if len(grids):
+                    for child in grid_children:
+                        code, row, col = grid_children[child]
+                        grids[code]["f"][col - 1][row - 1] = child
+                    jappend('''S3.dc_grids(%s,'%s')''' % (json.dumps(grids, separators=SEPARATORS), dtablename))
+
+                # Add JS
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.js" % appname)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.min.js" % appname)
 
         return True
     s3.prep = prep
