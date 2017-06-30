@@ -253,6 +253,20 @@ body.ltr .ui-multiselect {
       }
     }
   }
+  // content shrinking for alert and event cards
+  .card-alert .desc,
+  .card-event .desc {
+    overflow: hidden;
+    height: 4em;
+    position: relative;
+    &::before {
+      content: "";
+      background: linear-gradient(to bottom, rgba(239,239,239,0) 0%, rgba(239,239,239,1) 100%);
+      position: absolute;
+      width: 100%;
+      height: 4em;
+    }
+  }
 }
 
 // -------------------------------------

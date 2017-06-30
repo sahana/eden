@@ -14,9 +14,27 @@
   </div>
  </div>
  <div class='row well'>
-  <h3 class="well-title">Incidents</h3>
-  <div class="small-12 column">
-    {{=event_incident_datatable}}
+   <div class='small-12 column'>
+    <ul class='tabs tab-navigation' data-tab>
+      <li class='tab-title active'><a href='#panel1'>Incidents</a></li>
+      <li class='tab-title'><a href='#panel2'>Reports</a></li>
+    </ul>
+    <div class='tabs-content'>
+      <section class='content active' id='panel1'>
+        <div class='row'>
+          <div class='small-12 columns'>
+            {{=event_incident_datatable}}
+          </div>
+        </div>
+      </section>
+      <section class='staff content' id='panel2'>
+        <div class='row'>
+          <div class='small-12 columns'>
+            {{#event_incident_datatable}}
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
  </div>
 </main>

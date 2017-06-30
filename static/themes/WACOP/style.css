@@ -2912,8 +2912,24 @@ body.ltr .ui-multiselect {
 .well.blue .well-title a p, .well.blue .well-title a ul, .well.blue .well-title a h1, .well.blue .well-title a h2, .well.blue .well-title a h3, .well.blue .well-title a h4, .well.blue .well-title a h5, .well.blue .well-title a h6 {
   font-size: inherit;
 }
+/* line 257, ../scss/custom/_wacop.scss */
+.well .card-alert .desc,
+.well .card-event .desc {
+  overflow: hidden;
+  height: 4em;
+  position: relative;
+}
+/* line 262, ../scss/custom/_wacop.scss */
+.well .card-alert .desc::before,
+.well .card-event .desc::before {
+  content: "";
+  background: linear-gradient(to bottom, rgba(239, 239, 239, 0) 0%, #efefef 100%);
+  position: absolute;
+  width: 100%;
+  height: 4em;
+}
 
-/* line 261, ../scss/custom/_wacop.scss */
+/* line 275, ../scss/custom/_wacop.scss */
 .callout {
   border-style: none;
   border-width: 0;
@@ -2968,7 +2984,7 @@ body.ltr .ui-multiselect {
   float: left;
 }
 
-/* line 267, ../scss/custom/_wacop.scss */
+/* line 281, ../scss/custom/_wacop.scss */
 .callout.event-parent {
   border-style: none;
   border-width: 0;
@@ -3022,21 +3038,21 @@ body.ltr .ui-multiselect {
   width: 50%;
   float: left;
 }
-/* line 269, ../scss/custom/_wacop.scss */
+/* line 283, ../scss/custom/_wacop.scss */
 .callout.event-parent .callout-right {
   text-align-last: right;
 }
-/* line 272, ../scss/custom/_wacop.scss */
+/* line 286, ../scss/custom/_wacop.scss */
 .callout.event-parent .meta .date::after {
   content: "|";
   margin: 0 0.375rem;
 }
-/* line 276, ../scss/custom/_wacop.scss */
+/* line 290, ../scss/custom/_wacop.scss */
 .callout.event-parent .button {
   margin: 0;
 }
 
-/* line 283, ../scss/custom/_wacop.scss */
+/* line 297, ../scss/custom/_wacop.scss */
 .card-event {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3205,7 +3221,7 @@ body.ltr .ui-multiselect {
 .card-event .body {
   padding-top: 1.25rem;
 }
-/* line 285, ../scss/custom/_wacop.scss */
+/* line 299, ../scss/custom/_wacop.scss */
 .card-event .event-date-location {
   background-color: #DDDDDD;
   padding: 1.25rem;
@@ -3235,14 +3251,14 @@ body.ltr .ui-multiselect {
 .card-event .event-date-location .date-label p, .card-event .event-date-location .date-label ul, .card-event .event-date-location .date-label h1, .card-event .event-date-location .date-label h2, .card-event .event-date-location .date-label h3, .card-event .event-date-location .date-label h4, .card-event .event-date-location .date-label h5, .card-event .event-date-location .date-label h6 {
   font-size: inherit;
 }
-/* line 288, ../scss/custom/_wacop.scss */
+/* line 302, ../scss/custom/_wacop.scss */
 .card-event .event-date-location .adr,
 .card-event .event-date-location .date {
   font-size: 1.4375rem;
   font-weight: bold;
 }
 
-/* line 299, ../scss/custom/_wacop.scss */
+/* line 313, ../scss/custom/_wacop.scss */
 .card-alert {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3411,11 +3427,11 @@ body.ltr .ui-multiselect {
 .card-alert .body {
   padding-top: 1.25rem;
 }
-/* line 301, ../scss/custom/_wacop.scss */
+/* line 315, ../scss/custom/_wacop.scss */
 .card-alert .title {
   font-size: 1.6875rem;
 }
-/* line 304, ../scss/custom/_wacop.scss */
+/* line 318, ../scss/custom/_wacop.scss */
 .card-alert .meta-location {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -3440,7 +3456,7 @@ body.ltr .ui-multiselect {
   font-size: inherit;
 }
 
-/* line 313, ../scss/custom/_wacop.scss */
+/* line 327, ../scss/custom/_wacop.scss */
 .incident-profile {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3609,7 +3625,7 @@ body.ltr .ui-multiselect {
 .incident-profile .body {
   padding-top: 1.25rem;
 }
-/* line 315, ../scss/custom/_wacop.scss */
+/* line 329, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data {
   margin: 0 -0.625rem;
   max-width: none;
@@ -3627,14 +3643,14 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-data:after {
   clear: both;
 }
-/* line 320, ../scss/custom/_wacop.scss */
+/* line 334, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 322, ../scss/custom/_wacop.scss */
+/* line 336, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
@@ -3663,14 +3679,14 @@ body.ltr .ui-multiselect {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* line 326, ../scss/custom/_wacop.scss */
+/* line 340, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 328, ../scss/custom/_wacop.scss */
+/* line 342, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
@@ -3687,7 +3703,7 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-data .incident-date .box .date-label p, .incident-profile .incident-data .incident-date .box .date-label ul, .incident-profile .incident-data .incident-date .box .date-label h1, .incident-profile .incident-data .incident-date .box .date-label h2, .incident-profile .incident-data .incident-date .box .date-label h3, .incident-profile .incident-data .incident-date .box .date-label h4, .incident-profile .incident-data .incident-date .box .date-label h5, .incident-profile .incident-data .incident-date .box .date-label h6 {
   font-size: inherit;
 }
-/* line 334, ../scss/custom/_wacop.scss */
+/* line 348, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources {
   margin: 0 -0.625rem;
   max-width: none;
@@ -3702,14 +3718,14 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-resources:after {
   clear: both;
 }
-/* line 336, ../scss/custom/_wacop.scss */
+/* line 350, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-rail {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 33.33333%;
   float: left;
 }
-/* line 339, ../scss/custom/_wacop.scss */
+/* line 353, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-data {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
@@ -3717,7 +3733,7 @@ body.ltr .ui-multiselect {
   float: left;
 }
 
-/* line 349, ../scss/custom/_wacop.scss */
+/* line 363, ../scss/custom/_wacop.scss */
 .card-notification {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -3886,7 +3902,7 @@ body.ltr .ui-multiselect {
 .card-notification .body {
   padding-top: 1.25rem;
 }
-/* line 351, ../scss/custom/_wacop.scss */
+/* line 365, ../scss/custom/_wacop.scss */
 .card-notification .body .desc .img {
   max-width: 40%;
   height: auto;
@@ -3894,7 +3910,7 @@ body.ltr .ui-multiselect {
   margin: 0 0.5rem 0.5rem 0;
 }
 
-/* line 362, ../scss/custom/_wacop.scss */
+/* line 376, ../scss/custom/_wacop.scss */
 .card-post {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -4066,37 +4082,37 @@ body.ltr .ui-multiselect {
 .card-post .body {
   padding-top: 1.25rem;
 }
-/* line 368, ../scss/custom/_wacop.scss */
+/* line 382, ../scss/custom/_wacop.scss */
 .card-post .body .meta-update {
   width: 50%;
 }
-/* line 371, ../scss/custom/_wacop.scss */
+/* line 385, ../scss/custom/_wacop.scss */
 .card-post .body .meta-comments {
   white-space: nowrap;
 }
-/* line 372, ../scss/custom/_wacop.scss */
+/* line 386, ../scss/custom/_wacop.scss */
 .card-post .body .meta-comments::before {
   content: "\00a0\00a0";
 }
-/* line 378, ../scss/custom/_wacop.scss */
+/* line 392, ../scss/custom/_wacop.scss */
 .card-post .card-post-comments {
   margin-left: 0;
 }
-/* line 381, ../scss/custom/_wacop.scss */
+/* line 395, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment {
   background-color: #EFEFEF;
   margin-bottom: 0.625rem;
   padding: 1.25rem;
 }
-/* line 385, ../scss/custom/_wacop.scss */
+/* line 399, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment textarea {
   min-height: 10em;
 }
-/* line 388, ../scss/custom/_wacop.scss */
+/* line 402, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment p:last-child {
   margin-bottom: 0;
 }
-/* line 392, ../scss/custom/_wacop.scss */
+/* line 406, ../scss/custom/_wacop.scss */
 .card-post .add-comment,
 .card-post .submit {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
