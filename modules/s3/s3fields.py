@@ -130,32 +130,39 @@ class QueryS3(Query):
             self.sql = "CAST(TRIM(%s,"|") AS INTEGER)=%s" % (left, right)
 
 # =============================================================================
-def s3_fieldmethod(name, f, represent=None):
+def s3_fieldmethod(name, f, represent=None, search_field=None):
     """
         Helper to attach a representation method to a Field.Method.
 
         @param name: the field name
         @param f: the field method
         @param represent: the representation function
+        @param search_field: the field to use for searches
+               - only used by datatable_filter currently
+               - can only be a single field in the same table currently
     """
 
-    if represent is not None:
+    if represent is None and search_field is None:
+        fieldmethod = Field.Method(name, f)
 
+    else:
         class Handler(object):
             def __init__(self, method, row):
                 self.method=method
                 self.row=row
             def __call__(self, *args, **kwargs):
                 return self.method(self.row, *args, **kwargs)
-        if hasattr(represent, "bulk"):
-            Handler.represent = represent
-        else:
-            Handler.represent = staticmethod(represent)
+
+        if represent is not None:
+            if hasattr(represent, "bulk"):
+                Handler.represent = represent
+            else:
+                Handler.represent = staticmethod(represent)
+
+        if search_field is not None:
+            Handler.search_field = search_field
 
         fieldmethod = Field.Method(name, f, handler=Handler)
-
-    else:
-        fieldmethod = Field.Method(name, f)
 
     return fieldmethod
 

@@ -127,19 +127,21 @@ def incident():
                         r.method = "assign"
                     if r.method == "assign":
                         r.custom_action = s3db.hrm_AssignMethod(component="assign")
-                if r.component_name == "config":
+                cname = r.component_name
+                if cname == "config":
                     s3db.configure("gis_config",
                                    deletable = False,
                                    )
                     s3.crud.submit_button = T("Update")
-                elif r.component_name in ("asset", "human_resource", "organisation", "site"):
+                elif cname in ("asset", "human_resource", "organisation", "site"):
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
-                #else:
-                #    s3.crud.submit_button = T("Assign")
-                #    s3.crud_labels["DELETE"] = T("Remove")
+                    # Default Event to that of the Incident
+                    f = s3db["event_%s" % cname].event_id
+                    f.default = r.record.event_id
+                    f.readable = f.writable = False
 
-            elif r.method != "update" and r.method != "read":
+            elif r.method not in ("read", "update"):
                 # Create or ListCreate
                 r.table.closed.writable = r.table.closed.readable = False
 

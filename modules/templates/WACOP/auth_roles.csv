@@ -1,6 +1,9 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,event,incident,,,READ,,,,,general Public can view Incidents
 ANONYMOUS,Anonymous,,,,event_incident,,READ,,,,,general Public can view Incidents
+ANONYMOUS,Anonymous,,,,event_team,,READ,,,,,general Public can view Incident details
+ANONYMOUS,Anonymous,,,,event_human_resource,,READ,,,,,general Public can view Incident details
+ANONYMOUS,Anonymous,,,,event_organisation,,READ,,,,,general Public can view Incident details
 ANONYMOUS,Anonymous,,event,event,,,READ,,,,,general Public can view Events
 ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,general Public can view Events
 ANONYMOUS,Anonymous,,cms,post,,,READ,,,,,general Public can view Updates inc Alerts

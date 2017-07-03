@@ -3922,7 +3922,12 @@ class S3Resource(object):
                     except (KeyError, IndexError):
                         continue
                     if field is None:
-                        continue
+                        # Virtual
+                        if hasattr(rfield, "search_field"):
+                            field = db[rfield.tname][rfield.search_field]
+                        else:
+                            # Cannot search
+                            continue
                     ftype = str(field.type)
 
                     # Add left joins

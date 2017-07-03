@@ -132,9 +132,9 @@ class custom_WACOP(S3CRUD):
 
         if dt_init:
             # Move the search boxes into the design
-            dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));$('.custom-list-%(tablename)s_length').hide();''' % \
+            dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));''' % \
                 dict(tablename = tablename,
-                     placeholder = T("Enter search term…"),
+                     placeholder = T("Search"),
                      ))
             current.deployment_settings.ui.datatables_initComplete = "".join(dt_init)
 
@@ -163,7 +163,7 @@ class custom_WACOP(S3CRUD):
 
         dtargs = {"dt_pagination": "true",
                   "dt_pageLength": displayLength,
-                  "dt_searching": False,
+                  #"dt_searching": False,
                   #"dt_lengthMenu": None,
                   }
 
@@ -205,7 +205,7 @@ class custom_WACOP(S3CRUD):
                                     ]
         # Action Buttons on the right (no longer)
         #dtargs["dt_action_col"] = len(list_fields)
-        # Use Native controller for AJaX  calls
+        # Use Native controller for AJAX  calls
         #dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
         #                              representation="aadata")
         dtargs["dt_ajax_url"] = URL(c = c,

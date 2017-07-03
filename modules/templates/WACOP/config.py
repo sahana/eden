@@ -518,6 +518,7 @@ def config(settings):
                                            event_name,
                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                            represent = lambda v: v,
+                                           search_field = "name",
                                            )
 
         def event_status(row):
@@ -728,6 +729,7 @@ def config(settings):
                                            incident_name,
                                            # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                            represent = lambda v: v,
+                                           search_field = "name",
                                            )
 
         def incident_status(row):
@@ -973,6 +975,7 @@ def config(settings):
                                              # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                              # @ToDo: Bulk lookups
                                              represent = lambda v: v,
+                                             search_field = "human_resource_id",
                                              )
 
         s3db.configure(tablename,
@@ -1018,6 +1021,7 @@ def config(settings):
                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                             # @ToDo: Bulk lookups
                                             represent = lambda v: v,
+                                            search_field = "organisation_id",
                                             )
 
         s3db.configure(tablename,
@@ -1069,6 +1073,7 @@ def config(settings):
                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                             # @ToDo: Bulk lookups
                                             represent = lambda v: v,
+                                            search_field = "group_id",
                                             )
 
         s3db.configure(tablename,
@@ -1159,6 +1164,7 @@ def config(settings):
                                                       task_name,
                                                       # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
                                                       represent = lambda v: v,
+                                                      search_field = "name",
                                                       )
 
         s3db.configure(tablename,

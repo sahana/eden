@@ -696,6 +696,8 @@ class S3ResourceField(object):
                 handler = method.handler
                 if hasattr(handler, "represent"):
                     self.represent = handler.represent
+                if hasattr(handler, "search_field"):
+                    self.search_field = handler.search_field
         else:
             self.ftype = "context"
 
