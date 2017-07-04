@@ -1056,18 +1056,29 @@ def config(settings):
                                     )
 
         # Virtual Fields
-        # Always used from either the Event or Incident context
         f = r.function
-        record_id = r.id
         group_represent = ertable.group_id.represent
-        def team_name(row):
-            group_id = row["event_team.group_id"]
-            return A(group_represent(group_id),
-                     _href = URL(c="event", f=f,
-                                 args=[record_id, "group", group_id, "profile"],
-                                 extension = "", # ensure no .aadata
-                                 ),
-                     )
+        if f == "group":
+            # Resource Browse
+            def team_name(row):
+                group_id = row["event_team.group_id"]
+                return A(group_represent(group_id),
+                         _href = URL(c="event", f="incident",
+                                     args=[row["event_team.incident_id"], "group", group_id, "profile"],
+                                     extension = "", # ensure no .aadata
+                                     ),
+                         )
+        else:
+            # Event Profile or Incident Profile
+            record_id = r.id
+            def team_name(row):
+                group_id = row["event_team.group_id"]
+                return A(group_represent(group_id),
+                         _href = URL(c="event", f=f,
+                                     args=[record_id, "group", group_id, "profile"],
+                                     extension = "", # ensure no .aadata
+                                     ),
+                         )
         ertable.name_click = s3_fieldmethod("name_click",
                                             team_name,
                                             # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
