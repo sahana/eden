@@ -8,7 +8,9 @@
    {{=filter_form}}
   </div>
   <div id='map-here' class='medium-8 columns'>
-   {{#=XML(map)}}
+  {{if _map:}}
+    {{=XML(_map)}}
+  {{pass}}
   </div>
  </div>
  <div class='row well'>

@@ -169,9 +169,10 @@ class custom_WACOP(S3CRUD):
 
         dtargs = {"dt_pagination": "true",
                   "dt_pageLength": displayLength,
-                  "dt_searching": search,
                   #"dt_lengthMenu": None,
                   }
+        if not search:
+            dtargs["dt_searching"] = False
 
         # @ToDo: Permissions
         #messages = current.messages
@@ -287,11 +288,12 @@ class custom_WACOP(S3CRUD):
         output["%s_datatable" % tablename] = contents
 
     # -------------------------------------------------------------------------
-    def _map(self, layer_name, filter=None):
+    def _map(self, layer_name, map_id="default_map", filter=None):
         """
             Create the HTML for a Map section
 
             @param layer_name: the name of the Layer
+            @param map_id: the id of the map
             @param filter: optional filter
         """
 
@@ -310,10 +312,11 @@ class custom_WACOP(S3CRUD):
                               "filter"   : filter,
                               },
                              ]
-        map = current.gis.show_map(height = 350,
+        map = current.gis.show_map(id = map_id,
+                                   height = 350,
                                    width = 425,
                                    collapsed = True,
-                                   callback='''S3.search.s3map()''',
+                                   callback='''S3.search.s3map('%s')''' % map_id,
                                    feature_resources = feature_resources,
                                    #toolbar = True,
                                    #add_polygon = True,
@@ -933,16 +936,19 @@ class event_Browse(custom_WACOP):
         events = self._events_html()
 
         # Map of Events
-        #_map = self._map("Events")
-        # Now done through S3MapFilter
         map_id = "event-gis_location_the_geom-map-filter-map"
-        # Move Map into the Design
-        current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
+        if current.deployment_settings.get_gis_spatialdb():
+            # Now done through S3MapFilter
+            _map = None
+            # Move Map into the Design
+            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
+        else:
+            _map = self._map("Events", map_id=map_id)
 
         # Output
         output = {"alerts": alerts,
                   "events": events,
-                  #"map": _map,
+                  "_map": _map,
                   }
 
         # Filter Form
@@ -1021,6 +1027,7 @@ class event_Browse(custom_WACOP):
 
         self._datatable(output = output,
                         tablename = tablename,
+                        search = False,
                         updateable = False,
                         export = True,
                         #ajax_vars = ajax_vars,
@@ -1054,16 +1061,19 @@ class incident_Browse(custom_WACOP):
         events = self._events_html()
 
         # Map of Incidents
-        #_map = self._map("Incidents")
-        # Now done through S3MapFilter
         map_id = "incident-gis_location_the_geom-map-filter-map"
-        # Move Map into the Design
-        current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
+        if current.deployment_settings.get_gis_spatialdb():
+            # Now done through S3MapFilter
+            _map = None
+            # Move Map into the Design
+            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
+        else:
+            _map = self._map("Incidents", map_id=map_id)
 
         # Output
         output = {"alerts": alerts,
                   "events": events,
-                  #"map": _map,
+                  "_map": _map,
                   }
 
         # Filter Form
@@ -1159,6 +1169,7 @@ class incident_Browse(custom_WACOP):
         #output["event_incident_datatable"] = ""
         self._datatable(output = output,
                         tablename = tablename,
+                        search = False,
                         updateable = False,
                         export = True,
                         ajax_vars = ajax_vars,
@@ -1208,7 +1219,7 @@ class event_Profile(custom_WACOP):
                                                               )
 
         # Map of Incidents
-        _map = self._map("Incidents", "~.event_id=%s" % event_id)
+        _map = self._map("Incidents", filter="~.event_id=%s" % event_id)
 
         # Output
         output = {"map": _map,
