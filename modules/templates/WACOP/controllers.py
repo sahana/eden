@@ -42,10 +42,14 @@ class index(S3CustomController):
             r = S3Request(c="event", f="incident")#, vars=ajax_vars)
             customise(r, tablename)
 
+        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
         custom._datatable(output = output,
                           tablename = tablename,
+                          search = False,
                           updateable = False,
                           #ajax_vars = ajax_vars,
+                          dt_init = dt_init,
                           )
 
         # View
@@ -89,6 +93,7 @@ class custom_WACOP(S3CRUD):
     def _datatable(self,
                    output,
                    tablename,
+                   search = True,
                    updateable = True,
                    export = False,
                    event_id = None,
@@ -131,11 +136,12 @@ class custom_WACOP(S3CRUD):
         dataTable_id = "custom-list-%s" % tablename
 
         if dt_init:
-            # Move the search boxes into the design
-            dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));''' % \
-                dict(tablename = tablename,
-                     placeholder = T("Search"),
-                     ))
+            if search:
+                # Move the search boxes into the design
+                dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));''' % \
+                    dict(tablename = tablename,
+                         placeholder = T("Search"),
+                         ))
             current.deployment_settings.ui.datatables_initComplete = "".join(dt_init)
 
         # Get the data table
@@ -163,7 +169,7 @@ class custom_WACOP(S3CRUD):
 
         dtargs = {"dt_pagination": "true",
                   "dt_pageLength": displayLength,
-                  #"dt_searching": False,
+                  "dt_searching": search,
                   #"dt_lengthMenu": None,
                   }
 
