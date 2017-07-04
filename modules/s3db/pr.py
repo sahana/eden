@@ -2386,8 +2386,40 @@ class PRGroupModel(S3Model):
                                                      "multiple": False,
                                                      },
 
+                            # Events
+                            event_event = {"link": "event_team",
+                                           "joinby": "group_id",
+                                           "key": "event_id",
+                                           "actuate": "hide",
+                                           "autodelete": False,
+                                           },
+
                             # Incidents
+                            event_incident = {"link": "event_team",
+                                              "joinby": "group_id",
+                                              "key": "incident_id",
+                                              "actuate": "hide",
+                                              "autodelete": False,
+                                              },
                             event_team = "group_id",
+
+                            # Organisations
+                            org_organisation = {"link": "org_organisation_team",
+                                                "joinby": "group_id",
+                                                "key": "organisation_id",
+                                                "actuate": "hide",
+                                                "autodelete": False,
+                                                },
+                            org_organisation_team = "group_id",
+
+                            # Posts
+                            cms_post = {"link": "cms_post_team",
+                                        "joinby": "group_id",
+                                        "key": "post_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
+                            cms_post_team = "group_id",
                             )
 
         # ---------------------------------------------------------------------

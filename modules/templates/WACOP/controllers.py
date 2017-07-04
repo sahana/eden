@@ -1180,6 +1180,127 @@ class incident_Browse(custom_WACOP):
         return output
 
 # =============================================================================
+class resource_Browse(custom_WACOP):
+    """
+        Custom browse page for Resources
+    """
+
+    # -------------------------------------------------------------------------
+    def _html(self, r, **attr):
+        """
+            Handle HTML representation
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        T = current.T
+
+        # Alerts Cards
+        alerts = self._alerts_html()
+
+        # Events Cards
+        events = self._events_html()
+
+        # Map of Resources
+        map_id = "group-gis_location_the_geom-map-filter-map"
+        if current.deployment_settings.get_gis_spatialdb():
+            # Now done through S3MapFilter
+            _map = None
+            # Move Map into the Design
+            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
+        else:
+            _map = self._map("Resources", map_id=map_id)
+
+        # Output
+        output = {"alerts": alerts,
+                  "events": events,
+                  "_map": _map,
+                  }
+
+        # Filter Form
+        filter_widgets = [S3TextFilter(["name",
+                                        "comments",
+                                        ],
+                                       formstyle = text_filter_formstyle,
+                                       label = T("Search"),
+                                       _placeholder = T("Enter search term…"),
+                                       ),
+                          S3LocationFilter("location_id",
+                                           label = "",
+                                           #label = T("City"),
+                                           widget = "multiselect",
+                                           #levels = ("L1", "L2", "L3"),
+                                           levels = ("L3",),
+                                           ),
+                          S3MapFilter("location_id$the_geom",
+                                      label = "",
+                                      ),
+                          S3OptionsFilter("status_id",
+                                          label = "",
+                                          noneSelectedText = "Status",
+                                          no_opts = "",
+                                          ),
+                          ]
+
+        filter_form = S3FilterForm(filter_widgets,
+                                   formstyle = filter_formstyle_profile,
+                                   submit = True,
+                                   ajax = True,
+                                   #url = URL(args=["browse.dl"],
+                                   #          vars={}),
+                                   ajaxurl = URL(c="pr", f="group",
+                                                 args=["filter.options"], vars={}),
+                                   )
+        output["filter_form"] = filter_form.html(r.resource, r.get_vars,
+                                                 # Map & dataTable
+                                                 target="%s custom-list-pr_group" % map_id,
+                                                 alias=None)
+
+        # DataTables
+        datatable = self._datatable
+        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+
+        # Resources dataTable
+        tablename = "pr_group"
+
+        #ajax_vars = {"browse": 1}
+        # Run already by the controller:
+        #customise = current.deployment_settings.customise_resource(tablename)
+        #if customise:
+        #    customise(r, tablename)
+
+        # For debugging Map, replace the dataTable with this:
+        #output["pr_group_datatable"] = ""
+        datatable(output = output,
+                  tablename = tablename,
+                  search = False,
+                  updateable = False,
+                  export = True,
+                  #ajax_vars = ajax_vars,
+                  )
+
+        # Active Resources dataTable
+        tablename = "event_team"
+
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+
+        datatable(output = output,
+                  tablename = tablename,
+                  search = False,
+                  updateable = False,
+                  dt_init = dt_init,
+                  )
+
+        self._view(output, "resource_browse.html")
+
+        return output
+
+# =============================================================================
 class event_Profile(custom_WACOP):
     """
         Custom profile page for Events

@@ -1,0 +1,31 @@
+{{extend "layout.html"}}
+{{=system_wide}}
+<main role='main' class='main'>
+ {{=XML(alerts)}}
+ {{=XML(events)}}
+ <div class='row'>
+  <div class='small-9 columns'>
+   <div class='row'>
+    <div class='medium-4 columns'>
+     {{=filter_form}}
+    </div>
+    <div id='map-here' class='medium-8 columns'>
+    {{if _map:}}
+     {{=XML(_map)}}
+    {{pass}}
+    </div>
+   </div>
+   <div class='row'>
+    <div class="medium-12 column">
+     {{=pr_group_datatable}}
+    </div>
+   </div>
+  </div>
+  <div class='small-3 columns'>
+   <div class='panel'>
+    {{=event_team_datatable}}
+   </div>
+  </div>
+ </div>
+</main>
+{{include "dataTables.html"}}

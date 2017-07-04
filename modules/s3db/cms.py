@@ -31,6 +31,7 @@ __all__ = ("S3ContentModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            "S3ContentOrgGroupModel",
+           "S3ContentTeamModel",
            "S3ContentUserModel",
            "cms_index",
            "cms_documentation",
@@ -1006,6 +1007,34 @@ class S3ContentOrgGroupModel(S3Model):
         self.define_table(tablename,
                           self.cms_post_id(empty=False),
                           self.org_group_id(empty=False),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3ContentTeamModel(S3Model):
+    """
+        Link Posts to Teams
+    """
+
+    names = ("cms_post_team",)
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Teams <> Posts link table
+        #
+        tablename = "cms_post_team"
+        self.define_table(tablename,
+                          self.cms_post_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          self.pr_group_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------

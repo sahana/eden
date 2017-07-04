@@ -1046,7 +1046,7 @@ def config(settings):
         s3db = current.s3db
         ertable = s3db.event_team
 
-        #sertable.group_id.label = T("Resource")
+        #ertable.group_id.label = T("Resource")
 
         # Form
         # @ToDo: Have both Team & Event_Team in 1 form
@@ -1076,13 +1076,23 @@ def config(settings):
                                             search_field = "group_id",
                                             )
 
+        if f == "group":
+            # Resource Browse
+            list_fields = [(T("Group"), "name_click"),
+                           "incident_id",
+                           "status_id",
+                           ]
+        else:
+            # Event Profile or Incident Profile
+            list_fields = [(T("Name"), "name_click"),
+                           "status_id",
+                           ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        extra_fields = ("group_id",
                                        ),
-                       list_fields = [(T("Name"), "name_click"),
-                                      "status_id",
-                                      ],
+                       list_fields = list_fields,
                        orderby = "pr_group.name",
                        )
 
@@ -1091,7 +1101,11 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
+        from gluon import A, URL
+        from s3 import s3_fieldmethod, S3SQLCustomForm
+
         s3db = current.s3db
+        table = s3db.pr_group
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Resource"),
@@ -1105,26 +1119,58 @@ def config(settings):
             msg_record_deleted = T("Resource deleted"),
             msg_list_empty = T("No Resources currently registered"))
 
-        field = s3db.pr_group.status_id
+        field = table.status_id
         field.readable = field.writable = True
 
-        from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm((T("Name"), "name"),
                                     "status_id",
                                     "comments",
                                     )
 
-        list_fields = [(T("Name"), "name"),
+        # Virtual Fields
+        def team_name(row):
+            return A(row["pr_group.name"],
+                     _href = URL(c="pr", f="group",
+                                 args=[row["pr_group.id"], "profile"],
+                                 ),
+                     )
+        table.name_click = s3_fieldmethod("name_click",
+                                          team_name,
+                                          # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                          # @ToDo: Bulk lookups
+                                          represent = lambda v: v,
+                                          search_field = "name",
+                                          )
+
+        list_fields = [(T("Name"), "name_click"),
                        "status_id",
-                       "comments",
+                       #"comments",
+                       (T("Current Incident"), "event_team.incident_id"),
+                       (T("Organizations"), "organisation_team.organisation_id"),
+                       (T("Updates"), "post_team.post_id"),
                        ]
 
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       extra_fields = ("name",
+                                       ),
                        list_fields = list_fields,
                        )
 
     settings.customise_pr_group_resource = customise_pr_group_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_group_controller(**attr):
+
+        # Custom Browse
+        from templates.WACOP.controllers import resource_Browse
+        current.s3db.set_method("pr", "group",
+                                method = "browse",
+                                action = resource_Browse)
+
+        return attr
+
+    settings.customise_pr_group_controller = customise_pr_group_controller
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
