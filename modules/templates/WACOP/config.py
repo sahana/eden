@@ -294,7 +294,14 @@ def config(settings):
             # Custom Form
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
-            crud_fields = [(T("Type"), "series_id"),
+            s3db.cms_post_team.group_id.widget = None
+
+            crud_fields = [S3SQLInlineComponent("post_team",
+                                                fields = [("", "group_id")],
+                                                label = T("Resource"),
+                                                multiple = False,
+                                                ),
+                           (T("Type"), "series_id"),
                            (T("Priority"), "priority"),
                            (T("Status"), "status_id"),
                            (T("Title"), "title"),
@@ -380,6 +387,8 @@ def config(settings):
             s3.dl_no_header = True
 
             s3db.configure(tablename,
+                           # No create form in the datalist popups on Resource Browse page
+                           insertable = False,
                            list_fields = ["series_id",
                                           "priority",
                                           "status_id",
@@ -390,7 +399,8 @@ def config(settings):
                                           "tag.name",
                                           "document.file",
                                           "comment.id",
-                                          #"comment.body", # Extra fields come in unsorted, so can't match up to records
+                                          # Extra fields come in unsorted, so can't match up to records
+                                          #"comment.body",
                                           #"comment.created_by",
                                           #"comment.created_on",
                                           ],
@@ -1056,6 +1066,7 @@ def config(settings):
                                     )
 
         # Virtual Fields
+        # @ToDo: Replace with a link to Popup a dataTable of the List of Updates
         f = r.function
         group_represent = ertable.group_id.represent
         if f == "group":
@@ -1115,6 +1126,7 @@ def config(settings):
         from gluon import A, URL
         from s3 import s3_fieldmethod, S3SQLCustomForm
 
+        db = current.db
         s3db = current.s3db
         table = s3db.pr_group
 
@@ -1139,6 +1151,7 @@ def config(settings):
                                     )
 
         # Virtual Fields
+        # @ToDo: Replace with a link to Popup a dataTable of the List of Updates
         def team_name(row):
             return A(row["pr_group.name"],
                      _href = URL(c="pr", f="group",
@@ -1153,12 +1166,37 @@ def config(settings):
                                           search_field = "name",
                                           )
 
+        utable = s3db.cms_post_team
+        gfield = utable.group_id
+        query = (utable.deleted == False)
+        def updates(row):
+            group_id = row["pr_group.id"]
+            count = db(query & (gfield == group_id)).count()
+            if count:
+                return A(count,
+                         _href = URL(c="cms", f="post",
+                                     args = ["datalist.popup"],
+                                     vars = {"post_team.group_id": group_id},
+                                     ),
+                         _class="s3_modal",
+                         )
+            else:
+                return 0
+        table.updates = s3_fieldmethod("updates",
+                                       updates,
+                                       # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                       # @ToDo: Bulk lookups
+                                       represent = lambda v: v,
+                                       #search_field = "name",
+                                       )
+
         list_fields = [(T("Name"), "name_click"),
                        "status_id",
-                       #"comments",
                        (T("Current Incident"), "event_team.incident_id"),
                        (T("Organizations"), "organisation_team.organisation_id"),
-                       (T("Updates"), "post_team.post_id"),
+                       # Replaced with VF
+                       #(T("Updates"), "post_team.post_id"),
+                       (T("Updates"), "updates"),
                        ]
 
         s3db.configure(tablename,
