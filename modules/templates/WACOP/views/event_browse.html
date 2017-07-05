@@ -4,7 +4,7 @@
  {{=XML(alerts)}}
  {{=XML(events)}}
  <div class='row well'>
-  <div class='medium-4 columns'>
+  <div id='ff' class='medium-4 columns'>
    {{=filter_form}}
   </div>
   <div id='map-here' class='medium-8 columns'>
@@ -22,3 +22,5 @@
 </main>
 {{include "dataTables.html"}}
 {{include "dataLists.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}
+

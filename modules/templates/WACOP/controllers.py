@@ -944,6 +944,7 @@ class event_Browse(custom_WACOP):
             current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
         else:
             _map = self._map("Events", map_id=map_id)
+        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
 
         # Output
         output = {"alerts": alerts,
@@ -1069,6 +1070,7 @@ class incident_Browse(custom_WACOP):
             current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
         else:
             _map = self._map("Incidents", map_id=map_id)
+        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
 
         # Output
         output = {"alerts": alerts,
@@ -1211,6 +1213,7 @@ class resource_Browse(custom_WACOP):
             current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
         else:
             _map = self._map("Resources", map_id=map_id)
+        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
 
         # Output
         output = {"alerts": alerts,

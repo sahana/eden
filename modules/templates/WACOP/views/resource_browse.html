@@ -6,7 +6,7 @@
  <div class='row'>
   <div class='small-9 columns'>
    <div class='row'>
-    <div class='medium-4 columns'>
+    <div id='ff' class='medium-4 columns'>
      {{=filter_form}}
     </div>
     <div id='map-here' class='medium-8 columns'>
@@ -29,3 +29,4 @@
  </div>
 </main>
 {{include "dataTables.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}
