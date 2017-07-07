@@ -1320,6 +1320,53 @@ def config(settings):
     settings.customise_project_task_resource = customise_project_task_resource
 
 # =============================================================================
+def event_team_rheader(incident_id, group_id, updates=False):
+    """
+        RHeader for event_team
+    """
+
+    from gluon import A, DIV, SPAN, TABLE, TR, TH, URL
+
+    T = current.T
+
+    table = current.s3db.event_team
+    query = (table.incident_id == incident_id) & \
+            (table.group_id == group_id)
+    record = current.db(query).select(table.status_id,
+                                      limitby=(0, 1),
+                                      ).first()
+
+    rheader_tabs = DIV(SPAN(A(T("Resource Details"),
+                              _href=URL(c="event", f="incident",
+                                        args = [incident_id, "group", group_id],
+                                        ),
+                              _id="rheader_tab_group",
+                              ),
+                            _class="tab_here" if not updates else "tab_other",
+                            ),
+                       SPAN(A(T("Updates"),
+                              _href=URL(c="pr", f="group",
+                                        args = [group_id, "post", "datalist"],
+                                        vars = {"incident_id": incident_id,
+                                                }
+                                        ),
+                              _id="rheader_tab_post",
+                              ),
+                            _class="tab_here" if updates else "tab_last",
+                            ),
+                       _class="tabs",
+                       )
+    rheader = DIV(TABLE(TR(TH("%s: " % table.group_id.label),
+                           table.group_id.represent(group_id),
+                           ),
+                        TR(TH("%s: " % table.status_id.label),
+                           table.status_id.represent(record.status_id),
+                           ),
+                        ),
+                  rheader_tabs)
+    return rheader
+    
+# =============================================================================
 def wacop_rheader(r, tabs=[]):
     """ WACOP custom resource headers """
 
@@ -1343,50 +1390,31 @@ def wacop_rheader(r, tabs=[]):
 
         if tablename == "pr_group":
 
-            if not tabs:
-                tabs = [(T("Resource Details"), None),
-                        (T("Updates"), "post"),
-                        ]
+            incident_id = r.get_vars.get("incident_id")
+            if incident_id and r.component_name == "post":
+                # Look like event_team details
+                group_id = r.id
+                rheader = event_team_rheader(incident_id, group_id, updates=True)
+                return rheader
+            else:
+                # Normal
+                if not tabs:
+                    tabs = [(T("Resource Details"), None),
+                            (T("Updates"), "post"),
+                            ]
 
-            rheader_fields = [["name"],
-                              ["status_id"],
-                              #["organisation_team.organisation_id"],
-                              ["comments"],
-                              ]
+                rheader_fields = [["name"],
+                                  ["status_id"],
+                                  #["organisation_team.organisation_id"],
+                                  ["comments"],
+                                  ]
 
         elif tablename == "event_incident":
             if r.component_name == "group":
-                table = current.s3db.event_team
+                incident_id = r.id
                 group_id = r.component_id
-                record = current.db(table.group_id == group_id).select(table.status_id,
-                                                                       limitby=(0, 1),
-                                                                       ).first()
-                from gluon import A, DIV, SPAN, TABLE, TR, TH, URL
-
-                rheader_tabs = DIV(SPAN(A(T("Resource Details"),
-                                          _href=r.url(),
-                                          _id="rheader_tab_group",
-                                          ),
-                                        _class="tab_here",
-                                        ),
-                                   SPAN(A(T("Updates"),
-                                          _href=URL(c="pr", f="group", args=[group_id, "post"]),
-                                          _id="rheader_tab_post",
-                                          ),
-                                        _class="tab_last",
-                                        ),
-                                   _class="tabs",
-                                   )
-                rheader = DIV(TABLE(TR(TH("%s: " % table.group_id.label),
-                                       table.group_id.represent(group_id),
-                                       ),
-                                    TR(TH("%s: " % table.status_id.label),
-                                       table.status_id.represent(record.status_id),
-                                       ),
-                                    ),
-                              rheader_tabs)
+                rheader = event_team_rheader(incident_id, group_id, updates=False)
                 return rheader
-
             else:
                 # Unused
                 return None
