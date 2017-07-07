@@ -274,13 +274,15 @@ class custom_WACOP(S3CRUD):
                     # event_team
                     label = T("Add")
             output["create_%s_popup" % tablename] = \
-                A(TAG[""](ICON("plus"),
-                          label,
-                          ),
-                  _href = url,
-                  _class = "button tiny postfix s3_modal",
-                  _title = label,
-                  )
+                DIV(A(TAG[""](ICON("plus"),
+                              label,
+                              ),
+                      _href = url,
+                      _class = "button wide radius s3_modal",
+                      _title = label,
+                      ),
+                    _class = "panel"
+                    )
         else:
             output["create_%s_popup" % tablename] = ""
 
@@ -450,9 +452,9 @@ class custom_WACOP(S3CRUD):
                                                           _class="meta-location",
                                                           ),
                                                      ),
-                                                   P(row["cms_post.body"],
-                                                     _class="desc",
-                                                     ),
+                                                   DIV(row["cms_post.body"],
+                                                       _class="desc",
+                                                       ),
                                                    _class="body",
                                                    ),
                                                TAG["footer"](P(A(T("Read More"),
@@ -659,9 +661,9 @@ class custom_WACOP(S3CRUD):
                                                    P(meta,
                                                      _class="meta",
                                                      ),
-                                                   P(row["event_event.comments"],
-                                                     _class="desc",
-                                                     ),
+                                                   DIV(row["event_event.comments"],
+                                                       _class="desc",
+                                                       ),
                                                    _class="body",
                                                    ),
                                                TAG["footer"](P(A(T("Read More"),
