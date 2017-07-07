@@ -138,7 +138,7 @@ class custom_WACOP(S3CRUD):
         if dt_init:
             if search:
                 # Move the search boxes into the design
-                dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));''' % \
+                dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','%(placeholder)s').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));$('#dt-search-%(tablename)s .dataTables_filter').removeClass('dataTables_filter');''' % \
                     dict(tablename = tablename,
                          placeholder = T("Search"),
                          ))

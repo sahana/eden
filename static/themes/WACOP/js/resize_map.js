@@ -5,7 +5,7 @@ S3.wacop_resizeMap = function(map_id) {
     // Set Map Height to the minimum of Viewport height or Filter Form height
     var resizeMap = function(map_id) {
         var height = Math.min($('#ff').height(), $(window).height());
-            height = Math.max(height,400);
+        height = Math.max(height, 400);
         S3.gis.maps[map_id].s3.mapWin.setSize(undefined, height);
     }
 
