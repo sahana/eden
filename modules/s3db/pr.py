@@ -2395,12 +2395,25 @@ class PRGroupModel(S3Model):
                                            },
 
                             # Incidents
-                            event_incident = {"link": "event_team",
-                                              "joinby": "group_id",
-                                              "key": "incident_id",
-                                              "actuate": "hide",
-                                              "autodelete": False,
-                                              },
+                            event_incident = (# All Incidents
+                                              {"name": "incident",
+                                               "link": "event_team",
+                                               "joinby": "group_id",
+                                               "key": "incident_id",
+                                               "actuate": "hide",
+                                               "autodelete": False,
+                                               },
+                                              # Active Incidents
+                                              {"name": "active_incident",
+                                               "link": "event_team",
+                                               "joinby": "group_id",
+                                               "key": "incident_id",
+                                               "actuate": "hide",
+                                               "autodelete": False,
+                                               "filterby": {"closed": False,
+                                                            },
+                                               },
+                                              ),
                             event_team = "group_id",
 
                             # Organisations

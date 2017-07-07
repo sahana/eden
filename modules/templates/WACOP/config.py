@@ -15,7 +15,6 @@ def config(settings):
     # =========================================================================
     # System Settings
     #
-    settings.base.system_name = T("Sahana: Washington Common Operating Picture (WA-COP)")
     settings.base.system_name_short = T("Sahana")
 
     # Prepop default
@@ -131,6 +130,12 @@ def config(settings):
     settings.gis.location_represent_address_only = "icon"
     # Resources which can be directly added to the main map
     settings.gis.poi_create_resources = None
+
+    # -------------------------------------------------------------------------
+    # UI Settings
+    #
+    settings.ui.datatables_pagingType = "bootstrap"
+    settings.ui.update_label = "Edit"
 
     # -------------------------------------------------------------------------
     # Modules
@@ -709,7 +714,7 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        attr["rheader"] = wacop_event_rheader
+        attr["rheader"] = wacop_rheader
 
         return attr
 
@@ -949,11 +954,20 @@ def config(settings):
 
         # Custom rheader tabs
         #attr = dict(attr)
-        #attr["rheader"] = wacop_event_rheader
-        attr["rheader"] = None
+        attr["rheader"] = wacop_rheader
 
         # No sidebar menu
         current.menu.options = None
+
+        request_args = current.request.args
+        if len(request_args) > 1 and request_args[1] == "group":
+            from gluon import A, URL
+            attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
+                                                         _class="action-btn",
+                                                         _href=URL(c="pr", f="group", args="browse"),
+                                                         _id="list-btn",
+                                                         )
+                                           }
 
         return attr
 
@@ -1067,7 +1081,18 @@ def config(settings):
 
         # Virtual Fields
         # @ToDo: Replace with a link to Popup a dataTable of the List of Updates
-        f = r.function
+        incident_id = r.get_vars.get("~.incident_id")
+        if incident_id:
+            f = "incident"
+            record_id = incident_id
+        else:
+            event_id = r.get_vars.get("~.event_id")
+            if event_id:
+                f = "event"
+                record_id = event_id
+            else:
+                f = r.function
+                record_id = r.id
         group_represent = ertable.group_id.represent
         if f == "group":
             # Resource Browse
@@ -1075,20 +1100,21 @@ def config(settings):
                 group_id = row["event_team.group_id"]
                 return A(group_represent(group_id),
                          _href = URL(c="event", f="incident",
-                                     args=[row["event_team.incident_id"], "group", group_id, "profile"],
+                                     args=[row["event_team.incident_id"], "group", group_id, "read"],
                                      extension = "", # ensure no .aadata
                                      ),
+                         _class = "s3_modal",
                          )
         else:
             # Event Profile or Incident Profile
-            record_id = r.id
             def team_name(row):
                 group_id = row["event_team.group_id"]
                 return A(group_represent(group_id),
                          _href = URL(c="event", f=f,
-                                     args=[record_id, "group", group_id, "profile"],
+                                     args=[record_id, "group", group_id, "read"],
                                      extension = "", # ensure no .aadata
                                      ),
+                         _class = "s3_modal",
                          )
         ertable.name_click = s3_fieldmethod("name_click",
                                             team_name,
@@ -1124,7 +1150,7 @@ def config(settings):
     def customise_pr_group_resource(r, tablename):
 
         from gluon import A, URL
-        from s3 import s3_fieldmethod, S3SQLCustomForm
+        from s3 import s3_fieldmethod, S3SQLCustomForm, S3SQLInlineComponent
 
         db = current.db
         s3db = current.s3db
@@ -1147,16 +1173,21 @@ def config(settings):
 
         crud_form = S3SQLCustomForm((T("Name"), "name"),
                                     "status_id",
+                                    S3SQLInlineComponent("organisation_team",
+                                                         fields = [("", "organisation_id")],
+                                                         label = T("Organization"),
+                                                         multiple = False,
+                                                         ),
                                     "comments",
                                     )
 
         # Virtual Fields
-        # @ToDo: Replace with a link to Popup a dataTable of the List of Updates
         def team_name(row):
             return A(row["pr_group.name"],
                      _href = URL(c="pr", f="group",
-                                 args=[row["pr_group.id"], "profile"],
+                                 args=[row["pr_group.id"], "read"],
                                  ),
+                     _class = "s3_modal",
                      )
         table.name_click = s3_fieldmethod("name_click",
                                           team_name,
@@ -1192,8 +1223,8 @@ def config(settings):
 
         list_fields = [(T("Name"), "name_click"),
                        "status_id",
-                       (T("Current Incident"), "event_team.incident_id"),
-                       (T("Organizations"), "organisation_team.organisation_id"),
+                       (T("Current Incident"), "active_incident__link.incident_id"),
+                       (T("Organization"), "organisation_team.organisation_id"),
                        # Replaced with VF
                        #(T("Updates"), "post_team.post_id"),
                        (T("Updates"), "updates"),
@@ -1216,6 +1247,18 @@ def config(settings):
         current.s3db.set_method("pr", "group",
                                 method = "browse",
                                 action = resource_Browse)
+
+        # For the read view
+        attr["rheader"] = wacop_rheader
+        # No sidebar menu
+        current.menu.options = None
+        from gluon import A, URL
+        attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
+                                                     _class="action-btn",
+                                                     _href=URL(args="browse"),
+                                                     _id="list-btn",
+                                                     )
+                                       }
 
         return attr
 
@@ -1277,8 +1320,8 @@ def config(settings):
     settings.customise_project_task_resource = customise_project_task_resource
 
 # =============================================================================
-def wacop_event_rheader(r, tabs=[]):
-    """ EVENT custom resource headers """
+def wacop_rheader(r, tabs=[]):
+    """ WACOP custom resource headers """
 
     if r.representation != "html":
         # Resource headers only used in interactive views
@@ -1298,7 +1341,70 @@ def wacop_event_rheader(r, tabs=[]):
     if record:
         T = current.T
 
-        if tablename == "event_event":
+        if tablename == "pr_group":
+
+            if not tabs:
+                tabs = [(T("Resource Details"), None),
+                        (T("Updates"), "post"),
+                        ]
+
+            rheader_fields = [["name"],
+                              ["status_id"],
+                              #["organisation_team.organisation_id"],
+                              ["comments"],
+                              ]
+
+        elif tablename == "event_incident":
+            if r.component_name == "group":
+                table = current.s3db.event_team
+                group_id = r.component_id
+                record = current.db(table.group_id == group_id).select(table.status_id,
+                                                                       limitby=(0, 1),
+                                                                       ).first()
+                from gluon import A, DIV, SPAN, TABLE, TR, TH, URL
+
+                rheader_tabs = DIV(SPAN(A(T("Resource Details"),
+                                          _href=r.url(),
+                                          _id="rheader_tab_group",
+                                          ),
+                                        _class="tab_here",
+                                        ),
+                                   SPAN(A(T("Updates"),
+                                          _href=URL(c="pr", f="group", args=[group_id, "post"]),
+                                          _id="rheader_tab_post",
+                                          ),
+                                        _class="tab_last",
+                                        ),
+                                   _class="tabs",
+                                   )
+                rheader = DIV(TABLE(TR(TH("%s: " % table.group_id.label),
+                                       table.group_id.represent(group_id),
+                                       ),
+                                    TR(TH("%s: " % table.status_id.label),
+                                       table.status_id.represent(record.status_id),
+                                       ),
+                                    ),
+                              rheader_tabs)
+                return rheader
+
+            else:
+                # Unused
+                return None
+
+                if not tabs:
+                    tabs = [(T("Incident Details"), None),
+                            (T("Units"), "group"),
+                            (T("Tasks"), "task"),
+                            (T("Updates"), "post"),
+                            ]
+
+                rheader_fields = [["name"],
+                                  ["date"],
+                                  ["comments"],
+                                  ]
+
+        elif tablename == "event_event":
+            # No normal workflows use this
 
             if not tabs:
                 tabs = [(T("Event Details"), None),
@@ -1310,20 +1416,6 @@ def wacop_event_rheader(r, tabs=[]):
 
             rheader_fields = [["name"],
                               ["start_date"],
-                              ["comments"],
-                              ]
-
-        elif tablename == "event_incident":
-
-            if not tabs:
-                tabs = [(T("Incident Details"), None),
-                        (T("Units"), "group"),
-                        (T("Tasks"), "task"),
-                        (T("Updates"), "post"),
-                        ]
-
-            rheader_fields = [["name"],
-                              ["date"],
                               ["comments"],
                               ]
 

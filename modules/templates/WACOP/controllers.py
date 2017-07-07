@@ -42,7 +42,7 @@ class index(S3CustomController):
             r = S3Request(c="event", f="incident")#, vars=ajax_vars)
             customise(r, tablename)
 
-        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
         custom._datatable(output = output,
                           tablename = tablename,
@@ -1241,6 +1241,11 @@ class resource_Browse(custom_WACOP):
                           S3MapFilter("location_id$the_geom",
                                       label = "",
                                       ),
+                          S3OptionsFilter("organisation_team.organisation_id",
+                                          label = "",
+                                          noneSelectedText = "Organization",
+                                          no_opts = "",
+                                          ),
                           S3OptionsFilter("status_id",
                                           label = "",
                                           noneSelectedText = "Status",
@@ -1264,7 +1269,7 @@ class resource_Browse(custom_WACOP):
 
         # DataTables
         datatable = self._datatable
-        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
 
         # Resources dataTable
         tablename = "pr_group"
@@ -1455,7 +1460,7 @@ class event_Profile(custom_WACOP):
 
         # DataTables
         datatable = self._datatable
-        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
 
         # Incidents dataTable
@@ -1771,7 +1776,7 @@ class incident_Profile(custom_WACOP):
 
         # DataTables
         datatable = self._datatable
-        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
 
         # Resources dataTable
@@ -1861,7 +1866,7 @@ class person_Dashboard(custom_WACOP):
 
         # DataTables
         datatable = self._datatable
-        current.deployment_settings.ui.datatables_pagingType = "bootstrap"
+        #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
         dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
 
         # Tasks dataTable
