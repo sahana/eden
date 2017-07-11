@@ -1248,18 +1248,21 @@ def config(settings):
 
                 # "Beneficiaries" tab of PSS-type group activities
 
-                # Allow creation of new case activities
-                insertable = True
+                record = r.record
+                if record:
 
-                # Inherit + hide service_id
-                field = catable.service_id
-                field.default = r.record.service_id
-                field.readable = field.writable = False
+                    # Allow creation of new case activities
+                    insertable = True
 
-                # Inherit + hide project_id
-                field = catable.project_id
-                field.default = r.record.project_id
-                field.readable = field.writable = False
+                    # Inherit + hide service_id
+                    field = catable.service_id
+                    field.default = record.service_id
+                    field.readable = field.writable = False
+
+                    # Inherit + hide project_id
+                    field = catable.project_id
+                    field.default = record.project_id
+                    field.readable = field.writable = False
 
                 # No follow-ups for PSS
                 catable.followup.default = False
