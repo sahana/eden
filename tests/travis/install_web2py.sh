@@ -3,7 +3,7 @@
 # Install a web2py Developer environment inside Travis
 
 echo "installing required packages"
-echo "=========================="
+echo "============================"
 
 apt-get update -qq
 apt-get -q install python-dev
@@ -13,12 +13,19 @@ apt-get -q install python-psycopg2
 
 
 echo "downloading and installing web2py"
-echo "==========================================="
+echo "================================="
+
+# Use web2py-2.14.6-stable
+WEB2PY_COMMIT=cda35fd
 
 cd ../..
-rm web2py_src.zip*
-wget -nv http://web2py.com/examples/static/web2py_src.zip
-unzip -q web2py_src.zip
+git clone --recursive git://github.com/web2py/web2py.git
+cd web2py
+if [ ! -z "$WEB2PY_COMMIT" ]; then
+   git checkout $WEB2PY_COMMIT
+   git submodule update
+fi
+mv handlers/wsgihandler.py .
+cd ..
+
 chown -R ${USER} web2py
-rm web2py_src.zip*
-mv web2py/handlers/wsgihandler.py web2py/wsgihandler.py
