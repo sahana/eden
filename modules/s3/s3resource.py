@@ -3482,9 +3482,9 @@ class S3Resource(object):
 
         # Collect extra fields from virtual tables
         if extra_fields:
-            append = slist.append
             extra = self.get_config("extra_fields")
             if extra:
+                append = slist.append
                 for selector in extra:
                     s = prefix(selector)
                     if s not in display_fields:
