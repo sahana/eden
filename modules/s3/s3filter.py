@@ -1491,28 +1491,53 @@ class S3LocationFilter(S3FilterWidget):
             joined = False
 
         elif selector:
+
             # Lookup options from resource
             rfield = S3ResourceField(resource, selector)
             if not rfield.field or rfield.ftype != ftype:
                 # Must be a real reference to gis_location
                 return default
+
             fields = [selector] + ["%s$%s" % (selector, l) for l in levels]
             if translate:
                 fields.append("%s$path" % selector)
+
+            # Always joined (gis_location foreign key in resource)
             joined = True
+
+            # Reduce multi-table joins by excluding empty FKs
+            resource.add_filter(FS(selector) != None)
+
             # Filter out old Locations
             # @ToDo: Allow override
-            resource.add_filter(FS("%s.end_date" % selector) == None)
+            resource.add_filter(FS("%s$end_date" % selector) == None)
 
         else:
             # Neither fixed options nor resource to look them up
             return default
 
+        # Prevent unnecessary extraction of extra fields
+        extra_fields = resource.get_config("extra_fields")
+        resource.clear_config("extra_fields")
+
+        # Suppress instantiation of LazySets in rows (we don't need them)
+        db = current.db
+        rname = db._referee_name
+        db._referee_name = None
+
         # Find the options
-        rows = resource.select(fields=fields,
-                               limit=None,
-                               virtual=False,
-                               as_rows=True)
+        rows = resource.select(fields = fields,
+                               limit = None,
+                               virtual = False,
+                               as_rows = True,
+                               )
+
+        # Restore extra fields
+        resource.configure(extra_fields=extra_fields)
+
+        # Restore referee name
+        db._referee_name = rname
+
         rows2 = []
         if not rows:
             if values:
@@ -1768,7 +1793,7 @@ class S3MapFilter(S3FilterWidget):
                       _class=_class,
                       _id = _id,
                       )
-                      
+
         # Populate with the value, if given
         if values not in (None, []):
             if type(values) is list:
