@@ -712,7 +712,10 @@ class custom_WACOP(S3CRUD):
                              )
             else:
                 edit_btn = ""
-            system_wide = DIV(DIV(DIV(P(record and record.body or "",
+            content = record and record.body or ""
+            if content:
+                content = XML(content)
+            system_wide = DIV(DIV(DIV(P(content,
                                         ),
                                       _class="callout-left",
                                       ),
@@ -1264,6 +1267,8 @@ class resource_Browse(custom_WACOP):
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map & dataTable
+                                                 # We also want to filter the Active Resources datatable, however the selectors don't match for that
+                                                 #custom-list-event_team
                                                  target="%s custom-list-pr_group" % map_id,
                                                  alias=None)
 
@@ -1929,7 +1934,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
 
     record_id = record["cms_post.id"]
-    item_class = "thumbnail"
+    #item_class = "thumbnail"
 
     T = current.T
     db = current.db

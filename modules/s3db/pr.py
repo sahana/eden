@@ -2429,7 +2429,7 @@ class PRGroupModel(S3Model):
                             cms_post = {"link": "cms_post_team",
                                         "joinby": "group_id",
                                         "key": "post_id",
-                                        "actuate": "hide",
+                                        "actuate": "replace",
                                         "autodelete": False,
                                         },
                             cms_post_team = "group_id",
