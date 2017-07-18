@@ -869,6 +869,15 @@ def config(settings):
             if r.method == "assign":
                 current.menu.main = ""
 
+            elif r.component_name == "group":
+                if r.component_id:
+                    f = s3db.event_team.group_id
+                    f.writable = False
+                    f.comment = None
+                s3db.configure("event_team",
+                               update_next = r.url(),
+                               )
+
             elif r.component_name == "task":
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
@@ -924,6 +933,10 @@ def config(settings):
                                                  "modules", "templates",
                                                  "WACOP", "views",
                                                  "assign.html")
+
+                elif r.component_name == "group":
+                    output["title"] = T("Resource Details")
+
                 #elif r.component_name == "post":
                 #    # Add Tags - no, do client-side
                 #    output["form"].append()
@@ -954,15 +967,27 @@ def config(settings):
         # No sidebar menu
         current.menu.options = None
 
-        request_args = current.request.args
-        if len(request_args) > 1 and request_args[1] == "group":
-            from gluon import A, URL
-            attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
-                                                         _class="action-btn",
-                                                         _href=URL(c="pr", f="group", args="browse"),
-                                                         _id="list-btn",
-                                                         )
+        refresh = current.request.get_vars.get("refresh")
+        if refresh:
+            # Popup from Resource Browse
+            current.menu.main = ""
+
+            attr["rheader"] = wacop_rheader
+
+            #from gluon import A, URL
+            #attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
+            #                                             _class="action-btn",
+            #                                             _href=URL(c="pr", f="group", args="browse"),
+            #                                             _id="list-btn",
+            #                                             )
+            #                               }
+            attr["custom_crud_buttons"] = {"list_btn": "",
                                            }
+
+            response = current.response
+            if response.confirmation:
+                script = '''self.parent.$('#%s').dataTable().fnReloadAjax()''' % refresh
+                response.s3.jquery_ready.append(script)
 
         return attr
 
@@ -1095,7 +1120,9 @@ def config(settings):
                 group_id = row["event_team.group_id"]
                 return A(group_represent(group_id),
                          _href = URL(c="event", f="incident",
-                                     args=[row["event_team.incident_id"], "group", group_id, "read"],
+                                     args = [row["event_team.incident_id"], "group", group_id, "read"],
+                                     vars = {"refresh": "custom-list-event_team",
+                                             },
                                      extension = "", # ensure no .aadata
                                      ),
                          _class = "s3_modal",
@@ -1106,7 +1133,9 @@ def config(settings):
                 group_id = row["event_team.group_id"]
                 return A(group_represent(group_id),
                          _href = URL(c="event", f=f,
-                                     args=[record_id, "group", group_id, "read"],
+                                     args = [record_id, "group", group_id, "read"],
+                                     vars = {"refresh": "custom-list-event_team",
+                                             },
                                      extension = "", # ensure no .aadata
                                      ),
                          _class = "s3_modal",
@@ -1181,7 +1210,8 @@ def config(settings):
             return A(row["pr_group.name"],
                      _href = URL(c="pr", f="group",
                                  args = [row["pr_group.id"], "read"],
-                                 vars = {"refresh": "custom-list-pr_group"},
+                                 vars = {"refresh": "custom-list-pr_group",
+                                         },
                                  extension = "", # ensure no .aadata
                                  ),
                      _class = "s3_modal",
@@ -1245,17 +1275,30 @@ def config(settings):
                                 method = "browse",
                                 action = resource_Browse)
 
-        # For the read view
-        attr["rheader"] = wacop_rheader
         # No sidebar menu
         current.menu.options = None
-        from gluon import A, URL
-        attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
-                                                     _class="action-btn",
-                                                     _href=URL(args="browse"),
-                                                     _id="list-btn",
-                                                     )
-                                       }
+
+        refresh = current.request.get_vars.get("refresh")
+        if refresh:
+            # Popup from Browse
+            current.menu.main = ""
+
+            attr["rheader"] = wacop_rheader
+
+            #from gluon import A, URL
+            #attr["custom_crud_buttons"] = {"list_btn": A(T("Browse Resources"),
+            #                                             _class="action-btn",
+            #                                             _href=URL(args="browse"),
+            #                                             _id="list-btn",
+            #                                             )
+            #                               }
+            attr["custom_crud_buttons"] = {"list_btn": "",
+                                           }
+
+            response = current.response
+            if response.confirmation:
+                script = '''self.parent.$('#%s').dataTable().fnReloadAjax()''' % refresh
+                response.s3.jquery_ready.append(script)
 
         return attr
 
@@ -1336,6 +1379,8 @@ def event_team_rheader(incident_id, group_id, updates=False):
     rheader_tabs = DIV(SPAN(A(T("Resource Details"),
                               _href=URL(c="event", f="incident",
                                         args = [incident_id, "group", group_id],
+                                        vars = {"refresh": "custom-list-event_team",
+                                                },
                                         ),
                               _id="rheader_tab_group",
                               ),
@@ -1345,6 +1390,7 @@ def event_team_rheader(incident_id, group_id, updates=False):
                               _href=URL(c="pr", f="group",
                                         args = [group_id, "post", "datalist"],
                                         vars = {"incident_id": incident_id,
+                                                "refresh": "custom-list-event_team",
                                                 }
                                         ),
                               _id="rheader_tab_post",
@@ -1355,6 +1401,9 @@ def event_team_rheader(incident_id, group_id, updates=False):
                        )
     rheader = DIV(TABLE(TR(TH("%s: " % table.group_id.label),
                            table.group_id.represent(group_id),
+                           ),
+                        TR(TH("%s: " % table.incident_id.label),
+                           table.incident_id.represent(incident_id),
                            ),
                         TR(TH("%s: " % table.status_id.label),
                            table.status_id.represent(record.status_id),
@@ -1395,6 +1444,8 @@ def pr_group_rheader(r):
     rheader_tabs = DIV(SPAN(A(T("Resource Details"),
                               _href=URL(c="pr", f="group",
                                         args = [group_id],
+                                        vars = {"refresh": "custom-list-pr_group",
+                                                },
                                         ),
                               _id="rheader_tab_group",
                               ),
@@ -1403,6 +1454,8 @@ def pr_group_rheader(r):
                        SPAN(A(T("Updates"),
                               _href=URL(c="pr", f="group",
                                         args = [group_id, "post", "datalist"],
+                                        vars = {"refresh": "custom-list-pr_group",
+                                                },
                                         ),
                               _id="rheader_tab_post",
                               ),
@@ -1418,7 +1471,7 @@ def pr_group_rheader(r):
                            ),
                         org,
                         TR(TH("%s: " % table.comments.label),
-                           record.comments,
+                           record.comments or current.messages["NONE"],
                            ),
                         ),
                   rheader_tabs)
