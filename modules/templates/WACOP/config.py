@@ -1180,7 +1180,8 @@ def config(settings):
         def team_name(row):
             return A(row["pr_group.name"],
                      _href = URL(c="pr", f="group",
-                                 args=[row["pr_group.id"], "read"],
+                                 args = [row["pr_group.id"], "read"],
+                                 vars = {"refresh": "custom-list-pr_group"},
                                  extension = "", # ensure no .aadata
                                  ),
                      _class = "s3_modal",

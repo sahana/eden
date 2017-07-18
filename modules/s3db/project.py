@@ -7040,10 +7040,10 @@ class project_SummaryReport(S3Method):
             if indicator_ids:
                 if len(indicator_ids) == 1:
                     limitby = (0, 1)
-                    query = (table.indicator_id == indicator_ids[0]) & \
+                    query = (table.id == indicator_ids[0]) & \
                             (table.deleted == False)
                 else:
-                    query = (table.indicator_id.belongs(indicator_ids)) & \
+                    query = (table.id.belongs(indicator_ids)) & \
                             (table.deleted == False)
             elif goal_ids:
                 if len(goal_ids) == 1:
