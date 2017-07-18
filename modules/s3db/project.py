@@ -8078,7 +8078,7 @@ class project_SummaryReport(S3Method):
 
         start_date = project["start_date"]
         if start_date:
-            start_date = H3("%s: %s" % (T("From Date"), date_represent(s3_decode_iso_datetime(start_date))))
+            start_date = H3("%s: %s" % (T("From Date"), date_represent(start_date)))
 
         body = DIV(H1(T("Narrative Report")),
                    start_date,
