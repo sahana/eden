@@ -314,6 +314,11 @@ def config(settings):
                         if isinstance(requires, IS_EMPTY_OR):
                             field.requires = requires.other
 
+                        # Expose human_resource_id
+                        field = ctable.human_resource_id
+                        field.readable = field.writable = True
+                        field.widget = None
+
                         # Make marital status mandatory, remove "other"
                         dtable = s3db.pr_person_details
                         field = dtable.marital_status
@@ -341,6 +346,7 @@ def config(settings):
 
                             # Case Details ----------------------------
                             "dvr_case.organisation_id",
+                            "dvr_case.human_resource_id",
                             (T("Case Status"), "dvr_case.status_id"),
                             #S3SQLInlineLink("case_flag",
                             #                label = T("Flags"),
