@@ -1374,9 +1374,10 @@ class DVRReferralModel(S3Model):
 class DVRResponseModel(S3Model):
     """ Model representing responses to case needs """
 
-    names = ("dvr_response_type",
+    names = ("dvr_response",
+             "dvr_response_status",
+             "dvr_response_type",
              "dvr_response_type_case_activity",
-             "dvr_response",
              )
 
     def model(self):
@@ -1387,8 +1388,10 @@ class DVRResponseModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        define_table = self.define_table
         crud_strings = s3.crud_strings
+
+        define_table = self.define_table
+        configure = self.configure
 
         hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
 
@@ -1425,12 +1428,12 @@ class DVRResponseModel(S3Model):
             widget = None
 
         # Table configuration
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("name",),
-                                                 secondary = ("parent",),
-                                                 ),
-                       hierarchy = hierarchy,
-                       )
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("parent",),
+                                            ),
+                  hierarchy = hierarchy,
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1461,20 +1464,59 @@ class DVRResponseModel(S3Model):
                                            )
 
         # ---------------------------------------------------------------------
-        # Response Types <=> Case Activities link table
-        # @todo: drop/replace by dvr_response?
+        # Response status
         #
-        tablename = "dvr_response_type_case_activity"
+        tablename = "dvr_response_status"
         define_table(tablename,
-                     self.dvr_case_activity_id(
-                         empty = False,
-                         ondelete = "CASCADE",
-                         ),
-                     response_type_id(
-                         empty = False,
-                         ondelete = "RESTRICT",
-                         ),
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("position", "integer",
+                           label = T("Workflow Position"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("is_default", "boolean",
+                           default = False,
+                           label = T("Default Status"),
+                           ),
+                     Field("is_closed", "boolean",
+                           default = False,
+                           label = T("Closes Response"),
+                           ),
+                     s3_comments(),
                      *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Response Status"),
+            title_display = T("Response Status Details"),
+            title_list = T("Response Statuses"),
+            title_update = T("Edit Response Status"),
+            label_list_button = T("List Response Statuses"),
+            label_delete_button = T("Delete Response Status"),
+            msg_record_created = T("Response Status created"),
+            msg_record_modified = T("Response Status updated"),
+            msg_record_deleted = T("Response Status deleted"),
+            msg_list_empty = T("No Response Statuses currently registered"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        response_status_id = S3ReusableField("status_id",
+                                             "reference %s" % tablename,
+                                             label = T("Status"),
+                                             represent = represent,
+                                             requires = IS_EMPTY_OR(
+                                                          IS_ONE_OF(db, "%s.id" % tablename,
+                                                                    represent,
+                                                                    )),
+                                             sortby = "position",
+                                             )
 
         # ---------------------------------------------------------------------
         # Responses
@@ -1489,11 +1531,31 @@ class DVRResponseModel(S3Model):
                          empty = False,
                          ondelete = "RESTRICT",
                          ),
-                     s3_date(),
-                     s3_date("date_due"),
+                     s3_date("date_due",
+                             label = T("Date Due"),
+                             ),
+                     s3_date(), # Date actioned
                      self.hrm_human_resource_id(),
-                     # @todo: status (lookup table for variable workflows)
+                     response_status_id(),
                      s3_comments(),
+                     *s3_meta_fields())
+
+        # @todo: CRUD strings
+
+        # ---------------------------------------------------------------------
+        # Response Types <=> Case Activities link table
+        # @todo: drop/replace by dvr_response? (currently still used in STL)
+        #
+        tablename = "dvr_response_type_case_activity"
+        define_table(tablename,
+                     self.dvr_case_activity_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     response_type_id(
+                         empty = False,
+                         ondelete = "RESTRICT",
+                         ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

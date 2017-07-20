@@ -828,6 +828,15 @@ def config(settings):
             field.label = T("Completed on")
             field.readable = True
 
+            # Responses
+            rtable = s3db.dvr_response
+
+            # Assigned-to field: simple drop-down, no Add-link
+            field = rtable.human_resource_id
+            field.label = T("Assigned to")
+            field.widget = None
+            field.comment = None
+
             crud_form = S3SQLCustomForm(
                             "person_id",
 
@@ -848,10 +857,11 @@ def config(settings):
                                                  label = T("Measures"),
                                                  fields = [
                                                      "response_type_id",
+                                                     (T("Details"), "comments"),
                                                      "date_due",
                                                      "human_resource_id",
-                                                     "date",
-                                                     "comments",
+                                                     "status_id",
+                                                     #"date",
                                                      ],
                                                  ),
 

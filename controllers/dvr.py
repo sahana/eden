@@ -632,6 +632,12 @@ def response_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def response_status():
+    """ Response Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def termination_type():
     """ Termination Types: RESTful CRUD Controller """
 
