@@ -266,6 +266,10 @@ def person():
                                    filter_widgets = filter_widgets,
                                    )
 
+            elif r.component.tablename == "dvr_case_activity":
+
+                s3db.dvr_response_default_status()
+
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
 
@@ -539,6 +543,8 @@ def case_activity():
     def prep(r):
 
         resource = r.resource
+
+        s3db.dvr_response_default_status()
 
         query = (FS("person_id$dvr_case.archived") == False)
         resource.add_filter(query)

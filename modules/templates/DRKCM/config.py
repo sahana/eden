@@ -183,8 +183,8 @@ def config(settings):
     # Issue a "not checked-in" warning in case event registration
     settings.dvr.event_registration_checkin_warning = True
 
-    # Response types hierarchical ("Interventions")
-    #settings.dvr.response_types_hierarchical = True
+    # Response types hierarchical
+    settings.dvr.response_types_hierarchical = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():

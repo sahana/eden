@@ -49,6 +49,7 @@ __all__ = ("DVRCaseModel",
            "dvr_AssignMethod",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
+           "dvr_response_default_status",
            "dvr_case_household_size",
            "dvr_due_followups",
            "dvr_get_flag_instructions",
@@ -1512,12 +1513,12 @@ class DVRResponseModel(S3Model):
                                              "reference %s" % tablename,
                                              label = T("Status"),
                                              represent = represent,
-                                             requires = IS_EMPTY_OR(
-                                                          IS_ONE_OF(db, "%s.id" % tablename,
-                                                                    represent,
-                                                                    orderby = "workflow_position",
-                                                                    sort = False,
-                                                                    )),
+                                             requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  orderby = "workflow_position",
+                                                                  sort = False,
+                                                                  zero = None,
+                                                                  ),
                                              sortby = "workflow_position",
                                              )
 
@@ -4797,6 +4798,34 @@ def dvr_case_status_filter_opts(closed=None):
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
+
+# =============================================================================
+def dvr_response_default_status():
+    """
+        Helper to get/set the default status for response records
+
+        @return: the default status_id
+    """
+
+    s3db = current.s3db
+
+    rtable = s3db.dvr_response
+    field = rtable.status_id
+
+    default = field.default
+    if not default:
+
+        # Look up the default status
+        stable = s3db.dvr_response_status
+        query = (stable.is_default == True) & \
+                (stable.deleted != True)
+        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+
+        if row:
+            # Set as field default in case table
+            default = field.default = row.id
+
+    return default
 
 # =============================================================================
 def dvr_case_household_size(group_id):
