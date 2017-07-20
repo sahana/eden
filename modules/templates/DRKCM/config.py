@@ -162,7 +162,7 @@ def config(settings):
     # Uncomment this to enable features to manage case flags
     #settings.dvr.case_flags = True
     # Case activities use single Needs
-    #settings.dvr.case_activity_needs_multiple = True
+    settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = True
     # Uncomment this to have appointments with personal presence update last_seen_on
@@ -794,19 +794,29 @@ def config(settings):
             crud_form = S3SQLCustomForm(
                             "person_id",
 
-                            (T("Need established on"), "start_date"),
-
-                            "need_id",
+                            "start_date",
                             "need_details",
 
-                            S3SQLInlineLink("response_type",
-                                            label = T("Interventions"),
-                                            field = "response_type_id",
-                                            #widget = "hierarchy",
-                                            multiple = True,
-                                            #leafonly = True,
-                                            ),
-                            (T("Intervention Details"), "activity_details"),
+                            S3SQLInlineComponent("case_activity_need",
+                                                 label = T("Needs"),
+                                                 fields = [
+                                                     "need_id",
+                                                     "date",
+                                                     "human_resource_id",
+                                                     "comments",
+                                                     ],
+                                                 ),
+
+                            S3SQLInlineComponent("response",
+                                                 label = T("Measures"),
+                                                 fields = [
+                                                     "response_type_id",
+                                                     "date_due",
+                                                     "human_resource_id",
+                                                     "date",
+                                                     "comments",
+                                                     ],
+                                                 ),
 
                             #"priority",
                             "emergency",
@@ -814,6 +824,7 @@ def config(settings):
                             "followup",
                             "followup_date",
 
+                            # @todo: status dropdown (auto-set completed-flag/date)
                             "completed",
                             "end_date",
 

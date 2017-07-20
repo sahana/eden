@@ -1376,6 +1376,7 @@ class DVRResponseModel(S3Model):
 
     names = ("dvr_response_type",
              "dvr_response_type_case_activity",
+             "dvr_response",
              )
 
     def model(self):
@@ -1461,6 +1462,7 @@ class DVRResponseModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Response Types <=> Case Activities link table
+        # @todo: drop/replace by dvr_response?
         #
         tablename = "dvr_response_type_case_activity"
         define_table(tablename,
@@ -1472,6 +1474,26 @@ class DVRResponseModel(S3Model):
                          empty = False,
                          ondelete = "RESTRICT",
                          ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Responses
+        #
+        tablename = "dvr_response"
+        define_table(tablename,
+                     self.dvr_case_activity_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     response_type_id(
+                         empty = False,
+                         ondelete = "RESTRICT",
+                         ),
+                     s3_date(),
+                     s3_date("date_due"),
+                     self.hrm_human_resource_id(),
+                     # @todo: status (lookup table for variable workflows)
+                     s3_comments(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -2096,11 +2118,13 @@ class DVRCaseActivityModel(S3Model):
                                 "multiple": False,
                                 },
                             dvr_case_effort = "case_activity_id",
+                            dvr_case_activity_need = "case_activity_id",
                             dvr_need = {
                                 "link": "dvr_case_activity_need",
                                 "joinby": "case_activity_id",
                                 "key": "need_id",
                                 },
+                            dvr_response = "case_activity_id",
                             dvr_response_type = {
                                 "link": "dvr_response_type_case_activity",
                                 "joinby": "case_activity_id",
@@ -2239,10 +2263,10 @@ class DVRCaseActivityModel(S3Model):
                                            )
 
         # ---------------------------------------------------------------------
-        # Case Activity <> Needs
+        # Case Activity <=> Needs
         #
-        # - use this when there is a need to libnk Case Activities to
-        #   multiple Needs (e.g. STL)
+        # - use this when there is a need to link Case Activities to
+        #   multiple Needs (e.g. STL, DRKCM)
         #
 
         tablename = "dvr_case_activity_need"
@@ -2251,8 +2275,15 @@ class DVRCaseActivityModel(S3Model):
                                       # default
                                       #ondelete = "CASCADE",
                                       ),
+                     s3_date(label = T("Established on"),
+                             default = "now",
+                             ),
+                     self.hrm_human_resource_id(
+                         label=T("Established by"),
+                         ),
                      self.dvr_need_id(empty = False,
                                       ),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
