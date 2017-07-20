@@ -1489,6 +1489,7 @@ class DVRResponseModel(S3Model):
         # Table Configuration
         configure(tablename,
                   deduplicate = S3Duplicate(),
+                  onaccept = self.response_status_onaccept,
                   )
 
         # CRUD Strings
@@ -1514,8 +1515,10 @@ class DVRResponseModel(S3Model):
                                              requires = IS_EMPTY_OR(
                                                           IS_ONE_OF(db, "%s.id" % tablename,
                                                                     represent,
+                                                                    orderby = "workflow_position",
+                                                                    sort = False,
                                                                     )),
-                                             sortby = "position",
+                                             sortby = "workflow_position",
                                              )
 
         # ---------------------------------------------------------------------
@@ -1562,6 +1565,31 @@ class DVRResponseModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def response_status_onaccept(form):
+        """
+            Onaccept routine for response statuses:
+            - only one status can be the default
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # If this status is the default, then set is_default-flag
+        # for all other statuses to False:
+        if "is_default" in form_vars and form_vars.is_default:
+            table = current.s3db.dvr_response_status
+            db = current.db
+            db(table.id != record_id).update(is_default = False)
 
     # -------------------------------------------------------------------------
     @staticmethod
