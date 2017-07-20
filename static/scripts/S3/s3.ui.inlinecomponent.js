@@ -502,9 +502,6 @@
                     } else if (input.hasClass('s3-hierarchy-input')) {
                         if (value) {
                             value = JSON.parse(value);
-                            if (!input.data('multiple')) {
-                                value = value[0];
-                            }
                         } else {
                             continue;
                         }
@@ -1049,6 +1046,18 @@
                                 f.groupedopts('refresh');
                             } else if (f.hasClass('location-selector') && f.locationselector('instance')) {
                                 f.locationselector('refresh');
+                            } else if (f.hasClass('s3-hierarchy-input')) {
+                                var parent = f.parent();
+                                if (parent.hierarchicalopts('instance')) {
+                                    parent.hierarchicalopts('reset');
+                                    if (default_value) {
+                                        default_value = JSON.parse(default_value);
+                                        if (default_value.constructor !== Array) {
+                                            default_value = [default_value];
+                                        }
+                                        parent.hierarchicalopts('set', default_value);
+                                    }
+                                }
                             }
                         }
 
