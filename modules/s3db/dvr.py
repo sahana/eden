@@ -1471,7 +1471,7 @@ class DVRResponseModel(S3Model):
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("position", "integer",
+                     Field("workflow_position", "integer",
                            label = T("Workflow Position"),
                            requires = IS_INT_IN_RANGE(0, None),
                            ),

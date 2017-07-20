@@ -28,7 +28,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <resource name="dvr_response_status">
-            <data field="position">
+            <data field="workflow_position">
                 <xsl:value-of select="col[@field='Position']"/>
             </data>
             <data field="name">
