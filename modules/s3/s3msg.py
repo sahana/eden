@@ -126,6 +126,7 @@ class S3Msg(object):
                              "SKYPE":       T("Skype"),
                              "SMS":         MOBILE,
                              "TWITTER":     T("Twitter"),
+                             "WHATSAPP":    T("WhatsApp"),
                              #"XMPP":       "XMPP",
                              #"WEB":        T("Website"),
                              "WORK_PHONE":  T("Work phone"),

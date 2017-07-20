@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, SPAN
+from gluon import current, IS_IN_SET, SPAN
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
@@ -91,6 +91,9 @@ def config(settings):
     #    "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "EUR"
+
+    # Do not require international phone number format
+    settings.msg.require_international_phone_numbers = False
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -195,6 +198,35 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
+    def customise_pr_contact_resource(r, tablename):
+
+        table = current.s3db.pr_contact
+
+        #field = table.contact_description
+        #field.readable = field.writable = False
+
+        field = table.value
+        field.label = T("Number or Address")
+
+        field = table.contact_method
+        all_opts = current.msg.CONTACT_OPTS
+        subset = ("SMS",
+                  "EMAIL",
+                  "HOME_PHONE",
+                  "WORK_PHONE",
+                  "FACEBOOK",
+                  "TWITTER",
+                  "SKYPE",
+                  "WHATSAPP",
+                  "OTHER",
+                  )
+        contact_methods = [(k, all_opts[k]) for k in subset if k in all_opts]
+        field.requires = IS_IN_SET(contact_methods, zero=None)
+        field.default = "SMS"
+
+    settings.customise_pr_contact_resource = customise_pr_contact_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -277,6 +309,11 @@ def config(settings):
 
                 resource = r.resource
                 configure = resource.configure
+
+                s3db.set_method("pr", "person",
+                                method = "contacts",
+                                action = s3db.pr_Contacts,
+                                )
 
                 table = r.table
                 ctable = s3db.dvr_case
@@ -1458,6 +1495,7 @@ def drk_dvr_rheader(r, tabs=[]):
 
                 if not tabs:
                     tabs = [(T("Basic Details"), None),
+                            (T("Contact Info"), "contacts"),
                             (T("Family Members"), "group_membership/"),
                             (T("Activities"), "case_activity"),
                             (T("Appointments"), "case_appointment"),
