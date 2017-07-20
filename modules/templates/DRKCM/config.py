@@ -840,6 +840,8 @@ def config(settings):
             crud_form = S3SQLCustomForm(
                             "person_id",
 
+                            "sector_id",
+
                             "start_date",
                             "need_details",
 
@@ -955,12 +957,13 @@ def config(settings):
         # Custom list fields for case activity component tab
         if r.tablename != "dvr_case_activity":
             list_fields = ["start_date",
-                           "need_id",
+                           "sector_id",
+                           #"need_id",
                            #"need_details",
                            "emergency",
-                           (T("Interventions"),
-                            "response_type__link.response_type_id",
-                            ),
+                           #(T("Interventions"),
+                            #"response_type__link.response_type_id",
+                            #),
                            #"activity_details",
                            "followup",
                            "followup_date",

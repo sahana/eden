@@ -2116,6 +2116,7 @@ class DVRCaseActivityModel(S3Model):
                                 readable = service_type,
                                 writable = service_type,
                                 ),
+                     self.org_sector_id(),
                      # Alternatives to document the actions performed
                      # under this activity:
                      activity_id(readable=False,
