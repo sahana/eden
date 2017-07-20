@@ -668,6 +668,12 @@ def vulnerability_type():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def case_activity_update_type():
+    """ Case Activity Update Types: RESTful CRUD Controller"""
+
+    return s3_rest_controller()
+
 # =============================================================================
 # Allowance
 #

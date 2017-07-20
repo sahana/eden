@@ -1525,6 +1525,8 @@ class DVRCaseActivityModel(S3Model):
              "dvr_case_activity",
              "dvr_case_activity_id",
              "dvr_case_activity_need",
+             "dvr_case_activity_update",
+             "dvr_case_activity_update_type",
              "dvr_case_service_contact",
              "dvr_provider_type",
              "dvr_termination_type",
@@ -2130,6 +2132,7 @@ class DVRCaseActivityModel(S3Model):
                                 "joinby": "case_activity_id",
                                 "key": "response_type_id",
                                 },
+                            dvr_case_activity_update = "case_activity_id",
                             dvr_vulnerability_type = {
                                 "link": "dvr_vulnerability_type_case_activity",
                                 "joinby": "case_activity_id",
@@ -2320,6 +2323,62 @@ class DVRCaseActivityModel(S3Model):
             msg_record_deleted = T("Service Contact deleted"),
             msg_list_empty = T("No Service Contacts currently registered"),
             )
+
+        # ---------------------------------------------------------------------
+        # Case Activity Update Types
+        #
+        tablename = "dvr_case_activity_update_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Update Type"),
+            title_display = T("Update Type Details"),
+            title_list = T("Update Types"),
+            title_update = T("Edit Update Type"),
+            label_list_button = T("List Update Types"),
+            label_delete_button = T("Delete Update Type"),
+            msg_record_created = T("Update Type added"),
+            msg_record_modified = T("Update Type updated"),
+            msg_record_deleted = T("Update Type deleted"),
+            msg_list_empty = T("No Update Types currently defined"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        update_type_id = S3ReusableField("update_type_id",
+                                         "reference %s" % tablename,
+                                         label = T("Update Type"),
+                                         represent = represent,
+                                         requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                         sortby = "name",
+                                         )
+
+        # ---------------------------------------------------------------------
+        # Case Activity Updates
+        #
+        tablename = "dvr_case_activity_update"
+        define_table(tablename,
+                     case_activity_id(),
+                     s3_date(),
+                     update_type_id(),
+                     self.hrm_human_resource_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

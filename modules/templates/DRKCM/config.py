@@ -824,6 +824,16 @@ def config(settings):
                             "followup",
                             "followup_date",
 
+                            S3SQLInlineComponent("case_activity_update",
+                                                 label = T("Updates"),
+                                                 fields = [
+                                                     "date",
+                                                     "update_type_id",
+                                                     "human_resource_id",
+                                                     "comments",
+                                                     ],
+                                                 ),
+
                             # @todo: status dropdown (auto-set completed-flag/date)
                             "completed",
                             "end_date",
