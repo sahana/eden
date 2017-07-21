@@ -1532,6 +1532,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                         "dvr_case.household_size",
                                         "dvr_case.organisation_id",
                                         "dvr_case.site_id",
+                                        "dvr_case_flag_case.flag_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -1546,6 +1547,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     household_size = lambda row: case["dvr_case.household_size"]
                     organisation = lambda row: case["dvr_case.organisation_id"]
                     facility = lambda row: case["dvr_case.site_id"]
+                    flags = lambda row: case["dvr_case_flag_case.flag_id"]
                 else:
                     # Target record exists, but doesn't match filters
                     return None
@@ -1559,6 +1561,8 @@ def drk_dvr_rheader(r, tabs=[]):
                                    (T("Facility"), facility),
                                    ],
                                   ["date_of_birth",
+                                   ],
+                                  [(T("Flags"), flags),
                                    ],
                                   ]
 

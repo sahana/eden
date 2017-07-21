@@ -655,8 +655,15 @@ def response_status():
 def responses():
     """ Responses: RESTful CRUD controller """
 
-    # @todo: is this needed? (should not create responses from here)
-    #s3db.dvr_response_default_status()
+    def prep(r):
+
+        # Must not create or delete responses from here
+        r.resource.configure(insertable = False,
+                             deletable = False,
+                             )
+
+        return True
+    s3.prep = prep
 
     return s3_rest_controller(module, "response")
 
