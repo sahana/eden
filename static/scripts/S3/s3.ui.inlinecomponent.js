@@ -503,7 +503,7 @@
                         if (value) {
                             value = JSON.parse(value);
                         } else {
-                            continue;
+                            value = null;
                         }
                     } else {
                         cssclass = input.attr('class');
@@ -850,6 +850,19 @@
                             input.groupedopts('refresh');
                         } else if (input.hasClass('location-selector') && input.locationselector('instance')) {
                             input.locationselector('refresh');
+                        } else if (input.hasClass('s3-hierarchy-input')) {
+                            var parent = input.parent();
+                            if (parent.hierarchicalopts('instance')) {
+                                if (value) {
+                                    value = JSON.parse(value);
+                                    if (value.constructor !== Array) {
+                                        value = [value];
+                                    }
+                                    parent.hierarchicalopts('set', value);
+                                } else {
+                                    parent.hierarchicalopts('reset');
+                                }
+                            }
                         } else if (S3.rtl && input.hasClass('phone-widget')) {
                             if (value && (value.charAt(0) != '\u200E')) {
                                 input.val('\u200E' + value);
@@ -1049,13 +1062,14 @@
                             } else if (f.hasClass('s3-hierarchy-input')) {
                                 var parent = f.parent();
                                 if (parent.hierarchicalopts('instance')) {
-                                    parent.hierarchicalopts('reset');
                                     if (default_value) {
                                         default_value = JSON.parse(default_value);
                                         if (default_value.constructor !== Array) {
                                             default_value = [default_value];
                                         }
                                         parent.hierarchicalopts('set', default_value);
+                                    } else {
+                                        parent.hierarchicalopts('reset');
                                     }
                                 }
                             }
