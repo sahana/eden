@@ -268,6 +268,9 @@ def person():
 
             elif r.component.tablename == "dvr_case_activity":
 
+                # Set default statuses for components
+                # @todo: skip this where not exposed (deployment settings?)?
+                s3db.dvr_case_activity_default_status()
                 s3db.dvr_response_default_status()
 
             elif r.component_name == "allowance" and \
@@ -544,6 +547,9 @@ def case_activity():
 
         resource = r.resource
 
+        # Set default statuses
+        # @todo: skip this where not exposed (deployment settings?)?
+        s3db.dvr_case_activity_default_status()
         s3db.dvr_response_default_status()
 
         query = (FS("person_id$dvr_case.archived") == False)
@@ -623,7 +629,9 @@ def referral_type():
 
     return s3_rest_controller()
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Responses
+#
 def response_type():
     """ Response Types: RESTful CRUD Controller """
 
@@ -642,6 +650,15 @@ def response_status():
     """ Response Statuses: RESTful CRUD Controller """
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def responses():
+    """ Responses: RESTful CRUD controller """
+
+    # @todo: is this needed? (should not create responses from here)
+    #s3db.dvr_response_default_status()
+
+    return s3_rest_controller(module, "response")
 
 # -----------------------------------------------------------------------------
 def termination_type():
@@ -682,7 +699,13 @@ def vulnerability_type():
 
 # -----------------------------------------------------------------------------
 def case_activity_update_type():
-    """ Case Activity Update Types: RESTful CRUD Controller"""
+    """ Case Activity Update Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_activity_status():
+    """ Case Activity Statuses: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

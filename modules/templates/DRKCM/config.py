@@ -163,7 +163,7 @@ def config(settings):
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
     settings.dvr.household_size = "auto"
     # Uncomment this to enable features to manage case flags
-    #settings.dvr.case_flags = True
+    settings.dvr.case_flags = True
     # Case activities use single Needs
     settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to expose flags to mark appointment types as mandatory
@@ -337,6 +337,7 @@ def config(settings):
                                        S3TextFilter, \
                                        S3DateFilter, \
                                        S3OptionsFilter, \
+                                       s3_get_filter_opts, \
                                        IS_PERSON_GENDER
 
                         # Default organisation
@@ -385,12 +386,12 @@ def config(settings):
                             "dvr_case.organisation_id",
                             "dvr_case.human_resource_id",
                             (T("Case Status"), "dvr_case.status_id"),
-                            #S3SQLInlineLink("case_flag",
-                            #                label = T("Flags"),
-                            #                field = "flag_id",
-                            #                help_field = "comments",
-                            #                cols = 4,
-                            #                ),
+                            S3SQLInlineLink("case_flag",
+                                           label = T("Flags"),
+                                           field = "flag_id",
+                                           help_field = "comments",
+                                           cols = 4,
+                                           ),
 
                             # Person Details --------------------------
                             (T("ID"), "pe_label"),
@@ -483,6 +484,14 @@ def config(settings):
                             S3DateFilter("date_of_birth",
                                          hidden = True,
                                          ),
+                            S3OptionsFilter("case_flag_case.flag_id",
+                                            label = T("Flags"),
+                                            options = s3_get_filter_opts("dvr_case_flag",
+                                                                         translate = True,
+                                                                         ),
+                                            cols = 3,
+                                            hidden = True,
+                                            ),
                             S3OptionsFilter("dvr_case.status_id",
                                             cols = 3,
                                             #default = None,
