@@ -675,6 +675,31 @@
         },
 
         /**
+         * Helper to set correct position of menu
+         *
+         * @param {jQuery} wrapper - the menu wrapper
+         * @param {jQuery} button - the menu button
+         */
+        _setMenuPosition: function(wrapper, button) {
+
+            var pos = button.offset(),
+                css = {
+                    position: 'absolute',
+                    top: pos.top + button.outerHeight(),
+                    minWidth: button.outerWidth() - 8
+                };
+
+            if ($('body').css('direction') === 'rtl') {
+                // Right-align with button
+                css.right = ($(window).width() - (pos.left + button.outerWidth()));
+            } else {
+                // Left-align with button
+                css.left = pos.left;
+            }
+            wrapper.css(css);
+        },
+
+        /**
          * Open the tree (triggers 'open'-event)
          */
         openMenu: function() {
@@ -683,17 +708,20 @@
                 this.closeMenu();
             }
 
-            var button = $(this.button);
-            var pos = button.offset();
+            // Set correct menu position (+update on resize)
+            var button = $(this.button),
+                wrapper = $(this.wrapper),
+                self = this;
 
-            $(this.wrapper).css({
-                position: 'absolute',
-                top: pos.top + button.outerHeight(),
-                left: pos.left,
-                minWidth: button.outerWidth() - 8
-            }).show();
+            this._setMenuPosition(wrapper, button);
+            $(window).on('resize' + this._namespace + '-mpos', function() {
+                self._setMenuPosition(wrapper, button);
+            });
+
+            wrapper.show();
 
             $(this.tree).jstree('set_focus');
+
             this._isOpen = true;
             button.addClass('ui-state-active');
 
@@ -704,6 +732,9 @@
          * Close the tree (triggers 'close'-event)
          */
         closeMenu: function() {
+
+            // Disable resize event handler
+            $(window).off(this._namespace + '-mpos');
 
             $(this.tree).jstree('unset_focus')
                         .unbind('click.hierarchicalopts')
