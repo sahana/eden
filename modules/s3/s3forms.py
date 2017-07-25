@@ -3676,8 +3676,11 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         options["multiple"] = multiple
 
         # Field dummy
+        kfield = link.table[component.rkey]
         dummy_field = Storage(name = field.name,
-                              type = link.table[component.rkey].type)
+                              type = kfield.type,
+                              represent = kfield.represent,
+                              )
 
         # Widget type
         widget = options.get("widget")
