@@ -170,7 +170,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create", t="pr_person", p="create"),
                         M("All Cases", vars = {}),
                         ),
-                    M("Measures", f="responses", t="dvr_response"),
+                    M("Measures", f="response_action"),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
                           vars = {"~.emergency": "True"},

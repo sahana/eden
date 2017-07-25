@@ -2839,6 +2839,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("label", None)
 
+    def get_dvr_case_flags(self):
+        """
+            Enable features to manage case flags
+        """
+        return self.dvr.get("case_flags", False)
+
     def get_dvr_track_transfer_sites(self):
         """
             Enable features to track transfer origin/destination sites
@@ -2861,25 +2867,11 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_transferability", False)
 
-    def get_dvr_case_activity_needs_multiple(self):
+    def get_dvr_multiple_case_groups(self):
         """
-            Whether Case Activities link to Multiple Needs
-            - e.g. DRK: False
-            - e.g. STL: True
+            Whether a case can belong to multiple case groups at the same time
         """
-        return self.dvr.get("case_activity_needs_multiple", False)
-
-    def get_dvr_case_events_close_appointments(self):
-        """
-            Whether case events automatically close appointments
-        """
-        return self.dvr.get("case_events_close_appointments", False)
-
-    def get_dvr_case_flags(self):
-        """
-            Enable features to manage case flags
-        """
-        return self.dvr.get("case_flags", False)
+        return self.dvr.get("multiple_case_groups", False)
 
     def get_dvr_household_size(self):
         """
@@ -2896,6 +2888,12 @@ class S3Config(Storage):
             Expose flags to mark appointment types as mandatory
         """
         return self.dvr.get("mandatory_appointments", False)
+
+    def get_dvr_case_events_close_appointments(self):
+        """
+            Whether case events automatically close appointments
+        """
+        return self.dvr.get("case_events_close_appointments", False)
 
     def get_dvr_appointments_update_last_seen_on(self):
         """
@@ -2918,12 +2916,6 @@ class S3Config(Storage):
             the "last seen on" date when set to "paid"
         """
         return self.dvr.get("payments_update_last_seen_on", False)
-
-    def get_dvr_multiple_case_groups(self):
-        """
-            Whether a case can belong to multiple case groups at the same time
-        """
-        return self.dvr.get("multiple_case_groups", False)
 
     def get_dvr_id_code_pattern(self):
         """
@@ -2970,9 +2962,30 @@ class S3Config(Storage):
 
     def get_dvr_activity_use_service_type(self):
         """
-            Use service type in case activities
+            Use service type in group/case activities
         """
         return self.dvr.get("activity_use_service_type", False)
+
+    def get_dvr_activity_sectors(self):
+        """
+            Use sectors in group/case activities
+        """
+        return self.dvr.get("activity_sectors", False)
+
+    def get_dvr_case_activity_use_status(self):
+        """
+            Use configurable statuses in case activities
+            instead of simple completed-flag
+        """
+        return self.dvr.get("case_activity_use_status", False)
+
+    def get_dvr_case_activity_needs_multiple(self):
+        """
+            Whether Case Activities link to Multiple Needs
+            - e.g. DRK: False
+            - e.g. STL: True
+        """
+        return self.dvr.get("case_activity_needs_multiple", False)
 
     def get_dvr_needs_use_service_type(self):
         """
@@ -2991,6 +3004,12 @@ class S3Config(Storage):
             Vulnerability types are hierarchical
         """
         return self.dvr.get("vulnerability_types_hierarchical", False)
+
+    def get_dvr_manage_response_actions(self):
+        """
+            Manage individual response actions in case activities
+        """
+        return self.dvr.get("manage_response_actions", False)
 
     def get_dvr_response_types_hierarchical(self):
         """

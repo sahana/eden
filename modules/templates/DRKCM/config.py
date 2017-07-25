@@ -160,31 +160,42 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
-    # Uncomment this to enable household size in cases, set to "auto" for automatic counting
-    settings.dvr.household_size = "auto"
-    # Uncomment this to enable features to manage case flags
+    # Enable features to manage case flags
     settings.dvr.case_flags = True
-    # Case activities use single Needs
-    settings.dvr.case_activity_needs_multiple = True
-    # Uncomment this to expose flags to mark appointment types as mandatory
-    settings.dvr.mandatory_appointments = True
-    # Uncomment this to have appointments with personal presence update last_seen_on
-    settings.dvr.appointments_update_last_seen_on = True
-    # Uncomment this to have allowance payments update last_seen_on
-    settings.dvr.payments_update_last_seen_on = True
-    # Uncomment this to automatically update the case status when appointments are completed
-    settings.dvr.appointments_update_case_status = True
-    # Uncomment this to automatically close appointments when registering certain case events
-    settings.dvr.case_events_close_appointments = True
-    # Uncomment this to allow cases to belong to multiple case groups ("households")
+    # Allow cases to belong to multiple case groups ("households")
     #settings.dvr.multiple_case_groups = True
-    # Configure a regular expression pattern for ID Codes (QR Codes)
-    settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
-    # Issue a "not checked-in" warning in case event registration
-    settings.dvr.event_registration_checkin_warning = True
 
+    # Enable household size in cases, "auto" for automatic counting
+    settings.dvr.household_size = "auto"
+
+    # Group/Case activities per sector
+    settings.dvr.activity_sectors = True
+    # Case activities use status field
+    settings.dvr.case_activity_use_status = True
+    # Case activities cover multiple needs
+    settings.dvr.case_activity_needs_multiple = True
+
+    # Manage individual response actions in case activities
+    settings.dvr.manage_response_actions = True
     # Response types hierarchical
     settings.dvr.response_types_hierarchical = True
+
+    # Expose flags to mark appointment types as mandatory
+    settings.dvr.mandatory_appointments = True
+    # Appointments with personal presence update last_seen_on
+    settings.dvr.appointments_update_last_seen_on = True
+    # Automatically update the case status when appointments are completed
+    settings.dvr.appointments_update_case_status = True
+    # Automatically close appointments when registering certain case events
+    settings.dvr.case_events_close_appointments = True
+
+    # Allowance payments update last_seen_on
+    #settings.dvr.payments_update_last_seen_on = True
+
+    # Configure a regular expression pattern for ID Codes (QR Codes)
+    #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
+    # Issue a "not checked-in" warning in case event registration
+    #settings.dvr.event_registration_checkin_warning = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -838,7 +849,7 @@ def config(settings):
             field.readable = True
 
             # Responses
-            rtable = s3db.dvr_response
+            rtable = s3db.dvr_response_action
 
             # Assigned-to field: simple drop-down, no Add-link
             field = rtable.human_resource_id
@@ -864,7 +875,7 @@ def config(settings):
                                                      ],
                                                  ),
 
-                            S3SQLInlineComponent("response",
+                            S3SQLInlineComponent("response_action",
                                                  label = T("Measures"),
                                                  fields = [
                                                      "response_type_id",
@@ -892,8 +903,7 @@ def config(settings):
                                                      ],
                                                  ),
 
-                            # @todo: status dropdown (auto-set completed-flag/date)
-                            "completed",
+                            "status_id",
                             "end_date",
 
                             "outcome",

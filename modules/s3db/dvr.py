@@ -1376,7 +1376,7 @@ class DVRReferralModel(S3Model):
 class DVRResponseModel(S3Model):
     """ Model representing responses to case needs """
 
-    names = ("dvr_response",
+    names = ("dvr_response_action",
              "dvr_response_status",
              "dvr_response_type",
              "dvr_response_type_case_activity",
@@ -1526,7 +1526,7 @@ class DVRResponseModel(S3Model):
         # ---------------------------------------------------------------------
         # Responses
         #
-        tablename = "dvr_response"
+        tablename = "dvr_response_action"
         define_table(tablename,
                      self.dvr_case_activity_id(
                          empty = False,
@@ -1549,7 +1549,7 @@ class DVRResponseModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Response Types <=> Case Activities link table
-        # @todo: drop/replace by dvr_response? (currently still used in STL)
+        # @todo: drop/replace by dvr_response_action? (currently still used in STL)
         #
         tablename = "dvr_response_type_case_activity"
         define_table(tablename,
@@ -1637,6 +1637,8 @@ class DVRCaseActivityModel(S3Model):
         define_table = self.define_table
 
         service_type = settings.get_dvr_activity_use_service_type()
+        activity_sectors = settings.get_dvr_activity_sectors()
+
         service_id = self.org_service_id
         project_id = self.project_project_id
 
@@ -2107,6 +2109,7 @@ class DVRCaseActivityModel(S3Model):
         #
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
         multiple_needs = settings.get_dvr_case_activity_needs_multiple()
+        use_status = settings.get_dvr_case_activity_use_status()
 
         # Priority options
         priority_opts = [#(0, T("Urgent")),
@@ -2205,7 +2208,9 @@ class DVRCaseActivityModel(S3Model):
                                 readable = service_type,
                                 writable = service_type,
                                 ),
-                     self.org_sector_id(),
+                     self.org_sector_id(readable = activity_sectors,
+                                        writable = activity_sectors,
+                                        ),
                      # Alternatives to document the actions performed
                      # under this activity:
                      activity_id(readable=False,
@@ -2257,8 +2262,12 @@ class DVRCaseActivityModel(S3Model):
                            default = False,
                            label = T("Completed"),
                            represent = s3_yes_no_represent,
+                           readable = not use_status,
+                           writable = not use_status,
                            ),
-                     activity_status_id(),
+                     activity_status_id(readable = use_status,
+                                        writable = use_status,
+                                        ),
                      termination_type_id(ondelete = "RESTRICT",
                                          readable = False,
                                          writable = False,
@@ -2279,7 +2288,7 @@ class DVRCaseActivityModel(S3Model):
                                 "joinby": "case_activity_id",
                                 "key": "need_id",
                                 },
-                            dvr_response = "case_activity_id",
+                            dvr_response_action = "case_activity_id",
                             dvr_response_type = {
                                 "link": "dvr_response_type_case_activity",
                                 "joinby": "case_activity_id",
@@ -4923,7 +4932,7 @@ def dvr_response_default_status():
 
     s3db = current.s3db
 
-    rtable = s3db.dvr_response
+    rtable = s3db.dvr_response_action
     field = rtable.status_id
 
     default = field.default

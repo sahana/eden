@@ -269,9 +269,11 @@ def person():
             elif r.component.tablename == "dvr_case_activity":
 
                 # Set default statuses for components
-                # @todo: skip this where not exposed (deployment settings?)?
-                s3db.dvr_case_activity_default_status()
-                s3db.dvr_response_default_status()
+                if settings.get_dvr_case_activity_use_status():
+                    s3db.dvr_case_activity_default_status()
+
+                if settings.get_dvr_manage_response_actions():
+                    s3db.dvr_response_default_status()
 
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
@@ -548,10 +550,13 @@ def case_activity():
         resource = r.resource
 
         # Set default statuses
-        # @todo: skip this where not exposed (deployment settings?)?
-        s3db.dvr_case_activity_default_status()
-        s3db.dvr_response_default_status()
+        if settings.get_dvr_case_activity_use_status():
+            s3db.dvr_case_activity_default_status()
 
+        if settings.get_dvr_manage_response_actions():
+            s3db.dvr_response_default_status()
+
+        # Filter out case activities of archived cases
         query = (FS("person_id$dvr_case.archived") == False)
         resource.add_filter(query)
 
@@ -652,12 +657,12 @@ def response_status():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def responses():
-    """ Responses: RESTful CRUD controller """
+def response_action():
+    """ Response Actions: RESTful CRUD controller """
 
     def prep(r):
 
-        # Must not create or delete responses from here
+        # Must not create or delete response actions from here
         r.resource.configure(insertable = False,
                              deletable = False,
                              )
@@ -665,7 +670,7 @@ def responses():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(module, "response")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def termination_type():
