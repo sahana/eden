@@ -2573,11 +2573,16 @@ def config(settings):
                     field = ltable.language
                     field.requires._select = OrderedDict([
                         ("ar", "Arabic"),
+                        ("en", "English"),
+                        ("fr", "French"),
+                        ("de", "German"),
+                        ("el", "Greek, Modern (1453-)"),
                         ("ku", "Kurdish"),
                         ("fa", "Persian"),
-                        ("ur", "Urdu"),
+                        ("ru", "Russian"),
+                        ("sgn", "Sign Languages"),
                         ("tr", "Turkish"),
-                        ("en", "English"),
+                        ("ur", "Urdu"),
                     ])
 
                     # Custom validation for phone number

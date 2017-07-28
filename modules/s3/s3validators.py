@@ -4120,7 +4120,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("sel", "Selkup"),
                 #("sem", "Semitic languages"),
                 #("sga", "Irish, Old (to 900)"),
-                #("sgn", "Sign Languages"),
+                ("sgn", "Sign Languages"),
                 ("shn", "Shan"),
                 ("sid", "Sidamo"),
                 #("sin", "Sinhala; Sinhalese"),
