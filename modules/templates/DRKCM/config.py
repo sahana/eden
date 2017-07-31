@@ -321,6 +321,7 @@ def config(settings):
                 resource = r.resource
                 configure = resource.configure
 
+                # Set contacts-method for tab
                 s3db.set_method("pr", "person",
                                 method = "contacts",
                                 action = s3db.pr_Contacts,
@@ -585,6 +586,12 @@ def config(settings):
 
             resource = r.resource
             if r.controller == "dvr":
+
+                # Set contacts-method to retain the tab
+                s3db.set_method("pr", "person",
+                                method = "contacts",
+                                action = s3db.pr_Contacts,
+                                )
 
                 if r.interactive:
                     table = resource.table
