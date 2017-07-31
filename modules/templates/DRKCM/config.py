@@ -848,6 +848,13 @@ def config(settings):
             field.label = T("Completed on")
             field.readable = True
 
+            # Show human_resource_id
+            field = table.human_resource_id
+            field.label = T("Person responsible")
+            field.readable = field.writable = True
+            field.widget = None
+            field.comment = None
+
             # Responses
             rtable = s3db.dvr_response_action
 
@@ -861,6 +868,7 @@ def config(settings):
                             "person_id",
 
                             "sector_id",
+                            "human_resource_id",
 
                             "start_date",
                             "need_details",
@@ -943,12 +951,11 @@ def config(settings):
                                                                      translate = True,
                                                                      ),
                                 ),
-                S3OptionsFilter("completed",
-                                default = False,
-                                options = {True: COMPLETED,
-                                           False: CURRENT,
-                                           },
-                                cols = 2,
+                S3OptionsFilter("status_id",
+                                options = lambda: s3_get_filter_opts("dvr_case_activity_status",
+                                                                     translate = True,
+                                                                     ),
+                                cols = 3,
                                 ),
                 S3OptionsFilter("followup",
                                 label = T("Follow-up required"),
@@ -986,7 +993,7 @@ def config(settings):
                            #"activity_details",
                            "followup",
                            "followup_date",
-                           "completed",
+                           "status_id",
                            ]
 
             # Custom list fields
@@ -1039,7 +1046,7 @@ def config(settings):
                                #"activity_details",
                                "followup",
                                "followup_date",
-                               "completed",
+                               "status_id",
                                ]
 
             # Custom list fields

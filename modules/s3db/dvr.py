@@ -5015,8 +5015,12 @@ def dvr_case_household_size(group_id):
             db(ctable.id == case_id).update(household_size = number_of_members)
 
 # =============================================================================
-def dvr_due_followups():
-    """ Number of due follow-ups """
+def dvr_due_followups(human_resource_id=None):
+    """
+        Number of activities due for follow-up
+
+        @param human_resource_id: count only activities assigned to this HR
+    """
 
     # Generate a request for case activities and customise it
     r = S3Request("dvr", "case_activity",
@@ -5026,11 +5030,21 @@ def dvr_due_followups():
     r.customise_resource()
     resource = r.resource
 
+    # Filter to exclude closed case activities
+    if current.deployment_settings.get_dvr_case_activity_use_status():
+        status_filter = (FS("status_id$is_closed") == False)
+    else:
+        status_filter = (FS("completed") == False)
+
     # Filter for due follow-ups
     query = (FS("followup") == True) & \
             (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
-            (FS("completed") != True) & \
+            status_filter & \
             (FS("person_id$dvr_case.archived") == False)
+
+    if human_resource_id:
+        query &= (FS("human_resource_id") == human_resource_id)
+
     resource.add_filter(query)
 
     return resource.count()

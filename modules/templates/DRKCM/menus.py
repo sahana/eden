@@ -157,14 +157,45 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        due_followups = current.s3db.dvr_due_followups() or "0"
-        follow_up_label = "%s (%s)" % (current.T("Due Follow-ups"),
-                                       due_followups,
-                                       )
-
         ADMIN = current.auth.get_system_roles().ADMIN
 
+        human_resource_id = current.auth.s3_logged_in_human_resource()
+        if human_resource_id:
+            due_followups = current.s3db.dvr_due_followups(
+                                human_resource_id = human_resource_id,
+                                ) or "0"
+            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
+                                            due_followups,
+                                            )
+            my_menu = M("My Cases", c=("dvr", "pr"), f="person",
+                        vars = {"closed": "0", "mine": "1"})(
+                        M("Activities", f="case_activity",
+                          vars = {"mine": "1"},
+                          ),
+                        M(follow_ups_label, f="due_followups",
+                          vars = {"mine": "1"},
+                          ),
+                        )
+            all_followups = None
+        else:
+            due_followups = current.s3db.dvr_due_followups() or "0"
+            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
+                                            due_followups,
+                                            )
+            my_menu = None
+            all_followups = M(follow_ups_label, f="due_followups")
+
         return M(c="dvr")(
+                    my_menu,
+                    #M("My Cases", c=("dvr", "pr"), f="person",
+                      #vars = {"closed": "0", "mine": "1"})(
+                        #M("Activities", f="case_activity",
+                          #vars = {"mine": "1"},
+                          #),
+                        #M(my_follow_ups_label, f="due_followups",
+                          #vars = {"mine": "1"},
+                          #),
+                      #),
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create", t="pr_person", p="create"),
@@ -175,7 +206,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Emergencies",
                           vars = {"~.emergency": "True"},
                           ),
-                        M(follow_up_label, f="due_followups"),
+                        all_followups,
                         M("All Activities"),
                         M("Report", m="report"),
                         ),
