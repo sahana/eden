@@ -1042,45 +1042,73 @@ input.date.hasDatepicker {
 /* line 95, ../scss/custom/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
-  float: left;
   margin-right: 2px;
 }
+/* line 99, ../scss/custom/_widgets.scss */
+.range-filter-widget .postfix.calendar-clear-btn {
+  margin-left: -2px;
+}
 
-/* line 101, ../scss/custom/_widgets.scss */
+/* line 103, ../scss/custom/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
 }
 
-/* GroupedOptions widget */
 /* line 108, ../scss/custom/_widgets.scss */
+.calendar-widget-container {
+  white-space: nowrap;
+}
+
+/* line 111, ../scss/custom/_widgets.scss */
+.postfix.calendar-clear-btn {
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 2px;
+  width: 1.2rem;
+  vertical-align: top;
+}
+/* line 113, ../scss/custom/_widgets.scss */
+.postfix.calendar-clear-btn .fa {
+  color: #B0B0B0;
+}
+
+/* line 121, ../scss/custom/_widgets.scss */
+body.rtl .range-filter-field {
+  float: right;
+  padding-left: 10px;
+  padding-right: 0;
+}
+
+/* GroupedOptions widget */
+/* line 128, ../scss/custom/_widgets.scss */
 .s3-groupedopts-label {
   float: none;
   margin-bottom: 0.3rem;
 }
 
-/* line 112, ../scss/custom/_widgets.scss */
+/* line 132, ../scss/custom/_widgets.scss */
 .s3-groupedopts-widget table {
   margin-left: 0;
   margin-bottom: 0.5rem;
 }
 
-/* line 117, ../scss/custom/_widgets.scss */
+/* line 137, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td {
   white-space: nowrap;
 }
-/* line 119, ../scss/custom/_widgets.scss */
+/* line 139, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td input {
   vertical-align: top;
 }
-/* line 122, ../scss/custom/_widgets.scss */
+/* line 142, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td label {
   white-space: pre-wrap;
 }
 
 /* ImageCropWidget */
-/* line 129, ../scss/custom/_widgets.scss */
+/* line 149, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1088,36 +1116,36 @@ table.s3-groupedopts-widget td label {
 }
 
 /* pr_Contacts widgets */
-/* line 136, ../scss/custom/_widgets.scss */
+/* line 156, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 140, ../scss/custom/_widgets.scss */
+/* line 160, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 143, ../scss/custom/_widgets.scss */
+/* line 163, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 147, ../scss/custom/_widgets.scss */
+/* line 167, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 151, ../scss/custom/_widgets.scss */
+/* line 171, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 155, ../scss/custom/_widgets.scss */
+/* line 175, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1128,7 +1156,7 @@ table.s3-groupedopts-widget td label {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 164, ../scss/custom/_widgets.scss */
+/* line 184, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1136,46 +1164,46 @@ table.s3-groupedopts-widget td label {
 }
 
 /* Data Lists (including profile) */
-/* line 173, ../scss/custom/_widgets.scss */
+/* line 193, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 177, ../scss/custom/_widgets.scss */
+/* line 197, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 180, ../scss/custom/_widgets.scss */
+/* line 200, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 183, ../scss/custom/_widgets.scss */
+/* line 203, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 186, ../scss/custom/_widgets.scss */
+/* line 206, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 191, ../scss/custom/_widgets.scss */
+/* line 211, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 195, ../scss/custom/_widgets.scss */
+/* line 215, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 199, ../scss/custom/_widgets.scss */
+/* line 219, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 205, ../scss/custom/_widgets.scss */
+/* line 225, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1183,37 +1211,37 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 212, ../scss/custom/_widgets.scss */
+/* line 232, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 217, ../scss/custom/_widgets.scss */
+/* line 237, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 222, ../scss/custom/_widgets.scss */
+/* line 242, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Text representation */
-/* line 228, ../scss/custom/_widgets.scss */
+/* line 248, ../scss/custom/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
-/* line 231, ../scss/custom/_widgets.scss */
+/* line 251, ../scss/custom/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 235, ../scss/custom/_widgets.scss */
+/* line 255, ../scss/custom/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1221,7 +1249,7 @@ h4.profile-sub-header {
 }
 
 /* S3SQLInlineLink read-only list representation */
-/* line 242, ../scss/custom/_widgets.scss */
+/* line 262, ../scss/custom/_widgets.scss */
 ul.s3-inline-link {
   font-size: inherit;
 }

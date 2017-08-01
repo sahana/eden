@@ -732,10 +732,33 @@ def response_action():
 
     def prep(r):
 
-        # Must not create or delete response actions from here
-        r.resource.configure(insertable = False,
-                             deletable = False,
-                             )
+        resource = r.resource
+
+        mine = r.get_vars.get("mine")
+        if mine == "a":
+            # Filter for response actions assigned to logged-in user
+            mine_selector = FS("human_resource_id")
+            title_list = T("Actions assigned to me")
+        elif mine == "r":
+            # Filter for response actions managed by logged-in user
+            mine_selector = FS("case_activity_id$human_resource_id")
+            title_list = T("Actions managed by me")
+        else:
+            mine_selector = None
+
+        if mine_selector:
+            human_resource_id = auth.s3_logged_in_human_resource()
+            if human_resource_id:
+                resource.add_filter(mine_selector == human_resource_id)
+            else:
+                # Show nothing for mine if user is not a HR
+                resource.add_filter(mine_selector.belongs(set()))
+            s3.crud_strings[resource.tablename]["title_list"] = title_list
+
+        resource.configure(# Must not create or delete actions from here:
+                           insertable = False,
+                           deletable = False,
+                           )
 
         return True
     s3.prep = prep

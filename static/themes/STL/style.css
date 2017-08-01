@@ -1049,19 +1049,47 @@ input.date.hasDatepicker {
 /* line 97, ../scss/custom/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
-  float: left;
   margin-right: 2px;
 }
+/* line 101, ../scss/custom/_widgets.scss */
+.range-filter-widget .postfix.calendar-clear-btn {
+  margin-left: -2px;
+}
 
-/* line 103, ../scss/custom/_widgets.scss */
+/* line 105, ../scss/custom/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
 }
 
-/* ImageCropWidget */
 /* line 110, ../scss/custom/_widgets.scss */
+.calendar-widget-container {
+  white-space: nowrap;
+}
+
+/* line 113, ../scss/custom/_widgets.scss */
+.postfix.calendar-clear-btn {
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 2px;
+  width: 1.2rem;
+  vertical-align: top;
+}
+/* line 115, ../scss/custom/_widgets.scss */
+.postfix.calendar-clear-btn .fa {
+  color: #B0B0B0;
+}
+
+/* line 123, ../scss/custom/_widgets.scss */
+body.rtl .range-filter-field {
+  float: right;
+  padding-left: 10px;
+  padding-right: 0;
+}
+
+/* ImageCropWidget */
+/* line 130, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1069,36 +1097,36 @@ input.date.hasDatepicker {
 }
 
 /* pr_Contacts widgets */
-/* line 117, ../scss/custom/_widgets.scss */
+/* line 137, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 121, ../scss/custom/_widgets.scss */
+/* line 141, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 124, ../scss/custom/_widgets.scss */
+/* line 144, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 128, ../scss/custom/_widgets.scss */
+/* line 148, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 132, ../scss/custom/_widgets.scss */
+/* line 152, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 136, ../scss/custom/_widgets.scss */
+/* line 156, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1109,7 +1137,7 @@ input.date.hasDatepicker {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 145, ../scss/custom/_widgets.scss */
+/* line 165, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1117,46 +1145,46 @@ input.date.hasDatepicker {
 }
 
 /* Data Lists (including profile) */
-/* line 154, ../scss/custom/_widgets.scss */
+/* line 174, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 158, ../scss/custom/_widgets.scss */
+/* line 178, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 161, ../scss/custom/_widgets.scss */
+/* line 181, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 164, ../scss/custom/_widgets.scss */
+/* line 184, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 167, ../scss/custom/_widgets.scss */
+/* line 187, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 172, ../scss/custom/_widgets.scss */
+/* line 192, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 176, ../scss/custom/_widgets.scss */
+/* line 196, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 180, ../scss/custom/_widgets.scss */
+/* line 200, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 186, ../scss/custom/_widgets.scss */
+/* line 206, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1164,37 +1192,37 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 193, ../scss/custom/_widgets.scss */
+/* line 213, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 198, ../scss/custom/_widgets.scss */
+/* line 218, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 203, ../scss/custom/_widgets.scss */
+/* line 223, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Text representation */
-/* line 209, ../scss/custom/_widgets.scss */
+/* line 229, ../scss/custom/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
-/* line 212, ../scss/custom/_widgets.scss */
+/* line 232, ../scss/custom/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 216, ../scss/custom/_widgets.scss */
+/* line 236, ../scss/custom/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;

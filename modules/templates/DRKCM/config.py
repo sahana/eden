@@ -112,6 +112,11 @@ def config(settings):
     settings.security.version_info_requires_login = True
 
     # -------------------------------------------------------------------------
+    # General UI settings
+    #
+    settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
     # CMS Module Settings
     #
     settings.cms.hide_index = True
@@ -891,10 +896,10 @@ def config(settings):
                                                  ),
 
                             S3SQLInlineComponent("response_action",
-                                                 label = T("Measures"),
+                                                 label = T("Actions"),
                                                  fields = [
                                                      "response_type_id",
-                                                     (T("Details"), "comments"),
+                                                     "comments",
                                                      "date_due",
                                                      "human_resource_id",
                                                      "status_id",
@@ -1179,6 +1184,21 @@ def config(settings):
 
     settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
 
+    # -------------------------------------------------------------------------
+    def customise_dvr_response_action_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.dvr_response_action
+
+        # Custom format for case activity representation
+        field = table.case_activity_id
+        fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+        field.represent = s3db.dvr_CaseActivityRepresent(fmt = fmt,
+                                                         show_link = True,
+                                                         )
+
+    settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 

@@ -167,8 +167,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
             follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
                                             due_followups,
                                             )
+
             my_menu = M("My Cases", c=("dvr", "pr"), f="person",
                         vars = {"closed": "0", "mine": "1"})(
+                        M("Create", m="create", t="pr_person", p="create"),
                         M("Activities", f="case_activity",
                           vars = {"mine": "1"},
                           ),
@@ -176,6 +178,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars = {"mine": "1"},
                           ),
                         )
+
+            my_actions = M("Actions", c="dvr", f="response_action")(
+                            M("Assigned to me", vars = {"mine": "a"}),
+                            M("Managed by me", vars = {"mine": "r"}),
+                            )
+
             all_followups = None
         else:
             due_followups = current.s3db.dvr_due_followups() or "0"
@@ -183,6 +191,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                             due_followups,
                                             )
             my_menu = None
+            my_actions = None
             all_followups = M(follow_ups_label, f="due_followups")
 
         return M(c="dvr")(
@@ -196,12 +205,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           #vars = {"mine": "1"},
                           #),
                       #),
+                    my_actions,
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create", t="pr_person", p="create"),
                         M("All Cases", vars = {}),
+                        M("Actions", f="response_action"),
                         ),
-                    M("Measures", f="response_action"),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
                           vars = {"~.emergency": "True"},

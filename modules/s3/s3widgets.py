@@ -1507,11 +1507,13 @@ class S3CalendarWidget(FormWidget):
         extremes = self.extremes(dtformat=dtformat)
 
         T = current.T
+
         clear_text = self.clear_text
         if clear_text is None:
             clear_text = s3_str(T("Clear"))
         else:
             clear_text = s3_str(T(clear_text))
+
         options = {"calendar": calendar,
                    "dateFormat": str(date_format),
                    "timeFormat": str(time_format),
@@ -1531,6 +1533,9 @@ class S3CalendarWidget(FormWidget):
                    "setMax": self.set_max,
                    }
         options.update(extremes)
+
+        if settings.get_ui_calendar_clear_icon():
+            options["clearButton"] = "icon"
 
         # Inject JS
         self.inject_script(input_id, options)
