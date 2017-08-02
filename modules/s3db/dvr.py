@@ -2531,7 +2531,7 @@ class DVRCaseActivityModel(S3Model):
                              default = "now",
                              ),
                      self.hrm_human_resource_id(
-                         label=T("Established by"),
+                         label = T("Established by"),
                          ),
                      self.dvr_need_id(empty = False,
                                       ),

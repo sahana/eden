@@ -867,6 +867,16 @@ def config(settings):
             field.widget = None
             field.comment = None
 
+            # Needs
+            ntable = current.s3db.dvr_case_activity_need
+
+            field = ntable.human_resource_id
+            field.widget = None
+            field.comment = None
+
+            field = ntable.need_id
+            field.comment = None
+
             # Responses
             rtable = s3db.dvr_response_action
 
@@ -876,6 +886,7 @@ def config(settings):
             field.widget = None
             field.comment = None
 
+            from s3 import S3SQLVerticalSubFormLayout
             crud_form = S3SQLCustomForm(
                             "person_id",
 
@@ -888,23 +899,27 @@ def config(settings):
                             S3SQLInlineComponent("case_activity_need",
                                                  label = T("Needs"),
                                                  fields = [
-                                                     "need_id",
                                                      "date",
+                                                     "need_id",
+                                                     (T("Details"), "comments"),
                                                      "human_resource_id",
-                                                     "comments",
                                                      ],
+                                                 layout = S3SQLVerticalSubFormLayout,
+                                                 explicit_add = T("Add Need"),
                                                  ),
 
                             S3SQLInlineComponent("response_action",
                                                  label = T("Actions"),
                                                  fields = [
                                                      "response_type_id",
-                                                     "comments",
                                                      "date_due",
+                                                     "comments",
                                                      "human_resource_id",
-                                                     "status_id",
                                                      #"date",
+                                                     "status_id",
                                                      ],
+                                                 layout = S3SQLVerticalSubFormLayout,
+                                                 explicit_add = T("Add Action"),
                                                  ),
 
                             #"priority",
