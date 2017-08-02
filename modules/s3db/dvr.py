@@ -2717,23 +2717,50 @@ class DVRCaseActivityModel(S3Model):
         else:
             return
 
-        # Get the record
+        # Get current status and end_date of the record
         atable = s3db.dvr_case_activity
         query = (atable.id == record_id)
-        row = db(query).select(atable.id,
-                               atable.end_date,
-                               atable.completed,
-                               limitby = (0, 1),
-                               ).first()
-        if not row:
+
+        activity = None
+        is_closed = False
+
+        if current.deployment_settings.get_dvr_case_activity_use_status():
+            # Use status_id
+            stable = s3db.dvr_case_activity_status
+            left = stable.on(atable.status_id == stable.id)
+            row = db(query).select(atable.id,
+                                   atable.end_date,
+                                   stable.is_closed,
+                                   left = left,
+                                   limitby = (0, 1),
+                                   ).first()
+            if row:
+                activity = row.dvr_case_activity
+                is_closed = row.dvr_case_activity_status.is_closed
+
+        else:
+            # Use completed-flag
+            row = db(query).select(atable.id,
+                                   atable.end_date,
+                                   atable.completed,
+                                   limitby = (0, 1),
+                                   ).first()
+            if row:
+                activity = row
+                is_closed = row.completed
+
+        if not activity:
             return
 
-        # Update closed_on date
-        if row.completed:
-            if not row.end_date:
-                row.update_record(end_date = current.request.utcnow.date())
-        elif row.end_date:
-            row.update_record(end_date = None)
+        if is_closed:
+            if not activity.end_date:
+                activity.update_record(end_date=current.request.utcnow.date())
+
+            # @todo: also reset followup-flag and -date
+            # @todo: also close all actions linked to this activity
+
+        elif activity.end_date:
+            activity.update_record(end_date = None)
 
 # =============================================================================
 class DVRCaseEffortModel(S3Model):
