@@ -2193,7 +2193,9 @@ class S3SQLSubFormLayout(object):
                           _class = _class,
                           ))
             else:
-                append(TD(_class=_class))
+                append(TD(action(T("Discard this entry"), "dsc"),
+                          _class=_class,
+                          ))
                 append(TD(action(T("Add this entry"), "add", throbber=True),
                           _class = _class,
                           ))

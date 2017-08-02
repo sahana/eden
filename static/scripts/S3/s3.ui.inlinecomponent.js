@@ -98,6 +98,12 @@
             // Find non-static header rows
             this.labelRow = $('#sub-' + this.formname + ' .label-row:not(.static)');
 
+            // Hide discard action in add-row unless explicitAdd
+            if (!$(this.element).find('.inline-open-add').length) {
+                var test = $('#add-row-' + this.formname + ' .inline-dsc');
+                $('#add-row-' + this.formname + ' .inline-dsc').hide();
+            }
+
             this._showHeaders();
             this._bindEvents();
         },
@@ -290,7 +296,12 @@
          */
         _markChanged: function(element) {
 
-            $(element).closest('.inline-form').addClass('changed');
+            var subForm = $(element).closest('.inline-form');
+
+            subForm.addClass('changed');
+            if (subForm.hasClass('add-row')) {
+                subForm.find('.inline-dsc').show();
+            }
         },
 
         /**
@@ -922,16 +933,124 @@
         },
 
         /**
+         * Reset the add-row to defaults (and hide it if explicitAdd)
+         */
+        _resetAddRow: function() {
+
+            // formname
+            var self = this,
+                data = this._deserialize(),
+                formName = this.formname,
+                formPrefix = 'sub_' + formName + '_' + formName + '_i_';
+
+            // Remove any previous error messages
+            this._removeErrors();
+
+            var fields = data.fields,
+                fieldName,
+                fieldPrefix,
+                defaultField,
+                defaultValue,
+                currentField,
+                currentValue,
+                emptyWidget,
+                container;
+
+            for (var i = fields.length; i--;) {
+
+                fieldName = fields[i].name;
+                fieldPrefix = formPrefix + fieldName;
+
+                defaultField = $('#' + fieldPrefix + '_edit_default');
+                currentField = $('#' + fieldPrefix + '_edit_none');
+
+                if (currentField.attr('type') == 'file') {
+
+                    // Clone the default file input
+                    emptyWidget = defaultField.clone();
+                    emptyWidget.attr('id', currentField.attr('id'))
+                               .attr('name', currentField.attr('name'))
+                               .change(function() {
+                                    // Re-attach change event handler to the clone
+                                    self._markChanged(this);
+                                    self._catchSubmit(this);
+                                });
+                    currentField.replaceWith(emptyWidget);
+
+                } else {
+
+                    // Set the input to the default value
+                    defaultValue = defaultField.val()
+                    currentField.val(defaultValue);
+
+                    // Refresh widgets
+                    if (currentField.attr('type') == 'checkbox') {
+                        currentField.prop('checked', defaultField.prop('checked'));
+
+                    } else if (currentField.hasClass('multiselect-widget') &&
+                               currentField.multiselect('instance')) {
+                        currentField.multiselect('refresh');
+
+                    } else if (currentField.hasClass('groupedopts-widget') &&
+                               currentField.groupedopts('instance')) {
+                        currentField.groupedopts('refresh');
+
+                    } else if (currentField.hasClass('location-selector') &&
+                               currentField.locationselector('instance')) {
+                        currentField.locationselector('refresh');
+
+                    } else if (currentField.hasClass('s3-hierarchy-input')) {
+
+                        container = currentField.parent();
+                        if (container.hierarchicalopts('instance')) {
+                            if (defaultValue) {
+                                defaultValue = JSON.parse(defaultValue);
+                                if (defaultValue.constructor !== Array) {
+                                    defaultValue = [defaultValue];
+                                }
+                                container.hierarchicalopts('set', defaultValue);
+                            } else {
+                                container.hierarchicalopts('reset');
+                            }
+                        }
+                    }
+                }
+
+                // Copy default value for dummy input
+                defaultValue = $('#dummy_' + fieldPrefix + '_edit_default').val();
+                $('#dummy_' + fieldPrefix + '_edit_none').val(defaultValue);
+
+            }
+
+            var addRow = $('#add-row-' + formName);
+
+            // Unmark changed
+            addRow.removeClass('changed');
+
+            var explicitAdd = $(this.element).find('.inline-open-add');
+            if (explicitAdd.length) {
+                // Hide the add-row if explicit open-action available
+                addRow.hide();
+                explicitAdd.show();
+//                 $(this.element).find('.inline-open-add').each(function() {
+//                     addRow.hide();
+//                     $(this).show();
+//                 });
+            } else {
+                // Hide the discard-option
+                addRow.find('.inline-dsc').hide();
+            }
+        },
+
+        /**
          * Add a new row
-         *
-         * @todo: separate out the creation of a new read-row
          */
         _addRow: function() {
 
-            var formname = this.formname;
-            var rowindex = 'none';
+            var formName = this.formname,
+                rowindex = 'none';
 
-            var add_button = $('#add-' + formname + '-' + rowindex),
+            var add_button = $('#add-' + formName + '-' + rowindex),
                 multiple;
             if (add_button.length) {
                 multiple = true;
@@ -943,7 +1062,7 @@
             if (multiple) {
                 // Hide add-button, show throbber
                 add_button.addClass('hide');
-                var throbber = $('#throbber-' + formname + '-' + rowindex);
+                var throbber = $('#throbber-' + formName + '-' + rowindex);
                 throbber.removeClass('hide');
 
                 // Remove any previous error messages
@@ -963,7 +1082,7 @@
             }
 
             // If this is an empty required=true row in a multiple=true with existing rows, then don't validate
-            var add_required = $('#add-row-' + formname).hasClass('required'),
+            var add_required = $('#add-row-' + formName).hasClass('required'),
                 empty,
                 fieldname;
             if (add_required) {
@@ -975,9 +1094,9 @@
                 }
                 if (empty) {
                     // Check if we have other rows
-                    if ($('#add-' + formname + '-' + rowindex).length) {
+                    if ($('#add-' + formName + '-' + rowindex).length) {
                         // multiple=true, can have other rows
-                        if ($('#read-row-' + formname + '-0').length) {
+                        if ($('#read-row-' + formName + '-0').length) {
                             // Rows present, so skip validation
                             // Hide throbber, show add-button
                             throbber.addClass('hide');
@@ -989,112 +1108,56 @@
             }
 
             // Validate the data
-            var new_row = this._validate(data, rowindex, row_data);
+            var newRow = this._validate(data, rowindex, row_data),
+                success = false;
 
-            var success = false;
-            if (null !== new_row) {
+            if (null !== newRow) {
+
                 success = true;
-                // Add a new row to the real_input JSON
-                new_row['_changed'] = true; // mark as changed
-                var newindex = data['data'].push(new_row) - 1;
-                new_row['_index'] = newindex;
+
+                // Mark new row as changed
+                newRow['_changed'] = true;
+
+                // Add the new row to the real input JSON
+                var newIndex = data['data'].push(newRow) - 1;
+                newRow['_index'] = newIndex;
                 this._serialize();
 
                 if (multiple) {
-                    // Create a new read-row, clear add-row
+
+                    // Create a new read-row, reset the add-row
                     var items = [],
                         fields = data['fields'],
-                        i,
-                        field,
+                        fieldName,
                         upload,
-                        d,
-                        f,
-                        default_value;
-                    for (i=0; i < fields.length; i++) {
-                        field = fields[i]['name'];
+                        uploadID;
 
-                        // Update all file inputs of the add-row to the new row index
-                        upload = $('#upload_' + formname + '_' + field + '_none');
+                    for (var i = 0, len = fields.length; i < len; i++) {
+
+                        fieldName = fields[i]['name'];
+
+                        // Update file input (moved out by _collectData) to the new row index:
+                        upload = $('#upload_' + formName + '_' + fieldName + '_none');
                         if (upload.length) {
-                            var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
-                            $('#' + upload_id).remove();
-                            upload.attr('id', upload_id)
-                                  .attr('name', upload_id);
+                            uploadID = 'upload_' + formName + '_' + fieldName + '_' + newIndex;
+                            $('#' + uploadID).remove();
+                            upload.attr({'id': upload_id, 'name': upload_id});
                         }
 
-                        // Store the text representation for the read-row
-                        items.push(new_row[field]['text']);
-
-                        // Reset add-field to default value
-                        d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
-                        f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
-
-                        if (f.attr('type') == 'file') {
-
-                            // Clone the default file input
-                            // (because we cannot set the value for file inputs)
-                            var self = this,
-                                emptyWidget = d.clone();
-                            emptyWidget.attr('id', f.attr('id'))
-                                       .attr('name', f.attr('name'))
-                                       .change(function() {
-                                            // Re-attach change event handler to the clone
-                                            self._markChanged(this);
-                                            self._catchSubmit(this);
-                                        });
-                            f.replaceWith(emptyWidget);
-
-                        } else {
-
-                            // Set the input to the default value
-                            default_value = d.val();
-                            f.val(default_value);
-
-                            // Refresh widgets
-                            if (f.attr('type') == 'checkbox') {
-                                f.prop('checked', d.prop('checked'));
-                            } else if (f.hasClass('multiselect-widget') && f.multiselect('instance')) {
-                                f.multiselect('refresh');
-                            } else if (f.hasClass('groupedopts-widget') && f.groupedopts('instance')) {
-                                f.groupedopts('refresh');
-                            } else if (f.hasClass('location-selector') && f.locationselector('instance')) {
-                                f.locationselector('refresh');
-                            } else if (f.hasClass('s3-hierarchy-input')) {
-                                var parent = f.parent();
-                                if (parent.hierarchicalopts('instance')) {
-                                    if (default_value) {
-                                        default_value = JSON.parse(default_value);
-                                        if (default_value.constructor !== Array) {
-                                            default_value = [default_value];
-                                        }
-                                        parent.hierarchicalopts('set', default_value);
-                                    } else {
-                                        parent.hierarchicalopts('reset');
-                                    }
-                                }
-                            }
-                        }
-
-                        // Copy default value for dummy input
-                        default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
-                        $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
+                        // Store text representation for the read-row
+                        items.push(newRow[fieldName]['text']);
                     }
-                    // Unmark changed
-                    $('#add-row-' + formname).removeClass('changed');
 
-                    // Hide the add-row if explicit open-action available
-                    $(this.element).find('.inline-open-add').each(function() {
-                        $('#add-row-' + formname).hide();
-                        $(this).show();
-                    });
+                    // Reset add-row to defaults
+                    this._resetAddRow();
 
                     // Render new read row and append to container
-                    var read_row = this._renderReadRow(formname, newindex, items);
+                    var readRow = this._renderReadRow(formName, newIndex, items);
+                    this._appendReadRow(formName, readRow);
 
-                    // Append read-row
-                    this._appendReadRow(formname, read_row);
+                    // Show table headers
+                    // (initially hidden with explicitAdd=true and no rows yet existing)
                     this._showHeaders();
-
                 }
             }
 
@@ -1103,6 +1166,7 @@
                 throbber.addClass('hide');
                 add_button.removeClass('hide');
             }
+
             if (success) {
                 $(this.element).closest('form').unbind(this.eventNamespace + this.id);
             }
@@ -1537,6 +1601,9 @@
                 }
             }).delegate('.inline-add', 'click' + ns, function() {
                 self._addRow();
+                return false;
+            }).delegate('.inline-dsc', 'click' + ns, function() {
+                self._resetAddRow();
                 return false;
             }).delegate('.inline-cnc', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
