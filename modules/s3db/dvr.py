@@ -5237,7 +5237,7 @@ class dvr_ActivityRepresent(S3Represent):
             @param row: the row with this key (unused here)
         """
 
-        url = URL(c="dvr", f="activity", args=[k])
+        url = URL(c="dvr", f="activity", args=[k], extension="")
 
         return A(v, _href = url)
 
@@ -5250,6 +5250,7 @@ class dvr_CaseActivityRepresent(S3Represent):
             Constructor
 
             @param show_link: show representation as clickable link
+            @param fmt: string format template for person record
         """
 
         super(dvr_CaseActivityRepresent, self).__init__(
@@ -5322,7 +5323,11 @@ class dvr_CaseActivityRepresent(S3Represent):
 
         beneficiary = row.pr_person
 
-        url = URL(c="dvr", f="person", args=[beneficiary.id, "case_activity", k])
+        url = URL(c = "dvr",
+                  f = "person",
+                  args = [beneficiary.id, "case_activity", k],
+                  extension = "",
+                  )
 
         return A(v, _href = url)
 
