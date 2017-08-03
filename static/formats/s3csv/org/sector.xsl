@@ -6,7 +6,7 @@
          Sectors and Subsectors - CSV Import Stylesheet
 
          CSV Column              Type          Description
-         Abrv....................string........Abbreviation (unique)
+         Abrv....................string........Abbreviation (unique, required)
          Name....................string........Name (defaults to Abbreviation)
          SubsectorOf.............string........Abbreviation of the
                                                     Sectorname (for subsectors)
@@ -18,13 +18,15 @@
 
     <xsl:template match="/">
         <s3xml>
-            <xsl:apply-templates select="table/row[normalize-space(col[@field='SubsectorOf'])='']"/>
+            <xsl:apply-templates select="table/row[normalize-space(col[@field='SubsectorOf']/text())='']"/>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:call-template name="Sector"/>
+        <xsl:if test="normalize-space(col[@field='Abrv']/text())!=''">
+            <xsl:call-template name="Sector"/>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -55,7 +57,7 @@
                 </xsl:choose>
             </data>
             <xsl:if test="$resource='org_sector'">
-                <xsl:for-each select="//row[normalize-space(col[@field='SubsectorOf'])=$SectorAbrv]">
+                <xsl:for-each select="//row[normalize-space(col[@field='SubsectorOf']/text())=$SectorAbrv]">
                     <xsl:call-template name="Sector"/>
                 </xsl:for-each>
             </xsl:if>

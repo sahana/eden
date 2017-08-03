@@ -6320,12 +6320,13 @@ class pr_Contacts(S3Method):
                 "RADIO": 6,
                 "TWITTER": 7,
                 "FACEBOOK": 8,
-                "FAX": 9,
-                "OTHER": 10,
-                "IRC": 11,
-                "GITHUB": 12,
-                "LINKEDIN": 13,
-                "BLOG": 14,
+                "WHATSAPP": 9,
+                "FAX": 10,
+                "OTHER": 11,
+                "IRC": 12,
+                "GITHUB": 13,
+                "LINKEDIN": 14,
+                "BLOG": 15,
                 }
 
     def apply_method(self, r, **attr):

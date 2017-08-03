@@ -6594,7 +6594,7 @@ def org_organisation_controller():
             use_branches = settings.get_org_branches()
             if use_branches and not component and \
                not r.record and \
-               r.method != "deduplicate" \
+               r.method != "deduplicate" and \
                (not type_filter or type_filter != "Training Center"):
                 # Filter out branches from multi-record views
                 branch_filter = (FS("parent.id") == None)

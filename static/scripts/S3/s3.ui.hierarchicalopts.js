@@ -608,19 +608,44 @@
         /**
          * Check particular nodes (used by setCurrentFilters)
          *
-         * @param {Array} values - the nodeIDs of the nodes to select
+         * @param {Array} values - the record IDs of the nodes to select
          */
         set: function(values) {
 
-            var inst = jQuery.jstree.reference($(this.tree));
+            var inst = jQuery.jstree.reference($(this.tree)),
+                node,
+                self = this,
+                treeID = this.treeID;
 
+            this._isBulk = true;
             inst.uncheck_all();
+            inst.close_all();
             if (values) {
-                for (var i=0, len=values.length, nodeID; i < len; i++) {
-                    nodeID = $('#' + this.treeID + '-' + values[i]);
-                    inst.check_node(nodeID);
-                }
+                var openAncestors = function(nodeID, callback) {
+                    var parent = inst.get_parent(nodeID);
+                    if (parent) {
+                        if (parent != '#') {
+                            openAncestors(parent);
+                            inst.open_node(parent, callback);
+                        } else if (callback) {
+                            callback();
+                        }
+                    }
+                };
+                values.forEach(function(index) {
+                    var node = inst.get_node(treeID + '-' + index);
+                    if (node) {
+                        // must open all ancestors to make sure
+                        // there is a DOM node for check_node (otherwise
+                        // nothing gets checked), and for better UX anyway
+                        openAncestors(node, function() {
+                            inst.check_node(node);
+                        });
+                    }
+                });
             }
+            this._isBulk = false;
+            this._updateSelectedNodes();
         },
 
         /**
@@ -638,12 +663,40 @@
          */
         reset: function() {
 
-            this._isBulk = true;
-            this.tree.jstree('uncheck_all');
-            this._isBulk = false;
-            this._updateSelectedNodes();
+            var inst = jQuery.jstree.reference($(this.tree));
 
+            this._isBulk = true;
+            inst.uncheck_all();
+            inst.close_all();
+            this._isBulk = false;
+
+            this._updateSelectedNodes();
             return true;
+        },
+
+        /**
+         * Helper to set correct position of menu
+         *
+         * @param {jQuery} wrapper - the menu wrapper
+         * @param {jQuery} button - the menu button
+         */
+        _setMenuPosition: function(wrapper, button) {
+
+            var pos = button.offset(),
+                css = {
+                    position: 'absolute',
+                    top: pos.top + button.outerHeight(),
+                    minWidth: button.outerWidth() - 8
+                };
+
+            if ($('body').css('direction') === 'rtl') {
+                // Right-align with button
+                css.right = ($(window).width() - (pos.left + button.outerWidth()));
+            } else {
+                // Left-align with button
+                css.left = pos.left;
+            }
+            wrapper.css(css);
         },
 
         /**
@@ -655,17 +708,20 @@
                 this.closeMenu();
             }
 
-            var button = $(this.button);
-            var pos = button.offset();
+            // Set correct menu position (+update on resize)
+            var button = $(this.button),
+                wrapper = $(this.wrapper),
+                self = this;
 
-            $(this.wrapper).css({
-                position: 'absolute',
-                top: pos.top + button.outerHeight(),
-                left: pos.left,
-                minWidth: button.outerWidth() - 8
-            }).show();
+            this._setMenuPosition(wrapper, button);
+            $(window).on('resize' + this._namespace + '-mpos', function() {
+                self._setMenuPosition(wrapper, button);
+            });
+
+            wrapper.show();
 
             $(this.tree).jstree('set_focus');
+
             this._isOpen = true;
             button.addClass('ui-state-active');
 
@@ -676,6 +732,9 @@
          * Close the tree (triggers 'close'-event)
          */
         closeMenu: function() {
+
+            // Disable resize event handler
+            $(window).off(this._namespace + '-mpos');
 
             $(this.tree).jstree('unset_focus')
                         .unbind('click.hierarchicalopts')

@@ -1978,6 +1978,9 @@ class SKIP_POST_VALIDATION(Validator):
 class S3SQLSubFormLayout(object):
     """ Layout for S3SQLInlineComponent (Base Class) """
 
+    # Layout-specific CSS class for the inline component
+    layout_class = "subform-default"
+
     def __init__(self):
         """ Constructor """
 
@@ -2022,7 +2025,7 @@ class S3SQLSubFormLayout(object):
             subform = TABLE(headers,
                             TBODY(item_rows),
                             TFOOT(action_rows),
-                            _class="embeddedComponent",
+                            _class= " ".join(("embeddedComponent", self.layout_class)),
                             )
         return subform
 
@@ -2161,25 +2164,41 @@ class S3SQLSubFormLayout(object):
             else:
                 return DIV(btn)
 
+
+        # CSS class for action-columns
+        _class = "subform-action"
+
         # Render the action icons for this row
         append = subform.append
         if readonly:
             if editable:
-                append(action(T("Edit this entry"), "edt"))
+                append(TD(action(T("Edit this entry"), "edt"),
+                          _class = _class,
+                          ))
             else:
-                append(TD())
+                append(TD(_class=_class))
 
             if deletable:
-                append(action(T("Remove this entry"), "rmv"))
+                append(TD(action(T("Remove this entry"), "rmv"),
+                          _class = _class,
+                          ))
             else:
-                append(TD())
+                append(TD(_class=_class))
         else:
             if index != "none" or item:
-                append(action(T("Update this entry"), "rdy", throbber=True))
-                append(action(T("Cancel editing"), "cnc"))
+                append(TD(action(T("Update this entry"), "rdy", throbber=True),
+                          _class = _class,
+                          ))
+                append(TD(action(T("Cancel editing"), "cnc"),
+                          _class = _class,
+                          ))
             else:
-                append(TD())
-                append(action(T("Add this entry"), "add", throbber=True))
+                append(TD(action(T("Discard this entry"), "dsc"),
+                          _class=_class,
+                          ))
+                append(TD(action(T("Add this entry"), "add", throbber=True),
+                          _class = _class,
+                          ))
 
     # -------------------------------------------------------------------------
     def rowstyle_read(self, form, fields, *args, **kwargs):
@@ -2246,6 +2265,9 @@ class S3SQLVerticalSubFormLayout(S3SQLSubFormLayout):
         - standard horizontal layout for read-rows
         - hiding header row if there are no visible read-rows
     """
+
+    # Layout-specific CSS class for the inline component
+    layout_class = "subform-vertical"
 
     # -------------------------------------------------------------------------
     def headers(self, data, readonly=False):
@@ -3676,8 +3698,11 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         options["multiple"] = multiple
 
         # Field dummy
+        kfield = link.table[component.rkey]
         dummy_field = Storage(name = field.name,
-                              type = link.table[component.rkey].type)
+                              type = kfield.type,
+                              represent = kfield.represent,
+                              )
 
         # Widget type
         widget = options.get("widget")

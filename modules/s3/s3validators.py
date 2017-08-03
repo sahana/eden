@@ -3823,7 +3823,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("grb", "Grebo"),
                 #("grc", "Greek, Ancient (to 1453)"),
                 #("gre", "Greek, Modern (1453-)"),
-                ("el", "Greek, Modern (1453-)"),
+                ("el", "Greek"), # "Greek, Modern (1453-)"
                 #("grn", "Guarani"),
                 ("gn", "Guarani"),
                 ("gsw", "Swiss German; Alemannic; Alsatian"),
@@ -4120,7 +4120,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("sel", "Selkup"),
                 #("sem", "Semitic languages"),
                 #("sga", "Irish, Old (to 900)"),
-                #("sgn", "Sign Languages"),
+                ("sgn", "Sign Languages"),
                 ("shn", "Shan"),
                 ("sid", "Sidamo"),
                 #("sin", "Sinhala; Sinhalese"),

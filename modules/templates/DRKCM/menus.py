@@ -157,24 +157,66 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        due_followups = current.s3db.dvr_due_followups() or "0"
-        follow_up_label = "%s (%s)" % (current.T("Due Follow-ups"),
-                                       due_followups,
-                                       )
-
         ADMIN = current.auth.get_system_roles().ADMIN
 
+        human_resource_id = current.auth.s3_logged_in_human_resource()
+        if human_resource_id:
+            due_followups = current.s3db.dvr_due_followups(
+                                human_resource_id = human_resource_id,
+                                ) or "0"
+            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
+                                            due_followups,
+                                            )
+
+            my_menu = M("My Cases", c=("dvr", "pr"), f="person",
+                        vars = {"closed": "0", "mine": "1"})(
+                        M("Create Case", m="create", t="pr_person", p="create"),
+                        M("Activities", f="case_activity",
+                          vars = {"mine": "1"},
+                          ),
+                        M(follow_ups_label, f="due_followups",
+                          vars = {"mine": "1"},
+                          ),
+                        )
+
+            my_actions = M("Actions", c="dvr", f="response_action")(
+                            M("Assigned to me", vars = {"mine": "a"}),
+                            M("Managed by me", vars = {"mine": "r"}),
+                            )
+
+            all_followups = None
+        else:
+            due_followups = current.s3db.dvr_due_followups() or "0"
+            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
+                                            due_followups,
+                                            )
+            my_menu = None
+            my_actions = None
+            all_followups = M(follow_ups_label, f="due_followups")
+
         return M(c="dvr")(
+                    my_menu,
+                    #M("My Cases", c=("dvr", "pr"), f="person",
+                      #vars = {"closed": "0", "mine": "1"})(
+                        #M("Activities", f="case_activity",
+                          #vars = {"mine": "1"},
+                          #),
+                        #M(my_follow_ups_label, f="due_followups",
+                          #vars = {"mine": "1"},
+                          #),
+                      #),
+                    my_actions,
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
-                        M("Create", m="create", t="pr_person", p="create"),
+                        M("Create Case", m="create", t="pr_person", p="create"),
                         M("All Cases", vars = {}),
+                        M("Actions", f="response_action"),
                         ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
                           vars = {"~.emergency": "True"},
                           ),
-                        M(follow_up_label, f="due_followups"),
+                        all_followups,
                         M("All Activities"),
                         M("Report", m="report"),
                         ),
@@ -217,18 +259,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Hierarchy", m="hierarchy"),
                         M("Create", m="create"),
                         #M("Import", m="import")
-                    ),
+                        ),
                     M("Facilities", f="facility")(
                         M("Create", m="create"),
-                    ),
-                    M("Facility Types", f="facility_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Organization Types", f="organisation_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
+                        ),
+                    M("Administration", restrict=(ADMIN,))(
+                        M("Facility Types", f="facility_type"),
+                        M("Organization Types", f="organisation_type"),
+                        M("Sectors", f="sector"),
+                        )
                  )
 
     # -------------------------------------------------------------------------

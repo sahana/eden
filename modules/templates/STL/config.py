@@ -1953,7 +1953,8 @@ def config(settings):
                 #Protection Response Sector,
                 #Interventions required
 
-                from s3 import S3HierarchyFilter, \
+                from s3 import S3DateFilter, \
+                               S3HierarchyFilter, \
                                S3OptionsFilter, \
                                S3TextFilter, \
                                s3_get_filter_opts
@@ -1986,6 +1987,12 @@ def config(settings):
                                   S3HierarchyFilter("response_type_case_activity.response_type_id",
                                                     hidden = True,
                                                     ),
+                                  S3DateFilter("start_date",
+                                               hidden = True,
+                                               ),
+                                  S3DateFilter("end_date",
+                                               hidden = True,
+                                               ),
                                   ]
 
             r.resource.configure(filter_widgets = filter_widgets,
@@ -2566,11 +2573,16 @@ def config(settings):
                     field = ltable.language
                     field.requires._select = OrderedDict([
                         ("ar", "Arabic"),
+                        ("en", "English"),
+                        ("fr", "French"),
+                        ("de", "German"),
+                        ("el", "Greek"),
                         ("ku", "Kurdish"),
                         ("fa", "Persian"),
-                        ("ur", "Urdu"),
+                        ("ru", "Russian"),
+                        ("sgn", "Sign Languages"),
                         ("tr", "Turkish"),
-                        ("en", "English"),
+                        ("ur", "Urdu"),
                     ])
 
                     # Custom validation for phone number

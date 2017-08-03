@@ -36,19 +36,25 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
+        get_vars = r.get_vars
+        mine = True if get_vars.get("mine") == "1" else False
+
         beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
         if beneficiary:
             CASES = T("Beneficiaries")
             CURRENT = T("Current Beneficiaries")
             CLOSED = T("Former Beneficiaries")
         else:
-            CASES = T("Cases")
-            CURRENT = T("Current Cases")
+            if mine:
+                CASES = T("My Cases")
+                CURRENT = T("My Current Cases")
+            else:
+                CASES = T("Cases")
+                CURRENT = T("Current Cases")
             CLOSED = T("Closed Cases")
 
         # Filters to split case list
         if not r.record:
-            get_vars = r.get_vars
 
             # Filter to active/archived cases
             archived = get_vars.get("archived")
@@ -60,6 +66,14 @@ def person():
                 archived = False
                 query = (FS("dvr_case.archived") == False) | \
                         (FS("dvr_case.archived") == None)
+
+            # Filter for cases assigned to the logged-in user
+            if mine:
+                human_resource_id = auth.s3_logged_in_human_resource()
+                if human_resource_id:
+                    query &= (FS("dvr_case.human_resource_id") == human_resource_id)
+                else:
+                    query &= (FS("dvr_case.human_resource_id").belongs(set()))
 
             # Filter to open/closed cases
             # (also filtering status filter opts)
@@ -265,6 +279,15 @@ def person():
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,
                                    )
+
+            elif r.component.tablename == "dvr_case_activity":
+
+                # Set default statuses for components
+                if settings.get_dvr_case_activity_use_status():
+                    s3db.dvr_case_activity_default_status()
+
+                if settings.get_dvr_manage_response_actions():
+                    s3db.dvr_response_default_status()
 
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
@@ -540,8 +563,36 @@ def case_activity():
 
         resource = r.resource
 
-        query = (FS("person_id$dvr_case.archived") == False)
-        resource.add_filter(query)
+        # Set default statuses, determine status-field
+        if settings.get_dvr_case_activity_use_status():
+            s3db.dvr_case_activity_default_status()
+            status_field = "status_id"
+        else:
+            status_field = "completed"
+
+        if settings.get_dvr_manage_response_actions():
+            s3db.dvr_response_default_status()
+
+        if not r.record:
+
+            # Filter out case activities of archived cases
+            query = (FS("person_id$dvr_case.archived") == False)
+            resource.add_filter(query)
+
+            # Mine-filter
+            mine = r.get_vars.get("mine")
+            if mine == "1":
+
+                # Adapt CRUD-strings to perspective
+                s3.crud_strings["dvr_case_activity"]["title_list"] = T("My Activities")
+
+                # Filter for case activities assigned to the current user
+                human_resource_id = auth.s3_logged_in_human_resource()
+                if human_resource_id:
+                    query = (FS("human_resource_id") == human_resource_id)
+                else:
+                    query = (FS("human_resource_id").belongs(set()))
+                resource.add_filter(query)
 
         list_fields = ["case_id$reference",
                        "person_id$first_name",
@@ -552,7 +603,7 @@ def case_activity():
                        "activity_details",
                        "followup",
                        "followup_date",
-                       "completed",
+                       status_field,
                        ]
         resource.configure(list_fields = list_fields,
                            insertable = False,
@@ -565,19 +616,55 @@ def case_activity():
 
 # -----------------------------------------------------------------------------
 def due_followups():
-    """ RESTful Controller for Due Follow-ups """
+    """ Case Activities to follow up: RESTful CRUD Controller """
 
     def prep(r):
+
         resource = r.resource
+
+        # Set default statuses, determine status-field
+        if settings.get_dvr_case_activity_use_status():
+            s3db.dvr_case_activity_default_status()
+            status_field = "status_id"
+        else:
+            status_field = "completed"
+
+        if settings.get_dvr_manage_response_actions():
+            s3db.dvr_response_default_status()
+
+        # Adapt CRUD strings to perspective
         s3.crud_strings["dvr_case_activity"]["title_list"] = T("Activities to follow up")
+
         if not r.record:
+
+            # Filter to exclude closed case activities
+            if current.deployment_settings.get_dvr_case_activity_use_status():
+                status_filter = (FS("status_id$is_closed") == False)
+            else:
+                status_filter = (FS("completed") == False)
+
+            # Filters for due followups
             query = (FS("followup") == True) & \
                     (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
-                    (FS("completed") != True) & \
+                    status_filter & \
                     ((FS("person_id$dvr_case.archived") == None) | \
                     (FS("person_id$dvr_case.archived") == False))
-
             resource.add_filter(query)
+
+            # Mine-filter
+            mine = r.get_vars.get("mine")
+            if mine == "1":
+
+                # Adapt CRUD-strings to perspective
+                s3.crud_strings["dvr_case_activity"]["title_list"] = T("My Activities to follow-up")
+
+                # Filter for case activities assigned to the current user
+                human_resource_id = auth.s3_logged_in_human_resource()
+                if human_resource_id:
+                    query = (FS("human_resource_id") == human_resource_id)
+                else:
+                    query = (FS("human_resource_id").belongs(set()))
+                resource.add_filter(query)
 
         list_fields = ["case_id$reference",
                        "person_id$first_name",
@@ -587,7 +674,7 @@ def due_followups():
                        "emergency",
                        "activity_details",
                        "followup_date",
-                       "completed",
+                       status_field,
                        ]
 
         resource.configure(list_fields = list_fields,
@@ -617,7 +704,9 @@ def referral_type():
 
     return s3_rest_controller()
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Responses
+#
 def response_type():
     """ Response Types: RESTful CRUD Controller """
 
@@ -626,6 +715,51 @@ def response_type():
         field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % r.tablename,
                                                field.represent,
                                                ))
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def response_status():
+    """ Response Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def response_action():
+    """ Response Actions: RESTful CRUD controller """
+
+    def prep(r):
+
+        resource = r.resource
+
+        mine = r.get_vars.get("mine")
+        if mine == "a":
+            # Filter for response actions assigned to logged-in user
+            mine_selector = FS("human_resource_id")
+            title_list = T("Actions assigned to me")
+        elif mine == "r":
+            # Filter for response actions managed by logged-in user
+            mine_selector = FS("case_activity_id$human_resource_id")
+            title_list = T("Actions managed by me")
+        else:
+            mine_selector = None
+
+        if mine_selector:
+            human_resource_id = auth.s3_logged_in_human_resource()
+            if human_resource_id:
+                resource.add_filter(mine_selector == human_resource_id)
+            else:
+                # Show nothing for mine if user is not a HR
+                resource.add_filter(mine_selector.belongs(set()))
+            s3.crud_strings[resource.tablename]["title_list"] = title_list
+
+        resource.configure(# Must not create or delete actions from here:
+                           insertable = False,
+                           deletable = False,
+                           )
+
         return True
     s3.prep = prep
 
@@ -665,6 +799,18 @@ def vulnerability_type():
                                                ))
         return True
     s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_activity_update_type():
+    """ Case Activity Update Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_activity_status():
+    """ Case Activity Statuses: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

@@ -96,14 +96,34 @@ input.date.hasDatepicker {
 .range-filter-widget {
     input.date-filter-input {
         width: auto;
-        float: left;
         margin-right: 2px;
+    }
+    .postfix.calendar-clear-btn {
+        margin-left: -2px;
     }
 }
 .btn.date-clear-btn {
     font-size: 0.85em;
     padding: 0.325em;
     margin-top: 0.5em;
+}
+.calendar-widget-container {
+    white-space: nowrap;
+}
+.postfix.calendar-clear-btn {
+    cursor: pointer;
+    .fa {
+        color: #B0B0B0;
+    }
+    display: inline-block;
+    margin-top: 2px;
+    width: 1.2rem;
+    vertical-align: top;
+}
+body.rtl .range-filter-field {
+    float:right;
+    padding-left: 10px;
+    padding-right: 0;
 }
 
 /* ImageCropWidget */

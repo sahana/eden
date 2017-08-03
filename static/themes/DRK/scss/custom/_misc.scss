@@ -268,3 +268,26 @@ body.rtl {
 #sub-defaultaddress table tr td {
     padding: 0.3rem;
 }
+
+// Priority representation
+.prio {
+    padding: 0 4px;
+    border: 1px solid black;
+    text-align: center;
+    white-space: pre;
+    font-weight: normal;
+}
+.prio-red {
+    color: white;
+    background-color: #D10000;
+}
+.prio-blue {
+    color: white;
+    background-color: #10427B;
+}
+.prio-lightblue {
+    background-color: #B7DDFF;
+}
+.prio-grey {
+    background-color: silver;
+}
