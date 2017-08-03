@@ -1725,6 +1725,8 @@ class DVRCaseActivityModel(S3Model):
 
         service_id = self.org_service_id
         project_id = self.project_project_id
+        organisation_id = self.org_organisation_id
+        human_resource_id = self.hrm_human_resource_id
 
         # ---------------------------------------------------------------------
         # Provider Type
@@ -1951,9 +1953,9 @@ class DVRCaseActivityModel(S3Model):
                                 writable = service_type,
                                 ),
                      # Expose in template as needed:
-                     self.org_organisation_id(readable = False,
-                                              writable = False,
-                                              ),
+                     organisation_id(readable = False,
+                                     writable = False,
+                                     ),
                      project_id(ondelete = "SET NULL",
                                 readable = False,
                                 writable = False,
@@ -2273,14 +2275,14 @@ class DVRCaseActivityModel(S3Model):
                            ),
 
                      # Responsibilities (activate in template as needed)
-                     self.org_organisation_id(label = T("Referral Agency"),
-                                              readable = False,
-                                              writable = False,
-                                              ),
-                     self.hrm_human_resource_id(label = T("Assigned to"),
-                                                readable = False,
-                                                writable = False,
-                                                ),
+                     organisation_id(label = T("Referral Agency"),
+                                     readable = False,
+                                     writable = False,
+                                     ),
+                     human_resource_id(label = T("Assigned to"),
+                                       readable = False,
+                                       writable = False,
+                                       ),
 
                      # Categories (activate in template as needed)
                      self.org_sector_id(readable = activity_sectors,
@@ -2555,13 +2557,18 @@ class DVRCaseActivityModel(S3Model):
                      s3_date(label = T("Established on"),
                              default = "now",
                              ),
-                     self.hrm_human_resource_id(
+                     human_resource_id(
                          label = T("Established by"),
                          ),
                      self.dvr_need_id(empty = False,
                                       ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  orderby = "%s.date" % tablename,
+                  )
 
         # ---------------------------------------------------------------------
         # Case Service Contacts (other than case activities)
@@ -2579,8 +2586,8 @@ class DVRCaseActivityModel(S3Model):
                                       ),
                      s3_date(),
                      self.dvr_need_id(),
-                     self.org_organisation_id(label=T("Providing Agency"),
-                                              ),
+                     organisation_id(label=T("Providing Agency"),
+                                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2648,11 +2655,16 @@ class DVRCaseActivityModel(S3Model):
         tablename = "dvr_case_activity_update"
         define_table(tablename,
                      case_activity_id(),
-                     s3_date(),
+                     s3_date(default = "now",
+                             ),
                      update_type_id(),
-                     self.hrm_human_resource_id(),
+                     human_resource_id(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  orderby = "%s.date" % tablename,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

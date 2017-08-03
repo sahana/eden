@@ -922,7 +922,7 @@ def config(settings):
                             "sector_id",
 
                             "subject",
-                            "need_details",
+                            (T("Initial Situation Details"), ("need_details")),
 
                             "start_date",
                             "priority",
@@ -960,13 +960,15 @@ def config(settings):
                             "followup_date",
 
                             S3SQLInlineComponent("case_activity_update",
-                                                 label = T("Updates"),
+                                                 label = T("Progress"),
                                                  fields = [
                                                      "date",
-                                                     "update_type_id",
+                                                     (T("Occasion"), "update_type_id"),
                                                      "human_resource_id",
                                                      "comments",
                                                      ],
+                                                 layout = S3SQLVerticalSubFormLayout,
+                                                 explicit_add = T("Add Entry"),
                                                  ),
 
                             "status_id",
@@ -1320,6 +1322,16 @@ def config(settings):
         return attr
 
     settings.customise_org_facility_controller = customise_org_facility_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_sector_resource(r, tablename):
+
+        table = current.s3db.org_sector
+
+        field = table.location_id
+        field.readable = field.writable = False
+
+    settings.customise_org_sector_resource = customise_org_sector_resource
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
