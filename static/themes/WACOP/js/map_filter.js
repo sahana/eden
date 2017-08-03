@@ -53,7 +53,7 @@ S3.wacop_mapFilter = function(map_id) {
                     $('.map_polygon_panel').remove();
                     // Add New Panel
                     // @ToDo: i18n
-                    var msg = 'Please wait while we update your results. Remove this filter any time byclicking the Clear button below.';
+                    var msg = 'Please wait while we update your results. Remove this filter any time by clicking the Clear button below.';
                     var div = '<div class="map_polygon_panel">' + msg + '<div class="map_polygon_buttons"><a class="button small map_polygon_clear">' + 'Clear' + '</a></div></div>';
                     $('#' + map_id).append(div);
                     // Click Handler
