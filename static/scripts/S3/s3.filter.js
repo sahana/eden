@@ -1415,7 +1415,7 @@ S3.search = {};
 
     /**
      * Check that Map JS is Loaded
-     * - used if a tab containing a Map is unhidden
+     * - e.g. used if a tab containing a Map is unhidden
      */
     var jsLoaded = function() {
         var dfd = new jQuery.Deferred();

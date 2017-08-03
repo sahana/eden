@@ -1157,6 +1157,7 @@ def config(settings):
         else:
             # Event Profile or Incident Profile
             list_fields = [(T("Name"), "name_click"),
+                           "incident_id",
                            "status_id",
                            ]
 

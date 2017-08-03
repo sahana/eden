@@ -296,35 +296,61 @@ class custom_WACOP(S3CRUD):
 
             @param layer_name: the name of the Layer
             @param map_id: the id of the map
-            @param filter: optional filter
+            @param filter: True for an S3MapFilter, otherwise optional filter string for the layer
         """
 
-        ltable = current.s3db.gis_layer_feature
-        layer = current.db(ltable.name == layer_name).select(ltable.layer_id,
-                                                             limitby=(0, 1)
-                                                             ).first()
-        try:
-            layer_id = layer.layer_id
-        except:
-            # No prepop done?
-            layer_id = None
-        feature_resources = [{"name"     : current.T(layer_name),
-                              "id"       : "search_results",
-                              "layer_id" : layer_id,
-                              "filter"   : filter,
-                              },
-                             ]
-        map = current.gis.show_map(id = map_id,
-                                   height = 350,
-                                   width = 425,
-                                   collapsed = True,
-                                   callback='''S3.search.s3map('%s')''' % map_id,
-                                   feature_resources = feature_resources,
-                                   #toolbar = True,
-                                   #add_polygon = True,
-                                   )
+        s3 = current.response.s3
+        jqrappend = s3.jquery_ready.append
 
-        return map
+        if filter is True and current.deployment_settings.get_gis_spatialdb():
+            # Using S3MapFilter
+            _map = None
+
+            button = A("DRAW A MAP AREA",
+                       _class="button",
+                       _id="map_filter_button",
+                       )
+
+            # Move Map into the Design
+            jqrappend('''$('#%s').appendTo($('#map-here'))''' % map_id)
+
+            # Apply custom design to the S3MapFilter
+            s3.scripts.append("/%s/static/themes/WACOP/js/map_filter.js" % current.request.application)
+            jqrappend('''S3.wacop_mapFilter('%s')''' % map_id)
+
+        else:
+            # Map without S3MapFilter
+            button = None
+
+            ltable = current.s3db.gis_layer_feature
+            layer = current.db(ltable.name == layer_name).select(ltable.layer_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
+            try:
+                layer_id = layer.layer_id
+            except:
+                # No prepop done?
+                layer_id = None
+            feature_resources = [{"name"     : current.T(layer_name),
+                                  "id"       : "search_results",
+                                  "layer_id" : layer_id,
+                                  "filter"   : filter,
+                                  },
+                                 ]
+            _map = current.gis.show_map(id = map_id,
+                                        height = 350,
+                                        width = 425,
+                                        collapsed = True,
+                                        callback='''S3.search.s3map('%s')''' % map_id,
+                                        feature_resources = feature_resources,
+                                        #toolbar = True,
+                                        #add_polygon = True,
+                                        )
+
+        # Resize the map to match the height of the Filter Form
+        jqrappend('''S3.wacop_resizeMap('%s')''' % map_id)
+
+        return _map, button
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -860,7 +886,7 @@ class custom_WACOP(S3CRUD):
         else:
             output["create_post_button"] = ""
 
-        appname = current.request.application
+        appname = r.application
 
         # Comments for Updates
         s3.scripts.append("/%s/static/themes/WACOP/js/update_comments.js" % appname)
@@ -942,14 +968,7 @@ class event_Browse(custom_WACOP):
 
         # Map of Events
         map_id = "event-gis_location_the_geom-map-filter-map"
-        if current.deployment_settings.get_gis_spatialdb():
-            # Now done through S3MapFilter
-            _map = None
-            # Move Map into the Design
-            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
-        else:
-            _map = self._map("Events", map_id=map_id)
-        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
+        _map, button = self._map("Events", map_id=map_id, filter=True)
 
         # Output
         output = {"alerts": alerts,
@@ -982,6 +1001,7 @@ class event_Browse(custom_WACOP):
                                            ),
                           S3MapFilter("event_location.location_id$the_geom",
                                       label = "",
+                                      button = button,
                                       ),
                           S3OptionsFilter("tag.tag_id",
                                           label = "",
@@ -1068,14 +1088,7 @@ class incident_Browse(custom_WACOP):
 
         # Map of Incidents
         map_id = "incident-gis_location_the_geom-map-filter-map"
-        if current.deployment_settings.get_gis_spatialdb():
-            # Now done through S3MapFilter
-            _map = None
-            # Move Map into the Design
-            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
-        else:
-            _map = self._map("Incidents", map_id=map_id)
-        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
+        _map, button = self._map("Incidents", map_id=map_id, filter=True)
 
         # Output
         output = {"alerts": alerts,
@@ -1108,6 +1121,7 @@ class incident_Browse(custom_WACOP):
                                            ),
                           S3MapFilter("location_id$the_geom",
                                       label = "",
+                                      button = button,
                                       ),
                           S3OptionsFilter("tag.tag_id",
                                           label = "",
@@ -1211,14 +1225,7 @@ class resource_Browse(custom_WACOP):
 
         # Map of Resources
         map_id = "group-gis_location_the_geom-map-filter-map"
-        if current.deployment_settings.get_gis_spatialdb():
-            # Now done through S3MapFilter
-            _map = None
-            # Move Map into the Design
-            current.response.s3.jquery_ready.append('''$('#%s').appendTo($('#map-here'))''' % map_id)
-        else:
-            _map = self._map("Resources", map_id=map_id)
-        current.response.s3.jquery_ready.append('''S3.wacop_resizeMap('%s')''' % map_id)
+        _map, button = self._map("Resources", map_id=map_id, filter=True)
 
         # Output
         output = {"alerts": alerts,
@@ -1243,6 +1250,7 @@ class resource_Browse(custom_WACOP):
                                            ),
                           S3MapFilter("location_id$the_geom",
                                       label = "",
+                                      button = button,
                                       ),
                           S3OptionsFilter("organisation_team.organisation_id",
                                           label = "",

@@ -209,11 +209,11 @@ svg[id^=OpenLayers] {
     speak: none;
 }
 .map_legend_tab.left:before {
-    /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-left/ */
+    /* http://fontawesome.io/3.2.1/icon/double-angle-left/ */
     content: "\f100";
 }
 .map_legend_tab.right:before {
-    /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-right/ */
+    /* http://fontawesome.io/3.2.1/icon/double-angle-right/ */
     content: "\f101";
 }
 .map_wrapper.print .map_legend_tab {
@@ -240,6 +240,31 @@ svg[id^=OpenLayers] {
 .layer_throbber.save {
     /* Push Under Save Panel */
     top: 65px;
+}
+
+/* Draw Polygon */
+.map_polygon_panel {
+    background-color: #fbfbfb;
+    position: absolute;
+    top: 10px;
+    height: 125px;
+    width: 350px;
+    margin-left: -175px; /* Half of the  Div width */
+    left: 50%;
+    border: solid;
+    border-radius: 2px;
+    border-width: 1px;
+    font-size: small;
+    text-align: center;
+    padding: 12px;
+}
+.map_polygon_buttons {
+    font-size: 0.75rem;
+    margin-top: 12px;
+    text-transform: uppercase;
+}
+.button.map_polygon_finish {
+    margin-right: 12px;
 }
 
 /* Save Panel */

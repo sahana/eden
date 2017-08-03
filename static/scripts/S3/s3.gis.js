@@ -5055,6 +5055,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         });
 
+        var map_id = s3.id;
         if (toolbar) {
             // Toolbar Button
             if (config && config.l) {
@@ -5062,7 +5063,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             } else {
                 var tooltip = i18n.gis_draw_polygon;
             }
-            var map_id = s3.id;
             var polygonButton = new GeoExt.Action({
                 control: control,
                 handler: function() {
@@ -5115,11 +5115,71 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             map.addControl(control);
             if (active) {
                 control.activate();
-                $('#' + s3.id + '_panel .olMapViewport').addClass('crosshair');
+                $('#' + map_id + '_panel .olMapViewport').addClass('crosshair');
+                addPolygonPanel(map_id, control);
             }
         }
     };
     
+    // Floating DIV to explain & control
+    var addPolygonPanel = function(map_id, control) {
+        if (undefined === control) {
+            var i,
+                len,
+                controls = S3.gis.maps[map_id].controls;
+            for (i=0, len=controls.length; i < len; i++) {
+                control = controls[i];
+                if (control.CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                    break;
+                }
+            }
+        }
+        // @ToDo: i18n
+        var msg = 'Click anywhere on the map to begin drawing. Double click to complete the area or click the Finish button below.';
+        var div = '<div class="map_polygon_panel">' + msg + '<div class="map_polygon_buttons"><a class="button small map_polygon_finish">' + 'Finish' + '</a><a class="button small map_polygon_clear">' + 'Clear' + '</a></div></div>';
+        $('#' + map_id).append(div);
+
+        // Click Handlers
+        var s3 = S3.gis.maps[map_id].s3;
+        $('#' + map_id + ' .map_polygon_finish').click(function() {
+            // Complete the Polygon (which in-turn will call pointPlaced)
+            control.finishSketch();
+
+            if (undefined != s3.polygonPanelFinish) {
+                // Call Custom Call-back (used by S3MapFilter in WACOP)
+                s3.polygonPanelFinish();
+            } else {
+                if (s3.lastDraftFeature) {
+                    s3.lastDraftFeature.destroy();
+                } else if (s3.draftLayer.features.length > 1) {
+                    // Clear the one from the Current Location in S3LocationSelector
+                    s3.draftLayer.features[0].destroy();
+                }
+                control.deactivate();
+                $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
+            }
+        });
+
+        $('#' + map_id + ' .map_polygon_clear').click(function() {
+            if (s3.lastDraftFeature) {
+                s3.lastDraftFeature.destroy();
+            } else if (s3.draftLayer.features.length > 1) {
+                // Clear the one from the Current Location in S3LocationSelector
+                s3.draftLayer.features[0].destroy();
+            }
+            control.deactivate();
+            $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
+            if (undefined != s3.polygonPanelClear) {
+                // Call Custom Call-back (used by S3MapFilter in WACOP)
+                s3.polygonPanelClear();
+            }
+        });
+
+        return control;
+    };
+    // Pass to global scope so that it can be called from custom S3MapFilter buttons
+    S3.gis.addPolygonPanel = addPolygonPanel;
+
     // Enable this once CIRCULARSTRING is fully supported
     // Get the points on the circumference of the circle
     /*var getCircumferencePoints = function(lat_center, lon_center, radius) {

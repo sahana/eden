@@ -1775,18 +1775,22 @@ class S3MapFilter(S3FilterWidget):
             @param values: the search values from the URL query
         """
 
-        if not current.deployment_settings.get_gis_spatialdb():
+        settings = current.deployment_settings
+
+        if not settings.get_gis_spatialdb():
             current.log.warning("No Spatial DB => Cannot do Intersects Query yet => Disabling S3MapFilter")
             return ""
 
-        attr = self.attr
+        attr_get = self.attr.get
+        opts_get = self.opts.get
 
-        if "_class" in attr and attr["_class"]:
-            _class = "%s %s" % (attr["_class"], self._class)
+        _class = attr_get("class")
+        if _class:
+            _class = "%s %s" % (_class, self._class)
         else:
             _class = self._class
 
-        _id = attr["_id"]
+        _id = attr_get("_id")
 
         # Hidden INPUT to store the WKT
         input = INPUT(_type="hidden",
@@ -1804,8 +1808,8 @@ class S3MapFilter(S3FilterWidget):
         map_id = "%s-map" % _id
 
         c, f = resource.tablename.split("_", 1)
-        c = attr.get("controller", c)
-        f = attr.get("function", f)
+        c = opts_get("controller", c)
+        f = opts_get("function", f)
 
         ltable = current.s3db.gis_layer_feature
         query = (ltable.controller == c) & \
@@ -1827,21 +1831,30 @@ class S3MapFilter(S3FilterWidget):
         feature_resources = [{"name"     : current.T(layer_name),
                               "id"       : "search_results",
                               "layer_id" : layer_id,
-                              "filter"   : attr.get("filter"),
+                              "filter"   : opts_get("filter"),
                               },
                              ]
 
+        button = opts_get("button")
+        if button:
+            # No need for the toolbar
+            toolbar = opts_get("toolbar", False)
+        else:
+            # Need the toolbar
+            toolbar = True
+
         _map = current.gis.show_map(id = map_id,
-                                    height = attr.get("height", 350),
-                                    width = attr.get("width", 425),
+                                    height = opts_get("height", settings.get_gis_map_height()),
+                                    width = opts_get("width", settings.get_gis_map_width()),
                                     collapsed = True,
                                     callback='''S3.search.s3map('%s')''' % map_id,
                                     feature_resources = feature_resources,
-                                    toolbar = True,
+                                    toolbar = toolbar,
                                     add_polygon = True,
                                     )
 
         return TAG[""](input,
+                       button,
                        _map,
                        )
 
