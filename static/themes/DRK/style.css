@@ -1624,3 +1624,34 @@ body.rtl .event-type-header {
 #sub-defaultaddress table tr td {
   padding: 0.3rem;
 }
+
+/* line 273, ../scss/custom/_misc.scss */
+.prio {
+  padding: 0 4px;
+  border: 1px solid black;
+  text-align: center;
+  white-space: pre;
+  font-weight: normal;
+}
+
+/* line 280, ../scss/custom/_misc.scss */
+.prio-red {
+  color: white;
+  background-color: #D10000;
+}
+
+/* line 284, ../scss/custom/_misc.scss */
+.prio-blue {
+  color: white;
+  background-color: #10427B;
+}
+
+/* line 288, ../scss/custom/_misc.scss */
+.prio-lightblue {
+  background-color: #B7DDFF;
+}
+
+/* line 291, ../scss/custom/_misc.scss */
+.prio-grey {
+  background-color: silver;
+}

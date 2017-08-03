@@ -170,7 +170,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
             my_menu = M("My Cases", c=("dvr", "pr"), f="person",
                         vars = {"closed": "0", "mine": "1"})(
-                        M("Create", m="create", t="pr_person", p="create"),
+                        M("Create Case", m="create", t="pr_person", p="create"),
                         M("Activities", f="case_activity",
                           vars = {"mine": "1"},
                           ),
@@ -208,7 +208,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     my_actions,
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
-                        M("Create", m="create", t="pr_person", p="create"),
+                        M("Create Case", m="create", t="pr_person", p="create"),
                         M("All Cases", vars = {}),
                         M("Actions", f="response_action"),
                         ),
