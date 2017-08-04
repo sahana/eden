@@ -622,6 +622,8 @@ class S3ProjectModel(S3Model):
                                         "key": "theme_id",
                                         "actuate": "hide",
                                         },
+                       # Format needed by S3Filter (unless using $link)
+                       project_theme_project = "project_id",
                        # Programmes
                        project_programme = {"link": "project_programme_project",
                                             "joinby": "project_id",
@@ -630,7 +632,7 @@ class S3ProjectModel(S3Model):
                                             "multiple": False,
                                             },
                        # Format needed by S3Filter (unless using $link)
-                       project_theme_project = "project_id",
+                       project_programme_project = "project_id",
 
                        # Project Needs (e.g. Funding, Volunteers)
                        req_project_needs = {"joinby": "project_id",
@@ -12834,7 +12836,7 @@ def project_project_filters(org_label):
 
     if settings.get_project_programmes():
         append_filter(
-            S3OptionsFilter("programme_project.programme_id",
+            S3OptionsFilter("project_programme_project.programme_id",
                             label = T("Program"),
                             hidden = True,
                             )

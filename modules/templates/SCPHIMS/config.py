@@ -1466,7 +1466,7 @@ def config(settings):
                              levels = ("L1", "L2", "L3"),
                              hidden = True,
                              ),
-            S3OptionsFilter("programme_project.programme_id",
+            S3OptionsFilter("project_programme_project.programme_id",
                             label = T("Program"),
                             hidden = True,
                             ),

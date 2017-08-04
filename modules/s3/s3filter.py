@@ -63,8 +63,6 @@ from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import ICON, \
                       S3CalendarWidget, \
-                      S3DateWidget, \
-                      S3DateTimeWidget, \
                       S3GroupedOptionsWidget, \
                       S3MultiSelectWidget, \
                       S3HierarchyWidget
@@ -2186,9 +2184,9 @@ class S3OptionsFilter(S3FilterWidget):
 
                         rows = current.db(query).select(key_field,
                                                         resource._id.min(),
-                                                        groupby=key_field,
-                                                        join=join,
-                                                        left=left,
+                                                        groupby = key_field,
+                                                        join = join,
+                                                        left = left,
                                                         )
 
                 # If we can not perform a reverse lookup, then we need
