@@ -929,7 +929,7 @@ def config(settings):
                             "human_resource_id",
 
                             S3SQLInlineComponent("case_activity_need",
-                                                 label = T("Needs"),
+                                                 label = T("Needs Assessment"),
                                                  fields = [
                                                      "date",
                                                      "need_id",
@@ -953,8 +953,6 @@ def config(settings):
                                                  layout = S3SQLVerticalSubFormLayout,
                                                  explicit_add = T("Add Action"),
                                                  ),
-
-                            #"emergency",
 
                             "followup",
                             "followup_date",
@@ -1000,12 +998,13 @@ def config(settings):
                               ],
                               label = T("Search"),
                               ),
-                S3OptionsFilter("emergency",
-                                options = {True: T("Yes"),
-                                           False: T("No"),
-                                           },
-                                cols = 2,
-                                ),
+                # @todo: replace by priority filter
+                #S3OptionsFilter("emergency",
+                #                options = {True: T("Yes"),
+                #                           False: T("No"),
+                #                           },
+                #                cols = 2,
+                #                ),
                 S3OptionsFilter("need_id",
                                 options = lambda: s3_get_filter_opts("dvr_need",
                                                                      translate = True,
@@ -1076,6 +1075,10 @@ def config(settings):
                 result = True
 
             resource = r.resource
+
+            # Adapt list title when filtering for priority 0 (Emergency)
+            if r.get_vars.get("~.priority") == "0":
+                s3.crud_strings["dvr_case_activity"]["title_list"] = T("Emergencies")
 
             # Filter to active cases
             if not r.record:

@@ -2617,7 +2617,7 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # Table Configuration
+        # Table configuration
         configure(tablename,
                   deduplicate = S3Duplicate(),
                   )
@@ -2662,6 +2662,7 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table configuration
         configure(tablename,
                   orderby = "%s.date" % tablename,
                   )

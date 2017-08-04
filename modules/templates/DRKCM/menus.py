@@ -214,7 +214,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
-                          vars = {"~.emergency": "True"},
+                          vars = {"~.priority": "0"},
                           ),
                         all_followups,
                         M("All Activities"),
