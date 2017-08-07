@@ -2617,7 +2617,7 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # Table Configuration
+        # Table configuration
         configure(tablename,
                   deduplicate = S3Duplicate(),
                   )
@@ -2662,6 +2662,7 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table configuration
         configure(tablename,
                   orderby = "%s.date" % tablename,
                   )
@@ -2790,13 +2791,23 @@ class DVRCaseActivityModel(S3Model):
             return
 
         if is_closed:
-            if not activity.end_date:
-                activity.update_record(end_date=current.request.utcnow.date())
 
-            # @todo: also reset followup-flag and -date
+            # Cancel follow-ups for closed activities
+            data = {"followup": False,
+                    "followup_date": None,
+                    }
+
+            # Set end-date if not already set
+            if not activity.end_date:
+                data["end_date"] = current.request.utcnow.date()
+
+            activity.update_record(**data)
+
             # @todo: also close all actions linked to this activity
 
         elif activity.end_date:
+
+            # Remove end-date if present
             activity.update_record(end_date = None)
 
 # =============================================================================

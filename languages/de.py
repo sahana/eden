@@ -2898,6 +2898,7 @@
 'Need to specify a table!': 'Sie müssen einen Tabellennamen angeben!',
 'Need to specify a user!': 'Ein Benutzer muss angegeben werden!',
 'Need updated': 'Bedarf aktualisiert',
+'Needs Assessment': 'Bedarfseinschätzung',
 'Needs Details': 'Details zum Bedarf',
 'Needs Maintenance': 'Braucht Wartung',
 'Needs to reduce vulnerability to violence': 'Handlungsbedarf um die Anfälligkeit für Gewalt zu verringern',
