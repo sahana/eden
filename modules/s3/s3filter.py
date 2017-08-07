@@ -1540,6 +1540,13 @@ class S3LocationFilter(S3FilterWidget):
         # Restore referee name
         db._referee_name = rname
 
+        if filters_added:
+            # Remove them
+            rfilter = resource.rfilter
+            rfilter.filters.pop()
+            rfilter.filters.pop()
+            rfilter.query = None
+
         rows2 = []
         if not rows:
             if values:
@@ -1573,12 +1580,6 @@ class S3LocationFilter(S3FilterWidget):
 
             if not rows:
                 # No options
-                if filters_added:
-                    # Remove them
-                    rfilter = resource.rfilter
-                    rfilter.filters.pop()
-                    rfilter.filters.pop()
-                    rfilter.query = None
                 return default
 
         elif values:
@@ -1696,13 +1697,6 @@ class S3LocationFilter(S3FilterWidget):
                 name_l10n = "S3.location_name_l10n=%s" % \
                     json.dumps(name_l10n, separators=SEPARATORS)
                 js_global.append(name_l10n)
-
-        if filters_added:
-            # Remove them
-            rfilter = resource.rfilter
-            rfilter.filters.pop()
-            rfilter.filters.pop()
-            rfilter.query = None
 
         return (ftype, levels, None)
 
