@@ -19,7 +19,7 @@ def config(settings):
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/Demo", "default/users")
+    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SCPHIMS"
