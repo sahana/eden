@@ -1479,6 +1479,8 @@ class S3LocationFilter(S3FilterWidget):
         else:
             selector = self.field
 
+        filters_added = False
+
         options = opts.get("options")
         if options:
             # Fixed options (=list of location IDs)
@@ -1510,6 +1512,8 @@ class S3LocationFilter(S3FilterWidget):
             # @ToDo: Allow override
             resource.add_filter(FS("%s$end_date" % selector) == None)
 
+            filters_added = True
+
         else:
             # Neither fixed options nor resource to look them up
             return default
@@ -1540,7 +1544,7 @@ class S3LocationFilter(S3FilterWidget):
         if not rows:
             if values:
                 # Make sure the selected options are in the available options
-                resource = s3db.resource("gis_location")
+                resource2 = s3db.resource("gis_location")
                 fields = ["id"] + [l for l in levels]
                 if translate:
                     fields.append("path")
@@ -1551,17 +1555,17 @@ class S3LocationFilter(S3FilterWidget):
                     if not v:
                         continue
                     level = "L%s" % f.split("L", 1)[1][0]
-                    resource.clear_query()
+                    resource2.clear_query()
                     query = (gtable.level == level) & \
                             (gtable.name.belongs(v))
-                    resource.add_filter(query)
+                    resource2.add_filter(query)
                     # Filter out old Locations
                     # @ToDo: Allow override
-                    resource.add_filter(gtable.end_date == None)
-                    _rows = resource.select(fields=fields,
-                                            limit=None,
-                                            virtual=False,
-                                            as_rows=True)
+                    resource2.add_filter(gtable.end_date == None)
+                    _rows = resource2.select(fields=fields,
+                                             limit=None,
+                                             virtual=False,
+                                             as_rows=True)
                     if rows:
                         rows &= _rows
                     else:
@@ -1569,6 +1573,12 @@ class S3LocationFilter(S3FilterWidget):
 
             if not rows:
                 # No options
+                if filters_added:
+                    # Remove them
+                    rfilter = resource.rfilter
+                    rfilter.filters.pop()
+                    rfilter.filters.pop()
+                    rfilter.query = None
                 return default
 
         elif values:
@@ -1686,6 +1696,13 @@ class S3LocationFilter(S3FilterWidget):
                 name_l10n = "S3.location_name_l10n=%s" % \
                     json.dumps(name_l10n, separators=SEPARATORS)
                 js_global.append(name_l10n)
+
+        if filters_added:
+            # Remove them
+            rfilter = resource.rfilter
+            rfilter.filters.pop()
+            rfilter.filters.pop()
+            rfilter.query = None
 
         return (ftype, levels, None)
 
