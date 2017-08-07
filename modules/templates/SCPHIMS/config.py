@@ -19,7 +19,7 @@ def config(settings):
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/Demo", "default/users")
+    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SCPHIMS"
@@ -95,7 +95,7 @@ def config(settings):
     # Finance settings
     settings.fin.currencies = {
         "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
+        "GBP" : "Great British Pounds",
         "PHP" : "Philippine Pesos",
         "USD" : "United States Dollars",
     }
@@ -1674,37 +1674,37 @@ def config(settings):
             restricted = True,
             module_type = 4
         )),
-        #("asset", Storage(
-        #    name_nice = T("Assets"),
-        #    #description = "Recording and Assigning Assets",
-        #    restricted = True,
-        #    module_type = 5,
-        #)),
+        ("asset", Storage(
+            name_nice = T("Assets"),
+            #description = "Recording and Assigning Assets",
+            restricted = True,
+            module_type = 5,
+        )),
         # Vehicle depends on Assets
-        #("vehicle", Storage(
-        #    name_nice = T("Vehicles"),
-        #    #description = "Manage Vehicles",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
-        #("req", Storage(
-        #    name_nice = T("Requests"),
-        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("vehicle", Storage(
+            name_nice = T("Vehicles"),
+            #description = "Manage Vehicles",
+            restricted = True,
+            module_type = 10,
+        )),
+        ("req", Storage(
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 10,
+        )),
         ("project", Storage(
             name_nice = T("4W"),
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
             module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 10
+        )),
         ("hms", Storage(
             name_nice = T("Clinics"),
             #description = "Helps to monitor status of hospitals",

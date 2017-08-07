@@ -97,6 +97,7 @@ class S3MainMenu(default.S3MainMenu):
                     M("Offices", c="org", f="office"),
                     M("Schools", c="edu", f="school"),
                     M("Warehouses", c="inv", f="warehouse"),
+                    M("Displacement", c="cr", f="shelter"),
                 ),
                 MM("Assessments", c="dc", f="respnse", m="summary")(
                     #M("Table", m="list"),

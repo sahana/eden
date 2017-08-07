@@ -1,8 +1,12 @@
 Abrv,Name
-"Education","Education"
-"FSL","Food Security & Livelihoods"
-"Health","Health"
-"Nutrition","Nutrition"
-"Protection","Child Protection"
-"Shelter","Emergency Shelter & NFI"
-"WASH","Water Sanitation Hygiene"
+HEA,Healh
+LOG,Logistics
+NUT,Nutrition
+PRO,Portection
+SHE,Shelter
+WASH,Water Sanitation and Hygiene
+CCCM,Camp Coordination and Camp Management
+RECO,Early Recovery
+EDU,Education
+ETC,Emergency Telecommunications
+FOOD,Food Security
