@@ -90,6 +90,8 @@ class CRShelterModel(S3Model):
                      Field("name", notnull=True,
                            label = NAME,
                            requires = [IS_NOT_EMPTY(),
+                                       # @todo: add unique-constraint, otherwise
+                                       # IS_NOT_ONE_OF blocks reference imports
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),
@@ -245,7 +247,12 @@ class CRShelterModel(S3Model):
         # Shelters
         #
         cr_shelter_opts = {1 : T("Closed"),
-                           2 : T("Open"),
+                           # In many languages, translations of "Open" differ
+                           # between the verb and the adjective, as well as
+                           # between grammatical moods or genders etc - so
+                           # adding a context-comment for T() here to clarify
+                           # which "Open" we mean (will not be rendered):
+                           2 : T("Open##the_shelter_is"),
                            }
 
         day_and_night = settings.get_cr_day_and_night()

@@ -25,6 +25,8 @@
 'New Organization': 'Lägg Till Organisation',
 'New': 'Lägg till',
 'No Projects currently registered': 'Inga projekt registrerade',
+'Open': 'Öppna',
+'Open##the_shelter_is': 'Öppet',
 'Project': 'Projekt',
 'Projects': 'Projekt',
 'Search': 'Sök',

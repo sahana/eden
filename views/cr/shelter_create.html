@@ -1,8 +1,10 @@
 {{extend "layout.html"}}
 {{include "_create.html"}}
+{{if settings.get_cr_shelter_people_registration():}}
 <script type="text/javascript">//<![CDATA[
 $(function(){
  var msg_workflow = '{{=T("The next screen will allow you to detail the number of people here & their needs.")}}<br />'
- $(':submit').before(msg_workflow)
+ $('.form-container :submit').before(msg_workflow)
 })
 //]]></script>
+{{pass}}

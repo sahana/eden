@@ -186,7 +186,7 @@
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
-            
+
             <!-- Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type', col[@field='Type'])[1])]">
                 <xsl:call-template name="Type"/>
@@ -280,42 +280,44 @@
         <xsl:param name="BranchName"/>
 
         <!-- Create the Organisation/Branch -->
-        <resource name="org_organisation">
-            <xsl:choose>
-                <xsl:when test="$OrgName!=''">
-                    <!-- This is the Organisation -->
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$OrgName"/></data>
-                </xsl:when>
-                <xsl:when test="$BranchName!=''">
-                    <!-- This is the Branch -->
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$BranchName"/></data>
-                </xsl:when>
-            </xsl:choose>
+        <xsl:if test="$OrgName!='' or $BranchName!=''">
+            <resource name="org_organisation">
+                <xsl:choose>
+                    <xsl:when test="$OrgName!=''">
+                        <!-- This is the Organisation -->
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$OrgName"/></data>
+                    </xsl:when>
+                    <xsl:when test="$BranchName!=''">
+                        <!-- This is the Branch -->
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$BranchName"/></data>
+                    </xsl:when>
+                </xsl:choose>
 
-            <xsl:if test="$BranchName!=''">
-                <!-- Nest the Top-Level -->
-                <!-- Don't create Orgs as Branches of themselves -->
-                <xsl:if test="col[@field='Organisation']!=$BranchName">
-                    <resource name="org_organisation_branch">
-                        <reference field="organisation_id">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="col[@field='Organisation']"/>
-                            </xsl:attribute>
-                        </reference>
-                    </resource>
+                <xsl:if test="$BranchName!=''">
+                    <!-- Nest the Top-Level -->
+                    <!-- Don't create Orgs as Branches of themselves -->
+                    <xsl:if test="col[@field='Organisation']!=$BranchName">
+                        <resource name="org_organisation_branch">
+                            <reference field="organisation_id">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="col[@field='Organisation']"/>
+                                </xsl:attribute>
+                            </reference>
+                        </resource>
+                    </xsl:if>
                 </xsl:if>
-            </xsl:if>
 
-        </resource>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
-    
+
     <!-- ****************************************************************** -->
     <xsl:template name="Type">
         <xsl:variable name="type" select="col[@field='Type']/text()"/>

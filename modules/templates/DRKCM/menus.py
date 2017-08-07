@@ -39,6 +39,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             MM("Cases", c=("dvr", "pr")),
             MM("ToDo", c="project", f="task"),
+            MM("Shelters", c="cr", f="shelter"),
             MM("More", link=False)(
                 MM("Organizations", c="org", f="organisation"),
                 MM("Facilities", c="org", f="facility"),
@@ -149,7 +150,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="cr")(
-                    M("Shelter", f="shelter"),
+                    M("Shelters", f="shelter")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Administration", link=False, restrict=(ADMIN,))(
+                        M("Shelter Types", f="shelter_type"),
+                        ),
                 )
 
     # -------------------------------------------------------------------------

@@ -1242,6 +1242,85 @@ def config(settings):
                                                          )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
+
+    # -------------------------------------------------------------------------
+    # Shelter Registry Settings
+    #
+    settings.cr.people_registration = False
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_resource(r, tablename):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Disable name-validation of cr_shelter_type
+        import_prep = s3.import_prep
+        def custom_import_prep(data):
+
+            # Call standard import_prep
+            if import_prep:
+                from gluon.tools import callback
+                callback(import_prep, data, tablename="cr_shelter")
+
+            # Disable uniqueness validation for shelter type names,
+            # otherwise imports will fail before reaching de-duplicate
+            ttable = s3db.cr_shelter_type
+            field = ttable.name
+            field.requires = IS_NOT_EMPTY()
+
+            # Reset to standard (no need to repeat it)
+            s3.import_prep = import_prep
+
+        s3.import_prep = custom_import_prep
+
+        # Custom form
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("name",
+                                    "organisation_id",
+                                    "shelter_type_id",
+                                    "location_id",
+                                    "phone",
+                                    "status",
+                                    "comments",
+                                    )
+
+
+        # @todo: custom list_fields
+
+        current.s3db.configure("cr_shelter",
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.interactive:
+
+                # @todo: custom filters
+                pass
+
+            return result
+
+        s3.prep = custom_prep
+        return attr
+
+    settings.customise_cr_shelter_controller = customise_cr_shelter_controller
+
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
