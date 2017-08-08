@@ -12,7 +12,7 @@ ORG_ADMIN,Organization Administrator,,project,,,CREATE|READ|UPDATE|DELETE,,,,,He
 ORG_ADMIN,Organization Administrator,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
 ORG_ADMIN,Organization Administrator,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
 ORG_ADMIN,Organization Administrator,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
-ORG_ADMIN,Organization Administrator,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
+ORG_ADMIN,Organization Administrator,,,,cr_shelter,CREATE|READ|UPDATE,,,,,Head of administration can modify shelter info
 ORG_ADMIN,Organization Administrator,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter flags
 ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
 ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
