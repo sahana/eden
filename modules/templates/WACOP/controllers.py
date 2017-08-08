@@ -307,7 +307,7 @@ class custom_WACOP(S3CRUD):
             _map = None
 
             button = A("DRAW A MAP AREA",
-                       _class="button",
+                       _class="button wide",
                        _id="map_filter_button",
                        )
 
