@@ -1286,10 +1286,21 @@ def config(settings):
                                     )
 
 
-        # @todo: custom list_fields
+        # Custom list fields
+        list_fields = [(T("Name"), "name"),
+                       (T("Type"), "shelter_type_id"),
+                       "organisation_id",
+                       "status",
+                       ]
+
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+        lfields = ["location_id$%s" % level for level in levels]
+        list_fields[-1:-1] = lfields
 
         current.s3db.configure("cr_shelter",
                                crud_form = crud_form,
+                               list_fields = list_fields,
                                )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
@@ -1311,12 +1322,33 @@ def config(settings):
 
             if r.interactive:
 
-                # @todo: custom filters
-                pass
+                resource = r.resource
+
+                # Customise filter widgets
+                filter_widgets = resource.get_config("filter_widgets")
+                if filter_widgets:
+
+                    from s3 import S3TextFilter
+
+                    custom_filters = []
+                    for fw in filter_widgets:
+                        if fw.field == "capacity_day":
+                            continue
+                        if not isinstance(fw, S3TextFilter) and \
+                           fw.field != "shelter_type_id":
+                            fw.opts["hidden"] = True
+                        custom_filters.append(fw)
+
+                    resource.configure(filter_widgets = custom_filters)
 
             return result
 
         s3.prep = custom_prep
+
+        # Custom rheader
+        attr = dict(attr)
+        attr["rheader"] = drk_cr_rheader
+
         return attr
 
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
@@ -1645,6 +1677,49 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+
+# =============================================================================
+def drk_cr_rheader(r, tabs=[]):
+    """ CR custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "cr_shelter":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+            rheader_fields = [["name",
+                               ],
+                              ["organisation_id",
+                               ],
+                              ["location_id",
+                               ],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+    return rheader
 
 # =============================================================================
 def drk_dvr_rheader(r, tabs=[]):

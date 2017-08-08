@@ -440,7 +440,7 @@ class CRShelterModel(S3Model):
 
         # Text filter fields
         text_fields = ["name",
-                       "code",
+                       #"code",
                        "comments",
                        "organisation_id$name",
                        "organisation_id$acronym",

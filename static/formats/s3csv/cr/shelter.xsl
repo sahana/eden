@@ -303,7 +303,7 @@
                     <!-- Nest the Top-Level -->
                     <!-- Don't create Orgs as Branches of themselves -->
                     <xsl:if test="col[@field='Organisation']!=$BranchName">
-                        <resource name="org_organisation_branch">
+                        <resource name="org_organisation_branch" alias="parent">
                             <reference field="organisation_id">
                                 <xsl:attribute name="tuid">
                                     <xsl:value-of select="col[@field='Organisation']"/>
