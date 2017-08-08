@@ -5933,7 +5933,7 @@ class pr_PersonRepresent(S3Represent):
                     controller = "dvr"
                 else:
                     controller = "pr"
-            linkto = URL(c=controller, f="person", args=["[id]"])
+            linkto = URL(c=controller, f="person", args=["[id]"], extension="")
 
         if not fields:
             fields = ["first_name", "middle_name", "last_name"]
