@@ -442,17 +442,28 @@
 
             if (id) {
                 // Show next dropdown
-                var next = level + 1;
-                var dropdown_row = $(selector + '_L' + next + '__row');
+                var missing = false,
+                    next = level + 1,
+                    dropdown_row = $(selector + '_L' + next + '__row');
 
-                if (dropdown_row.length) {
-
+                if (!dropdown_row.length) {
+                    // Maybe we have a missing level, so try the next one
+                    missing = true;
+                    next++;
+                    dropdown_row = $(selector + '_L' + next + '__row');
+                }
+                if (!dropdown_row.length) {
+                    // No next level - we're at the bottom of the hierarchy
+                    if (this.useGeocoder && !refresh) {
+                        this._geocodeDecision();
+                    }
+                } else {
                     // Do we need to read hierarchy?
                     var locations,
                         location,
                         locationID;
                     if ($(selector + '_L' + level + ' option[value="' + id + '"]').hasClass('missing')) {
-                        // Missing level: we already have the data
+                        // An individual location with a Missing Level: we already have the data
                         location = hierarchyLocations[id];
                         location.i = id;
                         locations = [location];
@@ -467,7 +478,7 @@
                         }
                         if (read) {
                             // AJAX Read extra hierarchy options
-                            this._readHierarchy(id, next);
+                            this._readHierarchy(id, next, missing);
                         }
 
                         locations = [];
@@ -486,7 +497,6 @@
                     // Populate the next dropdown
                     var numLocations = locations.length,
                         selected,
-                        missing,
                         option;
 
                     if (numLocations) {
@@ -517,7 +527,7 @@
                                 // A normal level
                                 missing = '';
                             } else {
-                                // A link for a missing level
+                                // A link for an individual location with a Missing Level
                                 missing = ' class="missing"';
                             }
                             option = '<option value="' + locationID + '"' + selected + missing + '>' + location.n + '</option>';
@@ -554,11 +564,6 @@
                             // Only 1 option so select this one
                             this._lxSelect(next, locationID, refresh);
                         }
-                    }
-                } else {
-                    // No next level - we're at the bottom of the hierarchy
-                    if (this.useGeocoder && !refresh) {
-                        this._geocodeDecision();
                     }
                 }
             }
@@ -760,8 +765,9 @@
          *
          * @param {number} parent - the parent location id
          * @param {number} level - the hierarchy level (1..5)
+         * @param {boolean} missing - whether this is looking up after a missinglevel
          */
-        _readHierarchy: function(parent, level) {
+        _readHierarchy: function(parent, level, missing) {
 
             var selector = '#' + this.fieldname;
 
@@ -779,7 +785,11 @@
             var throbber = $(selector + '_L' + level + '__throbber').removeClass('hide').show();
 
             // Download Location Data
-            var url = S3.Ap.concat('/gis/ldata/' + parent);
+            if (missing) {
+                var url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
+            } else {
+                var url = S3.Ap.concat('/gis/ldata/' + parent);
+            }
             $.ajaxS3({
                 async: false,
                 url: url,

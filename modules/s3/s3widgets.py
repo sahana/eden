@@ -5285,7 +5285,8 @@ class S3LocationSelector(S3Selector):
 
         # Inject map
         if show_map:
-            map_icon = self._map(fieldname,
+            map_icon = self._map(field,
+                                 fieldname,
                                  lat,
                                  lon,
                                  wkt,
@@ -5405,27 +5406,29 @@ class S3LocationSelector(S3Selector):
             @param config: the current GIS config
 
             @return: dict of location data, ready for JSON output
+
+            @ToDo: DRY with controllers/gis.py ldata()
         """
 
+        db = current.db
         s3db = current.s3db
+        settings = current.deployment_settings
 
         L0 = values.get("L0")
         L1 = values.get("L1")
         L2 = values.get("L2")
         L3 = values.get("L3")
         L4 = values.get("L4")
-        L5 = values.get("L5")
-
-        settings = current.deployment_settings
-        countries = settings.get_gis_countries()
+        #L5 = values.get("L5")
 
         # Read all visible levels
         # NB (level != None) is to handle Missing Levels
         gtable = s3db.gis_location
-        query = None
+
         # @todo: DRY this:
         if "L0" in levels:
             query = (gtable.level == "L0")
+            countries = settings.get_gis_countries()
             if len(countries):
                 ttable = s3db.gis_location_tag
                 query &= ((ttable.tag == "ISO2") & \
@@ -5491,16 +5494,17 @@ class S3LocationSelector(S3Selector):
         elif L4 and "L5" in levels:
             query = (gtable.level != None) & \
                     (gtable.parent == L4)
+        else:
+            query = None
 
         # Translate options using gis_location_name?
-        settings = current.deployment_settings
-        translate = settings.get_L10n_translate_gis_location()
         language = current.session.s3.language
-        #if language == settings.get_L10n_default_language():
-        if language == "en": # Can have a default language for system & yet still want to translate from base English
+        if language in ("en", "en-gb"):
+            # We assume that Location names default to the English version 
             translate = False
+        else:
+            translate = settings.get_L10n_translate_gis_location()
 
-        db = current.db
         if query is not None:
             query &= (gtable.deleted == False) & \
                      (gtable.end_date == None)
@@ -5545,13 +5549,15 @@ class S3LocationSelector(S3Selector):
                                                 gtable.lon_max,
                                                 cache=s3db.cache,
                                                 limitby=(0, 1)).first()
-            if not record:
+            try:
+                bounds = [record.lon_min,
+                          record.lat_min,
+                          record.lon_max,
+                          record.lat_max
+                          ]
+            except:
+                # Record not found!
                 raise ValueError
-            bounds = [record.lon_min,
-                      record.lat_min,
-                      record.lon_max,
-                      record.lat_max
-                      ]
 
             location_dict["d"] = dict(id=lx, b=bounds)
             location_dict[lx] = dict(b=bounds, l=int(lowest_lx[1:]))
@@ -5726,7 +5732,7 @@ class S3LocationSelector(S3Selector):
         # 1st level is always hidden until populated
         hidden = True
 
-        T = current.T
+        #T = current.T
         required_levels = self.required_levels
         for level in levels:
 
@@ -5813,6 +5819,7 @@ class S3LocationSelector(S3Selector):
 
     # -------------------------------------------------------------------------
     def _map(self,
+             field,
              fieldname,
              lat,
              lon,
@@ -5824,6 +5831,7 @@ class S3LocationSelector(S3Selector):
         """
             Initialize the map
 
+            @param field: the field
             @param fieldname: the field name (to construct HTML IDs)
             @param lat: the Latitude of the current point location
             @param lon: the Longitude of the current point location
@@ -5846,18 +5854,6 @@ class S3LocationSelector(S3Selector):
         points = self.points
         polygons = self.polygons
         circles = self.circles
-        use_wkt = polygons or lines or circles
-
-        db = current.db
-        gis = current.gis
-        s3db = current.s3db
-
-        s3 = current.response.s3
-        global_append = s3.js_global.append
-
-        location_selector_loaded = s3.gis.location_selector_loaded
-
-        settings = current.deployment_settings
 
         # Toolbar options
         add_points_active = add_polygon_active = add_line_active = add_circle_active = False
@@ -5937,9 +5933,11 @@ class S3LocationSelector(S3Selector):
             # No Valid options!
             raise SyntaxError
 
+        s3 = current.response.s3
+
         # ColorPicker options
-        colorpicker = self.color_picker
-        if colorpicker:
+        color_picker = self.color_picker
+        if color_picker:
             toolbar = True
             # Requires the custom controller to store this before calling the widget
             # - a bit hacky, but can't think of a better option currently without
@@ -5951,6 +5949,8 @@ class S3LocationSelector(S3Selector):
             else:
                 # Do we have a style defined for this record?
                 # @ToDo: Support Layers using alternate controllers/functions
+                db = current.db
+                s3db = current.s3db
                 c, f = field.tablename.split("_", 1)
                 ftable = s3db.gis_layer_feature
                 query = (ftable.deleted == False) & \
@@ -5976,34 +5976,36 @@ class S3LocationSelector(S3Selector):
                         # Show Color Picker with default Style
                         color_picker = True
         else:
-            colorpicker = False
+            color_picker = False
+
+        settings = current.deployment_settings
 
         # Create the map
-        _map = gis.show_map(id = "location_selector_%s" % fieldname,
-                            collapsed = True,
-                            height = settings.get_gis_map_selector_height(),
-                            width = settings.get_gis_map_selector_width(),
-                            add_feature = points,
-                            add_feature_active = add_points_active,
-                            add_line = lines,
-                            add_line_active = add_line_active,
-                            add_polygon = polygons,
-                            add_polygon_active = add_polygon_active,
-                            add_circle = circles,
-                            add_circle_active = add_circle_active,
-                            catalogue_layers = self.catalog_layers,
-                            color_picker = colorpicker,
-                            toolbar = toolbar,
-                            # Hide controls from toolbar
-                            clear_layers = False,
-                            nav = False,
-                            print_control = False,
-                            area = False,
-                            zoomWheelEnabled = False,
-                            # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
-                            # but use our one if we need to display a map by default
-                            callback = callback,
-                            )
+        _map = current.gis.show_map(id = "location_selector_%s" % fieldname,
+                                    collapsed = True,
+                                    height = settings.get_gis_map_selector_height(),
+                                    width = settings.get_gis_map_selector_width(),
+                                    add_feature = points,
+                                    add_feature_active = add_points_active,
+                                    add_line = lines,
+                                    add_line_active = add_line_active,
+                                    add_polygon = polygons,
+                                    add_polygon_active = add_polygon_active,
+                                    add_circle = circles,
+                                    add_circle_active = add_circle_active,
+                                    catalogue_layers = self.catalog_layers,
+                                    color_picker = color_picker,
+                                    toolbar = toolbar,
+                                    # Hide controls from toolbar
+                                    clear_layers = False,
+                                    nav = False,
+                                    print_control = False,
+                                    area = False,
+                                    zoomWheelEnabled = False,
+                                    # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                                    # but use our one if we need to display a map by default
+                                    callback = callback,
+                                    )
 
         # Inject map icon labels
         if polygons or lines:
@@ -6022,6 +6024,9 @@ class S3LocationSelector(S3Selector):
                 label = show_map_add
 
         T = current.T
+        global_append = s3.js_global.append
+        location_selector_loaded = s3.gis.location_selector_loaded
+
         if not location_selector_loaded:
             global_append('''i18n.show_map_add="%s"
 i18n.show_map_view="%s"

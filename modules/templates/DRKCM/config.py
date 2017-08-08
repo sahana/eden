@@ -45,6 +45,7 @@ def config(settings):
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
     settings.gis.countries = ("DE",)
+    gis_levels = ("L1", "L3", "L4") # Ignore L2
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -1274,8 +1275,13 @@ def config(settings):
 
         s3.import_prep = custom_import_prep
 
+        from s3 import S3SQLCustomForm, S3LocationSelector
+
+        s3db.cr_shelter.location_id.widget = S3LocationSelector(levels = gis_levels,
+                                                                show_address = True,
+                                                                )
+
         # Custom form
-        from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm("name",
                                     "organisation_id",
                                     "shelter_type_id",
@@ -1294,14 +1300,14 @@ def config(settings):
                        ]
 
         # Which levels of Hierarchy are we using?
-        levels = current.gis.get_relevant_hierarchy_levels()
-        lfields = ["location_id$%s" % level for level in levels]
+        #levels = current.gis.get_relevant_hierarchy_levels()
+        lfields = ["location_id$%s" % level for level in gis_levels]
         list_fields[-1:-1] = lfields
 
-        current.s3db.configure("cr_shelter",
-                               crud_form = crud_form,
-                               list_fields = list_fields,
-                               )
+        s3db.configure("cr_shelter",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
 
