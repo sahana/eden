@@ -336,6 +336,15 @@ def config(settings):
                 table = r.table
                 ctable = s3db.dvr_case
 
+                # Case-sites must be shelters
+                field = ctable.site_id
+                field.label = T("Shelter")
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if hasattr(requires, "instance_types"):
+                    requires.instance_types = ("cr_shelter",)
+
                 if not r.component:
 
                     # Can the user see cases from more than one org?
@@ -1327,6 +1336,9 @@ def config(settings):
 
         s3.import_prep = custom_import_prep
 
+        from s3 import S3LocationSelector, \
+                       S3SQLCustomForm
+
         # Field configurations
         table = s3db.cr_shelter
 
@@ -1338,11 +1350,11 @@ def config(settings):
         field = table.shelter_type_id
         field.comment = None
 
-        from s3 import S3SQLCustomForm, S3LocationSelector
-
-        s3db.cr_shelter.location_id.widget = S3LocationSelector(levels = gis_levels,
-                                                                show_address = True,
-                                                                )
+        # Hide L2 Government District (when ready)
+        #field = table.location_id
+        #field.widget = S3LocationSelector(levels = gis_levels,
+        #                                  show_address = True,
+        #                                  )
 
         # Custom form
         crud_form = S3SQLCustomForm("name",
