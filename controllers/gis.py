@@ -690,12 +690,14 @@ def ldata():
             (table.end_date == None) & \
             (table.level != None)
     if output_level:
-        query &= (((table.path.like(_id + "/%")) | \
-                   (table.path.like("%/" + _id + "/%"))) | \
-                  (table.id == _id))
+        # We will be reading all descendants, which is inefficient, but otherwise we cannot support individual locations with missing levels
+        # Filter out results from the missing level as otherwise these show up like individual locations with missing levels
+        filter_level = output_level - 1
+        query &= (table.level != "L%s" % filter_level) & \
+                 ((table.path.like(_id + "/%")) | \
+                  (table.path.like("%/" + _id + "/%")))
     else:
-        query &= ((table.parent == _id) | \
-                  (table.id == _id))
+        query &= (table.parent == _id)
     fields = [table.id,
               table.name,
               table.level,
@@ -714,8 +716,8 @@ def ldata():
     else:
         left = None
 
-    locations = db(query).select(*fields,
-                                 left=left)
+    locations = db((table.id == _id) | query).select(*fields,
+                                                     left=left)
 
     _id = int(_id)
     if not output_level:

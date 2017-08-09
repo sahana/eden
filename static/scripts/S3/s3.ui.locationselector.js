@@ -413,7 +413,7 @@
 
                     // Update the label
                     $(s + '__row label').html(labelHTML);
-                    // Tuple themes (@todo: why would row1 have a label?)
+                    // Tuple themes
                     $(s + '__row1 label').html(labelHTML);
                     // Update the placeholder-option in the selector
                     $(s + ' option[value=""]').html(i18n.select + ' ' + label);
