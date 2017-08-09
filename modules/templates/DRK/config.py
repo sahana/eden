@@ -1432,7 +1432,18 @@ def config(settings):
                                             name = "bamf",
                                             ),
                                     "dvr_case.valid_until",
-                                    "dvr_case.stay_permit_until",
+                                    S3SQLInlineComponent(
+                                            "identity",
+                                            fields = ["value",
+                                                      "valid_until",
+                                                      ],
+                                            filterby = {"field": "type",
+                                                        "options": 5,
+                                                        },
+                                            label = T("Preliminary Residence Permit"),
+                                            multiple = False,
+                                            ),
+                                    #"dvr_case.stay_permit_until",
 
                                     # Shelter Data ----------------------------
                                     # Will always default & be hidden

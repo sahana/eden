@@ -96,7 +96,10 @@ form {
             }
         }
         tr.inline-form {
-            &.single td {
+            input, .btn.date-clear-btn {
+                margin-top: 0;
+            }
+            &.single td:only-child {
                 padding: 0;
             }
             select {

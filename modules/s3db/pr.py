@@ -4712,6 +4712,7 @@ class PRIdentityModel(S3Model):
                            2:  T("National ID Card"),
                            3:  T("Driving License"),
                            #4: T("Credit Card"),
+                           5:  T("Residence Permit"),
                            99: T("other")
                            }
 
