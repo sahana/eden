@@ -1403,6 +1403,8 @@ def config(settings):
                     for fw in filter_widgets:
                         if fw.field == "capacity_day":
                             continue
+                        elif fw.field == "location_id":
+                            fw.opts["levels"] = gis_levels
                         if not isinstance(fw, S3TextFilter) and \
                            fw.field != "shelter_type_id":
                             fw.opts["hidden"] = True

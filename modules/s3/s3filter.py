@@ -1305,6 +1305,7 @@ class S3LocationFilter(S3FilterWidget):
                                           requires=IS_IN_SET(options,
                                                              multiple=True))
                     widget = w(dummy_field, _values, **attr)
+                    first = False
                 else:
                     # Hidden, empty dropdown added to the page, whose options and multiselect will be activated when the higher level is selected
                     if hide:
@@ -1328,7 +1329,6 @@ class S3LocationFilter(S3FilterWidget):
                     script = '''S3.%s=function(){%s}''' % (name.replace("-", "_"), script)
                     s3.js_global.append(script)
                 w_append(widget)
-                first = False
 
         # Restore id and name for the data_element
         attr["_id"] = base_id
