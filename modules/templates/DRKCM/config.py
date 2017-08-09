@@ -1350,11 +1350,11 @@ def config(settings):
         field = table.shelter_type_id
         field.comment = None
 
-        # Hide L2 Government District (when ready)
-        #field = table.location_id
-        #field.widget = S3LocationSelector(levels = gis_levels,
-        #                                  show_address = True,
-        #                                  )
+        # Hide L2 Government District
+        field = table.location_id
+        field.widget = S3LocationSelector(levels = gis_levels,
+                                          show_address = True,
+                                          )
 
         # Custom form
         crud_form = S3SQLCustomForm("name",

@@ -1480,11 +1480,15 @@ class DVRResponseModel(S3Model):
                            ),
                      Field("is_default", "boolean",
                            default = False,
-                           label = T("Default Status"),
+                           label = T("Default Initial Status"),
+                           ),
+                     Field("is_default_closure", "boolean",
+                           default = False,
+                           label = T("Default Closure Status"),
                            ),
                      Field("is_closed", "boolean",
                            default = False,
-                           label = T("Closes Response"),
+                           label = T("Closes Response Action"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1670,12 +1674,19 @@ class DVRResponseModel(S3Model):
         if not record_id:
             return
 
+        table = current.s3db.dvr_response_status
+        db = current.db
+
         # If this status is the default, then set is_default-flag
         # for all other statuses to False:
-        if "is_default" in form_vars and form_vars.is_default:
-            table = current.s3db.dvr_response_status
-            db = current.db
+        if form_vars.get("is_default"):
             db(table.id != record_id).update(is_default = False)
+
+        # If this status is the default closure, then enforce is_closed,
+        # and set is_default_closure for all other statuses to False
+        if form_vars.get("is_default_closure"):
+            db(table.id == record_id).update(is_closed = True)
+            db(table.id != record_id).update(is_default_closure = False)
 
     # -------------------------------------------------------------------------
     @staticmethod
