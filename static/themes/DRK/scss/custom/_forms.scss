@@ -96,7 +96,9 @@ form {
             }
         }
         tr.inline-form {
-            input, .btn.date-clear-btn {
+            input,
+            .btn.date-clear-btn,
+            .postfix.calendar-clear-btn {
                 margin-top: 0;
             }
             &.single td:only-child {

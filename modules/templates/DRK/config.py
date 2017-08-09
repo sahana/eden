@@ -114,6 +114,11 @@ def config(settings):
     settings.security.version_info_requires_login = True
 
     # -------------------------------------------------------------------------
+    # General UI settings
+    #
+    settings.ui.calendar_clear_icon = True
+
+    # -------------------------------------------------------------------------
     # CMS Module Settings
     #
     settings.cms.hide_index = True
