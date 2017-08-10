@@ -370,6 +370,7 @@ def config(settings):
                         # Default organisation
                         ctable = s3db.dvr_case
                         field = ctable.organisation_id
+                        field.comment = None
                         user_org = auth.user.organisation_id if auth.user else None
                         if user_org:
                             field.default = user_org
@@ -381,6 +382,10 @@ def config(settings):
 
                         # Expose human_resource_id
                         field = ctable.human_resource_id
+                        field.comment = None
+                        human_resource_id = auth.s3_logged_in_human_resource()
+                        if human_resource_id:
+                            field.default = human_resource_id
                         field.readable = field.writable = True
                         field.widget = None
 
