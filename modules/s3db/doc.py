@@ -104,6 +104,7 @@ class S3DocumentLibrary(S3Model):
                                org_facility = T("Facility"),
                                org_group = T("Organization Group"),
                                req_req = T("Request"),
+                               security_seized_item = T("Seized Item"),
                                # @ToDo: Deprecate
                                #stats_people = T("People"),
                                stdm_tenure = T("Tenure"),
@@ -261,6 +262,7 @@ class S3DocumentLibrary(S3Model):
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload",
                            autodelete = True,
+                           label = T("File"),
                            length = current.MAX_FILENAME_LENGTH,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
@@ -421,9 +423,10 @@ class S3DocumentLibrary(S3Model):
                 msg = current.T("Either file upload or document URL required.")
             else:
                 msg = current.T("Either file upload or image URL required.")
-            form.errors.file = msg
-            form.errors.url = msg
-
+            if "file" in form_vars:
+                form.errors.file = msg
+            if "url" in form_vars:
+                form.errors.url = msg
 
         if hasattr(doc, "file"):
             name = form_vars.name

@@ -1157,7 +1157,7 @@
 'Date Required Until': 'Benötigt bis',
 'Date Needed By': 'Benötigt ab',
 'Date Sent': 'Gesendet am',
-'Date Taken': 'Verwendet am',
+'Date Taken': 'Aufgenommen am',
 'Date unknown': 'Datum unbekannt',
 'Date Until': 'Datum bis',
 'Date and Time': 'Datum und Zeit',
