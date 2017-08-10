@@ -21,6 +21,7 @@ ADMIN_HEAD,Head of Administration,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
+ADMIN_HEAD,Head of Administration,,,,doc_image,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
 ADMIN_HEAD,Head of Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
@@ -60,6 +61,7 @@ ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can m
 ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
+ADMINISTRATION,Administration,,,,doc_image,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to allowance information
 ADMINISTRATION,Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage activities
@@ -186,6 +188,7 @@ RP,Regierungspräsidium,,project,,,NONE,,,,,
 RP,Regierungspräsidium,,,,cr_shelter,READ,,,,,
 RP,Regierungspräsidium,,,,cr_shelter_registration,READ,,,,,
 RP,Regierungspräsidium,,,,cr_shelter_unit,READ,,,,,
+RP,Regierungspräsidium,,,,doc_image,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_allowance,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case_activity,NONE,,,,,
@@ -217,6 +220,7 @@ QUARTIER,Quartiermanager,,security,seized_item_depository,,READ,,,,,Quartiermana
 QUARTIER,Quartiermanager,,,,cr_shelter_flag,READ,,,,,Quartiermanager can read shelter flags
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
+QUARTIER,Quartiermanager,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
@@ -268,6 +272,7 @@ SECURITY,Security,,security,seized_item_depository,,READ,,,,,Security can read s
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY,Security,,,,cr_shelter_unit,READ,,,,,
+SECURITY,Security,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 SECURITY,Security,,,,dvr_case,READ,,,,,
 SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
@@ -295,6 +300,7 @@ SECURITY_HEAD,Head of Security,,security,seized_item_depository,,READ,,,,,Head o
 SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_unit,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_allowance,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_activity,NONE,,,,,
@@ -330,6 +336,7 @@ STAFF,General Staff,,,,cr_shelter,READ,,,,,
 STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
 STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
+STAFF,General Staff,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
 STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,
 STAFF,General Staff,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Staff can read and update case activities
