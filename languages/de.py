@@ -3192,7 +3192,7 @@
 'OR Status Reason': 'oder Statusgrund',
 'OR Status': 'oder Status',
 'Observer': 'Beobachter',
-'Obsolete': 'Veraltet',
+'Obsolete': 'Hinfällig',
 'Obstetrics/Gynecology': 'Geburtshilfe/Gynäkologie',
 'Office Address': 'Büroadresse',
 'Office Details': 'Bürodetails',
