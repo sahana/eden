@@ -4964,20 +4964,26 @@ def config(settings):
                 field.readable = field.writable = False
                 _customise_job_title_field(atable.job_title_id)
 
-            elif component_name == "experience":
+            if component_name == "experience":
                 if ircs:
                     ctable = r.component.table
                     ctable.hours.readable = ctable.hours.writable = False
                     ctable.job_title_id.readable = ctable.job_title_id.writable = False
 
-            elif component_name == "physical_description":
+            elif component_name == "physical_description" or \
+                 method == "import":
                 from gluon import DIV
                 ctable = r.component.table
-                if crmada or ircs:
-                    ctable.ethnicity.readable = ctable.ethnicity.writable = False
                 ctable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+                # Add the less-specific blood types (as that's all the data currently available in some cases)
+                from gluon.validators import IS_EMPTY_OR, IS_IN_SET
+                blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
+                ctable.blood_type.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
+
+                if crmada or ircs:
+                    ctable.ethnicity.readable = ctable.ethnicity.writable = False
 
             elif component_name == "identity":
                 if crmada:
@@ -5632,14 +5638,6 @@ def config(settings):
                     hide_fields = set(hide_fields)
                     list_fields = (fs for fs in list_fields if fs not in hide_fields)
                     s3db.configure("pr_identity", list_fields = list_fields)
-
-                elif component_name == "physical_description" or \
-                     method == "import":
-                    # Add the less-specific blood types (as that's all the data currently available in some cases)
-                    field = s3db.pr_physical_description.blood_type
-                    from gluon.validators import IS_EMPTY_OR, IS_IN_SET
-                    blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
-                    field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
 
                 elif method == "cv" or component_name == "experience":
                     table = s3db.hrm_experience
