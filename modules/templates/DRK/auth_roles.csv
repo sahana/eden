@@ -21,6 +21,7 @@ ADMIN_HEAD,Head of Administration,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
+ADMIN_HEAD,Head of Administration,,,,doc_image,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
 ADMIN_HEAD,Head of Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
@@ -37,6 +38,7 @@ ADMIN_HEAD,Head of Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,
 ADMIN_HEAD,Head of Administration,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility type links
 ADMIN_HEAD,Head of Administration,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage family members
+ADMIN_HEAD,Head of Administration,,,,pr_identity,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage profile pictures
 ADMIN_HEAD,Head of Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
@@ -59,6 +61,7 @@ ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can m
 ADMINISTRATION,Administration,,,,cr_shelter_flag,READ,,,,,Administration can read shelter flags
 ADMINISTRATION,Administration,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
+ADMINISTRATION,Administration,,,,doc_image,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Administration have unrestricted access to allowance information
 ADMINISTRATION,Administration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage activities
@@ -75,6 +78,7 @@ ADMINISTRATION,Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage facility type links
 ADMINISTRATION,Administration,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage family members
+ADMINISTRATION,Administration,,,,pr_identity,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage profile pictures
 ADMINISTRATION,Administration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ADMINISTRATION,Administration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
@@ -132,6 +136,7 @@ MEDICAL,Medical,,,,dvr_need,READ,,,,,
 MEDICAL,Medical,,,,dvr_note,CREATE|READ,UPDATE,,,,Medical can create notes and update their own notes
 MEDICAL,Medical,,,,pr_contact,READ,,,,,
 MEDICAL,Medical,,,,pr_group_membership,READ,,,,,Medical can see family members
+MEDICAL,Medical,,,,pr_identity,READ,,,,,
 MEDICAL,Medical,,,,pr_image,READ,,,,,Medical can see profile pictures
 MEDICAL,Medical,,,,pr_person,READ|UPDATE,,,,,Medical can look up persons
 MEDICAL,Medical,,,,pr_person_details,READ,,,,,
@@ -163,6 +168,7 @@ POLICE,Police,,,,dvr_need,READ,,,,,
 POLICE,Police,,,,dvr_note,READ,,,,,
 POLICE,Police,,,,pr_contact,READ,,,,,
 POLICE,Police,,,,pr_group_membership,READ,,,,,
+POLICE,Police,,,,pr_identity,READ,,,,,
 POLICE,Police,,,,pr_image,CREATE|READ|UPDATE,,,,,Police can create and update photos
 POLICE,Police,,,,pr_person,READ|UPDATE,,,,,
 POLICE,Police,,,,pr_person_details,READ,,,,,
@@ -182,6 +188,7 @@ RP,Regierungspräsidium,,project,,,NONE,,,,,
 RP,Regierungspräsidium,,,,cr_shelter,READ,,,,,
 RP,Regierungspräsidium,,,,cr_shelter_registration,READ,,,,,
 RP,Regierungspräsidium,,,,cr_shelter_unit,READ,,,,,
+RP,Regierungspräsidium,,,,doc_image,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_allowance,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case,READ,,,,,
 RP,Regierungspräsidium,,,,dvr_case_activity,NONE,,,,,
@@ -194,6 +201,7 @@ RP,Regierungspräsidium,,,,dvr_note,NONE,,,,,
 RP,Regierungspräsidium,,,,dvr_site_activity,READ,,,,,"Head of administration can create, read, update and delete site activity reports"
 RP,Regierungspräsidium,,,,pr_contact,READ,,,,,
 RP,Regierungspräsidium,,,,pr_group_membership,READ,,,,,
+RP,Regierungspräsidium,,,,pr_identity,READ,,,,,
 RP,Regierungspräsidium,,,,pr_image,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person,READ,,,,,
 RP,Regierungspräsidium,,,,pr_person_details,READ,,,,,
@@ -212,6 +220,7 @@ QUARTIER,Quartiermanager,,security,seized_item_depository,,READ,,,,,Quartiermana
 QUARTIER,Quartiermanager,,,,cr_shelter_flag,READ,,,,,Quartiermanager can read shelter flags
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_unit,READ,,,,,
+QUARTIER,Quartiermanager,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 QUARTIER,Quartiermanager,,,,dvr_case,READ,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
@@ -243,6 +252,7 @@ SCAN,Scan,,,,dvr_case_language,READ,,,,,
 SCAN,Scan,,,,dvr_need,READ,,,,,
 SCAN,Scan,,,,pr_contact,READ,,,,,
 SCAN,Scan,,,,pr_group_membership,READ,,,,,Scan role can see family members
+SCAN,Scan,,,,pr_identity,READ,,,,,
 SCAN,Scan,,,,pr_image,READ,,,,,Scan role can see profile images
 SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
 SCAN,Scan,,,,pr_person_details,READ,,,,,
@@ -262,6 +272,7 @@ SECURITY,Security,,security,seized_item_depository,,READ,,,,,Security can read s
 SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY,Security,,,,cr_shelter_unit,READ,,,,,
+SECURITY,Security,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 SECURITY,Security,,,,dvr_case,READ,,,,,
 SECURITY,Security,,,,dvr_case_appointment,CREATE|UPDATE,,,,,
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
@@ -270,6 +281,7 @@ SECURITY,Security,,,,dvr_need,READ,,,,,
 SECURITY,Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
 SECURITY,Security,,,,pr_contact,READ,,,,,
 SECURITY,Security,,,,pr_group_membership,READ,,,,,
+SECURITY,Security,,,,pr_identity,READ,,,,,
 SECURITY,Security,,,,pr_image,READ,,,,,Security can see profile pictures
 SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
 SECURITY,Security,,,,pr_person_details,READ,,,,,
@@ -288,6 +300,7 @@ SECURITY_HEAD,Head of Security,,security,seized_item_depository,,READ,,,,,Head o
 SECURITY_HEAD,Head of Security,,,,cr_shelter,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_registration,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,cr_shelter_unit,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_allowance,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_case_activity,NONE,,,,,
@@ -299,6 +312,7 @@ SECURITY_HEAD,Head of Security,,,,dvr_need,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,dvr_note,CREATE|READ,UPDATE,,,,
 SECURITY_HEAD,Head of Security,,,,pr_contact,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_group_membership,READ,,,,,
+SECURITY_HEAD,Head of Security,,,,pr_identity,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_image,READ,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person,READ|UPDATE,,,,,
 SECURITY_HEAD,Head of Security,,,,pr_person_details,READ,,,,,
@@ -322,6 +336,7 @@ STAFF,General Staff,,,,cr_shelter,READ,,,,,
 STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
 STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
 STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
+STAFF,General Staff,,,,doc_image,CREATE|READ,UPDATE|DELETE,,,,
 STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
 STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,
 STAFF,General Staff,,,,dvr_case_activity,CREATE|READ|UPDATE,,,,,Staff can read and update case activities
@@ -333,6 +348,7 @@ STAFF,General Staff,,,,dvr_need,READ,,,,,
 STAFF,General Staff,,,,dvr_note,CREATE|READ,UPDATE,,,,
 STAFF,General Staff,,,,pr_contact,READ,,,,,
 STAFF,General Staff,,,,pr_group_membership,READ,,,,,
+STAFF,General Staff,,,,pr_identity,READ,,,,,
 STAFF,General Staff,,,,pr_image,READ,,,,,
 STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
 STAFF,General Staff,,,,pr_person_details,READ,,,,,

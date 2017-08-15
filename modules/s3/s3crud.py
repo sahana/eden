@@ -2139,13 +2139,16 @@ class S3CRUD(S3Method):
             fields = Storage()
             for fname in record:
 
-                error = None
-                validated = fields[fname] = Storage()
-
                 # We do not validate primary keys
                 # (because we don't update them)
                 if fname in (pkey, "_id"):
                     continue
+
+                error = None
+                validated = fields[fname] = Storage()
+
+                skip_validation = False
+                skip_formatting = False
 
                 value = record[fname]
 
@@ -2158,7 +2161,8 @@ class S3CRUD(S3Method):
 
                 # Convert numeric type (does not always happen in the widget)
                 field = table[fname]
-                if field.type == "integer":
+                ftype = field.type
+                if ftype == "integer":
                     if value not in (None, ""):
                         try:
                             value = int(value)
@@ -2166,7 +2170,7 @@ class S3CRUD(S3Method):
                             value = 0
                     else:
                         value = None
-                if field.type == "double":
+                elif ftype == "double":
                     if value not in (None, ""):
                         try:
                             value = float(value)
@@ -2175,22 +2179,41 @@ class S3CRUD(S3Method):
                     else:
                         value = None
 
+                # Catch upload fields
+                if ftype == "upload" and value:
+
+                    # We cannot Ajax-validate the file (it's not uploaded yet)
+                    skip_validation = True
+
+                    # We cannot render a link/preview of the file
+                    # (unless it's already uploaded)
+                    try:
+                        fullname = field.retrieve(value, nameonly=True)[1]
+                    except Exception, e:
+                        skip_formatting = True
+                    else:
+                        import os
+                        skip_formatting = not isinstance(fullname, basestring) or \
+                                          not os.path.isfile(fullname)
+
                 widget = field.widget
                 if isinstance(widget, S3Selector):
                     # Use widget-validator instead of field-validator
-                    value, error = widget.validate(value,
-                                                   requires=field.requires,
-                                                   )
+                    if not skip_validation:
+                        value, error = widget.validate(value,
+                                                       requires=field.requires,
+                                                       )
                     validated["value"] = widget.serialize(value) \
                                          if not error else value
                     # Use widget-represent instead of standard represent
                     widget_represent = widget.represent
                 else:
                     # Validate and format the value
-                    try:
-                        value, error = s3_validate(table, fname, value, original)
-                    except AttributeError:
-                        error = "invalid field"
+                    if not skip_validation:
+                        try:
+                            value, error = s3_validate(table, fname, value, original)
+                        except AttributeError:
+                            error = "invalid field"
                     validated["value"] = field.formatter(value) \
                                          if not error else value
                     widget_represent = None
@@ -2199,6 +2222,8 @@ class S3CRUD(S3Method):
                 if error:
                     has_errors = True
                     validated["_error"] = s3_unicode(error)
+                elif skip_formatting:
+                    validated["text"] = s3_unicode(value)
                 elif widget_represent:
                     try:
                         text = widget_represent(value)

@@ -457,6 +457,7 @@ class SecuritySeizedItemsModel(S3Model):
                               }
         tablename = "security_seized_item"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      # Owner
                      person_id(empty = False,
                                label = T("Owner"),
@@ -559,6 +560,7 @@ class SecuritySeizedItemsModel(S3Model):
                   list_fields = list_fields,
                   onaccept = self.seized_item_onaccept,
                   orderby = "%s.date desc" % tablename,
+                  super_entity = "doc_entity",
                   )
 
         # CRUD Strings

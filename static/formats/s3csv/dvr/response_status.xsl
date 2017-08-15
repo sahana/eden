@@ -27,43 +27,62 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+
         <resource name="dvr_response_status">
+
             <data field="workflow_position">
                 <xsl:value-of select="col[@field='Position']"/>
             </data>
+
             <data field="name">
                 <xsl:value-of select="col[@field='Status']"/>
             </data>
-            <xsl:variable name="is_default" select="col[@field='Default']/text()"/>
-            <data field="is_default">
-                <xsl:attribute name="value">
-                    <xsl:choose>
-                        <xsl:when test="$is_default='true'">
-                            <xsl:value-of select="'true'"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:value-of select="'false'"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </data>
-            <xsl:variable name="is_closed" select="col[@field='Closed']/text()"/>
-            <data field="is_closed">
-                <xsl:attribute name="value">
-                    <xsl:choose>
-                        <xsl:when test="$is_closed='true'">
-                            <xsl:value-of select="'true'"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:value-of select="'false'"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </data>
+
+            <xsl:call-template name="Boolean">
+                <xsl:with-param name="column">Default</xsl:with-param>
+                <xsl:with-param name="field">is_default</xsl:with-param>
+            </xsl:call-template>
+
+            <xsl:call-template name="Boolean">
+                <xsl:with-param name="column">Closed</xsl:with-param>
+                <xsl:with-param name="field">is_closed</xsl:with-param>
+            </xsl:call-template>
+
+            <xsl:call-template name="Boolean">
+                <xsl:with-param name="column">Default Closure</xsl:with-param>
+                <xsl:with-param name="field">is_default_closure</xsl:with-param>
+            </xsl:call-template>
+
             <data field="comments">
                 <xsl:value-of select="col[@field='Comments']"/>
             </data>
+
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper for boolean fields -->
+    <xsl:template name="Boolean">
+
+        <xsl:param name="column"/>
+        <xsl:param name="field"/>
+
+        <data>
+            <xsl:attribute name="field">
+                <xsl:value-of select="$field"/>
+            </xsl:attribute>
+            <xsl:attribute name="value">
+                <xsl:choose>
+                    <xsl:when test="col[@field=$column]/text()='true'">
+                        <xsl:value-of select="'true'"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="'false'"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:attribute>
+        </data>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

@@ -471,6 +471,17 @@
 
                     if (input.attr('type') == 'file') {
 
+                        // When editing an existing row, upload-fields are empty
+                        // unless a new file is uploaded, so if it is not marked
+                        // to be deleted, then retain the original file name to
+                        // indicate no change (may not pass validation otherwise):
+                        if (!value && original) {
+                            var dflag = $('#' + formname + '_i_' + fieldname + '_edit_' + rowindex + '__delete');
+                            if (!dflag.prop("checked")) {
+                                value = original[fieldname].value;
+                            }
+                        }
+
                         // Clone the file input ready to accept new files
                         var cloned = input.clone().insertAfter(input);
 
@@ -844,6 +855,10 @@
                         // Update the upload-widget (i.e. link and image preview)
                         this._updateUploadWidget(input, value);
 
+                        // Also reset the delete-flag in the edit row
+                        var dflag = $('#' + formname + '_i_' + fieldname + '_edit_0__delete');
+                        dflag.prop("checked", false);
+
                     } else if (input.attr('type') == 'checkbox') {
 
                         // Set checked-property from boolean value
@@ -1141,7 +1156,7 @@
                         if (upload.length) {
                             uploadID = 'upload_' + formName + '_' + fieldName + '_' + newIndex;
                             $('#' + uploadID).remove();
-                            upload.attr({'id': upload_id, 'name': upload_id});
+                            upload.attr({'id': uploadID, 'name': uploadID});
                         }
 
                         // Store text representation for the read-row

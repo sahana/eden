@@ -2878,6 +2878,8 @@ def config(settings):
         from s3 import S3DateFilter, \
                        S3OptionsFilter, \
                        S3Represent, \
+                       S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
                        S3TextFilter, \
                        s3_get_filter_opts
 
@@ -2921,7 +2923,35 @@ def config(settings):
         field = table.confiscated_by
         field.writable = False
 
+        # Default date for images
+        itable = s3db.doc_image
+        field = itable.date
+        field.default = current.request.utcnow.date()
+
         if r.interactive:
+
+            # CRUD form
+            crud_form = S3SQLCustomForm("person_id",
+                                        "item_type_id",
+                                        "number",
+                                        "date",
+                                        "confiscated_by",
+                                        "status",
+                                        "depository_id",
+                                        "status_comment",
+                                        "returned_on",
+                                        "returned_by",
+                                        S3SQLInlineComponent("image",
+                                             label = T("Photos"),
+                                             fields = ["date",
+                                                       "file",
+                                                       "comments",
+                                                       ],
+                                             explicit_add = T("Add Photo"),
+                                             ),
+                                        "comments",
+                                        )
+
             # Custom filter Widgets
             filter_widgets = [S3TextFilter(["person_id$pe_label",
                                             "person_id$first_name",
@@ -2958,6 +2988,7 @@ def config(settings):
                               ]
 
             s3db.configure("security_seized_item",
+                           crud_form = crud_form,
                            filter_widgets = filter_widgets,
                            )
 

@@ -108,6 +108,12 @@ form {
                 max-width: 18rem;
             }
         }
+        tr.inline-form,
+        tr.read-row {
+            .zoom img {
+                max-height: 8rem;
+            }
+        }
     }
     .inline-open-add {
         display: inline-block;
