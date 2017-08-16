@@ -329,7 +329,7 @@ STAFF,General Staff,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 STAFF,General Staff,,inv,,,NONE,,,,,Staff can not access inv module
 STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
 STAFF,General Staff,,security,person_search,,READ,,,,,Staff can look up persons
-STAFF,General Staff,,security,seized_item,,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
+STAFF,General Staff,,security,seized_item,,CREATE|READ|UPDATE,DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
 STAFF,General Staff,,security,seized_item_type,,NONE,,,,,Staff can not access seized item types controller
 STAFF,General Staff,,security,seized_item_depository,,NONE,,,,,Staff can not access seized itemdepository controller
 STAFF,General Staff,,,,cr_shelter,READ,,,,,
@@ -353,6 +353,6 @@ STAFF,General Staff,,,,pr_image,READ,,,,,
 STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
 STAFF,General Staff,,,,pr_person_details,READ,,,,,
 STAFF,General Staff,,,,pr_person_tag,READ,,,,,
-STAFF,General Staff,,,,security_seized_item,CREATE|READ,UPDATE|DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
+STAFF,General Staff,,,,security_seized_item,CREATE|READ|UPDATE,DELETE,,,,"Staff can register seized items, and update/delete the ones they created"
 STAFF,General Staff,,,,security_seized_item_type,READ,,,,,Staff can read seized item types
 STAFF,General Staff,,,,security_seized_item_depository,READ,,,,,Staff can read seized item depositories
