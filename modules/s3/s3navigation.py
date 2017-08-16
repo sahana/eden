@@ -431,16 +431,11 @@ class S3NavigationItem(object):
             by the renderer.
         """
 
-        has_role = current.auth.s3_has_role
-
         authorized = False
 
         restrict = self.restrict
         if restrict:
-            for role in restrict:
-                if has_role(role):
-                    authorized = True
-                    break
+            authorized = current.auth.s3_has_roles(restrict)
         else:
             authorized = True
 

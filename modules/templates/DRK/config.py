@@ -1009,11 +1009,9 @@ def config(settings):
     def customise_pr_person_controller(**attr):
 
         db = current.db
+        auth = current.auth
         s3db = current.s3db
         s3 = current.response.s3
-
-        has_role = current.auth.s3_has_role
-        is_admin = has_role(current.auth.get_system_roles().ADMIN)
 
         # Roles with extended access to person form
         PRIVILEGED = ("ADMIN_HEAD",
@@ -1025,16 +1023,17 @@ def config(settings):
                       "SECURITY_HEAD",
                       )
 
+        has_roles = auth.s3_has_roles
+
         s3.is_privileged = None
         def privileged():
             # Lazy check for privileged access to person form
             privileged = s3.is_privileged
             if privileged is None:
-                privileged = is_admin or any(has_role(role) for role in PRIVILEGED)
-                s3.is_privileged = privileged
+                s3.is_privileged = privileged = has_roles(PRIVILEGED)
             return privileged
 
-        QUARTIERMANAGER = has_role("QUARTIER") and not privileged()
+        QUARTIERMANAGER = auth.s3_has_role("QUARTIER") and not privileged()
 
         # Custom prep
         standard_prep = s3.prep
@@ -1692,8 +1691,7 @@ def config(settings):
                     # Make appointments tab read-only even if the user is
                     # permitted to create or update appointments (via event
                     # registration), except for ADMINISTRATION/ADMIN_HEAD:
-                    if not has_role("ADMINISTRATION") and \
-                       not has_role("ADMIN_HEAD"):
+                    if not has_roles("ADMINISTRATION", "ADMIN_HEAD"):
                         r.component.configure(insertable = False,
                                               editable = False,
                                               deletable = False,
@@ -1982,6 +1980,9 @@ def config(settings):
 
         if not auth.s3_has_role("ADMIN"):
 
+            db = current.db
+            s3db = current.s3db
+
             # Restrict access by note type
             GENERAL = "General"
             MEDICAL = "Medical"
@@ -1991,36 +1992,22 @@ def config(settings):
 
             user = auth.user
             if user:
+                has_roles = auth.s3_has_roles
+
                 # Roles permitted to access "Security" type notes
                 SECURITY_ROLES = ("ADMIN_HEAD",
                                   "SECURITY_HEAD",
                                   "POLICE",
                                   "MEDICAL",
                                   )
+                if has_roles(SECURITY_ROLES):
+                    permitted_note_types.append(SECURITY)
 
                 # Roles permitted to access "Health" type notes
                 MEDICAL_ROLES = ("ADMIN_HEAD",
                                  "MEDICAL",
                                  )
-
-                # Get role IDs
-                db = current.db
-                s3db = current.s3db
-                gtable = s3db.auth_group
-                roles = db(gtable.deleted != True).select(gtable.uuid,
-                                                          gtable.id,
-                                                          ).as_dict(key = "uuid")
-
-                realms = user.realms
-
-                security_roles = (roles[uuid]["id"]
-                                  for uuid in SECURITY_ROLES if uuid in roles)
-                if any(role in realms for role in security_roles):
-                    permitted_note_types.append(SECURITY)
-
-                medical_roles = (roles[uuid]["id"]
-                                 for uuid in MEDICAL_ROLES if uuid in roles)
-                if any(role in realms for role in medical_roles):
+                if has_roles(MEDICAL_ROLES):
                     permitted_note_types.append(MEDICAL)
 
             # Filter notes to permitted note types
@@ -3324,11 +3311,17 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Appointments"), "case_appointment"),
                             (T("Allowance"), "allowance"),
                             (T("Presence"), "shelter_registration_history"),
-                            (T("Events"), "case_event"),
                             (T("Photos"), "image"),
                             (T("Notes"), "case_note"),
                             (T("Confiscation"), "seized_item"),
                             ]
+                    if current.auth.s3_has_roles(("ADMIN_HEAD",
+                                                  "ADMINISTRATION",
+                                                  "MEDICAL",
+                                                  "POLICE",
+                                                  "SECURITY_HEAD",
+                                                  )):
+                        tabs.insert(-3, (T("Events"), "case_event"))
 
                 case = resource.select(["dvr_case.status_id",
                                         "dvr_case.archived",

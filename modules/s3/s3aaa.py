@@ -3937,6 +3937,83 @@ $.filterOptionsS3({
         return False
 
     # -------------------------------------------------------------------------
+    def s3_has_roles(self, roles, for_pe=None, all=False):
+        """
+            Check whether the currently logged-in user has at least one
+            out of a set of roles (or all of them, with all=True)
+
+            @param roles: list|tuple|set of role IDs or UIDs
+            @param for_pe: check for this particular realm, possible values:
+                               None - for any entity
+                               0 - site-wide
+                               X - for entity X
+            @param all: check whether the user has all of the roles
+        """
+
+        # Override
+        if self.override or not roles:
+            return True
+
+        # Get the realms
+        session_s3 = current.session.s3
+        if not session_s3:
+            return False
+        realms = None
+        if self.user:
+            realms = self.user.realms
+        elif session_s3.roles:
+            realms = Storage([(r, None) for r in session_s3.roles])
+        if not realms:
+            return False
+
+        # Administrators have all roles (no need to check)
+        system_roles = self.get_system_roles()
+        if system_roles.ADMIN in realms:
+            return True
+
+        # Resolve any role UIDs
+        if not isinstance(roles, (tuple, list, set)):
+            roles = [roles]
+
+        check = set()
+        resolve = set()
+        for role in roles:
+            if isinstance(role, basestring):
+                resolve.add(role)
+            else:
+                check.add(role)
+
+        if resolve:
+            gtable = self.settings.table_group
+            query = (gtable.uuid.belongs(resolve)) & \
+                    (gtable.deleted != True)
+            rows = current.db(query).select(gtable.id,
+                                            cache = (current.cache.ram, 600),
+                                            )
+            for row in rows:
+                check.add(row.id)
+
+        # Check each role
+        for role in check:
+
+            if role == system_roles.ANONYMOUS:
+                # All users have the anonymous role
+                has_role = True
+            elif role in realms:
+                realm = realms[role]
+                has_role = realm is None or for_pe is None or for_pe in realm
+            else:
+                has_role = False
+
+            if has_role:
+                if not all:
+                    return True
+            elif all:
+                return False
+
+        return bool(all)
+
+    # -------------------------------------------------------------------------
     def s3_group_members(self, group_id, for_pe=[]):
         """
             Get a list of members of a group
