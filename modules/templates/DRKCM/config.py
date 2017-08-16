@@ -361,6 +361,7 @@ def config(settings):
                         from s3 import S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
                                        S3SQLInlineLink, \
+                                       S3SQLVerticalSubFormLayout, \
                                        S3TextFilter, \
                                        S3DateFilter, \
                                        S3OptionsFilter, \
@@ -395,6 +396,13 @@ def config(settings):
                         options = dict(s3db.pr_marital_status_opts)
                         del options[9] # Remove "other"
                         field.requires = IS_IN_SET(options, zero=None)
+
+                        # Remove Add-links in residence status
+                        rtable = s3db.dvr_residence_status
+                        field = rtable.status_type_id
+                        field.comment = None
+                        field = rtable.permit_type_id
+                        field.comment = None
 
                         # Make gender mandatory, remove "unknown"
                         field = table.gender
@@ -460,8 +468,22 @@ def config(settings):
                                     multiple = False,
                                     name = "bamf",
                                     ),
-                            "dvr_case.valid_until",
-                            "dvr_case.stay_permit_until",
+                            #"dvr_case.valid_until",
+                            S3SQLInlineComponent(
+                                    "residence_status",
+                                    fields = ["status_type_id",
+                                              "permit_type_id",
+                                              #"reference",
+                                              #"valid_from",
+                                              "valid_until",
+                                              "comments",
+                                              ],
+                                    label = T("Residence Status"),
+                                    #multiple = False,
+                                    layout = S3SQLVerticalSubFormLayout,
+                                    explicit_add = T("Add Residence Status"),
+                                    ),
+                            #"dvr_case.stay_permit_until",
 
                             # Other Details ---------------------------
                             "person_details.occupation",

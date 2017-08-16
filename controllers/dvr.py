@@ -1044,6 +1044,20 @@ def income_source():
     return s3_rest_controller()
 
 # =============================================================================
+# Legal Status
+#
+def residence_status_type():
+    """ Residence Status Types: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def residence_permit_type():
+    """ Residence Permit Types: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
 # Evaluations
 #
 def evaluation():

@@ -189,6 +189,9 @@ select {
         tr td {
             padding: rem-calc(3);
         }
+        .embeddedComponent td {
+            padding-right: rem-calc(9);
+        }
     }
     width: auto;
     overflow: inherit;

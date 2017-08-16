@@ -1059,6 +1059,7 @@ class PRPersonModel(S3Model):
                             dvr_note = {"name": "case_note",
                                         "joinby": "person_id",
                                         },
+                            dvr_residence_status = "person_id",
                             # Evacuee Registry
                             evr_case = {"joinby": "person_id",
                                         "multiple": False,

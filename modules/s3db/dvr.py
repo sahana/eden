@@ -35,6 +35,7 @@ __all__ = ("DVRCaseModel",
            "DVRHouseholdModel",
            "DVRHouseholdMembersModel",
            "DVRCaseEconomyInformationModel",
+           "DVRLegalStatusModel",
            "DVRCaseEffortModel",
            "DVRCaseEventModel",
            "DVRCaseEvaluationModel",
@@ -3868,6 +3869,175 @@ class DVRCaseEconomyInformationModel(S3Model):
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+# =============================================================================
+class DVRLegalStatusModel(S3Model):
+    """ Models to document the legal status of a beneficiary """
+
+    names = ("dvr_residence_status_type",
+             "dvr_residence_permit_type",
+             "dvr_residence_status",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Residence Status Types
+        #
+        tablename = "dvr_residence_status_type"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Residence Status Type"),
+            title_display = T("Residence Status Type Details"),
+            title_list = T("Residence Status Types"),
+            title_update = T("Edit Residence Status Type"),
+            label_list_button = T("List Residence Status Types"),
+            label_delete_button = T("Delete Residence Status Type"),
+            msg_record_created = T("Residence Status Type created"),
+            msg_record_modified = T("Residence Status Type updated"),
+            msg_record_deleted = T("Residence Status Type deleted"),
+            msg_list_empty = T("No Residence Status Types currently defined"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        status_type_id = S3ReusableField("status_type_id",
+                                         "reference %s" % tablename,
+                                         label = T("Residence Status"),
+                                         represent = represent,
+                                         requires = IS_EMPTY_OR(IS_ONE_OF(
+                                            db, "%s.id" % tablename,
+                                            represent,
+                                            )),
+                                         sortby = "name",
+                                         comment = S3PopupLink(
+                                                c="dvr",
+                                                f="residence_status_type",
+                                                tooltip=T("Create a new status type"),
+                                                ),
+                                         )
+
+        # ---------------------------------------------------------------------
+        # Residence Permit Types
+        #
+        tablename = "dvr_residence_permit_type"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Residence Permit Type"),
+            title_display = T("Residence Permit Type Details"),
+            title_list = T("Residence Permit Types"),
+            title_update = T("Edit Residence Permit Type"),
+            label_list_button = T("List Residence Permit Types"),
+            label_delete_button = T("Delete Residence Permit Type"),
+            msg_record_created = T("Residence Permit Type created"),
+            msg_record_modified = T("Residence Permit Type updated"),
+            msg_record_deleted = T("Residence Permit Type deleted"),
+            msg_list_empty = T("No Residence Permit Types currently defined"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        permit_type_id = S3ReusableField("permit_type_id",
+                                         "reference %s" % tablename,
+                                         label = T("Residence Permit Type"),
+                                         represent = represent,
+                                         requires = IS_EMPTY_OR(IS_ONE_OF(
+                                                        db, "%s.id" % tablename,
+                                                        represent,
+                                                        )),
+                                         sortby = "name",
+                                         comment = S3PopupLink(
+                                                        c="dvr",
+                                                        f="residence_permit_type",
+                                                        tooltip=T("Create a new permit type"),
+                                                        ),
+                                                   )
+
+        # ---------------------------------------------------------------------
+        # Residence Status
+        #
+        tablename = "dvr_residence_status"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     status_type_id(),
+                     permit_type_id(),
+                     Field("reference",
+                           label = T("ID/Ref.No."),
+                           ),
+                     s3_date("valid_from",
+                             label = T("Valid From"),
+                             ),
+                     s3_date("valid_until",
+                             label = T("Valid Until"),
+                             ),
+                     #Field("obsolete", "boolean",
+                     #      default = False,
+                     #      ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Residence Status"),
+            title_display = T("Residence Status Details"),
+            title_list = T("Residence Statuses"),
+            title_update = T("Edit Residence Status"),
+            label_list_button = T("List Residence Statuses"),
+            label_delete_button = T("Delete Residence Status"),
+            msg_record_created = T("Residence Status created"),
+            msg_record_modified = T("Residence Status updated"),
+            msg_record_deleted = T("Residence Status deleted"),
+            msg_list_empty = T("No Residence Statuses currently defined"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
 
         return {}
 
