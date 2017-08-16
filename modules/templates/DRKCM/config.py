@@ -415,6 +415,7 @@ def config(settings):
                         crud_form = S3SQLCustomForm(
 
                             # Case Details ----------------------------
+                            "dvr_case.date",
                             "dvr_case.organisation_id",
                             "dvr_case.human_resource_id",
                             (T("Case Status"), "dvr_case.status_id"),
@@ -447,7 +448,7 @@ def config(settings):
                                     link = False,
                                     multiple = False,
                                     ),
-                            (T("Date of Arrival"), "dvr_case.date"),
+                            (T("Date of Entry"), "dvr_case_details.arrival_date"),
                             S3SQLInlineComponent(
                                     "bamf",
                                     fields = [("", "value"),

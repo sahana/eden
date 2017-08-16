@@ -3331,6 +3331,7 @@
 'Path': 'Pfad',
 'Pathology': 'Pathologie',
 'Patients': 'Patienten',
+'Date of Entry': 'Einreisedatum',
 'Date of payment required': 'Auszahlungsdatum erforderlich',
 'Payload Height (m)': 'Ladekapazität Höhe (m)',
 'Payload Length (m)': 'Ladekapazität Länge (m)',
