@@ -246,7 +246,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         ),
                     M("Administration", restrict=(ADMIN,))(
-                        #M("Flags", f="case_flag"),
+                        M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
                         M("Need Types", f="need"),
                         M("Intervention Types", f="response_type"),
@@ -276,6 +276,31 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Sectors", f="sector"),
                         )
                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm():
+        """ HRM / Human Resources Management """
+
+        #ADMIN = current.session.s3.system_roles.ADMIN
+
+        settings = current.deployment_settings
+
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+
+        return M(c="hrm")(
+                    M(settings.get_hrm_staff_label(), f="staff")(
+                        M("Create", m="create"),
+                    ),
+                    M(teams, f="group", check=use_teams)(
+                        M("Create", m="create"),
+                        M("Search Members", f="group_membership"),
+                    ),
+                    M("Job Titles", f="job_title")(
+                        M("Create", m="create"),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod

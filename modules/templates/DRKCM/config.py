@@ -126,6 +126,18 @@ def config(settings):
     # Human Resource Module Settings
     #
     settings.hrm.teams_orgs = False
+    settings.hrm.staff_departments = False
+
+    settings.hrm.use_id = False
+    settings.hrm.use_address = False
+    settings.hrm.use_description = False
+
+    settings.hrm.use_trainings = False
+    settings.hrm.use_certificates = False
+    settings.hrm.use_credentials = False
+
+    settings.hrm.use_skills = False
+    settings.hrm.staff_experience = False
 
     # -------------------------------------------------------------------------
     # Organisations Module Settings
@@ -187,11 +199,11 @@ def config(settings):
     settings.dvr.response_types_hierarchical = True
 
     # Expose flags to mark appointment types as mandatory
-    settings.dvr.mandatory_appointments = True
+    settings.dvr.mandatory_appointments = False
     # Appointments with personal presence update last_seen_on
-    settings.dvr.appointments_update_last_seen_on = True
+    settings.dvr.appointments_update_last_seen_on = False
     # Automatically update the case status when appointments are completed
-    settings.dvr.appointments_update_case_status = True
+    settings.dvr.appointments_update_case_status = False
     # Automatically close appointments when registering certain case events
     settings.dvr.case_events_close_appointments = True
 
@@ -1316,6 +1328,29 @@ def config(settings):
     settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
 
     # -------------------------------------------------------------------------
+    def customise_dvr_case_flag_resource(r, tablename):
+
+        table = current.s3db.dvr_case_flag
+
+        # Hide unwanted fields
+        unused = ("advise_at_check_in",
+                  "advise_at_check_out",
+                  "advise_at_id_check",
+                  "instructions",
+                  "deny_check_in",
+                  "deny_check_out",
+                  "allowance_suspended",
+                  "is_not_transferable",
+                  "is_external",
+                  )
+
+        for fieldname in unused:
+            field = table[fieldname]
+            field.readable = field.writable = False
+
+    settings.customise_dvr_case_flag_resource = customise_dvr_case_flag_resource
+
+    # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
         s3db = current.s3db
@@ -1710,24 +1745,24 @@ def config(settings):
            # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
            module_type = None,
         )),
-        ("supply", Storage(
-           name_nice = T("Supply Chain Management"),
-           #description = "Used within Inventory Management, Request Management and Asset Management",
-           restricted = True,
-           module_type = None, # Not displayed
-        )),
-        ("inv", Storage(
-           name_nice = T("Warehouses"),
-           #description = "Receiving and Sending Items",
-           restricted = True,
-           module_type = 4
-        )),
-        ("asset", Storage(
-           name_nice = T("Assets"),
-           #description = "Recording and Assigning Assets",
-           restricted = True,
-           module_type = 5,
-        )),
+        #("supply", Storage(
+        #   name_nice = T("Supply Chain Management"),
+        #   #description = "Used within Inventory Management, Request Management and Asset Management",
+        #   restricted = True,
+        #   module_type = None, # Not displayed
+        #)),
+        #("inv", Storage(
+        #   name_nice = T("Warehouses"),
+        #   #description = "Receiving and Sending Items",
+        #   restricted = True,
+        #   module_type = 4
+        #)),
+        #("asset", Storage(
+        #   name_nice = T("Assets"),
+        #   #description = "Recording and Assigning Assets",
+        #   restricted = True,
+        #   module_type = 5,
+        #)),
         # Vehicle depends on Assets
         #("vehicle", Storage(
         #    name_nice = T("Vehicles"),
@@ -1735,12 +1770,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        ("req", Storage(
-           name_nice = T("Requests"),
-           #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-           restricted = True,
-           module_type = 10,
-        )),
+        #("req", Storage(
+        #   name_nice = T("Requests"),
+        #   #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
         ("project", Storage(
            name_nice = T("Projects"),
            #description = "Tracking of Projects, Activities and Tasks",

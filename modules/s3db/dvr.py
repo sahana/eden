@@ -3018,6 +3018,7 @@ class DVRCaseAppointmentModel(S3Model):
 
         mandatory_appointments = settings.get_dvr_mandatory_appointments()
         update_case_status = settings.get_dvr_appointments_update_case_status()
+        update_last_seen_on = settings.get_dvr_appointments_update_last_seen_on()
 
         # ---------------------------------------------------------------------
         # Case Appointment Type
@@ -3076,6 +3077,8 @@ class DVRCaseAppointmentModel(S3Model):
                            default = True,
                            label = T("Presence required"),
                            represent = s3_yes_no_represent,
+                           readable = update_last_seen_on,
+                           writable = update_last_seen_on,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Presence required"),
                                                              T("This appointment requires the presence of the person concerned"),
