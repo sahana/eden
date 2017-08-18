@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Organizations", c="org", f="organisation"),
                 MM("Facilities", c="org", f="facility"),
                 homepage("vol"),
-                homepage("hrm"),
+                MM("Staff", c="hrm", f="staff"),
                 ),
         ]
 
