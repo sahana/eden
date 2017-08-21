@@ -1,88 +1,278 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-ORG_ADMIN,Organization Administrator,,cr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,dvr,case_event,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
-ORG_ADMIN,Organization Administrator,,dvr,site_activity,,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update site activity reports"
-ORG_ADMIN,Organization Administrator,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,hrm,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module index controller
-ORG_ADMIN,Organization Administrator,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff data
-ORG_ADMIN,Organization Administrator,,hrm,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to staff module
-ORG_ADMIN,Organization Administrator,,inv,,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
-ORG_ADMIN,Organization Administrator,,project,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to task management
-ORG_ADMIN,Organization Administrator,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module index controller
-ORG_ADMIN,Organization Administrator,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer data
-ORG_ADMIN,Organization Administrator,,vol,,,CREATE|READ|UPDATE|DELETE,,,,,Head of administration has unrestricted access to volunteer module
-ORG_ADMIN,Organization Administrator,,,,cr_shelter,CREATE|READ|UPDATE,,,,,Head of administration can modify shelter info
-ORG_ADMIN,Organization Administrator,,,,cr_shelter_flag,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter flags
-ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage shelter registration info
-ORG_ADMIN,Organization Administrator,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
-ORG_ADMIN,Organization Administrator,,,,cr_shelter_unit,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,dvr_allowance,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to allowance information
-ORG_ADMIN,Organization Administrator,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage activities
-ORG_ADMIN,Organization Administrator,,,,dvr_case_appointment,CREATE|READ|UPDATE|DELETE,,,,,Head of administration have unrestricted access to case appointments
-ORG_ADMIN,Organization Administrator,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,dvr_case_event,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read and update case events"
-ORG_ADMIN,Organization Administrator,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete case notes"
-ORG_ADMIN,Organization Administrator,,,,dvr_site_activity,CREATE|READ|UPDATE|DELETE,,,,,"Head of administration can create, read, update and delete site activity reports"
-ORG_ADMIN,Organization Administrator,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facilities
-ORG_ADMIN,Organization Administrator,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility types
-ORG_ADMIN,Organization Administrator,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage organisation data
-ORG_ADMIN,Organization Administrator,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage facility type links
-ORG_ADMIN,Organization Administrator,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage family members
-ORG_ADMIN,Organization Administrator,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,Head of administration can manage profile pictures
-ORG_ADMIN,Organization Administrator,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_ADMIN,Organization Administrator,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
 AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,Normal users can see their own staff record
 AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no access to staff data
-AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,Default rule for HRM
 AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,org,,,NONE,,,,,Normal users don't see org menu entries
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,person,,,READ|UPDATE,,,,But need to be able to add/edit addresses
 AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,,,CREATE,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,supply,,,CREATE|READ,,,,,Authenticated  users can see the Supply Catalogue
-AUTHENTICATED,Authenticated,,vol,index,,NONE,,,,,Hides the Volunteers menu item
-AUTHENTICATED,Authenticated,,vol,volunteer,,NONE,,,,,Normal users have no access to volunteer data
-AUTHENTICATED,Authenticated,,,,cr_shelter_registration_history,NONE,,,,,Normal users have no access to the check-in history
-AUTHENTICATED,Authenticated,,,,org_facility,READ,,,,,Normal users can read facility data
+AUTHENTICATED,Authenticated,,,,cr_shelter_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_case_activity_status,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_case_activity_update_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_case_flag,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_need,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_note_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_residence_permit_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_residence_status_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_response_status,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_response_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,Normal users can read facility types
-AUTHENTICATED,Authenticated,,,,org_organisation,READ,,,,,Normal users can read organisation data
+AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_organisation_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_sector,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,,,,Normal users can read facility type links
-AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete addresses
-AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete contact information
-AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete emergency contact information
-AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
-STAFF,General Staff,,cr,,,READ,,,,,
-STAFF,General Staff,,dvr,case_activity,,NONE,,,,,Staff can not access case activity controller
-STAFF,General Staff,,dvr,case_appointment,,NONE,,,,,Staff can not access case appointment controller
-STAFF,General Staff,,dvr,case_event,,CREATE|READ,,,,,
-STAFF,General Staff,,dvr,site_activity,,NONE,,,,,
-STAFF,General Staff,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
-STAFF,General Staff,,inv,,,NONE,,,,,Staff can not access inv module
-STAFF,General Staff,,project,,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,,,,
-STAFF,General Staff,,,,cr_shelter,READ,,,,,
-STAFF,General Staff,,,,cr_shelter_flag,READ,,,,,Staff can read shelter flags
-STAFF,General Staff,,,,cr_shelter_registration,READ|UPDATE,,,,,
-STAFF,General Staff,,,,cr_shelter_unit,READ,,,,,
-STAFF,General Staff,,,,dvr_allowance,NONE,,,,,
-STAFF,General Staff,,,,dvr_case,READ|UPDATE,,,,,
-STAFF,General Staff,,,,dvr_case_activity,READ,,,,,
-STAFF,General Staff,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,
-STAFF,General Staff,,,,dvr_case_flag_case,CREATE|READ|DELETE,,,,,
-STAFF,General Staff,,,,dvr_case_event,CREATE,,,,,
-STAFF,General Staff,,,,dvr_case_language,READ,,,,,
-STAFF,General Staff,,,,dvr_note,CREATE|READ,UPDATE,,,,
-STAFF,General Staff,,,,pr_contact,READ,,,,,
-STAFF,General Staff,,,,pr_group_membership,READ,,,,,
-STAFF,General Staff,,,,pr_image,READ,,,,,
-STAFF,General Staff,,,,pr_person,READ|UPDATE,,,,,
-STAFF,General Staff,,,,pr_person_details,READ,,,,,
-STAFF,General Staff,,,,pr_person_tag,READ,,,,,
+AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own addresses
+AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own contact information
+AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own emergency contact information
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Normal users can only see/edit their own PR records
+CASE_MANAGEMENT,Case Manager,,dvr,case,,NONE,,,,,Case Managers can not access the case controller
+CASE_MANAGEMENT,Case Manager,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case activities
+CASE_MANAGEMENT,Case Manager,,dvr,case_activity_status,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,case_activity_update_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case appointments
+CASE_MANAGEMENT,Case Manager,,dvr,case_appointment_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,case_flag,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,case_status,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case activities
+CASE_MANAGEMENT,Case Manager,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can see the DVR index page
+CASE_MANAGEMENT,Case Manager,,dvr,need,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case files
+CASE_MANAGEMENT,Case Manager,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage response actions
+CASE_MANAGEMENT,Case Manager,,dvr,response_status,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,response_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,,,READ,,,,,Default rule for DVR module
+CASE_MANAGEMENT,Case Manager,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage tasks
+CASE_MANAGEMENT,Case Manager,,project,,,READ,,,,,Default rule for PROJECT module
+CASE_MANAGEMENT,Case Manager,,,,cr_shelter,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_activity_need,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_activity_update,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_details,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_flag_case,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_case_status,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_residence_status,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,dvr_response_action,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,hrm_human_resource,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_facility,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_organisation,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_site,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,case,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,case_activity_status,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,case_activity_update_type,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,case_appointment_type,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,case_flag,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,case_status,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,need,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,dvr,response_status,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,response_type,,NONE,,,,,
+COORDINATOR,Coordinator,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,project,,,READ,,,,,
+COORDINATOR,Coordinator,,,,cr_shelter,READ,,,,,
+COORDINATOR,Coordinator,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_activity_need,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_activity_update,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_details,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_flag_case,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_residence_status,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,dvr_response_action,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,hrm_human_resource,READ,,,,,
+COORDINATOR,Coordinator,,,,org_facility,READ,,,,,
+COORDINATOR,Coordinator,,,,org_organisation,READ,,,,,
+COORDINATOR,Coordinator,,,,org_sector,READ,,,,,
+COORDINATOR,Coordinator,,,,org_site,READ,,,,,
+COORDINATOR,Coordinator,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+COORDINATOR,Coordinator,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,cr,shelter,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,cr,shelter_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,cr,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,group,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,job_title,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,person,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,org,facility,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,org,facility_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,organisation,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,org,organisation_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,sector,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,project,,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,group,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,job_title,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,person,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,,,cr_shelter,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_site,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity_status,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity_update_type,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment_type,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_flag,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_status,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,need,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_status,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_type,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility,,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,organisation,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,organisation_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,sector,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,,,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,cr_shelter,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,cr_shelter_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,hrm_job_title,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_organisation_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_sector,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_site,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_site_facility_type,READ,,,,,
+REGISTRATION,Case Registration,,dvr,case,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,case_activity_status,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,case_activity_update_type,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,case_appointment_type,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,case_flag,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,case_status,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,need,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,dvr,response_status,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,response_type,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,project,,,READ,,,,,
+REGISTRATION,Case Registration,,,,cr_shelter,READ,,,,,
+REGISTRATION,Case Registration,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_activity_need,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_activity_update,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_details,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_flag_case,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_residence_status,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,dvr_response_action,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,hrm_human_resource,READ,,,,,
+REGISTRATION,Case Registration,,,,org_facility,READ,,,,,
+REGISTRATION,Case Registration,,,,org_organisation,READ,,,,,
+REGISTRATION,Case Registration,,,,org_sector,READ,,,,,
+REGISTRATION,Case Registration,,,,org_site,READ,,,,,
+REGISTRATION,Case Registration,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,case,,NONE,,,,,
+TRACING,Tracing Service,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,case_activity_status,,NONE,,,,,
+TRACING,Tracing Service,,dvr,case_activity_update_type,,NONE,,,,,
+TRACING,Tracing Service,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,case_appointment_type,,NONE,,,,,
+TRACING,Tracing Service,,dvr,case_flag,,NONE,,,,,
+TRACING,Tracing Service,,dvr,case_status,,NONE,,,,,
+TRACING,Tracing Service,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,need,,NONE,,,,,
+TRACING,Tracing Service,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,dvr,response_status,,NONE,,,,,
+TRACING,Tracing Service,,dvr,response_type,,NONE,,,,,
+TRACING,Tracing Service,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,project,,,READ,,,,,Default rule for PROJECT module
+TRACING,Tracing Service,,,,cr_shelter,READ,,,,,
+TRACING,Tracing Service,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_activity,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_activity_need,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_activity_update,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_details,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_flag_case,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_note,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_residence_status,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,dvr_response_action,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,hrm_human_resource,READ,,,,,
+TRACING,Tracing Service,,,,org_facility,READ,,,,,
+TRACING,Tracing Service,,,,org_organisation,READ,,,,,
+TRACING,Tracing Service,,,,org_site,READ,,,,,
+TRACING,Tracing Service,,,,org_site_facility_type,READ,,,,,
+TRACING,Tracing Service,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+TRACING,Tracing Service,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,

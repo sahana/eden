@@ -1800,17 +1800,17 @@ def config(settings):
           restricted = True,
           module_type = 10,
         )),
-        ("event", Storage(
-           name_nice = T("Events"),
-           #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-           restricted = True,
-           module_type = 10,
-        )),
-        ("security", Storage(
-           name_nice = T("Security"),
-           restricted = True,
-           module_type = 10,
-        )),
+        #("event", Storage(
+        #   name_nice = T("Events"),
+        #   #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
+        #("security", Storage(
+        #   name_nice = T("Security"),
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,
