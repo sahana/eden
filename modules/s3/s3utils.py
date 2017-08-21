@@ -501,7 +501,7 @@ def s3_truncate(text, length=48, nice=True):
 
 
     if len(text) > length:
-        if type(text) == unicode:
+        if type(text) is unicode:
             encode = False
         else:
             # Make sure text is multi-byte-aware before truncating it
