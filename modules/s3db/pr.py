@@ -5881,12 +5881,11 @@ class pr_PersonEntityRepresent(S3Represent):
 
         item = object.__getattribute__(row, instance_type)
         if instance_type == "pr_person":
-            pe_str = "%s %s" % (s3_fullname(item),
-                                label)
+            pe_str = "%s %s" % (s3_fullname(item), label)
         elif instance_type == "hrm_training_event":
             pe_str = self.training_event_represent.represent_row(item)
         elif "name" in item:
-            pe_str = s3_unicode(item["name"])
+            pe_str = s3_str(item["name"])
         else:
             pe_str = "[%s]" % label
 
@@ -5894,7 +5893,8 @@ class pr_PersonEntityRepresent(S3Represent):
             etable = current.s3db.pr_pentity
             instance_type_nice = etable.instance_type.represent(instance_type)
             pe_str = "%s (%s)" % (pe_str,
-                                  s3_unicode(instance_type_nice))
+                                  s3_str(instance_type_nice),
+                                  )
 
         return pe_str
 

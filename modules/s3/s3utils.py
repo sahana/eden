@@ -499,13 +499,21 @@ def s3_truncate(text, length=48, nice=True):
         @param nice: do not truncate words
     """
 
-    # Make sure text is multi-byte-aware before truncating it
-    text = s3_unicode(text)
+
     if len(text) > length:
-        if nice:
-            return "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
+        if type(text) == unicode:
+            encode = False
         else:
-            return "%s..." % text[:length-3]
+            # Make sure text is multi-byte-aware before truncating it
+            text = s3_unicode(text)
+            encode = True
+        if nice:
+            truncated = "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
+        else:
+            truncated = "%s..." % text[:length-3]
+        if encode:
+            truncated = truncated.encode("utf-8")
+        return truncated
     else:
         return text
 
