@@ -118,6 +118,107 @@ def config(settings):
     settings.ui.calendar_clear_icon = True
 
     # -------------------------------------------------------------------------
+    # Realm Rules
+    #
+    def drk_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        tablename = table._ot or table._tablename
+
+        realm_entity = 0
+
+        if tablename == "pr_person":
+
+            # Client records are owned by the organisation
+            # the case is assigned to
+            ctable = s3db.dvr_case
+            query = (ctable.person_id == row.id) & \
+                    (ctable.deleted == False)
+            case = db(query).select(ctable.organisation_id,
+                                    limitby = (0, 1),
+                                    ).first()
+
+            if case and case.organisation_id:
+                realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                 case.organisation_id,
+                                                 )
+
+        elif tablename in ("dvr_case_activity",
+                           "dvr_case_details",
+                           "dvr_case_flag_case",
+                           "dvr_case_language",
+                           "dvr_note",
+                           "dvr_residence_status",
+                           "pr_group_membership",
+                           "pr_person_details",
+                           "pr_person_tag",
+                           ):
+
+            # Inherit from person via person_id
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.id == table.person_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename in ("pr_address",
+                           "pr_contact",
+                           "pr_contact_emergency",
+                           "pr_image",
+                           ):
+
+            # Inherit from person via PE
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.pe_id == table.pe_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename in ("dvr_case_activity_need",
+                           "dvr_case_activity_update",
+                           "dvr_response_action",
+                           ):
+
+            # Inherit from case activity
+            table = s3db.table(tablename)
+            atable = s3db.dvr_case_activity
+            query = (table._id == row.id) & \
+                    (atable.id == table.case_activity_id)
+            activity = db(query).select(atable.realm_entity,
+                                        limitby = (0, 1),
+                                        ).first()
+            if activity:
+                realm_entity = activity.realm_entity
+
+        elif tablename == "pr_group":
+
+            # No realm-entity for case groups
+            table = s3db.pr_group
+            query = table._id == row.id
+            group = db(query).select(table.group_type,
+                                     limitby = (0, 1),
+                                     ).first()
+            if group and group.group_type == 7:
+                realm_entity = None
+
+        return realm_entity
+
+    settings.auth.realm_entity = drk_realm_entity
+
+    # -------------------------------------------------------------------------
     # CMS Module Settings
     #
     settings.cms.hide_index = True
@@ -286,6 +387,25 @@ def config(settings):
             for field in rtable:
                 if field.name != "shelter_unit_id" or not is_staff:
                     field.writable = False
+
+        # Configure components to inherit realm_entity
+        # from the person record
+        s3db.configure("pr_person",
+                       realm_components = ("case_activity",
+                                           "case_details",
+                                           "dvr_flag",
+                                           "case_language",
+                                           "case_note",
+                                           "residence_status",
+                                           "address",
+                                           "contact",
+                                           "contact_emergency",
+                                           "group_membership",
+                                           "image",
+                                           "person_details",
+                                           "person_tag",
+                                           ),
+                       )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
@@ -480,7 +600,6 @@ def config(settings):
                                     multiple = False,
                                     name = "bamf",
                                     ),
-                            #"dvr_case.valid_until",
                             S3SQLInlineComponent(
                                     "residence_status",
                                     fields = ["status_type_id",
@@ -495,7 +614,6 @@ def config(settings):
                                     layout = S3SQLVerticalSubFormLayout,
                                     explicit_add = T("Add Residence Status"),
                                     ),
-                            #"dvr_case.stay_permit_until",
 
                             # Other Details ---------------------------
                             "person_details.occupation",
@@ -711,24 +829,110 @@ def config(settings):
     settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
 
     # -------------------------------------------------------------------------
+    def dvr_case_onaccept(form):
+        """
+            Additional custom-onaccept for dvr_case to force-update the
+            realm entity of the person record:
+            - the organisation managing the case is the realm-owner,
+              but the person record is written first, so we need to
+              update it after writing the case
+            - the case can be transferred to another organisation/branch,
+              and then the person record needs to be transferred to that
+              same realm as well
+        """
+
+        form_vars = form.vars
+        record_id = form_vars.id
+
+        s3db = current.s3db
+
+        # Get the person ID for this case
+        person_id = form_vars.person_id
+        if not person_id:
+            table = s3db.dvr_case
+            query = (table.id == record_id)
+            row = current.db(query).select(table.person_id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                person_id = row.person_id
+
+        if person_id:
+
+            set_realm_entity = current.auth.set_realm_entity
+
+            # Configure components to inherit realm_entity
+            # from the person record
+            s3db.configure("pr_person",
+                           realm_components = ("case_activity",
+                                               "case_details",
+                                               "dvr_flag",
+                                               "case_language",
+                                               "case_note",
+                                               "residence_status",
+                                               "address",
+                                               "contact",
+                                               "contact_emergency",
+                                               "group_membership",
+                                               "image",
+                                               "person_details",
+                                               "person_tag",
+                                               ),
+                           )
+
+            # Force-update the realm entity for the person
+            set_realm_entity("pr_person", person_id, force_update=True)
+
+            # Configure components to inherit realm entity
+            # from the case activity record
+            s3db.configure("dvr_case_activity",
+                           realm_components = ("case_activity_need",
+                                               "case_activity_update",
+                                               "response_action",
+                                               ),
+                           )
+
+            # Force-update the realm entity for all case activities
+            # linked to the person_id
+            atable = s3db.dvr_case_activity
+            query = (atable.person_id == person_id)
+            set_realm_entity(atable, query, force_update=True)
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
 
         s3db = current.s3db
         ctable = s3db.dvr_case
 
-        # Expose expiration dates
-        field = ctable.valid_until
-        field.label = T("BÜMA valid until")
-        field.readable = field.writable = True
-        field = ctable.stay_permit_until
-        field.readable = field.writable = True
+        get_vars = r.get_vars
+        if r.function == "group_membership" and "viewing" in get_vars:
 
-        # Set all fields read-only except comments, unless
-        # the user has permission to create cases
-        if not current.auth.s3_has_permission("create", "dvr_case"):
-            for field in ctable:
-                if field.name != "comments":
-                    field.writable = False
+            # Creating a case file for a new family member
+            # => default to same organisation as primary case
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                vtablename, record_id = None, None
+
+            if vtablename == "pr_person":
+                query = (ctable.person_id == record_id)
+                row = current.db(query).select(ctable.organisation_id,
+                                               limitby = (0, 1),
+                                               ).first()
+                if row:
+                    ctable.organisation_id.default = row.organisation_id
+
+        # Custom-onaccept to update realm-entity of the
+        # beneficiary and case activities of this case
+        # (incl. their respective realm components)
+        s3db.add_custom_callback("dvr_case",
+                                 "onaccept",
+                                 dvr_case_onaccept,
+                                 )
+
+        # Update the realm-entity when the case gets updated
+        # (because the assigned organisation/branch can change)
+        s3db.configure("dvr_case", update_realm = True)
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 
@@ -1060,6 +1264,15 @@ def config(settings):
             s3db.configure("dvr_case_activity",
                            list_fields = list_fields,
                            )
+
+        # Configure components to inherit realm entity
+        # from the case activity record
+        s3db.configure("dvr_case_activity",
+                       realm_components = ("case_activity_need",
+                                           "case_activity_update",
+                                           "response_action",
+                                           ),
+                       )
 
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 
