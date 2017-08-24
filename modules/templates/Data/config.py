@@ -149,13 +149,13 @@ def config(settings):
             restricted = False,
             module_type = None  # No Menu
         )),
-        #("sync", Storage(
-        #    name_nice = T("Synchronization"),
-        #    #description = "Synchronization",
-        #    restricted = True,
-        #    access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-        #    module_type = None  # This item is handled separately for the menu
-        #)),
+        ("sync", Storage(
+            name_nice = T("Synchronization"),
+            #description = "Synchronization",
+            restricted = True,
+            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+            module_type = None  # This item is handled separately for the menu
+        )),
         #("tour", Storage(
         #    name_nice = T("Guided Tour Functionality"),
         #    module_type = None,
