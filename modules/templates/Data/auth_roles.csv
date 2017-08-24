@@ -1,0 +1,9 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,,,"Authenticated users can see the Map"
+AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,,,"But need to be able to add/edit addresses"
+AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+SYNC,Synchronisation,,sync,,,,CREATE|READ,READ|UPDATE|DELETE,,,,
