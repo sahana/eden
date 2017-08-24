@@ -22,8 +22,8 @@ def config(settings):
     settings.base.system_name_short = T("DataRepo")
 
     # PrePopulate data
-    #settings.base.prepopulate = ("data",)
-    settings.base.prepopulate += ("data",)
+    #settings.base.prepopulate = ("Data",)
+    settings.base.prepopulate += ("Data",)
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "skeleton"
