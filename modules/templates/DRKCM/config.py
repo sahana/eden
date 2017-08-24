@@ -214,6 +214,29 @@ def config(settings):
             if group and group.group_type == 7:
                 realm_entity = None
 
+        elif tablename == "project_task":
+
+            # Inherit the realm entity from the assignee
+            assignee_pe_id = row.pe_id
+            instance_type = s3db.pr_instance_type(assignee_pe_id)
+            if instance_type:
+                table = s3db.table(instance_type)
+                query = table.pe_id == assignee_pe_id
+                assignee = db(query).select(table.realm_entity,
+                                            limitby = (0, 1),
+                                            ).first()
+                if assignee and assignee.realm_entity:
+                    realm_entity = assignee.realm_entity
+
+            # If there is no assignee, or the assignee has no
+            # realm entity, fall back to the user organisation
+            if realm_entity == 0:
+                auth = current.auth
+                user_org_id = auth.user.organisation_id if auth.user else None
+                if user_org_id:
+                    realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                                    user_org_id,
+                                                    )
         return realm_entity
 
     settings.auth.realm_entity = drk_realm_entity
@@ -1881,20 +1904,23 @@ def config(settings):
                                     )
         s3db.configure("project_task",
                        crud_form = crud_form,
+                       update_realm = True,
                        )
+
+        accessible_query = current.auth.s3_accessible_query
 
         # Filter assignees to human resources
         htable = s3db.hrm_human_resource
         ptable = s3db.pr_person
-        query = (htable.deleted == False) & \
+        query = accessible_query("read", htable) & \
                 (htable.person_id == ptable.id)
         rows = db(query).select(ptable.pe_id)
         pe_ids = set(row.pe_id for row in rows)
 
         # ...and teams
         gtable = s3db.pr_group
-        query = (gtable.group_type == 3) & \
-                (gtable.deleted == False)
+        query = accessible_query("read", gtable) & \
+                (gtable.group_type == 3)
         rows = db(query).select(gtable.pe_id)
         pe_ids |= set(row.pe_id for row in rows)
 
