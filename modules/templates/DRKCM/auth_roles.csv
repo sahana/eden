@@ -4,6 +4,7 @@ AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated user
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
 AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,Normal users can see their own staff record
 AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no access to staff data
+AUTHENTICATED,Authenticated,,hrm,group,,NONE,,,,,Normal users have no access to teams
 AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,Default rule for HRM
 AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,org,,,NONE,,,,,Normal users don't see org menu entries
@@ -152,6 +153,9 @@ ORG_ADMIN,Organisation Admin,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,org_site,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,

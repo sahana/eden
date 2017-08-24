@@ -3027,7 +3027,8 @@ class S3OrganisationTeamModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       onaccept = self.org_team_onaccept,
+                       onaccept = self.organisation_team_onaccept,
+                       ondelete = self.organisation_team_ondelete,
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3035,37 +3036,31 @@ class S3OrganisationTeamModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_team_onaccept(form):
+    def organisation_team_onaccept(form):
         """
-            Update affiliations.
-
-            @ToDo: ondelete function needed too
+            Onaccept of org_organisation_team:
+                - update affiliations (OU relationships) of the team
         """
 
-        if hasattr(form, "vars"):
-            _id = form.vars.id
-        elif isinstance(form, Row) and "id" in form:
-            _id = form.id
-        else:
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            record_id = None
+
+        if not record_id:
             return
 
-        if not _id:
-            return
+        org_update_affiliations("org_organisation_team", record_id)
 
-        db = current.db
-        table = db.org_organisation_team
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def organisation_team_ondelete(row):
+        """
+            Ondelete of org_organisation_team:
+                - update affiliations (OU relationships) of the team
+        """
 
-        record = db(table.id == _id).select(table.group_id,
-                                            table.organisation_id,
-                                            limitby=(0, 1)).first()
-        if record:
-            from pr import OU
-            org = ("org_organisation", record.organisation_id)
-            group = ("pr_group", record.group_id)
-            current.s3db.pr_add_affiliation(org, group,
-                                            role="Groups",
-                                            role_type=OU,
-                                            )
+        org_update_affiliations("org_organisation_team", row.id)
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):
@@ -7224,7 +7219,6 @@ def org_facility_controller():
 # =============================================================================
 # Hierarchy Manipulation
 # =============================================================================
-#
 def org_update_affiliations(table, record):
     """
         Update OU affiliations related to this record
@@ -7243,7 +7237,7 @@ def org_update_affiliations(table, record):
         ltable = current.s3db.org_organisation_branch
         if not isinstance(record, Row):
             record = current.db(ltable.id == record).select(ltable.ALL,
-                                                            limitby=(0, 1)
+                                                            limitby=(0, 1),
                                                             ).first()
         if not record:
             return
@@ -7254,7 +7248,7 @@ def org_update_affiliations(table, record):
         mtable = current.s3db.org_group_membership
         if not isinstance(record, Row):
             record = current.db(mtable.id == record).select(mtable.ALL,
-                                                            limitby=(0, 1)
+                                                            limitby=(0, 1),
                                                             ).first()
         if not record:
             return
@@ -7274,6 +7268,21 @@ def org_update_affiliations(table, record):
                                               limitby=(0, 1)).first()
 
         org_site_update_affiliations(record)
+
+    elif rtype == "org_organisation_team":
+
+        if not isinstance(record, Row) or "group_id" not in record:
+            ltable = current.s3db.org_organisation_team
+            record = current.db(ltable.id == record).select(ltable.id,
+                                                            ltable.organisation_id,
+                                                            ltable.group_id,
+                                                            ltable.deleted,
+                                                            ltable.deleted_fk,
+                                                            limitby=(0, 1),
+                                                            ).first()
+        if not record:
+            return
+        org_team_update_affiliations(record)
 
 # =============================================================================
 def organisation_update_affiliations(record):
@@ -7455,6 +7464,78 @@ def org_site_update_affiliations(record):
         if o_pe_id and not seen:
             s3db.pr_add_affiliation(o_pe_id, s_pe_id, role=SITES,
                                     role_type=OU)
+
+# =============================================================================
+def org_team_update_affiliations(record):
+    """
+        Update affiliations for an organisation team
+
+        @param record: the org_organisation_team record
+    """
+
+    # Get the group_id of the team
+    if record.deleted:
+        group_id = None
+        if record.deleted_fk:
+            try:
+                fk = json.loads(record.deleted_fk)
+            except (TypeError, ValueError, KeyError):
+                pass
+            else:
+                group_id = fk.get("group_id")
+    else:
+        group_id = record.group_id
+    if not group_id:
+        # Nothing we can do
+        return
+
+    s3db = current.s3db
+
+    # Get the pe_id of the team
+    team_pe_id = s3db.pr_get_pe_id("pr_group", group_id)
+    if not team_pe_id:
+        # Nothing we can do
+        return
+
+    from pr import OU
+    TEAMS = "Groups" # Backwards-compatibility, but should be "Teams"
+
+    db = current.db
+
+    # Get current memberships (=organisation pe_ids)
+    ltable = s3db.org_organisation_team
+    otable = s3db.org_organisation
+    query = (ltable.group_id == group_id) & \
+            (ltable.deleted == False)
+    left = otable.on(ltable.organisation_id == otable.id)
+    rows = db(query).select(otable.pe_id, left=left)
+    current_memberships = set(row["pe_id"] for row in rows)
+
+    # Get current affiliations (=organisation pe_ids)
+    etable = s3db.pr_pentity
+    rtable = db.pr_role
+    atable = db.pr_affiliation
+    query = (atable.pe_id == team_pe_id) & \
+            (atable.deleted == False) & \
+            (rtable.id == atable.role_id) & \
+            (rtable.role == TEAMS) & \
+            (rtable.deleted == False) & \
+            (etable.pe_id == rtable.pe_id) & \
+            (etable.instance_type == "org_organisation")
+    rows = db(query).select(rtable.pe_id)
+    current_affiliations = set(row["pe_id"] for row in rows)
+
+    # Remove all affiliations which are not current memberships
+    obsolete = current_affiliations - current_memberships
+    remove_affiliation = s3db.pr_remove_affiliation
+    for org_pe_id in obsolete:
+        remove_affiliation(org_pe_id, team_pe_id, role=TEAMS)
+
+    # Add affiliations for all new memberships
+    new =  current_memberships - current_affiliations
+    add_affiliation = s3db.pr_add_affiliation
+    for org_pe_id in new:
+        add_affiliation(org_pe_id, team_pe_id, role=TEAMS, role_type=OU)
 
 # =============================================================================
 def org_update_root_organisation(organisation_id, root_org=None):

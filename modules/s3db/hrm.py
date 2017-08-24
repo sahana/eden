@@ -4111,7 +4111,6 @@ class S3HRExperienceModel(S3Model):
                                                  "key": "assignment_id",
                                                  "autodelete": False,
                                                  },
-                       
                             )
 
         # ---------------------------------------------------------------------

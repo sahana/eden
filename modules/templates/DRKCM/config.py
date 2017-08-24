@@ -226,7 +226,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Human Resource Module Settings
     #
-    settings.hrm.teams_orgs = False
+    settings.hrm.teams_orgs = True
     settings.hrm.staff_departments = False
 
     settings.hrm.use_id = False

@@ -6976,8 +6976,9 @@ def pr_update_affiliations(table, record):
             return
         pr_group_update_affiliations(record)
 
-    elif rtype in ("org_organisation_branch",
-                   "org_group_membership",
+    elif rtype in ("org_group_membership",
+                   "org_organisation_branch",
+                   "org_organisation_team",
                    "org_site") or \
          rtype in current.auth.org_site_types:
         # Hierarchy methods in org.py:
