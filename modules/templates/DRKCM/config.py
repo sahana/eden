@@ -740,6 +740,54 @@ def config(settings):
     settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
+    def customise_pr_group_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.controller in ("hrm", "vol"):
+
+                if not r.component:
+
+                    # No inline-adding new organisations
+                    ottable = s3db.org_organisation_team
+                    field = ottable.organisation_id
+                    field.comment = None
+
+                    # Organisation is required
+                    from s3 import S3SQLCustomForm, \
+                                   S3SQLInlineComponent
+                    crud_form = S3SQLCustomForm(
+                                    "name",
+                                    "description",
+                                    S3SQLInlineComponent("organisation_team",
+                                                         label = T("Organization"),
+                                                         fields = ["organisation_id"],
+                                                         multiple = False,
+                                                         required = True,
+                                                         ),
+                                    "comments",
+                                    )
+                    r.resource.configure(crud_form = crud_form)
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_group_controller = customise_pr_group_controller
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_membership_controller(**attr):
 
         s3db = current.s3db
