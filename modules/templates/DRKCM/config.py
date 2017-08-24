@@ -803,6 +803,17 @@ def config(settings):
                                     )
                     r.resource.configure(crud_form = crud_form)
 
+                elif r.component_name == "group_membership":
+
+                    from s3 import S3PersonAutocompleteWidget
+
+                    # Make sure only HRs can be added to teams
+                    mtable = s3db.pr_group_membership
+                    field = mtable.person_id
+                    field.widget = S3PersonAutocompleteWidget(
+                                        #controller="hrm",
+                                        ajax_filter="human_resource.id__ne=None",
+                                        )
             return result
         s3.prep = custom_prep
 
