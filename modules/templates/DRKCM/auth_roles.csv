@@ -2,10 +2,10 @@ uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected
 AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
-AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,Normal users can see their own staff record
+AUTHENTICATED,Authenticated,,hrm,person,,,READ,,,,Normal users can see their own staff record
 AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no access to staff data
 AUTHENTICATED,Authenticated,,hrm,group,,NONE,,,,,Normal users have no access to teams
-AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,Default rule for HRM
+AUTHENTICATED,Authenticated,,hrm,,,NONE,,,,,Default rule for HRM
 AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,org,,,NONE,,,,,Normal users don't see org menu entries
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
@@ -164,20 +164,20 @@ ORG_ADMIN,Organisation Admin,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,
 ORG_ADMIN,Organisation Admin,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity_status,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_activity_update_type,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment_type,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_flag,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_status,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_appointment_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_flag,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,case_status,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,due_followups,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,index,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,need,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_status,,NONE,,,,,
-ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_type,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,need,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,person,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_action,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_status,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_type,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility,,READ,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility_type,,CREATE|READ|UPDATE|DELETE,,,,,

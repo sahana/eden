@@ -36,15 +36,22 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        case_vars = {"closed": "0"}
+        if current.auth.s3_logged_in_human_resource():
+            case_vars["mine"] = "1"
+
         return [
-            MM("Cases", c=("dvr", "pr")),
+            MM("Cases", c=("dvr", "pr"), f="person", vars=case_vars),
+            MM("Case Consulting", c="dvr", f="index",
+               check = lambda this: not this.preceding()[-1].check_permission(),
+               ),
             MM("ToDo", c="project", f="task"),
             MM("Shelters", c="cr", f="shelter"),
             MM("More", link=False)(
                 MM("Organizations", c="org", f="organisation"),
                 MM("Facilities", c="org", f="facility"),
-                homepage("vol"),
                 MM("Staff", c="hrm", f="staff"),
+                MM("Volunteers", c="vol", f="volunteer"),
                 ),
         ]
 
@@ -164,88 +171,91 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        ADMIN = current.auth.get_system_roles().ADMIN
+        sysroles = current.auth.get_system_roles()
+
+        ADMIN = sysroles.ADMIN
+        ORG_ADMIN = sysroles.ORG_ADMIN
+        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
+
+        due_followups = current.s3db.dvr_due_followups
 
         human_resource_id = current.auth.s3_logged_in_human_resource()
         if human_resource_id:
-            due_followups = current.s3db.dvr_due_followups(
-                                human_resource_id = human_resource_id,
-                                ) or "0"
+
+            due_followups = due_followups(human_resource_id = human_resource_id) or "0"
             follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
                                             due_followups,
                                             )
 
-            my_menu = M("My Cases", c=("dvr", "pr"), f="person",
-                        vars = {"closed": "0", "mine": "1"})(
-                        M("Create Case", m="create", t="pr_person", p="create"),
-                        M("Activities", f="case_activity",
-                          vars = {"mine": "1"},
-                          ),
-                        M(follow_ups_label, f="due_followups",
-                          vars = {"mine": "1"},
-                          ),
-                        )
+            my_cases = M("My Cases", c=("dvr", "pr"), f="person",
+                         vars = {"closed": "0", "mine": "1"})(
+                            M("Create Case", m="create", t="pr_person", p="create"),
+                            M("Activities", f="case_activity",
+                              vars = {"mine": "1"},
+                              ),
+                            M(follow_ups_label, f="due_followups",
+                              vars = {"mine": "1"},
+                              ),
+                            )
 
             my_actions = M("Actions", c="dvr", f="response_action")(
                             M("Assigned to me", vars = {"mine": "a"}),
                             M("Managed by me", vars = {"mine": "r"}),
                             )
 
-            all_followups = None
+            all_cases = M("Current Cases", c=("dvr", "pr"), f="person",
+                          vars = {"closed": "0"})(
+                            #M("Create Case", m="create", t="pr_person", p="create"),
+                            M("All Cases", vars = {}),
+                            #M("Actions", f="response_action"),
+                            )
+
+            all_activities = M("Activities", f="case_activity")(
+                                M("Emergencies", vars = {"~.priority": "0"}),
+                                M("All Activities"),
+                                M("Report", m="report"),
+                                )
+
         else:
-            due_followups = current.s3db.dvr_due_followups() or "0"
+            due_followups = due_followups() or "0"
             follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
                                             due_followups,
                                             )
-            my_menu = None
+
+            my_cases = None
             my_actions = None
-            all_followups = M(follow_ups_label, f="due_followups")
+            all_cases = M("Current Cases", c=("dvr", "pr"), f="person",
+                          vars = {"closed": "0"})(
+                            M("Create Case", m="create", t="pr_person", p="create"),
+                            M("All Cases", vars = {}),
+                            M("Actions", f="response_action"),
+                            )
+
+            all_activities = M("Activities", f="case_activity")(
+                                M("Emergencies", vars = {"~.priority": "0"}),
+                                M(follow_ups_label, f="due_followups"),
+                                M("All Activities"),
+                                M("Report", m="report"),
+                                )
 
         return M(c="dvr")(
-                    my_menu,
-                    #M("My Cases", c=("dvr", "pr"), f="person",
-                      #vars = {"closed": "0", "mine": "1"})(
-                        #M("Activities", f="case_activity",
-                          #vars = {"mine": "1"},
-                          #),
-                        #M(my_follow_ups_label, f="due_followups",
-                          #vars = {"mine": "1"},
-                          #),
-                      #),
+                    my_cases,
                     my_actions,
-                    M("Current Cases", c=("dvr", "pr"), f="person",
-                      vars = {"closed": "0"})(
-                        M("Create Case", m="create", t="pr_person", p="create"),
-                        M("All Cases", vars = {}),
-                        M("Actions", f="response_action"),
-                        ),
-                    M("Activities", f="case_activity")(
-                        M("Emergencies",
-                          vars = {"~.priority": "0"},
-                          ),
-                        all_followups,
-                        M("All Activities"),
-                        M("Report", m="report"),
-                        ),
+                    all_cases,
+                    all_activities,
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
-                        #M("Import Updates", m="import", p="create",
-                          #restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
-                          #),
-                        #M("Bulk Status Update", m="manage", p="update",
-                          #restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
-                          #),
                         ),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
                           vars={"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
-                          restrict = (ADMIN, "ADMINISTRATION", "ADMIN_HEAD"),
+                          restrict = (ADMIN, ORG_ADMIN),
                           vars={"archived": "1"},
                           ),
                         ),
-                    M("Administration", restrict=(ADMIN,))(
+                    M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
                         M("Need Types", f="need"),
@@ -259,30 +269,30 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        sysroles = current.auth.get_system_roles()
+
+        ADMIN = sysroles.ADMIN
+        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
                         M("Hierarchy", m="hierarchy"),
                         M("Create", m="create"),
-                        #M("Import", m="import")
                         ),
                     M("Facilities", f="facility")(
                         M("Create", m="create"),
                         ),
-                    M("Administration", restrict=(ADMIN,))(
+                    M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
                         M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
                         M("Sectors", f="sector"),
                         )
-                 )
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm():
         """ HRM / Human Resources Management """
-
-        #ADMIN = current.session.s3.system_roles.ADMIN
 
         settings = current.deployment_settings
 
@@ -292,15 +302,36 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="hrm")(
                     M(settings.get_hrm_staff_label(), f="staff")(
                         M("Create", m="create"),
-                    ),
+                        ),
                     M(teams, f="group", check=use_teams)(
                         M("Create", m="create"),
-                        M("Search Members", f="group_membership"),
-                    ),
+                        ),
                     M("Job Titles", f="job_title")(
                         M("Create", m="create"),
-                    ),
-                )
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def vol():
+        """ Volunteer Management """
+
+        settings = current.deployment_settings
+
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+
+        return M(c="vol")(
+                    M("Volunteers", f="volunteer")(
+                        M("Create", m="create"),
+                        ),
+                    M(teams, f="group", check=use_teams)(
+                        M("Create", m="create"),
+                        ),
+                    M("Job Titles", f="job_title")(
+                        M("Create", m="create"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -308,10 +339,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ PROJECT / Project/Task Management """
 
         return M(c="project")(
-                 M("Tasks", f="task")(
-                    M("Create", m="create"),
-                    M("My Open Tasks", vars={"mine":1}),
-                 ),
-                )
+                    M("Tasks", f="task")(
+                        M("Create", m="create"),
+                        M("My Open Tasks", vars={"mine":1}),
+                        ),
+                    )
 
 # END =========================================================================

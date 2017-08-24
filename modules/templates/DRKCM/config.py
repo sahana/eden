@@ -341,12 +341,10 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
-        """ Redirect dvr/index to dvr/person?closed=0 """
+        """ Do not redirect to person-controller """
 
-        from gluon import URL
-        from s3 import s3_redirect_default
-
-        s3_redirect_default(URL(f="person", vars={"closed": "0"}))
+        return {"module_name": T("Case Consulting"),
+                }
 
     settings.customise_dvr_home = customise_dvr_home
 
