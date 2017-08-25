@@ -328,6 +328,8 @@ def config(settings):
     #settings.gis.zoomcontrol = False
     # Uncomment to open Location represent links in a Popup Window
     #settings.gis.popup_location_link = True
+    # Uncomment to include WKT in XML exports
+    #settings.gis.xml_wkt = True
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 

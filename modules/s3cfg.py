@@ -1460,6 +1460,12 @@ class S3Config(Storage):
         """
         return self.gis.get("popup_location_link", False)
 
+    def get_gis_xml_wkt(self):
+        """
+            Whether XML exports should include the bulky WKT
+        """
+        return self.gis.get("xml_wkt", False)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):

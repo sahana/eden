@@ -83,7 +83,7 @@ class S3XML(S3Codec):
     # GIS field names
     Lat = "lat"
     Lon = "lon"
-    WKT = "wkt"
+    #WKT = "wkt"
 
     IGNORE_FIELDS = [
         "id",

@@ -1541,13 +1541,25 @@ class S3Resource(object):
         append = qfields.append
         for f in table.fields:
 
-            if tablename == "gis_location" and \
-               ((f == "the_geom") or (f == "wkt" and current.auth.permission.format != "cap")):
-                # Filter out bulky Polygons
-                continue
-            elif f in ("wkt", "the_geom")  and tablename.startswith("gis_layer_shapefile_"):
-                # Filter out bulky Polygons
-                continue
+            if f in ("wkt", "the_geom"):
+                if tablename == "gis_location":
+                    if f == "the_geom":
+                        # Filter out bulky Polygons
+                        continue
+                    else:
+                        format = current.auth.permission.format
+                        if format == "cap":
+                            # Include WKT
+                            pass
+                        elif format == "xml" and current.deployment_settings.get_gis_xml_wkt():
+                            # Include WKT
+                            pass
+                        else:
+                            # Filter out bulky Polygons
+                            continue
+                elif tablename.startswith("gis_layer_shapefile_"):
+                    # Filter out bulky Polygons
+                    continue
 
             if fields or skip:
 
@@ -3583,11 +3595,19 @@ class S3Resource(object):
 
         if rfields is None or dfields is None:
             if self.tablename == "gis_location":
-                if "wkt" not in skip and current.auth.permission.format != "cap":
-                    # Skip bulky WKT fields
-                    skip.append("wkt")
-                if current.deployment_settings.get_gis_spatialdb() and \
-                   "the_geom" not in skip:
+                settings = current.deployment_settings
+                if "wkt" not in skip:
+                    format = current.auth.permission.format 
+                    if format == "cap":
+                        # Include WKT
+                        pass
+                    elif format == "xml" and settings.get_gis_xml_wkt():
+                        # Include WKT
+                        pass
+                    else:
+                        # Skip bulky WKT fields
+                        skip.append("wkt")
+                if "the_geom" not in skip and settings.get_gis_spatialdb():
                     skip.append("the_geom")
 
             xml = current.xml
