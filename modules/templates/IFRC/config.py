@@ -4973,7 +4973,7 @@ def config(settings):
             elif component_name == "physical_description" or \
                  method == "import":
                 from gluon import DIV
-                ctable = r.component.table
+                ctable = s3db.pr_physical_description
                 ctable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
