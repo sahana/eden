@@ -3847,6 +3847,15 @@ class DRKSiteActivityReport(object):
                                                              utc=True,
                                                              )
 
+        # Filtered component for preliminary residence permit
+        s3db.add_components("pr_person",
+                            pr_identity = {"name": "residence_permit",
+                                           "joinby": "person_id",
+                                           "filterby": {"type": 5},
+                                           "multiple": False,
+                                           },
+                            )
+
         # Filtered component for family
         s3db.add_components("pr_person",
                             pr_group = {"name": "family",
@@ -3923,7 +3932,7 @@ class DRKSiteActivityReport(object):
                        (T("X-Ray Place"), "xray_place"),
                        date_completed("BAMF"),
                        (T("BÜMA valid until"), "dvr_case.valid_until"),
-                       "dvr_case.stay_permit_until",
+                       (T("Preliminary Residence Permit until"), "residence_permit.valid_until"),
                        (T("Allowance Payments"), "payment.paid_on"),
                        (T("Admitted on"), "dvr_case.date"),
                        "dvr_case.origin_site_id",

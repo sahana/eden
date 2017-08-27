@@ -3495,6 +3495,7 @@
 'Pregnant women': 'Schwangere Frauen',
 'Preliminary': 'Vorläufig',
 'Preliminary Residence Permit': 'Aufenthaltsgestattung',
+'Preliminary Residence Permit until': 'Aufenthaltsgestattung bis',
 'Presence': 'Anwesenheit',
 'Presence Condition': 'Anwesenheitsbedingung',
 'Presence Log': 'Anwesenheitsprotokollierung',
