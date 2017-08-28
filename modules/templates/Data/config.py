@@ -51,6 +51,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    # Include WKT in XML exports
+    settings.gis.xml_wkt = True
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
