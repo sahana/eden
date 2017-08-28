@@ -338,7 +338,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def project():
         """ PROJECT / Project/Task Management """
 
-        return M(c="project")(
+        return M(c="project", f="task")(
                     M("Tasks", f="task")(
                         M("Create", m="create"),
                         M("My Open Tasks", vars={"mine":1}),

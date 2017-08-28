@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN
+from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
@@ -253,20 +253,23 @@ def config(settings):
     settings.hrm.staff_departments = False
 
     settings.hrm.use_id = False
-    settings.hrm.use_address = False
+    settings.hrm.use_address = True
     settings.hrm.use_description = False
 
     settings.hrm.use_trainings = False
     settings.hrm.use_certificates = False
     settings.hrm.use_credentials = False
+    settings.hrm.use_awards = False
 
     settings.hrm.use_skills = False
     settings.hrm.staff_experience = False
+    settings.hrm.vol_experience = False
 
     # -------------------------------------------------------------------------
     # Organisations Module Settings
     #
     settings.org.branches = True
+    settings.org.offices_tab = False
 
     # -------------------------------------------------------------------------
     # Persons Module Settings
@@ -274,30 +277,6 @@ def config(settings):
     settings.pr.hide_third_gender = False
     settings.pr.separate_name_fields = 2
     settings.pr.name_format= "%(last_name)s, %(first_name)s"
-
-    # -------------------------------------------------------------------------
-    # Project Module Settings
-    #
-    settings.project.mode_task = True
-    settings.project.sectors = False
-
-    # NB should not add or remove options, but just comment/uncomment
-    settings.project.task_status_opts = {#1: T("Draft"),
-                                         2: T("New"),
-                                         3: T("Assigned"),
-                                         #4: T("Feedback"),
-                                         #5: T("Blocked"),
-                                         6: T("On Hold"),
-                                         7: T("Canceled"),
-                                         #8: T("Duplicate"),
-                                         #9: T("Ready"),
-                                         #10: T("Verified"),
-                                         #11: T("Reopened"),
-                                         12: T("Completed"),
-                                         }
-
-    settings.project.task_time = False
-    settings.project.my_tasks_include_team_tasks = True
 
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
@@ -747,6 +726,26 @@ def config(settings):
                         list_fields.insert(-1, "dvr_case.organisation_id")
 
                     configure(list_fields = list_fields)
+
+            elif r.controller == "default":
+
+                # Personal Profile
+
+                if r.component_name == "group_membership":
+
+                    # Team memberships are read-only
+                    r.component.configure(insertable = False,
+                                          editable = False,
+                                          deletable = False,
+                                          )
+
+                elif r.component_name == "human_resource":
+
+                    # Staff/Volunteer records are read-only
+                    r.component.configure(insertable = False,
+                                          editable = False,
+                                          deletable = False,
+                                          )
 
             return result
         s3.prep = custom_prep
@@ -1887,6 +1886,40 @@ def config(settings):
     settings.customise_org_sector_resource = customise_org_sector_resource
 
     # -------------------------------------------------------------------------
+    # Project Module Settings
+    #
+    settings.project.mode_task = True
+    settings.project.projects = False
+    settings.project.sectors = False
+
+    # NB should not add or remove options, but just comment/uncomment
+    settings.project.task_status_opts = {#1: T("Draft"),
+                                         2: T("New"),
+                                         3: T("Assigned"),
+                                         #4: T("Feedback"),
+                                         #5: T("Blocked"),
+                                         6: T("On Hold"),
+                                         7: T("Canceled"),
+                                         #8: T("Duplicate"),
+                                         #9: T("Ready"),
+                                         #10: T("Verified"),
+                                         #11: T("Reopened"),
+                                         12: T("Completed"),
+                                         }
+
+    settings.project.task_time = False
+    settings.project.my_tasks_include_team_tasks = True
+
+    # -------------------------------------------------------------------------
+    #def customise_project_home():
+    #    """ Always go to task list """
+    #
+    #    from s3 import s3_redirect_default
+    #    s3_redirect_default(URL(f="task"))
+    #
+    #settings.customise_project_home = customise_project_home
+
+    # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
         """
             Restrict list of assignees to just Staff/Volunteers
@@ -1901,13 +1934,7 @@ def config(settings):
                                     "status",
                                     "priority",
                                     "description",
-                                    "source",
-                                    S3SQLInlineLink("shelter_inspection_flag",
-                                                    field="inspection_flag_id",
-                                                    label=T("Shelter Inspection"),
-                                                    readonly=True,
-                                                    render_list=True,
-                                                    ),
+                                    #"source",
                                     "pe_id",
                                     "date_due",
                                     )
@@ -2035,11 +2062,11 @@ def config(settings):
            module_type = 10,
         )),
         ("msg", Storage(
-           name_nice = T("Messaging"),
-           #description = "Sends & Receives Alerts via Email & SMS",
-           restricted = True,
-           # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-           module_type = None,
+          name_nice = T("Messaging"),
+          #description = "Sends & Receives Alerts via Email & SMS",
+          restricted = True,
+          # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+          module_type = None,
         )),
         #("supply", Storage(
         #   name_nice = T("Supply Chain Management"),
@@ -2269,7 +2296,6 @@ def drk_dvr_rheader(r, tabs=[]):
                                 )
 
                 # Add profile picture
-                from gluon import A, URL
                 from s3 import s3_avatar_represent
                 record_id = record.id
                 rheader.insert(0, A(s3_avatar_represent(record_id,

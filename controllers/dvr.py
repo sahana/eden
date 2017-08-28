@@ -15,7 +15,7 @@ def index():
 # -----------------------------------------------------------------------------
 def index_alt():
     """
-        Module homepage for non-Admin users when no CMS content found
+        Default module homepage
     """
 
     # Just redirect to the person list

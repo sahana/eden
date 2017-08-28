@@ -3465,9 +3465,12 @@ class S3Config(Storage):
             Whether Human Resources should show address tab
         """
         use_address = self.hrm.get("use_address", None)
+
         # Fall back to PR setting if not specified
         if use_address is None:
-            return self.get_pr_use_address()
+            use_address = self.get_pr_use_address()
+
+        return use_address
 
     def get_hrm_use_code(self):
         """

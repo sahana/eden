@@ -5588,7 +5588,7 @@ class S3ProjectPlanningModel(S3Model):
                 project["overall_status"] += overall_status
                 project["total_current_weighting"] += current_weighting
                 project["total_overall_weighting"] += overall_weighting
-                               
+
         # Update Project Status
         total_current_weighting = project["total_current_weighting"]
         if total_current_weighting:
@@ -6554,7 +6554,7 @@ class project_SummaryReport(S3Method):
             record = r.record
             end_date = current.request.utcnow
             end_date = end_date.date()
-            
+
             project = {"start_date": None, #record.start_date,
                        "end_date": end_date,
                        }
@@ -6875,7 +6875,7 @@ class project_SummaryReport(S3Method):
                                     table.planned_progress,
                                     table.weighting,
                                     )
-            
+
             for row in rows:
                 activity_id = row[ltable.activity_id]
                 activity_name = row[atable.name]
@@ -7266,9 +7266,7 @@ class project_SummaryReport(S3Method):
                 project["planned_progress"] += planned_progress
 
             return project, goals
-        
-        
-        
+
         # Filtered, so we need to recalculate dynamically
         # status_by_indicators
         # Goals
@@ -12399,7 +12397,8 @@ def project_rheader(r):
         tabs = [(T("Details"), None)]
         append = tabs.append
         append((attachments_label, "document"))
-        if settings.has_module("msg"):
+        if settings.has_module("msg") and \
+           current.auth.permission.has_permission("update", c="msg"):
             append((T("Notify"), "dispatch"))
         #(T("Roles"), "job_title"),
         #(T("Assignments"), "human_resource"),
