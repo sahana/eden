@@ -3,6 +3,7 @@
 from collections import OrderedDict
 
 from gluon import current
+from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
 from gluon.storage import Storage
 
 def config(settings):
@@ -117,6 +118,448 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
     #settings.security.policy = 7 # Organisation-ACLs
+
+    # -------------------------------------------------------------------------
+    # Organisations
+    settings.org.tags = True
+    settings.org.service_locations = True
+
+    # -------------------------------------------------------------------------
+    # Project Module
+    settings.project.projects = True
+    settings.project.mode_3w = True
+    settings.project.activities = True
+    settings.project.activity_types = True
+    settings.project.sectors = True
+
+    settings.project.multiple_organisations = True
+
+    settings.project.assign_staff_tab = False
+
+    # -------------------------------------------------------------------------
+    # Requests Module
+    #
+    settings.req.recurring = False
+    settings.req.use_req_number = False
+    settings.req.requester_optional = True
+    settings.req.summary = True
+
+    settings.req.use_commit = False
+    settings.req.ask_transport = True
+    settings.req.req_type = ("Stock",)
+
+    # -------------------------------------------------------------------------
+    def customise_project_location_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.project_location
+
+        # Allow editing of names
+        field = table.name
+        field.readable = field.writable = True
+
+        # Hide percentage field (not needed)
+        field = table.percentage
+        field.readable = field.writable = False
+
+        # Use location selector
+        from s3 import S3LocationSelector
+        field = table.location_id
+        field.widget = S3LocationSelector(show_address=True)
+
+        # List fields
+        list_fields = ["project_id",
+                       "name",
+                       "location_id",
+                       "location_id$addr_street",
+                       "activity_type_location.activity_type_id",
+                        ]
+
+        # CRUD Form
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("project_id",
+                                    "name",
+                                    "location_id",
+                                    S3SQLInlineLink("activity_type",
+                                                    field = "activity_type_id",
+                                                    multiple = True,
+                                                    ),
+                                    "comments",
+                                    )
+
+        # Reconfigure resource
+        s3db.configure("project_location",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       create_next = None,
+                       onaccept = None,
+                       )
+
+    settings.customise_project_location_resource = customise_project_location_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+        filter_widgets = [
+            S3TextFilter(["name"],
+                         label = T("Search"),
+                         comment = T("Search by facility name. You can use * as wildcard."),
+                         ),
+            S3OptionsFilter("site_facility_type.facility_type_id",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            ),
+            S3LocationFilter("location_id",
+                             ),
+            ]
+
+        s3db = current.s3db
+
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       )
+
+        # Customize fields
+        table = s3db.org_facility
+
+        # Main facility flag visible and in custom crud form
+        field = table.main_facility
+        field.readable = field.writable = True
+        crud_form = s3db.get_config(tablename, "crud_form")
+        crud_form.insert(-2, "main_facility")
+
+        # "Obsolete" labeled as "inactive"
+        field = table.obsolete
+        field.label = T("Inactive")
+
+        # Show Last Updated field in list view
+        list_fields = s3db.get_config(tablename, "list_fields")
+        list_fields.append((T("Last Updated"), "modified_on"))
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from gluon.html import DIV, INPUT
+        from s3 import s3_comments_widget, \
+                       S3LocationSelector, \
+                       S3MultiSelectWidget, \
+                       S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineComponentMultiSelectWidget, \
+                       S3SQLVerticalSubFormLayout
+
+        s3db = current.s3db
+
+        # Filtered component to access phone number and email
+        s3db.add_components(tablename,
+                            org_facility = {"name": "main_facility",
+                                            "joinby": "organisation_id",
+                                            "filterby": {
+                                                "main_facility": True,
+                                                },
+                                            },
+                            )
+
+        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L3", "L4"),
+                                                                               show_map=False,
+                                                                               labels=False,
+                                                                               )
+
+        crud_fields = ["name",
+                       "acronym",
+                       S3SQLInlineLink("organisation_type",
+                                       field = "organisation_type_id",
+                                       label = T("Type"),
+                                       multiple = False,
+                                       ),
+                       S3SQLInlineLink(
+                            "service",
+                            label = T("Services"),
+                            field = "service_id",
+                            ),
+                       S3SQLInlineComponent(
+                            "facility",
+                            label = T("Main Facility"),
+                            fields = ["name",
+                                      "phone1",
+                                      "phone2",
+                                      "email",
+                                      "location_id",
+                                      ],
+                            layout = S3SQLVerticalSubFormLayout,
+                            filterby = {"field": "main_facility",
+                                        "options": True,
+                                        },
+                            multiple = False,
+                            ),
+                       "website",
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "twitter",
+                            label = T("Twitter"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "TWITTER",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "facebook",
+                            label = T("Facebook"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "FACEBOOK",
+                                            ),
+                            ),
+                       "comments",
+                       ]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter#, S3HierarchyFilter
+        filter_widgets = [
+            S3TextFilter(["name", "acronym"],
+                         label = T("Search"),
+                         comment = T("Search by organization name or acronym. You can use * as wildcard."),
+                         _class = "filter-search",
+                         ),
+            S3LocationFilter("org_facility.location_id",
+                             label = T("Location"),
+                             #hidden = True,
+                             ),
+            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                            label = T("Type"),
+                            #hidden = True,
+                            ),
+            S3OptionsFilter("service_organisation.service_id",
+                            #hidden = True,
+                            ),
+            ]
+
+        list_fields = ["name",
+                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                       (T("Services"), "service.name"),
+                       (T("Adresse"), "main_facility.location_id"),
+                       (T("Phone #"), "main_facility.phone1"),
+                       (T("Email"), "main_facility.email"),
+                       (T("Facebook"), "facebook.value"),
+                       "website",
+                       (T("Last Updated"), "modified_on"),
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        tabs = [(T("Basic Details"), None),
+                (T("Service Locations"), "service_location"),
+                (T("Needs"), "needs"),
+                (T("Facilities"), "facility"),
+                (T("Warehouses"), "warehouse"),
+                (T("Offices"), "office"),
+                (T("Staff & Volunteers"), "human_resource"),
+                #(T("Assets"), "asset"),
+                #(T("Projects"), "project"),
+                #(T("User Roles"), "roles"),
+                #(T("Tasks"), "task"),
+                ]
+        rheader = lambda r: current.s3db.org_rheader(r, tabs=tabs)
+        attr["rheader"] = rheader
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_organisation_needs_resource(r, tablename):
+
+        s3db = current.s3db
+        table = current.s3db.req_organisation_needs
+
+        CASH = T("Cash Donations needed")
+
+        if r.tablename == "req_organisation_needs":
+
+            from s3 import IS_ONE_OF, S3DateTime
+
+            # Allow only organisations which do not have a needs record
+            # yet (single component):
+            field = table.organisation_id
+            dbset = current.db(table.id == None)
+            left = table.on(table.organisation_id == current.s3db.org_organisation.id)
+            field.requires = IS_ONE_OF(dbset, "org_organisation.id",
+                                       field.represent,
+                                       left = left,
+                                       orderby = "org_organisation.name",
+                                       sort = True,
+                                       )
+
+            # Format modified_on as date
+            field = table.modified_on
+            field.represent = lambda d: S3DateTime.date_represent(d, utc=True)
+
+        if r.representation in ("html", "aadata", "iframe"):
+
+            # Structured lists for interactive views
+            from gluon import Field
+            table.needs_skills = Field.Method(lambda row: \
+                                    organisation_needs(row, need_type="skills"))
+            table.needs_items = Field.Method(lambda row: \
+                                    organisation_needs(row, need_type="items"))
+            current.response.s3.stylesheets.append("../themes/RW/needs.css")
+
+            needs_skills = (T("Volunteers needed"), "needs_skills")
+            needs_items = (T("Supplies needed"), "needs_items")
+
+            # Filter widgets
+            from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+            filter_widgets = [#S3TextFilter(["organisation_id$name",
+                              #              ],
+                              #              label = T("Search"),
+                              #             ),
+                              S3OptionsFilter("organisation_id"),
+                              S3OptionsFilter("organisation_needs_skill.skill_id",
+                                              label = T("Skills sought"),
+                                              ),
+                              S3OptionsFilter("organisation_needs_item.item_id",
+                                              label = T("Supplies sought"),
+                                              ),
+                              S3LocationFilter("organisation_id$active_service_location.site_id$location_id",
+                                               ),
+                              ]
+
+            # CRUD form
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+            crud_form = S3SQLCustomForm(
+                            "organisation_id",
+                            S3SQLInlineComponent("organisation_needs_skill",
+                                                label = T("Volunteers needed"),
+                                                fields = ["skill_id",
+                                                        "demand",
+                                                        "comments",
+                                                        ],
+                                                ),
+                            S3SQLInlineComponent("organisation_needs_item",
+                                                label = T("Supplies needed"),
+                                                fields = ["item_id",
+                                                        "demand",
+                                                        "comments",
+                                                        ],
+                                                ),
+                            (CASH, "money"),
+                            "money_details",
+                            #"vol",
+                            #"vol_details",
+                            )
+
+            next_page = r.url(method="") \
+                        if r.tablename == "req_organisation_needs" else None
+
+            s3db.configure("req_organisation_needs",
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           create_next = next_page,
+                           update_next = next_page,
+                           )
+        else:
+            # Simple fields for exports
+            needs_skills = (T("Volunteers needed"),
+                            "organisation_needs_skill.skill_id")
+            needs_items = (T("Supplies needed"),
+                           "organisation_needs_item.item_id")
+
+        # List fields (all formats)
+        list_fields = ["organisation_id",
+                       needs_skills,
+                       needs_items,
+                       (CASH, "money"),
+                       (T("Cash Donation Details"), "money_details"),
+                       (T("Last Update"), "modified_on"),
+                       ]
+
+        s3db.configure("req_organisation_needs",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_req_organisation_needs_resource = customise_req_organisation_needs_resource
+
+    # -------------------------------------------------------------------------
+    def customise_req_site_needs_resource(r, tablename):
+
+        if r.tablename == "req_site_needs":
+            table = r.table
+            field = table.site_id
+            field.label = current.T("Facility")
+            field.readable = field.writable = True
+
+            # Allow only facilities which do not have a req_site_needs
+            # yet (single component), and filter out obsolete facilities
+            from s3 import IS_ONE_OF, FS
+            dbset = current.db(table.id == None)
+            left = table.on(table.site_id == current.s3db.org_site.id)
+            field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+                                       field.represent,
+                                       left = left,
+                                       not_filterby = "obsolete",
+                                       not_filter_opts = (True,),
+                                       orderby = "org_site.name",
+                                       sort = True,
+                                       )
+            if not r.record:
+                query = FS("site_id$obsolete") != True
+                r.resource.add_filter(query)
+
+            # Allow adding of facilities in popup
+            from s3layouts import S3PopupLink
+            field.comment = S3PopupLink(c = "org",
+                                        f = "facility",
+                                        vars = {"child": "site_id",
+                                                "parent": "site_needs",
+                                                },
+                                        title = T("Add New Facility"),
+                                        )
+
+        # Filters
+        from s3 import S3LocationFilter, S3TextFilter
+        filter_widgets = [S3TextFilter(["site_id$name",
+                                        "vol_details",
+                                        "goods_details",
+                                        ],
+                                        label = T("Search"),
+                                       ),
+                          S3LocationFilter("site_id$location_id",
+                                           ),
+                          ]
+
+        # List fields
+        list_fields = [(T("Facility"), "site_id$name"),
+                       "site_id$location_id",
+                       ("%s?" % T("Volunteers"), "vol"),
+                       (T("Help Wanted"), "vol_details"),
+                       ("%s?" % T("Donations"), "goods"),
+                       (T("Donations Needed"), "goods_details"),
+                       "modified_on",
+                       ]
+
+        current.s3db.configure("req_site_needs",
+                               filter_widgets = filter_widgets,
+                               list_fields = list_fields,
+                               )
+
+    settings.customise_req_site_needs_resource = customise_req_site_needs_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
