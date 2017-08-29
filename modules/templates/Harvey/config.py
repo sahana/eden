@@ -6,6 +6,8 @@ from gluon import current
 from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
 from gluon.storage import Storage
 
+from s3 import S3SQLInlineLink
+
 def config(settings):
     """
         Template settings: 'Skeleton' designed to be copied to quickly create
@@ -250,7 +252,6 @@ def config(settings):
                        S3MultiSelectWidget, \
                        S3SQLCustomForm, \
                        S3SQLInlineComponent, \
-                       S3SQLInlineComponentMultiSelectWidget, \
                        S3SQLVerticalSubFormLayout
 
         s3db = current.s3db
