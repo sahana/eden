@@ -277,7 +277,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="org")(
                     M("Organizations", f="organisation")(
                         M("Hierarchy", m="hierarchy"),
-                        M("Create", m="create"),
+                        M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
                         ),
                     M("Facilities", f="facility")(
                         M("Create", m="create"),

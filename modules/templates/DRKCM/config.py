@@ -1792,6 +1792,39 @@ def config(settings):
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            # Disable creation of new root orgs unless user is ORG_GROUP_ADMIN
+            if r.method != "hierarchy" and \
+               (r.representation != "popup" or not r.get_vars.get("hierarchy")):
+                auth = current.auth
+                sysroles = sysroles = auth.get_system_roles()
+                insertable = auth.s3_has_roles((sysroles.ADMIN,
+                                                sysroles.ORG_GROUP_ADMIN,
+                                                ))
+                r.resource.configure(insertable = insertable)
+
+            return result
+
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         s3db = current.s3db

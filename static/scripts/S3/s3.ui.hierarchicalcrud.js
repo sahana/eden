@@ -27,16 +27,22 @@
         options: {
             widgetID: null,
             ajaxURL: null,
+
             openLabel: 'Open',
             openURL: null,
+
             editTitle: 'Edit Record',
             editLabel: 'Edit',
             editURL: null,
+
             deleteLabel: 'Delete',
             deleteURL: null,
+            deleteRoot: true,
+
             addTitle: 'Add Record',
             addLabel: 'Add',
             addURL: null,
+
             icons: false,
             stripes: true,
             htmlTitles: true
@@ -110,36 +116,53 @@
                 },
                 'contextmenu': {
                     items: function($node) {
-                        return {
+
+                        var deletable = true;
+                        if (tree.jstree(true).get_parent($node) == '#') {
+                           deletable = opts.deleteRoot;
+                        }
+
+                        var items = {
                             'open': {
                                 label: self.options.openLabel,
                                 action: function(obj) {
                                     self._openNode($node);
                                 },
                                 separator_after: true
-                            },
-                            'edit': {
+                            }
+                        };
+
+                        // @todo: check permission for node and disable if forbidden
+                        if (opts.editURL) {
+                            items.edit = {
                                 label: self.options.editLabel,
-                                // @todo: check permission and disable if forbidden
                                 action: function(obj) {
                                     self._editNode($node);
-                                }
-                            },
-                            'delete': {
+                                },
+                            }
+                        }
+
+                        // @todo: check permission for node and disable if forbidden
+                        if (deletable && opts.deleteURL) {
+                            items.delete = {
                                 label: self.options.deleteLabel,
                                 separator_after: true,
-                                // @todo: check permission and disable if forbidden
                                 action: function(obj) {
                                     self._deleteNode($node);
-                                }
-                            },
-                            'add': {
+                                },
+                            }
+                        }
+
+                        if (opts.addURL) {
+                            items.add = {
                                 label: self.options.addLabel,
                                 action: function(obj) {
                                     self._addNode($node);
-                                }
+                                },
                             }
-                        };
+                        }
+
+                        return items;
                     },
                     select_node: true
                 },
