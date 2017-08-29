@@ -36,8 +36,11 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        auth = current.auth
+
         case_vars = {"closed": "0"}
-        if current.auth.s3_logged_in_human_resource():
+        if auth.s3_logged_in_human_resource() and \
+           auth.s3_has_role("CASE_MANAGEMENT"):
             case_vars["mine"] = "1"
 
         return [
@@ -171,7 +174,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        sysroles = current.auth.get_system_roles()
+        auth = current.auth
+
+        sysroles = auth.get_system_roles()
 
         ADMIN = sysroles.ADMIN
         ORG_ADMIN = sysroles.ORG_ADMIN
@@ -179,8 +184,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         due_followups = current.s3db.dvr_due_followups
 
-        human_resource_id = current.auth.s3_logged_in_human_resource()
-        if human_resource_id:
+        human_resource_id = auth.s3_logged_in_human_resource()
+        if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
 
             due_followups = due_followups(human_resource_id = human_resource_id) or "0"
             follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
