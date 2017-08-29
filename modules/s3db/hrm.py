@@ -6087,11 +6087,17 @@ def hrm_rheader(r, tabs=[], profile=False):
                     ]
             contacts_tabs = settings.get_pr_contacts_tabs()
             if "all" in contacts_tabs:
-                tabs.append((T("Contacts"), "contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("all"),
+                             "contacts",
+                             ))
             if "public" in contacts_tabs:
-                tabs.append((T("Public Contacts"), "public_contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
+                             "public_contacts",
+                             ))
             if "private" in contacts_tabs:
-                tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("private_contacts"),
+                             "private_contacts",
+                             ))
             tabs += [availability_tab,
                      education_tab,
                      trainings_tab,
@@ -6113,11 +6119,17 @@ def hrm_rheader(r, tabs=[], profile=False):
         #            ]
         #    contacts_tabs = settings.get_pr_contacts_tabs()
         #    if "all" in contacts_tabs:
-        #        tabs.append((T("Contacts"), "contacts"))
+        #        tabs.append((settings.get_pr_contacts_tab_label("all"),
+        #                     "contacts",
+        #                     ))
         #    if "public" in contacts_tabs:
-        #        tabs.append((T("Public Contacts"), "public_contacts"))
+        #        tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
+        #                     "public_contacts",
+        #                     ))
         #    if "private" in contacts_tabs:
-        #        tabs.append((T("Private Contacts"), "private_contacts"))
+        #        tabs.append((settings.get_pr_contacts_tab_label("private_contacts"),
+        #                     "private_contacts",
+        #                     ))
         #    if record_method is not None:
         #        hr_tab = (T("Positions"), "human_resource")
         #    tabs += [availability_tab,
@@ -6151,11 +6163,17 @@ def hrm_rheader(r, tabs=[], profile=False):
                     ]
             contacts_tabs = settings.get_pr_contacts_tabs()
             if "all" in contacts_tabs:
-                tabs.append((T("Contacts"), "contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("all"),
+                             "contacts",
+                             ))
             if "public" in contacts_tabs:
-                tabs.append((T("Public Contacts"), "public_contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
+                             "public_contacts",
+                             ))
             if "private" in contacts_tabs:
-                tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs.append((settings.get_pr_contacts_tab_label("private_contacts"),
+                             "private_contacts",
+                             ))
             tabs += [availability_tab,
                      salary_tab,
                      education_tab,

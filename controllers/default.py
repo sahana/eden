@@ -895,7 +895,7 @@ def person():
 
     setting = settings.get_pr_contacts_tabs()
     if setting:
-        contacts_tab = (T("Contacts"), "contacts")
+        contacts_tab = (settings.get_pr_contacts_tab_label(), "contacts")
     else:
         contacts_tab = None
 

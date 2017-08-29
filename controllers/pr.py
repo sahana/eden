@@ -176,17 +176,23 @@ def person():
         s3db.set_method(module, resourcename,
                         method = "contacts",
                         action = s3db.pr_Contacts)
-        contacts_tabs.append((T("Contacts"), "contacts"))
+        tabs.append((settings.get_pr_contacts_tab_label("all"),
+                     "contacts",
+                     ))
     if "public" in setting:
         s3db.set_method(module, resourcename,
                         method = "public_contacts",
                         action = s3db.pr_Contacts)
-        contacts_tabs.append((T("Public Contacts"), "public_contacts"))
+        contacts_tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
+                              "public_contacts",
+                              ))
     if "private" in setting and auth.is_logged_in():
         s3db.set_method(module, resourcename,
                         method = "private_contacts",
                         action = s3db.pr_Contacts)
-        contacts_tabs.append((T("Private Contacts"), "private_contacts"))
+        contacts_tabs.append((settings.get_pr_contacts_tab_label("public_contacts"),
+                              "private_contacts",
+                              ))
 
     # All tabs
     tabs = [(T("Basic Details"), None),

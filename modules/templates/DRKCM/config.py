@@ -278,6 +278,8 @@ def config(settings):
     settings.pr.separate_name_fields = 2
     settings.pr.name_format= "%(last_name)s, %(first_name)s"
 
+    settings.pr.contacts_tabs = {"all": "Contact Info"}
+
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #

@@ -4265,11 +4265,32 @@ class S3Config(Storage):
     def get_pr_contacts_tabs(self):
         """
             Which tabs to show for contacts: all, public &/or private
+                - a tuple or list with all|private|public, or
+                - a dict with labels per contacts group
+                  (defaults see get_pr_contacts_tab_label)
         """
         contacts_tabs = self.pr.get("contacts_tabs", ("all",))
         if not contacts_tabs:
             return () # iterable expected
         return contacts_tabs
+
+    def get_pr_contacts_tab_label(self, group="all"):
+        """
+            Labels for contacts tabs
+        """
+        defaults = {"all": "Contacts",
+                    "private": "Private Contacts",
+                    "public": "Public Contacts",
+                    }
+
+        tabs = self.get_pr_contacts_tabs()
+        label = tabs.get(group) if type(tabs) is dict else None
+
+        if label is None:
+            # Use default label
+            label = defaults.get(group)
+
+        return current.T(label) if label else label
 
     # -------------------------------------------------------------------------
     # Proc
