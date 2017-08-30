@@ -48,8 +48,8 @@ class S3MainMenu(default.S3MainMenu):
             MM("Case Consulting", c="dvr", f="index",
                check = lambda this: not this.preceding()[-1].check_permission(),
                ),
-            MM("Map", c="gis", f="index"),
             MM("ToDo", c="project", f="task"),
+            MM("Map", c="gis", f="index"),
             MM("Shelters", c="cr", f="shelter"),
             MM("More", link=False)(
                 MM("Organizations", c="org", f="organisation"),

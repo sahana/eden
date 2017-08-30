@@ -1060,6 +1060,7 @@ def config(settings):
 
             # Update the person's location_id
             ptable = s3db.pr_person
+            location_id = None
 
             if site_id:
                 # Use the Shelter's Address
@@ -1799,10 +1800,10 @@ def config(settings):
 
         # Reload the record (need site_id which is never in form.vars)
         table = s3db.cr_shelter
-        shelter = db(table.id == form_vars.id).select(table.location_id,
-                                                      table.site_id,
-                                                      limitby = (0, 1),
-                                                      ).first()
+        shelter = db(table.id == record_id).select(table.location_id,
+                                                   table.site_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
 
         # If shelter were None here, then this shouldn't have been called
         # in the first place => let it raise AttributeError
@@ -1829,6 +1830,9 @@ def config(settings):
             * called onaccept from dvr_case
         """
 
+        db = current.db
+        s3db = current.s3db
+
         # Get the number of open cases per site_id
         ctable = s3db.dvr_case
         stable = s3db.dvr_case_status
@@ -1836,16 +1840,18 @@ def config(settings):
                 (ctable.deleted == False) & \
                 (ctable.status_id == stable.id) & \
                 (stable.is_closed == False)
+
+        site_id = ctable.site_id
         count = ctable.id.count()
-        rows = db(query).select(ctable.site_id,
+        rows = db(query).select(site_id,
                                 count,
-                                groupby = ctable.site_id,
+                                groupby = site_id,
                                 )
 
         # Update shelter population count
         stable = s3db.cr_shelter
         for row in rows:
-            db(stable.site_id == row.site_id).update(
+            db(stable.site_id == row[site_id]).update(
                 population = row[count],
                 # Indirect update by system rule,
                 # do not change modified_* fields:
@@ -1916,6 +1922,7 @@ def config(settings):
         list_fields = [(T("Name"), "name"),
                        (T("Type"), "shelter_type_id"),
                        "organisation_id",
+                       (T("Number of Cases"), "population"),
                        "status",
                        ]
 
