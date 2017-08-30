@@ -9243,7 +9243,7 @@ class S3Map(S3Method):
             prefix, name = tablename.split("_", 1)
             layer_id = lookup_layer(prefix, name)
 
-        url = URL(extension="geojson", args=None)
+        url = URL(extension="geojson", args=None, vars=r.get_vars)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
         #_id = "search_results_%s" % widget_id
