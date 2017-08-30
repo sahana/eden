@@ -1456,7 +1456,11 @@ Thank you"""
             utable.utc_offset.writable = True
 
         # Users should not be able to change their Org affiliation
+        # - also hide popup-link to create a new Org (makes
+        #   no sense here if the field is read-only anyway)
         utable.organisation_id.writable = False
+        utable.organisation_id.comment = None
+
         ## Only allowed to select Orgs that the user has update access to
         #utable.organisation_id.requires = \
         #    current.s3db.org_organisation_requires(updateable = True)
@@ -1795,11 +1799,13 @@ $.filterOptionsS3({
                 else:
                     field.requires = IS_EMPTY_OR(requires)
 
-        if "profile" in request.args:
-            return
+        # Link User to Organisation (as staff, volunteer, or member)
+        if any(m in request.args for m in ("profile", "user_profile")):
+            # Irrelevant in personal profile
+            link_user_to_opts = False
+        else:
+            link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
 
-        # Link User to
-        link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
         if link_user_to_opts:
             link_user_to = utable.link_user_to
             link_user_to_default = deployment_settings.get_auth_registration_link_user_to_default()
