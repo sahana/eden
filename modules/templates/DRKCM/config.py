@@ -336,27 +336,26 @@ def config(settings):
             - unless their case is associated with a Site
         """
 
-        form_vars = form.vars
-
         try:
-            record_id = form_vars["id"]
-        except:
+            record_id = form.vars.id
+        except AttributeError:
             # Nothing we can do
             return
 
         db = current.db
         s3db = current.s3db
-        atable = db.pr_address
 
+        atable = db.pr_address
         row = db(atable.id == record_id).select(atable.location_id,
                                                 atable.pe_id,
-                                                limitby=(0, 1)
+                                                limitby=(0, 1),
                                                 ).first()
         try:
             location_id = row.location_id
         except:
             # Nothing we can do
             return
+
         pe_id = row.pe_id
 
         ctable = s3db.dvr_case
@@ -364,11 +363,16 @@ def config(settings):
         query = (ptable.pe_id == pe_id) & \
                 (ptable.id == ctable.person_id)
         case = db(query).select(ctable.site_id,
-                                limitby=(0, 1)
+                                limitby=(0, 1),
                                 ).first()
-        if case:
-            if not case.site_id:
-                db(ptable.pe_id == pe_id).update(location_id = location_id)
+
+        if case and not case.site_id:
+            db(ptable.pe_id == pe_id).update(location_id = location_id,
+                                             # Indirect update by system rule,
+                                             # do not change modified_* fields:
+                                             modified_on = ptable.modified_on,
+                                             modified_by = ptable.modified_by,
+                                             )
 
     # -------------------------------------------------------------------------
     def customise_pr_address_resource(r, tablename):
@@ -980,8 +984,15 @@ def config(settings):
             - otherwise use the Private Address
         """
 
-        form_vars = form.vars
+        try:
+            form_vars = form.vars
+        except AttributeError:
+            return
+
         record_id = form_vars.id
+        if not record_id:
+            # Nothing we can do
+            return
 
         db = current.db
         s3db = current.s3db
@@ -991,26 +1002,20 @@ def config(settings):
 
         # Get the Person ID & Site ID for this case
         person_id = form_vars.person_id
-        if person_id:
-            site_id = form_vars.site_id
-            if not site_id:
-                table = s3db.dvr_case
-                query = (table.id == record_id)
-                row = db(query).select(table.site_id,
-                                       limitby = (0, 1),
-                                       ).first()
-                if row:
-                    site_id = row.site_id
-        else:
+        if not person_id or "site_id" not in form_vars:
+            # Reload the record
             table = s3db.dvr_case
             query = (table.id == record_id)
             row = db(query).select(table.person_id,
                                    table.site_id,
                                    limitby = (0, 1),
                                    ).first()
+
             if row:
                 person_id = row.person_id
                 site_id = row.site_id
+        else:
+            site_id = form_vars.site_id
 
         if person_id:
 
@@ -1053,6 +1058,9 @@ def config(settings):
             query = (atable.person_id == person_id)
             set_realm_entity(atable, query, force_update=True)
 
+            # Update the person's location_id
+            ptable = s3db.pr_person
+
             if site_id:
                 # Use the Shelter's Address
                 stable = s3db.org_site
@@ -1060,9 +1068,10 @@ def config(settings):
                                                             limitby = (0, 1),
                                                             ).first()
                 if site:
-                    db(s3db.pr_person.id == person_id).update(location_id = site.location_id)
+                    location_id = site.location_id
             else:
-                # Use the Private Address (no need to filter by type as only 'Current Address' is exposed)
+                # Use the Private Address (no need to filter by address type as only
+                # 'Current Address' is exposed)
                 # NB If this is a New/Modified Address then this won't be caught here
                 # - we use pr_address_onaccept to catch those
                 atable = s3db.pr_address
@@ -1073,7 +1082,14 @@ def config(settings):
                                            limitby = (0, 1),
                                            ).first()
                 if address:
-                    db(s3db.pr_person.id == person_id).update(location_id = address.location_id)
+                    location_id = address.location_id
+
+            db(ptable.id == person_id).update(location_id = location_id,
+                                              # Indirect update by system rule,
+                                              # do not change modified_* fields:
+                                              modified_on = ptable.modified_on,
+                                              modified_by = ptable.modified_by,
+                                              )
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
@@ -1763,53 +1779,79 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def cr_shelter_onaccept(form):
-        # Update the Location for all linked Cases
-        # (in case the Address has been updated)
+        """
+            Custom onaccept for shelters:
+            * Update the Location for all linked Cases
+              (in case the Address has been updated)
+        """
 
         db = current.db
         s3db = current.s3db
 
-        form_vars = form.vars
-        location_id = form_vars.location_id
-        site_id = form_vars.site_id
-        if not site_id or not location_id:
-            table = s3db.cr_shelter
-            shelter = db(table.id == form_vars.id).select(table.location_id,
-                                                          table.site_id,
-                                                          limitby = (0, 1),
-                                                          ).first()
-            if shelter:
-                location_id = shelter.location_id
-                site_id = shelter.site_id
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
 
-        if site_id:
-            ctable = s3db.dvr_case
-            cases = db(ctable.site_id == site_id).select(ctable.person_id)
-            if len(cases):
-                people = [c.person_id for c in cases]
-                db(s3db.pr_person.id.belongs(people)).update(location_id == location_id)
+        if not record_id:
+            # Nothing we can do
+            return
+
+        # Reload the record (need site_id which is never in form.vars)
+        table = s3db.cr_shelter
+        shelter = db(table.id == form_vars.id).select(table.location_id,
+                                                      table.site_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+
+        # If shelter were None here, then this shouldn't have been called
+        # in the first place => let it raise AttributeError
+        location_id = shelter.location_id
+        site_id = shelter.site_id
+
+        ctable = s3db.dvr_case
+        cases = db(ctable.site_id == site_id).select(ctable.person_id)
+        if cases:
+            person_ids = set(case.person_id for case in cases)
+            ptable = s3db.pr_person
+            db(ptable.id.belongs(person_ids)).update(
+                                            location_id = location_id,
+                                            # Indirect update by system rule,
+                                            # do not change modified_* fields:
+                                            modified_on = ptable.modified_on,
+                                            modified_by = ptable.modified_by,
+                                            )
 
     # -------------------------------------------------------------------------
     def cr_shelter_population():
-        # Update the Population of all Shelters
-        # Called onaccept from dvr_case
+        """
+            Update the Population of all Shelters
+            * called onaccept from dvr_case
+        """
 
+        # Get the number of open cases per site_id
         ctable = s3db.dvr_case
         stable = s3db.dvr_case_status
-        query = (ctable.deleted == False) & \
+        query = (ctable.site_id != None) & \
+                (ctable.deleted == False) & \
                 (ctable.status_id == stable.id) & \
                 (stable.is_closed == False)
-        cases = db(query).select(ctable.site_id)
-        sites = {}
-        for case in cases:
-            site_id = case.site_id
-            if site_id in sites:
-                sites[site_id] += 1
-            else:
-                sites[site_id] = 1
+        count = ctable.id.count()
+        rows = db(query).select(ctable.site_id,
+                                count,
+                                groupby = ctable.site_id,
+                                )
 
-        for site_id in sites:
-            db(s3db.cr_shelter.site_id == site_id).update(population = sites[site_id])
+        # Update shelter population count
+        stable = s3db.cr_shelter
+        for row in rows:
+            db(stable.site_id == row.site_id).update(
+                population = row[count],
+                # Indirect update by system rule,
+                # do not change modified_* fields:
+                modified_on = stable.modified_on,
+                modified_by = stable.modified_by,
+                )
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
