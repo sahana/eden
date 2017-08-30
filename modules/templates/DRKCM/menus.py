@@ -48,6 +48,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Case Consulting", c="dvr", f="index",
                check = lambda this: not this.preceding()[-1].check_permission(),
                ),
+            MM("Map", c="gis", f="index"),
             MM("ToDo", c="project", f="task"),
             MM("Shelters", c="cr", f="shelter"),
             MM("More", link=False)(
@@ -251,6 +252,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
                         ),
+                    M("Map", f="person", m="map"),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
                           vars={"closed": "1"},

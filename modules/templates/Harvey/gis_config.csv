@@ -1,0 +1,3 @@
+UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker
+SITE_DEFAULT,Default,,US,6,31.222196,-98.326898,900913,-90,90,-180,180,marker_red
+TX,Texas,,US,6,31.222196,-98.326898,900913,40,50,-130,-110,marker_red

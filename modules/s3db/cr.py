@@ -1385,9 +1385,8 @@ class CRShelterInspectionModel(S3Model):
             # Automatic task creation disabled
             return
 
-        formvars = form.vars
         try:
-            record_id = formvars.id
+            record_id = form.vars.id
         except AttributeError:
             # Nothing we can do
             return
@@ -1891,7 +1890,7 @@ class CRShelterRegistrationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def shelter_population_onaccept(form, tablename=None, unit_id = None):
+    def shelter_population_onaccept(form, tablename=None, unit_id=None):
         """
             Update the shelter population, onaccept
 

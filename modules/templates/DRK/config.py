@@ -1889,27 +1889,10 @@ def config(settings):
 
         s3db = current.s3db
 
-        config = {}
-        get_config = s3db.get_config
-
-        for method in ("create", "update", None):
-
-            setting = "%s_onaccept" % method if method else "onaccept"
-            default = get_config(tablename, setting)
-            if not default:
-                if method is None and len(config) < 2:
-                    onaccept = dvr_case_onaccept
-                else:
-                    continue
-            elif not isinstance(default, list):
-                onaccept = [default, dvr_case_onaccept]
-            else:
-                onaccept = default
-                if all(cb != dvr_case_onaccept for cb in onaccept):
-                    onaccept.append(dvr_case_onaccept)
-            config[setting] = onaccept
-
-        s3db.configure(tablename, **config)
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 dvr_case_onaccept,
+                                 )
 
         ctable = s3db.dvr_case
 

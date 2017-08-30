@@ -330,6 +330,59 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
+    def pr_address_onaccept(form):
+        """
+            Custom onaccept to set the person's Location to the Private Address
+            - unless their case is associated with a Site
+        """
+
+        form_vars = form.vars
+
+        try:
+            record_id = form_vars["id"]
+        except:
+            # Nothing we can do
+            return
+
+        db = current.db
+        s3db = current.s3db
+        atable = db.pr_address
+
+        row = db(atable.id == record_id).select(atable.location_id,
+                                                atable.pe_id,
+                                                limitby=(0, 1)
+                                                ).first()
+        try:
+            location_id = row.location_id
+        except:
+            # Nothing we can do
+            return
+        pe_id = row.pe_id
+
+        ctable = s3db.dvr_case
+        ptable = s3db.pr_person
+        query = (ptable.pe_id == pe_id) & \
+                (ptable.id == ctable.person_id)
+        case = db(query).select(ctable.site_id,
+                                limitby=(0, 1)
+                                ).first()
+        if case:
+            if not case.site_id:
+                db(ptable.pe_id == pe_id).update(location_id = location_id)
+
+    # -------------------------------------------------------------------------
+    def customise_pr_address_resource(r, tablename):
+
+        # Custom onaccept to set the Person's Location to this address
+        # - unless their case is associated with a Site
+        s3db.add_custom_callback("pr_address",
+                                 "onaccept",
+                                 pr_address_onaccept,
+                                 )
+
+    settings.customise_pr_address_resource = customise_pr_address_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_contact_resource(r, tablename):
 
         table = current.s3db.pr_contact
@@ -912,31 +965,52 @@ def config(settings):
     # -------------------------------------------------------------------------
     def dvr_case_onaccept(form):
         """
-            Additional custom-onaccept for dvr_case to force-update the
-            realm entity of the person record:
+            Additional custom-onaccept for dvr_case to:
+            * Force-update the realm entity of the person record:
             - the organisation managing the case is the realm-owner,
               but the person record is written first, so we need to
               update it after writing the case
             - the case can be transferred to another organisation/branch,
               and then the person record needs to be transferred to that
               same realm as well
+            * Update the Population of all Shelters
+            * Update the Location of the person record:
+            - if the Case is linked to a Site then use that for the Location of
+              the Person
+            - otherwise use the Private Address
         """
 
         form_vars = form.vars
         record_id = form_vars.id
 
+        db = current.db
         s3db = current.s3db
 
-        # Get the person ID for this case
+        # Update the Population of all Shelters
+        cr_shelter_population()
+
+        # Get the Person ID & Site ID for this case
         person_id = form_vars.person_id
-        if not person_id:
+        if person_id:
+            site_id = form_vars.site_id
+            if not site_id:
+                table = s3db.dvr_case
+                query = (table.id == record_id)
+                row = db(query).select(table.site_id,
+                                       limitby = (0, 1),
+                                       ).first()
+                if row:
+                    site_id = row.site_id
+        else:
             table = s3db.dvr_case
             query = (table.id == record_id)
-            row = current.db(query).select(table.person_id,
-                                           limitby = (0, 1),
-                                           ).first()
+            row = db(query).select(table.person_id,
+                                   table.site_id,
+                                   limitby = (0, 1),
+                                   ).first()
             if row:
                 person_id = row.person_id
+                site_id = row.site_id
 
         if person_id:
 
@@ -979,6 +1053,28 @@ def config(settings):
             query = (atable.person_id == person_id)
             set_realm_entity(atable, query, force_update=True)
 
+            if site_id:
+                # Use the Shelter's Address
+                stable = s3db.org_site
+                site = db(stable.site_id == site_id).select(stable.location_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+                if site:
+                    db(s3db.pr_person.id == person_id).update(location_id = site.location_id)
+            else:
+                # Use the Private Address (no need to filter by type as only 'Current Address' is exposed)
+                # NB If this is a New/Modified Address then this won't be caught here
+                # - we use pr_address_onaccept to catch those
+                atable = s3db.pr_address
+                query = (ptable.id == person_id) & \
+                        (ptable.pe_id == atable.pe_id) & \
+                        (atable.deleted == False)
+                address = db(query).select(atable.location_id,
+                                           limitby = (0, 1),
+                                           ).first()
+                if address:
+                    db(s3db.pr_person.id == person_id).update(location_id = address.location_id)
+
     # -------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
 
@@ -1003,7 +1099,7 @@ def config(settings):
                 if row:
                     ctable.organisation_id.default = row.organisation_id
 
-        # Custom-onaccept to update realm-entity of the
+        # Custom onaccept to update realm-entity of the
         # beneficiary and case activities of this case
         # (incl. their respective realm components)
         s3db.add_custom_callback("dvr_case",
@@ -1666,6 +1762,56 @@ def config(settings):
     settings.cr.people_registration = False
 
     # -------------------------------------------------------------------------
+    def cr_shelter_onaccept(form):
+        # Update the Location for all linked Cases
+        # (in case the Address has been updated)
+
+        db = current.db
+        s3db = current.s3db
+
+        form_vars = form.vars
+        location_id = form_vars.location_id
+        site_id = form_vars.site_id
+        if not site_id or not location_id:
+            table = s3db.cr_shelter
+            shelter = db(table.id == form_vars.id).select(table.location_id,
+                                                          table.site_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+            if shelter:
+                location_id = shelter.location_id
+                site_id = shelter.site_id
+
+        if site_id:
+            ctable = s3db.dvr_case
+            cases = db(ctable.site_id == site_id).select(ctable.person_id)
+            if len(cases):
+                people = [c.person_id for c in cases]
+                db(s3db.pr_person.id.belongs(people)).update(location_id == location_id)
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_population():
+        # Update the Population of all Shelters
+        # Called onaccept from dvr_case
+
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
+        query = (ctable.deleted == False) & \
+                (ctable.status_id == stable.id) & \
+                (stable.is_closed == False)
+        cases = db(query).select(ctable.site_id)
+        sites = {}
+        for case in cases:
+            site_id = case.site_id
+            if site_id in sites:
+                sites[site_id] += 1
+            else:
+                sites[site_id] = 1
+
+        for site_id in sites:
+            db(s3db.cr_shelter.site_id == site_id).update(population = sites[site_id])
+
+    # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
         auth = current.auth
@@ -1740,6 +1886,12 @@ def config(settings):
                        crud_form = crud_form,
                        list_fields = list_fields,
                        )
+
+        # Add custom onaccept
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 cr_shelter_onaccept,
+                                 )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
 

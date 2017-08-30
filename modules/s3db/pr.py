@@ -3003,27 +3003,34 @@ class PRAddressModel(S3Model):
         """
 
         form_vars = form.vars
-        location_id = form_vars.get("location_id")
-        if not location_id:
-            return
 
         try:
             record_id = form_vars["id"]
         except:
             # Nothing we can do
             return
+
         db = current.db
         s3db = current.s3db
         atable = db.pr_address
-        pe_id = db(atable.id == record_id).select(atable.pe_id,
-                                                  limitby=(0, 1)
-                                                  ).first().pe_id
-        requestvars = current.request.form_vars
+
+        row = db(atable.id == record_id).select(atable.location_id,
+                                                atable.pe_id,
+                                                limitby=(0, 1)
+                                                ).first()
+        try:
+            location_id = row.location_id
+        except:
+            # Nothing we can do
+            return
+        pe_id = row.pe_id
+
+        req_vars = current.request.form_vars
         settings = current.deployment_settings
         person = None
         ptable = s3db.pr_person
-        if requestvars and "base_location" in requestvars and \
-           requestvars.base_location == "on":
+        if req_vars and "base_location" in req_vars and \
+           req_vars.base_location == "on":
             # Specifically requested
             S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
             person = db(ptable.pe_id == pe_id).select(ptable.id,
