@@ -379,10 +379,10 @@ def config(settings):
 
         # Custom onaccept to set the Person's Location to this address
         # - unless their case is associated with a Site
-        s3db.add_custom_callback("pr_address",
-                                 "onaccept",
-                                 pr_address_onaccept,
-                                 )
+        current.s3db.add_custom_callback("pr_address",
+                                         "onaccept",
+                                         pr_address_onaccept,
+                                         )
 
     settings.customise_pr_address_resource = customise_pr_address_resource
 
