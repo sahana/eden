@@ -66,6 +66,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(),
             MM("Organizations", c="org", f="organisation"),
+            MM("Shelters", c="cr", f="shelter"),
             MM("Projects", c="project", f="project"),
             MM("Warehouses", c="inv", f="warehouse"),
             MM("Facilities", c="org", f="facility"),
