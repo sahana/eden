@@ -4718,7 +4718,7 @@
 'Total Quantity': 'Gesamtmenge',
 'Tourist Group': 'Touristengruppe',
 'Town': 'Stadt',
-'Town / Municipality': 'Ort / Stadtbezirk',
+'Town / Municipality': 'Stadt / Gemeinde',
 'Traces internally displaced people (IDPs) and their needs': 'Verfolgung von Binnenflüchtlingen (IDP) und deren Bedürfnisse',
 'Tracing': 'Verfolgung',
 'Track Details': 'Details zum Track',

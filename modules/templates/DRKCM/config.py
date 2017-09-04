@@ -45,7 +45,7 @@ def config(settings):
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
     settings.gis.countries = ("DE",)
-    gis_levels = ("L1", "L3", "L4") # Ignore L2
+    gis_levels = ("L1", "L2", "L3")
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
