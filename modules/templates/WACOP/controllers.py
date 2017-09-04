@@ -1874,6 +1874,34 @@ class person_Dashboard(custom_WACOP):
         output = {"map": _map,
                   }
 
+        # Greeting
+        user = current.auth.user
+        organisation_id = user.organisation_id
+        if organisation_id:
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
+            hrtable = s3db.hrm_human_resource
+            organisation = hrtable.organisation_id.represent(organisation_id)
+            query = (ltable.user_id == user.id) & \
+                    (ltable.pe_id == ptable.pe_id) & \
+                    (hrtable.person_id == ptable.id)
+            hr = current.db(query).select(hrtable.job_title_id,
+                                          limitby = (0, 1),
+                                          ).first()
+            if hr:
+                job_title = hrtable.organisation_id.represent(hr.job_title_id)
+                staff_role = XML("%s, %s" % (job_title, organisation))
+                
+            else:
+                staff_role = organisation
+        else:
+            staff_role = ""
+        output["greeting"] = Storage(first_name = user.first_name,
+                                     last_name = user.last_name,
+                                     staff_role = staff_role,
+                                     )
+
         # DataTables
         datatable = self._datatable
         #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
