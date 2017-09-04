@@ -2,84 +2,180 @@
 {{=system_wide}}
 <div class='row'>
  <div class='small-12 column'>
-   {{=XML(map)}}
- </div>
-</div>
-<div class='row'>
- <div class='small-12 column'>
    <ul class='tabs tab-navigation' data-tab>
     <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-    <li class='tab-title'><a href='#panel2'>Directories</a></li>
-    <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+    <li class='tab-title'><a href='#panel2'>Staff</a></li>
+    <li class='tab-title'><a href='#panel3'>Orgs</a></li>
+    <li class='tab-title'><a href='#panel4'>Panels</a></li>
+    <li class='tab-title'><a href='#panel5'>Tasks</a></li>
+    <li class='tab-title'><a href='#panel6'>Settings</a></li>
    </ul>
-   <div class='tabs-content panel'>
-    <div class='content active' id='panel1'>
-     <div class='row'>
-      <div class='large-3 columns'>
-       {{=filter_form}}
-      </div>
-      <div class='large-9 columns'>
-       {{if create_post_button:}}
+   <div class='tabs-content'>
+    <section class='content active' id='panel1'>
+      <div class='row'>
+       <div class='large-3 columns'>
+        {{if create_post_button:}}
           {{=create_post_button}}
+        {{pass}}
+        {{=filter_form}}
+
+        <div class='filter-group'>
+          <h1 class='title'>My Groups <a href=''>See all groups</a></h1>
+          <p class='sub-title'>Admin Groups</p>
+
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Ladies go to lunch
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Admin Setting</a></li>
+              <li><a href='#'>Go to group</a></li>
+              <li><a href='#'>Edit Notifications</a></li>
+              <li><a href='#'>Leave Group</a></li>
+            </ul>
+          </div>
+
           <hr>
-       {{pass}}
-       <ul class='no-bullet'>
-        {{=updates_datalist}}
-       </ul>
+          <p class='sub-title'>Member Groups</p>
+
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Another group
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Admin Setting</a></li>
+              <li><a href='#'>Go to group</a></li>
+              <li><a href='#'>Edit Notifications</a></li>
+              <li><a href='#'>Leave Group</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class='filter-group'>
+          <h1 class='title'>Bookmarked Events</h1>
+
+          <ul class='item-group'>
+            <li class='item'>
+              <label>
+                <input type='checkbox'>
+                Event One
+              </label>
+              <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop2' aria-controls='drop2' aria-expanded='false'>…</a>
+              <ul id='drop2' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+                <li><a href='#'>This is a link</a></li>
+                <li><a href='#'>This is another</a></li>
+                <li><a href='#'>Yet another</a></li>
+              </ul>
+              <ul class='item-sub-group'>
+                <li class='item'>
+                  <label>
+                    <input type='checkbox'>
+                    Incident
+                  </label>
+                  <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop3' aria-controls='drop3' aria-expanded='false'>…</a>
+                  <ul id='drop3' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+                    <li><a href='#'>This is a link</a></li>
+                    <li><a href='#'>This is another</a></li>
+                    <li><a href='#'>Yet another</a></li>
+                  </ul>
+                </li>
+                <li class='item'>
+                  <label>
+                    <input type='checkbox'>
+                    Fire in a trash can
+                  </label>
+                  <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop4' aria-controls='drop4' aria-expanded='false'>…</a>
+                  <ul id='drop4' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+                    <li><a href='#'>This is a link</a></li>
+                    <li><a href='#'>This is another</a></li>
+                    <li><a href='#'>Yet another</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+       </div>
+       <div class='large-9 columns'>
+        <ul class='dl' id='updates_datalist'>
+         {{=updates_datalist}}
+        </ul>
+       </div>
       </div>
-     </div>
-    </div>
+     </section>
     <section class='staff content' id='panel2'>
-     <div class='row'>
-      <ul class='large-3 columns tabs vertical' data-tab>
-       <li class='tab-title active'><a href='#staff'>Staff</a></li>
-       <li class='tab-title'><a href='#organisations'>Organizations</a></li>
-      </ul>
-      <div class='tabs-content large-9 columns'>
-       <div class='row collapse prefix-radius content active' id='staff'>
-        <div class='large-2 columns'>
-         <label for='hrm_human_resource-search' class='prefix'>Search</label>
+      <div class='row'>
+        <div class='large-3 columns'>
+          {{=create_hrm_human_resource_popup}}
+          <div class='panel'>
+            <div class='search-wrapper' id='dt-search-hrm_human_resource'>
+              <span class='search-icon'><i class='fa fa-search'></i></span>
+            </div>
+          </div>
         </div>
-        <div class='large-6 columns' id='dt-search-hrm_human_resource'></div>
-        <div class='large-4 columns'>
-         {{=create_hrm_human_resource_popup}}
+        <div class='large-9 columns'>
+          <div id='dt-event_human_resource'>
+            {{=hrm_human_resource_datatable}}
+          </div>
         </div>
-        <div id='dt-event_human_resource'>
-         {{=hrm_human_resource_datatable}}
-        </div>
-       </div>
-       <div class='row collapse prefix-radius content' id='organisations'>
-        <div class='large-2 columns'>
-         <label for='org_organisation-search' class='prefix'>Search</label>
-        </div>
-        <div class='large-6 columns' id='dt-search-org_organisation'></div>
-        <div class='large-4 columns'>
-         {{=create_org_organisation_popup}}
-        </div>
-        <div id='dt-event_organisation'>
-         {{=org_organisation_datatable}}
-        </div>
-       </div>
       </div>
-     </div>
     </section>
-    <section class='tasks content' id='panel3'>
-     <div class='row collapse prefix-radius'>
-      <div class='large-2 columns'>
-       <label for='project_task-search' class='prefix'>Search</label>
+    <section class='organization content' id='panel3'>
+      <div class='row'>
+        <div class='large-3 columns'>
+          {{=create_org_organisation_popup}}
+          <div class='panel'>
+            <div class='search-wrapper' id='dt-search-org_organisation'>
+              <span class='search-icon'><i class='fa fa-search'></i></span>
+            </div>
+          </div>
+        </div>
+        <div class='large-9 columns'>
+          <div id='dt-event_organisation'>
+            {{=org_organisation_datatable}}
+          </div>
+        </div>
       </div>
-      <div class='large-6 columns' id='dt-search-project_task'></div>
-      <div class='large-4 columns'>
-       {{=create_project_task_popup}}
+    </section>
+    <section class='panels content' id='panel4'>
+    </section>
+    <section id='panel5' class='tasks content'>
+      <div class='row'>
+        <div class='large-3 columns'>
+          {{=create_project_task_popup}}
+          <div class='panel'>
+            <div class='search-wrapper' id='dt-search-project_task'>
+              <span class='search-icon'><i class='fa fa-search'></i></span>
+            </div>
+          </div>
+        </div>
+        <div class='large-9 columns'>
+          <div id='dt-project_task'>
+            {{=project_task_datatable}}
+          </div>
+        </div>
       </div>
-      <div id='dt-project_task'>
-       {{=project_task_datatable}}
+    </section>
+    <section id='panel6' class='settings content'>
+      <div class='row'>
+        <div class='large-3 columns'>
+          Setting nav
+        </div>
+        <div class='large-9 columns'>
+          Settings options
+        </div>
       </div>
-     </div>
     </section>
    </div>
  </div>
 </div>
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}
 {{s3.scripts.append("/%s/static/themes/WACOP/js/dashboard.js" % appname)}}
