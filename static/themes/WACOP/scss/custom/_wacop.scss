@@ -195,6 +195,14 @@ body.ltr .ui-multiselect {
 }
 
 // -------------------------------------
+// Filter Group
+
+.filter-group {
+  @include filter-group();
+  margin: $global-padding 0;
+}
+
+// -------------------------------------
 // Data Table
 
 // .dt-wrapper {
