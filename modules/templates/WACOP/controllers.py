@@ -874,8 +874,10 @@ class custom_WACOP(S3CRUD):
                           vars={"refresh": list_id},
                           )
             else:
-                # Update doesn't make sense here
-                raise NotImplementedError
+                url = URL(c="cms", f="post",
+                          args = ["create.popup"],
+                          vars={"refresh": list_id},
+                          )
             output["create_post_button"] = DIV(A(ICON("add"),
                                                  T("Add Update"),
                                                  _href=url,
@@ -1348,13 +1350,8 @@ class event_Profile(custom_WACOP):
 
         etable = s3db.event_event
         itable = s3db.event_incident
-        ptable = s3db.cms_post
-        gtable = s3db.gis_location
-        #rtable = s3db.pr_group
         ertable = s3db.event_team
         eptable = s3db.event_post
-        ttable = s3db.cms_tag
-        ittable = s3db.event_tag
 
         date_represent = lambda dt: S3DateTime.date_represent(dt,
                                                               format = "%b %d %Y %H:%M",
@@ -1363,7 +1360,7 @@ class event_Profile(custom_WACOP):
                                                               )
 
         # Map of Incidents
-        _map = self._map("Incidents", filter="~.event_id=%s" % event_id)
+        _map, button = self._map("Incidents", filter="~.event_id=%s" % event_id)
 
         # Output
         output = {"map": _map,
@@ -1872,7 +1869,7 @@ class person_Dashboard(custom_WACOP):
         """
 
         # Map of Incidents
-        _map = self._map("Incidents")
+        _map, button = self._map("Incidents")
 
         output = {"map": _map,
                   }
@@ -1921,9 +1918,9 @@ class person_Dashboard(custom_WACOP):
                   dt_init = dt_init,
                   )
 
-        # Updates DataList (without Create...at least until we can select an Incident to link it to)
+        # Updates DataList
         event_id = incident_id = None
-        self._updates_html(r, output, event_id, incident_id, False, **attr)
+        self._updates_html(r, output, event_id, incident_id, True, **attr)
 
         self._view(output, "dashboard.html")
 
