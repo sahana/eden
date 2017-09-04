@@ -176,9 +176,9 @@ def person():
         s3db.set_method(module, resourcename,
                         method = "contacts",
                         action = s3db.pr_Contacts)
-        tabs.append((settings.get_pr_contacts_tab_label("all"),
-                     "contacts",
-                     ))
+        contacts_tabs.append((settings.get_pr_contacts_tab_label("all"),
+                              "contacts",
+                              ))
     if "public" in setting:
         s3db.set_method(module, resourcename,
                         method = "public_contacts",
