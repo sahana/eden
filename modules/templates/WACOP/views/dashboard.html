@@ -1,7 +1,12 @@
 {{extend "layout.html"}}
 {{=system_wide}}
 <div class='row'>
-Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
+  <div class='small-12 column user-greeting'>
+    <h2>
+      Hello <span class='user-fname'>{{=greeting.first_name}}</span> <span class='user-lname'>{{=greeting.last_name}}</span> <span class='user-role'>{{=greeting.staff_role}}</span>
+    </h2>
+    <hr>
+  </div>
 </div>
 <div class='row'>
  <div class='small-12 column'>
