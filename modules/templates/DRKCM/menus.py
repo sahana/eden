@@ -273,6 +273,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Need Types", f="need"),
                         M("Intervention Types", f="response_type", m="hierarchy"),
                         M("Appointment Types", f="case_appointment_type"),
+                        M("Residence Status Types", f="residence_status_type"),
+                        M("Residence Permit Types", f="residence_permit_type"),
                         ),
                     )
 
