@@ -10180,7 +10180,7 @@ class S3ProjectTaskModel(S3Model):
     """
         Project Task Model
 
-        This class holds the tables used for an Organisation to manage
+        This class holds the tables used for a Person or Organisation to manage
         their Tasks in detail.
     """
 

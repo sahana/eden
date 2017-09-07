@@ -317,7 +317,7 @@ class S3LocationModel(S3Model):
                                       represent = gis_location_represent,
                                       requires = IS_EMPTY_OR(IS_LOCATION()),
                                       sortby = "name",
-                                      widget = S3LocationSelector(show_address=True,
+                                      widget = S3LocationSelector(show_address = True,
                                                                   ),
                                       # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
                                       #requires = IS_EMPTY_OR(

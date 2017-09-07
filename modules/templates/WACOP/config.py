@@ -254,20 +254,30 @@ def config(settings):
     def cms_post_onaccept(form):
         """
             Handle Tags in Create / Update forms
+            Auto-Bookmark Updates created from the Dashboard
         """
 
         post_id = form.vars.id
 
         db = current.db
         s3db = current.s3db
+        request = current.request
+
+        if request.get_vars.get("dashboard"):
+            # Bookmark the post
+            s3db.cms_post_user.insert(post_id = post_id,
+                                      user_id = current.auth.user.id,
+                                      )
+
+        # Process Tags
         ttable = s3db.cms_tag
         ltable = s3db.cms_tag_post
 
         # Delete all existing tags for this post
         db(ltable.post_id == post_id).delete()
 
-        # Add these tags
-        tags = current.request.post_vars.get("tags")
+        # Add tags found in form
+        tags = request.post_vars.get("tags")
         if not tags:
             return
 
@@ -371,7 +381,7 @@ def config(settings):
                 tags = ",".join(tags)
                 s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
 
-            # Processing Tags
+            # Processing Tags/auto-Bookmarks
             default = s3db.get_config(tablename, "onaccept")
             if isinstance(default, list):
                 onaccept = default
@@ -384,7 +394,7 @@ def config(settings):
                            onaccept = onaccept,
                            )
 
-        elif method in ("custom", "datalist", "filter"):
+        elif method in ("custom", "dashboard", "datalist", "filter"):
             # dataList configuration
             from templates.WACOP.controllers import cms_post_list_layout
 
@@ -414,7 +424,12 @@ def config(settings):
                            #orderby = "cms_post.date desc",
                            )
 
-            if method in ("custom", "filter"):
+            get_vars = r.get_vars
+            if method == "datalist" and get_vars.get("dashboard"):
+                from templates.WACOP.controllers import dashboard_filter
+                s3.filter = dashboard_filter()
+
+            elif method in ("custom", "dashboard", "filter"):
                 # Filter Widgets
                 from s3 import S3DateFilter, \
                                S3LocationFilter, \
@@ -423,11 +438,14 @@ def config(settings):
 
                 if method == "filter":
                     # Apply filter_vars
-                    get_vars = r.get_vars
                     for k, v in get_vars.iteritems():
                         # We only expect a maximum of 1 of these, no need to append
-                        from s3 import FS
-                        s3.filter = (FS(k) == v)
+                        if k == "dashboard":
+                            from templates.WACOP.controllers import dashboard_filter
+                            s3.filter = dashboard_filter()
+                        else:
+                            from s3 import FS
+                            s3.filter = (FS(k) == v)
 
                 date_filter = S3DateFilter("date",
                                            # If we introduce an end_date on Posts:
@@ -474,6 +492,7 @@ def config(settings):
                                                   ),
                                   date_filter,
                                   ]
+
                 if r.tablename == "event_event" or \
                    (method == "filter" and get_vars.get("event_post.event_id")):
                     # Event Profile
@@ -483,17 +502,18 @@ def config(settings):
                                                              no_opts = "",
                                                              ))
 
-                user = current.auth.user
-                if user:
-                    filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
-                                                             label = "",
-                                                             options = {"*": T("All"),
-                                                                        user.id: T("My Bookmarks"),
-                                                                        },
-                                                             cols = 2,
-                                                             multiple = False,
-                                                             table = False,
-                                                             ))
+                if method != "dashboard":
+                    user = current.auth.user
+                    if user:
+                        filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
+                                                                 label = "",
+                                                                 options = {"*": T("All"),
+                                                                            user.id: T("My Bookmarks"),
+                                                                            },
+                                                                 cols = 2,
+                                                                 multiple = False,
+                                                                 table = False,
+                                                                 ))
 
                 s3db.configure(tablename,
                                filter_widgets = filter_widgets,
@@ -1322,10 +1342,29 @@ def config(settings):
     settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
+    def user_pe_id_default_filter(selector, tablename=None):
+        """
+            Default filter for pe_id:
+            * Use the user's pe_id if logged-in
+        """
+
+        auth = current.auth
+        if auth.is_logged_in():
+            return auth.user.pe_id
+        else:
+            # no default
+            return {}
+
+    # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
         from gluon import A, URL
-        from s3 import s3_fieldmethod
+        from s3 import s3_fieldmethod, s3_set_default_filter
+
+        # Default Filter to 'Tasks Assigned to me'
+        s3_set_default_filter("~.pe_id",
+                              user_pe_id_default_filter,
+                              tablename = "project_task")
 
         s3db = current.s3db
 
