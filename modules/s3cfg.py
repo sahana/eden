@@ -3215,6 +3215,20 @@ class S3Config(Storage):
                                                            4: T("Members"),
                                                            })
 
+    def get_hrm_event_course_mandatory(self):
+        """
+            Whether (Training) Events have a Mandatory Course
+        """
+        return self.__lazy("hrm", "event_course_mandatory", default=True)
+
+    def get_hrm_event_site(self):
+        """
+            How (Training) Events should be Located:
+            - True: use Site
+            - False: use Location (e.g. Country or Country/L1)
+        """
+        return self.__lazy("hrm", "event_site", default=True)
+
     def get_hrm_staff_label(self):
         """
             Label for 'Staff'

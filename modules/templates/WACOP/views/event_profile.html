@@ -1,49 +1,50 @@
 {{extend "layout.html"}}
 {{=system_wide}}
-<main role='main' class='main'>
- <div class='row'>
-  <div role='complementary' class='callout event-parent'>
-   <div class='callout-left'>
-    <h1 class='title'>{{=event.name}}</h1>
-    <!--<a href='#' class='button radius small'><i class='fa fa-share-alt'></i> Share Event</a>-->
-    {{=bookmark_btn}}
-   </div>
-   <div class='callout-right meta'>
-    <p>
-     <span class='date-label'>Zero hour:</span> <span class='date'>{{=event.start_date}}</span>
-     <span class='date-label'>Closed:</span> <span class='date'>{{=event.end_date}}</span>
-     <span class='location adr'>{{=event.location}}</span>
-    </p>
-    <p>
-     {{=event.incidents}}
-     {{=event.resources}}
-     {{=event.updates}}
-    </p>
-    <span class='label {{=event.status}}'>{{=event.status}}</span>
-   </div>
+<div class='row'>
+ <div role='complementary' class='callout event-parent'>
+  <div class='callout-left'>
+   <h1 class='title'>{{=event.name}}</h1>
+   <!--<a href='#' class='button radius small'><i class='fa fa-share-alt'></i> Share Event</a>-->
+   {{=bookmark_btn}}
+  </div>
+  <div class='callout-right meta'>
+   <p>
+    <span class='date-label'>Zero hour:</span> <span class='date'>{{=event.start_date}}</span>
+    <span class='date-label'>Closed:</span> <span class='date'>{{=event.end_date}}</span>
+    <span class='location adr'>{{=event.location}}</span>
+   </p>
+   <p>
+    {{=event.incidents}}
+    {{=event.resources}}
+    {{=event.updates}}
+   </p>
+   <span class='label {{=event.status}}'>{{=event.status}}</span>
   </div>
  </div>
- <div class='row'>
-  <div class='small-12 columns'>
-   <p>{{=event.desc or ""}}</p>
-  </div>
+</div>
+<div class='row'>
+ <div class='small-12 columns'>
+  <p>{{=event.desc or ""}}</p>
  </div>
- <div class='row well'>
-  <div class='small-12 columns'>
-   {{=XML(map)}}
-  </div>
+</div>
+<div class='row well'>
+ <div class='small-12 columns'>
+  {{=XML(map)}}
  </div>
- <div class='row well'>
-  <div class='medium-8 columns'>
-   <h3>Incidents</h3>
-   {{=event_incident_datatable}}
-  </div>
-  <div class='medium-4 columns'>
-   <h3>Resources</h3>
-   {{=event_team_datatable}}
-  </div>
+</div>
+<div class='row well'>
+ <div class='medium-8 columns'>
+  <h3>Incidents</h3>
+  {{=event_incident_datatable}}
  </div>
+ <div class='medium-4 columns'>
+  <h3>Resources</h3>
+  {{=event_team_datatable}}
+ </div>
+</div>
+<hr>
 {{include "../modules/templates/%s/views/updates_directories.html" % response.s3.theme}}
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
 {{s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % appname)}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}

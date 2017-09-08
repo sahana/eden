@@ -2494,11 +2494,15 @@ class S3HRSkillModel(S3Model):
                        )
 
         # =========================================================================
-        # Training Events
+        # (Training) Events
+        # - can include Meetings, Workshops, etc
         #
 
         #site_label = settings.get_org_site_label()
         site_label = T("Venue")
+
+        course_mandatory = settings.get_hrm_event_course_mandatory()
+        event_site = settings.get_hrm_event_site()
 
         # Instructor settings
         INSTRUCTOR = T("Instructor")
@@ -2529,8 +2533,12 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      # Instance
                      self.super_link("pe_id", "pr_pentity"),
-                     course_id(empty = False),
+                     course_id(empty = not course_mandatory),
                      organisation_id(label = T("Organized By")),
+                     self.gis_location_id(widget = S3LocationSelector(), # show_address = False
+                                          readable = not event_site,
+                                          writable = not event_site,
+                                          ),
                      self.super_link("site_id", "org_site",
                                      label = site_label,
                                      instance_types = auth.org_site_types,
@@ -2538,9 +2546,9 @@ class S3HRSkillModel(S3Model):
                                      not_filterby = "obsolete",
                                      not_filter_opts = (True,),
                                      default = auth.user.site_id if auth.is_logged_in() else None,
-                                     readable = True,
-                                     writable = True,
-                                     empty = False,
+                                     readable = event_site,
+                                     writable = event_site,
+                                     empty = not event_site,
                                      represent = self.org_site_represent,
                                      ),
                      s3_datetime("start_date",

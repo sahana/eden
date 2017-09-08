@@ -26,7 +26,7 @@ var incident_tags = function(incident_id) {
 };
 
 $(document).ready(function() {
-    $('main.main').attr('id', 'incident-profile');
+    //$('main.main').attr('id', 'incident-profile');
 
     $('.filter-clear, .show-filter-manager').addClass('button tiny secondary');
 });

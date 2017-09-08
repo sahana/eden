@@ -1,7 +1,12 @@
 {{extend "layout.html"}}
 {{=system_wide}}
 <div class='row'>
-Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
+  <div class='small-12 column user-greeting'>
+    <h2>
+      Hello <span class='user-fname'>{{=greeting.first_name}}</span> <span class='user-lname'>{{=greeting.last_name}}</span> <span class='user-role'>{{=greeting.staff_role}}</span>
+    </h2>
+    <hr>
+  </div>
 </div>
 <div class='row'>
  <div class='small-12 column'>
@@ -9,9 +14,9 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
     <li class='tab-title active'><a href='#panel1'>Updates</a></li>
     <li class='tab-title'><a href='#panel2'>Staff</a></li>
     <li class='tab-title'><a href='#panel3'>Orgs</a></li>
-    <li class='tab-title'><a href='#panel4'>Panels</a></li>
+    <!--<li class='tab-title'><a href='#panel4'>Panels</a></li>-->
     <li class='tab-title'><a href='#panel5'>Tasks</a></li>
-    <li class='tab-title'><a href='#panel6'>Settings</a></li>
+    <!--<li class='tab-title'><a href='#panel6'>Settings</a></li>-->
    </ul>
    <div class='tabs-content'>
     <section class='content active' id='panel1'>
@@ -22,6 +27,7 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
         {{pass}}
         {{=filter_form}}
 
+        <!--
         <div class='filter-group'>
           <h1 class='title'>My Groups <a href=''>See all groups</a></h1>
           <p class='sub-title'>Admin Groups</p>
@@ -102,7 +108,7 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
               </ul>
             </li>
           </ul>
-        </div>
+        </div>-->
 
        </div>
        <div class='large-9 columns'>
@@ -146,8 +152,9 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
         </div>
       </div>
     </section>
+    <!--
     <section class='panels content' id='panel4'>
-    </section>
+    </section>-->
     <section id='panel5' class='tasks content'>
       <div class='row'>
         <div class='large-3 columns'>
@@ -165,6 +172,7 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
         </div>
       </div>
     </section>
+    <!--
     <section id='panel6' class='settings content'>
       <div class='row'>
         <div class='large-3 columns'>
@@ -174,11 +182,11 @@ Hello {{=greeting.first_name}} {{=greeting.last_name}} {{=greeting.staff_role}}
           Settings options
         </div>
       </div>
-    </section>
+    </section>-->
    </div>
  </div>
 </div>
 {{include "dataLists.html"}}
 {{include "dataTables.html"}}
-{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}
 {{s3.scripts.append("/%s/static/themes/WACOP/js/dashboard.js" % appname)}}
+{{s3.scripts.append("/%s/static/themes/WACOP/js/resize_map.js" % appname)}}

@@ -784,6 +784,9 @@ class custom_WACOP(S3CRUD):
         elif incident_id:
             resource.add_filter(FS("event_post.incident_id") == incident_id)
             ajax_vars["event_post.incident_id"] = incident_id
+        elif r.method == "dashboard":
+            resource.add_filter(dashboard_filter())
+            ajax_vars["dashboard"] = 1
         ajaxurl = URL(c="cms", f="post", args="datalist",
                       vars=ajax_vars, extension="dl")
 
@@ -872,6 +875,13 @@ class custom_WACOP(S3CRUD):
                 url = URL(c="event", f="incident",
                           args = [incident_id, "post", "create.popup"],
                           vars={"refresh": list_id},
+                          )
+            elif r.method == "dashboard":
+                url = URL(c="cms", f="post",
+                          args = ["create.popup"],
+                          vars={"dashboard": 1,
+                                "refresh": list_id,
+                                },
                           )
             else:
                 url = URL(c="cms", f="post",
@@ -1953,6 +1963,43 @@ class person_Dashboard(custom_WACOP):
         self._view(output, "dashboard.html")
 
         return output
+
+# =============================================================================
+def dashboard_filter():
+    """
+        Filter Updates on the Dashboard
+         - Updates we have Bookmarked
+         - Updates linked to Incidents we have Bookmarked
+         - Updates linked to Events we have Bookmarked
+           (unless that update is also linked to an Incident)
+         - @ToDo: Updates linked to Groups which we are a Member of
+    """
+
+    user_id = current.auth.user.id
+
+    btable = current.s3db.event_bookmark
+    query = (btable.user_id == user_id) & \
+            (btable.deleted == False)
+    bookmarks = current.db(query).select(btable.event_id,
+                                         btable.incident_id,
+                                         )
+    incident_ids = []
+    iappend = incident_ids.append
+    event_ids = []
+    eappend = event_ids.append
+    for b in bookmarks:
+        incident_id = b.incident_id
+        if incident_id is not None:
+            iappend(incident_id)
+        else:
+            eappend(b.event_id)
+
+    filter = (FS("bookmark.user_id") == user_id) | \
+             (FS("incident_post.incident_id").belongs(incident_ids)) | \
+             ((FS("incident_post.event_id").belongs(event_ids)) & \
+              (FS("incident_post.incident_id") == None))
+
+    return filter
 
 # =============================================================================
 def cms_post_list_layout(list_id, item_id, resource, rfields, record):
