@@ -1,3 +1,5 @@
+dist: precise
+
 language: python
 
 # currently only testing for python 2.7
