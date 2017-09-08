@@ -530,6 +530,7 @@ def config(settings):
                 # Case-sites must be shelters
                 field = ctable.site_id
                 field.label = T("Shelter")
+                field.represent = s3db.org_SiteRepresent(show_type=False)
                 requires = field.requires
                 if isinstance(requires, IS_EMPTY_OR):
                     requires = requires.other
@@ -2513,7 +2514,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                    ],
                                   [(T("Name"), name),
                                    (T("Size of Family"), household_size),
-                                   (T("Facility"), facility),
+                                   (T("Shelter"), facility),
                                    ],
                                   ["date_of_birth",
                                    ],
