@@ -637,6 +637,8 @@ def config(settings):
 
                             # Process Data ----------------------------
                             "dvr_case.site_id",
+                            (T("Moving-in Date"), "dvr_case_details.on_site_from"),
+                            (T("Moving-out Date"), "dvr_case_details.on_site_until"),
                             S3SQLInlineComponent(
                                     "address",
                                     label = T("Current Address"),
@@ -648,7 +650,6 @@ def config(settings):
                                     link = False,
                                     multiple = False,
                                     ),
-                            (T("Date of Entry"), "dvr_case_details.arrival_date"),
                             S3SQLInlineComponent(
                                     "bamf",
                                     fields = [("", "value"),
@@ -660,6 +661,7 @@ def config(settings):
                                     multiple = False,
                                     name = "bamf",
                                     ),
+                            (T("Date of Entry"), "dvr_case_details.arrival_date"),
                             S3SQLInlineComponent(
                                     "residence_status",
                                     fields = ["status_type_id",
@@ -1836,17 +1838,27 @@ def config(settings):
 
         # Get the number of open cases per site_id
         ctable = s3db.dvr_case
+        dtable = s3db.dvr_case_details
         stable = s3db.dvr_case_status
+        join = stable.on(stable.id == ctable.status_id)
+        left = dtable.on((dtable.person_id == ctable.person_id) & \
+                         ((dtable.case_id == None) |
+                          (dtable.case_id == ctable.id)) & \
+                         (dtable.deleted == False))
+        today = current.request.utcnow.date()
         query = (ctable.site_id != None) & \
                 (ctable.deleted == False) & \
-                (ctable.status_id == stable.id) & \
-                (stable.is_closed == False)
+                (stable.is_closed == False) & \
+                ((dtable.on_site_from == None) | (dtable.on_site_from <= today)) & \
+                ((dtable.on_site_until == None) | (dtable.on_site_until >= today))
 
         site_id = ctable.site_id
         count = ctable.id.count()
         rows = db(query).select(site_id,
                                 count,
                                 groupby = site_id,
+                                join = join,
+                                left = left,
                                 )
 
         # Update shelter population count
@@ -2027,6 +2039,20 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def org_site_check(site_id):
+        """ Custom tasks for scheduled site checks """
+
+        # Tasks which are not site-specific
+        if site_id == "all":
+
+            # Update all shelter populations
+            # NB will be db.committed by org_site_check in models/tasks.py
+            current.log.info("Updating all shelter populations")
+            cr_shelter_population()
+
+    settings.org.site_check = org_site_check
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):

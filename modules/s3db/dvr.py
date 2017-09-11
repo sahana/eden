@@ -623,6 +623,12 @@ class DVRCaseModel(S3Model):
                      s3_date("arrival_date",
                              label = T("Arrival Date"),
                              ),
+                     s3_date("on_site_from",
+                             label = T("On-site from"),
+                             ),
+                     s3_date("on_site_until",
+                             label = T("On-site until"),
+                             ),
                      self.dvr_referral_type_id(),
                      self.dvr_referral_type_id(
                          "activity_referral_type_id",

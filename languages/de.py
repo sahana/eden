@@ -2863,6 +2863,8 @@
 'Mother': 'Mutter',
 'Motorcycle': 'Motorrad',
 'Moustache': 'Schnurrbart',
+'Moving-in Date': 'Einzugsdatum',
+'Moving-out Date': 'Auszugsdatum',
 'MultiPolygon': 'MultiPolygon',
 'Multiple Matches': 'Mehrere Übereinstimmungen',
 'Multiple': 'Mehrere',
