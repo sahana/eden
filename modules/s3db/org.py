@@ -6363,17 +6363,19 @@ def org_rheader(r, tabs=[]):
                         (T("Staff & Volunteers"), "human_resource"),
                         (T("Assets"), "asset"),
                         (T("Projects"), "project"),
-                        (T("User Roles"), "roles"),
                         #(T("Tasks"), "task"),
                         ]
+                append_tab = tabs.append
                 if settings.get_org_tags():
                     append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
-                    tabs.insert(-1, (T("Resources"), "resource"))
+                    append_tab((T("Resources"), "resource"))
                 if settings.get_org_needs_tab():
-                    tabs.insert(-1, (T("Needs"), "needs"))
+                    append_tab((T("Needs"), "needs"))
                 if settings.get_org_service_locations():
-                    tabs.insert(-1, (T("Service Locations"), "service_location"))
+                    append_tab((T("Service Locations"), "service_location"))
+                # Org Role Manager always last
+                append_tab((T("User Roles"), "roles"))
 
             if settings.get_L10n_translate_org_organisation():
                     tabs.insert(1, (T("Local Names"), "name"))
