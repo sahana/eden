@@ -254,7 +254,7 @@ class S3DelphiModel(S3Model):
                                  "created_by",
                                  "modified_on",
                                  ],
-                  orderby = table.code,
+                  orderby = "delphi_problem.code",
                   )
 
         # Components

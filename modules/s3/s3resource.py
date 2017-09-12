@@ -998,6 +998,7 @@ class S3Resource(object):
                         db.commit()
         else:
             # Hard delete
+            deletable = len(rows) # assume all rows deletable
             for row in rows:
 
                 if joined:
@@ -1014,14 +1015,18 @@ class S3Resource(object):
                 # Delete super-entity
                 success = delete_super(table, row)
                 if not success:
+                    # Super-entity is not deletable
                     self.error = INTEGRITY_ERROR
+                    deletable -= 1
                     continue
+
                 # Delete the row
                 try:
                     del table[record_id]
                 except:
                     # Row is not deletable
                     self.error = INTEGRITY_ERROR
+                    deletable -= 1
                     continue
                 else:
                     # Successfully deleted
@@ -3597,7 +3602,7 @@ class S3Resource(object):
             if self.tablename == "gis_location":
                 settings = current.deployment_settings
                 if "wkt" not in skip:
-                    format = current.auth.permission.format 
+                    format = current.auth.permission.format
                     if format == "cap":
                         # Include WKT
                         pass
