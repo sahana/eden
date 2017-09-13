@@ -134,12 +134,21 @@ def incident():
                                    )
                     s3.crud.submit_button = T("Update")
                 elif cname in ("asset", "human_resource", "organisation", "site"):
+
+                    atable = s3db.table("budget_allocation")
+                    if atable:
+                        field = atable.budget_entity_id
+                        field.readable = field.writable = True
+
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
-                    # Default Event to that of the Incident
-                    f = s3db["event_%s" % cname].event_id
-                    f.default = r.record.event_id
-                    f.readable = f.writable = False
+
+                    # Default Event in the link to that of the Incident
+                    ltable = s3db.table("event_%s" % cname)
+                    if ltable and "event_id" in ltable.fields:
+                        f = s3db["event_%s" % cname].event_id
+                        f.default = r.record.event_id
+                        f.readable = f.writable = False
 
             elif r.method not in ("read", "update"):
                 # Create or ListCreate

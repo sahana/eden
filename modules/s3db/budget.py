@@ -81,7 +81,9 @@ class S3BudgetModel(S3Model):
                                )
 
         tablename = "budget_entity"
-        self.super_entity(tablename, "budget_entity_id", entity_types)
+        self.super_entity(tablename, "budget_entity_id", entity_types,
+                          Field("name"), # shared field
+                          )
 
         self.add_components(tablename,
                             # Budget Details
@@ -1340,7 +1342,14 @@ class S3BudgetAllocationModel(S3Model):
         self.define_table(tablename,
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
-                          super_link("budget_entity_id", "budget_entity"),
+                          super_link("budget_entity_id", "budget_entity",
+                                     # @todo: proper representation method incl.
+                                     #        entity type (currently only one
+                                     #        type defined, so using that as
+                                     #        label for now)
+                                     label = T("Project"),
+                                     represent = S3Represent(lookup="budget_entity"),
+                                     ),
                           # Component not instance
                           super_link("cost_item_id", "budget_cost_item",
                                      readable = True,
