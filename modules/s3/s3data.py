@@ -425,7 +425,6 @@ class S3DataTable(object):
         """
             Calculate the export formats that can be added to the table
 
-            @param id: the unique dataTable ID
             @param rfields: optional list of field selectors for exports
             @param permalink: search result URL
             @param base_url: the base URL of the datatable (without

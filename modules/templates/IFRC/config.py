@@ -2492,7 +2492,8 @@ def config(settings):
             @param row: the row
         """
 
-        items = [row["pr_contact_emergency.name"]]
+        name = row["pr_contact_emergency.name"] or current.messages["NONE"]
+        items = [name]
         relationship = row["pr_contact_emergency.relationship"]
         if relationship:
             items.append(" (%s)" % relationship)

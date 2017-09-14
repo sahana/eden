@@ -1061,7 +1061,12 @@ S3.search = {};
                             } else {
                                 for (var i=0, len=newopts.length; i < len; i++) {
                                     item = newopts[i];
-                                    value = item[0].toString();
+                                    value = item[0];
+                                    if (null === value) {
+                                        value = 'None';
+                                    } else {
+                                        value = value.toString();
+                                    }
                                     label = item[1];
                                     if (selected && $.inArray(value, selected) >= 0) {
                                         s.push(value);

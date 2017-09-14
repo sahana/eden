@@ -1366,6 +1366,13 @@ def config(settings):
                               user_pe_id_default_filter,
                               tablename = "project_task")
 
+        if r.method == "filter":
+            # Apply filter_vars
+            for k, v in r.get_vars.iteritems():
+                # We only expect a maximum of 1 of these, no need to append
+                from s3 import FS
+                current.response.s3.filter = (FS(k) == v)
+
         s3db = current.s3db
 
         # Virtual Fields
