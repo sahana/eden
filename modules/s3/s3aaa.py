@@ -156,47 +156,37 @@ class AuthS3(Auth):
         messages = self.messages
         messages.lock_keys = False
 
+        T = current.T
+
         # @ToDo Move these to deployment_settings
-        messages.approve_user = \
-"""Your action is required to approve a New User for %(system_name)s:
-%(first_name)s %(last_name)s
-%(email)s
-Please go to %(url)s to approve this user."""
-        messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
-        messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
-        messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
-        messages.email_verified = "Email verified - you can now login"
-        messages.duplicate_email = "This email address is already in use"
-        messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
-        messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
-        messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
-        messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
-        messages.label_image = "Profile Image"
-        messages.label_organisation_id = "Organization"
-        messages.label_org_group_id = "Coalition"
-        messages.label_remember_me = "Remember Me"
-        messages.label_utc_offset = "UTC Offset"
-        #messages.logged_in = "Signed In"
-        #messages.logged_out = "Signed Out"
-        #messages.submit_button = "Signed In"
-        messages.new_user = \
-"""A New User has registered for %(system_name)s:
-%(first_name)s %(last_name)s
-%(email)s
-No action is required."""
-        messages.password_reset_button = "Request password reset"
-        messages.profile_save_button = "Apply changes"
-        messages.registration_disabled = "Registration Disabled!"
-        messages.registration_verifying = "You haven't yet Verified your account - please check your email"
-        messages.reset_password = "Click on the link %(url)s to reset your password"
-        messages.verify_email = "Click on the link %(url)s to verify your email"
-        messages.verify_email_subject = "%(system_name)s - Verify Email"
-        messages.welcome_email_subject = "Welcome to %(system_name)s"
-        messages.welcome_email = \
-"""Welcome to %(system_name)s
- - You can start using %(system_name)s at: %(url)s
- - To edit your profile go to: %(url)s%(profile)s
-Thank you"""
+        messages.approve_user = T("Your action is required to approve a New User for %(system_name)s:\n%(first_name)s %(last_name)s\n%(email)s\nPlease go to %(url)s to approve this user.")
+        messages.email_approver_failed = T("Failed to send mail to Approver - see if you can notify them manually!")
+        messages.email_sent = T("Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters")
+        messages.email_verification_failed = T("Unable to send verification email - either your email is invalid or our email server is down")
+        messages.email_verified = T("Email verified - you can now login")
+        messages.duplicate_email = T("This email address is already in use")
+        messages.help_utc_offset = T("The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones.")
+        messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
+        messages.help_organisation = T("Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions.")
+        messages.help_image = T("You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50.")
+        messages.label_image = T("Profile Image")
+        messages.label_organisation_id = T("Organization")
+        messages.label_org_group_id = T("Coalition")
+        messages.label_remember_me = T("Remember Me")
+        messages.label_utc_offset = T("UTC Offset")
+        #messages.logged_in = T("Signed In")
+        #messages.logged_out = T("Signed Out")
+        #messages.submit_button = T("Signed In")
+        messages.new_user = T("A New User has registered for %(system_name)s:\n%(first_name)s %(last_name)s\n%(email)s\nNo action is required.")
+        messages.password_reset_button = T("Request password reset")
+        messages.profile_save_button = T("Apply changes")
+        messages.registration_disabled = T("Registration Disabled!")
+        messages.registration_verifying = T("You haven't yet Verified your account - please check your email")
+        messages.reset_password = T("Click on the link %(url)s to reset your password")
+        messages.verify_email = T("Click on the link %(url)s to verify your email")
+        messages.verify_email_subject = T("%(system_name)s - Verify Email")
+        messages.welcome_email_subject = T("Welcome to %(system_name)s")
+        messages.welcome_email = T("Welcome to %(system_name)s\n - You can start using %(system_name)s at: %(url)s\n - To edit your profile go to: %(url)s%(profile)s\nThank you")
         messages.lock_keys = True
 
         # S3Permission
@@ -210,7 +200,6 @@ Thank you"""
         self.rollback = False
 
         # Site types (for OrgAuth)
-        T = current.T
         if current.deployment_settings.get_ui_label_camp():
             shelter = T("Camp")
         else:
