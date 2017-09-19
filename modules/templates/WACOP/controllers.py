@@ -99,7 +99,9 @@ class custom_WACOP(S3CRUD):
                    event_id = None,
                    incident_id = None,
                    ajax_vars = None, # Used to be able to differentiate contexts in customise()
+                                     # & for filter_defaults
                    dt_init = None,
+                   resource = None,
                    ):
         """
             Update output with a dataTable and a create_popup
@@ -113,7 +115,8 @@ class custom_WACOP(S3CRUD):
 
         if ajax_vars is None:
             ajax_vars = {}
-        resource = s3db.resource(tablename)
+        if resource is None:
+            resource = s3db.resource(tablename)
         if event_id:
             ltablename = "event_%s" % f
             if tablename == ltablename:
@@ -781,10 +784,12 @@ class custom_WACOP(S3CRUD):
         s3db = current.s3db
         resource = s3db.resource(tablename)
         if event_id:
-            resource.add_filter(FS("event_task.event_id") == event_id)
+            # Done by _datatable
+            #resource.add_filter(FS("event_task.event_id") == event_id)
             ajax_vars["event_task.event_id"] = event_id
         elif incident_id:
-            resource.add_filter(FS("event_task.incident_id") == incident_id)
+            # Done by _datatable
+            #resource.add_filter(FS("event_task.incident_id") == incident_id)
             ajax_vars["event_task.incident_id"] = incident_id
         ajaxurl = URL(c="project", f="task", args="datatable",
                       vars=ajax_vars, extension="aadata")
@@ -793,13 +798,17 @@ class custom_WACOP(S3CRUD):
         if customise:
             customise(r, tablename)
 
+        default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+
         self._datatable(output = output,
                         tablename = tablename,
                         search = False,
                         updateable = updateable,
                         event_id = event_id,
                         incident_id = incident_id,
+                        ajax_vars = default_filters,
                         dt_init = dt_init,
+                        resource = resource,
                         )
 
         # Filter Form

@@ -1359,14 +1359,16 @@ def config(settings):
     def customise_project_task_resource(r, tablename):
 
         from gluon import A, URL
-        from s3 import s3_fieldmethod, s3_set_default_filter
+        from s3 import s3_fieldmethod
 
-        # Default Filter to 'Tasks Assigned to me'
-        s3_set_default_filter("~.pe_id",
-                              user_pe_id_default_filter,
-                              tablename = "project_task")
-
-        if r.method == "filter":
+        method = r.method
+        if method == "dashboard":
+            # Default Filter to 'Tasks Assigned to me'
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("~.pe_id",
+                                  user_pe_id_default_filter,
+                                  tablename = tablename)
+        elif method == "filter":
             # Apply filter_vars
             for k, v in r.get_vars.iteritems():
                 # We only expect a maximum of 1 of these, no need to append
