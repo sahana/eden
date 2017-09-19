@@ -696,6 +696,14 @@ def config(settings):
                     "date_due",
                     "status",
                     "comments",
+                    S3SQLInlineComponent("document",
+                                         name = "file",
+                                         label = T("Files"),
+                                         fields = [("", "file"),
+                                                   #"comments",
+                                                   ],
+                                         ),
+                                    
                     )
                 r.component.configure(crud_form = crud_form,
                                       )
@@ -897,20 +905,6 @@ def config(settings):
                 s3db.configure("event_team",
                                update_next = r.url(),
                                )
-
-            elif r.component_name == "task":
-                from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("name",
-                                            "description",
-                                            "source",
-                                            "priority",
-                                            "pe_id",
-                                            "date_due",
-                                            "status",
-                                            "comments",
-                                            )
-                r.component.configure(crud_form = crud_form,
-                                      )
 
             elif r.representation == "popup":
                 if not r.component:
@@ -1358,8 +1352,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
-        from gluon import A, URL
-        from s3 import s3_fieldmethod
+        from gluon import A, URL, IS_EMPTY_OR
+        from s3 import s3_fieldmethod, IS_ONE_OF, S3DateFilter, S3OptionsFilter, S3TextFilter, S3SQLCustomForm, S3SQLInlineComponent
 
         method = r.method
         if method == "dashboard":
@@ -1376,6 +1370,7 @@ def config(settings):
                 current.response.s3.filter = (FS(k) == v)
 
         s3db = current.s3db
+        table = s3db.project_task
 
         # Virtual Fields
         # Always used from either the Event or Incident context
@@ -1387,17 +1382,86 @@ def config(settings):
                                  args=[record_id, "task", row["project_task.id"], "profile"],
                                  ),
                      )
-        s3db.project_task.name_click = s3_fieldmethod("name_click",
-                                                      task_name,
-                                                      # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
-                                                      represent = lambda v: v,
-                                                      search_field = "name",
-                                                      )
+        table.name_click = s3_fieldmethod("name_click",
+                                          task_name,
+                                          # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                          represent = lambda v: v,
+                                          search_field = "name",
+                                          )
+
+        # Assignee must be a System User
+        etable = s3db.pr_pentity
+        ltable = s3db.pr_person_user
+        query = (ltable.pe_id == etable.pe_id)
+        set = current.db(query)
+        f = table.pe_id
+        f.requires = IS_EMPTY_OR(
+                        IS_ONE_OF(set, "pr_pentity.pe_id",
+                                  f.represent))
+
+        # Custom Form
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "source",
+                                    "priority",
+                                    "pe_id",
+                                    "date_due",
+                                    "status",
+                                    "comments",
+                                    S3SQLInlineComponent("document",
+                                                         name = "file",
+                                                         label = T("Files"),
+                                                         fields = [("", "file"),
+                                                                   #"comments",
+                                                                   ],
+                                                         ),
+                                    )
+                                    
+        # Filters
+        project_task_priority_opts = settings.get_project_task_priority_opts()
+        project_task_status_opts = settings.get_project_task_status_opts()
+
+        filter_widgets = [S3TextFilter(["name",
+                                        "description",
+                                        ],
+                                       label = T("Search"),
+                                       _class = "filter-search",
+                                       ),
+                          S3OptionsFilter("priority",
+                                          options = project_task_priority_opts,
+                                          ),
+                          S3OptionsFilter("pe_id",
+                                          label = T("Assigned To"),
+                                          none = T("Unassigned"),
+                                          ),
+                          S3OptionsFilter("status",
+                                          options = project_task_status_opts,
+                                          ),
+                          S3OptionsFilter("created_by",
+                                          label = T("Created By"),
+                                          hidden = True,
+                                          ),
+                          S3DateFilter("created_on",
+                                       label = T("Date Created"),
+                                       hide_time = True,
+                                       hidden = True,
+                                       ),
+                          S3DateFilter("date_due",
+                                       hide_time = True,
+                                       hidden = True,
+                                       ),
+                          S3DateFilter("modified_on",
+                                       label = T("Date Modified"),
+                                       hide_time = True,
+                                       hidden = True,
+                                       ),
+                          ]
 
         s3db.configure(tablename,
-                       #crud_form = crud_form,
+                       crud_form = crud_form,
                        extra_fields = ("name",
                                        ),
+                       filter_widgets = filter_widgets,
                        list_fields = ["status",
                                       (T("Description"), "name_click"),
                                       (T("Created"), "created_on"),
