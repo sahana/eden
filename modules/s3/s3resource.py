@@ -63,7 +63,7 @@ from s3data import S3DataTable, S3DataList
 from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_get_last_record_id, s3_remove_last_record_id
+from s3utils import s3_get_foreign_key, s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str, s3_unicode
 from s3validators import IS_ONE_OF
 from s3xml import S3XMLFormat
 
@@ -3217,7 +3217,7 @@ class S3Resource(object):
                     elif field.represent:
                         represent = field.represent(value)
                     else:
-                        represent = s3_unicode(value)
+                        represent = s3_str(value)
                     if isinstance(represent, A):
                         represent = represent.components[0]
 
@@ -6309,7 +6309,7 @@ class S3ResourceData(object):
         renderer = rfield.represent
         if not callable(renderer):
             # @ToDo: Don't convert unformatted numbers to strings
-            renderer = lambda v: s3_unicode(v) if v is not None else none
+            renderer = lambda v: s3_str(v) if v is not None else none
 
         # Deactivate linkto if so requested
         if not show_links and hasattr(renderer, "show_link"):
@@ -6330,7 +6330,7 @@ class S3ResourceData(object):
                 try:
                     text = renderer(value)
                 except:
-                    text = s3_unicode(value)
+                    text = s3_str(value)
                 fvalues[value] = text
 
         # Write representations into result
@@ -6352,7 +6352,7 @@ class S3ResourceData(object):
                 try:
                     text = renderer(value)
                 except:
-                    text = s3_unicode(value)
+                    text = s3_str(value)
                 result[colname] = text
                 if raw_data:
                     result["_row"][colname] = value
@@ -6386,7 +6386,7 @@ class S3ResourceData(object):
                                 )[:-1]
                             )
                 else:
-                    data = ", ".join([s3_unicode(v) for v in vlist])
+                    data = ", ".join([s3_str(v) for v in vlist])
 
                 result[colname] = data
                 if raw_data:
