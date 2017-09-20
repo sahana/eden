@@ -4293,8 +4293,8 @@ class S3Config(Storage):
             Labels for contacts tabs
         """
         defaults = {"all": "Contacts",
-                    "private": "Private Contacts",
-                    "public": "Public Contacts",
+                    "private_contacts": "Private Contacts",
+                    "public_contacts": "Public Contacts",
                     }
 
         tabs = self.get_pr_contacts_tabs()
