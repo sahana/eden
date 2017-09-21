@@ -3326,6 +3326,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("deletable", True)
 
+    def get_hrm_event_types(self):
+        """
+            Whether (Training) Events should be of different Types
+        """
+        return self.__lazy("hrm", "event_types", default=False)
+
     def get_hrm_multiple_job_titles(self):
         """
             If set to True then HRs can have multiple Job Titles

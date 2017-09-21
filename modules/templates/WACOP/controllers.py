@@ -25,7 +25,7 @@ class index(S3CustomController):
         events = custom._events_html()
 
         # Map of Incidents
-        _map = custom._map("Incidents")
+        _map, button = custom._map("Incidents")
 
         # Output
         output = {"alerts": alerts,

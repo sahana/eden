@@ -2235,7 +2235,10 @@ class S3ImportItem(object):
         # Authorize item
         if not self.authorize():
             #_debug("Not authorized - skip")
-            self.error = current.ERROR.NOT_PERMITTED
+            self.error = "%s: %s, %s, %s" % (current.ERROR.NOT_PERMITTED,
+                                             self.method,
+                                             self.tablename,
+                                             self.id)
             self.skip = True
             return ignore_errors
 
