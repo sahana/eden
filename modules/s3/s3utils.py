@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: (c) 2010-2015 Sahana Software Foundation
+    @copyright: (c) 2010-2017 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -2561,6 +2561,33 @@ class S3MultiPath:
                 return True
             else:
                 return False
+
+# =============================================================================
+class StringTemplateParser(object):
+    """
+        Helper to parse string templates with named keys
+
+        @return: a list of keys (in order of appearance),
+                 None for invalid string templates
+
+        @example:
+            keys = StringTemplateParser.keys("%(first_name)s %(last_name)s")
+            # Returns: ["first_name", "last_name"]
+    """
+    def __init__(self):
+        self.keys = []
+
+    def __getitem__(self, key):
+        self.keys.append(key)
+
+    @classmethod
+    def keys(cls, template):
+        parser = cls()
+        try:
+            template % parser
+        except TypeError:
+            return None
+        return parser.keys
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):

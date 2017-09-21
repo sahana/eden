@@ -1,160 +1,174 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import logging
+import sys
+from operator import itemgetter
+from itertools import groupby
+
 from nameparser.util import u
-from nameparser.util import text_type
+from nameparser.util import text_types, binary_type
 from nameparser.util import lc
+from nameparser.util import log
 from nameparser.config import CONSTANTS
 from nameparser.config import Constants
 
-# http://code.google.com/p/python-nameparser/issues/detail?id=10
-log = logging.getLogger('HumanName')
-try:
-    log.addHandler(logging.NullHandler())
-except AttributeError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-    log.addHandler(NullHandler())
-log.setLevel(logging.ERROR)
-
 ENCODING = 'utf-8'
 
+def group_contiguous_integers(data):
+    """
+    return list of tuples containing first and last index
+    position of contiguous numbers in a series
+    """
+    ranges = []
+    for key, group in groupby(enumerate(data), lambda i: i[0] - i[1]):
+        group = list(map(itemgetter(1), group))
+        if len(group) > 1:
+            ranges.append((group[0], group[-1]))
+    return ranges
 
 class HumanName(object):
     """
     Parse a person's name into individual components.
-    
-    Instantiation assigns to ``full_name``, and assignment to :py:attr:`full_name`
-    triggers :py:func:`parse_full_name`. After parsing the name, these instance 
-    attributes are available.
-    
+
+    Instantiation assigns to ``full_name``, and assignment to
+    :py:attr:`full_name` triggers :py:func:`parse_full_name`. After parsing the
+    name, these instance attributes are available.
+
     **HumanName Instance Attributes**
-    
+
     * :py:attr:`title`
     * :py:attr:`first`
     * :py:attr:`middle`
     * :py:attr:`last`
     * :py:attr:`suffix`
     * :py:attr:`nickname`
-    
+
     :param str full_name: The name string to be parsed.
-    :param constants constants: 
-        a :py:class:`~nameparser.config.Constants` instance. Pass ``None`` for 
-        `per-instance config <customize.html>`_. 
+    :param constants constants:
+        a :py:class:`~nameparser.config.Constants` instance. Pass ``None`` for
+        `per-instance config <customize.html>`_.
     :param str encoding: string representing the encoding of your input
-    :param str string_format: python string formatting 
+    :param str string_format: python string formatting
     """
-    
-    has_own_config = False
-    """True if this instance is not using the shared module-level configuration. Read only."""
-    
+
     C = CONSTANTS
     """
-    A reference to the configuration for this instance, which may or may not be a
-    reference to the shared, module-wide instance at :py:mod:`~nameparser.config.CONSTANTS`.
-    See `Customizing the Parser <customize.html>`_.
+    A reference to the configuration for this instance, which may or may not be
+    a reference to the shared, module-wide instance at
+    :py:mod:`~nameparser.config.CONSTANTS`. See `Customizing the Parser
+    <customize.html>`_.
     """
-    
+
     original = ''
     """
     The original string, untouched by the parser.
     """
-    
-    count = 0
+
+    _count = 0
     _members = ['title','first','middle','last','suffix','nickname']
     unparsable = True
     _full_name = ''
-    
-    def __init__(self, full_name="", constants=CONSTANTS, encoding=ENCODING, 
+
+    def __init__(self, full_name="", constants=CONSTANTS, encoding=ENCODING,
                 string_format=None):
-        global CONSTANTS
         self.C = constants
-        if not self.C:
+        if type(self.C) is not type(CONSTANTS):
             self.C = Constants()
-        if self.C is not CONSTANTS:
-            self.has_own_config = True
-        
+
         self.ENCODING = encoding
-        self.string_format = string_format
-        self.original = full_name
+        self.string_format = string_format or self.C.string_format
+        # full_name setter triggers the parse
         self.full_name = full_name
-    
+
     def __iter__(self):
         return self
-    
+
     def __len__(self):
         l = 0
         for x in self:
             l += 1
         return l
-    
+
     def __eq__(self, other):
         """
-        HumanName instances are equal to other objects whose 
+        HumanName instances are equal to other objects whose
         lower case unicode representation is the same.
         """
         return (u(self)).lower() == (u(other)).lower()
-    
+
     def __ne__(self, other):
         return not (u(self)).lower() == (u(other)).lower()
-    
+
     def __getitem__(self, key):
         if isinstance(key, slice):
             return [getattr(self, x) for x in self._members[key]]
         else:
-            return getattr(self, self._members[key])
+            return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        if key in self._members:
+            self._set_list(key, value)
+        else:
+            raise KeyError("Not a valid HumanName attribute", key)
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        if self.count >= len(self._members):
-            self.count = 0
+        if self._count >= len(self._members):
+            self._count = 0
             raise StopIteration
         else:
-            c = self.count
-            self.count = c + 1
+            c = self._count
+            self._count = c + 1
             return getattr(self, self._members[c]) or next(self)
 
     def __unicode__(self):
         if self.string_format:
             # string_format = "{title} {first} {middle} {last} {suffix} ({nickname})"
-            return self.collapse_whitespace(self.string_format.format(**self.as_dict())).strip(', ')
+            _s = self.string_format.format(**self.as_dict())
+            # remove trailing punctation from missing nicknames
+            _s = _s.replace(str(self.C.empty_attribute_default),'').replace(" ()","").replace(" ''","").replace(' ""',"")
+            return self.collapse_whitespace(_s).strip(', ')
         return " ".join(self)
-    
+
     def __str__(self):
-        return self.__unicode__()
-    
+        if sys.version >= '3':
+            return self.__unicode__()
+        return self.__unicode__().encode(self.ENCODING)
+
     def __repr__(self):
         if self.unparsable:
-            return "<%(class)s : [ Unparsable ] >" % {'class': self.__class__.__name__,}
-        return "<%(class)s : [\n\ttitle: '%(title)s' \n\tfirst: '%(first)s' \n\tmiddle: '%(middle)s' \n\tlast: '%(last)s' \n\tsuffix: '%(suffix)s'\n\tnickname: '%(nickname)s'\n]>" % {
-            'class': self.__class__.__name__,
-            'title': self.title,
-            'first': self.first,
-            'middle': self.middle,
-            'last': self.last,
-            'suffix': self.suffix,
-            'nickname': self.nickname,
-        }
-    
+            _string = "<%(class)s : [ Unparsable ] >" % {'class': self.__class__.__name__,}
+        else:
+            _string = "<%(class)s : [\n\ttitle: '%(title)s' \n\tfirst: '%(first)s' \n\tmiddle: '%(middle)s' \n\tlast: '%(last)s' \n\tsuffix: '%(suffix)s'\n\tnickname: '%(nickname)s'\n]>" % {
+                'class': self.__class__.__name__,
+                'title': self.title or '',
+                'first': self.first or '',
+                'middle': self.middle or '',
+                'last': self.last or '',
+                'suffix': self.suffix or '',
+                'nickname': self.nickname or '',
+            }
+        if sys.version >= '3':
+            return _string
+        return _string.encode(self.ENCODING)
+
     def as_dict(self, include_empty=True):
         """
         Return the parsed name as a dictionary of its attributes.
-        
+
         :param bool include_empty: Include keys in the dictionary for empty name attributes.
         :rtype: dict
-        
+
         .. doctest::
-        
+
             >>> name = HumanName("Bob Dole")
             >>> name.as_dict()
-            {u'last': u'Dole', u'suffix': u'', u'title': u'', u'middle': u'', u'nickname': u'', u'first': u'Bob'}
+            {'last': 'Dole', 'suffix': '', 'title': '', 'middle': '', 'nickname': '', 'first': 'Bob'}
             >>> name.as_dict(False)
-            {u'last': u'Dole', u'first': u'Bob'}
-            
+            {'last': 'Dole', 'first': 'Bob'}
+
         """
         d = {}
         for m in self._members:
@@ -165,156 +179,200 @@ class HumanName(object):
                 if val:
                     d[m] = val
         return d
-        
+
+    @property
+    def has_own_config(self):
+        """
+        True if this instance is not using the shared module-level
+        configuration.
+        """
+        return self.C is not CONSTANTS
+
     ### attributes
-    
+
     @property
     def title(self):
         """
-        The person's titles. Any string of consecutive pieces in 
-        :py:mod:`~nameparser.config.titles` or :py:mod:`~nameparser.config.conjunctions`
+        The person's titles. Any string of consecutive pieces in
+        :py:mod:`~nameparser.config.titles` or
+        :py:mod:`~nameparser.config.conjunctions`
         at the beginning of :py:attr:`full_name`.
         """
-        return " ".join(self.title_list)
-    
+        return " ".join(self.title_list) or self.C.empty_attribute_default
+
     @property
     def first(self):
         """
-        The person's first name. The first name piece after any known 
+        The person's first name. The first name piece after any known
         :py:attr:`title` pieces parsed from :py:attr:`full_name`.
         """
-        return " ".join(self.first_list)
-    
+        return " ".join(self.first_list) or self.C.empty_attribute_default
+
     @property
     def middle(self):
         """
-        The person's middle names. All name pieces after the first name and before 
-        the last name parsed from :py:attr:`full_name`.
+        The person's middle names. All name pieces after the first name and
+        before the last name parsed from :py:attr:`full_name`.
         """
-        return " ".join(self.middle_list)
-    
+        return " ".join(self.middle_list) or self.C.empty_attribute_default
+
     @property
     def last(self):
         """
-        The person's last name. The last name piece parsed from 
+        The person's last name. The last name piece parsed from
         :py:attr:`full_name`.
         """
-        return " ".join(self.last_list)
-    
+        return " ".join(self.last_list) or self.C.empty_attribute_default
+
     @property
     def suffix(self):
         """
         The persons's suffixes. Pieces at the end of the name that are found in
         :py:mod:`~nameparser.config.suffixes`, or pieces that are at the end
-        of comma separated formats, e.g. "Lastname, Title Firstname Middle[,] Suffix 
-        [, Suffix]" parsed from :py:attr:`full_name`.
+        of comma separated formats, e.g.
+        "Lastname, Title Firstname Middle[,] Suffix [, Suffix]" parsed
+        from :py:attr:`full_name`.
         """
-        return ", ".join(self.suffix_list)
-    
+        return ", ".join(self.suffix_list) or self.C.empty_attribute_default
+
     @property
     def nickname(self):
         """
-        The person's nicknames. Any text found inside of quotes (``""``) or 
+        The person's nicknames. Any text found inside of quotes (``""``) or
         parenthesis (``()``)
         """
-        return " ".join(self.nickname_list)
-    
+        return " ".join(self.nickname_list) or self.C.empty_attribute_default
+
     ### setter methods
-    
+
     def _set_list(self, attr, value):
-        setattr(self, attr+"_list", self.parse_pieces([value]))
-    
+        if isinstance(value, list):
+            val = value
+        elif isinstance(value, text_types):
+            val = [value]
+        elif value is None:
+            val = []
+        else:
+            raise TypeError(
+                    "Can only assign strings, lists or None to name attributes."
+                    " Got {0}".format(type(value)))
+        setattr(self, attr+"_list", self.parse_pieces(val))
+
     @title.setter
     def title(self, value):
         self._set_list('title', value)
-    
+
     @first.setter
     def first(self, value):
         self._set_list('first', value)
-    
+
     @middle.setter
     def middle(self, value):
         self._set_list('middle', value)
-    
+
     @last.setter
     def last(self, value):
         self._set_list('last', value)
-    
+
     @suffix.setter
     def suffix(self, value):
         self._set_list('suffix', value)
-    
+
     @nickname.setter
     def nickname(self, value):
         self._set_list('nickname', value)
-    
+
     ### Parse helpers
-    
+
     def is_title(self, value):
         """Is in the :py:data:`~nameparser.config.titles.TITLES` set."""
         return lc(value) in self.C.titles
-    
+
     def is_conjunction(self, piece):
-        """Is in the conjuctions set or :py:func:`is_an_initial()`."""
-        return lc(piece) in self.C.conjunctions and not self.is_an_initial(piece)
-    
+        """Is in the conjuctions set and not :py:func:`is_an_initial()`."""
+        return piece.lower() in self.C.conjunctions and not self.is_an_initial(piece)
+
     def is_prefix(self, piece):
-        """Is in the prefixes set or :py:func:`is_an_initial()`."""
-        return lc(piece) in self.C.prefixes and not self.is_an_initial(piece)
-    
+        """
+        Lowercase and no periods version of piece is in the
+        `~nameparser.config.titles.PREFIXES` set.
+        """
+        return lc(piece) in self.C.prefixes
+
+    def is_roman_numeral(self, value):
+        """
+        Matches the ``roman_numeral`` regular expression in
+        :py:data:`~nameparser.config.regexes.REGEXES`.
+        """
+        return bool(self.C.regexes.roman_numeral.match(value))
+
     def is_suffix(self, piece):
-        """Is in the suffixes set or :py:func:`is_an_initial()`."""
+        """
+        Is in the suffixes set and not :py:func:`is_an_initial()`.
+
+        Some suffixes may be acronyms (M.B.A) while some are not (Jr.),
+        so we remove the periods from `piece` when testing against
+        `C.suffix_acronyms`.
+        """
         # suffixes may have periods inside them like "M.D."
-        return lc(piece).replace('.','') in self.C.suffixes and not self.is_an_initial(piece)
-    
+        return ((lc(piece).replace('.','') in self.C.suffix_acronyms) \
+            or (lc(piece) in self.C.suffix_not_acronyms)) \
+            and not self.is_an_initial(piece)
+
     def are_suffixes(self, pieces):
         """Return True if all pieces are suffixes."""
         for piece in pieces:
             if not self.is_suffix(piece):
                 return False
         return True
-    
+
     def is_rootname(self, piece):
-        '''Is not a known title, suffix or prefix. Just first, middle, last names.'''
+        """
+        Is not a known title, suffix or prefix. Just first, middle, last names.
+        """
         return lc(piece) not in self.C.suffixes_prefixes_titles \
-            and not self.is_an_initial(piece) 
-    
+            and not self.is_an_initial(piece)
+
     def is_an_initial(self, value):
         """
-        Matches the ``initial`` regular expression in 
+        Words with a single period at the end, or a single uppercase letter.
+
+        Matches the ``initial`` regular expression in
         :py:data:`~nameparser.config.regexes.REGEXES`.
         """
-        return self.C.regexes.initial.match(value) or False
+        return bool(self.C.regexes.initial.match(value))
 
-    # def is_a_roman_numeral(value):
-    #     return re_roman_numeral.match(value) or False
 
-    
     ### full_name parser
-    
+
     @property
     def full_name(self):
         """The name string to be parsed."""
         return self._full_name
-    
+
     @full_name.setter
     def full_name(self, value):
+        self.original = value
         self._full_name = value
+        if isinstance(value, binary_type):
+            self._full_name = value.decode(self.ENCODING)
         self.parse_full_name()
-    
+
     def collapse_whitespace(self, string):
         # collapse multiple spaces into single space
         return self.C.regexes.spaces.sub(" ", string.strip())
-    
+
     def pre_process(self):
         """
-        This method happens at the beginning of the :py:func:`parse_full_name` before
-        any other processing of the string aside from unicode normalization, so
-        it's a good place to do any custom handling in a subclass. 
-        Runs :py:func:`parse_nicknames`.
+
+        This method happens at the beginning of the :py:func:`parse_full_name`
+        before any other processing of the string aside from unicode
+        normalization, so it's a good place to do any custom handling in a
+        subclass. Runs :py:func:`parse_nicknames`.
+
         """
         self.parse_nicknames()
-        
+        self.squash_emoji()
 
     def post_process(self):
         """
@@ -335,29 +393,40 @@ class HumanName(object):
             self.nickname_list = re_nickname.findall(self._full_name)
             self._full_name = re_nickname.sub('', self._full_name)
 
+    def squash_emoji(self):
+        """
+        Remove emoji from the input string.
+        """
+        re_emoji = self.C.regexes.emoji
+        if re_emoji and re_emoji.search(self._full_name):
+            self._full_name = re_emoji.sub('', self._full_name)
+
     def handle_firstnames(self):
         """
         If there are only two parts and one is a title, assume it's a last name
         instead of a first name. e.g. Mr. Johnson. Unless it's a special title
         like "Sir", then when it's followed by a single name that name is always
-        a first name. 
+        a first name.
         """
         if self.title \
                 and len(self) == 2 \
                 and not lc(self.title) in self.C.first_name_titles:
             self.last, self.first = self.first, self.last
-    
+
     def parse_full_name(self):
         """
-        The main parse method for the parser. This method is run upon assignment to the
-        :py:attr:`full_name` attribute or instantiation.
 
-        Basic flow is to hand off to :py:func:`pre_process` to handle nicknames. It
-        then splits on commas and chooses a code path depending on the number of commas.
+        The main parse method for the parser. This method is run upon
+        assignment to the :py:attr:`full_name` attribute or instantiation.
+
+        Basic flow is to hand off to :py:func:`pre_process` to handle
+        nicknames. It then splits on commas and chooses a code path depending
+        on the number of commas.
+
         :py:func:`parse_pieces` then splits those parts on spaces and
-        :py:func:`join_on_conjunctions` joins any pieces next to conjunctions. 
+        :py:func:`join_on_conjunctions` joins any pieces next to conjunctions.
         """
-        
+
         self.title_list = []
         self.first_list = []
         self.middle_list = []
@@ -365,55 +434,68 @@ class HumanName(object):
         self.suffix_list = []
         self.nickname_list = []
         self.unparsable = True
-        
-        if not isinstance(self._full_name, text_type):
-            self._full_name = u(self._full_name, self.ENCODING)
-        
+
+
         self.pre_process()
-        
+
         self._full_name = self.collapse_whitespace(self._full_name)
-        
+
         # break up full_name by commas
         parts = [x.strip() for x in self._full_name.split(",")]
-        
+
         log.debug("full_name: {0}".format(self._full_name))
         log.debug("parts: {0}".format(parts))
-        
+
         if len(parts) == 1:
-            
+
             # no commas, title first middle middle middle last suffix
             #            part[0]
-            
+
             pieces = self.parse_pieces(parts)
-            
+            p_len = len(pieces)
             for i, piece in enumerate(pieces):
                 try:
                     nxt = pieces[i + 1]
                 except IndexError:
                     nxt = None
-                
+
                 # title must have a next piece, unless it's just a title
-                if self.is_title(piece) and (nxt or len(pieces) == 1):
+                if self.is_title(piece) \
+                        and (nxt or p_len == 1) \
+                        and not self.first:
                     self.title_list.append(piece)
                     continue
                 if not self.first:
                     self.first_list.append(piece)
                     continue
-                if self.are_suffixes(pieces[i+1:]):
+                if self.are_suffixes(pieces[i+1:]) or \
+                        (
+                            # if the next piece is the last piece and a roman
+                            # numeral but this piece is not an initial
+                            self.is_roman_numeral(nxt) and i == p_len - 2
+                            and not self.is_an_initial(piece)
+                        ):
                     self.last_list.append(piece)
                     self.suffix_list += pieces[i+1:]
                     break
                 if not nxt:
                     self.last_list.append(piece)
                     continue
-                
+
                 self.middle_list.append(piece)
         else:
-            if self.are_suffixes(parts[1].split(' ')):
-                
-                # suffix comma: title first middle last [suffix], suffix [suffix] [, suffix]
-                #               parts[0],                         parts[1:...]
-                
+            # if all the end parts are suffixes and there is more than one piece
+            # in the first part. (Suffixes will never appear after last names
+            # only, and allows potential first names to be in suffixes, e.g.
+            # "Johnson, Bart"
+            if self.are_suffixes(parts[1].split(' ')) \
+                    and len(parts[0].split(' ')) > 1:
+
+                # suffix comma:
+                # title first middle last [suffix], suffix [suffix] [, suffix]
+                #               parts[0],          parts[1:...]
+
+
                 self.suffix_list += parts[1:]
                 pieces = self.parse_pieces(parts[0].split(' '))
                 log.debug("pieces: {0}".format(u(pieces)))
@@ -423,7 +505,9 @@ class HumanName(object):
                     except IndexError:
                         nxt = None
 
-                    if self.is_title(piece) and (nxt or len(pieces) == 1):
+                    if self.is_title(piece) \
+                            and (nxt or len(pieces) == 1) \
+                            and not self.first:
                         self.title_list.append(piece)
                         continue
                     if not self.first:
@@ -438,29 +522,33 @@ class HumanName(object):
                         continue
                     self.middle_list.append(piece)
             else:
-                
-                # lastname comma: last [suffix], title first middles[,] suffix [,suffix]
-                #                 parts[0],      parts[1],              parts[2:...]
+
+                # lastname comma:
+                # last [suffix], title first middles[,] suffix [,suffix]
+                #      parts[0],      parts[1],              parts[2:...]
                 pieces = self.parse_pieces(parts[1].split(' '), 1)
-                
+
                 log.debug("pieces: {0}".format(u(pieces)))
-                
+
                 # lastname part may have suffixes in it
                 lastname_pieces = self.parse_pieces(parts[0].split(' '), 1)
                 for piece in lastname_pieces:
-                    # the first one is always a last name, even if it look like a suffix
+                    # the first one is always a last name, even if it look like
+                    # a suffix
                     if self.is_suffix(piece) and len(self.last_list) > 0:
                         self.suffix_list.append(piece)
                     else:
                         self.last_list.append(piece)
-                
+
                 for i, piece in enumerate(pieces):
                     try:
                         nxt = pieces[i + 1]
                     except IndexError:
                         nxt = None
-                    
-                    if self.is_title(piece) and (nxt or len(pieces) == 1):
+
+                    if self.is_title(piece) \
+                            and (nxt or len(pieces) == 1) \
+                            and not self.first:
                         self.title_list.append(piece)
                         continue
                     if not self.first:
@@ -475,145 +563,192 @@ class HumanName(object):
                         self.suffix_list += parts[2:]
                 except IndexError:
                     pass
-                
+
         if len(self) < 0:
-            log.info("Unparsable full_name: " + self._full_name)
+            log.info("Unparsable: \"{}\" ".format(self.original))
         else:
             self.unparsable = False
-            self.post_process()
+        self.post_process()
 
-
-    # def split_periods(self, pieces):
-    #     """
-    #     If there is a period that is not at the end of a piece, split it on periods.
-    #     """
-    #     tmp = []
-    #     for piece in pieces:
-    #         if piece[:-1].find('.') >= 0:
-    #             p = [_f for _f in piece.split('.') if _f]
-    #             tmp += [x+'.' for x in p]
-    #         else:
-    #             tmp += [piece]
-    #     return tmp
 
     def parse_pieces(self, parts, additional_parts_count=0):
         """
         Split parts on spaces and remove commas, join on conjunctions and
-        lastname prefixes.
-        
+        lastname prefixes. If parts have periods in the middle, try splitting
+        on periods and check if the parts are titles or suffixes. If they are
+        add to the constant so they will be found.
+
         :param list parts: name part strings from the comma split
-        :param int additional_parts_count: 
-        
-            if the comma format contains other parts, we need to know 
-            how many there are to decide if things should be considered a conjunction.
+        :param int additional_parts_count:
+
+            if the comma format contains other parts, we need to know
+            how many there are to decide if things should be considered a
+            conjunction.
         :return: pieces split on spaces and joined on conjunctions
         :rtype: list
         """
-        
-        tmp = []
+
+        output = []
         for part in parts:
-            tmp += [x.strip(' ,') for x in part.split(' ')]
-        return self.join_on_conjunctions(tmp, additional_parts_count)
-        
+            if not isinstance(part, text_types):
+                raise TypeError("Name parts must be strings. "
+                                "Got {0}".format(type(part)))
+            output += [x.strip(' ,') for x in part.split(' ')]
+
+        # If part contains periods, check if it's multiple titles or suffixes
+        # together without spaces if so, add the new part with periods to the
+        # constants so they get parsed correctly later
+        for part in output:
+            # if this part has a period not at the beginning or end
+            if self.C.regexes.period_not_at_end.match(part):
+                # split on periods, any of the split pieces titles or suffixes?
+                # ("Lt.Gov.")
+                period_chunks = part.split(".")
+                titles   = list(filter(self.is_title,  period_chunks))
+                suffixes = list(filter(self.is_suffix, period_chunks))
+
+                # add the part to the constant so it will be found
+                if len(list(titles)):
+                    self.C.titles.add(part)
+                    continue
+                if len(list(suffixes)):
+                    self.C.suffix_not_acronyms.add(part)
+                    continue
+
+        return self.join_on_conjunctions(output, additional_parts_count)
+
     def join_on_conjunctions(self, pieces, additional_parts_count=0):
         """
-        Join conjunctions to surrounding pieces, e.g.:
-        ['Mr. and Mrs.'], ['King of the Hill'], ['Jack and Jill'], ['Velasquez y Garcia']
-        
+        Join conjunctions to surrounding pieces. Title- and prefix-aware. e.g.:
+
+            ['Mr.', 'and'. 'Mrs.', 'John', 'Doe'] ==>
+                            ['Mr. and Mrs.', 'John', 'Doe']
+
+            ['The', 'Secretary', 'of', 'State', 'Hillary', 'Clinton'] ==>
+                            ['The Secretary of State', 'Hillary', 'Clinton']
+
+        When joining titles, saves newly formed piece to the instance's titles
+        constant so they will be parsed correctly later. E.g. after parsing the
+        example names above, 'The Secretary of State' and 'Mr. and Mrs.' would
+        be present in the titles constant set.
+
         :param list pieces: name pieces strings after split on spaces
-        :param int additional_parts_count: 
-        :return: new list with piece next to conjunctions merged into one piece with spaces in it.
+        :param int additional_parts_count:
+        :return: new list with piece next to conjunctions merged into one piece
+        with spaces in it.
         :rtype: list
-        
+
         """
         length = len(pieces) + additional_parts_count
         # don't join on conjuctions if there's only 2 parts
         if length < 3:
             return pieces
-        
-        for conj in filter(self.is_conjunction, pieces[::-1]): # reverse sorted list
-            
-            # loop through the pieces backwards, starting at the end of the list.
-            # Join conjunctions to the pieces on either side of them.
-            
-            if len(conj) == 1 and \
-                len(list(filter(self.is_rootname, pieces))) + additional_parts_count < 4:
-                # if there are only 3 total parts (minus known titles, suffixes and prefixes) 
-                # and this conjunction is a single letter, prefer treating it as an initial
-                # rather than a conjunction.
+
+        rootname_pieces = [p for p in pieces if self.is_rootname(p)]
+        total_length = len(rootname_pieces) + additional_parts_count
+
+        # find all the conjunctions, join any conjunctions that are next to each
+        # other, then join those newly joined conjunctions and any single
+        # conjunctions to the piece before and after it
+        conj_index = [i for i, piece in enumerate(pieces)
+                                if self.is_conjunction(piece)]
+
+        contiguous_conj_i = []
+        for i, val in enumerate(conj_index):
+            try:
+                if conj_index[i+1] == val+1:
+                     contiguous_conj_i += [val]
+            except IndexError:
+                pass
+
+        contiguous_conj_i = group_contiguous_integers(conj_index)
+
+        delete_i = []
+        for i in contiguous_conj_i:
+            if type(i) == tuple:
+                new_piece = " ".join(pieces[ i[0] : i[1]+1] )
+                delete_i += list(range( i[0]+1, i[1]+1 ))
+                pieces[i[0]] = new_piece
+            else:
+                new_piece = " ".join(pieces[ i : i+2 ])
+                delete_i += [i+1]
+                pieces[i] = new_piece
+            #add newly joined conjunctions to constants to be found later
+            self.C.conjunctions.add(new_piece)
+
+        for i in reversed(delete_i):
+            # delete pieces in reverse order or the index changes on each delete
+            del pieces[i]
+
+        # refresh conjunction index locations
+        conj_index = [i for i, piece in enumerate(pieces) if self.is_conjunction(piece)]
+
+        for i in conj_index:
+            if len(pieces[i]) == 1 and total_length < 4:
+                # if there are only 3 total parts (minus known titles, suffixes
+                # and prefixes) and this conjunction is a single letter, prefer
+                # treating it as an initial rather than a conjunction.
                 # http://code.google.com/p/python-nameparser/issues/detail?id=11
                 continue
-            
-            try:
-                i = pieces.index((conj))
-            except ValueError:
-                log.error("Couldn't find '{conj}' in pieces. i={i}, pieces={pieces}".format(**locals()))
-                continue
-            
-            if i < len(pieces) - 1: 
-                # if this is not the last piece
-                
-                if self.is_conjunction(pieces[i-1]):
-                    
-                    # if the piece in front of this one is a conjunction too,
-                    # add new_piece (this conjuction and the following piece) 
-                    # to the conjuctions constant so that it is recognized
-                    # as a conjunction in the next loop. 
-                    # e.g. for ["Lord","of","the Universe"], put "the Universe"
-                    # into the conjunctions constant.
-                    
-                    new_piece = ' '.join(pieces[i:i+2])
-                    self.C.conjunctions.add(new_piece)
-                    pieces[i] = new_piece
-                    pieces.pop(i+1)
-                    continue
-                
-                new_piece = ' '.join(pieces[i-1:i+2])
-                if self.is_title(pieces[i-1]):
-                    
-                    # if the second name is a title, assume the first one is too and add the 
-                    # two titles with the conjunction between them to the titles constant 
-                    # so the combo we just created gets parsed as a title. 
-                    # e.g. "Mr. and Mrs." becomes a title.
-                    
+
+            if i is 0:
+                new_piece = " ".join(pieces[i:i+2])
+                if self.is_title(pieces[i+1]):
+                    # when joining to a title, make new_piece a title too
                     self.C.titles.add(new_piece)
-                
+                pieces[i] = new_piece
+                pieces.pop(i+1)
+                # subtract 1 from the index of all the remaining conjunctions
+                for j,val in enumerate(conj_index):
+                    if val > i:
+                        conj_index[j]=val-1
+
+            else:
+                new_piece = " ".join(pieces[i-1:i+2])
+                if self.is_title(pieces[i-1]):
+                    # when joining to a title, make new_piece a title too
+                    self.C.titles.add(new_piece)
                 pieces[i-1] = new_piece
                 pieces.pop(i)
-                pieces.pop(i)
-        
+                rm_count = 2
+                try:
+                    pieces.pop(i)
+                except IndexError:
+                    rm_count = 1
+
+                # subtract the number of removed pieces from the index
+                # of all the remaining conjunctions
+                for j,val in enumerate(conj_index):
+                    if val > i:
+                        conj_index[j] = val - rm_count
+
+
         # join prefixes to following lastnames: ['de la Vega'], ['van Buren']
         prefixes = list(filter(self.is_prefix, pieces))
-        try:
-            for prefix in prefixes:
-                try:
-                    i = pieces.index(prefix)
-                except ValueError:
-                    # if two prefixes in a row ("de la Vega"), have to do 
-                    # extra work to find the index the second time around
-                    def find_p(p):
-                        return p.endswith(prefix) # closure on prefix
-                    m = list(filter(find_p, pieces))
-                    # I wonder if some input will throw an IndexError here. 
-                    # Means it can't find prefix anyore.
-                    i = pieces.index(m[0])
-                pieces[i] = ' '.join(pieces[i:i+2])
-                pieces.pop(i+1)
-        except IndexError:
-            pass
-            
+        if prefixes:
+            i = pieces.index(prefixes[0])
+            # join everything after the prefix until the next suffix
+            next_suffix = list(filter(self.is_suffix, pieces[i:]))
+            if next_suffix:
+                j = pieces.index(next_suffix[0])
+                new_piece = ' '.join(pieces[i:j])
+                pieces = pieces[:i] + [new_piece] + pieces[j:]
+            else:
+                new_piece = ' '.join(pieces[i:])
+                pieces = pieces[:i] + [new_piece]
+
         log.debug("pieces: {0}".format(pieces))
         return pieces
-    
-    
+
+
     ### Capitalization Support
-    
+
     def cap_word(self, word):
         if self.is_prefix(word) or self.is_conjunction(word):
-            return lc(word)
+            return word.lower()
         exceptions = self.C.capitalization_exceptions
-        if word in exceptions:
-            return exceptions[word]
+        if lc(word) in exceptions:
+            return exceptions[lc(word)]
         mac_match = self.C.regexes.mac.match(word)
         if mac_match:
             def cap_after_mac(m):
@@ -628,29 +763,35 @@ class HumanName(object):
         replacement = lambda m: self.cap_word(m.group(0))
         return self.C.regexes.word.sub(replacement, piece)
 
-    def capitalize(self):
+    def capitalize(self, force=False):
         """
-        The HumanName class can try to guess the correct capitalization 
-        of name entered in all upper or lower case. It will not adjust 
-        the case of names entered in mixed case.
-        
+        The HumanName class can try to guess the correct capitalization of name
+        entered in all upper or lower case. By default, it will not adjust the
+        case of names entered in mixed case. To run capitalization on all names
+        pass the parameter `force=True`.
+
+        :param bool force: force capitalization of strings that include mixed case
+
         **Usage**
-        
+
         .. doctest:: capitalize
-        
+
             >>> name = HumanName('bob v. de la macdole-eisenhower phd')
             >>> name.capitalize()
-            >>> unicode(name)
-            u'Bob V. de la MacDole-Eisenhower Ph.D.'
+            >>> str(name)
+            'Bob V. de la MacDole-Eisenhower Ph.D.'
             >>> # Don't touch good names
             >>> name = HumanName('Shirley Maclaine')
             >>> name.capitalize()
-            >>> unicode(name) 
-            u'Shirley Maclaine'
-        
+            >>> str(name)
+            'Shirley Maclaine'
+            >>> name.capitalize(force=True)
+            >>> str(name)
+            'Shirley MacLaine'
+
         """
         name = u(self)
-        if not (name == name.upper() or name == name.lower()):
+        if not force and not (name == name.upper() or name == name.lower()):
             return
         self.title_list  = self.cap_piece(self.title ).split(' ')
         self.first_list  = self.cap_piece(self.first ).split(' ')

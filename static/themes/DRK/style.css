@@ -1287,6 +1287,12 @@ ul.s3-inline-link {
   font-size: inherit;
 }
 
+/* AddPersonWidget */
+/* line 270, ../scss/custom/_widgets.scss */
+.box_bottom {
+  clear: left;
+}
+
 /* line 1, ../scss/custom/_misc.scss */
 .org-logo {
   vertical-align: top;

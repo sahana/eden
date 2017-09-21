@@ -2,7 +2,7 @@
 
 """ S3 Logging Facility
 
-    @copyright: (c) 2015 Sahana Software Foundation
+    @copyright: (c) 2015-2017 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -95,7 +95,7 @@ class S3Log(object):
                             if level <= logging.DEBUG else self.ignore
 
         self.configure_logger()
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def setup(cls):
@@ -107,7 +107,7 @@ class S3Log(object):
             return
         current.log = cls()
         return
-        
+
     # -------------------------------------------------------------------------
     def configure_logger(self):
         """
@@ -116,7 +116,7 @@ class S3Log(object):
 
         if hasattr(current, "log"):
             return
-            
+
         settings = current.deployment_settings
         console = settings.get_log_console()
         logfile = settings.get_log_logfile()
@@ -138,7 +138,7 @@ class S3Log(object):
         d_format = "%Y-%m-%d %H:%M:%S"
         formatter = logging.Formatter(m_format, d_format)
 
-        # Set up console handler       
+        # Set up console handler
         if console:
             console_handler = logging.StreamHandler(sys.stderr)
             console_handler.setFormatter(formatter)
@@ -191,12 +191,12 @@ class S3Log(object):
 
         msg = "%s: %s" % (message, value) if value else message
         extra = {"caller": "S3LOG"}
-        
+
         if current.deployment_settings.get_log_caller_info():
             caller = logger.findCaller()
             if caller:
                 extra = {"caller": "(%s %s %s)" % caller}
-                
+
         logger.log(severity, msg, extra=extra)
         return
 
@@ -206,13 +206,13 @@ class S3Log(object):
         """
             Log a critical message (highest severity level),
             called via current.log.critical()
-            
+
             @param message: the message
             @param value: message suffix (optional)
         """
 
         cls._log(logging.CRITICAL, message, value=value)
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def _error(cls, message, value=None):
@@ -265,38 +265,38 @@ class S3Log(object):
 
         cls._log(logging.DEBUG, message, value=value)
 
-# =============================================================================        
+# =============================================================================
 class S3LogRecorder(object):
     """
         S3Log recorder, simple facility to record log messages for tests
-        
+
         Start:
             recorder = current.log.recorder()
-            
+
         Read out messages:
             messages = recorder.read()
-            
+
         Stop recording:
             recorder.stop()
-            
+
         Re-start recording:
             recorder.listen()
-        
+
         Clear messages buffer:
             recorder.clear()
     """
 
     def __init__(self):
-        
+
         self.handler = None
         self.strbuf = None
-        
+
         self.listen()
-        
+
     # -------------------------------------------------------------------------
     def listen(self):
         """ Start recording S3Log messages """
-        
+
         if self.handler is not None:
             return
         strbuf = self.strbuf
@@ -307,10 +307,10 @@ class S3LogRecorder(object):
                 from StringIO import StringIO
             strbuf = StringIO()
         handler = logging.StreamHandler(strbuf)
-        
+
         logger = logging.getLogger(__name__)
         logger.addHandler(handler)
-        
+
         self.handler = handler
         self.strbuf = strbuf
         return

@@ -4540,6 +4540,7 @@ def req_customise_req_fields():
     if site_id:
         field.default = site_id
         field.readable = field.writable = False
+
         # Lookup Site Contact
         script = \
 '''var fieldname='req_req_requester_id'
@@ -4548,8 +4549,14 @@ $.when(S3.addPersonWidgetReady(fieldname)).then(
 function(status){real_input.data('lookup_contact')(fieldname,%s)},
 function(status){s3_debug(status)},
 function(status){s3_debug(status)})''' % site_id
+
+        # @todo: change to this when migrated to S3AddPersonWidget
+        script = '''$.when(S3.addPersonWidgetReady('req_req_requester_id')).then(
+function(input){input.addPerson('lookupContact', %s)})''' % site_id
+
         current.response.s3.jquery_ready.append(script)
     else:
+
         # If the Requester is blank, then lookup default Site Contact
         script = \
 '''$('#req_req_site_id').change(function(){
@@ -4560,6 +4567,16 @@ function(status){s3_debug(status)})''' % site_id
   if(!real_input.val()&&!$('#req_req_requester_id_full_name').val()){
    real_input.data('lookup_contact')(fieldname,site_id)
 }}})'''
+
+        # @todo: change to this when migrated to S3AddPersonWidget
+        #script = '''$('#req_req_site_id').change(function(){
+#var siteID=$(this).val()
+#if(siteID){
+#var fieldName='req_req_requester_id',input=$('#'+fieldName)
+#if(!input.val()&&!$('#'+fieldName+'_full_name').val()){
+#input.addPerson('lookupContact',siteID)}}})
+#'''
+
         current.response.s3.jquery_ready.append(script)
 
         organisation_id = request.get_vars.get("~.(organisation)", None)
@@ -4601,6 +4618,8 @@ function(status){s3_debug(status)})''' % site_id
     field = table.requester_id
     field.requires = IS_ADD_PERSON_WIDGET2()
     field.widget = S3AddPersonWidget2(controller="pr")
+    # @todo: use new widget (=> must also update scripts above)
+    #field.widget = S3AddPersonWidget(controller="pr")
 
     filter_widgets = [
         S3TextFilter(["requester_id$first_name",

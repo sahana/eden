@@ -5155,6 +5155,7 @@
 'legend URL': 'URL zur Legende',
 'less': 'weniger',
 'light': 'lichtquelle',
+'loading': 'wird geladen',
 'login': 'Anmeldung',
 'long': 'lang',
 'long>12cm': 'lang > 12cm',

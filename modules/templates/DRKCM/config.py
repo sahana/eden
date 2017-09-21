@@ -910,12 +910,18 @@ def config(settings):
                 if r.interactive:
                     table = resource.table
 
-                    from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2
+                    #from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2
+                    from s3 import S3AddPersonWidget
 
                     field = table.person_id
                     field.represent = s3db.pr_PersonRepresent(show_link=True)
-                    field.requires = IS_ADD_PERSON_WIDGET2()
-                    field.widget = S3AddPersonWidget2(controller="dvr")
+                    #field.requires = IS_ADD_PERSON_WIDGET2()
+                    #field.widget = S3AddPersonWidget2(controller="dvr")
+                    field.requires = IS_ONE_OF(current.db, "pr_person.id")
+                    s3db.pr_person.pe_label.label = T("ID")
+                    field.widget = S3AddPersonWidget(controller = "dvr",
+                                                     pe_label = True,
+                                                     )
 
                     field = table.role_id
                     field.readable = field.writable = True

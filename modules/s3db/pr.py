@@ -1685,17 +1685,46 @@ class PRPersonModel(S3Model):
             JSON lookup method for S3AddPersonWidget2
         """
 
-        id = r.id
-        if not id:
-            output = current.xml.json_message(False, 400, "No id provided!")
-            raise HTTP(400, body=output)
+        record_id = r.id
+
+        current.response.headers["Content-Type"] = "application/json"
+
+        get_vars = r.get_vars
+
+        if not record_id:
+            if get_vars.get("search") == "1":
+                # Allow other URL filters to identify the record
+                # (e.g. pe_id, uuid or pe_label)
+                resource = r.resource
+                resource.load(start=0, limit=2)
+                if len(resource) == 1:
+                    # Found exactly one match
+                    record_id = resource.records().first().id
+                else:
+                    # Return blank (no error when search=1)
+                    return "{}"
+            else:
+                r.error(400, "No Record ID provided")
+
+        # NB Requirement to identify a single record also (indirectly)
+        #    requires read permission to that record (=>S3Request).
+        #
+        #    However: that does not imply that the user also has
+        #    permission to see person details or contact information,
+        #    so sub-queries must apply s3_accessible_query for those
+        #    (independently of the widget => URL exploit)
 
         db = current.db
         s3db = current.s3db
         settings = current.deployment_settings
+
+        auth = current.auth
+        accessible_query = auth.s3_accessible_query
+
         request_dob = settings.get_pr_request_dob()
         request_gender = settings.get_pr_request_gender()
         home_phone = settings.get_pr_request_home_phone()
+        get_pe_label = get_vars.get("label") == "1"
 
         ptable = db.pr_person
         ctable = s3db.pr_contact
@@ -1705,6 +1734,7 @@ class PRPersonModel(S3Model):
                   #ptable.middle_name,
                   #ptable.last_name,
                   ]
+
         separate_name_fields = settings.get_pr_separate_name_fields()
         site_contact_person = r.tablename == "org_site" # Coming from site_contact_person()
         if separate_name_fields or \
@@ -1716,6 +1746,8 @@ class PRPersonModel(S3Model):
                            ))
 
         left = None
+        if get_pe_label:
+            fields.append(ptable.pe_label)
         if request_dob:
             fields.append(ptable.date_of_birth)
         if request_gender:
@@ -1728,17 +1760,18 @@ class PRPersonModel(S3Model):
                        dtable.grandfather_name,
                        dtable.year_of_birth,
                        ]
-            left = dtable.on(dtable.person_id == ptable.id)
+            left = dtable.on((dtable.person_id == ptable.id) & \
+                             (accessible_query("read", dtable)))
 
-        row = db(ptable.id == id).select(left=left,
-                                         *fields).first()
+        row = db(ptable.id == record_id).select(left=left, *fields).first()
+
         if left:
-            details = row["pr_person_details"]
+            details = row.pr_person_details
             occupation = details.occupation
             father_name = details.father_name
             grandfather_name = details.grandfather_name
             year_of_birth = details.year_of_birth
-            row = row["pr_person"]
+            row = row.pr_person
         else:
             occupation = None
             father_name = None
@@ -1752,6 +1785,7 @@ class PRPersonModel(S3Model):
                 middle_name = row.middle_name
         elif site_contact_person:
             name = s3_fullname(row)
+        pe_label = row.pe_label if get_pe_label else None
         if request_dob:
             date_of_birth = row.date_of_birth
         else:
@@ -1767,7 +1801,8 @@ class PRPersonModel(S3Model):
         else:
             contact_methods = ("SMS", "EMAIL")
         query = (ctable.pe_id == row.pe_id) & \
-                (ctable.contact_method.belongs(contact_methods))
+                (ctable.contact_method.belongs(contact_methods)) & \
+                accessible_query("read", ctable)
         rows = db(query).select(ctable.contact_method,
                                 ctable.value,
                                 orderby = ctable.priority,
@@ -1795,8 +1830,8 @@ class PRPersonModel(S3Model):
 
         # Minimal flattened structure
         item = {}
-        if site_contact_person:
-            item["id"] = id
+        if site_contact_person or not r.id:
+            item["id"] = record_id
         if separate_name_fields:
             item["first_name"] = first_name
             item["last_name"] = last_name
@@ -1804,6 +1839,8 @@ class PRPersonModel(S3Model):
                 item["middle_name"] = middle_name
         elif site_contact_person:
             item["name"] = name
+        if pe_label:
+            item["pe_label"] = pe_label
         if email:
             item["email"] = email
         if mobile_phone:
@@ -1869,13 +1906,24 @@ class PRPersonModel(S3Model):
         # * MySQL:
         #    * http://forums.mysql.com/read.php?20,282935,282935#msg-282935
 
-        separate_name_fields = settings.get_pr_separate_name_fields()
+        # Setting can be overridden per-instance, so must
+        # introspect the data here rather than looking at the setting:
+        #separate_name_fields = settings.get_pr_separate_name_fields()
+        separate_name_fields = "first_name" in post_vars
+
         if separate_name_fields:
-            middle_name_field = separate_name_fields == 3
+            #middle_name_field = separate_name_fields == 3
+            middle_name_field = "middle_name" in post_vars
 
             first_name = post_vars.get("first_name")
+            if first_name:
+                first_name = first_name.lower()
             middle_name = post_vars.get("middle_name")
+            if middle_name:
+                middle_name = middle_name.lower()
             last_name = post_vars.get("last_name")
+            if last_name:
+                last_name = last_name.lower()
 
             # Names could be in the wrong order
             # @ToDo: Allow each name to be split into words in a different order
@@ -1910,6 +1958,8 @@ class PRPersonModel(S3Model):
             # Single search term
             # Value can be (part of) any of first_name, middle_name or last_name
             value = post_vars.get("name")
+            if value:
+                value = value.lower()
             query = (FS("first_name").lower().like(value + "%")) | \
                     (FS("last_name").lower().like(value + "%"))
             if middle_name:
@@ -2118,13 +2168,14 @@ class PRPersonModel(S3Model):
                     middle_name = row["pr_person.middle_name"]
                     if middle_name:
                         item["middle_name"] = middle_name
-            else:
-                name = Storage(first_name=row["pr_person.first_name"],
-                               middle_name=row["pr_person.middle_name"],
-                               last_name=row["pr_person.last_name"],
-                               )
-                name = s3_fullname(name)
-                item["name"] = name
+
+            name = Storage(first_name=row["pr_person.first_name"],
+                           middle_name=row["pr_person.middle_name"],
+                           last_name=row["pr_person.last_name"],
+                           )
+            name = s3_fullname(name)
+            item["name"] = name
+
             date_of_birth = row.get("pr_person.date_of_birth")
             if date_of_birth:
                 item["dob"] = date_of_birth.isoformat()

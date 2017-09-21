@@ -389,228 +389,893 @@ $(function () {
 # =============================================================================
 class S3AddPersonWidget(FormWidget):
     """
-        Renders a person_id field as a Create Person form,
-        with an embedded Autocomplete to select existing people.
+        Widget for person_id (future also: human_resource_id) fields that
+        allows to either select an existing person (autocomplete), or to
+        create a new person record inline
 
-        It relies on JS code in static/S3/s3.select_person.js
+        Features:
+        - embedded fields configurable in deployment settings
+        - can use single name field (with on-submit name splitting),
+          alternatively separate fields for first/middle/last names
+        - can check for possible duplicates during data entry
+        - fully encapsulated, works with regular validators (IS_ONE_OF)
+
+        => Uses client-side script s3.ui.addperson.js (injected)
     """
 
     def __init__(self,
                  controller = None,
-                 select_existing = None):
+                 separate_name_fields = None,
+                 father_name = None,
+                 grandfather_name = None,
+                 year_of_birth = None,
+                 first_name_only = None,
+                 pe_label = False,
+                 ):
+        """
+            Constructor
 
-        # Controller to retrieve the person record
+            @param controller: controller for autocomplete
+            @param separate_name_fields: use separate name fields, overrides
+                                         deployment setting
+
+            @param father_name: expose father name field, overrides
+                                deployment setting
+            @param grandfather_name: expose grandfather name field, overrides
+                                     deployment setting
+
+            @param year_of_birth: use just year-of-birth field instead of full
+                                  date-of-birth, overrides deployment setting
+
+            @param first_name_only: treat single name field entirely as
+                                    first name (=do not split into name parts),
+                                    overrides auto-detection, otherwise default
+                                    for right-to-left written languages
+
+            @param pe_label: expose ID label field
+        """
+
         self.controller = controller
-        if select_existing is not None:
-            self.select_existing = select_existing
-        else:
-            self.select_existing = current.deployment_settings.get_pr_select_existing()
+        self.separate_name_fields = separate_name_fields
+        self.father_name = father_name
+        self.grandfather_name = grandfather_name
+        self.year_of_birth = year_of_birth
+        self.first_name_only = first_name_only
+        self.pe_label = pe_label
 
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
+        """
+            Widget builder
+
+            @param field: the Field
+            @param value: the current or default value
+            @param attributes: additional HTML attributes for the widget
+        """
+
+        s3db = current.s3db
+        T = current.T
+        s3 = current.response.s3
+
+        # Attributes for the main input
+        default = dict(_type = "text",
+                       value = (value is not None and str(value)) or "",
+                       )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        # Translations
+        i18n = {"none_of_the_above": T("None of the above"),
+                "loading": T("loading")
+                }
+
+        # Determine reference type
+        reference_type = str(field.type)[10:]
+        if reference_type == "pr_person":
+            hrm = False
+            fn = "person"
+        # Currently not supported + no active use-case
+        # @todo: implement in create_person()
+        #elif reference_type == "hrm_human_resource":
+        #    hrm = True
+        #    fn = "human_resource"
+        else:
+            raise TypeError("S3AddPersonWidget: unsupported field type %s" % field.type)
+
+        settings = current.deployment_settings
+
+        # Field label overrides
+        self.labels = {
+            "full_name": T(settings.get_pr_label_fullname()),
+            "email": T("Email"),
+            "mobile_phone": settings.get_ui_label_mobile_phone(),
+            "home_phone": T("Home Phone"),
+            }
+
+        # Fields which are required (if they are enabled)
+        self.required = {
+            "organisation_id": settings.get_hrm_org_required(),
+            "full_name": True,
+            "first_name": True,
+            "middle_name": settings.get_L10n_mandatory_middlename(),
+            "last_name": settings.get_L10n_mandatory_lastname(),
+            "date_of_birth": settings.get_pr_dob_required(),
+            "email": settings.get_hrm_email_required() if hrm else False,
+        }
+
+        # Determine controller for autocomplete
+        controller = self.controller
+        if not controller:
+            controller = current.request.controller
+            if controller not in ("pr", "dvr", "hrm", "vol"):
+                controller = "hrm" if hrm else "pr"
+
+        # Fields to extract and fields in form
+        # @todo: add pe_label
+        ptable = s3db.pr_person
+        dtable = s3db.pr_person_details
+
+        fields = {}
+        details = False
+
+        trigger = None
+        formfields = []
+        fappend = formfields.append
+
+        # Organisation ID
+        if hrm:
+            htable = s3db.hrm_human_resource
+            fields["organisation_id"] = htable.organisation_id
+            fappend("organisation_id")
+
+        # ID Label
+        pe_label = self.pe_label
+        if pe_label:
+            fields["pe_label"] = ptable.pe_label
+            fappend("pe_label")
+
+        # Name fields (always extract all)
+        fields["first_name"] = ptable.first_name
+        fields["last_name"] = ptable.last_name
+        fields["middle_name"] = ptable.middle_name
+
+        separate_name_fields = self.separate_name_fields
+        if separate_name_fields is None:
+            separate_name_fields = settings.get_pr_separate_name_fields()
+
+        if separate_name_fields:
+
+            # Detect order of name fields
+            name_format = settings.get_pr_name_format()
+            keys = StringTemplateParser.keys(name_format)
+
+            if keys and keys[0] == "last_name":
+                # Last name first
+                trigger = "last_name"
+                fappend("last_name")
+                fappend("first_name")
+            else:
+                # First name first
+                trigger = "first_name"
+                fappend("first_name")
+                fappend("last_name")
+
+            if separate_name_fields == 3:
+                if keys and keys[-1] == "middle_name":
+                    fappend("middle_name")
+                else:
+                    formfields.insert(-1, "middle_name")
+
+        else:
+
+            # Single combined name field
+            fields["full_name"] = True
+            fappend("full_name")
+
+        # Additional name fields
+        father_name = self.father_name
+        if father_name is None:
+            # Not specified => apply deployment setting
+            father_name = settings.get_pr_request_father_name()
+        if father_name:
+            field = dtable.father_name
+            i18n["father_name_label"] = field.label
+            fields["father_name"] = field
+            details = True
+            fappend("father_name")
+
+        grandfather_name = self.grandfather_name
+        if grandfather_name is None:
+            # Not specified => apply deployment setting
+            grandfather_name  = settings.get_pr_request_grandfather_name()
+        if grandfather_name:
+            field = dtable.grandfather_name
+            i18n["grandfather_name_label"] = field.label
+            fields["grandfather_name"] = dtable.grandfather_name
+            details = True
+            fappend("grandfather_name")
+
+        # Date of Birth / Year of birth
+        year_of_birth = self.year_of_birth
+        if year_of_birth is None:
+            # Use Global deployment_setting
+            year_of_birth = settings.get_pr_request_year_of_birth()
+        if year_of_birth:
+            fields["year_of_birth"] = dtable.year_of_birth
+            details = True
+            fappend("year_of_birth")
+        elif settings.get_pr_request_dob():
+            fields["date_of_birth"] = ptable.date_of_birth
+            fappend("date_of_birth")
+
+        # Gender
+        if settings.get_pr_request_gender():
+            fields["gender"] = ptable.gender
+            fappend("gender")
+
+        # Occupation
+        if controller == "vol":
+            fields["occupation"] = dtable.occupation
+            details = True
+            fappend("occupation")
+
+        # Contact Details
+        if settings.get_pr_request_email():
+            fields["email"] = True
+            fappend("email")
+        if settings.get_pr_request_mobile_phone():
+            fields["mobile_phone"] = True
+            fappend("mobile_phone")
+        if settings.get_pr_request_home_phone():
+            fields["home_phone"] = True
+            fappend("home_phone")
+
+        self.fields = fields
+
+        # Extract existing values
+        values = {}
+        if value:
+            record_id = None
+            if isinstance(value, basestring) and not value.isdigit():
+                data, error = self.parse(value)
+                if not error:
+                    if all(k in data for k in formfields):
+                        values = data
+                    else:
+                        record_id = data.get("id")
+            else:
+                record_id = value
+            if record_id:
+                values = self.extract(record_id, fields, hrm=hrm, details=details)
+
+        # Generate the embedded rows
+        widget_id = str(field).replace(".", "_")
+        formrows = self.embedded_form(field.label, widget_id, formfields, values)
+
+        # Widget Options (pass only non-default options)
+        widget_options = {}
+
+        # Duplicate checking?
+        lookup_duplicates = settings.get_pr_lookup_duplicates()
+        if lookup_duplicates:
+            # Add translations for duplicates-review
+            i18n.update({"Yes": T("Yes"),
+                         "No": T("No"),
+                         "dupes_found": T("_NUM_ duplicates found"),
+                         })
+            widget_options["lookupDuplicates"] = True
+
+        if settings.get_ui_icons() != "font-awesome":
+            # Non-default icon theme => pass icon classes
+            widget_options["downIcon"] = ICON("down").attributes.get("_class")
+            widget_options["yesIcon"] = ICON("deployed").attributes.get("_class")
+            widget_options["noIcon"] = ICON("remove").attributes.get("_class")
+
+        # Use separate name fields?
+        if separate_name_fields:
+            widget_options["separateNameFields"] = True
+            if trigger:
+                widget_options["trigger"] = trigger
+
+        # Non default AC controller/function?
+        if controller != "pr":
+            widget_options["c"] = controller
+        if fn != "person":
+            widget_options["f"] = fn
+
+        # Non-default AC trigger parameters?
+        delay = settings.get_ui_autocomplete_delay()
+        if delay != 800:
+            widget_options["delay"] = delay
+        chars = settings.get_ui_autocomplete_min_chars()
+        if chars != 2:
+            widget_options["chars"] = chars
+
+        # Inject the scripts
+        self.inject_script(widget_id, widget_options, i18n)
+
+        # Create and return the main input
+        attr["_class"] = "hide"
+        attr["requires"] = self.validate
+
+        return TAG[""](DIV(INPUT(**attr), _class = "hide"), formrows)
+
+    # -------------------------------------------------------------------------
+    def extract(self, record_id, fields, details=False, hrm=False):
+        """
+            Extract the data for a record ID
+
+            @param record_id: the record ID
+            @param fields: the fields to extract, dict {propName: Field}
+            @param details: includes person details
+            @param hrm: record ID is a hrm_human_resource ID rather
+                        than person ID
+
+            @return: dict of {propName: value}
+        """
+
+        db = current.db
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        dtable = s3db.pr_person_details
+
+        qfields = [f for f in fields.values() if type(f) is not bool]
+        qfields.append(ptable.pe_id)
+
+        if hrm:
+            htable = s3db.hrm_human_resource
+            query = (htable.id == record_id)
+            join = ptable.on(ptable.id == htable.person_id)
+        else:
+            query = (ptable.id == record_id)
+            join = None
+
+        if details:
+            left = dtable.on(dtable.person_id == ptable.id)
+        else:
+            left = None
+
+        row = db(query).select(join = join,
+                               left = left,
+                               limitby = (0, 1),
+                               *qfields).first()
+        if not row:
+            # Raise?
+            return {}
+
+
+        person = row.pr_person if join or left else row
+        values = dict((k, person[k]) for k in person)
+
+        if fields.get("full_name"):
+            values["full_name"] = s3_fullname(person)
+
+        if details:
+            details = row.pr_person_details
+            for k in details:
+                values[k] = details[k]
+
+        if hrm:
+            human_resource = row.hrm_human_resource
+            for k in human_resource:
+                values[k] = human_resource[k]
+
+        values.update(self.get_contact_data(row.pe_id))
+
+        return values
+
+    # -------------------------------------------------------------------------
+    def get_contact_data(self, pe_id):
+        """
+            @todo: docstring
+        """
+
+        # Map contact method <=> form field name
+        names = {"EMAIL": "email",
+                 "HOME_PHONE": "home_phone",
+                 "SMS": "mobile_phone",
+                 }
+
+        # Determine relevant contact methods
+        fields = self.fields
+        methods = set(m for m in names if fields.get(names[m]))
+
+        # Initialize values with relevant fields
+        values = dict.fromkeys((names[m] for m in methods), "")
+
+        if methods:
+
+            # Retrieve the contact data
+            ctable = current.s3db.pr_contact
+            query = (ctable.pe_id == pe_id) & \
+                    (ctable.deleted == False) & \
+                    (ctable.contact_method.belongs(methods))
+
+            rows = current.db(query).select(ctable.contact_method,
+                                            ctable.value,
+                                            orderby=ctable.priority,
+                                            )
+
+            # Extract the values
+            for row in rows:
+                method = row.contact_method
+                if method in methods:
+                    values[names[method]] = row.value
+                    methods.discard(method)
+                if not methods:
+                    break
+
+        return values
+
+    # -------------------------------------------------------------------------
+    def embedded_form(self, label, widget_id, formfields, values):
+        """
+            @todo: docstring
+        """
 
         T = current.T
-        request = current.request
-        appname = request.application
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        # Test the formstyle
         formstyle = s3.crud.formstyle
+        tuple_rows = isinstance(formstyle("", "", "", ""), tuple)
 
-        default = dict(_type = "text",
-                       value = (value is not None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
+        rows = DIV()
 
-        # Main Input
-        if "_id" in attr:
-            real_input = attr["_id"]
+        # Section Title + Actions
+        title_id = "%s_title" % widget_id
+        label = LABEL(label, _for=title_id)
+
+        widget = DIV(A(ICON("edit"),
+                       _class="edit-action",
+                       _title=T("Edit Entry"),
+                       ),
+                     A(ICON("remove"),
+                       _class="cancel-action",
+                       _title=T("Revert Entry"),
+                       ),
+                     _class="add_person_edit_bar hide",
+                     _id="%s_edit_bar" % widget_id,
+                     )
+
+        if tuple_rows:
+            row = TR(TD(DIV(label, widget, _class="box_top_inner"),
+                        _class="box_top_td",
+                        _colspan=2,
+                        ),
+                     _id="%s__row" % title_id,
+                     )
         else:
-            real_input = str(field).replace(".", "_")
+            row = formstyle("%s__row" % title_id, label, widget, "")
+            row.add_class("box_top hide")
 
-        if self.controller is None:
-            controller = request.controller
-        else:
-            controller = self.controller
+        rows.append(row)
 
-        if self.select_existing:
-            # Autocomplete
-            select = '''S3.select_person($('#%s').val())''' % real_input
-            widget = S3PersonAutocompleteWidget(post_process=select,
-                                                hideerror=True)
-            ac_row = TR(TD(LABEL("%s: " % T("Name"),
-                                 _class="hide",
-                                 _id="person_autocomplete_label"),
-                           widget(field,
-                                  None,
-                                  _class="hide")),
-                        TD(),
-                        _id="person_autocomplete_row",
-                        _class="box_top")
-            # Select from registry buttons
-            _class ="box_top"
-            select_row = TR(TD(A(T("Select from Registry"),
-                                 _href="#",
-                                 _id="select_from_registry",
-                                 _class="action-btn"),
-                               A(T("Remove selection"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_clear_form()''',
-                                 _id="clear_form_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px"),
-                               A(T("Edit Details"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_edit_form()''',
-                                 _id="edit_selected_person_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px"),
-                               DIV(_id="person_load_throbber",
-                                   _class="throbber hide",
-                                   _style="padding-left:85px"),
-                               _class="w2p_fw"),
-                            TD(),
-                            _id="select_from_registry_row",
-                            _class=_class,
-                            _controller=controller,
-                            _field=real_input,
-                            _value=str(value))
+        # Input rows
+        for fname in formfields:
 
-        else:
-            _class = "hide"
-            ac_row = ""
-            select_row = TR(TD(A(T("Edit Details"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_edit_form()''',
-                                 _id="edit_selected_person_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px"),
-                               DIV(_id="person_load_throbber",
-                                   _class="throbber hide",
-                                   _style="padding-left:85px"),
-                               _class="w2p_fw"),
-                            TD(),
-                            _id="select_from_registry_row",
-                            _class=_class,
-                            _controller=controller,
-                            _field=real_input,
-                            _value=str(value))
+            field = self.fields.get(fname)
+            if not field:
+                continue # Field is disabled
 
-        # Embedded Form
-        s3db = current.s3db
-        ptable = s3db.pr_person
-        ctable = s3db.pr_contact
-        fields = [ptable.first_name,
-                  ptable.middle_name,
-                  ptable.last_name,
-                  ]
-        if settings.get_pr_request_dob():
-            fields.append(ptable.date_of_birth)
-        if settings.get_pr_request_gender():
-            fields.append(ptable.gender)
+            field_id = "%s_%s" % (widget_id, fname)
 
-        # Determine validation rule for email address
-        if controller == "hrm":
-            emailRequired = settings.get_hrm_email_required()
-        elif controller == "vol":
-            fields.append(s3db.pr_person_details.occupation)
-            emailRequired = settings.get_hrm_email_required()
-        else:
-            emailRequired = False
-        if emailRequired:
-            email_requires = IS_EMAIL()
-        else:
-            email_requires = IS_EMPTY_OR(IS_EMAIL())
-
-        # Determine validation rule for mobile phone number
-        mobile_phone_requires = IS_EMPTY_OR(IS_PHONE_NUMBER(
-                                                international = True))
-
-        # Add fields for email and mobile phone number
-        fields.extend([Field("email",
-                             notnull=emailRequired,
-                             requires=email_requires,
-                             label=T("Email Address")),
-                       Field("mobile_phone",
-                             label=T("Mobile Phone Number"),
-                             requires=mobile_phone_requires),
-                       ])
-
-        labels, required = s3_mark_required(fields)
-        if required:
-            s3.has_required = True
-
-        record_id = value if value else 0
-
-        # Generate embedded form
-        formname = "person_embedded"
-        form = SQLFORM.factory(table_name="pr_person",
-                               labels=labels,
-                               formstyle=formstyle,
-                               upload="default/download",
-                               separator = "",
-                               record_id = record_id,
-                               *fields)
-
-        if request.env.request_method == "POST":
-            # Read POST data
-            post_vars = request.post_vars
-            values = Storage(ptable._filter_fields(post_vars))
-            values["email"] = post_vars["email"]
-            values["mobile_phone"] = post_vars["mobile_phone"]
-            # Validate form
-            values["_formname"] = formname
-            valid = form.validate(request_vars=values,
-                                  session=None,
-                                  keepvalues=True,
-                                  hideerror=False,
-                                  formname=formname,
-                                  onsuccess=None,
-                                  onfailure=None,
-                                  onchange=None)
-
-        # Re-package the child elements of the FORM into a DIV,
-        # so that they can get embedded as widget in the outer FORM
-        trs = []
-        for tr in form[0]:
-            if "_id" in tr.attributes:
-                # Standard formstyle
-                if tr.attributes["_id"].startswith("submit_record"):
-                    # skip submit row
-                    continue
-            elif "_id" in tr[0][0].attributes:
-                # DIV-based formstyle
-                if tr[0][0].attributes["_id"].startswith("submit_record"):
-                    # skip submit row
-                    continue
-            if "_class" in tr.attributes:
-                tr.attributes["_class"] = "%s box_middle" % \
-                                            tr.attributes["_class"]
+            label = self.get_label(fname)
+            required = self.required.get(fname, False)
+            if required:
+                label = DIV("%s:" % label, SPAN(" *", _class="req"))
             else:
-                tr.attributes["_class"] = "box_middle"
-            trs.append(tr)
+                label = "%s:" % label
+            label = LABEL(label, _for=field_id)
 
-        table = DIV(*trs)
+            widget = self.get_widget(fname, field)
+            value = s3_str(values.get(fname, ""))
+            if not widget:
+                widget = INPUT(_id = field_id,
+                               _name = fname,
+                               _value = value,
+                               old_value = value,
+                               )
+            else:
+                value = values.get(fname, "")
+                widget = widget(field,
+                                value,
+                                requires = None,
+                                _id = field_id,
+                                old_value = value,
+                                )
 
-        # Divider
-        divider = TR(TD(_class="subheading"),
-                     TD(),
-                     _class="box_bottom")
 
-        # JS
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.select_person.js" % appname
+            row = formstyle("%s__row" % field_id, label, widget, "")
+            if tuple_rows:
+                row[0].add_class("box_middle")
+                row[1].add_class("box_middle")
+                rows.append(row[0])
+                rows.append(row[1])
+            else:
+                row.add_class("box_middle hide")
+                rows.append(row)
+
+        # Divider (bottom box)
+        if tuple_rows:
+            row = formstyle("%s_box_bottom" % widget_id, "", "", "")
+            row = row[0]
+            row.add_class("box_bottom")
         else:
-            script = "/%s/static/scripts/S3/s3.select_person.min.js" % appname
+            row = DIV(_id="%s_box_bottom" % widget_id,
+                      _class="box_bottom hide",
+                      )
+            if settings.ui.formstyle == "bootstrap":
+                # Need to add custom classes to core HTML markup
+                row.add_class("control-group")
+        rows.append(row)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def get_label(self, fieldname):
+        """
+            @todo: docstring
+        """
+
+        label = self.labels.get(fieldname)
+        if label is None:
+            # use self.fields
+            field = self.fields.get(fieldname)
+            if not field or field is True:
+                label = ""
+            else:
+                label = field.label
+
+        return label
+
+    # -------------------------------------------------------------------------
+    def get_widget(self, fieldname, field):
+        """
+            @todo: docstring
+        """
+
+        # Fields which require a specific widget
+        widget = None
+
+        if fieldname in ("organisation_id", "gender"):
+            widget = OptionsWidget.widget
+
+        elif fieldname == "date_of_birth":
+            if hasattr(field, "widget"):
+                widget = field.widget
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def inject_script(self, widget_id, options, i18n):
+        """
+            @todo: docstring
+        """
+
+        request = current.request
+        s3 = current.response.s3
+
+        # Static script
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.addperson.js" % \
+                     request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.addperson.min.js" % \
+                     request.application
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)
-        s3.jquery_ready.append('''S3.addPersonWidget()''')
+            self.inject_i18n(i18n)
 
-        # Overall layout of components
-        return TAG[""](select_row,
-                       ac_row,
-                       table,
-                       divider)
+        # Widget options
+        opts = {}
+        if options:
+            opts.update(options)
+
+        # Widget instantiation
+        script = '''$('#%(widget_id)s').addPerson(%(options)s)''' % \
+                 {"widget_id": widget_id,
+                  "options": json.dumps(opts),
+                  }
+        jquery_ready = s3.jquery_ready
+        if script not in jquery_ready:
+            jquery_ready.append(script)
+
+    # -------------------------------------------------------------------------
+    def inject_i18n(self, labels):
+        """
+            @todo: docstring
+        """
+
+        strings = ['''i18n.%s="%s"''' % (k, s3_str(v))
+                                        for k, v in labels.items()]
+        current.response.s3.js_global.append("\n".join(strings))
+
+    # -------------------------------------------------------------------------
+    def validate(self, value):
+        """
+            Validate main input value
+
+            @param value: the main input value (JSON)
+
+            @return: tuple (id, error), where "id" is the record ID of the
+                     selected or newly created record
+        """
+
+        if not isinstance(value, basestring) or value.isdigit():
+            # Not a JSON object => return as-is
+            return value, None
+
+        data, error = self.parse(value)
+        if (error):
+            return value, error
+
+        person_id = data.get("id")
+        if person_id:
+            # Existing record selected => return ID as-is
+            return person_id, None
+
+        # Establish the name(s)
+        names = self.get_names(data)
+        if not names:
+            # Treat as empty
+            return None, None
+        else:
+            data.update(names)
+
+        # Validate phone numbers
+        mobile = data.get("mobile_phone")
+        if mobile:
+            validator = IS_PHONE_NUMBER(international=True)
+            mobile, error = validator(mobile)
+            if error:
+                return (None, error)
+
+        home_phone = data.get("home_phone")
+        if home_phone:
+            validator = IS_PHONE_NUMBER()
+            home_phone, error = validator(home_phone)
+            if error:
+                return (None, error)
+
+        # Validate date of birth
+        dob = data.get("date_of_birth")
+        if not dob and \
+           self.fields.get("date_of_birth") and \
+           self.required.get("date_of_birth"):
+            return (None, T("Date of Birth is Required"))
+
+        # Validate the email
+        email, error = self.validate_email(data.get("email"))
+        if error:
+            return (None, error)
+
+        # Try to create the person records (and related records)
+        return self.create_person(data)
+
+    # -------------------------------------------------------------------------
+    def parse(self, value):
+        """
+            Parse the main input JSON when the form gets submitted
+
+            @param value: the main input value (JSON)
+
+            @return: tuple (data, error), where data is a dict with the
+                     submitted data like: {fieldname: value, ...}
+        """
+
+        from s3validators import JSONERRORS
+        try:
+            data = json.loads(value)
+        except JSONERRORS:
+            return value, "invalid JSON"
+
+        if type(data) is not dict:
+            return value, "invalid JSON"
+
+        return data, None
+
+    # -------------------------------------------------------------------------
+    def get_names(self, data):
+        """
+            Get first, middle and last names from the input data
+
+            @param data: the input data dict
+
+            @return: dict with the name parts found
+        """
+
+        settings = current.deployment_settings
+
+        separate_name_fields = self.separate_name_fields
+        if separate_name_fields is None:
+            separate_name_fields = settings.get_pr_separate_name_fields()
+
+        keys = ["first_name", "middle_name", "last_name"]
+
+        if separate_name_fields:
+
+            names = {}
+
+            for key in keys:
+                value = data.get(key)
+                if value:
+                    names[key] = value
+
+        else:
+
+            fullname = data.get("full_name")
+
+            if fullname:
+
+                # Shall all name parts go into first_name?
+                first_name_only = self.first_name_only
+                if first_name_only is None:
+                    # Activate by default if using RTL
+                    first_name_only = current.response.s3.rtl
+
+                if first_name_only:
+
+                    # Put all name parts into first_name
+                    names = {"first_name": fullname}
+
+                else:
+
+                    # Separate the name parts
+                    name_format = settings.get_pr_name_format()
+                    parts = StringTemplateParser.keys(name_format)
+                    if parts and parts[0] == "last_name":
+                        keys.reverse()
+                    names = dict(zip(keys, self.split_names(fullname)))
+
+            else:
+
+                names = {}
+
+        return names
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def split_names(name):
+        """
+            Split a full name into first/middle/last
+
+            @param name: the full name
+
+            @return: tuple (first, middle, last)
+        """
+
+        # https://github.com/derek73/python-nameparser
+        from nameparser import HumanName
+        name = HumanName(name)
+
+        return name.first, name.middle, name.last
+
+    # -------------------------------------------------------------------------
+    def validate_email(self, value, person_id=None):
+        """
+            Validate the email address
+            TODO: elaborate
+        """
+
+        T = current.T
+        settings = current.deployment_settings
+
+        error_message = T("Please enter a valid email address")
+
+        if value is not None:
+            value = value.strip()
+
+        # No email?
+        if not value:
+            # TODO: may not need to check whether email is enabled
+            email_required = self.fields.get("email") and \
+                             self.required.get("email")
+            if email_required:
+                return (value, error_message)
+            return (value, None)
+
+        # Valid email?
+        value, error = IS_EMAIL()(value)
+        if error:
+            return value, error_message
+
+        # Unique email?
+        s3db = current.s3db
+        ctable = s3db.pr_contact
+        query = (ctable.deleted != True) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.value == value)
+        if person_id:
+            ptable = s3db.pr_person
+            query &= (ctable.pe_id == ptable.pe_id) & \
+                     (ptable.id != person_id)
+        email = current.db(query).select(ctable.id, limitby=(0, 1)).first()
+        if email:
+            error_message = T("This email-address is already registered.")
+            return value, error_message
+
+        # Ok!
+        return value, None
+
+    # -------------------------------------------------------------------------
+    def create_person(self, data):
+        """
+            Create a new record from form data
+
+            @param data - the submitted data
+            @return: tuple (id, error), where "id" is the record ID of the
+                     newly created record
+        """
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Validate the person fields
+        ptable = s3db.pr_person
+        person = {}
+        for f in ptable._filter_fields(data):
+            if f == "id":
+                continue
+            value, error = s3_validate(ptable, f, data[f])
+            if error:
+                return (None, error)
+            else:
+                person[f] = value
+
+        # Onvalidation? (doesn't currently exist)
+
+        # Create new person record
+        person_id = ptable.insert(**person)
+
+        if not person_id:
+            return (None, T("Could not add person record"))
+
+        # Update the super-entities
+        record = {"id": person_id}
+        s3db.update_super(ptable, record)
+
+        # Update ownership & realm
+        current.auth.s3_set_record_owner(ptable, person_id)
+
+        # Onaccept? (not relevant for this case)
+
+        # Read the created pe_id
+        pe_id = record.get("pe_id")
+        if not pe_id:
+            return (None, T("Could not add person details"))
+
+        # Add contact information as provided
+        ctable = s3db.pr_contact
+        contacts = {"email": "EMAIL",
+                    "home_phone": "HOME_PHONE",
+                    "mobile_phone": "SMS",
+                    }
+        for fname, contact_method in contacts.items():
+            value = data.get(fname)
+            if value:
+                ctable.insert(pe_id = pe_id,
+                              contact_method = contact_method,
+                              value = value,
+                              )
+
+        # Add details as provided
+        details = {}
+        for fname in ("occupation",
+                      "father_name",
+                      "grandfather_name",
+                      "year_of_birth",
+                      ):
+            value = data.get(fname)
+            if value:
+                details[fname] = value
+        if details:
+            details["person_id"] = person_id
+            s3db.pr_person_details.insert(**details)
+
+        return (person_id, None)
 
 # =============================================================================
 class S3AddPersonWidget2(FormWidget):
@@ -5500,7 +6165,7 @@ class S3LocationSelector(S3Selector):
         # Translate options using gis_location_name?
         language = current.session.s3.language
         if language in ("en", "en-gb"):
-            # We assume that Location names default to the English version 
+            # We assume that Location names default to the English version
             translate = False
         else:
             translate = settings.get_L10n_translate_gis_location()
