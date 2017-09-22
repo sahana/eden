@@ -904,7 +904,8 @@ class S3DateFilter(S3RangeFilter):
                 #range_picker["_data-fmt"] = current.deployment_settings.get_L10n_datetime_format()
                 range_picker["_data-fmt"] = "MMM D YYYY HH:mm"
                 #range_picker["_data-fmt"] = "LLL" # Locale-aware version
-            append(range_picker)
+            append(DIV(range_picker,
+                       _class="range-picker-wrapper"))
 
         get_variable = self._variable
 
