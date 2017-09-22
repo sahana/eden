@@ -476,6 +476,12 @@ def certificate_skill():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def event_type():
+    """ Event Types Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def facility():
     """
         Filtered version of the facility() REST controller

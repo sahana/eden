@@ -1171,7 +1171,8 @@ def config(settings):
     def hrm_event_course_mandatory(default):
         """ Whether (Training) Event Courses are mandatory """
 
-        if current.auth.s3_has_role("EVENT_MONITOR"):
+        has_role = current.auth.s3_has_role
+        if (has_role("EVENT_MONITOR") or has_role("EVENT_ORGANISER")):
             return False
         else:
             # True
@@ -1183,7 +1184,7 @@ def config(settings):
         """ Whether (Training) Events use a Site (or Location) """
 
         has_role = current.auth.s3_has_role
-        if has_role("EVENT_MONITOR") and not has_role("ADMIN"):
+        if (has_role("EVENT_MONITOR") or has_role("EVENT_ORGANISER") or has_role("EVENT_OFFICE_MANAGER")) and not has_role("ADMIN"):
             # Use a Location (e.g. Country or Country/L1)
             return False
         else:
@@ -1191,6 +1192,19 @@ def config(settings):
             return default
 
     settings.hrm.event_site = hrm_event_site
+
+    def hrm_event_types(default):
+        """ Whether (Training) Events have multiple Types to choose from """
+
+        has_role = current.auth.s3_has_role
+        if has_role("EVENT_MONITOR") or has_role("EVENT_ORGANISER") or has_role("EVENT_OFFICE_MANAGER"):
+            # Use Event Types
+            return True
+        else:
+            # False: No
+            return default
+
+    settings.hrm.event_types = hrm_event_types
 
     def hrm_use_certificates(default):
         """ Whether to use Certificates """
@@ -1381,6 +1395,13 @@ def config(settings):
         root_org = current.auth.root_org_name()
         if root_org == NRCS:
             return "both"
+
+        has_role = current.auth.s3_has_role
+        if has_role("EVENT_MONITOR") or has_role("EVENT_ORGANISER") or has_role("EVENT_OFFICE_MANAGER"):
+            # Use Status field
+            return None
+
+        # External
         return default
 
     settings.hrm.training_instructors = training_instructors
@@ -2704,11 +2725,13 @@ def config(settings):
         has_role = auth.s3_has_role
         if has_role("EVENT_MONITOR") and not has_role("ADMIN"):
             # Bangkok CCST
-            # Filter People to just those from this region's countries
-            ltable = s3db.org_organisation_organisation
-            root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
-            root_orgs = [o.organisation_id for o in root_orgs]
-            s3.filter = FS("~.organisation_id$root_organisation").belongs(root_orgs)
+            pass
+            # @ToDo:
+            # Filter People to just those from this region's countries & those people traineed by this region
+            #ltable = s3db.org_organisation_organisation
+            #root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
+            #root_orgs = [o.organisation_id for o in root_orgs]
+            #s3.filter = FS("~.organisation_id$root_organisation").belongs(root_orgs)
         else:
             if controller == "deploy":
                 # Default Filter
@@ -3538,11 +3561,15 @@ def config(settings):
         if has_role("EVENT_MONITOR") and not has_role("ADMIN"):
             # Bangkok CCST
             # Filter People to just those from this region's countries
+            # & those who have been trained by the region
             from s3 import FS
             ltable = s3db.org_organisation_organisation
             root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
             root_orgs = [o.organisation_id for o in root_orgs]
-            current.response.s3.filter = FS("~.person_id$human_resource.organisation_id$root_organisation").belongs(root_orgs)
+            filter = FS("~.person_id$human_resource.organisation_id$root_organisation").belongs(root_orgs)
+            # @ToDo:
+            #filter |= FS("~.training_event_id")
+            current.response.s3.filter = filter
         else:
             tablename = "hrm_training"
 
@@ -4979,13 +5006,13 @@ def config(settings):
             settings.modules.pop("asset", None)
         else:
             has_role = auth.s3_has_role
-            if has_role("EVENT_MONITOR") and not has_role("ADMIN"):
-                # Bangkok CCST
-                # Filter People to just those from this region's countries
-                ltable = s3db.org_organisation_organisation
-                root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
-                root_orgs = [o.organisation_id for o in root_orgs]
-                s3.filter = FS("human_resource.organisation_id$root_organisation").belongs(root_orgs)
+            #if has_role("EVENT_MONITOR") and not has_role("ADMIN"):
+            #    # Bangkok CCST
+            #    # Filter People to just those from this region's countries & those people trained by the region
+            #    ltable = s3db.org_organisation_organisation
+            #    root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
+            #    root_orgs = [o.organisation_id for o in root_orgs]
+            #    s3.filter = FS("human_resource.organisation_id$root_organisation").belongs(root_orgs)
 
         if current.request.controller == "deploy":
             # Replace default title in imports:

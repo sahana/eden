@@ -9,15 +9,32 @@
          Column headers defined in this stylesheet:
          Training Event (just used for setting defaults) @ToDo: Complete this
          Training Organisation
+         Event Name
+         Event Type
          Course
-         Venue
-         Venue Type
+             Venue
+             Venue Type
+                OR
+             Training L0
+             Training L1
+             Training L2
+             Training L3
+             Training L4
+             Training L5
          Start
          End
          Hours
          Grade
          Trainee Organisation
          HR Type
+         Department
+         Office L0
+         Office L1
+         Office L2
+         Office L3
+         Office L4
+         Office L5
+         Job Title
          Certificate Number
          First Name
          Middle Name (Apellido Paterno in Spanish)
@@ -64,9 +81,16 @@
         </xsl:call-template>
     </xsl:variable>
 
+    <xsl:variable name="JobTitle">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">JobTitle</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
     <xsl:key name="courses" match="row" use="col[@field='Course']"/>
+    <xsl:key name="event_types" match="row" use="col[@field='Event Type']"/>
     <xsl:key name="organisations" match="row" use="col[@field='Trainee Organisation']"/>
     <xsl:key name="organisers" match="row" use="col[@field='Training Organisation']"/>
     <xsl:key name="sites" match="row" use="concat(col[@field='Venue'], '/',
@@ -77,15 +101,299 @@
                                                     col[@field='DoB'], '/',
                                                     col[@field='National ID'], '/',
                                                     col[@field='Email'])"/>
-    <xsl:key name="events" match="row" use="concat(col[@field='Venue'], '/',
+    <xsl:key name="events" match="row" use="concat(col[@field='Training L0'], '/',
+                                                   col[@field='Training L1'], '/',
+                                                   col[@field='Training L2'], '/',
+                                                   col[@field='Training L3'], '/',
+                                                   col[@field='Venue'], '/',
                                                    col[@field='Course'], '/',
                                                    col[@field='Start'])"/>
     <xsl:key name="trainingevents" match="row" use="col[@field='Training Event']"/>
+
+    <xsl:key name="departments" match="row"
+             use="concat(col[@field='Trainee Organisation'], '/', col[@field='Department'])"/>
+    <xsl:key name="jobtitles" match="row"
+             use="concat(col[@field='Trainee Organisation'], '/',
+                         col[contains(
+                             document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
+                             concat('|', @field, '|'))])"/>
+
+    <xsl:key name="OL1" match="row"
+             use="concat(col[@field='Office L0'], '/',
+                         col[@field='Office L1'])"/>
+    <xsl:key name="OL2" match="row"
+             use="concat(col[@field='Office L0'], '/',
+                         col[@field='Office L1'], '/',
+                         col[@field='Office L2'])"/>
+    <xsl:key name="OL3" match="row"
+             use="concat(col[@field='Office L0'], '/',
+                         col[@field='Office L1'], '/',
+                         col[@field='Office L2'], '/',
+                         col[@field='Office L3'])"/>
+    <xsl:key name="OL4" match="row"
+             use="concat(col[@field='Office L0'], '/',
+                         col[@field='Office L1'], '/',
+                         col[@field='Office L2'], '/',
+                         col[@field='Office L3'], '/',
+                         col[@field='Office L4'])"/>
+    <xsl:key name="OL5" match="row"
+             use="concat(col[@field='Office L0'], '/',
+                         col[@field='Office L1'], '/',
+                         col[@field='Office L2'], '/',
+                         col[@field='Office L3'], '/',
+                         col[@field='Office L4'], '/',
+                         col[@field='Office L5'])"/>
+    <xsl:key name="offices" match="row"
+             use="concat(col[@field='Trainee Organisation'], '/',
+                         col[@field='Office L0'], '/',
+                         col[@field='Office L1'], '/',
+                         col[@field='Office L2'], '/',
+                         col[@field='Office L3'], '/',
+                         col[@field='Office L4'], '/',
+                         col[@field='Office L5'])"/>
+
+    <xsl:key name="TL1" match="row"
+             use="concat(col[@field='Training L0'], '/',
+                         col[@field='Training L1'])"/>
+    <xsl:key name="TL2" match="row"
+             use="concat(col[@field='Training L0'], '/',
+                         col[@field='Training L1'], '/',
+                         col[@field='Training L2'])"/>
+    <xsl:key name="TL3" match="row"
+             use="concat(col[@field='Training L0'], '/',
+                         col[@field='Training L1'], '/',
+                         col[@field='Training L2'], '/',
+                         col[@field='Training L3'])"/>
+    <xsl:key name="TL4" match="row"
+             use="concat(col[@field='Training L0'], '/',
+                         col[@field='Training L1'], '/',
+                         col[@field='Training L2'], '/',
+                         col[@field='Training L3'], '/',
+                         col[@field='Training L4'])"/>
+
+    <xsl:key name="TL5" match="row"
+             use="concat(col[@field='Training L0'], '/',
+                         col[@field='Training L1'], '/',
+                         col[@field='Training L2'], '/',
+                         col[@field='Training L3'], '/',
+                         col[@field='Training L4'], '/',
+                         col[@field='Training L5'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
+            <!-- L1 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('OL1',
+                                                                   concat(col[@field='Office L0'], '/',
+                                                                          col[@field='Office L1']))[1])]">
+                <xsl:call-template name="L1">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Office L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Office L1']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('TL1',
+                                                                   concat(col[@field='Training L0'], '/',
+                                                                          col[@field='Training L1']))[1])]">
+                <xsl:call-template name="L1">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Training L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Training L1']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- L2 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('OL2',
+                                                                   concat(col[@field='Office L0'], '/',
+                                                                          col[@field='Office L1'], '/',
+                                                                          col[@field='Office L2']))[1])]">
+                <xsl:call-template name="L2">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Office L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Office L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Office L2']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('TL2',
+                                                                   concat(col[@field='Training L0'], '/',
+                                                                          col[@field='Training L1'], '/',
+                                                                          col[@field='Training L2']))[1])]">
+                <xsl:call-template name="L2">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Training L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Training L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Training L2']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- L3 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('OL3',
+                                                                   concat(col[@field='Office L0'], '/',
+                                                                          col[@field='Office L1'], '/',
+                                                                          col[@field='Office L2'], '/',
+                                                                          col[@field='Office L3']))[1])]">
+                <xsl:call-template name="L3">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Office L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Office L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Office L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Office L3']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('TL3',
+                                                                   concat(col[@field='Training L0'], '/',
+                                                                          col[@field='Training L1'], '/',
+                                                                          col[@field='Training L2'], '/',
+                                                                          col[@field='Training L3']))[1])]">
+                <xsl:call-template name="L3">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Training L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Training L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Training L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Training L3']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- L4 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('OL4',
+                                                                   concat(col[@field='Office L0'], '/',
+                                                                          col[@field='Office L1'], '/',
+                                                                          col[@field='Office L2'], '/',
+                                                                          col[@field='Office L3'], '/',
+                                                                          col[@field='Office L4']))[1])]">
+                <xsl:call-template name="L4">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Office L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Office L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Office L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Office L3']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L4">
+                        <xsl:value-of select="col[@field='Office L4']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('TL4',
+                                                                   concat(col[@field='Training L0'], '/',
+                                                                          col[@field='Training L1'], '/',
+                                                                          col[@field='Training L2'], '/',
+                                                                          col[@field='Training L3'], '/',
+                                                                          col[@field='Training L4']))[1])]">
+                <xsl:call-template name="L4">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Training L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Training L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Training L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Training L3']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L4">
+                        <xsl:value-of select="col[@field='Training L4']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+
+            <!-- L5 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('OL5',
+                                                                   concat(col[@field='Office L0'], '/',
+                                                                          col[@field='Office L1'], '/',
+                                                                          col[@field='Office L2'], '/',
+                                                                          col[@field='Office L3'], '/',
+                                                                          col[@field='Office L4'], '/',
+                                                                          col[@field='Office L5']))[1])]">
+                <xsl:call-template name="L5">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Office L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Office L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Office L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Office L3']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L4">
+                        <xsl:value-of select="col[@field='Office L4']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L5">
+                        <xsl:value-of select="col[@field='Office L5']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('TL5',
+                                                                   concat(col[@field='Training L0'], '/',
+                                                                          col[@field='Training L1'], '/',
+                                                                          col[@field='Training L2'], '/',
+                                                                          col[@field='Training L3'], '/',
+                                                                          col[@field='Training L4'], '/',
+                                                                          col[@field='Training L5']))[1])]">
+                <xsl:call-template name="L5">
+                    <xsl:with-param name="L0">
+                        <xsl:value-of select="col[@field='Training L0']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L1">
+                        <xsl:value-of select="col[@field='Training L1']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L2">
+                        <xsl:value-of select="col[@field='Training L2']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L3">
+                        <xsl:value-of select="col[@field='Training L3']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L4">
+                        <xsl:value-of select="col[@field='Training L4']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="L5">
+                        <xsl:value-of select="col[@field='Training L5']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
             <!-- Training Events -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('trainingevents',
                                                                    col[@field='Training Event'])[1])]">
@@ -121,13 +429,61 @@
                 <xsl:call-template name="Certificate"/>
             </xsl:for-each>
 
+            <!-- Event Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('event_types',
+                                                                   col[@field='Event Type'])[1])]">
+                <xsl:call-template name="EventType"/>
+            </xsl:for-each>
+
             <!-- Events -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('events',
-                                                        concat(col[@field='Venue'], '/',
+                                                        concat(col[@field='Training L0'], '/',
+                                                               col[@field='Training L1'], '/',
+                                                               col[@field='Training L2'], '/',
+                                                               col[@field='Training L3'], '/',
+                                                               col[@field='Venue'], '/',
                                                                col[@field='Course'], '/',
                                                                col[@field='Start']))[1])]">
                 <xsl:call-template name="Event"/>
+            </xsl:for-each>
+
+            <!-- Departments -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('departments',
+                                                        concat(col[@field='Trainee Organisation'], '/',
+                                                               col[@field='Department']))[1])]">
+                <xsl:call-template name="Department">
+                    <xsl:with-param name="type">resource</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Offices -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('offices',
+                                                        concat(col[@field='Trainee Organisation'], '/',
+                                                               col[@field='Office L0'], '/',
+                                                               col[@field='Office L1'], '/',
+                                                               col[@field='Office L2'], '/',
+                                                               col[@field='Office L3'], '/',
+                                                               col[@field='Office L4'], '/',
+                                                               col[@field='Office L5']))[1])]">
+                <xsl:call-template name="Office">
+                    <xsl:with-param name="type">resource</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Job Titles -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('jobtitles',
+                                            concat(col[@field='Trainee Organisation'], '/',
+                                                   col[contains(
+                                                       document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
+                                                       concat('|', @field, '|'))])
+                                        )[1])]">
+                <xsl:call-template name="JobTitle">
+                    <xsl:with-param name="type">resource</xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Persons -->
@@ -150,31 +506,52 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Event">
-        <xsl:variable name="Organisation" select="col[@field='Training Organisation']/text()"/>
         <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
-        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
-        <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
-        <xsl:variable name="StartDate" select="col[@field='Start']/text()"/>
-        <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
+        <xsl:variable name="L0" select="col[@field='Training L0']/text()"/>
 
-        <xsl:variable name="resourcename">
-            <xsl:choose>
-                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
-                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
-                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
-                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
-                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
-                <xsl:otherwise>org_office</xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
+        <xsl:if test="$SiteName!='' or $L0!=''">
+            <xsl:variable name="Organisation" select="col[@field='Training Organisation']/text()"/>
+            <xsl:variable name="EventType" select="col[@field='Event Type']/text()"/>
+            <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+            <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
+            <xsl:variable name="StartDate" select="col[@field='Start']/text()"/>
+            <xsl:variable name="Hours" select="col[@field='Hours']/text()"/>
+            <xsl:variable name="L1" select="col[@field='Training L1']/text()"/>
+            <xsl:variable name="L2" select="col[@field='Training L2']/text()"/>
+            <xsl:variable name="L3" select="col[@field='Training L3']/text()"/>
 
-        <xsl:if test="$SiteName!=''">
+            <xsl:variable name="resourcename">
+                <xsl:choose>
+                    <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                    <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                    <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                    <xsl:otherwise>org_office</xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
             <resource name="hrm_training_event">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($SiteName, '/',
-                                                 $CourseName, '/',
-                                                 $StartDate)"/>
-                </xsl:attribute>
+                 <xsl:choose>
+                    <xsl:when test="$SiteName!=''">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($SiteName, '/',
+                                                         $CourseName, '/',
+                                                         $StartDate)"/>
+                        </xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test="$L0!=''">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($L0, '/',
+                                                         $L1, '/',
+                                                         $L2, '/',
+                                                         $L3, '/',
+                                                         $CourseName, '/',
+                                                         $StartDate)"/>
+                        </xsl:attribute>
+                    </xsl:when>
+                </xsl:choose>
+                <data field="name"><xsl:value-of select="col[@field='Event Name']"/></data>
                 <data field="start_date"><xsl:value-of select="$StartDate"/></data>
                 <data field="end_date"><xsl:value-of select="col[@field='End']"/></data>
                 <xsl:if test="$Hours!=''">
@@ -186,21 +563,92 @@
                         <xsl:value-of select="$Organisation"/>
                     </xsl:attribute>
                 </reference>
-                <!-- Link to Course -->
-                <reference field="course_id" resource="hrm_course">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$CourseName"/>
-                    </xsl:attribute>
-                </reference>
-                <!-- Link to Site -->
-                <reference field="site_id">
-                    <xsl:attribute name="resource">
-                        <xsl:value-of select="$resourcename"/>
-                    </xsl:attribute>
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$SiteName"/>
-                    </xsl:attribute>
-                </reference>
+                <xsl:if test="$EventType!=''">
+                    <!-- Link to Event Type -->
+                    <reference field="event_type_id" resource="hrm_event_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$EventType"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="$CourseName!=''">
+                    <!-- Link to Course -->
+                    <reference field="course_id" resource="hrm_course">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$CourseName"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="$SiteName!=''">
+                    <!-- Link to Site -->
+                    <reference field="site_id">
+                        <xsl:attribute name="resource">
+                            <xsl:value-of select="$resourcename"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$SiteName"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="$L0!=''">
+                    <!-- Link to Location -->
+                    <xsl:variable name="L4" select="col[@field='Training L4']/text()"/>
+                    <xsl:variable name="L5" select="col[@field='Training L5']/text()"/>
+
+                    <!-- Country Code = UUID of the L0 Location -->
+                    <xsl:variable name="countrycode">
+                        <xsl:choose>
+                            <xsl:when test="string-length($L0)!=2">
+                                <xsl:call-template name="countryname2iso">
+                                    <xsl:with-param name="country">
+                                        <xsl:value-of select="$L0"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$L0"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
+                    <reference field="location_id" resource="gis_location">
+                        <xsl:choose>
+                            <xsl:when test="$L5!=''">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('L5/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4, '/', $L5)"/>
+                                </xsl:attribute>
+                            </xsl:when>
+                            <xsl:when test="$L4!=''">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
+                                </xsl:attribute>
+                            </xsl:when>
+                            <xsl:when test="$L3!=''">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                                </xsl:attribute>
+                            </xsl:when>
+                            <xsl:when test="$L2!=''">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                                </xsl:attribute>
+                            </xsl:when>
+                            <xsl:when test="$L1!=''">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                                </xsl:attribute>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:variable name="country"
+                                              select="concat('urn:iso:std:iso:3166:-1:code:',
+                                                             $countrycode)"/>
+                                <xsl:attribute name="uuid">
+                                    <xsl:value-of select="$country"/>
+                                </xsl:attribute>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </reference>
+                </xsl:if>
 
             </resource>
         </xsl:if>
@@ -360,6 +808,21 @@
                             </xsl:otherwise>
                         </xsl:choose>
                     </xsl:if>
+
+                    <!-- Link to Department -->
+                    <xsl:call-template name="Department">
+                        <xsl:with-param name="type">reference</xsl:with-param>
+                    </xsl:call-template>
+
+                    <!-- Link to Office -->
+                    <xsl:call-template name="Office">
+                        <xsl:with-param name="type">reference</xsl:with-param>
+                    </xsl:call-template>
+
+                    <!-- Link to Job Title -->
+                    <xsl:call-template name="JobTitle">
+                        <xsl:with-param name="type">reference</xsl:with-param>
+                    </xsl:call-template>
                 </resource>
             </xsl:if>
 
@@ -432,6 +895,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
+        <xsl:variable name="L0" select="col[@field='Training L0']/text()"/>
         <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
         <xsl:variable name="StartDate" select="col[@field='Start']/text()"/>
         <xsl:variable name="EndDate" select="col[@field='End']/text()"/>
@@ -465,6 +929,21 @@
                     <reference field="training_event_id" resource="hrm_training_event">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat($SiteName, '/',
+                                                         $CourseName, '/',
+                                                         $StartDate)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$L0!=''">
+                    <xsl:variable name="L1" select="col[@field='Training L1']/text()"/>
+                    <xsl:variable name="L2" select="col[@field='Training L2']/text()"/>
+                    <xsl:variable name="L3" select="col[@field='Training L3']/text()"/>
+                    <reference field="training_event_id" resource="hrm_training_event">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($L0, '/',
+                                                         $L1, '/',
+                                                         $L2, '/',
+                                                         $L3, '/',
                                                          $CourseName, '/',
                                                          $StartDate)"/>
                         </xsl:attribute>
@@ -528,12 +1007,14 @@
     <xsl:template name="Course">
         <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
 
-        <resource name="hrm_course">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$CourseName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$CourseName"/></data>
-        </resource>
+        <xsl:if test="$CourseName!=''">
+            <resource name="hrm_course">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$CourseName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$CourseName"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -559,37 +1040,621 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="EventType">
+        <xsl:variable name="Name" select="col[@field='Event Type']/text()"/>
+
+        <xsl:if test="$Name!=''">
+            <resource name="hrm_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Name"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Name"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Site">
         <xsl:variable name="SiteName" select="col[@field='Venue']/text()"/>
-        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
 
-        <xsl:variable name="resourcename">
+        <xsl:if test="$SiteName!=''">
+            <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+
+            <xsl:variable name="resourcename">
+                <xsl:choose>
+                    <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                    <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                    <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                    <xsl:otherwise>org_office</xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <resource>
+                <xsl:attribute name="name">
+                    <xsl:value-of select="$resourcename"/>
+                </xsl:attribute>
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$SiteName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SiteName"/></data>
+                <!-- Link to Organisation. No: Leave this to deduplicator
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Organisation']"/>
+                    </xsl:attribute>
+                </reference> -->
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Department">
+
+        <xsl:param name="type"/>
+
+        <xsl:variable name="Department" select="col[@field='Department']/text()"/>
+
+        <xsl:if test="$Department!=''">
+            <!-- Create the Department -->
+            <xsl:variable name="OrgName" select="col[@field='Trainee Organisation']/text()"/>
             <xsl:choose>
-                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
-                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
-                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
-                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
-                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:when test="$type='reference'">
+                    <reference field="department_id" resource="hrm_department">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$Department)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <resource name="hrm_department">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$Department)"/>
+                        </xsl:attribute>
+
+                        <data field="name">
+                            <xsl:value-of select="$Department"/>
+                        </data>
+
+                        <!-- Link to Organisation to filter lookup lists -->
+                        <xsl:if test="$OrgName!=''">
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('ORG:', $OrgName)"/>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:if>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Office">
+
+        <xsl:param name="type"/>
+
+        <xsl:variable name="L0" select="col[@field='Office L0']/text()"/>
+        
+        <xsl:variable name="resourcename">org_office</xsl:variable>
+            <!-- @ToDo if-required:
+            <xsl:choose>
+                <xsl:when test="$OfficeType='Office'">org_office</xsl:when>
+                <xsl:when test="$OfficeType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$OfficeType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$OfficeType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$OfficeType='Warehouse'">inv_warehouse</xsl:when>
                 <xsl:otherwise>org_office</xsl:otherwise>
             </xsl:choose>
+        </xsl:variable>-->
+
+        <xsl:if test="$L0!=''">
+            <!-- Create the Office -->
+            <xsl:variable name="OrgName" select="col[@field='Trainee Organisation']/text()"/>
+            <xsl:variable name="L1" select="col[@field='Office L1']/text()"/>
+            <xsl:variable name="L2" select="col[@field='Office L2']/text()"/>
+            <xsl:variable name="L3" select="col[@field='Office L3']/text()"/>
+            <xsl:variable name="L4" select="col[@field='Office L4']/text()"/>
+            <xsl:variable name="L5" select="col[@field='Office L5']/text()"/>
+
+            <xsl:variable name="OfficeName">
+                <xsl:choose>
+                    <xsl:when test="$L5!=''">
+                        <xsl:value-of select="$L5"/>
+                    </xsl:when>
+                    <xsl:when test="$L4!=''">
+                        <xsl:value-of select="$L4"/>
+                    </xsl:when>
+                    <xsl:when test="$L3!=''">
+                        <xsl:value-of select="$L3"/>
+                    </xsl:when>
+                    <xsl:when test="$L2!=''">
+                        <xsl:value-of select="$L2"/>
+                    </xsl:when>
+                    <xsl:when test="$L1!=''">
+                        <xsl:value-of select="$L1"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$L0"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:choose>
+                <xsl:when test="$type='reference'">
+                    <reference field="site_id">
+                        <xsl:attribute name="resource">
+                            <xsl:value-of select="$resourcename"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$OfficeName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Country Code = UUID of the L0 Location -->
+                    <xsl:variable name="countrycode">
+                        <xsl:choose>
+                            <xsl:when test="string-length($L0)!=2">
+                                <xsl:call-template name="countryname2iso">
+                                    <xsl:with-param name="country">
+                                        <xsl:value-of select="$L0"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:call-template name="uppercase">
+                                    <xsl:with-param name="string">
+                                       <xsl:value-of select="$L0"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
+                    <resource>
+                        <xsl:attribute name="name">
+                            <xsl:value-of select="$resourcename"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$OfficeName)"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                        <!-- Link to Organisation -->
+                        <reference field="organisation_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$OrgName"/>
+                            </xsl:attribute>
+                        </reference>
+                        <!-- Link to Location -->
+                        <reference field="location_id" resource="gis_location">
+                            <xsl:choose>
+                                <xsl:when test="$L5!=''">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat('L5/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4, '/', $L5)"/>
+                                    </xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="$L4!=''">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
+                                    </xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="$L3!=''">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                                    </xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="$L2!=''">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                                    </xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="$L1!=''">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                                    </xsl:attribute>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:attribute name="uuid">
+                                        <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+                                    </xsl:attribute>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </reference>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="JobTitle">
+
+        <xsl:param name="type"/>
+
+        <xsl:variable name="JobName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$JobTitle"/>
+            </xsl:call-template>
         </xsl:variable>
 
-        <resource>
-            <xsl:attribute name="name">
-                <xsl:value-of select="$resourcename"/>
-            </xsl:attribute>
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$SiteName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$SiteName"/></data>
-            <!-- Link to Organisation. No: Leave this to deduplicator
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Organisation']"/>
-                </xsl:attribute>
-            </reference> -->
-        </resource>
+        <xsl:if test="$JobName!=''">
+            <!-- Create the Job Title -->
+            <xsl:variable name="OrgName" select="col[@field='Trainee Organisation']/text()"/>
+            <xsl:choose>
+                <xsl:when test="$type='reference'">
+                    <reference field="job_title_id" resource="hrm_job_title">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <resource name="hrm_job_title">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
+                        </xsl:attribute>
 
+                        <data field="name">
+                            <xsl:value-of select="$JobName"/>
+                        </data>
+
+                        <!-- Link to Top-level Organisation to filter lookup lists -->
+                        <xsl:if test="$OrgName!=''">
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('ORG:', $OrgName)"/>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:if>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L1">
+        <xsl:param name="L0"/>
+        <xsl:param name="L1"/>
+
+        <xsl:if test="$L1!=''">
+
+            <!-- Country Code = UUID of the L0 Location -->
+            <xsl:variable name="countrycode">
+                <xsl:choose>
+                    <xsl:when test="string-length($L0)!=2">
+                        <xsl:call-template name="countryname2iso">
+                            <xsl:with-param name="country">
+                                <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+            <!-- Create the gis location -->
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$L1"/></data>
+                <data field="level"><xsl:text>L1</xsl:text></data>
+                <!-- Parent to Country -->
+                <xsl:if test="$countrycode!=''">
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="$country"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+            </resource>
+
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L2">
+        <xsl:param name="L0"/>
+        <xsl:param name="L1"/>
+        <xsl:param name="L2"/>
+
+        <xsl:if test="$L2!=''">
+
+            <!-- Country Code = UUID of the L0 Location -->
+            <xsl:variable name="countrycode">
+                <xsl:choose>
+                    <xsl:when test="string-length($L0)!=2">
+                        <xsl:call-template name="countryname2iso">
+                            <xsl:with-param name="country">
+                                <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:call-template name="uppercase">
+                            <xsl:with-param name="string">
+                               <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+            <!-- Create the gis location -->
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$L2"/></data>
+                <data field="level"><xsl:text>L2</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="$L1!=''">
+                        <!-- Parent to L1 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$countrycode!=''">
+                        <!-- Parent to Country -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L3">
+        <xsl:param name="L0"/>
+        <xsl:param name="L1"/>
+        <xsl:param name="L2"/>
+        <xsl:param name="L3"/>
+
+        <xsl:if test="$L3!=''">
+
+            <!-- Country Code = UUID of the L0 Location -->
+            <xsl:variable name="countrycode">
+                <xsl:choose>
+                    <xsl:when test="string-length($L0)!=2">
+                        <xsl:call-template name="countryname2iso">
+                            <xsl:with-param name="country">
+                                <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$L0"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="country"
+                          select="concat('urn:iso:std:iso:3166:-1:code:',
+                                         $countrycode)"/>
+
+            <!-- Create the gis location -->
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$L3"/></data>
+                <data field="level"><xsl:text>L3</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="$L2!=''">
+                        <!-- Parent to L2 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L1!=''">
+                        <!-- Parent to L1 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$countrycode!=''">
+                        <!-- Parent to Country -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L4">
+        <xsl:param name="L0"/>
+        <xsl:param name="L1"/>
+        <xsl:param name="L2"/>
+        <xsl:param name="L3"/>
+        <xsl:param name="L4"/>
+
+        <xsl:if test="$L4!=''">
+
+            <!-- Country Code = UUID of the L0 Location -->
+            <xsl:variable name="countrycode">
+                <xsl:choose>
+                    <xsl:when test="string-length($L0)!=2">
+                        <xsl:call-template name="countryname2iso">
+                            <xsl:with-param name="country">
+                                <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$L0"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="country"
+                          select="concat('urn:iso:std:iso:3166:-1:code:',
+                                         $countrycode)"/>
+
+            <!-- Create the gis location -->
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$L4"/></data>
+                <data field="level"><xsl:text>L4</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="$L3!=''">
+                        <!-- Parent to L3 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L2!=''">
+                        <!-- Parent to L2 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L1!=''">
+                        <!-- Parent to L1 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$countrycode!=''">
+                        <!-- Parent to Country -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L5">
+        <xsl:param name="L0"/>
+        <xsl:param name="L1"/>
+        <xsl:param name="L2"/>
+        <xsl:param name="L3"/>
+        <xsl:param name="L4"/>
+        <xsl:param name="L5"/>
+
+        <xsl:if test="$L5!=''">
+
+            <!-- Country Code = UUID of the L0 Location -->
+            <xsl:variable name="countrycode">
+                <xsl:choose>
+                    <xsl:when test="string-length($L0)!=2">
+                        <xsl:call-template name="countryname2iso">
+                            <xsl:with-param name="country">
+                                <xsl:value-of select="$L0"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$L0"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="country"
+                          select="concat('urn:iso:std:iso:3166:-1:code:',
+                                         $countrycode)"/>
+
+            <!-- Create the gis location -->
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('L5/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4, '/', $L5)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$L5"/></data>
+                <data field="level"><xsl:text>L5</xsl:text></data>
+                <xsl:choose>
+                    <xsl:when test="$L4!=''">
+                        <!-- Parent to L4 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L3!=''">
+                        <!-- Parent to L3 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L2!=''">
+                        <!-- Parent to L2 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$L1!=''">
+                        <!-- Parent to L1 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$countrycode!=''">
+                        <!-- Parent to Country -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
