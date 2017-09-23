@@ -1551,11 +1551,11 @@ class S3OptionsMenu(object):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Resource Types", f="resource_type",
-                      restrict=[ADMIN])(
+                    M(SECTORS, f="sector", restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M(SECTORS, f="sector", restrict=[ADMIN])(
+                    M("Resource Types", f="resource_type",
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
                 )
