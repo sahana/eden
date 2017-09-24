@@ -3126,10 +3126,10 @@ class S3CRUD(S3Method):
         else:
             return
         settings = current.response.s3.crud
+        custom_submit = [item]
         if settings.custom_submit:
-            settings.custom_submit.insert(0, item)
-        else:
-            settings.custom_submit = [item]
+            custom_submit.extend(settings.custom_submit)
+        settings.custom_submit = custom_submit
         return
 
     # -------------------------------------------------------------------------
