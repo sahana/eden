@@ -25,57 +25,28 @@ import json
 migrate = settings.get_base_migrate()
 fake_migrate = settings.get_base_fake_migrate()
 
-(db_string, pool_size) = settings.get_database_string()
-if db_string.find("sqlite") != -1:
-    if migrate:
-        check_reserved = ("mysql", "postgres")
+(db_type, db_string, pool_size) = settings.get_database_string()
+if migrate:
+    if db_type == "mysql":
+        check_reserved = ["postgres"]
+    elif db_type == "postgres":
+        check_reserved = ["mysql"]
     else:
-        check_reserved = []
+        check_reserved = ["mysql", "postgres"]
+else:
+    check_reserved = []
+
+try:
     db = DAL(db_string,
-             check_reserved=check_reserved,
+             check_reserved = check_reserved,
+             pool_size = pool_size,
              migrate_enabled = migrate,
              fake_migrate_all = fake_migrate,
-             lazy_tables = not migrate)
-    # on SQLite 3.6.19+ this enables foreign key support (included in Python 2.7+)
-    # db.executesql("PRAGMA foreign_keys=ON")
-else:
-    try:
-        if db_string.find("mysql") != -1:
-            # Use MySQLdb where available (pymysql has given broken pipes)
-            # - done automatically now, no need to add this manually
-            #try:
-            #    import MySQLdb
-            #    from gluon.dal import MySQLAdapter
-            #    MySQLAdapter.driver = MySQLdb
-            #except ImportError:
-            #    # Fallback to pymysql
-            #    pass
-            if migrate:
-                check_reserved = ["postgres"]
-            else:
-                check_reserved = []
-            db = DAL(db_string,
-                     check_reserved = check_reserved,
-                     pool_size = pool_size,
-                     migrate_enabled = migrate,
-                     fake_migrate_all = fake_migrate,
-                     lazy_tables = not migrate)
-        else:
-            # PostgreSQL
-            if migrate:
-                check_reserved = ["mysql"]
-            else:
-                check_reserved = []
-            db = DAL(db_string,
-                     check_reserved = check_reserved,
-                     pool_size = pool_size,
-                     migrate_enabled = migrate,
-                     fake_migrate_all = fake_migrate,
-                     lazy_tables = not migrate)
-    except:
-        db_type = db_string.split(":", 1)[0]
-        db_location = db_string.split("@", 1)[1]
-        raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
+             lazy_tables = not migrate,
+             )
+except:
+    db_location = db_string.split("@", 1)[1]
+    raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
 
 current.db = db
 db.set_folder("upload")

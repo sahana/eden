@@ -85,7 +85,7 @@ class S3Migration(object):
 
         FYI: If you need to access a filename in eden/databases/ then here is how:
         import hashlib
-        (db_string, pool_size) = settings.get_database_string()
+        (db_type, db_string, pool_size) = settings.get_database_string()
         prefix = hashlib.md5(db_string).hexdigest()
         filename = "%s_%s.table" % (prefix, tablename)
 
@@ -139,8 +139,8 @@ class S3Migration(object):
 
         self.environment = environment
 
-        self.db_engine = settings.get_database_type()
-        (db_string, pool_size) = settings.get_database_string()
+        (db_type, db_string, pool_size) = settings.get_database_string()
+        self.db_engine = db_type
 
         # Get a handle to the database
         self.db = DAL(db_string,

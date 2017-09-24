@@ -2068,7 +2068,8 @@ class GIS(object):
         db = current.db
         settings = current.deployment_settings
 
-        if settings.gis.spatialdb and settings.database.db_type == "postgres":
+        if settings.get_gis_spatialdb() and \
+           settings.get_database_type() == "postgres":
             # Use PostGIS routine
             # The ST_DWithin function call will automatically include a bounding box comparison that will make use of any indexes that are available on the geometries.
             # @ToDo: Support optional Category (make this a generic filter?)
@@ -2076,16 +2077,14 @@ class GIS(object):
             import psycopg2
             import psycopg2.extras
 
-            dbname = settings.database.database
-            username = settings.database.username
-            password = settings.database.password
-            host = settings.database.host
-            port = settings.database.port or "5432"
-
             # Convert km to degrees (since we're using the_geom not the_geog)
             radius = math.degrees(float(radius) / RADIUS_EARTH)
 
-            connection = psycopg2.connect("dbname=%s user=%s password=%s host=%s port=%s" % (dbname, username, password, host, port))
+            dbstr = "dbname=%(database)s user=%(username)s " \
+                    "password=%(password)s host=%(host)s port=%(port)s" % \
+                    settings.db_params
+            connection = psycopg2.connect(dbstr)
+
             cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
             info_string = "SELECT column_name, udt_name FROM information_schema.columns WHERE table_name = 'gis_location' or table_name = '%s';" % tablename
             cursor.execute(info_string)
