@@ -1500,12 +1500,12 @@ class PRPersonModel(S3Model):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = current.request.get_vars
+        get_vars = current.request.get_vars
 
         # JQueryUI Autocomplete uses "term"
         # old JQuery Autocomplete uses "q"
         # what uses "value"?
-        value = _vars.term or _vars.value or _vars.q or None
+        value = get_vars.term or get_vars.value or get_vars.q or None
 
         if not value:
             output = current.xml.json_message(False, 400, "No value provided!")
@@ -1611,7 +1611,7 @@ class PRPersonModel(S3Model):
 
         resource.add_filter(query)
 
-        limit = int(_vars.limit or 0)
+        limit = int(get_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
@@ -1623,6 +1623,10 @@ class PRPersonModel(S3Model):
                       "middle_name",
                       "last_name",
                       ]
+
+            show_pe_label = get_vars.get("label") == "1"
+            if show_pe_label:
+                fields.append("pe_label")
 
             show_hr = settings.get_pr_search_shows_hr_details()
             if show_hr:
@@ -1648,10 +1652,11 @@ class PRPersonModel(S3Model):
                 #orderby = "pr_person.middle_name"
             #else:
                 #orderby = "pr_person.last_name"
-            rows = resource.select(fields=fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby=orderby)["rows"]
+            rows = resource.select(fields = fields,
+                                   start = 0,
+                                   limit = limit,
+                                   orderby = orderby,
+                                   ).rows
 
             items = []
             iappend = items.append
@@ -1660,10 +1665,14 @@ class PRPersonModel(S3Model):
                                middle_name=row["pr_person.middle_name"],
                                last_name=row["pr_person.last_name"],
                                )
-                name = s3_fullname(name)
+
                 item = {"id"    : row["pr_person.id"],
-                        "name"  : name,
+                        "name"  : s3_fullname(name),
                         }
+
+                if show_pe_label:
+                    item["pe_label"] = row["pr_person.pe_label"]
+
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
@@ -1672,7 +1681,9 @@ class PRPersonModel(S3Model):
                          org = row.get("org_organisation.name", None)
                          if org:
                             item["org"] = org
+
                 iappend(item)
+
             output = items
 
         response.headers["Content-Type"] = "application/json"

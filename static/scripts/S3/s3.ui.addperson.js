@@ -700,6 +700,12 @@
             if (details.length) {
                 label += ' (' + details.join(',') + ')';
             }
+            if (this.idLabel) {
+                var pe_label = item.pe_label;
+                if (pe_label) {
+                    label += ' <span class="pe-label">[' + pe_label + ']</span> ';
+                }
+            }
             return label;
         },
 
@@ -719,6 +725,9 @@
                 self = this;
 
             this.acURL = S3.Ap.concat('/' + opts.c + '/' + opts.f + '/search_ac');
+            if (this.idLabel) {
+                this.acURL += '?label=1';
+            }
 
             // Instantiate AC
             var acInstance = trigger.autocomplete({

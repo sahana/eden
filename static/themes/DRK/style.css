@@ -1293,6 +1293,13 @@ ul.s3-inline-link {
   clear: left;
 }
 
+/* line 273, ../scss/custom/_widgets.scss */
+.ui-menu-item .pe-label {
+  font-size: 0.7rem;
+  color: #A0A0A0;
+  vertical-align: super;
+}
+
 /* line 1, ../scss/custom/_misc.scss */
 .org-logo {
   vertical-align: top;
