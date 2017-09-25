@@ -1928,13 +1928,13 @@ class PRPersonModel(S3Model):
 
             first_name = post_vars.get("first_name")
             if first_name:
-                first_name = first_name.lower()
+                first_name = s3_unicode(first_name).lower().strip()
             middle_name = post_vars.get("middle_name")
             if middle_name:
-                middle_name = middle_name.lower()
+                middle_name = s3_unicode(middle_name).lower().strip()
             last_name = post_vars.get("last_name")
             if last_name:
-                last_name = last_name.lower()
+                last_name = s3_unicode(last_name).lower().strip()
 
             # Names could be in the wrong order
             # @ToDo: Allow each name to be split into words in a different order

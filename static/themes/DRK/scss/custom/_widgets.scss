@@ -275,3 +275,15 @@ ul.s3-inline-link {
     color: #A0A0A0;
     vertical-align: super;
 }
+
+/* Data lists */
+.card_1_line {
+    margin-bottom: 0;
+    overflow: hidden;
+    height: auto;
+}
+.card_1_line, .card_manylines {
+    color: #666;
+    font-size: 0.7rem;
+    padding: 0.05rem;
+}
