@@ -130,7 +130,24 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @property {bool} lookupDuplicates - activate duplicates checking
+         * @property {bool} separateNameFields - use separate fields for
+         *                                       first/middle/last name parts
+         *
+         * @property {string} trigger - name of the autocomplete trigger field
+         * @property {string} c - the autocomplete controller
+         * @property {string} f - the autocomplete function
+         * @property {number} chars - the minimum number of characters that
+         *                            must be entered to trigger the autocomplete
+         * @property {number} delay - the delay (in milliseconds) before the
+         *                            autocomplete is triggered
+         *
+         * @property {string} downIcon - CSS class for the icon to open the
+         *                               duplicate search result list
+         * @property {string} yesIcon - CSS class for the icon to confirm a
+         *                              duplicate
+         * @property {string} noIcon - CSS class for the icon to decline all
+         *                             duplicates
          */
         options: {
 
@@ -324,11 +341,10 @@
                 formStyle = this.formStyle;
 
             if (formStyle == 'div') {
-                // Move the user-visible rows underneath the real (hidden) one
-                var box_bottom = $(selector + '_box_bottom');
-
                 // Insert the bottom box
-                realRow.after(box_bottom.removeClass('hide').show());
+                $(selector + '_box_bottom').removeClass('hide')
+                                           .show()
+                                           .insertAfter(realRow);
 
                 // Insert all embedded form rows after the real row
                 var self = this,
@@ -589,20 +605,15 @@
         },
 
         // --------------------------------------------------------------------
-        // TODO: docstring
-        _stashSelection: function() {
-
-            this.previousSelection = $.extend({}, this.data);
-        },
-
-        // --------------------------------------------------------------------
         /**
          * Edit the current selection, or actually: cancel the selection and
          * start selecting/entering a different person
          */
         _edit: function() {
 
-            this._stashSelection();
+            // Store previous selection so it can be reverted to
+            this.previousSelection = $.extend({}, this.data);
+
             this._reset();
 
             this._enableAutocomplete();
@@ -615,9 +626,9 @@
          */
         _cancel: function() {
 
-            var existing = this.previousSelection;
+            var previous = this.previousSelection;
 
-            if (existing && Object.values(existing).length) {
+            if (previous && Object.values(previous).length) {
 
                 this.data = $.extend({}, this.previousSelection);
                 this._serialize();
@@ -858,7 +869,8 @@
             }
             this._serialize();
 
-            this._stashSelection();
+            // Store as previous selection so it can be reverted to
+            this.previousSelection = $.extend({}, this.data);
 
             this._updateInputs();
             this._disableInputs();

@@ -484,6 +484,7 @@ class S3AddPersonWidget(FormWidget):
         settings = current.deployment_settings
 
         # Field label overrides
+        # (all other labels are looked up from the corresponding Field)
         self.labels = {
             "full_name": T(settings.get_pr_label_fullname()),
             "email": T("Email"),
@@ -491,7 +492,8 @@ class S3AddPersonWidget(FormWidget):
             "home_phone": T("Home Phone"),
             }
 
-        # Fields which are required (if they are enabled)
+        # Fields which, if enabled, are required
+        # (all other fields are assumed to not be required)
         self.required = {
             "organisation_id": settings.get_hrm_org_required(),
             "full_name": True,
@@ -510,7 +512,6 @@ class S3AddPersonWidget(FormWidget):
                 controller = "hrm" if hrm else "pr"
 
         # Fields to extract and fields in form
-        # @todo: add pe_label
         ptable = s3db.pr_person
         dtable = s3db.pr_person_details
 
@@ -767,7 +768,13 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def get_contact_data(self, pe_id):
         """
-            @todo: docstring
+            Extract the contact data for a pe_id; extracts only the first
+            value per contact method
+
+            @param pe_id: the pe_id
+
+            @return: a dict {fieldname: value}, where field names
+                     correspond to the contact method (field map)
         """
 
         # Map contact method <=> form field name
@@ -810,7 +817,18 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def embedded_form(self, label, widget_id, formfields, values):
         """
-            @todo: docstring
+            Construct the embedded form
+
+            @param label: the label for the embedded form
+                          (= field label for the person_id)
+            @param widget_id: the widget ID
+                              (=element ID of the person_id field)
+            @param formfields: list of field names indicating which
+                               fields to render and in which order
+            @param values: dict with values to populate the embedded
+                           form
+
+            @return: a DIV containing the embedded form rows
         """
 
         T = current.T
@@ -916,7 +934,11 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def get_label(self, fieldname):
         """
-            @todo: docstring
+            Get a label for an embedded field
+
+            @param fieldname: the name of the embedded form field
+
+            @return: the label
         """
 
         label = self.labels.get(fieldname)
@@ -933,7 +955,14 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def get_widget(self, fieldname, field):
         """
-            @todo: docstring
+            Get a widget for an embedded field; only when the field needs
+            a specific widget => otherwise return None here, so the form
+            builder will render a standard INPUT
+
+            @param fieldname: the name of the embedded form field
+            @param field: the Field corresponding to the form field
+
+            @return: the widget; or None if no specific widget is required
         """
 
         # Fields which require a specific widget
@@ -951,7 +980,14 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def inject_script(self, widget_id, options, i18n):
         """
-            @todo: docstring
+            Inject the necessary JavaScript for the widget
+
+            @param widget_id: the widget ID
+                              (=element ID of the person_id field)
+            @param options: JSON-serializable dict of widget options
+            @param i18n: translations of screen messages rendered by
+                         the client-side script,
+                         a dict {messageKey: translation}
         """
 
         request = current.request
@@ -986,7 +1022,10 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def inject_i18n(self, labels):
         """
-            @todo: docstring
+            Inject translations for screen messages rendered by the
+            client-side script
+
+            @param labels: dict of translations {messageKey: translation}
         """
 
         strings = ['''i18n.%s="%s"''' % (k, s3_str(v))
@@ -1156,8 +1195,15 @@ class S3AddPersonWidget(FormWidget):
     # -------------------------------------------------------------------------
     def validate_email(self, value, person_id=None):
         """
-            Validate the email address
-            TODO: elaborate
+            Validate the email address; checks whether the email address
+            is valid and unique
+
+            @param value: the email address
+            @param person_id: the person ID, if known
+
+            @return: tuple (value, error), where error is None if the
+                     email address is valid, otherwise contains the
+                     error message
         """
 
         T = current.T
@@ -1170,7 +1216,7 @@ class S3AddPersonWidget(FormWidget):
 
         # No email?
         if not value:
-            # TODO: may not need to check whether email is enabled
+            # @todo: may not need to check whether email is enabled?
             email_required = self.fields.get("email") and \
                              self.required.get("email")
             if email_required:
