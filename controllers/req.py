@@ -1162,7 +1162,8 @@ def commit():
         tablename = "req_commit_person"
         table = s3db[tablename]
         # Unaffiliated people can't commit on behalf of others
-        table.person_id.writable = False
+        #table.person_id.writable = False
+        table.human_resource_id.writable = False
         # & can only make single-person commitments
         # (This should have happened in the main commitment)
         s3db.configure(tablename,
