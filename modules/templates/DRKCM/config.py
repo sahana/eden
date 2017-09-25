@@ -525,7 +525,7 @@ def config(settings):
                                 )
 
                 # Autocomplete search-method
-                search_fields = ("first_name", "last_name", "pe_label")
+                search_fields = ("first_name", "last_name")
                 s3db.set_method("pr", "person",
                                 method = "search_ac",
                                 action = s3db.pr_PersonSearchAutocomplete(search_fields),

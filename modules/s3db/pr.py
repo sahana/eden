@@ -8740,6 +8740,7 @@ class pr_PersonSearchAutocomplete(S3Method):
 
         # Build query
         search_fields = set(self.search_fields)
+        pe_label_separate = "pe_label" not in search_fields
         if get_vars.get("label") == "1":
             search_fields.add("pe_label")
         query = None
@@ -8803,11 +8804,20 @@ class pr_PersonSearchAutocomplete(S3Method):
                                last_name=row["pr_person.last_name"],
                                )
                 name = s3_fullname(name)
-                if "pe_label" in search_fields:
-                    name = "%s %s" % (row["pr_person.pe_label"], name)
-                item = {"id"    : row["pr_person.id"],
-                        "name"  : name,
+                item = {"id": row["pr_person.id"],
+                        "name": name,
                         }
+
+                # Include pe_label?
+                if "pe_label" in search_fields:
+                    pe_label = row["pr_person.pe_label"]
+                    if pe_label:
+                        if pe_label_separate:
+                            # Send pe_label separate (dealt with client-side)
+                            item["pe_label"] = pe_label
+                        else:
+                            # Prepend pe_label to name
+                            item["name"] = "%s %s" % (pe_label, name)
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
