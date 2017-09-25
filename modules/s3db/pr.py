@@ -8739,7 +8739,9 @@ class pr_PersonSearchAutocomplete(S3Method):
         partials = value.split()[:8]
 
         # Build query
-        search_fields = self.search_fields
+        search_fields = set(self.search_fields)
+        if get_vars.get("label") == "1":
+            search_fields.add("pe_label")
         query = None
         for partial in partials:
             pquery = None

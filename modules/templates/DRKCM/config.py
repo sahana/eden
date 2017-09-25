@@ -524,6 +524,13 @@ def config(settings):
                                 action = s3db.pr_Contacts,
                                 )
 
+                # Autocomplete search-method
+                search_fields = ("first_name", "last_name", "pe_label")
+                s3db.set_method("pr", "person",
+                                method = "search_ac",
+                                action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                                )
+
                 table = r.table
                 ctable = s3db.dvr_case
 
