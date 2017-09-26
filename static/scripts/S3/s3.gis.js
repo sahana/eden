@@ -6140,7 +6140,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // Activate Help Tooltips
                             S3.addTooltips();
                             // Activate RoleRequired autocomplete
-                            S3.autocomplete('role', 'admin', 'group', 'gis_layer_' + layer_type + '_role_required');
+                            S3.autocomplete.normal('role', 'admin', 'group', 'gis_layer_' + layer_type + '_role_required');
                         }
                     });
                 }
