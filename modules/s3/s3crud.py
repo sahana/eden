@@ -1294,7 +1294,7 @@ class S3CRUD(S3Method):
                     items = []
 
             current.response.view = "plain.html"
-            return {"items": items}
+            return {"item": items}
 
         elif representation == "csv":
 
