@@ -331,24 +331,50 @@ class S3MobileSchema(object):
         SUPPORTED_FIELD_TYPES = set(self.SUPPORTED_FIELD_TYPES)
 
         # Check if foreign key
+        reftype = None
         if fieldtype[:9] == "reference":
 
-            # Skip super-entity references until supported by mobile client
-            key = s3_get_foreign_key(field)[1]
-            if key and key != "id":
-                return None
+            s3db = current.s3db
 
             is_foreign_key = True
 
-            # Store schema reference
-            lookup = fieldtype[10:].split(".")[0]
-            references = self._references
-            if lookup not in references:
-                references[lookup] = set()
+            # Get referenced table/field name
+            ktablename, key = s3_get_foreign_key(field)[:2]
 
+            # Get referenced table
+            ktable = current.s3db.table(ktablename)
+            if not ktable:
+                return None
+
+            if "instance_type" in ktable.fields:
+                # Super-key
+
+                tablename = str(field).split(".", 1)[0]
+                supertables = s3db.get_config(tablename, "super_entity")
+                if not supertables:
+                    supertables = set()
+                elif not isinstance(supertables, (list, tuple)):
+                    supertables = [supertables]
+
+                if ktablename in supertables and key == ktable._id.name:
+                    # This is the super-id of the instance table
+                    return None
+                else:
+                    # This is a super-entity reference
+                    fieldtype = "objectkey"
+
+                    # @todo: add instance types if limited in validator
+                    reftype = {ktablename: []}
+            else:
+                # Regular foreign key
+
+                # Store schema reference
+                references = self._references
+                if ktablename not in references:
+                    references[ktablename] = set()
         else:
             is_foreign_key = False
-            lookup = None
+            ktablename = None
 
         # Check that field type is supported
         if fieldtype in SUPPORTED_FIELD_TYPES or is_foreign_key:
@@ -363,51 +389,42 @@ class S3MobileSchema(object):
                        "label": str(field.label),
                        }
 
-        # Add field settings to description
-        settings = self.settings(field)
-        if settings:
-            description["settings"] = settings
+        # Add type for super-entity references (=object keys)
+        if reftype:
+            description["reftype"] = reftype
 
         # Add field options to description
-        options = self.get_options(field, lookup=lookup)
+        # @todo: indicate SE reference
+        options = self.get_options(field, lookup=ktablename)
         if options:
+            # @todo: if reference, store the returned options
+            #        as representation labels rather than as
+            #        options
             description["options"] = options
 
         # Add default value to description
-        default = self.get_default(field, lookup=lookup)
+        default = self.get_default(field, lookup=ktablename)
         if default:
             description["default"] = default
 
-        # @todo: add tooltip to description
-
-        return description
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def settings(cls, field):
-        """
-            Encode settings for the field description
-
-            @param field: a Field instance
-
-            @return: a dict with the field settings
-        """
-
-        settings = {}
-
         # Add readable/writable settings if False (True is assumed)
         if not field.readable:
-            settings["readable"] = False
+            description["readable"] = False
         if not field.writable:
-            settings["writable"] = False
+            description["writable"] = False
 
         # Add required flag if True (False is assumed)
-        if cls.is_required(field):
-            settings["required"] = True
+        if self.is_required(field):
+            description["required"] = True
 
-        # @todo: min/max settings for numeric and date/time fields
+        # @todo: add tooltip to description
 
-        return settings
+        # @todo: if field.represent is a base-class S3Represent
+        #        (i.e. no custom lookup, no custom represent),
+        #        and its field list is not just "name" => pass
+        #        that field list as description["represent"]
+
+        return description
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -451,24 +468,38 @@ class S3MobileSchema(object):
         fieldtype = str(field.type)
         if fieldtype[:9] == "reference":
 
+            if lookup not in self._references:
+                # Lookup table schema not exported => skip
+                return None
+
+            # @todo: if super-entity reference (@todo: caller to indicate):
+            #        => look up the instance record IDs
+            #        => add to self._references under the
+            #           instance types rather than SE (must add the
+            #           instance tables too if not present yet)
+
             # For writable foreign keys, if the referenced table
             # does not expose a mobile form itself, look up all
             # valid options and report them as schema references:
             if field.writable and not self.has_mobile_form(lookup):
                 add = self._references[lookup].add
 
-                # @note: introspection only works with e.g. IS_ONE_OF,
-                #        but not with widget-specific validators like
-                #        IS_ADD_PERSON_WIDGET2 => should change these
-                #        widgets to apply the conversion internally on
-                #        the dummy input (like S3LocationSelector), and
-                #        then have regular IS_ONE_OF's for the fields
+                # @note: introspection only works with regular validators
+                #        like IS_ONE_OF, but not with special widget
+                #        validators e.g. IS_ADD_PERSON_WIDGET2 =>
+                # @todo: migrate to S3AddPersonWidget to have regular
+                #        IS_ONE_OFs in the models
                 if hasattr(requires, "options"):
                     for value, label in requires.options():
                         if value:
                             add(long(value))
 
+
             # Foreign keys have no fixed options, however
+            # @todo: deliver store uuid<=>label map instead, so that the
+            #        mobile client has labels for fk options - unless the
+            #        field has a base-class S3Represent with a field list
+            #        that can be encoded in the field description
             return None
 
         elif fieldtype in ("string", "integer"):
