@@ -1620,12 +1620,14 @@ class S3SurveySeriesModel(S3Model):
                 questions = current.db(query).select(q_ltable.posn,
                                                      q_ltable.question_id,
                                                      orderby = q_ltable.posn)
-                for question in questions:
-                    qstn_posn = question.posn + posn_offset
-                    if mode == "Inclusive":
+                if mode == "Inclusive":
+                    for question in questions:
+                        qstn_posn = question.posn + posn_offset
                         if str(qstn_posn) in selected:
                             question_ids.append(str(question.question_id))
-                    elif mode == "Exclusive":
+                elif mode == "Exclusive":
+                    for question in questions:
+                        qstn_posn = question.posn + posn_offset
                         if str(qstn_posn) not in selected:
                             question_ids.append(str(question.question_id))
                 items = buildCompletedList(series_id, question_ids)
@@ -1638,6 +1640,7 @@ class S3SurveySeriesModel(S3Model):
                                            )
                 if r.representation == "html":
                     table = buildTableFromCompletedList(items)
+                    s3.actions = []
                     #exporter = S3Exporter()
                     #table = exporter.html(items)
                 output["items"] = table

@@ -34,11 +34,13 @@ __all__ = ("S3HRModel",
            #"S3HRJobModel",
            "S3HRContractModel",
            "S3HRSkillModel",
+           "S3HREventStrategyModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
            "S3HRAwardModel",
            "S3HRDisciplinaryActionModel",
            "S3HRProgrammeModel",
+           "S3HRProgrammeEventModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
            "hrm_TrainingEventRepresent",
@@ -1968,6 +1970,7 @@ class S3HRSkillModel(S3Model):
              "hrm_trainings",
              "hrm_event_type",
              "hrm_training_event",
+             "hrm_training_event_id",
              "hrm_certificate",
              "hrm_certification",
              "hrm_certification_onaccept",
@@ -2736,6 +2739,17 @@ class S3HRSkillModel(S3Model):
                                     ],
                        # Format for list_fields
                        hrm_training_event_instructor = "training_event_id",
+
+                       hrm_programme = {"link": "hrm_programme_event",
+                                        "joinby": "training_event_id",
+                                        "key": "programme_id",
+                                        "actuate": "hide",
+                                        },
+                       project_strategy = {"link": "hrm_event_strategy",
+                                           "joinby": "training_event_id",
+                                           "key": "strategy_id",
+                                           "actuate": "hide",
+                                           },
                        )
 
         # =====================================================================
@@ -3320,6 +3334,7 @@ class S3HRSkillModel(S3Model):
                     hrm_skill_id = skill_id,
                     hrm_multi_skill_id = multi_skill_id,
                     hrm_multi_skill_represent = multi_skill_represent,
+                    hrm_training_event_id = training_event_id,
                     hrm_certification_onaccept = self.hrm_certification_onaccept,
                     )
 
@@ -3818,6 +3833,31 @@ def hrm_training_onaccept(form):
                 form.vars = Storage()
                 form.vars.id = certification_id
                 hrm_certification_onaccept(form)
+
+# =============================================================================
+class S3HREventStrategyModel(S3Model):
+    """
+        (Training) Events <> Strategies Link Table
+    """
+
+    names = ("hrm_event_strategy",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # (Training) Events <> Strategies Link Table
+        #
+        tablename = "hrm_event_strategy"
+        self.define_table(tablename,
+                          self.hrm_training_event_id(),
+                          self.project_strategy_id(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3HRAppraisalModel(S3Model):
@@ -4330,10 +4370,11 @@ class S3HRDisciplinaryActionModel(S3Model):
 # =============================================================================
 class S3HRProgrammeModel(S3Model):
     """
-        Record Volunteer Hours on Programmes
-        - initially at least this doesn't link to the Project module
-
-        @ToDo: Move to modules/eden/vol.py
+        Programmes
+            - record Volunteer Hours
+            - categorise (Training) Events
+        These are separate to the Project module's Programmes
+        - @ToDo: setting to make them the same?
     """
 
     names = ("hrm_programme",
@@ -4358,7 +4399,6 @@ class S3HRProgrammeModel(S3Model):
 
         # =====================================================================
         # Progammes
-        # - not sure yet whether this will map to 'Programme', 'Project' or 'Activity' in future
         #
 
         tablename = "hrm_programme"
@@ -4433,6 +4473,12 @@ class S3HRProgrammeModel(S3Model):
                             hrm_programme_hours = {"name": "person",
                                                    "joinby": "programme_id",
                                                    },
+                            # Uncomment if-required for reporting
+                            #hrm_training_event = {"link": "hrm_programme_event",
+                            #                      "joinby": "programme_id",
+                            #                      "key": "training_event_id",
+                            #                      "actuate": "hide",
+                            #                      },
                             )
 
         # =====================================================================
@@ -4555,6 +4601,31 @@ class S3HRProgrammeModel(S3Model):
         #
         return dict(hrm_programme_id = programme_id,
                     )
+
+# =============================================================================
+class S3HRProgrammeEventModel(S3Model):
+    """
+        Programmes <> (Training) Events Link Table
+    """
+
+    names = ("hrm_programme_event",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # Programmes <> (Training) Events Link Table
+        #
+        tablename = "hrm_programme_event"
+        self.define_table(tablename,
+                          self.hrm_programme_id(),
+                          self.hrm_training_event_id(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 def hrm_programme_hours_month(row):

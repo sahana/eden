@@ -254,9 +254,10 @@ def series():
     s3.prep = prep
 
     def postp(r, output):
-        if request.ajax == True and r.method == "read":
+        method = r.method
+        if request.ajax == True and method == "read":
             return output["item"]
-        if not r.component:
+        if not r.component and method != "summary":
             # Replace the Action buttons
             s3.actions = [{"label": s3base.s3_str(messages.UPDATE),
                            "_class": "action-btn edit",
@@ -270,7 +271,7 @@ def series():
                           ]
 
         elif r.component_name == "complete":
-            if r.method == "update":
+            if method == "update":
                 if r.http == "GET":
                     form = s3db.survey_buildQuestionnaireFromSeries(r.id,
                                                                     r.component_id)

@@ -591,85 +591,134 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         has_role = current.auth.s3_has_role
         ADMIN = current.session.s3.system_roles.ADMIN
-        settings = current.deployment_settings
 
-        SECTORS = "Clusters" if settings.get_ui_label_cluster() \
-                             else "Sectors"
-
-        is_org_admin = lambda i: has_role(ADMIN)
-        is_super_editor = lambda i: has_role("staff_super") or \
-                                    has_role("vol_super")
-
-        use_certs = lambda i: settings.get_hrm_use_certificates()
-
-        return M()(
-                    M("Staff", c="hrm", f=("staff", "person"), m="summary")(
-                        M("Create", m="create"),
-                        M("Import", f="person", m="import",
-                          vars={"group": "staff"}, p="create"),
-                    ),
-                    M("Staff & Volunteers (Combined)",
-                      c="hrm", f="human_resource", m="summary",
-                      check=is_super_editor),
-                    M("Teams", c="hrm", f="group")(
-                        M("Create", m="create"),
-                        M("Search Members", f="group_membership"),
-                        M("Import", f="group_membership", m="import"),
-                    ),
-                    M("National Societies", c="org",
-                                            f="organisation",
-                                            vars=red_cross_filter)(
-                        M("Create", m="create",
-                          vars=red_cross_filter
-                          ),
-                        M("Import", m="import", p="create", check=is_org_admin)
-                    ),
-                    M("Offices", c="org", f="office")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Department Catalog", c="hrm", f="department")(
-                        M("Create", m="create"),
-                    ),
-                    M("Job Title Catalog", c="hrm", f="job_title")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create", check=is_org_admin),
-                    ),
-                    #M("Skill Catalog", f="skill")(
-                    #    M("Create", m="create"),
-                    #    #M("Skill Provisions", f="skill_provision"),
-                    #),
-                    M("Training Events", c="hrm", f="training_event")(
-                        M("Create", m="create"),
-                        M("Search Training Participants", f="training"),
-                        M("Import Participant List", f="training", m="import"),
-                    ),
-                    M("Reports", c="hrm", f="staff", m="report")(
-                        M("Staff Report", m="report"),
-                        M("Expiring Staff Contracts Report",
-                          vars=dict(expiring="1")),
-                        M("Training Report", f="training", m="report"),
-                    ),
-                    M("Training Course Catalog", c="hrm", f="course")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create", check=is_org_admin),
-                        M("Course Certificates", f="course_certificate"),
-                    ),
-                    M("Certificate Catalog", c="hrm", f="certificate",
-                      check=use_certs)(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create", check=is_org_admin),
-                        #M("Skill Equivalence", f="certificate_skill"),
-                    ),
-                    M("Organization Types", c="org", f="organisation_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Office Types", c="org", f="office_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                )
+        if not has_role(ADMIN) and (has_role("EVENT_MONITOR") or \
+                                    has_role("EVENT_ORGANISER") or \
+                                    has_role("EVENT_OFFICE_MANAGER")):
+            return M()(
+                        M("Training Events", c="hrm", f="training_event")(
+                            M("Create", m="create"),
+                            M("Search Training Participants", f="training"),
+                            M("Import Participant List", f="training", m="import"),
+                        ),
+                        M("Reports", c="hrm", f="staff", m="report")(
+                            M("Training Report", f="training", m="report"),
+                        ),
+                        M("Staff", c="hrm", f=("staff", "person"), m="summary")(
+                            #M("Create", m="create"),
+                            #M("Import", f="person", m="import",
+                            #  vars={"group": "staff"}, p="create"),
+                        ),
+                        M("National Societies", c="org",
+                                                f="organisation",
+                                                vars=red_cross_filter)(
+                            #M("Create", m="create",
+                            #  vars=red_cross_filter
+                            #  ),
+                            #M("Import", m="import", p="create", check=is_org_admin)
+                        ),
+                        M("Offices", c="org", f="office")(
+                            #M("Create", m="create"),
+                            #M("Import", m="import", p="create"),
+                        ),
+                        M("Event Types", c="hrm", f="event_type",
+                          restrict=["EVENT_MONITOR"])(
+                            #M("Create", m="create"),
+                        ),
+                        M("Training Course Catalog", c="hrm", f="course")(
+                            #M("Create", m="create"),
+                            #M("Import", m="import", p="create", check=is_org_admin),
+                            #M("Course Certificates", f="course_certificate"),
+                        ),
+                        M("Programmes", c="hrm", f="programme")(
+                            #M("Create", m="create"),
+                        ),
+                        M("AoF/SFI", c="hrm", f="strategy")(
+                            #M("Create", m="create"),
+                        ),
+                        M("Department Catalog", c="hrm", f="department")(
+                            #M("Create", m="create"),
+                        ),
+                        M("Job Title Catalog", c="hrm", f="job_title")(
+                            #M("Create", m="create"),
+                            #M("Import", m="import", p="create", check=is_org_admin),
+                        ),
+                       )
+        else:
+            settings = current.deployment_settings
+            is_org_admin = lambda i: has_role(ADMIN)
+            is_super_editor = lambda i: has_role("staff_super") or \
+                                        has_role("vol_super")
+            use_certs = lambda i: settings.get_hrm_use_certificates()
+        
+            return M()(
+                        M("Staff", c="hrm", f=("staff", "person"), m="summary")(
+                            M("Create", m="create"),
+                            M("Import", f="person", m="import",
+                              vars={"group": "staff"}, p="create"),
+                        ),
+                        M("Staff & Volunteers (Combined)",
+                          c="hrm", f="human_resource", m="summary",
+                          check=is_super_editor),
+                        M("Teams", c="hrm", f="group")(
+                            M("Create", m="create"),
+                            M("Search Members", f="group_membership"),
+                            M("Import", f="group_membership", m="import"),
+                        ),
+                        M("National Societies", c="org",
+                                                f="organisation",
+                                                vars=red_cross_filter)(
+                            M("Create", m="create",
+                              vars=red_cross_filter
+                              ),
+                            M("Import", m="import", p="create", check=is_org_admin)
+                        ),
+                        M("Offices", c="org", f="office")(
+                            M("Create", m="create"),
+                            M("Import", m="import", p="create"),
+                        ),
+                        M("Department Catalog", c="hrm", f="department")(
+                            M("Create", m="create"),
+                        ),
+                        M("Job Title Catalog", c="hrm", f="job_title")(
+                            M("Create", m="create"),
+                            M("Import", m="import", p="create", check=is_org_admin),
+                        ),
+                        #M("Skill Catalog", f="skill")(
+                        #    M("Create", m="create"),
+                        #    #M("Skill Provisions", f="skill_provision"),
+                        #),
+                        M("Training Events", c="hrm", f="training_event")(
+                            M("Create", m="create"),
+                            M("Search Training Participants", f="training"),
+                            M("Import Participant List", f="training", m="import"),
+                        ),
+                        M("Reports", c="hrm", f="staff", m="report")(
+                            M("Staff Report", m="report"),
+                            M("Expiring Staff Contracts Report",
+                              vars=dict(expiring="1")),
+                            M("Training Report", f="training", m="report"),
+                        ),
+                        M("Training Course Catalog", c="hrm", f="course")(
+                            M("Create", m="create"),
+                            M("Import", m="import", p="create", check=is_org_admin),
+                            M("Course Certificates", f="course_certificate"),
+                        ),
+                        M("Certificate Catalog", c="hrm", f="certificate",
+                          check=use_certs)(
+                            M("Create", m="create"),
+                            M("Import", m="import", p="create", check=is_org_admin),
+                            #M("Skill Equivalence", f="certificate_skill"),
+                        ),
+                        M("Organization Types", c="org", f="organisation_type",
+                          restrict=[ADMIN])(
+                            M("Create", m="create"),
+                        ),
+                        M("Office Types", c="org", f="office_type",
+                          restrict=[ADMIN])(
+                            M("Create", m="create"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
