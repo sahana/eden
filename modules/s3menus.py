@@ -879,6 +879,7 @@ class S3OptionsMenu(object):
         return M()(
                     M("Schools", c="edu", f="school")(
                         M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
                     M("School Types", c="edu", f="school_type")(
                         M("Create", m="create"),
