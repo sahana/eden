@@ -605,13 +605,11 @@ body.popup {
 #popup {
     max-width: 750px;
     width: 100%;
+    /* Popup contents initially hidden until iframe resized to fit modal */
+    display: none;
 }
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
-}
-#popup form {
-    /* Form initially hidden until resized to fit modal */
-    display: none;
 }
 #popup .form-container {
     /* Ensure scrollbars are all on the Modal, not inside */
