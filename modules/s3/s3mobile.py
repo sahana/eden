@@ -805,12 +805,16 @@ class S3MobileForm(object):
 
         s3db = current.s3db
         resource = self.resource
+        tablename = resource.tablename
+
+        super_entities = self.super_entities
 
         ms = S3MobileSchema(resource)
         schema = ms.serialize()
 
-        main = {"tablename": resource.tablename,
+        main = {"tablename": tablename,
                 "schema": schema,
+                "types": super_entities(tablename),
                 "form": ms.form,
                 }
 
@@ -836,14 +840,18 @@ class S3MobileForm(object):
             cresource = resource.components.get(alias)
             if not cresource:
                 continue
+            ctablename = cresource.tablename
 
             # Get the schema for the component
             cschema = S3MobileSchema(cresource)
             hook = components[alias]
             hook["schema"] = cschema.serialize()
 
+            # Add super entity declarations
+            hook["types"] = super_entities(cresource)
+
             # Mark as provided
-            provided.add(cresource.tablename)
+            provided.add(tablename)
 
             for tname in cschema.references:
                 required.add(tname)
@@ -853,21 +861,23 @@ class S3MobileForm(object):
         required = list(required)
         while required:
 
-            tablename = required.pop()
-            if tablename in provided:
+            ktablename = required.pop()
+            if ktablename in provided:
                 continue
 
             # Check if we need to include any records
-            record_ids = ms.references[tablename]
+            record_ids = ms.references[ktablename]
             if record_ids:
-                rresource = s3db.resource(tablename, id=list(record_ids))
+                rresource = s3db.resource(ktablename, id=list(record_ids))
             else:
-                rresource = s3db.resource(tablename)
+                rresource = s3db.resource(ktablename)
 
             # Serialize the table schema
             rs = S3MobileSchema(rresource)
             schema = rs.serialize()
-            spec = {"schema": schema}
+            spec = {"schema": schema,
+                    "types": super_entities(ktablename),
+                    }
 
             # Include records as required
             if record_ids:
@@ -880,14 +890,14 @@ class S3MobileForm(object):
                     data = current.xml.tree2json(tree, as_dict=True)
                     spec["data"] = data
 
-            references[tablename] = spec
+            references[ktablename] = spec
 
             # Check for dependencies
             for reference in rs.references:
                 if reference not in provided:
                     required.append(reference)
 
-            provided.add(tablename)
+            provided.add(ktablename)
 
         form = {"main": main,
                 }
@@ -986,6 +996,33 @@ class S3MobileForm(object):
                                      }
 
         return components
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def super_entities(tablename):
+        """
+            Helper method to determine the super entities of a table
+
+            @param tablename: the table name
+
+            @return: a dict {super-table: super-key}
+        """
+
+        s3db = current.s3db
+
+        supertables = s3db.get_config(tablename, "super_entity")
+        if not supertables:
+            supertables = set()
+        elif not isinstance(supertables, (tuple, list)):
+            supertables = [supertables]
+
+        super_entities = {}
+        for tablename in supertables:
+            table = s3db.table(tablename)
+            if table:
+                super_entities[tablename] = table._id.name
+
+        return super_entities
 
 # =============================================================================
 class S3MobileCRUD(S3Method):
