@@ -183,7 +183,7 @@ S3.addModals = function() {
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click.S3Modal')
+    $('.s3_add_resource_link, .s3_modal').off('.S3Modal')
                                          .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;
@@ -213,7 +213,10 @@ S3.addModals = function() {
                 // Set initial 'loading' class to show spinner until contents loaded
                 'class': 'loading',
                 'load': function(event, ui) {
-                    S3.popup_loaded(id);
+                    // Call popup loaded (but only once we have a src)
+                    if ($(this).attr('src')) {
+                        S3.popup_loaded(id);
+                    }
                 },
                 'marginWidth': '0',
                 'marginHeight': '0',

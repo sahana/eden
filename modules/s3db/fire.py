@@ -64,8 +64,9 @@ class S3FireModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      # @ToDo: Currently unused - apply in layer_feature for now
-                     Field("style", "text",
-                           label=T("Style")),
+                     Field("mapstyle", "text",
+                           label=T("Style"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
