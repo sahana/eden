@@ -141,6 +141,9 @@ class S3MobileFormList(object):
                 # Provides (master-)data for download?
                 data = True if options.get("data") else False
 
+                # Exposed for data entry (or just for reference)?
+                main = False if options.get("data_only", False) else True
+
                 # Append to form list
                 url = {"c": c, "f": f}
                 if url_vars:
@@ -150,6 +153,7 @@ class S3MobileFormList(object):
                          "t": tablename,
                          "r": url,
                          "d": data,
+                         "m": main,
                          }
                 formlist.append(mform)
                 formdict[name] = mform
@@ -331,6 +335,7 @@ class S3MobileSchema(object):
         SUPPORTED_FIELD_TYPES = set(self.SUPPORTED_FIELD_TYPES)
 
         # Check if foreign key
+        superkey = False
         reftype = None
         if fieldtype[:9] == "reference":
 
@@ -357,13 +362,14 @@ class S3MobileSchema(object):
                     supertables = [supertables]
 
                 if ktablename in supertables and key == ktable._id.name:
-                    # This is the super-id of the instance table
+                    # This is the super-id of the instance table => skip
                     return None
                 else:
                     # This is a super-entity reference
                     fieldtype = "objectkey"
 
                     # @todo: add instance types if limited in validator
+                    superkey = True
                     reftype = {ktablename: []}
             else:
                 # Regular foreign key
@@ -394,7 +400,6 @@ class S3MobileSchema(object):
             description["reftype"] = reftype
 
         # Add field options to description
-        # @todo: indicate SE reference
         options = self.get_options(field, lookup=ktablename)
         if options:
             # @todo: if reference, store the returned options
@@ -403,7 +408,7 @@ class S3MobileSchema(object):
             description["options"] = options
 
         # Add default value to description
-        default = self.get_default(field, lookup=ktablename)
+        default = self.get_default(field, lookup=ktablename, superkey=superkey)
         if default:
             description["default"] = default
 
@@ -452,7 +457,7 @@ class S3MobileSchema(object):
             Get the options for a field with IS_IN_SET
 
             @param field: the Field
-            @param lookup: the look-up table name (if field is a foreign key)
+            @param lookup: the name of the lookup table
 
             @return: a list of tuples (key, label) with the field options
         """
@@ -468,34 +473,13 @@ class S3MobileSchema(object):
         fieldtype = str(field.type)
         if fieldtype[:9] == "reference":
 
-            if lookup not in self._references:
-                # Lookup table schema not exported => skip
-                return None
+            # Foreign keys have no fixed options
+            # => must expose the lookup table with data=True in order
+            #    to share current field options with the mobile client;
+            #    this is better done explicitly in order to run the
+            #    data download through the lookup table's controller
+            #    for proper authorization, customise_* and filtering
 
-            # @todo: if super-entity reference (@todo: caller to indicate):
-            #        => look up the instance record IDs
-            #        => add to self._references under the
-            #           instance types rather than SE (must add the
-            #           instance tables too if not present yet)
-
-            # For writable foreign keys, if the referenced table
-            # does not expose a mobile form itself, look up all
-            # valid options and report them as schema references:
-            if field.writable and not self.has_mobile_form(lookup):
-                add = self._references[lookup].add
-
-                # @note: introspection only works with regular validators
-                #        like IS_ONE_OF, but not with special widget
-                #        validators e.g. IS_ADD_PERSON_WIDGET2 =>
-                # @todo: migrate to S3AddPersonWidget to have regular
-                #        IS_ONE_OFs in the models
-                if hasattr(requires, "options"):
-                    for value, label in requires.options():
-                        if value:
-                            add(long(value))
-
-
-            # Foreign keys have no fixed options, however
             # @todo: deliver store uuid<=>label map instead, so that the
             #        mobile client has labels for fk options - unless the
             #        field has a base-class S3Represent with a field list
@@ -519,28 +503,54 @@ class S3MobileSchema(object):
             return None
 
     # -------------------------------------------------------------------------
-    def get_default(self, field, lookup=None):
+    def get_default(self, field, lookup=None, superkey=False):
         """
             Get the default value for a field
 
             @param field: the Field
+            @param lookup: the name of the lookup table
+            @param superkey: lookup table is a super-entity
 
             @returns: the default value for the field
         """
 
         default = field.default
+
         if default is not None:
 
             fieldtype = str(field.type)
 
             if fieldtype[:9] == "reference":
 
-                # Convert the default value into a UUID
+                # Look up the UUID for the default
                 uuid = self.get_uuid(lookup, default)
                 if uuid:
-                    # Store record reference for later resolution
-                    self._references[lookup].add(default)
-                    default = uuid
+
+                    if super_key:
+                        # Get the instance record ID
+                        prefix, name, record_id = current.s3db.get_instance(lookup, default)
+                        if record_id:
+                            tablename = "%s_%s" % (prefix, name)
+                    else:
+                        record_id = default
+                        tablename = lookup
+
+                    if record_id:
+
+                        # Export the default lookup record as dependency
+                        # (make sure the corresponding table schema is exported)
+                        if tablename not in self._references:
+                            references = self.references[tablename] = set()
+                        else:
+                            references = self.references[tablename]
+                        references.add(record_id)
+
+                        # Resolve as UUID
+                        default = uuid
+
+                    else:
+                        default = None
+
                 else:
                     default = None
 
