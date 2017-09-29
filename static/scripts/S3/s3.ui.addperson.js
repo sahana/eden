@@ -310,16 +310,18 @@
             // Show the edit bar
             $(selector + '_edit_bar').removeClass('hide').show();
 
-            // @todo: make sure the object doesn't yet exist
             if (opts.lookupDuplicates) {
 
-                // Add place to store results
-                // @todo: replace class "req" with widget-specific class
-                var results = '<div id="' + this.fieldName + '_duplicates" class="req"></div>';
-                if (this.formStyle == 'div') {
-                    $(selector + '_box_bottom').before(results);
-                } else {
-                    $(selector + '_box_bottom1').before(results);
+                var resultsID = this.fieldName + '_duplicates';
+                if (!$('#' + resultsID).length) {
+                    // Add place to store results
+                    // @todo: replace class "req" with widget-specific class
+                    var results = '<div id="' + resultsID + '" class="req"></div>';
+                    if (this.formStyle == 'div') {
+                        $(selector + '_box_bottom').before(results);
+                    } else {
+                        $(selector + '_box_bottom1').before(results);
+                    }
                 }
             }
 
