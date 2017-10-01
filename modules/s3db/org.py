@@ -5437,25 +5437,26 @@ class org_SiteRepresent(S3Represent):
                  ):
 
         settings = current.deployment_settings
+
         # Translation uses org_site_name & not T()
         translate = settings.get_L10n_translate_org_site()
         language = current.session.s3.language
         if language == settings.get_L10n_default_language():
             translate = False
 
-        self.show_type = show_type
         if show_type or show_link or translate:
             # Need a custom lookup
             self.lookup_rows = self.custom_lookup_rows
-        # Need a custom representation
-        fields = ["name"]
 
-        super(org_SiteRepresent,
-              self).__init__(lookup="org_site",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
+        self.L10n = {}
+        self.show_type = show_type
+
+        super(org_SiteRepresent, self).__init__(lookup = "org_site",
+                                                fields = ["name"],
+                                                show_link = show_link,
+                                                translate = translate,
+                                                multiple = multiple,
+                                                )
 
     # -------------------------------------------------------------------------
     def bulk(self, values, rows=None, list_type=False, show_link=True, include_blank=True):
@@ -5515,69 +5516,93 @@ class org_SiteRepresent(S3Represent):
         s3db = current.s3db
         stable = s3db.org_site
 
+        show_type = self.show_type
+        show_link = self.show_link
+
         count = len(values)
         if count == 1:
             value = values[0]
             query = (stable.site_id == value)
-            limitby = (0, 1)
         else:
             query = (stable.site_id.belongs(values))
-            limitby = (0, count)
+        limitby = (0, count)
 
-        if self.show_link:
-            # We need the instance_type IDs
-            # Do a first query to see which instance_types we have
-            rows = db(query).select(stable.instance_type,
-                                    limitby=limitby)
-            instance_types = []
-            for row in rows:
-                if row.instance_type not in instance_types:
-                    instance_types.append(row.instance_type)
+        fields = [stable.site_id,
+                  stable.name,
+                  ]
+        if show_type or show_link:
+            fields.append(stable.instance_type)
 
-            # Now do a second query which left-joins with all the instance tables we have
-            fields = [stable.site_id,
-                      stable.instance_type,
-                      stable.name,
-                      ]
-            left = []
-            for instance_type in instance_types:
-                table = s3db[instance_type]
-                fields.append(table.id)
-                left.append(table.on(table.site_id == stable.site_id))
-
-                if instance_type == "org_facility":
-                    # We also need the Facility Types
-                    ltable = db.org_site_facility_type
-                    ttable = db.org_facility_type
-                    fields.append(ttable.name)
-                    left.append(ltable.on(ltable.site_id == stable.site_id))
-                    left.append(ttable.on(ttable.id == ltable.facility_type_id))
-            rows = db(query).select(*fields, left=left)
-
-        elif self.show_type:
-            # We don't need instance_type IDs
-            # Just do a join with org_facility_type
-            ttable = s3db.org_facility_type
-            ltable = db.org_site_facility_type
-
-            left = [ltable.on(ltable.site_id == stable.site_id),
-                    ttable.on(ttable.id == ltable.facility_type_id)]
-
-            rows = db(query).select(stable.site_id,
-                                    stable.instance_type,
-                                    stable.name,
-                                    ttable.name,
-                                    left=left,
-                                    limitby=limitby)
-        else:
-            # We are just translating
-            rows = db(query).select(stable.site_id,
-                                    stable.name,
-                                    limitby=limitby)
-
+        rows = db(query).select(limitby=limitby, *fields)
         self.queries += 1
 
+        if show_type:
+
+            # Collect the site_ids
+            site_ids = set(row.site_id for row in rows)
+
+            # Retrieve the facility type links
+            ltable = s3db.org_site_facility_type
+            query = ltable.site_id.belongs(site_ids)
+            links = db(query).select(ltable.site_id,
+                                     ltable.facility_type_id,
+                                     )
+
+            # Collect all type IDs and type IDs per site_id
+            all_types = set()
+            facility_types = {}
+
+            for link in links:
+
+                facility_type_id = link.facility_type_id
+                all_types.add(facility_type_id)
+
+                site_id = link.site_id
+                if site_id in facility_types:
+                    facility_types[site_id].append(facility_type_id)
+                else:
+                    facility_types[site_id] = [facility_type_id]
+
+            # Bulk-represent all type IDs
+            # (stores the representations in the S3Represent)
+            ltable.facility_type_id.represent.bulk(list(all_types))
+
+            # Add the list of corresponding type IDs to each row
+            for row in rows:
+                row.facility_types = facility_types.get(row.site_id) or []
+
+        if show_link:
+
+            # Collect site_ids per instance type
+            site_ids = {}
+            for row in rows:
+                instance_type = row.instance_type
+                if instance_type in site_ids:
+                    site_ids[instance_type].add(row.site_id)
+                else:
+                    site_ids[instance_type] = set([row.site_id])
+
+            # Retrieve site ID / instance ID pairs per instance_type
+            instance_ids = {}
+            for instance_type in site_ids:
+                table = s3db.table(instance_type)
+                if not table:
+                    continue
+                query = table.site_id.belongs(site_ids[instance_type])
+                instances = db(query).select(table._id,
+                                             table.site_id,
+                                             )
+                self.queries += 1
+                key = table._id.name
+                for instance in instances:
+                    instance_ids[instance.site_id] = instance[key]
+
+            # Add the instance ID to each row
+            for row in rows:
+                row.instance_id = instance_ids.get(row.site_id)
+
         if self.translate:
+
             table = s3db.org_site_name
             query = (table.deleted == False) & \
                     (table.language == current.session.s3.language)
@@ -5589,6 +5614,7 @@ class org_SiteRepresent(S3Represent):
                                          table.name_l10n,
                                          limitby = (0, count),
                                          ).as_dict(key="site_id")
+
         return rows
 
     # -------------------------------------------------------------------------
@@ -5604,12 +5630,12 @@ class org_SiteRepresent(S3Represent):
         if row:
             try:
                 instance_type = row["org_site.instance_type"]
-                id = row[instance_type].id
+                instance_id = row.instance_id
             except (AttributeError, KeyError):
                 return v
             else:
                 c, f = instance_type.split("_", 1)
-                return A(v, _href=URL(c=c, f=f, args=[id],
+                return A(v, _href=URL(c=c, f=f, args=[instance_id],
                                       # remove the .aaData extension in paginated views
                                       extension=""
                                       ))
@@ -5626,9 +5652,9 @@ class org_SiteRepresent(S3Represent):
         """
 
         if self.translate:
-            _row = self.l10n.get(row["org_site.site_id"])
-            if _row:
-                name = _row["name_l10n"]
+            l10n_row = self.l10n.get(row["org_site.site_id"])
+            if l10n_row:
+                name = l10n_row["name_l10n"]
             else:
                 name = row["org_site.name"]
         else:
@@ -5639,11 +5665,13 @@ class org_SiteRepresent(S3Represent):
 
         if self.show_type:
             instance_type = row["org_site.instance_type"]
-            facility_type = row.get("org_facility_type.name", None)
+            facility_types = row.get("facility_types")
 
-            if facility_type:
-                # These need to be translated
-                name = "%s (%s)" % (name, current.T(facility_type))
+            if facility_types:
+                ltable = current.s3db.org_site_facility_type
+                represent = ltable.facility_type_id.represent
+                type_names = represent.multiple(facility_types)
+                name = "%s (%s)" % (name, type_names)
             else:
                 instance_type = current.auth.org_site_types.get(instance_type, None)
                 if instance_type:
