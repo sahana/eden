@@ -117,12 +117,6 @@ def vehicle():
     return s3db.asset_controller()
 
 # =============================================================================
-def vehicle_type():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
 def item():
     """ RESTful CRUD controller """
 
@@ -185,6 +179,22 @@ def item_category():
     field = table.is_vehicle
     field.readable = field.writable = False
     field.default = True
+
+    # CRUD strings
+    s3.crud_strings["supply_item_category"] = Storage(
+        label_create = T("Add New Vehicle Category"),
+        title_display = T("Vehicle Category Details"),
+        title_list = T("Vehicle Categories"),
+        title_update = T("Edit Vehicle Category"),
+        label_list_button = T("List Vehicle Categories"),
+        label_delete_button = T("Delete Vehicle Category"),
+        msg_record_created = T("Vehicle Category added"),
+        msg_record_modified = T("Vehicle Category updated"),
+        msg_record_deleted = T("Vehicle Category deleted"),
+        msg_list_empty = T("No Vehicle Categories currently registered"),
+        msg_match = T("Matching Vehicle Categories"),
+        msg_no_match = T("No Matching Vehicle Categories")
+        )
 
     return s3_rest_controller("supply", "item_category")
 

@@ -348,7 +348,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", m="import", p="create"),
                         M("Map", m="map"),
                     ),
-                    M("Vehicle Types", c="vehicle", f="vehicle_type")(
+                    M("Vehicle Types", c="vehicle", f="item")(
                         M("Create", m="create"),
                     ),
                 )
