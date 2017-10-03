@@ -2013,7 +2013,10 @@ class S3OptionsMenu(object):
                         M("Import", m="import", p="create"),
                         M("Map", m="map"),
                     ),
-                    M("Vehicle Types", f="vehicle_type")(
+                    M("Vehicle Types", f="item")(
+                        M("Create", m="create"),
+                    ),
+                    M("Vehicle Categories", f="item_category")(
                         M("Create", m="create"),
                     ),
                 )

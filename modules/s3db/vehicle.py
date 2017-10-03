@@ -42,8 +42,7 @@ class S3VehicleModel(S3Model):
         http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle
     """
 
-    names = ("vehicle_vehicle_type",
-             "vehicle_vehicle",
+    names = ("vehicle_vehicle",
              "vehicle_vehicle_id",
              )
 
@@ -58,113 +57,12 @@ class S3VehicleModel(S3Model):
         int_represent = IS_INT_AMOUNT.represent
 
         # ---------------------------------------------------------------------
-        # Vehicle Types
-        #
-        tablename = "vehicle_vehicle_type"
-        define_table(tablename,
-                     # @ToDo: deployment_setting for use of Code
-                     Field("code", length=64,
-                           label = T("Code"),
-                           requires = IS_LENGTH(64),
-                           ),
-                     Field("name", notnull=True, length=64,
-                           label = T("Name"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
-                                       ],
-                           ),
-                     #Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
-                     #      label = T("SubType of"),
-                     #      ondelete = "RESTRICT",
-                     #      readable = hierarchical_vehicle_types,
-                     #      writable = hierarchical_vehicle_types,
-                     #      ),
-                     Field("vehicle_height", "double",
-                           label = T("Vehicle Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     Field("vehicle_weight", "double",
-                           comment = T("Gross Vehicle Weight Rating (GVWR)"),
-                           label = T("Vehicle Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     Field("weight", "double",
-                           label = T("Payload Weight (kg)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" %
-                                                  (T("Payload Weight"),
-                                                   T("Gross Vehicle Weight Rating (GVWR) minus Curb Weight")
-                                                   )
-                                         ),
-                           ),
-                     Field("length", "double",
-                           label = T("Payload Length (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     Field("width", "double",
-                           label = T("Payload Width (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     Field("height", "double",
-                           label = T("Payload Height (m)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     Field("volume", "double",
-                           label = T("Payload Volume (m3)"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        type_represent = S3Represent(lookup=tablename,
-                                     fields=["code", "name"],
-                                     translate=True)
-
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Vehicle Type"),
-            title_display = T("Vehicle Type Details"),
-            title_list = T("Vehicle Types"),
-            title_update = T("Edit Vehicle Type"),
-            title_upload = T("Import Vehicle Types"),
-            label_list_button = T("List Vehicle Types"),
-            label_delete_button = T("Delete Vehicle Type"),
-            msg_record_created = T("Vehicle Type added"),
-            msg_record_modified = T("Vehicle Type updated"),
-            msg_record_deleted = T("Vehicle Type removed"),
-            msg_list_empty = T("No Vehicle Types currently registered")
-            )
-
-        vehicle_type_id = S3ReusableField("vehicle_type_id", "reference %s" % tablename,
-                                          label = T("Vehicle Type"),
-                                          ondelete = "RESTRICT",
-                                          represent = type_represent,
-                                          requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "vehicle_vehicle_type.id",
-                                                                  type_represent,
-                                                                  orderby="vehicle_vehicle_type.code",
-                                                                  sort=True)),
-                                          sortby = "code",
-                                          # Allow changing by whether hierarchical or not
-                                          #widget = vehicle_type_widget,
-                                          #comment = vehicle_type_comment,
-                                          )
-
-        # ---------------------------------------------------------------------
         # Vehicles
         #   a type of Asset
         #
         tablename = "vehicle_vehicle"
         define_table(tablename,
                      self.asset_asset_id(),
-                     vehicle_type_id(),
                      Field("name",
                            comment = T("e.g. License Plate"),
                            label = T("ID"),

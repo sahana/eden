@@ -826,11 +826,6 @@ def config(settings):
                        crud_form = crud_form,
                        )
 
-        if r.representation == "geojson":
-            from s3 import S3Represent
-            s3db.vehicle_vehicle.vehicle_type_id.represent = S3Represent(lookup="vehicle_vehicle_type",
-                                                                         fields=("code",))
-
     settings.customise_asset_asset_resource = customise_asset_asset_resource
 
     # -------------------------------------------------------------------------
