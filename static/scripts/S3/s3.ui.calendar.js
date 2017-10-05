@@ -322,16 +322,13 @@
             }
 
             // Add clear-button
+            var clearButton;
             if (opts.clearButton === "icon") {
-
-                var clearButton = $('<span class="postfix calendar-clear-btn" title="' + opts.clearText + '"><i class="fa-close fa"> </i></span>');
-
+                clearButton = $('<span class="postfix calendar-clear-btn" title="' + opts.clearText + '"><i class="fa-close fa"> </i></span>');
                 el.after(clearButton);
                 this.clearButton = clearButton;
-
             } else if (opts.clearButton) {
-
-                var clearButton = $('<button class="btn date-clear-btn" type="button">' + opts.clearText + '</button>');
+                clearButton = $('<button class="btn date-clear-btn" type="button">' + opts.clearText + '</button>');
                 el.after(clearButton);
                 this.clearButton = clearButton;
             }
@@ -371,7 +368,7 @@
             if (this.dateInput && this.timeInput) {
                 this._updateInput();
             } else {
-                el.val('');
+                el.val('').change();
             }
 
             this._updateExtremes(null);
@@ -550,7 +547,7 @@
                     defaultDate: +0, // drawDate will automatically be min/max adjusted
                     showTrigger: '<div>',
 
-                    onSelect: function(input) {
+                    onSelect: function( /* input */ ) {
                         self._updateInput();
                     },
                     onShow: function(picker, calendar, inst) {
@@ -599,7 +596,7 @@
                     minDate: minDate,
                     maxDate: maxDate,
 
-                    onSelect: function(input) {
+                    onSelect: function( /* input */ ) {
                         // Trigger a change event (calendarPicker does not)
                         el.change();
                     },
@@ -777,7 +774,7 @@
                 date = this.dateInput.val(),
                 time = this.timeInput.val();
 
-            el.val(this._join(date, time));
+            el.val(this._join(date, time)).change();
 
             // Inform the filter form about the change
             el.closest('.filter-form').trigger('optionChanged');
@@ -883,7 +880,8 @@
          */
         _join: function(datestr, timestr) {
 
-            return [datestr, timestr].join(this.options.separator);
+            return [datestr, timestr].map(function(s) { return s; })
+                                     .join(this.options.separator);
         },
 
         /**
@@ -1046,7 +1044,8 @@
 
             var el = $(this.element),
                 opts = this.options,
-                selectedDate = null;
+                selectedDate = null,
+                calendarDates;
 
             if (opts.timepicker) {
                 if (opts.calendar == 'gregorian') {
@@ -1054,7 +1053,7 @@
                     selectedDate = el.datetimepicker('getDate');
                 } else {
                     // calendarsPicker + timepicker
-                    var calendarDates = this.dateInput.calendarsPicker('getDate');
+                    calendarDates = this.dateInput.calendarsPicker('getDate');
                     if (calendarDates.length) {
                         selectedDate = calendarDates[0].toJSDate();
                         var selectedTime = this.timeInput.data('selectedTime');
@@ -1206,8 +1205,7 @@
         _unbindEvents: function() {
 
             var el = $(this.element),
-                ns = this.eventNamespace,
-                self = this;
+                ns = this.eventNamespace;
 
             // Real input
             el.unbind(ns);
