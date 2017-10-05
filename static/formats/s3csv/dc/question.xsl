@@ -77,12 +77,6 @@
         <xsl:variable name="Section">
             <xsl:value-of select="col[@field='Section']"/>
         </xsl:variable>
-        <xsl:variable name="SubSection">
-            <xsl:value-of select="col[@field='SubSection']"/>
-        </xsl:variable>
-        <xsl:variable name="SubSubSection">
-            <xsl:value-of select="col[@field='SubSubSection']"/>
-        </xsl:variable>
 
         <resource name="dc_question">
             <data field="name"><xsl:value-of select="col[@field='Question']"/></data>
@@ -134,25 +128,33 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Link to Section -->
-            <reference field="section_id" resource="dc_section">
-                <xsl:attribute name="tuid">
-                    <xsl:choose>
-                        <xsl:when test="$SubSubSection!=''">
-                            <!-- Hierarchical Section with 3 levels -->
-                            <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection, '/', $SubSubSection)"/>
-                        </xsl:when>
-                        <xsl:when test="$SubSection!=''">
-                            <!-- Hierarchical Section with 2 levels -->
-                            <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <!-- Simple Section -->
-                            <xsl:value-of select="concat($SectionPrefix, $Section)"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$Section!=''">
+                <!-- Link to Section -->
+                <xsl:variable name="SubSection">
+                    <xsl:value-of select="col[@field='SubSection']"/>
+                </xsl:variable>
+                <xsl:variable name="SubSubSection">
+                    <xsl:value-of select="col[@field='SubSubSection']"/>
+                </xsl:variable>
+                <reference field="section_id" resource="dc_section">
+                    <xsl:attribute name="tuid">
+                        <xsl:choose>
+                            <xsl:when test="$SubSubSection!=''">
+                                <!-- Hierarchical Section with 3 levels -->
+                                <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection, '/', $SubSubSection)"/>
+                            </xsl:when>
+                            <xsl:when test="$SubSection!=''">
+                                <!-- Hierarchical Section with 2 levels -->
+                                <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <!-- Simple Section -->
+                                <xsl:value-of select="concat($SectionPrefix, $Section)"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Field Type -->
             <xsl:variable name="Type">
@@ -232,63 +234,65 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Section">
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
         <xsl:param name="Section"/>
         <xsl:param name="SubSection"/>
         <xsl:param name="SubSubSection"/>
 
-        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
-        <resource name="dc_section">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($SectionPrefix, $Section)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Section"/></data>
-            <data field="posn"><xsl:value-of select="col[@field='Section Position']"/></data>
-            <!-- Link to Template -->
-            <reference field="template_id" resource="dc_template">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Template']"/>
-                </xsl:attribute>
-            </reference>
-        </resource>
-        <xsl:if test="$SubSection!=''">
+        <xsl:if test="$Section!=''">
             <resource name="dc_section">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection)"/>
+                    <xsl:value-of select="concat($SectionPrefix, $Section)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubSection"/></data>
-                <data field="posn"><xsl:value-of select="col[@field='SubSection Position']"/></data>
+                <data field="name"><xsl:value-of select="$Section"/></data>
+                <data field="posn"><xsl:value-of select="col[@field='Section Position']"/></data>
                 <!-- Link to Template -->
                 <reference field="template_id" resource="dc_template">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="col[@field='Template']"/>
-                    </xsl:attribute>
-                </reference>
-                <reference field="parent" resource="dc_section">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($SectionPrefix, $Section)"/>
                     </xsl:attribute>
                 </reference>
             </resource>
-        </xsl:if>
-        <xsl:if test="$SubSubSection!=''">
-            <resource name="dc_section">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection, '/', $SubSubSection)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubSubSection"/></data>
-                <data field="posn"><xsl:value-of select="col[@field='SubSubSection Position']"/></data>
-                <!-- Link to Template -->
-                <reference field="template_id" resource="dc_template">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="col[@field='Template']"/>
-                    </xsl:attribute>
-                </reference>
-                <reference field="parent" resource="dc_section">
+            <xsl:if test="$SubSection!=''">
+                <resource name="dc_section">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection)"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name"><xsl:value-of select="$SubSection"/></data>
+                    <data field="posn"><xsl:value-of select="col[@field='SubSection Position']"/></data>
+                    <!-- Link to Template -->
+                    <reference field="template_id" resource="dc_template">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Template']"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="parent" resource="dc_section">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($SectionPrefix, $Section)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            <xsl:if test="$SubSubSection!=''">
+                <resource name="dc_section">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection, '/', $SubSubSection)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubSubSection"/></data>
+                    <data field="posn"><xsl:value-of select="col[@field='SubSubSection Position']"/></data>
+                    <!-- Link to Template -->
+                    <reference field="template_id" resource="dc_template">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Template']"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="parent" resource="dc_section">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($SectionPrefix, $Section, '/', $SubSection)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:if>
 
     </xsl:template>

@@ -4563,7 +4563,7 @@
 'Temp folder %s not writable - unable to apply theme!': "%s dossier temp non inscriptible - impossible d'appliquer thème!",
 'Template Name': 'Nom du modèle',
 'Template file %s not readable - unable to apply theme!': "%s modèle de fichier non lisible - impossible d'appliquer thème!",
-'Templates': 'templates',
+'Templates': 'Templates',
 'Term for the fifth-level within-country administrative division (e.g. a voting or postcode subdivision). This level is not often used.': "Terme pour le division administrative niveau 5 dans le pays (par exemple, un vote ou subdivision Code postal). Ce niveau n'est pas utilisée souvent.",
 'Term for the fourth-level within-country administrative division (e.g. Village, Neighborhood or Precinct).': 'Terme pour le division administrative niveau 4 dans le pays (par exemple, un village, quartier ou district).',
 'Term for the primary within-country administrative division (e.g. State or Province).': 'Terme pour la principale division administrative du pays (par exemple, Etat ou province).',

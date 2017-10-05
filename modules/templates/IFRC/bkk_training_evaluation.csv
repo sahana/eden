@@ -1,0 +1,10 @@
+Template,Question,Question Position,Type,Options,Required,Code,Totals,Grid,Tooltip
+Training Evaluation,"1. How much information from the training you attended do you still remember?",1,options,"['0%', '20%', '60%', '80%', '100%']",,,,,
+Training Evaluation,"2. I would recommend this training to my colleagues",2,options,"['strongly agree', 'agree', 'disagree', 'strongly disagree']",,,,,
+Training Evaluation,"3. I shared the information received during the training with your colleagues",3,options,"['not at all', 'part of it', 'most of it', 'all of it']",,,,,
+Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?",4,options,"['no change', 'some change', 'significant change']",,,,,
+Training Evaluation,"Please provide example (in English or in your own language)",5,text,,,,,,
+Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?",6,text,,,,,,
+Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?",7,options,"['no change', 'some change', 'significant change']",,,,,
+Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?",8,text,,,,,,
+Training Evaluation,"8. Would you be willing to be contacted again for further information?",9,options,"['yes', 'no']",,,,,

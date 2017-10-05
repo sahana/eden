@@ -2821,6 +2821,13 @@ class S3Config(Storage):
         """
         return self.dc.get("response_label", "Assessment")
 
+    def get_dc_unique_question_names_per_template(self):
+        """
+            Deduplicate Questions by Name/Template
+             - needed for importing multiple translations
+        """
+        return self.dc.get("unique_question_names_per_template", False)
+
     def get_dc_mobile_data(self):
         """
             Whether Mobile Clients should download Assessments

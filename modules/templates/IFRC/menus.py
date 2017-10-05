@@ -43,14 +43,26 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        T = current.T
-        auth = current.auth
-        settings = current.deployment_settings
-
-        has_role = auth.s3_has_role
-        root_org = auth.root_org_name()
         system_roles = current.session.s3.system_roles
         ADMIN = system_roles.ADMIN
+
+        T = current.T
+        auth = current.auth
+        has_role = auth.s3_has_role
+
+        if not has_role(ADMIN) and auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
+            # Simplified menu for Bangkok CCST
+            return [homepage("hrm", "org", name=T("Trainings"), f="training_event",
+                             #vars=dict(group="staff"), check=hrm)(
+                             vars=dict(group="staff"))(
+                        #MM("Training Events", c="hrm", f="training_event"),
+                        #MM("Training Courses", c="hrm", f="course"),
+                        ),
+                    ]
+
+        settings = current.deployment_settings
+
+        root_org = auth.root_org_name()
         ORG_ADMIN = system_roles.ORG_ADMIN
 
         s3db = current.s3db
@@ -399,6 +411,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                  )
 
     # -------------------------------------------------------------------------
+    def dc(self):
+        """ Data Collection """
+
+        # Currently only used in HRM (by CCST Bangkok)
+        return self.hrm()
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def deploy():
         """ RDRT Alerting and Deployments """
@@ -625,21 +644,30 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           restrict=["EVENT_MONITOR"])(
                             #M("Create", m="create"),
                         ),
+                        M("Surveys", c="dc", f="target")(
+                            M("Templates", f="template"),
+                            M("Surveys", f="target"),
+                            M("Responses", f="respnse"),
+                        ),
                         M("Training Course Catalog", c="hrm", f="course")(
                             #M("Create", m="create"),
                             #M("Import", m="import", p="create", check=is_org_admin),
                             #M("Course Certificates", f="course_certificate"),
                         ),
+                        M("AoF/SFI", c="hrm", f="strategy",
+                          restrict=["EVENT_MONITOR"])(
+                            #M("Create", m="create"),
+                        ),
                         M("Programmes", c="hrm", f="programme")(
                             #M("Create", m="create"),
                         ),
-                        M("AoF/SFI", c="hrm", f="strategy")(
+                        M("Projects", c="project", f="project")(
                             #M("Create", m="create"),
                         ),
-                        M("Department Catalog", c="hrm", f="department")(
+                        M("Departments", c="hrm", f="department")(
                             #M("Create", m="create"),
                         ),
-                        M("Job Title Catalog", c="hrm", f="job_title")(
+                        M("Job Titles", c="hrm", f="job_title")(
                             #M("Create", m="create"),
                             #M("Import", m="import", p="create", check=is_org_admin),
                         ),

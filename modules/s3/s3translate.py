@@ -715,7 +715,7 @@ class TranslateReadFiles:
                                 s = obj
                                 fsappend((loc, s))
                     else:
-                        #@ToDo : Get the value of non-settings variables
+                        # @ToDo: Get the value of non-settings variables
                         pass
 
                 else:
@@ -836,7 +836,7 @@ class TranslateReadFiles:
                 # Set current template.
                 template_list.append(current.deployment_settings.base.template)
 
-            # List of fields which don't have an S3ReusableFiled defined but we
+            # List of fields which don't have an S3ReusableField defined but we
             # know we wish to translate
             # @ToDo: Extend to dict if we need to support some which don't just translate the name
             always_translate = ("project_beneficiary_type_id",
