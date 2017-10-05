@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+lo,Training Evaluation,"1. How much information from the training you attended do you still remember?","1.ທ່ານຍັງຈື່ຂໍ້ມູນໃນການເຂົ້າຝຶກອົບຮົມໄດ້ຫຼາຍສ່ຳໃດ?","['0%', '20%', '60%', '80%', '100%']",
+lo,Training Evaluation,"2. I would recommend this training to my colleagues","2.ຂ້າພະເຈົ້າຢາກຈະແນະນຳການຝຶກອົບຮົມແກ່ເພື່ອນຮ່ວມງານຂອງຂ້າພະເຈົ້າ","['ເຫັນດີຢ່າງຍີ່ງ', 'ເຫັນດີ', 'ບໍ່ເຫັນດີ', 'ບໍ່ເຫັນດີຢ່າງຍີ່ງ']",
+lo,Training Evaluation,"3. I shared the information received during the training with your colleagues","3.ຂ້າພະເຈົັ້າໄດ້ແບ່ງປັນຂໍ້ມູນໃຫ້ແກ່ເພື່ອນຮ່ວມງານຂອງຂ້າພະເຈົ້າ","['ບໍ່ເລີຍ', 'ບາງສ່ວນ', 'ສ່ວນໃຫຍ່', 'ທັ້ງໝົດ']",
+lo,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","4.ຫຼັງຈາກທີ່ທ່ານໄດ້ເຂົ້າຮ່ວມຝຶກອົບຮົມທ່ານໄດ້ເຮັດວຽກປະຈຳແຕກຕ່າງຈາກເດີມຈາກວຽກຂອງທ່ານບໍ່","['ບໍ່ມີການປ່ຽນແປງຫຍັງເລີຍ', 'ປ່ຽນແປງບາງສ່ວນ', 'ປ່ຽນແປງຈາກເດີມຫຼາຍ']",
+lo,Training Evaluation,"Please provide example (in English or in your own language)","ຂອງທ່ານບໍ່ (ຍົກຕົວຢ່າງເປັນພາສາລາວແລະພາສາອັງກິດ)",,
+lo,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","5.ຫາກບໍ່ມີການປ່ຽນແປງຫຼືມີການປ່ຽນແປງພຽງເລັກນ້ອຍໃນການເຮັດວຽກຫຼັງຈາກເຂົ້າຮ່ວມການຝຶກອົບຮົມນີ້ ເປັນຫຍັງຈື່ງເປັນແບບນັ້ນ?",,
+lo,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","6.ທ່ານເຫັນການປ່ຽນແປງ ໃນໜ່ວຍງານ/ພະແນກ/ອົງກອນຂອງທ່ານເນື່ອງມາຈາກການຝຶກອົບຮົມຫຼືບໍ່?","['ບໍ່ມີການປ່ຽນແປງຫຍັງເລີຍ', 'ປ່ຽນແປງບາງສ່ວນ', 'ປ່ຽນແປງຈາກເດີມຫຼາຍ']",
+lo,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","7.ຫາກບໍ່ມີການປ່ຽນແປງຫຼືມີການປ່ຽນແປງພຽງເລັກນ້ອຍໃນໜ່ວຍງານ/ພະແນກ/ອົງກແນຂອງທ່ານຈາກການຝຶກອົບຮົມ ເປັນຫຍັງຈື່ງເປັນແນວນັ້ນ?",,
+lo,Training Evaluation,"8. Would you be willing to be contacted again for further information?","8.ທ່ານຍິນດີທີ່ຈະໃຫ້ຂໍ້ມູນເພີ່ມເຕີມອີກຄັ້ງຫຼືບໍ່","['ຍິນດີ', 'ບໍ່ຍິນດີ']",

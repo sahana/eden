@@ -35,12 +35,14 @@ __all__ = ("S3HRModel",
            "S3HRContractModel",
            "S3HRSkillModel",
            "S3HREventStrategyModel",
+           "S3HREventProgrammeModel",
+           "S3HREventProjectModel",
+           "S3HREventAssessmentModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
            "S3HRAwardModel",
            "S3HRDisciplinaryActionModel",
            "S3HRProgrammeModel",
-           "S3HRProgrammeEventModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
            "hrm_TrainingEventRepresent",
@@ -2740,16 +2742,27 @@ class S3HRSkillModel(S3Model):
                        # Format for list_fields
                        hrm_training_event_instructor = "training_event_id",
 
-                       hrm_programme = {"link": "hrm_programme_event",
+                       hrm_programme = {"link": "hrm_event_programme",
                                         "joinby": "training_event_id",
                                         "key": "programme_id",
                                         "actuate": "hide",
                                         },
+                       project_project = {"link": "hrm_event_project",
+                                           "joinby": "training_event_id",
+                                           "key": "project_id",
+                                           "actuate": "hide",
+                                           },
                        project_strategy = {"link": "hrm_event_strategy",
                                            "joinby": "training_event_id",
                                            "key": "strategy_id",
                                            "actuate": "hide",
                                            },
+
+                       dc_target = {"link": "hrm_event_target",
+                                    "joinby": "training_event_id",
+                                    "key": "target_id",
+                                    "actuate": "replace",
+                                    },
                        )
 
         # =====================================================================
@@ -2782,6 +2795,12 @@ class S3HRSkillModel(S3Model):
         #
         course_grade_opts = settings.get_hrm_course_grades()
 
+        # @ToDo: configuration setting once-required
+        role_opts = {1: T("Participant"),
+                     2: T("Facilitator"),
+                     3: T("Observer"),
+                     }
+
         tablename = "hrm_training"
         define_table(tablename,
                      # @ToDo: Create a way to add new people to training as staff/volunteers
@@ -2798,6 +2817,18 @@ class S3HRSkillModel(S3Model):
                                        ),
                      course_id(empty = not course_mandatory,
                                ),
+                     Field("role", "integer",
+                           default = 1,
+                           label = T("Role"),
+                           represent = lambda opt: \
+                                       role_opts.get(opt, NONE),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(role_opts,
+                                                  zero=None)),
+                           # Enable in templates as-required
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_datetime(),
                      s3_datetime("end_date",
                                  label = T("End Date"),
@@ -3850,8 +3881,105 @@ class S3HREventStrategyModel(S3Model):
         #
         tablename = "hrm_event_strategy"
         self.define_table(tablename,
-                          self.hrm_training_event_id(),
-                          self.project_strategy_id(),
+                          self.hrm_training_event_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          self.project_strategy_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3HREventProgrammeModel(S3Model):
+    """
+        (Training) Events <> Programmes Link Table
+    """
+
+    names = ("hrm_event_programme",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # (Training) Events <> Programmes Link Table
+        #
+        tablename = "hrm_event_programme"
+        self.define_table(tablename,
+                          self.hrm_training_event_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          self.hrm_programme_id(empty = False,
+                                                ondelete = "CASCADE",
+                                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3HREventProjectModel(S3Model):
+    """
+        (Training) Events <> Projects Link Table
+    """
+
+    names = ("hrm_event_project",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # (Training) Events <> Projects Link Table
+        #
+        tablename = "hrm_event_project"
+        self.define_table(tablename,
+                          self.hrm_training_event_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          self.project_project_id(empty = False,
+                                                  ondelete = "CASCADE",
+                                                  ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3HREventAssessmentModel(S3Model):
+    """
+        (Training) Events <> Data Collection Assessments Link Table
+         Can be used for:
+            * Needs Assessment / Readiness checklist
+            * Tests (either for checking learning/application or for final grade)
+            * Evaluation (currently the only use case - for IFRC's Bangkok CCST)
+
+        @ToDo: Add Type here if it becomes useful
+    """
+
+    names = ("hrm_event_target",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # (Training) Events <> DC Targets Link Table
+        #
+        tablename = "hrm_event_target"
+        self.define_table(tablename,
+                          self.hrm_training_event_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          self.dc_target_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -4474,7 +4602,7 @@ class S3HRProgrammeModel(S3Model):
                                                    "joinby": "programme_id",
                                                    },
                             # Uncomment if-required for reporting
-                            #hrm_training_event = {"link": "hrm_programme_event",
+                            #hrm_training_event = {"link": "hrm_event_programme",
                             #                      "joinby": "programme_id",
                             #                      "key": "training_event_id",
                             #                      "actuate": "hide",
@@ -4601,31 +4729,6 @@ class S3HRProgrammeModel(S3Model):
         #
         return dict(hrm_programme_id = programme_id,
                     )
-
-# =============================================================================
-class S3HRProgrammeEventModel(S3Model):
-    """
-        Programmes <> (Training) Events Link Table
-    """
-
-    names = ("hrm_programme_event",
-             )
-
-    def model(self):
-
-        # =====================================================================
-        # Programmes <> (Training) Events Link Table
-        #
-        tablename = "hrm_programme_event"
-        self.define_table(tablename,
-                          self.hrm_programme_id(),
-                          self.hrm_training_event_id(),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
 
 # =============================================================================
 def hrm_programme_hours_month(row):
@@ -6374,21 +6477,28 @@ def hrm_rheader(r, tabs=[], profile=False):
         tabs = [(T("Training Event Details"), None),
                 (T("Participants"), "participant"),
                 ]
-        rheader_tabs = s3_rheader_tabs(r, tabs)
         settings = current.deployment_settings
-        if settings.has_module("msg") and \
-               current.auth.permission.has_permission("update", c="hrm", f="compose"):
-            # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
-            action = A(T("Message Participants"),
-                       _href = URL(f = "compose",
-                                   vars = {"training_event.id": record.id,
-                                           "pe_id": record.pe_id,
-                                           },
-                                   ),
-                       _class = "action-btn send"
-                       )
-        else:
-            action = None
+        if settings.has_module("dc"):
+            label = settings.get_dc_response_label()
+            if label == "Survey":
+                label = T("Surveys")
+            else:
+                label = T("Assessments")
+            tabs.append((label, "target"),)
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        action = None
+        if settings.has_module("msg"):
+            permit = current.auth.permission.has_permission
+            if permit("update", c="hrm", f="compose") and permit("update", c="msg"):
+                # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
+                action = A(T("Message Participants"),
+                           _href = URL(f = "compose",
+                                       vars = {"training_event.id": record.id,
+                                               "pe_id": record.pe_id,
+                                               },
+                                       ),
+                           _class = "action-btn send"
+                           )
 
         if settings.get_hrm_event_types():
             event_type = TR(TH("%s: " % table.event_type_id.label),
@@ -7728,11 +7838,57 @@ def hrm_training_event_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if r.component_name == "participant" and \
+        if r.component_name == "target":
+
+            tablename = "dc_target"
+
+            # Simplify
+            table = r.component.table
+            table.location_id.readable = table.location_id.writable = False
+            #table.organisation_id.readable = table.organisation_id.writable = False
+            #table.comments.readable = table.comments.writable = False
+
+            # CRUD strings
+            T = current.T
+            label = current.deployment_settings.get_dc_response_label()
+            if label == "Survey":
+                #label = T("Survey")
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Create Survey"),
+                    title_display = T("Survey Details"),
+                    title_list = T("Surveys"),
+                    title_update = T("Edit Survey"),
+                    title_upload = T("Import Surveys"),
+                    label_list_button = T("List Surveys"),
+                    label_delete_button = T("Delete Survey"),
+                    msg_record_created = T("Survey added"),
+                    msg_record_modified = T("Survey updated"),
+                    msg_record_deleted = T("Survey deleted"),
+                    msg_list_empty = T("No Surveys currently registered"))
+            else:
+                #label = T("Assessment")
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Create Assessment"),
+                    title_display = T("Assessment Details"),
+                    title_list = T("Assessments"),
+                    title_update = T("Edit Assessment"),
+                    title_upload = T("Import Assessments"),
+                    label_list_button = T("List Assessments"),
+                    label_delete_button = T("Delete Assessment"),
+                    msg_record_created = T("Assessment added"),
+                    msg_record_modified = T("Assessment updated"),
+                    msg_record_deleted = T("Assessment deleted"),
+                    msg_list_empty = T("No Assessments currently registered"))
+
+            # Open in native controller
+            current.s3db.configure(tablename,
+                                   linkto = lambda record_id: URL(c="dc", f="target", args=[record_id, "read"]),
+                                   linkto_update = lambda record_id: URL(c="dc", f="target", args=[record_id, "update"]),
+                                   )
+
+        elif r.component_name == "participant" and \
            (r.interactive or \
             r.representation in ("aadata", "pdf", "xls")):
-
-            T = current.T
 
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(

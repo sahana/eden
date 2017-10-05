@@ -35,6 +35,7 @@ __all__ = ("DataCollectionTemplateModel",
            )
 
 from gluon import *
+from gluon.languages import read_dict, write_dict
 
 from ..s3 import *
 from s3layouts import S3PopupLink
@@ -59,7 +60,9 @@ class DataCollectionTemplateModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
+        settings = current.deployment_settings
 
+        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
 
@@ -87,6 +90,7 @@ class DataCollectionTemplateModel(S3Model):
 
         configure(tablename,
                   create_onaccept = self.dc_template_create_onaccept,
+                  deduplicate = S3Duplicate(),
                   )
 
         # Reusable field
@@ -117,10 +121,10 @@ class DataCollectionTemplateModel(S3Model):
             msg_list_empty = T("No Templates currently registered"))
 
         # Components
-        self.add_components(tablename,
-                            dc_question = "template_id",
-                            dc_section = "template_id",
-                            )
+        add_components(tablename,
+                       dc_question = "template_id",
+                       dc_section = "template_id",
+                       )
 
         # =====================================================================
         # Template Sections
@@ -306,8 +310,17 @@ class DataCollectionTemplateModel(S3Model):
                                  ),
                      *s3_meta_fields())
 
+        unique_question_names_per_template = settings.get_dc_unique_question_names_per_template()
+        if unique_question_names_per_template:
+            # Deduplicate Questions by Name/Template
+            # - needed for importing multiple translations
+            deduplicate = S3Duplicate(primary=("name", "template_id"))
+        else:
+            deduplicate = None
+
         configure(tablename,
                   onaccept = self.dc_question_onaccept,
+                  deduplicate = deduplicate,
                   )
 
         # Reusable field
@@ -338,10 +351,15 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_deleted = T("Question deleted"),
             msg_list_empty = T("No Questions currently registered"))
 
+        # Components
+        add_components(tablename,
+                       dc_question_l10n = "question_id",
+                       )
+
         # =====================================================================
         # Question Translations
         #
-        l10n_languages = current.deployment_settings.get_L10n_languages()
+        l10n_languages = settings.get_L10n_languages()
 
         tablename = "dc_question_l10n"
         define_table(tablename,
@@ -353,8 +371,14 @@ class DataCollectionTemplateModel(S3Model):
                            requires = IS_ISO639_2_LANGUAGE_CODE(),
                            ),
                      Field("name_l10n",
-                           label = T("Translated Field Name"),
+                           label = T("Translated Question"),
                            ),
+                     Field("options_l10n", "json",
+                           label = T("Translated Options"),
+                           represent = lambda opts: ", ".join(json.loads(opts)),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           ),
+                     # @ToDo: Implement this when-required
                      Field("tooltip_l10n",
                            label = T("Translated Tooltip"),
                            ),
@@ -373,6 +397,10 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_modified = T("Translation updated"),
             msg_record_deleted = T("Translation deleted"),
             msg_list_empty = T("No Translations currently registered"))
+
+        configure(tablename,
+                  onaccept = self.dc_question_l10n_onaccept,
+                  )
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
@@ -524,6 +552,64 @@ class DataCollectionTemplateModel(S3Model):
             # Link the Field to the Question
             question.update_record(field_id=field_id)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dc_question_l10n_onaccept(form):
+        """
+            On-accept routine for dc_question_l10n:
+                - Update the Translations file with translated Options
+        """
+
+        try:
+            question_l10n_id = form.vars.id
+        except AttributeError:
+            return
+
+        db = current.db
+
+        # Read the Question
+        qtable = db.dc_question
+        ltable = db.dc_question_l10n
+        query = (qtable.id == ltable.question_id) & \
+                (ltable.id == question_l10n_id)
+        question = db(query).select(qtable.field_type,
+                                    qtable.options,
+                                    ltable.options_l10n,
+                                    ltable.language,
+                                    limitby=(0, 1)
+                                    ).first()
+
+        if question["dc_question.field_type"] != 6:
+            # Nothing we need to do
+            return
+
+        options = question["dc_question.options"]
+        options_l10n = question["dc_question_l10n.options_l10n"]
+
+        len_options = len(options)
+        if len_options != len(options_l10n):
+            current.session.error(T("Number of Translated Options don't match original!"))
+            return
+
+        # Read existing translations (if any)
+        w2pfilename = os.path.join(current.request.folder, "languages",
+                                   "%s.py" % question["dc_question_l10n.language"])
+
+        if os.path.exists(w2pfilename):
+            translations = read_dict(w2pfilename)
+        else:
+            translations = {}
+
+        # Add ours
+        for i in range(len_options):
+            original = s3_str(options[i])
+            translated = s3_str(options_l10n[i])
+            if original != translated:
+                translations[original] = translated
+
+        # Write out new file
+        write_dict(w2pfilename, translations)
+
 # =============================================================================
 class DataCollectionModel(S3Model):
     """
@@ -559,7 +645,9 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      template_id(),
                      s3_date(default = "now"),
-                     location_id(widget = S3LocationSelector(show_map=False)),
+                     location_id(widget = S3LocationSelector(show_map = False,
+                                                             show_postcode = False,
+                                                             )),
                      #self.org_organisation_id(),
                      #self.pr_person_id(),
                      s3_comments(),
@@ -745,6 +833,23 @@ def dc_rheader(r, tabs=None):
                     )
 
             rheader_fields = (["name"],
+                              )
+
+        elif tablename == "dc_question":
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Translations"), "question_l10n"),
+                    )
+
+            def options(record):
+                if record.options:
+                    return ", ".join(record.options)
+                else:
+                    return current.messages["NONE"]
+
+            rheader_fields = ([(T("Question"), "name")],
+                              [(T("Options"), options)],
+                              ["comments"],
                               )
 
         elif tablename == "dc_response":
