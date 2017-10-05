@@ -52,6 +52,7 @@ class S3VehicleModel(S3Model):
         T = current.T
         db = current.db
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         float_represent = IS_FLOAT_AMOUNT.represent
@@ -67,11 +68,9 @@ class S3VehicleModel(S3Model):
                            label = T("Code"),
                            requires = IS_LENGTH(64),
                            ),
-                     Field("name", notnull=True, length=64,
+                     Field("name", length=128,
                            label = T("Name"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
-                                       ],
+                           requires = IS_LENGTH(128),
                            ),
                      #Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
                      #      label = T("SubType of"),
@@ -141,6 +140,10 @@ class S3VehicleModel(S3Model):
             msg_record_deleted = T("Vehicle Type removed"),
             msg_list_empty = T("No Vehicle Types currently registered")
             )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("code",)),
+                  )
 
         vehicle_type_id = S3ReusableField("vehicle_type_id", "reference %s" % tablename,
                                           label = T("Vehicle Type"),
@@ -215,10 +218,10 @@ class S3VehicleModel(S3Model):
                                                               )),
                                      )
 
-        self.configure(tablename,
-                       context = {"location": "asset_id$location_id"
-                                  },
-                       )
+        configure(tablename,
+                  context = {"location": "asset_id$location_id"
+                             },
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
