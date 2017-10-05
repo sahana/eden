@@ -364,8 +364,12 @@ class S3Represent(object):
         translated = False
 
         if self.slabels:
-            # String Template
-            v = labels % row
+            # String Template or lazyT
+            try:
+                v = labels % row.as_dict()
+            except AttributeError:
+                # Row just a dict/Storage after all? (e.g. custom lookup)
+                v = labels % row
         elif self.clabels:
             # External Renderer
             v = labels(row)
@@ -645,7 +649,7 @@ class S3Represent(object):
         # What type of renderer do we use?
         labels = self.labels
         # String template?
-        self.slabels = isinstance(labels, basestring)
+        self.slabels = isinstance(labels, (basestring, lazyT))
         # External renderer?
         self.clabels = callable(labels)
 
