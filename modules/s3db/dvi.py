@@ -147,11 +147,15 @@ class S3DVIModel(S3Model):
                                  ])
 
         # Reusable fields
+        represent = S3Represent(lookup="dvi_recreq",
+                                fields = ["marker", "date", "bodies_found"],
+                                labels = T("[%(marker)s] %(date)s: %(bodies_found)s bodies"),
+                                )
         dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
                                         requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                         "dvi_recreq.id",
-                                                        "[%(marker)s] %(date)s: %(bodies_found)s bodies")),
-                                        represent = lambda id: id,
+                                                        represent)),
+                                        represent = represent,
                                         label=T("Recovery Request"),
                                         ondelete = "RESTRICT")
 
@@ -190,7 +194,7 @@ class S3DVIModel(S3Model):
         morgue_id = S3ReusableField("morgue_id", "reference %s" % tablename,
                                     requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                     "dvi_morgue.id", "%(name)s")),
-                                    represent = self.morgue_represent,
+                                    represent = S3Represent(lookup="dvi_morgue"),
                                     ondelete = "RESTRICT")
 
         # CRUD Strings
@@ -227,7 +231,7 @@ class S3DVIModel(S3Model):
                      self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
                                                   IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
                      morgue_id(),
-                     dvi_recreq_id(label = T("Recovery Request")),
+                     dvi_recreq_id(),
                      s3_datetime("date_of_recovery",
                                  label = T("Date of Recovery"),
                                  empty=False,
@@ -477,21 +481,5 @@ class S3DVIModel(S3Model):
                            title = c_title,
                            tooltip = c_comment,
                            )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def morgue_represent(id):
-
-        if not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.dvi_morgue
-        row = db(table.id == id).select(table.name,
-                                        limitby=(0, 1)).first()
-        try:
-            return row.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
 # END =========================================================================
