@@ -411,9 +411,9 @@ def organisation():
 
     resource = s3db.resource("org_organisation")
     totalrows = resource.count()
-    display_start = int(get_vars.displayStart) if get_vars.displayStart else 0
-    display_length = int(get_vars.pageLength) if get_vars.pageLength else 10
-    limit = 4 * display_length
+    display_start = int(get_vars.start) if get_vars.start else 0
+    display_length = int(get_vars.limit) if get_vars.limit else 10
+    limit = display_length
 
     list_fields = ["id", "name"]
     default_orderby = orderby = "org_organisation.name asc"
@@ -423,6 +423,8 @@ def organisation():
             orderby = default_orderby
         if query:
             resource.add_filter(query)
+    else:
+        limit = 4 * limit
 
     data = resource.select(list_fields,
                            start=display_start,
