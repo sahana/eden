@@ -1409,12 +1409,7 @@ def twitter_channel():
         return output
     s3.postp = postp
 
-    s3db.configure(tablename,
-                   listadd = False,
-                   deletable = False,
-                   )
-
-    return s3_rest_controller(deduplicate="", list_btn="")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def inject_search_after_save(output):

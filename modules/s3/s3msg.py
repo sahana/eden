@@ -2398,12 +2398,12 @@ class S3Msg(object):
                                                          limitby=(0, 1)).first()
 
         tso = TwitterSearch.TwitterSearchOrder()
-        tso.setKeywords(search_query.keywords.split(" "))
-        tso.setLanguage(search_query.lang)
+        tso.set_keywords(search_query.keywords.split(" "))
+        tso.set_language(search_query.lang)
         # @ToDo Handle more than 100 results per page
         # This may have to be changed upstream
-        tso.setCount(int(search_query.count))
-        tso.setIncludeEntities(search_query.include_entities)
+        tso.set_count(int(search_query.count))
+        tso.set_include_entities(search_query.include_entities)
 
         try:
             ts = TwitterSearch.TwitterSearch(
@@ -2423,7 +2423,7 @@ class S3Msg(object):
         rtable.location_id.requires = None
         update_super = s3db.update_super
 
-        for tweet in ts.searchTweetsIterable(tso):
+        for tweet in ts.search_tweets_iterable(tso):
             user = tweet["user"]["screen_name"]
             body = tweet["text"]
             tweet_id = tweet["id_str"]
