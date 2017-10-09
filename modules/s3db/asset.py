@@ -700,8 +700,17 @@ $.filterOptionsS3({
         """
 
         request = current.request
-        get_vars = request.get_vars
-        status = get_vars.get("status", None)
+
+        # Custom methods to allow form customization for specific cases
+        # Original method passed from asset_log_prep()
+        method = current.response.s3.asset_log_method
+        if method == "setbase":
+            status = ASSET_LOG_SET_BASE
+        elif method in ("assignperson", "assignsite", "assignorg"):
+            status = ASSET_LOG_ASSIGN
+        else:
+            status = None
+
         if not status:
             if not current.response.s3.asset_import:
                 # e.g. Record merger or Sync
@@ -711,10 +720,6 @@ $.filterOptionsS3({
             form_vars = form.vars
             asset_id = form_vars.asset_id
             status = int(form_vars.status)
-            if status == ASSET_LOG_ASSIGN:
-                # Only type supported right now
-                # @ToDo: Support more types
-                type == "person"
             new = True
         else:
             # Interactive
@@ -733,7 +738,6 @@ $.filterOptionsS3({
 
             current_log = asset_get_current_log(asset_id)
 
-            type = get_vars.get("type", None)
             log_time = current_log.datetime
             current_time = form_vars.get("datetime", None).replace(tzinfo=None)
             new = log_time <= current_time
@@ -757,7 +761,32 @@ $.filterOptionsS3({
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
             elif status == ASSET_LOG_ASSIGN:
-                if type == "person":
+                if method == "assignsite":
+                    asset_tracker.check_in(db.org_site, form_vars.site_id,
+                                           timestmp = request.utcnow)
+                    # Also do component items
+                    locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                    try:
+                        db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
+                    except:
+                        pass
+
+                elif method == "assignorg":
+                    site_id = form_vars.get("site_id", None)
+                    if site_id:
+                        asset_tracker.check_in(db.org_site, site_id,
+                                               timestmp = request.utcnow)
+                        # Also do component items
+                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                        try:
+                            db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
+                        except:
+                            pass
+                    else:
+                        # We can no longer track location
+                        asset_tracker.check_out()
+
+                else:
                     if form_vars.check_in_to_person:
                         asset_tracker.check_in(db.pr_person, form_vars.person_id,
                                                timestmp = request.utcnow)
@@ -775,31 +804,6 @@ $.filterOptionsS3({
                         db(aitable.asset_id == asset_id).update(location_id = location_id)
                     # Update main record for component
                     db(atable.id == asset_id).update(assigned_to_id=form_vars.person_id)
-
-                elif type == "site":
-                    asset_tracker.check_in(db.org_site, form_vars.site_id,
-                                           timestmp = request.utcnow)
-                    # Also do component items
-                    locations = asset_tracker.get_location(_fields=[db.gis_location.id])
-                    try:
-                        db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
-                    except:
-                        pass
-
-                elif type == "organisation":
-                    site_id = form_vars.get("site_id", None)
-                    if site_id:
-                        asset_tracker.check_in(db.org_site, site_id,
-                                               timestmp = request.utcnow)
-                        # Also do component items
-                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
-                        try:
-                            db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
-                        except:
-                            pass
-                    else:
-                        # We can no longer track location
-                        asset_tracker.check_out()
 
             elif status == ASSET_LOG_RETURN:
                 # Set location to base location
@@ -982,6 +986,20 @@ def asset_log_prep(r):
 
     table = db.asset_log
 
+    # Custom methods to allow form customization for specific cases
+    # Also passed via response.s3.asset_log_method to asset_log_onaccept()
+    method = r.method
+    current.response.s3.asset_log_method = method
+
+    if method == "setbase":
+        status = ASSET_LOG_SET_BASE
+        r.method = "create"
+    elif method in ("assignperson", "assignsite", "assignorg"):
+        status = ASSET_LOG_ASSIGN
+        r.method = "create"
+    else:
+        status = 0
+
     if r.record:
         asset = Storage(r.record)
     else:
@@ -992,16 +1010,12 @@ def asset_log_prep(r):
 
     # This causes an error with the dataTables paginate
     # if used only in r.interactive & not also r.representation=="aadata"
-    if r.method != "read" and r.method != "update":
+    if method != "read" and method != "update":
         table.cancel.readable = False
         table.cancel.writable = False
     current_log = asset_get_current_log(asset.id)
-    if request.vars.status:
-        status = int(request.vars.status)
-    else:
-        status = 0
 
-    if status and status != "None":
+    if status:
         field = table.status
         field.default = status
         field.readable = False
@@ -1038,9 +1052,7 @@ def asset_log_prep(r):
         table.site_id.writable = False
 
     elif status == ASSET_LOG_ASSIGN:
-        type = request.vars.type
-        # table["%s_id" % type].required = True
-        if type == "person":
+        if method == "assignperson":
             crud_strings.msg_record_created = T("Assigned to Person")
             table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
                                                     table.person_id.represent,
@@ -1052,9 +1064,9 @@ def asset_log_prep(r):
             table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
-        elif type == "site":
+        elif method == "assignsite":
             crud_strings.msg_record_created = T("Assigned to Facility/Site")
-        elif type == "organisation":
+        elif method == "assignorg":
             crud_strings.msg_record_created = T("Assigned to Organization")
             table.organisation_id.readable = True
             table.organisation_id.writable = True
@@ -1065,7 +1077,7 @@ def asset_log_prep(r):
             table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
-    elif "status" in request.get_vars:
+    else:
         crud_strings.msg_record_created = T("Status Updated")
         table.person_id.label = T("Updated By")
         field = table.status
@@ -1128,8 +1140,7 @@ def asset_rheader(r):
             asset_action_btns = [
                 A(T("Set Base Facility/Site"),
                   _href = URL(f=func,
-                              args = [record.id, "log", "create"],
-                              vars = dict(status = ASSET_LOG_SET_BASE)
+                              args = [record.id, "log", "setbase"],
                               ),
                   _class = "action-btn",
                   )
@@ -1156,25 +1167,19 @@ def asset_rheader(r):
                 asset_action_btns += [
                     A(T("Assign to Person"),
                       _href = URL(f=func,
-                                  args = [record.id, "log", "create"],
-                                  vars = dict(status = ASSET_LOG_ASSIGN,
-                                              type = "person")
+                                  args = [record.id, "log", "assignperson"],
                                   ),
                       _class = "action-btn",
                       ),
                     A(T("Assign to Facility/Site"),
                       _href = URL(f=func,
-                                  args = [record.id, "log", "create"],
-                                  vars = dict(status = ASSET_LOG_ASSIGN,
-                                              type = "site")
+                                  args = [record.id, "log", "assignsite"],
                                   ),
                       _class = "action-btn",
                     ),
                     A(T("Assign to Organization"),
                       _href = URL(f=func,
-                                  args = [record.id, "log", "create"],
-                                  vars = dict(status = ASSET_LOG_ASSIGN,
-                                              type = "organisation")
+                                  args = [record.id, "log", "assignorg"],
                                   ),
                       _class = "action-btn",
                       ),
@@ -1183,7 +1188,6 @@ def asset_rheader(r):
                 A(T("Update Status"),
                   _href = URL(f=func,
                               args = [record.id, "log", "create"],
-                              vars = None
                               ),
                   _class = "action-btn",
                   ),
@@ -1383,8 +1387,8 @@ class asset_AssetRepresent(S3Represent):
         """
 
         if row:
-            type = row.get("asset_asset.type", None)
-            if type == 1:
+            atype = row.get("asset_asset.type", None)
+            if atype == 1:
                 return A(v, _href=URL(c="vehicle", f="vehicle", args=[k],
                                       # remove the .aaData extension in paginated views
                                       extension=""
