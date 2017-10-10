@@ -3,6 +3,7 @@ ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Required for self-registration
 ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,Required for self-registration
 ANONYMOUS,Anonymous,,org,sites_for_org,,,READ,,,,,Required for self-registration
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,dc,respnse,,,CREATE,UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,gis_location,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,config,,,READ|CREATE,READ|CREATE|UPDATE,,,,

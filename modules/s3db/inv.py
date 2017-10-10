@@ -4972,7 +4972,7 @@ def inv_adj_rheader(r):
                     # row = current.db(query).select(aitable.id,
                                                    # limitby=(0, 1)).first()
                     # if row == None:
-                    close_btn = A( T("Complete Adjustment"),
+                    close_btn = A(T("Complete Adjustment"),
                                   _href = URL(c = "inv",
                                               f = "adj_close",
                                               args = [record.id]
@@ -4981,7 +4981,7 @@ def inv_adj_rheader(r):
                                   _class = "action-btn"
                                   )
                     close_btn_confirm = SCRIPT("S3.confirmClick('#adj_close', '%s')"
-                                              % T("Do you want to complete & close this adjustment?") )
+                                              % T("Do you want to complete & close this adjustment?"))
                     rheader.append(close_btn)
                     rheader.append(close_btn_confirm)
 

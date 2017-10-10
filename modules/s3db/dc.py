@@ -655,12 +655,20 @@ class DataCollectionModel(S3Model):
 
         # Components
         add_components(tablename,
+
                        dc_response = "target_id",
+
                        event_event = {"link": "event_target",
                                       "joinby": "target_id",
                                       "key": "event_id",
                                       "actuate": "replace",
                                       },
+
+                       hrm_training_event = {"link": "hrm_event_target",
+                                             "joinby": "target_id",
+                                             "key": "training_event_id",
+                                             "actuate": "replace",
+                                             },
                        )
 
         # CRUD strings

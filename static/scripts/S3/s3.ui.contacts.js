@@ -108,6 +108,7 @@
                     });
                 form.find('input[type="submit"]').after(cancelButton);
                 // Show the form
+                frame.find('#popup').show();
                 form.show();
                 frame.insertAfter(button).slideDown('medium', function() {
                     $(button).siblings('.throbber').hide();

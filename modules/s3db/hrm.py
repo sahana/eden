@@ -6486,7 +6486,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                 label = T("Assessments")
             tabs.append((label, "target"),)
         rheader_tabs = s3_rheader_tabs(r, tabs)
-        action = None
+        action = ""
         if settings.has_module("msg"):
             permit = current.auth.permission.has_permission
             if permit("update", c="hrm", f="compose") and permit("update", c="msg"):
@@ -7891,6 +7891,7 @@ def hrm_training_event_controller():
             r.representation in ("aadata", "pdf", "xls")):
 
             # Use appropriate CRUD strings
+            T = current.T
             s3.crud_strings["hrm_training"] = Storage(
                 label_create = T("Add Participant"),
                 title_display = T("Participant Details"),
