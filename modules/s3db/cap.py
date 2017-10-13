@@ -1825,30 +1825,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
-
-            irows = db(itable.alert_id == alert_id).select(itable.language)
-            # An alert can contain two info segments, one in English and one in
-            # local language
-            if len(irows) > 2:
-                # Check if there are more than two alerts
-                db(itable.id == info_id).delete()
-                current.session.error = current.T("An alert can contain maximum of two info segments! Please edit already created info segments!")
-                redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
-            else:
-                if len(irows) == 2:
-                    # Check if both info segments are for same language
-                    if irows[0]["language"] == irows[1]["language"]:
-                        db(itable.id == info_id).delete()
-                        current.session.error = current.T("Please edit already created info segment with same language!")
-                        redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
-                if not all(language in [key for key in current.deployment_settings.get_L10n_languages()] for language in [irow.language for irow in irows]):
-                    # Check if created info segment contain other than allowed
-                    # language for the deployment
-                    db(itable.id == info_id).delete()
-                    current.session.error = current.T("An alert cannot contain other than English and Local Language! Check your selection!")
-                    redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
-                
-
             set_ = db(itable.id == info_id)
             if alert_id and cap_alert_is_template(alert_id):
                 set_.update(is_template = True)
@@ -1915,6 +1891,17 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                 used for import from CSV
         """
 
+        T = current.T
+        itable = current.db.cap_info
+        irow = current.db((itable.alert_id == form.request_vars.alert_id) & \
+                          (itable.id != form.request_vars.id)).\
+                                                select(itable.language,
+                                                       limitby=(0, 1)).first()
+        # Check if both info segments are for same language
+        if irow and irow.language == form.vars.language:
+            form.errors["language"] = \
+               T("Please edit already created info segment with same language!")
+
         form_record = form.record
         if form_record and form_record.is_template == False:
             form_vars = form.vars
@@ -1927,18 +1914,14 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             #                current.T("Name-Value Pair is incomplete.")
 
             if not form_vars.get("urgency"):
-                form.errors["urgency"] = \
-                    current.T("'Urgency' field is mandatory")
+                form.errors["urgency"] = T("'Urgency' field is mandatory")
             if not form_vars.get("severity"):
-                form.errors["severity"] = \
-                    current.T("'Severity' field is mandatory")
+                form.errors["severity"] = T("'Severity' field is mandatory")
             if not form_vars.get("certainty"):
-                form.errors["certainty"] = \
-                    current.T("'Certainty' field is mandatory")
+                form.errors["certainty"] = T("'Certainty' field is mandatory")
 
             if not form_vars.get("category"):
-                form.errors["category"] = \
-                    current.T("At least one category is required.")
+                form.errors["category"] = T("At least one category is required.")
 
     # -------------------------------------------------------------------------
     @staticmethod
