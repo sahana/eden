@@ -106,7 +106,7 @@ def config(settings):
         #("km", "ភាសាខ្មែរ"),        # Khmer
         #("mn", "Монгол хэл"),  # Mongolian
         ("my", "မြန်မာစာ"),        # Burmese
-        #("ne", "नेपाली"),          # Nepali
+        ("ne", "नेपाली"),          # Nepali
         #("prs", "دری"),        # Dari
         #("ps", "پښتو"),        # Pashto
         #("tet", "Tetum"),
