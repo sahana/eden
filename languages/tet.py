@@ -601,6 +601,7 @@
 'Task removed': 'Muda sai tia servisu',
 'Tent 4m x 6m': 'Lona 4m x 6m',
 'Terms of Service': 'Kondisaun husi serbi',
+'Tetum': 'Tetun',
 'Text': 'Testu',
 'Thanks for your assistance': 'Obrigadu ba ita nia ajuda',
 'The language you wish the site to be displayed in.': 'Lingua neebe mak ita hakarak janela ida nee fo sai',

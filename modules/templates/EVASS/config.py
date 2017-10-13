@@ -56,7 +56,7 @@ def config(settings):
     # L10n settings
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
-        ("it", "Italiano"),
+        ("it", "Italian"),
     ])
     settings.L10n.default_language = "en"
     settings.L10n.utc_offset = "+0100"

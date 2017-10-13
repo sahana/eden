@@ -50,9 +50,9 @@ def config(settings):
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
-        ("ar", "العربية"),
+        ("ar", "Arabic"),
         ("en", "English"),
-        ("tr", "Türkçe"),
+        ("tr", "Turkish"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "tr"

@@ -2677,6 +2677,7 @@
 'Monetization': 'Зоосон мөнгө хэвлэл',
 'Monetization Details': 'Зоосон мөнгө хэвлэллийн талаарх мэдээлэл',
 'Monetization Report': 'Зоосон мөнгө хэвлэлийн тайлан',
+'Mongolian': 'Монгол хэл',
 'mongoloid': 'Дауны синдромын өвчлөл',
 'Month': 'Сар',
 'Monthly': 'Сар бүр',

@@ -2559,12 +2559,12 @@ class S3Config(Storage):
                 http://www.i18nguy.com/unicode/language-identifiers.html
         """
 
-        return self.cap.get("languages", OrderedDict([("ar", "العربية"),
+        return self.cap.get("languages", OrderedDict([("ar", "Arabic"),
                                                       ("en-US", "English"),
-                                                      ("es", "Español"),
-                                                      ("fr", "Français"),
-                                                      ("pt", "Português"),
-                                                      ("ru", "русский"),
+                                                      ("es", "Spanish"),
+                                                      ("fr", "French"),
+                                                      ("pt", "Portuguese"),
+                                                      ("ru", "Russian"),
                                                       ]))
 
     def get_cap_authorisation(self):

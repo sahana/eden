@@ -98,22 +98,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
-        #("ar", "العربية"),
-        ("dv", "ދިވެހި"), # Divehi (Maldives)
+        #("ar", "Arabic"),
+        ("dv", "Divehi"), # Maldives
         ("en-US", "English"),
-        #("es", "Español"),
-        #("fr", "Français"),
-        #("km", "ភាសាខ្មែរ"),        # Khmer
-        #("mn", "Монгол хэл"),  # Mongolian
-        ("my", "မြန်မာစာ"),        # Burmese
-        #("ne", "नेपाली"),          # Nepali
-        #("prs", "دری"),        # Dari
-        #("ps", "پښتو"),        # Pashto
-        #("tet", "Tetum"),
-        ("th", "ภาษาไทย"),        # Thai
-        ("tl", "Tagalog"), # Filipino
-        #("vi", "Tiếng Việt"),   # Vietnamese
-        #("zh-cn", "中文 (简体)"),
+        #("es", "Spanish"),
+        #("fr", "French"),
+        #("km", "Khmer"), # Cambodia
+        #("mn", "Mongolian"),
+        ("my", "Burmese"), # Myanmar
+        #("ne", "Nepali"),
+        ("th", "Thai"),
+        ("tl", "Tagalog"), # Philippines
     ])
     settings.cap.languages = languages
     settings.L10n.languages = languages

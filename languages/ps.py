@@ -2110,6 +2110,7 @@
 'Partner Organizations': 'د شریک موسسی',
 'Partner': 'شریک',
 'Partners': 'شریکان',
+'Pashto': 'پښتو',
 'Pass': 'کامیاب',
 'Passport': 'پاسپورټ',
 'Password': 'پاسورد',

@@ -200,8 +200,10 @@ if settings.has_module("vol") and \
 
 # Languages available in User Profiles
 if len(s3.l10n_languages) > 1:
-    _settings.table_user.language.requires = IS_IN_SET(s3.l10n_languages,
-                                                       zero=None)
+    _settings.table_user.language.requires = s3base.IS_ISO639_2_LANGUAGE_CODE(sort = True,
+                                                                              translate = True,
+                                                                              zero = None,
+                                                                              )
 else:
     field = _settings.table_user.language
     field.default = s3.l10n_languages.keys()[0]

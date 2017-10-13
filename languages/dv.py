@@ -9,6 +9,7 @@
 'Create': 'ކްރިއޭޓް',
 'Create Alert': 'އެލަރޓް ކްރިއޭޓް',
 'Delete': 'ޑިލީޓް',
+'Divehi': 'ދިވެހި',
 'Entries': 'އެންޓްރީ',
 'Event Type': 'އިވަންޓް ޓައިޕް',
 'Filter Type': 'ފިލްޓަރ ބައި',

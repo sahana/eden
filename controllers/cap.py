@@ -742,7 +742,7 @@ def alert():
                                               ),)
 
             elif r.component_name == "info":
-                # Filter the langauge options
+                # Filter the language options
                 itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(\
                                             zero=None,
                                             translate=True,

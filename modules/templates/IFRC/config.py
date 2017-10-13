@@ -281,20 +281,23 @@ def config(settings):
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
-        ("ar", "العربية"),
+        ("ar", "Arabic"),
         ("en-gb", "English"),
-        ("es", "Español"),
-        ("fr", "Français"),
-        ("km", "ភាសាខ្មែរ"),        # Khmer
+        ("es", "Spanish"),
+        ("fr", "French"),
+        #("id", "Bahasa Indonesia"),
+        ("km", "Khmer"),
+        #("lo", "Lao"),
         ("mg", "Мalagasy"),
-        ("mn", "Монгол хэл"),  # Mongolian
-        ("my", "မြန်မာစာ"),        # Burmese
-        ("ne", "नेपाली"),          # Nepali
-        ("prs", "دری"),        # Dari
-        ("ps", "پښتو"),        # Pashto
-        #("th", "ภาษาไทย"),                           # Thai
-        ("vi", "Tiếng Việt"),  # Vietnamese
-        ("zh-cn", "中文 (简体)"),
+        ("mn", "Mongolian"),
+        #("ms", "Malaysian"),
+        ("my", "Burmese"),
+        ("ne", "Nepali"),
+        ("prs", "Dari"),
+        ("ps", "Pashto"),
+        #("th", "Thai"),
+        ("vi", "Vietnamese"),
+        ("zh-cn", "Chinese (Simplified)"),
     ])
     # Default Language
     settings.L10n.default_language = "en-gb"
@@ -1799,6 +1802,26 @@ def config(settings):
             return rheader
 
     # -------------------------------------------------------------------------
+    def dc_answer_onaccept(form):
+        """
+            Set the Date of the Response when the Answers are added
+        """
+
+        record_id = form.vars.get("id")
+
+        # Retrieve the tablename set in prep
+        dtablename = current.response.s3.dc_dtablename
+        s3db = current.s3db
+        dtable = s3db[dtablename]
+        rtable = s3db.dc_response
+        query = (rtable.id == dtable.response_id)
+        response = current.db(query).select(rtable.id,
+                                            limitby = (0, 1)
+                                            ).first()
+
+        response.update_record(date = current.request.utcnow)
+
+    # -------------------------------------------------------------------------
     def customise_dc_response_controller(**attr):
         """
             Only used by Bangkok CCST currently
@@ -1821,21 +1844,44 @@ def config(settings):
                     menu.main = ""
                     menu.options = None
                     s3.crud_strings["dc_response"]["title_display"] = ""
-                    if r.method == "create":
-                        target_id = r.get_vars.get("target_id")
-                        if target_id:
-                            current.s3db.dc_response.target_id.default = target_id
-                        else:
-                            # Block create
-                            current.response.error = T("Survey not specified, please click on original link to take survey")
-                            current.s3db.configure("dc_response",
-                                                   insertable = False,
-                                                   )
-                            return True
-                        # Auto-submit form
-                        script = '''$('form').submit()'''
-                        s3.jquery_ready.append(script)
+                    if r.component_name == "answer":
+                        # CRUD Strings
+                        tablename = r.component.tablename
+                        s3.crud_strings[tablename].msg_record_created = T("Thank you for taking this survey and helping us to increase the quality of our trainings.")
+                        current.s3db.configure(tablename,
+                                               create_onaccept = dc_answer_onaccept,
+                                               )
+                        # Store tablename for onaccept
+                        s3.dc_dtablename = tablename
+                    #elif r.method == "create":
+                    #    target_id = r.get_vars.get("target_id")
+                    #    if target_id:
+                    #        s3db = current.s3db
+                    #        table = s3db.dc_response
+                    #        table.target_id.default = target_id
+                    #        ttable = s3db.dc_target
+                    #        target = current.db(ttable.id == target_id).select(ttable.template_id,
+                    #                                                           limitby = (0, 1)
+                    #                                                           ).first()
+                    #        try:
+                    #            table.template_id.default = target.template_id
+                    #        except:
+                    #            # Template not found?
+                    #            pass
+                    #        # Auto-submit form
+                    #        script = '''$('form').submit()'''
+                    #        s3.jquery_ready.append(script)
+                    #    else:
+                    #        # Block create
+                    #        current.response.error = T("Survey not specified, please click on original link to take survey")
+                    #        current.s3db.configure("dc_response",
+                    #                               insertable = False,
+                    #                               )
                 else:
+                    # Filter out date is None (unfilled responses)
+                    from s3 import FS
+                    r.resource.add_filter(FS("date") != None)
+
                     current.s3db.configure("dc_response",
                                            insertable = False,
                                            list_fields = [(current.T("Event"), "target_id$training_event__link.training_event_id"),
@@ -1859,10 +1905,13 @@ def config(settings):
             Only used by Bangkok CCST currently
         """
 
+        from s3 import S3DateTime
+
         table = current.s3db.dc_response
         table.location_id.readable = table.location_id.writable = False
         table.organisation_id.readable = table.organisation_id.writable = False
         table.comments.readable = table.comments.writable = False
+        table.date.represent = S3DateTime.date_represent # Just Date not datetime
         table.date.writable = False
         table.person_id.writable = False
         table.person_id.comment = None
@@ -1875,7 +1924,7 @@ def config(settings):
             title_upload = T("Import Responses"),
             label_list_button = T("List Responses"),
             label_delete_button = T("Delete Response"),
-            msg_record_created = T("Thank you for taking this survey and helping us to increase the quality of our trainings."),
+            msg_record_created = T("Response created"),
             msg_record_modified = T("Response updated"),
             msg_record_deleted = T("Response deleted"),
             msg_list_empty = T("No Responses currently registered"))
@@ -1897,59 +1946,14 @@ def config(settings):
             if callable(standard_prep):
                 result = standard_prep(r)
 
-            if r.interactive:
+            if r.interactive and r.component_name == "response":
 
-                s3db = current.s3db
-
-                s3.crud_strings["dc_target"] = Storage(
-                    label_create = T("Create Survey"),
-                    title_display = T("Survey Details"),
-                    title_list = T("Surveys"),
-                    title_update = T("Edit Survey"),
-                    title_upload = T("Import Surveys"),
-                    label_list_button = T("List Surveys"),
-                    label_delete_button = T("Delete Survey"),
-                    msg_record_created = T("Survey added"),
-                    msg_record_modified = T("Survey updated"),
-                    msg_record_deleted = T("Survey deleted"),
-                    msg_list_empty = T("No Surveys currently registered"))
-
-                if r.component_name == "response":
-
-                    s3db.configure("dc_response",
-                                   #insertable = False,
-                                   list_fields = ["person_id",
-                                                  "date",
-                                                  ],
-                                   )
-                else:
-
-                    table = s3db.dc_target
-                    table.location_id.readable = table.location_id.writable = False
-                    #table.comments.readable = table.comments.writable = False
-
-                    from s3 import S3SQLCustomForm, S3SQLInlineLink
-
-                    crud_form = S3SQLCustomForm(S3SQLInlineLink("training_event",
-                                                                field = "training_event_id",
-                                                                label = T("Event"),
-                                                                multiple = False,
-                                                                ),
-                                                "template_id",
-                                                "date",
-                                                "comments",
-                                                )
-
-                    list_fields = [(T("Event"), "training_event__link.training_event_id"),
-                                   "template_id",
-                                   "date",
-                                   "comments",
-                                   ]
-
-                    s3db.configure("dc_target",
-                                   crud_form = crud_form,
-                                   list_fields = list_fields,
-                                   )
+                s3db.configure("dc_response",
+                               insertable = False,
+                               list_fields = ["person_id",
+                                              "date",
+                                              ],
+                               )
 
             return result
         s3.prep = custom_prep
@@ -1975,6 +1979,81 @@ def config(settings):
         return attr
 
     settings.customise_dc_target_controller = customise_dc_target_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dc_target_resource(r, tablename):
+        """
+            Only used by Bangkok CCST currently
+        """
+
+        s3db = current.s3db
+        table = s3db.table(tablename)
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Survey"),
+            title_display = T("Survey Details"),
+            title_list = T("Surveys"),
+            title_update = T("Edit Survey"),
+            title_upload = T("Import Surveys"),
+            label_list_button = T("List Surveys"),
+            label_delete_button = T("Delete Survey"),
+            msg_record_created = T("Survey added"),
+            msg_record_modified = T("Survey updated"),
+            msg_record_deleted = T("Survey deleted"),
+            msg_list_empty = T("No Surveys currently registered"))
+
+        table.location_id.readable = table.location_id.writable = False
+        #table.comments.readable = table.comments.writable = False
+
+        # Expose the Language Option
+        f = table.language
+        f.readable = f.writable = True
+        f.label = current.T("Default Language")
+        f.requires.other._select = OrderedDict([("en-gb", "English"),
+                                                ("my", "Burmese"),
+                                                ("id", "Indonesian"),
+                                                ("km", "Khmer"),
+                                                ("lo", "Lao"),
+                                                ("ms", "Malaysian"),
+                                                ("th", "Thai"),
+                                                ])
+
+        # Default the template
+        ttable = s3db.dc_template
+        template = current.db(ttable.name == "Training Evaluation").select(ttable.id,
+                                                                           limitby = (0, 1)
+                                                                           ).first()
+        if template:
+            f = table.template_id
+            f.default = template.id
+            #f.readable = f.writable = False
+
+        if not r.component:
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
+
+            crud_form = S3SQLCustomForm(S3SQLInlineLink("training_event",
+                                                        field = "training_event_id",
+                                                        label = T("Event"),
+                                                        multiple = False,
+                                                        ),
+                                        "template_id",
+                                        "language",
+                                        #"date",
+                                        "comments",
+                                        )
+
+            list_fields = [(T("Event"), "training_event__link.training_event_id"),
+                           "template_id",
+                           "date",
+                           "comments",
+                           ]
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           list_fields = list_fields,
+                           )
+
+    settings.customise_dc_target_resource = customise_dc_target_resource
 
     # -------------------------------------------------------------------------
     def _is_asia_pacific(region_id=False):
@@ -2310,7 +2389,6 @@ def config(settings):
         _customise_assignment_fields()
 
         # Restrict Location to just Countries
-        from s3 import S3Represent
         field = s3db.deploy_mission.location_id
         field.represent = S3Represent(lookup="gis_location", translate=True)
 
@@ -2362,7 +2440,7 @@ def config(settings):
                                    )
 
         # Restrict Location to just Countries
-        from s3 import S3Represent, S3MultiSelectWidget
+        from s3 import S3MultiSelectWidget
         COUNTRY = messages.COUNTRY
         field = table.location_id
         field.label = COUNTRY
@@ -3073,7 +3151,6 @@ def config(settings):
                 field.readable = field.writable = True
                 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                 field.requires = IS_EMPTY_OR(IS_IN_SET(types))
-                from s3 import S3Represent
                 field.represent = S3Represent(options=types)
 
         elif controller == "hrm":
@@ -3248,7 +3325,7 @@ def config(settings):
                     # ARCS have a custom Volunteer form
                     from gluon import IS_EMPTY_OR
                     #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    from s3 import IS_ONE_OF, S3LocationSelector, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
                     # Go back to Create form after submission
                     current.session.s3.rapid_data_entry = True
@@ -3781,7 +3858,6 @@ def config(settings):
 
                 if r.method != "profile":
                     # Representation of emergency contacts (breaks the update_url construction in render_toolbox)
-                    from s3 import S3Represent
                     field = s3db.pr_contact_emergency.id
                     field.represent = S3Represent(lookup = "pr_contact_emergency",
                                                   fields = ("name", "relationship", "phone"),
@@ -4006,6 +4082,7 @@ def config(settings):
         if not auth.s3_has_role("ADMIN") and \
            auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
             # Bangkok CCST
+            s3db.hrm_training.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
             from s3 import FS
             # Filter People to just those conducted by the region
             # @ToDo: Filter by Org too if more EVENT_* teams come onboard
@@ -4364,12 +4441,15 @@ def config(settings):
         """
 
         T = current.T
+        auth = current.auth
         db = current.db
         s3db = current.s3db
         training_event_id = r.id
 
+        import time
         from gluon import redirect, URL
-        from s3 import s3_fullname, s3_str
+        from gluon.utils import web2py_uuid
+        from s3 import s3_fullname, s3_str, S3DateTime
 
         # Read the Event Details
         etable = s3db.hrm_training_event
@@ -4388,14 +4468,20 @@ def config(settings):
         query = (ltable.training_event_id == training_event_id) & \
                 (ltable.target_id == dtable.id)
         target = db(query).select(dtable.id,
+                                  dtable.template_id,
+                                  dtable.language,
                                   limitby = (0, 1),
                                   ).first()
         target_id = target.id
+        template_id = target.template_id
+        default_language = target.language
         target.update_record(date = current.request.utcnow)
 
         # Build list of people to notify
         # - including their language
         ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+        htable = s3db.hrm_human_resource
         ttable = s3db.hrm_training
         utable = s3db.auth_user
         ltable = s3db.pr_person_user
@@ -4405,45 +4491,119 @@ def config(settings):
                 (ttable.deleted == False)
         left = [ltable.on(ltable.pe_id == ptable.pe_id),
                 utable.on(utable.id == ltable.user_id),
+                htable.on(htable.person_id == ptable.id),
+                ctable.on((ctable.pe_id == ptable.pe_id) & (ctable.contact_method=="EMAIL") & (ctable.deleted == False)),
                 ]
-        persons = db(query).select(ptable.pe_id,
+        persons = db(query).select(ptable.id,
+                                   ptable.pe_id,
                                    ptable.first_name,
                                    ptable.middle_name,
                                    ptable.last_name,
+                                   ctable.value,
+                                   htable.organisation_id,
+                                   htable.site_id,
+                                   utable.id,
                                    utable.language,
                                    left = left,
                                    )
 
         # Build localised mail for each language
+        session = current.session
+        session_s3 = session.s3
+        ui_language = session_s3.language
+        subject = "Placeholder Subject"
         line1 = "You are receiving this email as a participant of %(event_name)s held in %(event_location)s on %(event_date)s."
         line2 = "We have 8 simple questions for you, this should not take more than 15mn of your time."
         line3 = "The information collected through this questionnaire will be treated as confidential."
+        click = "Please click this link to complete the survey"
         line4 = "Thank you for your participation."
         translations = {}
         languages = list(set([p["auth_user.language"] for p in persons]))
-        location_represent = etable.location_id.represent
-        date_represent = etable.start_date.represent
-        # Dates should be localised per-language, but currently aren't
-        event_date = date_represent(event_date)
+        if default_language not in languages:
+            languages.append(default_language)
+        location_represent = s3db.gis_LocationRepresent()
+        date_represent = S3DateTime.date_represent # We want Dates not datetime which etable.start_date uses
         for l in languages:
             T.force(l)
-            translations[l] = {1: s3_str(T(line1)),
+            session_s3.language = l # for date_represent
+            translations[l] = {"s": s3_str(T(subject)),
+                               1: s3_str(T(line1)),
                                2: s3_str(T(line2)),
                                3: s3_str(T(line3)),
+                               "c": s3_str(T(click)),
                                4: s3_str(T(line4)),
                                "l": location_represent(event_location),
-                               # Dates should be localised per-language, but currently aren't
-                               #"d": date_represent(event_date),
+                               "d": date_represent(event_date),
                                }
 
         # Send localised email to each person
+        # @ToDo: Group by Language?
+        s3 = current.response.s3
+        s3.bulk = True # Don't send a Welcome Message for new users as we send our own message instead
         send_email = current.msg.send_by_pe_id
+        rtable = s3db.dc_response
+        rtable.date.default = None # Set the date when we answer
+        rinsert = rtable.insert
+        uinsert = utable.insert
+        approve_user = auth.s3_approve_user
+        public_url = settings.get_base_public_url()
+        update_super = s3db.update_super
         for p in persons:
             person = p["pr_person"]
-            lang = p.get("auth_user.language")
-            # @ToDo: Fallback language based on Duty Station? NS?
-            if lang:
+            user_id = p.get("auth_user.id")
+            if user_id:
+                NEW_USER = False
+                lang = p.get("auth_user.language")
                 T.force(lang)
+            else:
+                # No User Account exists, so create one
+                NEW_USER = True
+                email = p.get("pr_contact.value")
+                if not email:
+                    # Cannot create User account for this person
+                    continue
+                hr = p.get("hrm_human_resource")
+                reset_password_key = str(int(time.time())) + '-' + web2py_uuid() # format from auth.email_reset_password()
+                # Fallback language based on Target
+                lang = default_language
+                user = Storage(first_name = person.first_name,
+                               last_name = person.last_name,
+                               email = email,
+                               organisation_id = hr.organisation_id,
+                               site_id = hr.site_id,
+                               reset_password_key = reset_password_key,
+                               )
+                user_id = uinsert(**user)
+                user.id = user_id
+                approve_user(user)
+
+            # Create response (so that User only needs oacl UPDATE not uacl READ|CREATE
+            record = dict(target_id = target_id,
+                          template_id = template_id,
+                          person_id = person.id,
+                          owned_by_user = user_id,
+                          )
+            response_id = rinsert(**record)
+            record["id"] = response_id
+            update_super(rtable, record) # doc_entity
+
+            url = URL(c="dc", f="respnse",
+                      args = [response_id, "answer"],
+                      )
+            if NEW_USER:
+                url = "%s%s" % (public_url,
+                                URL(c="default", f="user",
+                                    args = ["reset_password"],
+                                    vars= {"key": reset_password_key,
+                                           "_next": url,
+                                           },
+                                    ),
+                                )
+            else:
+                url = "%s%s" % (public_url,
+                                url,
+                                )
+
             # @ToDo: Automate title in some cases?
             line1 = s3_str(T("Dear %(person_name)s")) % dict(#person_title = p.title,
                                                              person_name = s3_fullname(person),
@@ -4451,32 +4611,25 @@ def config(settings):
             translation = translations[lang]
             message = "%s\n%s\n%s\n%s\n\n%s\n%s\n\n%s" % (line1,
                                                           translation[1] % dict(event_name = event_name,
-                                                                                       event_location = translation["l"],
-                                                                                       #event_date = translation["d"],
-                                                                                       event_date = event_date,
-                                                                                       ),
-                                                                  translation[2],
-                                                                  translation[3],
-                                                                  "%s:" % s3_str(T("Please click this link to complete the survey")), # @ToDo: Move into translations dict
-                                                                  "%s%s" % (settings.get_base_public_url(),
-                                                                            URL(c="dc", f="respnse",
-                                                                                args = ["create"],
-                                                                                vars= {"target_id": target_id,
-                                                                                       },
+                                                                                event_location = translation["l"],
+                                                                                event_date = translation["d"],
                                                                                 ),
-                                                                            ),
-                                                                  translation[4],
-                                                                  )
-            # @ToDo: Subject
-            subject = T("Placeholder Subject")
+                                                          translation[2],
+                                                          translation[3],
+                                                          "%s:" % translation["c"],
+                                                          url,
+                                                          translation[4],
+                                                          )
             send_email(person.pe_id,
-                       subject = subject,
+                       subject = translation["s"],
                        message = message,
                        )
 
+        s3.bulk = False
+
         # Restore language for UI
-        session = current.session
-        T.force(session.s3.language)
+        session_s3.language = ui_language
+        T.force(ui_language)
 
         # Notify the user of success & redirect to main event page
         session.confirmation = T("Notifications sent!")
@@ -4484,6 +4637,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_controller(**attr):
+
+        s3db = current.s3db
 
         # Special cases for different NS/roles
         EVENTS = False
@@ -4501,7 +4656,6 @@ def config(settings):
                 from s3 import FS
 
                 db = current.db
-                s3db = current.s3db
 
                 s3db.set_method("hrm", "training_event",
                                 method = "notify",
@@ -4541,10 +4695,11 @@ def config(settings):
                 # Don't allow creating of Persons here
                 from gluon import DIV
                 T = current.T
-                current.s3db.hrm_training.person_id.comment = \
+                s3db.hrm_training.person_id.comment = \
                     DIV(_class="tooltip",
                         _title="%s|%s" % (T("Participant"),
                                           T("Type the first few characters of one of the Participant's names.")))
+
             elif EVENTS:
                 if not r.component:
 
@@ -4615,17 +4770,14 @@ def config(settings):
                                    crud_form = crud_form,
                                    list_fields = list_fields,
                                    )
-
-                elif r.component_name == "response":
-                    # Default the template
-                    ttable = s3db.dc_template
-                    template = db(ttable.name == "Training Evaluation").select(ttable.id,
-                                                                               limitby = (0, 1)
-                                                                               ).first()
-                    if template:
-                        f = r.component.table.template_id
-                        f.default = template.id
-                        f.readable = f.writable = False
+                elif r.component_name == "participant":
+                    s3db.hrm_training.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+                    s3db.configure("hrm_training",
+                                   list_fields = ["person_id",
+                                                  (current.T("Job Title"), "job_title"),                    # Field.Method
+                                                  (settings.get_hrm_organisation_label(), "organisation"),  # Field.Method
+                                                  ],
+                                   )
 
             return result
         s3.prep = custom_prep
@@ -4633,6 +4785,82 @@ def config(settings):
         return attr
 
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_onaccept(form):
+        """
+            Create a Schduled Task to notify EO / MFP to run survey
+        """
+
+        form_vars = form.vars
+
+        try:
+            training_event_id = form_vars.id
+        except:
+            # Nothing we can do
+            return
+
+        start_date = form_vars.get("start_date")
+        end_date = form_vars.get("end_date")
+        if not start_date or not end_date:
+            # Read the record
+            etable = current.s3db.hrm_training_event
+            event = current.db(etable.id == training_event_id).select(etable.start_date,
+                                                                      etable.end_date,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+            start_date = event.start_date
+            end_date = event.end_date
+
+        # Prefer end_date if-available, otherwise use start_date
+        end_date = end_date or start_date
+
+        if not end_date:
+            # No date defined, so exit
+            return
+
+        from dateutil.relativedelta import relativedelta
+        schedule_task = current.s3task.schedule_task
+
+        # Send a 3 month reminder
+        start_time = end_date + relativedelta(months = 3)
+        schedule_task("hrm_training_event_survey",
+                      args = [training_event_id],
+                      start_time = start_time,
+                      #period = 300,  # seconds
+                      timeout = 300, # seconds
+                      repeats = 1    # run once
+                      )
+
+        # Send a 12 month reminder
+        start_time = end_date + relativedelta(months = 12)
+        schedule_task("hrm_training_event_survey",
+                      args = [training_event_id],
+                      start_time = start_time,
+                      #period = 300,  # seconds
+                      timeout = 300, # seconds
+                      repeats = 1    # run once
+                      )
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_event_resource(r, tablename):
+
+        # Add custom onaccept
+        s3db = current.s3db
+        default = s3db.get_config(tablename, "onaccept")
+        if not default:
+            onaccept = hrm_training_event_onaccept
+        elif not isinstance(default, list):
+            onaccept = [hrm_training_event_onaccept, default]
+        else:
+            onaccept = default
+            if all(cb != hrm_training_event_onaccept for cb in onaccept):
+                onaccept.append(hrm_training_event_onaccept)
+        s3db.configure(tablename,
+                       onaccept = onaccept,
+                       )
+
+    settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_home():

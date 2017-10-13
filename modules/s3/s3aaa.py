@@ -40,6 +40,7 @@ __all__ = ("AuthS3",
 import datetime
 import json
 #import re
+import time
 
 from collections import OrderedDict
 from uuid import uuid4
@@ -57,6 +58,7 @@ from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_c
 from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
+from s3validators import IS_ISO639_2_LANGUAGE_CODE
 
 # DRY helper to get the original name of a Table (_tablename can be an alias)
 original_tablename = lambda table: table._ot if table._ot else table._tablename
@@ -848,6 +850,92 @@ Thank you"""
         return form
 
     # -------------------------------------------------------------------------
+    def reset_password(self,
+                       next=DEFAULT,
+                       onvalidation=DEFAULT,
+                       onaccept=DEFAULT,
+                       log=DEFAULT,
+                       ):
+        """
+            Returns a form to reset the user password, overrides web2py's
+            version of the method to not swallow the _next var.
+        """
+
+        table_user = self.table_user()
+        request = current.request
+        session = current.session
+
+        messages = self.messages
+        settings = self.settings
+
+        if next is DEFAULT:
+            next = self.get_vars_next() or settings.reset_password_next
+
+        if settings.prevent_password_reset_attacks:
+            key = request.vars.key
+            if key:
+                session._reset_password_key = key
+                session._reset_password_next = next
+                redirect(self.url(args = "reset_password"))
+            else:
+                key = session._reset_password_key
+                next = session._reset_password_next
+        else:
+            key = request.vars.key
+
+        try:
+            t0 = int(key.split('-')[0])
+            if time.time() - t0 > 60 * 60 * 24:
+                raise Exception
+            user = table_user(reset_password_key=key)
+            if not user:
+                raise Exception
+        except Exception:
+            session.flash = messages.invalid_reset_password
+            redirect(next, client_side=settings.client_side)
+
+        key = user.registration_key
+        if key in ("pending", "disabled", "blocked") or (key or "").startswith("pending"):
+            session.flash = messages.registration_pending
+            redirect(next, client_side=settings.client_side)
+
+        if onvalidation is DEFAULT:
+            onvalidation = settings.reset_password_onvalidation
+        if onaccept is DEFAULT:
+            onaccept = settings.reset_password_onaccept
+
+        passfield = settings.password_field
+        form = SQLFORM.factory(
+            Field("new_password", "password",
+                  label = messages.new_password,
+                  requires = table_user[passfield].requires,
+                  ),
+            Field("new_password2", "password",
+                  label = messages.verify_password,
+                  requires = [IS_EXPR("value==%s" % repr(request.vars.new_password),
+                              messages.mismatched_password)
+                              ],
+                  ),
+            submit_button = messages.password_reset_button,
+            hidden = dict(_next=next),
+            formstyle = settings.formstyle,
+            separator = settings.label_separator
+            )
+        if form.accepts(request, session, onvalidation=onvalidation,
+                        hideerror=settings.hideerror):
+            user.update_record(
+                **{passfield: str(form.vars.new_password),
+                   "registration_key": "",
+                   "reset_password_key": "",
+                   })
+            session.flash = messages.password_changed
+            if settings.login_after_password_change:
+                self.login_user(user)
+            callback(onaccept, form)
+            redirect(next, client_side=settings.client_side)
+        return form
+
+    # -------------------------------------------------------------------------
     def request_reset_password(self,
                                next=DEFAULT,
                                onvalidation=DEFAULT,
@@ -866,18 +954,18 @@ Thank you"""
 
         messages = self.messages
         settings = self.settings
+        if not settings.mailer:
+            current.response.error = messages.function_disabled
+            return ""
+
         utable = settings.table_user
         request = current.request
-        response = current.response
         session = current.session
         captcha = settings.retrieve_password_captcha or \
                   (settings.retrieve_password_captcha != False and settings.captcha)
 
         if next is DEFAULT:
             next = self.get_vars_next() or settings.request_reset_password_next
-        if not settings.mailer:
-            response.error = messages.function_disabled
-            return ""
         if onvalidation is DEFAULT:
             onvalidation = settings.reset_password_onvalidation
         if onaccept is DEFAULT:
@@ -895,13 +983,13 @@ Thank you"""
                 IS_IN_DB(self.db, utable[userfield],
                          error_message=messages.invalid_username)]
         form = SQLFORM(utable,
-                       fields=[userfield],
-                       hidden=dict(_next=next),
-                       showid=settings.showid,
-                       submit_button=messages.password_reset_button,
-                       delete_label=messages.delete_label,
-                       formstyle=current.deployment_settings.get_ui_formstyle(),
-                       separator=settings.label_separator
+                       fields = [userfield],
+                       hidden = dict(_next=next),
+                       showid = settings.showid,
+                       submit_button = messages.password_reset_button,
+                       delete_label = messages.delete_label,
+                       formstyle = current.deployment_settings.get_ui_formstyle(),
+                       separator = settings.label_separator
                        )
         form.add_class("auth_reset_password")
         if captcha:
@@ -1653,9 +1741,12 @@ Thank you"""
         language.comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("Language"),
                                                  T("The language you wish the site to be displayed in.")))
-        languages = current.deployment_settings.get_L10n_languages()
-        language.represent = lambda opt: \
-            languages.get(opt, cmessages.UNKNOWN_OPT)
+        language.represent = IS_ISO639_2_LANGUAGE_CODE.represent
+        # Set in 00_settings.py
+        #language.requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
+        #                                              translate = True,
+        #                                              zero = None,
+        #                                              )
         # Default the profile language to the one currently active
         language.default = T.accepted_language
         if multiselect_widget:

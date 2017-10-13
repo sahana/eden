@@ -5,6 +5,7 @@
 # =============================================================================
 
 tasks = {}
+has_module = settings.has_module
 
 # -----------------------------------------------------------------------------
 def maintenance(period="daily"):
@@ -64,7 +65,7 @@ def org_site_check(site_id, user_id=None):
 tasks["org_site_check"] = org_site_check
 
 # -----------------------------------------------------------------------------
-if settings.has_module("cap"):
+if has_module("cap"):
 
     # -------------------------------------------------------------------------
     def cap_ftp_sync(user_id=None):
@@ -84,7 +85,7 @@ if settings.has_module("cap"):
     tasks["cap_ftp_sync"] = cap_ftp_sync
 
 # -----------------------------------------------------------------------------
-if settings.has_module("doc"):
+if has_module("doc"):
 
     # -----------------------------------------------------------------------------
     def document_create_index(document, user_id=None):
@@ -232,7 +233,28 @@ def org_facility_geojson(user_id=None):
 tasks["org_facility_geojson"] = org_facility_geojson
 
 # -----------------------------------------------------------------------------
-if settings.has_module("msg"):
+if has_module("hrm"):
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_survey(training_event_id, user_id=None):
+        """
+            Notify Event Organiser that they should consider sending out a Survey
+
+            @param training_event_id: (Training) Event record_id
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.hrm_training_event_survey(training_event_id)
+        db.commit()
+        return result
+
+    tasks["hrm_training_event_survey"] = hrm_training_event_survey
+
+# -----------------------------------------------------------------------------
+if has_module("msg"):
 
     # -------------------------------------------------------------------------
     def msg_process_outbox(contact_method, user_id=None):
@@ -362,7 +384,7 @@ if settings.has_module("msg"):
     tasks["notify_notify"] = notify_notify
 
 # -----------------------------------------------------------------------------
-if settings.has_module("req"):
+if has_module("req"):
 
     def req_add_from_template(req_id, user_id=None):
         """
@@ -379,7 +401,7 @@ if settings.has_module("req"):
     tasks["req_add_from_template"] = req_add_from_template
 
 # -----------------------------------------------------------------------------
-if settings.has_module("setup"):
+if has_module("setup"):
 
     def deploy(playbook, private_key, host=["127.0.0.1"], only_tags="all", user_id=None):
 
@@ -506,7 +528,7 @@ if settings.has_module("setup"):
     tasks["setup_management"] = setup_management
 
 # --------------------e--------------------------------------------------------
-if settings.has_module("stats"):
+if has_module("stats"):
 
     def stats_demographic_update_aggregates(records=None, user_id=None):
         """
@@ -561,7 +583,7 @@ if settings.has_module("stats"):
     tasks["stats_demographic_update_location_aggregate"] = stats_demographic_update_location_aggregate
 
     # -------------------------------------------------------------------------
-    if settings.has_module("vulnerability"):
+    if has_module("vulnerability"):
 
         def vulnerability_update_aggregates(records=None, user_id=None):
             """
@@ -615,7 +637,7 @@ if settings.has_module("stats"):
         tasks["vulnerability_update_location_aggregate"] = vulnerability_update_location_aggregate
 
 # --------------------e--------------------------------------------------------
-if settings.has_module("disease"):
+if has_module("disease"):
 
     def disease_stats_update_aggregates(records=None, all=False, user_id=None):
         """
@@ -667,7 +689,7 @@ if settings.has_module("disease"):
     tasks["disease_stats_update_location_aggregates"] = disease_stats_update_location_aggregates
 
 # -----------------------------------------------------------------------------
-if settings.has_module("sync"):
+if has_module("sync"):
 
     def sync_synchronize(repository_id, user_id=None, manual=False):
         """

@@ -3302,8 +3302,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                            set explicitly to None to allow all languages
             @param sort: sort options in selector
             @param translate: translate the language options into
-                              the current UI language (only with
-                              explicit select=None)
+                              the current UI language
             @param zero: use this label for the empty-option (default="")
         """
 
@@ -3332,8 +3331,13 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         language_codes = self.language_codes()
         if self._select:
             language_codes_dict = dict(language_codes)
-            items = [(k, v) for k, v in self._select.items()
-                            if k in language_codes_dict]
+            if self.translate:
+                T = current.T
+                items = [(k, T(v)) for k, v in self._select.items()
+                            if k.split("-")[0] in language_codes_dict]
+            else:
+                items = [(k, v) for k, v in self._select.items()
+                            if k.split("-")[0] in language_codes_dict]
         else:
             if self.translate:
                 T = current.T
@@ -3352,33 +3356,45 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         """
             Represent a language code by language name, uses the
             representation from deployment_settings if available
-            rather than translation into current UI language.
+            (to allow overrides).
 
             @param code: the language code
         """
 
         l10n_languages = current.deployment_settings.get_L10n_languages()
-        if code in l10n_languages:
-            name = l10n_languages[code]
-        else:
-            name = cls.represent_local(code)
+        name = l10n_languages.get(code)
+        if not name:
+            name = dict(cls.language_codes()).get(code.split("-")[0])
+            if name is None:
+                return current.messages.UNKNOWN_OPT
+
+        if cls.translate:
+            name = current.T(name)
+
         return name
 
     # -------------------------------------------------------------------------
     @classmethod
     def represent_local(cls, code):
         """
-            Represent a language code by language name, translated
-            into current UI language (preferrable for database fields).
+            Represent a language code by the name of the language in that
+            language. e.g. for Use in a Language dropdown
 
             @param code: the language code
         """
 
-        name = dict(cls.language_codes()).get(code)
-        if name is None:
-            name = current.messages.UNKNOWN_OPT
-        else:
-            name = current.T(name)
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+        name = l10n_languages.get(code)
+        if not name:
+            name = dict(cls.language_codes()).get(code.split("-")[0])
+            if name is None:
+                return current.messages.UNKNOWN_OPT
+
+        T = current.T
+        ui_language = current.session.s3.language
+        T.force(code)
+        name = s3_str(T(name))
+        T.force(ui_language)
         return name
 
     # -------------------------------------------------------------------------
@@ -3783,7 +3799,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 #("mis", "Uncoded languages"),
                 #("mkh", "Mon-Khmer languages"),
                 #("mlg", "Malagasy"),
-                ("mg", "Malagasy"),
+                ("mg", "Malagasy"), # Madagascar
                 ("mlt", "Maltese"),
                 ("mt", "Maltese"),
                 ("mnc", "Manchu"),

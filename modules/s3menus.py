@@ -129,16 +129,20 @@ class S3MainMenu(object):
         if not settings.get_L10n_display_toolbar():
             return None
 
-        languages = current.response.s3.l10n_languages
+        T = current.T
         request = current.request
+        languages = settings.get_L10n_languages()
+        represent_local = IS_ISO639_2_LANGUAGE_CODE.represent_local
 
         menu_lang = MM("Language", **attr)
         for language in languages:
-            menu_lang.append(MM(languages[language], r=request,
-                                translate=False,
-                                selectable=False,
-                                vars={"_language":language},
-                                ltr=True
+            # Show Language in it's own Language
+            menu_lang.append(MM(represent_local(language),
+                                r = request,
+                                translate = False,
+                                selectable = False,
+                                vars = {"_language": language},
+                                ltr = True
                                 ))
         return menu_lang
 

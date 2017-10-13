@@ -328,15 +328,17 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Personal Menu """
 
         auth = current.auth
-        s3 = current.response.s3
         settings = current.deployment_settings
+        languages = settings.get_L10n_languages()
+        represent_local = IS_ISO639_2_LANGUAGE_CODE.represent_local
 
         # Language selector
         menu_lang = ML("Language", right=True)
-        for language in s3.l10n_languages.items():
-            code, name = language
+        for language in languages:
+            # Show Language in it's own Language
+            lang_name = represent_local(language)
             menu_lang(
-                ML(name, translate=False, lang_code=code, lang_name=name)
+                ML(lang_name, translate=False, lang_code=language, lang_name=lang_name)
             )
 
         if not auth.is_logged_in():

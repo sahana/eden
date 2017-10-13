@@ -1055,6 +1055,7 @@
 'Bomb Threat': 'Prijetnja bombom',
 'Border Colour for Text blocks': 'Boja rubova tekstualnih polja',
 'Bosnia and Herzegovina': 'Bosna i Herzegovina',
+'Bosnian': 'Bosanski',
 'Both': 'Oboje',
 'Botswana': 'Bocvana',
 'Bounding Box Insets': 'Nacrti okvirne kutije',

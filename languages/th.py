@@ -8,4 +8,5 @@
 'Department Catalog': 'Department แคตตาล็อก',
 'Edit Catalog': 'Edit แคตตาล็อก',
 'Edit Catalog Item': 'Edit แคตตาล็อก Item',
+'Thai': 'ภาษาไทย',
 }

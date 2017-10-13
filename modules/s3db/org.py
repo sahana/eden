@@ -1195,7 +1195,6 @@ class S3OrganisationNameModel(S3Model):
     def model(self):
 
         T = current.T
-        l10n_languages = current.deployment_settings.get_L10n_languages()
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -1205,12 +1204,7 @@ class S3OrganisationNameModel(S3Model):
                           self.org_organisation_id(empty = False,
                                                    ondelete = "CASCADE",
                                                    ),
-                          Field("language",
-                                label = T("Language"),
-                                represent = lambda opt: l10n_languages.get(opt,
-                                                current.messages.UNKNOWN_OPT),
-                                requires = IS_ISO639_2_LANGUAGE_CODE(),
-                                ),
+                          s3_language(empty = False),
                           Field("name_l10n",
                                 label = T("Local Name"),
                                 ),
@@ -3689,7 +3683,6 @@ class S3SiteNameModel(S3Model):
     def model(self):
 
         T = current.T
-        LANGUAGE_CODE = IS_ISO639_2_LANGUAGE_CODE
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -3698,11 +3691,7 @@ class S3SiteNameModel(S3Model):
         self.define_table(tablename,
                           # Component not instance
                           self.super_link("site_id", "org_site"),
-                          Field("language",
-                                label = T("Language"),
-                                represent = LANGUAGE_CODE.represent,
-                                requires = LANGUAGE_CODE(),
-                                ),
+                          s3_language(empty = False),
                           Field("name_l10n",
                                 label = T("Local Name"),
                                 ),

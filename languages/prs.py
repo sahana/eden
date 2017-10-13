@@ -739,6 +739,7 @@
 'DRRPP Extensions': 'DDRRP گسترش ها',
 'Daily Work': 'کار روزمره',
 'Daily': 'روزمره',
+'Dari': 'دری',
 'Data Type': 'نوع معلومات',
 'Data added to Theme Layer': 'معلومات به لایه زمینه اضافه گردید',
 'Data import error': 'خطا در ورود معلومات',

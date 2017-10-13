@@ -22,7 +22,7 @@ def config(settings):
 
     # L10n (Localization) settings
     languages = OrderedDict([
-        ("dv", "ދިވެހި"), # Divehi (Maldives)
+        ("dv", "Divehi"), # Maldives
         ("en-US", "English"),
     ])
     settings.L10n.languages = languages

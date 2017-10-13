@@ -277,6 +277,7 @@
 'Building Collapsed': 'အေဆာက္အဦျပဳိဳက်မႈ',
 'Building Name': 'အေဆာက္အအံု အမည္',
 'Bundles': 'အထုပ္အပုိးမ်ား',
+'Burmese': 'မြန်မာစာ',
 'By selecting this you agree that we may contact you.': 'ဤေနရာကိုေရြးခ်ယ္ျခင္းျဖင့္ ကၽြႏ္ုပ္တုိ႔က သင့္အားဆက္သြယ္ျခင္းကို သင္ကသေဘာတူသည္။',
 'CDRT (Community Disaster Response Teams)': 'CDRT (လူထုေဘးအႏၱရာယ္တုံ႔ျပန္ေရးအဖဲြ႕)',
 'CV': 'ကိုယ္ေရးရာဇဝင္',

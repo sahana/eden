@@ -698,19 +698,12 @@ class OutreachHouseholdModel(S3Model):
         # ---------------------------------------------------------------------
         # Social Information
         #
-        languages = dict(IS_ISO639_2_LANGUAGE_CODE.language_codes())
-
         tablename = "po_household_social"
         define_table(tablename,
                      household_id(),
-                     Field("language",
-                           label = T("Main Language"),
-                           represent = S3Represent(options=languages),
-                           requires = IS_EMPTY_OR(
-                                        IS_ISO639_2_LANGUAGE_CODE(select=None,
-                                                                  sort=True,
-                                                                  )),
-                           ),
+                     s3_language(label = T("Main Language"),
+                                 list_from_settings = False,
+                                 ),
                      Field("community", "text",
                            label = T("Community Connections"),
                            ),

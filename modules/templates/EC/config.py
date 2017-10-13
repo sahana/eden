@@ -48,7 +48,7 @@ def config(settings):
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
-        ("es", "Español"),
+        ("es", "Spanish"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "es"

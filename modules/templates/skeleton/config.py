@@ -52,33 +52,43 @@ def config(settings):
     #settings.gis.print_button = True
 
     # L10n settings
-    # Languages used in the deployment (used for Language Toolbar & GIS Locations)
+    # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     #settings.L10n.languages = OrderedDict([
-    #    ("ar", "العربية"),
-    #    ("bs", "Bosanski"),
+    #    ("ar", "Arabic"),
+    #    ("bs", "Bosnian"),
+    #    #("dv", "Divehi"), # Maldives
     #    ("en", "English"),
-    #    ("fr", "Français"),
-    #    ("de", "Deutsch"),
-    #    ("el", "ελληνικά"),
-    #    ("es", "Español"),
-    #    ("it", "Italiano"),
-    #    ("ja", "日本語"),
-    #    ("km", "ភាសាខ្មែរ"),
-    #    ("ko", "한국어"),
-    #    ("ne", "नेपाली"),          # Nepali
-    #    ("prs", "دری"), # Dari
-    #    ("ps", "پښتو"), # Pashto
-    #    ("pt", "Português"),
-    #    ("pt-br", "Português (Brasil)"),
-    #    ("ru", "русский"),
+    #    ("fr", "French"),
+    #    ("de", "German"),
+    #    ("el", "Greek"),
+    #    ("es", "Spanish"),
+    #    #("id", "Bahasa Indonesia"),
+    #    ("it", "Italian"),
+    #    ("ja", "Japanese"),
+    #    ("km", "Khmer"), # Cambodia
+    #    ("ko", "Korean"),
+    #    #("lo", "Lao"),
+    #    #("mg", "Malagasy"),
+    #    ("mn", "Mongolian"),
+    #    #("ms", "Malaysian"),
+    #    ("my", "Burmese"), # Myanmar
+    #    ("ne", "Nepali"),
+    #    ("prs", "Dari"), # Afghan Persian
+    #    ("ps", "Pashto"), # Afghanistan, Pakistan
+    #    ("pt", "Portuguese"),
+    #    ("pt-br", "Portuguese (Brazil)"),
+    #    ("ru", "Russian"),
     #    ("tet", "Tetum"),
-    #    ("tl", "Tagalog"),
-    #    ("tr", "Türkçe"),
-    #    ("ur", "اردو"),
-    #    ("vi", "Tiếng Việt"),
-    #    ("zh-cn", "中文 (简体)"),
-    #    ("zh-tw", "中文 (繁體)"),
+    #    #("si", "Sinhala"), # Sri Lanka
+    #    #("ta", "Tamil"), # India, Sri Lanka
+    #    ("th", "Thai"),
+    #    ("tl", "Tagalog"), # Philippines
+    #    ("tr", "Turkish"),
+    #    ("ur", "Urdu"), # Pakistan
+    #    ("vi", "Vietnamese"),
+    #    ("zh-cn", "Chinese (Simplified)"), # Mainland China
+    #    ("zh-tw", "Chinese (Taiwan)"),
     #])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"

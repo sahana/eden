@@ -1242,7 +1242,6 @@ class S3LocationNameModel(S3Model):
         configure = self.configure
         define_table = self.define_table
         location_id = self.gis_location_id
-        l10n_languages = current.deployment_settings.get_L10n_languages()
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -1252,12 +1251,7 @@ class S3LocationNameModel(S3Model):
                      location_id(empty = False,
                                  ondelete = "CASCADE",
                                  ),
-                     Field("language",
-                           label = T("Language"),
-                           represent = lambda opt: l10n_languages.get(opt,
-                                               current.messages.UNKNOWN_OPT),
-                           requires = IS_ISO639_2_LANGUAGE_CODE(),
-                           ),
+                     s3_language(empty = False),
                      Field("name_l10n",
                            label = T("Local Name"),
                            ),
@@ -5351,6 +5345,7 @@ class gis_LocationRepresent(S3Represent):
                 name = row.name or ""
         else:
             name = row.name or ""
+
         level = row.level
         if sep:
             if level == "L0":
@@ -5411,7 +5406,6 @@ class gis_LocationRepresent(S3Represent):
                 # Fallback to name even if show_name is False
                 represent = name
         else:
-            # @ToDo: Support translate=True
             if level == "L0":
                 represent = "%s (%s)" % (name, current.messages.COUNTRY)
             elif level in ("L1", "L2", "L3", "L4", "L5"):
@@ -5437,7 +5431,9 @@ class gis_LocationRepresent(S3Represent):
                 if level_name:
                     represent = "%s (%s)" % (represent, level_name)
                 if row.parent:
+                    # @ToDo: Don't assume no missing levels in PATH
                     parent_level = "L%s" % (int(level[1]) - 1)
+                    # @ToDo: Support translate=True
                     parent_name = row[parent_level]
                     if parent_name:
                         represent = "%s, %s" % (represent, parent_name)
@@ -5467,8 +5463,9 @@ class gis_LocationRepresent(S3Represent):
                     path = path.split("/")
                     path_len = len(path)
                     if path_len > 1:
-                        # @ToDo: Assumes no missing levels in PATH
+                        # @ToDo: Don't assume no missing levels in PATH
                         parent_level = "L%s" % (path_len - 2)
+                        # @ToDo: Support translate=True
                         parent_name = row[parent_level]
                         if parent_name:
                             if represent:

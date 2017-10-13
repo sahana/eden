@@ -3,7 +3,7 @@ ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Required for self-registration
 ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,Required for self-registration
 ANONYMOUS,Anonymous,,org,sites_for_org,,,READ,,,,,Required for self-registration
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
-AUTHENTICATED,Authenticated,,dc,respnse,,,CREATE,UPDATE,,,,
+AUTHENTICATED,Authenticated,,dc,respnse,,,,CREATE|READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,gis_location,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,config,,,READ|CREATE,READ|CREATE|UPDATE,,,,
@@ -857,7 +857,8 @@ RDRT_READER,RDRT Reader,,,,pr_contact_emergency,,READ,,,,,
 RDRT_READER,RDRT Reader,,,,hrm_competency_rating,,READ,,,,,
 RDRT_READER,RDRT Reader,,,,hrm_experience,,READ,,,,,
 RDRT_READER,RDRT Reader,,,,hrm_skill,,READ,,,,,
-EVENT_MONITOR,Event Monitoring Focal Person,,dc,,,,READ|CREATE|UPDATE|DELETE,,,,,# Move to 2nd role which is not global?
+EVENT_MONITOR,Event Monitoring Focal Person,,dc,,,,READ|CREATE|UPDATE|DELETE,,,,,# If DC used in other usecases, move to 2nd role which is not global?
+EVENT_MONITOR,Event Monitoring Focal Person,,dc,respnse,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person,,hrm,,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person,,hrm,course,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person,,hrm,department,,,READ|CREATE|UPDATE|DELETE,,,,,

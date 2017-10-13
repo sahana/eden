@@ -1868,6 +1868,7 @@
 "Need a 'url' argument!": "यू.आर.एल.' को विश्लेषण !",
 'Needs': 'आवश्यकताहरू',
 'negroid': 'नेग्रोइड',
+'Nepali': 'नेपाली',
 'Network added': 'नेटवर्क संचित गरियो',
 'Network Details': 'नेटवर्क विवरण',
 'Network removed': 'नेटवर्क हटाइयो',

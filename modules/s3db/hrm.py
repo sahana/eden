@@ -68,6 +68,7 @@ __all__ = ("S3HRModel",
            #"hrm_experience_list_layout",
            #"hrm_training_list_layout",
            "hrm_human_resource_filters",
+           "hrm_training_event_survey",
            )
 
 import datetime
@@ -2685,7 +2686,8 @@ class S3HRSkillModel(S3Model):
         levels = current.gis.get_relevant_hierarchy_levels()
 
         filter_widgets = [
-            S3TextFilter(["course_id$name",
+            S3TextFilter(["name",
+                          "course_id$name",
                           "site_id$name",
                           "comments",
                           ],
@@ -2710,7 +2712,8 @@ class S3HRSkillModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   create_next = URL(f="training_event",
-                                    args=["[id]", "participant"]),
+                                    args=["[id]", "participant"],
+                                    ),
                   deduplicate = S3Duplicate(primary = ("course_id",
                                                        "start_date",
                                                        ),
@@ -2895,6 +2898,7 @@ class S3HRSkillModel(S3Model):
             S3TextFilter(["person_id$first_name",
                           "person_id$last_name",
                           "course_id$name",
+                          "training_event_id$name",
                           "comments",
                           ],
                          label = T("Search"),
@@ -3706,7 +3710,7 @@ def hrm_training_onaccept(form):
 
     if delete:
         deleted_fks = json.loads(record.deleted_fk)
-        course_id = deleted_fks["course_id"]
+        course_id = deleted_fks.get("course_id")
         person_id = deleted_fks["person_id"]
     else:
         course_id = record.course_id
@@ -9524,5 +9528,36 @@ def hrm_human_resource_filters(resource_type=None,
                                       ))
 
     return filter_widgets
+
+# =============================================================================
+def hrm_training_event_survey(training_event_id):
+    """
+        Notify Event Organiser that they should consider sending out a Survey
+
+        @param training_event_id: (Training) Event record_id
+
+        @ToDo: Currently configured for IFRC Bangkok CCST...make this more
+               generic if-required
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Read Event Record
+    etable = s3db.hrm_training_event
+    event = db(etable.id == training_event_id).select(etable.name,
+                                                      etable.created_by,
+                                                      limitby = (0, 1)
+                                                      ).first()
+    message = current.T("A Message")
+
+    # Send to EO (created_by) & MFP
+    send_email = current.msg.send_by_pe_id
+
+    ltable = s3db.pr_person_user
+    eo = db(ltable.user_id == event.created_by)
+    # @ToDo: Complete this
+
+    return
 
 # END =========================================================================

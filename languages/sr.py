@@ -4,4 +4,5 @@
 'District': 'Округ',
 'Municipality': 'Општина',
 'Municipality / City': 'Општина / Град',
+'Serbian': 'Српски',
 }

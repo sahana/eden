@@ -359,17 +359,10 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Question Translations
         #
-        l10n_languages = settings.get_L10n_languages()
-
         tablename = "dc_question_l10n"
         define_table(tablename,
                      question_id(),
-                     Field("language",
-                           label = T("Language"),
-                           represent = lambda opt: \
-                                        l10n_languages.get(opt, UNKNOWN_OPT),
-                           requires = IS_ISO639_2_LANGUAGE_CODE(),
-                           ),
+                     s3_language(empty = False),
                      Field("name_l10n",
                            label = T("Translated Question"),
                            ),
@@ -645,6 +638,10 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      template_id(),
                      s3_date(default = "now"),
+                     # Enable in-templates as-required
+                     s3_language(readable = False,
+                                 writable = False,
+                                 ),
                      location_id(widget = S3LocationSelector(show_map = False,
                                                              show_postcode = False,
                                                              )),
@@ -704,6 +701,10 @@ class DataCollectionModel(S3Model):
                      target_id(),
                      template_id(),
                      s3_datetime(default = "now"),
+                     # Enable in-templates as-required
+                     s3_language(readable = False,
+                                 writable = False,
+                                 ),
                      location_id(),
                      self.org_organisation_id(),
                      self.pr_person_id(

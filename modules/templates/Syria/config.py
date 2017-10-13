@@ -90,7 +90,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
-        #("ar", "العربية"), # Needed to import Arabic placenames
+        #("ar", "Arabic"), # Needed to import Arabic placenames
         ("en", "English"),
     ])
     # Default Language

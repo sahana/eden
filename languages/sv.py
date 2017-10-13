@@ -32,6 +32,7 @@
 'Search': 'Sök',
 'Settings': 'Inställningar',
 'Staff': 'Medarbetare',
+'Swedish': 'Svenska',
 'Synchronization': 'Synkronisering',
 'Test Results': 'Testresultat',
 'Translation': 'Översättning',

@@ -5,6 +5,7 @@
 'Dear %(person_name)s': 'Kepada %(person_name)s',
 'Dear %(person_title)s %(person_name)s': 'Kepada %(person_title)s %(person_name)s',
 'disagree': 'tidak setuju',
+'Indonesian': 'Bahasa Indonesia',
 'most of it': 'sebagian besar',
 'no': 'tidak',
 'no change': 'tidak ada perubahan',

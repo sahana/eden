@@ -101,6 +101,7 @@ def target():
                 # Default component values from master record
                 record = r.record
                 table = s3db.dc_response
+                table.language.default = record.language
                 table.location_id.default = record.location_id
                 f = table.template_id
                 f.default = record.template_id

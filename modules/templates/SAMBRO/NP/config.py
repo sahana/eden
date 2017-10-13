@@ -23,7 +23,7 @@ def config(settings):
     # L10n (Localization) settings
     languages = OrderedDict([
         ("en-US", "English"),
-        ("ne", "नेपाली"),         # Nepali
+        ("ne", "Nepali"),
     ])
     settings.L10n.languages = languages
 

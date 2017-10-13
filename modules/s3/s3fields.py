@@ -46,7 +46,7 @@ from s3dal import Query, SQLCustomType
 from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
 from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
-from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
+from s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from s3widgets import S3CalendarWidget, S3DateWidget
 
 # =============================================================================
@@ -1233,6 +1233,49 @@ def s3_currency(name="currency", **attr):
         attr["writable"] = settings.get_fin_currency_writable()
 
     f = S3ReusableField(name, length=3,
+                        **attr)
+    return f()
+
+# =============================================================================
+def s3_language(name="language", **attr):
+    """
+        Return a standard Language field
+    """
+
+    if "label" not in attr:
+        attr["label"] = current.T("Language")
+    if "default" not in attr:
+        attr["default"] = current.deployment_settings.get_L10n_default_language()
+    if "requires" not in attr:
+        empty = attr.pop("empty", None)
+        if empty:
+            zero = ""
+        else:
+            zero = None
+        list_from_settings = attr.pop("list_from_settings", True)
+        select = attr.pop("select", None) # None = Full list
+        translate = attr.pop("translate", True)
+        if select or not list_from_settings:
+            requires = IS_ISO639_2_LANGUAGE_CODE(select = select,
+                                                 sort = True,
+                                                 translate = translate,
+                                                 zero = zero,
+                                                 )
+        else:
+            # Use deployment_settings to show a limited list
+            requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
+                                                 translate = translate,
+                                                 zero = zero,
+                                                 )
+        if empty is False:
+            attr["requires"] = requires
+        else:
+            # Default
+            attr["requires"] = IS_EMPTY_OR(requires)
+    if "represent" not in attr:
+        attr["represent"] = IS_ISO639_2_LANGUAGE_CODE.represent
+
+    f = S3ReusableField(name, length=8,
                         **attr)
     return f()
 

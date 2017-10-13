@@ -268,21 +268,21 @@ def config(settings):
 
             s3db = current.s3db
 
-            # Hack to provide additional languages for L10n location names
+            # Provide additional languages for L10n location names
             # without activating them in the GUI
-            l10n_languages = dict(settings.L10n.languages)
-            l10n_languages["ky"] = "Kyrgyz"
-            l10n_languages["ru"] = "Russian"
-            l10n_languages["hy"] = "Armenian"
-            l10n_languages["az"] = "Azerbaijani"
-            l10n_languages["ka"] = "Georgian"
-            l10n_languages["kk"] = "Kazakh"
-            l10n_languages["tg"] = "Tajik"
-            l10n_languages["tk"] = "Turkmen"
-            l10n_languages["uk"] = "Ukraine"
-            l10n_languages["uz"] = "Uzbek"
-            from s3 import IS_ISO639_2_LANGUAGE_CODE
-            s3db.gis_location_name.language.requires = IS_ISO639_2_LANGUAGE_CODE(select=l10n_languages)
+            s3db.gis_location_name.language.requires._select = OrderedDict([
+                ("en", "English"),
+                ("hy", "Armenian"),
+                ("az", "Azerbaijani"),
+                ("ka", "Georgian"),
+                ("kk", "Kazakh"),
+                ("ky", "Kyrgyz"),
+                ("ru", "Russian"),
+                ("tg",  "Tajik"),
+                ("tk",  "Turkmen"),
+                ("uk", "Ukrainian"),
+                ("uz", "Uzbek"),
+            ])
 
             if r.interactive or r.representation == "aadata":
                 if r.vars.get("location.level__ne"):

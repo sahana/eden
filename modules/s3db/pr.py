@@ -5026,9 +5026,6 @@ class PRPersonDetailsModel(S3Model):
             3: T("literate"),
         }
 
-        # Language Options
-        languages = settings.get_L10n_languages()
-
         # Nationality Options
         STATELESS = T("Stateless")
         def nationality_opts():
@@ -5047,11 +5044,7 @@ class PRPersonDetailsModel(S3Model):
                           self.pr_person_id(label = T("Person"),
                                             ondelete = "CASCADE",
                                             ),
-                          Field("language", length=16,
-                                represent = lambda opt: \
-                                    languages.get(opt, UNKNOWN_OPT),
-                                requires = IS_EMPTY_OR(IS_IN_SET(languages)),
-                                ),
+                          s3_language(default = None),
                           Field("nationality",
                                 label = T("Nationality"),
                                 represent = nationality_repr,
