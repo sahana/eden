@@ -3351,8 +3351,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         return items
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def represent(cls, code):
+    def represent(self, code):
         """
             Represent a language code by language name, uses the
             representation from deployment_settings if available
@@ -3364,11 +3363,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         l10n_languages = current.deployment_settings.get_L10n_languages()
         name = l10n_languages.get(code)
         if not name:
-            name = dict(cls.language_codes()).get(code.split("-")[0])
+            name = dict(self.language_codes()).get(code.split("-")[0])
             if name is None:
                 return current.messages.UNKNOWN_OPT
 
-        if cls.translate:
+        if self.translate:
             name = current.T(name)
 
         return name

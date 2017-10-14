@@ -1737,20 +1737,25 @@ Thank you"""
                           ]
 
         language = utable.language
-        language.label = T("Language")
-        language.comment = DIV(_class="tooltip",
-                               _title="%s|%s" % (T("Language"),
-                                                 T("The language you wish the site to be displayed in.")))
-        language.represent = IS_ISO639_2_LANGUAGE_CODE.represent
-        # Set in 00_settings.py
-        #language.requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
-        #                                              translate = True,
-        #                                              zero = None,
-        #                                              )
-        # Default the profile language to the one currently active
-        language.default = T.accepted_language
-        if multiselect_widget:
-            language.widget = S3MultiSelectWidget(multiple=False)
+        languages = deployment_settings.get_L10n_languages()
+        if len(languages) > 1:
+            language.label = T("Language")
+            language.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("Language"),
+                                                     T("The language you wish the site to be displayed in.")))
+            requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
+                                                 translate = True,
+                                                 zero = None,
+                                                 )
+            language.represent = requires.represent
+            language.requires = requires
+            # Default the profile language to the one currently active
+            language.default = T.accepted_language
+            if multiselect_widget:
+                language.widget = S3MultiSelectWidget(multiple=False)
+        else:
+            language.default = languages.keys()[0]
+            language.readable = language.writable = False
 
         utc_offset = utable.utc_offset
         utc_offset.label = messages.label_utc_offset

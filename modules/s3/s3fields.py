@@ -1246,34 +1246,34 @@ def s3_language(name="language", **attr):
         attr["label"] = current.T("Language")
     if "default" not in attr:
         attr["default"] = current.deployment_settings.get_L10n_default_language()
+    empty = attr.pop("empty", None)
+    if empty:
+        zero = ""
+    else:
+        zero = None
+    list_from_settings = attr.pop("list_from_settings", True)
+    select = attr.pop("select", None) # None = Full list
+    translate = attr.pop("translate", True)
+    if select or not list_from_settings:
+        requires = IS_ISO639_2_LANGUAGE_CODE(select = select,
+                                             sort = True,
+                                             translate = translate,
+                                             zero = zero,
+                                             )
+    else:
+        # Use deployment_settings to show a limited list
+        requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
+                                             translate = translate,
+                                             zero = zero,
+                                             )
     if "requires" not in attr:
-        empty = attr.pop("empty", None)
-        if empty:
-            zero = ""
-        else:
-            zero = None
-        list_from_settings = attr.pop("list_from_settings", True)
-        select = attr.pop("select", None) # None = Full list
-        translate = attr.pop("translate", True)
-        if select or not list_from_settings:
-            requires = IS_ISO639_2_LANGUAGE_CODE(select = select,
-                                                 sort = True,
-                                                 translate = translate,
-                                                 zero = zero,
-                                                 )
-        else:
-            # Use deployment_settings to show a limited list
-            requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
-                                                 translate = translate,
-                                                 zero = zero,
-                                                 )
         if empty is False:
             attr["requires"] = requires
         else:
             # Default
             attr["requires"] = IS_EMPTY_OR(requires)
     if "represent" not in attr:
-        attr["represent"] = IS_ISO639_2_LANGUAGE_CODE.represent
+        attr["represent"] = requires.represent
 
     f = S3ReusableField(name, length=8,
                         **attr)

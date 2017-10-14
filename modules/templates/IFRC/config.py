@@ -2044,6 +2044,7 @@ def config(settings):
 
             list_fields = [(T("Event"), "training_event__link.training_event_id"),
                            "template_id",
+                           "language",
                            "date",
                            "comments",
                            ]
