@@ -25,6 +25,7 @@ def config(settings):
         ("dv", "Divehi"), # Maldives
         ("en-US", "English"),
     ])
+    settings.cap.languages = languages
     settings.L10n.languages = languages
 
     # Alert Hub Title

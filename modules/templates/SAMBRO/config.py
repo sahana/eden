@@ -106,7 +106,7 @@ def config(settings):
         #("km", "Khmer"), # Cambodia
         #("mn", "Mongolian"),
         ("my", "Burmese"), # Myanmar
-        #("ne", "Nepali"),
+        ("ne", "Nepali"),
         ("th", "Thai"),
         ("tl", "Tagalog"), # Philippines
     ])
