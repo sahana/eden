@@ -25,6 +25,7 @@ def config(settings):
         ("en-US", "English"),
         ("my", "Burmese"),
     ])
+    settings.cap.languages = languages
     settings.L10n.languages = languages
 
     # Alert Hub Title

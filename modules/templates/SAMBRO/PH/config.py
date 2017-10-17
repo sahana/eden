@@ -25,6 +25,7 @@ def config(settings):
         ("en-US", "English"),
         ("tl", "Tagalog"), # Filipino
     ])
+    settings.cap.languages = languages
     settings.L10n.languages = languages
 
     # for creating location from SAME geocodes
