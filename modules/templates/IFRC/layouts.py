@@ -116,6 +116,9 @@ class S3LanguageMenuLayout(S3NavigationItem):
             if item.components:
                 # The language menu itself
                 current_language = current.T.accepted_language
+                # Hack: for some reason T.accepted_language here is NOT what is set in 00_settings.py for unauthenticated users
+                if current_language == "en":
+                    current_language = "en-gb"
                 items = item.render_components()
                 select = SELECT(items, value=current_language,
                                     _name="_language",

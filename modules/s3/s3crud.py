@@ -1986,7 +1986,13 @@ class S3CRUD(S3Method):
                     except:
                         success = False
                     if success:
-                        response.confirmation = T("Record approved")
+                        confirmation = response.confirmation
+                        if confirmation:
+                            response.confirmation = "%s, %s" % (T("Record approved"),
+                                                                confirmation,
+                                                                )
+                        else:
+                            response.confirmation = T("Record approved")
                         output["approve_form"] = ""
                     else:
                         response.warning = T("Record could not be approved.")

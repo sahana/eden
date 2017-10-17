@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+id,Training Evaluation,"1. How much information from the training you attended do you still remember?","၁။ သင္ တက္္ေရာက္ခဲ့ေသာ သင္တန္းမွ မည္သည့္သတင္းအခ်က္အလက္ အေၾကာင္းအရာမ်ားကို မည္မွ် မွတ္မိ သနည္း။","['၀%', '၂၀%', '၆၀%', '၈၀%', '၁၀၀%']",
+id,Training Evaluation,"2. I would recommend this training to my colleagues","၂။ ဤသင္တန္းႏွင့္ပက္သတ္၍ ကၽြႏ္ုပ္၏လုပ္ေဖာ္ကိုင္ဖက္မ်ားကို တက္္ေရာက္ရန္ အႀကံျပဳမည္။","['လံုး၀သေဘာတူ', 'သေဘာတူ', 'သေဘာမတူ', 'လံုး၀သေဘာ']",
+id,Training Evaluation,"3. I shared the information received during the training with your colleagues","၃။ သင္တန္းတက္ေရာက္္စဥ္ ရရိခဲ့ေသာ သတင္းအခ်က္အလက္မ်ားကို ကၽြႏ္ုပ္၏ လုပ္ေဖာ္ကိုင္ဖက္မ်ားအား ျပန္လည္မွ်ေ၀မည္။","['အားလံုးမဟုတ္', 'တစိတ္တပိုင္း', 'အမ်ားစု', 'အားလံုး']",
+id,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","","['ေျပာင္းလဲမႈ မရွိ', 'ေျပာင္းလဲမႈရွိသည္', 'သိသိသာသာေျပာင္းလဲမႈရွိသည္']",
+id,Training Evaluation,"Please provide example (in English or in your own language)","",,
+id,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","၅။ သင္၏ေန႔စဥ္လုပ္္ေဆာင္မႈမ်ားတြင္ သင္တန္းေၾကာင့္ အကယ္၍ ေျပာင္းလဲမႈမရွိျခင္း (သို႔မဟုတ္) အနည္းငယ္ ေျပာင္းလဲမႈရွိခဲ့လွ်င္ အဘယ့္ေၾကာင့္ ထိုသို႔ျဖစ္ရသနည္း။",,
+id,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","၆။ သင္တန္း၏ အက်ိဳးရလာဒ္အျဖစ္ သင္၏ယူနစ္/ဌာန/အဖြဲ႕အစည္းတြင္ ေျပာင္းလဲမႈမ်ား ျမင္ေတြ႕ခဲ့ပါသလား။","['ေျပာင္းလဲမႈ မရွိ', 'ေျပာင္းလဲမႈရွိသည္', 'သိသိသာသာေျပာင္းလဲမႈရွိသည္']",
+id,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","၇။ သင္၏ယူနစ္/ဌာန/အဖြဲ႕အစည္းတြင္ သင္တန္းေၾကာင့္ အကယ္၍ ေျပာင္းလဲမႈမရွိျခင္း (သို႔မဟုတ္) အနည္းငယ္ ေျပာင္းလဲမႈရွိခဲ့လွ်င္ အဘယ့္ေၾကာင့္ ထိုသို႔ျဖစ္ရသနည္း။",,
+id,Training Evaluation,"8. Would you be willing to be contacted again for further information?","၈။ အနာဂတ္တြင္ သတင္းအခ်က္အလက္မ်ားႏွင့္ ပက္သတ္၍ ေနာက္တစ္ႀကိမ္ဆက္သြယ္လုပ္ေဆာင္ရန္ စိတ္အား ထက္သန္မႈ ရွိပါသလား။","['မရွိပါ', 'ရွိပါသည္']",

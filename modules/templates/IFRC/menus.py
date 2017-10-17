@@ -52,10 +52,11 @@ class S3MainMenu(default.S3MainMenu):
 
         if not has_role(ADMIN) and auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
             # Simplified menu for Bangkok CCST
-            return [homepage("hrm", "org", name=T("Trainings"), f="training_event",
+            return [homepage("hrm", "org", name=T("Training Events"), f="training_event",
                              #vars=dict(group="staff"), check=hrm)(
                              vars=dict(group="staff"))(
                         #MM("Training Events", c="hrm", f="training_event"),
+                        #MM("Trainings", c="hrm", f="training"),
                         #MM("Training Courses", c="hrm", f="course"),
                         ),
                     ]
@@ -610,12 +611,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm():
         """ HRM Human Resource Management """
 
-        has_role = current.auth.s3_has_role
+        auth = current.auth
+        has_role = auth.s3_has_role
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        if not has_role(ADMIN) and (has_role("EVENT_MONITOR") or \
-                                    has_role("EVENT_ORGANISER") or \
-                                    has_role("EVENT_OFFICE_MANAGER")):
+        if not has_role(ADMIN) and auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
+            if has_role("EVENT_OFFICE_MANAGER"):
+                # Just their Dashboard
+                return M()(M("Training Events", c="hrm", f="training_event")())
+
             return M()(
                         M("Training Events", c="hrm", f="training_event")(
                             M("Create", m="create"),
@@ -629,6 +633,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             #M("Create", m="create"),
                             #M("Import", f="person", m="import",
                             #  vars={"group": "staff"}, p="create"),
+                            M("EOs", f="staff", m=None, vars={"eo": 1}),
                         ),
                         M("National Societies", c="org",
                                                 f="organisation",

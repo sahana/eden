@@ -3334,10 +3334,10 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             if self.translate:
                 T = current.T
                 items = [(k, T(v)) for k, v in self._select.items()
-                            if k.split("-")[0] in language_codes_dict]
+                            if k in language_codes_dict]
             else:
                 items = [(k, v) for k, v in self._select.items()
-                            if k.split("-")[0] in language_codes_dict]
+                            if k in language_codes_dict]
         else:
             if self.translate:
                 T = current.T
@@ -4081,7 +4081,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("zza", "Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki"),
                 ]
 
-        extra_codes = current.deployment_settings.get_L10n_extra_codes()
+        settings = current.deployment_settings
+        l10n_languages = settings.get_L10n_languages()
+        lang += l10n_languages.items()
+        lang = list(set(lang)) # Remove duplicates
+        extra_codes = settings.get_L10n_extra_codes()
         if extra_codes:
             lang += extra_codes
 

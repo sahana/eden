@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+id,Training Evaluation,"1. How much information from the training you attended do you still remember?","1. Berapa banyak maklumat dari latihan yang anda hadiri yang anda masih ingat?","['0%', '20%', '60%', '80%', '100%']",
+id,Training Evaluation,"2. I would recommend this training to my colleagues","2. Saya akan mengesyorkan latihan ini kepada rakan-rakan sekerja saya","['sangat setuju', 'setuju', 'tidak setuju', 'sangat tidak setuju']",
+id,Training Evaluation,"3. I shared the information received during the training with your colleagues","3. Saya berkongsi maklumat yang diterima semasa latihan dengan rakan-rakan sekerja saya","['tidak sama sekali', 'sebahagian daripadanya', 'kebanyakannya', 'semuanya']",
+id,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","4. Adakah anda melakukan apa-apa perbezaan dalam kerja harian anda akibat daripada latihan ini","['tiada perubahan', 'sedikit perubahan', 'perubahan yang ketara']",
+id,Training Evaluation,"Please provide example (in English or in your own language)","Sila berikan contoh (dalam Bahasa Inggeris atau dalam bahasa anda sendiri)",,
+id,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","5. Jika tidak ada atau sedikit perubahan dalam amalan harian anda akibat latihan ini, mengapa?",,
+id,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","6. Adakah anda melihat apa-apa perubahan dalam unit / jabatan / organisasi anda sebagai hasil daripada latihan ini?","['tiada perubahan', 'sedikit perubahan', 'perubahan yang ketara']",
+id,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","8. Adakah anda rela untuk dihubungi sekali lagi untuk maklumat lanjut?",,
+id,Training Evaluation,"8. Would you be willing to be contacted again for further information?","8. Bersediakah Anda dihubungi lagi untuk informasi lebih lanjut?","['ya', 'tidak']",

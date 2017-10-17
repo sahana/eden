@@ -32,6 +32,7 @@
 __all__ = ("DataCollectionTemplateModel",
            "DataCollectionModel",
            "dc_rheader",
+           "dc_target_check",
            )
 
 from gluon import *
@@ -664,8 +665,13 @@ class DataCollectionModel(S3Model):
                        hrm_training_event = {"link": "hrm_event_target",
                                              "joinby": "target_id",
                                              "key": "training_event_id",
+                                             "multiple": False,
                                              "actuate": "replace",
                                              },
+                       # Format for S3InlineComponent
+                       hrm_event_target = {"joinby": "target_id",
+                                           "multiple": False,
+                                           }
                        )
 
         # CRUD strings
@@ -992,5 +998,107 @@ def dc_rheader(r, tabs=None):
                                                          )
 
     return rheader
+
+# =============================================================================
+def dc_target_check(target_id):
+    """
+        Check whether a Survey has been Approved/Rejected & notify OM if not
+
+        @param target_id: Target record_id
+
+        @ToDo: Currently configured for IFRC Bangkok CCST...make this more
+               generic if-required (e.g. Move this all to a deployment_setting)
+    """
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    # Read Survey Record
+    ttable = s3db.dc_target
+    ltable = s3db.hrm_event_target
+    etable = s3db.hrm_training_event
+    query = (ttable.id == target_id)
+    left = etable.on((ttable.id == ltable.target_id) & \
+                     (etable.id == ltable.training_event_id))
+    survey = db(query).select(ttable.approved_by,
+                              ttable.deleted,
+                              etable.name,
+                              etable.location_id,
+                              etable.start_date,
+                              left = left,
+                              limitby = (0, 1)
+                              ).first()
+
+    if not survey:
+        return
+
+    if survey["dc_target"].deleted:
+        # Presumably it was Rejected
+        return
+
+    if survey["dc_target"].approved_by:
+        # Survey was Approved
+        return
+
+    # List of recipients, grouped by language
+    # Recipients: OM
+    languages = {}
+
+    utable = db.auth_user
+    gtable = db.auth_group
+    mtable = db.auth_membership
+    ltable = s3db.pr_person_user
+    query = (utable.id == mtable.user_id) & \
+            (mtable.group_id == gtable.id) & \
+            (gtable.uuid == "EVENT_OFFICE_MANAGER") & \
+            (ltable.user_id == utable.id)
+    users = db(query).select(ltable.pe_id,
+                             utable.language,
+                             )
+    for user in users:
+        language = user["auth_user.language"]
+        if language in languages:
+            languages[language].append(user["pr_person_user.pe_id"])
+        else:
+            languages[language] = [user["pr_person_user.pe_id"]]
+
+    # Build Message
+    event = survey["hrm_training_event"]
+    event_date = event.start_date
+    location_id = event.location_id
+    url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                    URL(c="dc", f="target", args=[target_id, "review"]),
+                    )
+    subject = T("Post-Event Survey hasn't been Approved/Rejected")
+    message = T("The post-Event Survey for %(event_name)s on %(date)s in %(location)s has not been Approved or Rejected") % \
+            dict(date = "%(date)s", # Localise per-language
+                 event_name = event.name,
+                 location = "%(location)s", # Localise per-language
+                 #url = url,
+                 )
+
+    # Send Localised Mail(s)
+    send_email = current.msg.send_by_pe_id
+    session_s3 = current.session.s3
+    date_represent = S3DateTime.date_represent # We want Dates not datetime which etable.start_date uses
+    location_represent = s3db.gis_LocationRepresent()
+    for language in languages:
+        T.force(language)
+        subject = s3_str(subject)
+        session_s3.language = language # for date_represent
+        message = s3_str(message % dict(date = date_represent(event_date),
+                                        location = location_represent(location_id),
+                                        ),
+                         )
+        users = languages[language]
+        for pe_id in users:
+            send_email(pe_id,
+                       subject = subject,
+                       message = message,
+                       )
+
+    # NB No need to restore UI language as this is run as an async task w/o UI
+    return
 
 # END =========================================================================

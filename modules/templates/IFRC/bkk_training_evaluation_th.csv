@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+id,Training Evaluation,"1. How much information from the training you attended do you still remember?","1. คุณยังจำข้อมูลจากการฝึกอบรมที่คุณเข้าร่วมได้มากแค่ไหน?","['0%', '20%', '60%', '80%', '100%']",
+id,Training Evaluation,"2. I would recommend this training to my colleagues","2.   ฉันอยากจะแนะนำการฝึกอบรมนี้แก่เพื่อนร่วมงานของฉัน","['เห็นด้วยอย่างยิ่ง', 'เห็นด้วย', 'ไม่เห็นด้วย', 'ไม่เห็นด้วยอย่างยิ่ง']",
+id,Training Evaluation,"3. I shared the information received during the training with your colleagues","3. ฉันได้แบ่งปันข้อมูลที่ได้รับระหว่างการฝึกอบรมกับเพื่อนร่วมงานของคุณ","['ไม่เลย', 'บางส่วน', 'ส่วนใหญ่', 'ทั้งหมด']",
+id,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","4. คุณทำอะไรที่แตกต่างไปจากงานประจำวันของคุณอันเนื่องมาจากการฝึกอบรมนี้","['ไม่มีความเปลี่ยนแปลง', 'เปลี่ยนแปลงไปบางส่วน', 'เปลี่ยนแปลงไปอย่างมาก']",
+id,Training Evaluation,"Please provide example (in English or in your own language)","กรุณายกตัวอย่าง (เป็นภาษาอังกฤษหรือภาษาไทย)",,
+id,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","5. หากการเปลี่ยนแปลงในการใช้ชีวิตประจำวันไม่มีเลยหรือมีเพียงเล็กน้อยจากการฝึกอบรมนี้ ทำไมถึงเป็นเช่นนั้น? ",,
+id,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","6. คุณเห็นการเปลี่ยนแปลงใดในหน่วยงาน/แผนก/องค์กรของคุณอันเนื่องมาจากการฝึกอบรมนี้ไหม?","['ไม่มีความเปลี่ยนแปลง', 'เปลี่ยนแปลงไปบางส่วน', 'เปลี่ยนแปลงไปอย่างมาก']",
+id,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","7. หากไม่มีหรือมีการเปลี่ยนแปลงเพียงเล็กน้อยในหน่วยงาน/แผนก/องค์กรของคุณจากการฝึกอบรมนี้ ทำไมถึงเป็นเช่นนั้น?",,
+id,Training Evaluation,"8. Would you be willing to be contacted again for further information?","8. คุณยินดีที่จะได้รับการติดต่ออีกครั้งเพื่อขอข้อมูลเพิ่มเติมหรือไม่?","['ใช่', 'ไม่ใช่']",

@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+id,Training Evaluation,"1. How much information from the training you attended do you still remember?","1. Anh/ chị còn nhớ bao nhiêu thông tin từ khóa tập huấn?","['0%', '20%', '60%', '80%', '100%']",
+id,Training Evaluation,"2. I would recommend this training to my colleagues","2. Tôi sẽ gợi ý cho đồng nghiệp của mình tham dự khóa tập huấn này.","['rất đồng ý', 'đồng ý', 'không đồng ý', 'rất không đồng ý']",
+id,Training Evaluation,"3. I shared the information received during the training with your colleagues","3. Tôi đã chia sẻ những thông tin từ khóa học với đồng nghiệp.","['hoàn toàn không', 'một phần', 'phần lớn', 'toàn bộ']",
+id,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","4. Khóa tập huấn có dẫn đến thay đổi gì trong cách anh chị thực hiện công việc của mình không?","['không có thay đổi gì', 'có thay đổi một chút', 'thay đổi lớn']",
+id,Training Evaluation,"Please provide example (in English or in your own language)","Anh/ chị có thể cho biết ví dụ cụ thế?",,
+id,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","5. Trong trường hợp khóa tập huấn không dẫn đến thay đổi gì trong cách anh/ chị thực hiện công việc của mình, anh/ chị có thể cho biết lý do vì sao?",,
+id,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","6. Khóa tập huấn có dẫn đến thay đổi gì trong ban hay tổ chức của anh/ chị không?","['không có thay đổi gì', 'có thay đổi một chút', 'thay đổi lớn']",
+id,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","7. Trong trường hợp không có thay đổi gì hay thay đổi rất ít trong ban hay tổ chức của anh/ chị, anh/ chị có thể cho biết lý do vì sao?",,
+id,Training Evaluation,"8. Would you be willing to be contacted again for further information?","8. Anh/ chị có vui lòng được liên hệ trong trường hợp chúng tôi muốn tìm hiểu thêm thông tin không?","['có', 'không']",

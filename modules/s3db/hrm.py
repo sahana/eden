@@ -3964,14 +3964,20 @@ class S3HREventAssessmentModel(S3Model):
             * Needs Assessment / Readiness checklist
             * Tests (either for checking learning/application or for final grade)
             * Evaluation (currently the only use case - for IFRC's Bangkok CCST)
-
-        @ToDo: Add Type here if it becomes useful
     """
 
     names = ("hrm_event_target",
              )
 
     def model(self):
+
+        T = current.T
+
+        # @ToDo: Deployment_setting if use expanded beyond Bangkok CCST
+        type_opts = {1: T("Other"),
+                     3: T("3-month post-event Evaluation"),
+                     12: T("12-month post-event Evaluation"),
+                     }
 
         # =====================================================================
         # (Training) Events <> DC Targets Link Table
@@ -3984,6 +3990,12 @@ class S3HREventAssessmentModel(S3Model):
                           self.dc_target_id(empty = False,
                                             ondelete = "CASCADE",
                                             ),
+                          Field("survey_type",
+                                default = 1,
+                                label = T("Type"),
+                                requires = IS_EMPTY_OR(IS_IN_SET(type_opts)),
+                                represent = S3Represent(options = type_opts),
+                                ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -9530,34 +9542,129 @@ def hrm_human_resource_filters(resource_type=None,
     return filter_widgets
 
 # =============================================================================
-def hrm_training_event_survey(training_event_id):
+def hrm_training_event_survey(training_event_id, survey_type):
     """
         Notify Event Organiser that they should consider sending out a Survey
 
         @param training_event_id: (Training) Event record_id
+        @param survey_type: Survey Type (3 month or 6 month currently)
 
         @ToDo: Currently configured for IFRC Bangkok CCST...make this more
-               generic if-required
+               generic if-required (e.g. Move this all to a deployment_setting)
     """
 
+    try:
+        import arrow
+    except:
+        current.log.error("Arrow library needed for hrm_training_event_survey")
+        return
+
+    T = current.T
     db = current.db
     s3db = current.s3db
 
     # Read Event Record
     etable = s3db.hrm_training_event
     event = db(etable.id == training_event_id).select(etable.name,
+                                                      etable.start_date,
+                                                      etable.end_date,
+                                                      etable.location_id,
                                                       etable.created_by,
                                                       limitby = (0, 1)
                                                       ).first()
-    message = current.T("A Message")
 
-    # Send to EO (created_by) & MFP
-    send_email = current.msg.send_by_pe_id
+    event_date = event.end_date or event.start_date # Use end_date where-available, otherwise use start_date
+    location_id = event.location_id
+    EO = event.created_by
 
+    # Create Survey (unapproved)
+    # Default the template
+    ttable = s3db.dc_template
+    template = current.db(ttable.name == "Training Evaluation").select(ttable.id,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+    try:
+        template_id = template.id
+    except:
+        current.log.error("Cannot find 'Training Evaluation' template so cannot run hrm_training_event_survey")
+        return
+
+    stable = s3db.dc_target
+    ltable = s3db.hrm_event_target
+    target_id = stable.insert(template_id = template_id,
+                              date = None, # Gets set when notifications sent (onapprove here)
+                              owned_by_user = EO,
+                              )
+    ltable.insert(training_event_id = training_event_id,
+                  target_id = target_id,
+                  type = survey_type,
+                  )
+
+    # Create Task to check if Survey has been Approved/Rejected
+    start_time = arrow.utcnow()
+    start_time = start_time.shift(months = 1)
+    current.s3task.schedule_task("dc_target_check",
+                                 args = [target_id],
+                                 start_time = start_time.datetime,
+                                 #period = 300,  # seconds
+                                 timeout = 300, # seconds
+                                 repeats = 1    # run once
+                                 )
+
+    # List of recipients, grouped by language
+    # Recipients: EO (created_by) & MFP(s)
+    languages = {}
+
+    utable = db.auth_user
+    gtable = db.auth_group
+    mtable = db.auth_membership
     ltable = s3db.pr_person_user
-    eo = db(ltable.user_id == event.created_by)
-    # @ToDo: Complete this
+    query = ((utable.id == EO) & \
+             (ltable.user_id == utable.id)) | \
+            ((utable.id == mtable.user_id) & \
+             (mtable.group_id == gtable.id) & \
+             (gtable.uuid == "EVENT_MONITOR") & \
+             (ltable.user_id == utable.id))
+    users = db(query).select(ltable.pe_id,
+                             utable.language,
+                             )
+    for user in users:
+        language = user["auth_user.language"]
+        if language in languages:
+            languages[language].append(user["pr_person_user.pe_id"])
+        else:
+            languages[language] = [user["pr_person_user.pe_id"]]
 
+    # Build Message
+    url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                    URL(c="dc", f="target", args=[target_id, "review"]),
+                    )
+    subject = T("Consider sending a post-Event Survey")
+    message = T("It is now %(date)s since the event %(event_name)s in %(location)s so you should consider creating a survey by visiting this link: %(url)s") % \
+            dict(date = "%(date)s", # Localise per-language
+                 event_name = event.name,
+                 location = "%(location)s", # Localise per-language
+                 url = url,
+                 )
+
+    # Send Localised Mail(s)
+    send_email = current.msg.send_by_pe_id
+    for language in languages:
+        T.force(language)
+        subject = s3_str(subject)
+        humanized_date = event_date.humanize(locale=language.replace("-", "_"))
+        message = s3_str(message % dict(date = humanized_date,
+                                        location = s3db.gis_LocationRepresent(location_id),
+                                        ),
+                         )
+        users = languages[language]
+        for pe_id in users:
+            send_email(pe_id,
+                       subject = subject,
+                       message = message,
+                       )
+
+    # NB No need to restore UI language as this is run as an async task w/o UI
     return
 
 # END =========================================================================

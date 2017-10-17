@@ -48,9 +48,9 @@ Vulnerability,Super Editor,vul_super@example.com,eden,"reader/0,vulnerability_su
 Afghanistan,Disaster Management,af_dm@example.com,eden,af_dm,Afghan Red Crescent Society,,,prs
 Afghanistan,Volunteer Administrator,af_vol_admin@example.com,eden,af_volunteer_admin,Afghan Red Crescent Society,,,prs
 Afghanistan,Volunteer Manager,af_vol_manager@example.com,eden,af_volunteer_manager,Afghan Red Crescent Society,,,prs
-Bangkok,Monitoring Focal Person,bkk_mfp@example.com,eden,"EVENT_MONITOR/0",CCST Bangkok,,,
-Bangkok,Event Organiser,bkk_eo@example.com,eden,"EVENT_ORGANISER/0",CCST Bangkok,,,
-Bangkok,Office Manager,bkk_om@example.com,eden,"EVENT_OFFICE_MANAGER/0",CCST Bangkok,,,
+Bangkok,Monitoring Focal Person,bkk_mfp@example.com,eden,"EVENT_MONITOR/0,EVENT_MONITOR_IFRC/org_organisation.name=International Federation of Red Cross and Red Crescent Societies",CCST Bangkok,,,
+Bangkok,Event Organiser,bkk_eo@example.com,eden,"EVENT_ORGANISER/0,EVENT_ORGANISER_IFRC/org_organisation.name=International Federation of Red Cross and Red Crescent Societies",CCST Bangkok,,,
+Bangkok,Office Manager,bkk_om@example.com,eden,"EVENT_OFFICE_MANAGER",CCST Bangkok,,,
 Bangladesh,Volunteer Data Entry,bd_dataentry@example.com,eden,vol_data_entry,Bangladesh Red Crescent Society,,,
 Bangladesh,Volunteer Editor,bd_editor@example.com,eden,vol_editor,Bangladesh Red Crescent Society,,,
 Bangladesh,Volunteer Super Editor,bd_super@example.com,eden,vol_super,Bangladesh Red Crescent Society,,,

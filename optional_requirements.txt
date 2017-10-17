@@ -33,6 +33,8 @@ requests>=2.3.0
 ansible>=1.6.2
 # Warning: Setup unresolved dependency: PyYAML required for Setup Module
 PyYAML>=3.11
+# Warning: Setup unresolved dependency: arrow used for some HRM functionality (currently just by IFRC)
+#arrow>=0.10.0
 # Warning: Setup unresolved dependency: boto required for Setup Module
 boto>=2.32.1
 # Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries

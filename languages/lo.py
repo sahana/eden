@@ -3,8 +3,8 @@
 'agree': 'ເຫັນດີ',
 'all of it': 'ທັ້ງໝົດ',
 'Dear %(person_name)s': 'เรียน %(person_name)s',
-'Dear %(person_title)s %(person_name)s': 'เรียน %(person_title)s %(person_name)s',
 'disagree': 'ບໍ່ເຫັນດີ',
+'Lao': 'ພາສາລາວ',
 'most of it': 'ສ່ວນໃຫຍ່',
 'no': 'ບໍ່ຍິນດີ',
 'no change': 'ບໍ່ມີການປ່ຽນແປງຫຍັງເລີຍ',
@@ -19,5 +19,5 @@
 'The information collected through this questionnaire will be treated as confidential.': 'ຂໍ້ມູນທີ່ຖືກລວບລວມຈາກແບບສອບຖາມທັງໝົດຈະຖືກເກັບເປັນຄວາມລັບຢ່າງດີ',
 'We have 8 simple questions for you, this should not take more than 15mn of your time.': 'ເຮົາມີຄຳຖາມງ່າຍໆ 8 ຂໍ້ ເຊີ່ງໃຊ້ເວລາບໍ່ເກີນ15 ນາທີ',
 'yes': 'ຍິນດີ',
-'You are receiving this email as a participant of %(event_name)s held in %(event_location)s on %(event_date)s.': 'ທ່ານໄດ້ຮັບອີເມລສະບັບນີ້ໃນໂອກາດທີ່ທ່ານໄດ້ເຂົ້າຮ່ວມໃນ%(event_name)sຊື່ງຈັດຂື້ນທີ່%(event_location)sໃນວັນທີ%(event_date)s',
+'You are receiving this email as a participant of %(event_name)s held in %(location)s on %(date)s.': 'ທ່ານໄດ້ຮັບອີເມລສະບັບນີ້ໃນໂອກາດທີ່ທ່ານໄດ້ເຂົ້າຮ່ວມໃນ%(event_name)sຊື່ງຈັດຂື້ນທີ່%(location)sໃນວັນທີ%(date)s',
 }

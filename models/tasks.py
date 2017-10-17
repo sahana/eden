@@ -49,6 +49,68 @@ def maintenance(period="daily"):
 tasks["maintenance"] = maintenance
 
 # -----------------------------------------------------------------------------
+# GIS: always-enabled
+# -----------------------------------------------------------------------------
+def gis_download_kml(record_id, filename, session_id_name, session_id,
+                     user_id=None):
+    """
+        Download a KML file
+            - will normally be done Asynchronously if there is a worker alive
+
+        @param record_id: id of the record in db.gis_layer_kml
+        @param filename: name to save the file as
+        @param session_id_name: name of the session
+        @param session_id: id of the session
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task & return the result
+    result = gis.download_kml(record_id, filename, session_id_name, session_id)
+    db.commit()
+    return result
+
+tasks["gis_download_kml"] = gis_download_kml
+
+# -----------------------------------------------------------------------------
+def gis_update_location_tree(feature, user_id=None):
+    """
+        Update the Location Tree for a feature
+            - will normally be done Asynchronously if there is a worker alive
+
+        @param feature: the feature (in JSON format)
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task & return the result
+    feature = json.loads(feature)
+    path = gis.update_location_tree(feature)
+    db.commit()
+    return path
+
+tasks["gis_update_location_tree"] = gis_update_location_tree
+
+# -----------------------------------------------------------------------------
+# Org: always-enabled
+# -----------------------------------------------------------------------------
+def org_facility_geojson(user_id=None):
+    """
+        Export GeoJSON[P] Of Facility data
+
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task & return the result
+    s3db.org_facility_geojson()
+
+tasks["org_facility_geojson"] = org_facility_geojson
+
+# -----------------------------------------------------------------------------
 def org_site_check(site_id, user_id=None):
     """ Check the Status for Sites """
 
@@ -64,6 +126,8 @@ def org_site_check(site_id, user_id=None):
 
 tasks["org_site_check"] = org_site_check
 
+# -----------------------------------------------------------------------------
+# Optional Modules
 # -----------------------------------------------------------------------------
 if has_module("cap"):
 
@@ -83,6 +147,27 @@ if has_module("cap"):
                 sync.synchronize(row)
 
     tasks["cap_ftp_sync"] = cap_ftp_sync
+
+# -----------------------------------------------------------------------------
+if has_module("dc"):
+
+    # -------------------------------------------------------------------------
+    def dc_target_check(target_id, user_id=None):
+        """
+            Check whether Survey has been Approved/Rejected
+
+            @param target_id: Target record_id
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.dc_target_check(target_id)
+        db.commit()
+        return result
+
+    tasks["dc_target_check"] = dc_target_check
 
 # -----------------------------------------------------------------------------
 if has_module("doc"):
@@ -173,64 +258,6 @@ if has_module("doc"):
         db.commit()
 
     tasks["document_delete_index"] = document_delete_index
-
-# -----------------------------------------------------------------------------
-def gis_download_kml(record_id, filename, session_id_name, session_id,
-                     user_id=None):
-    """
-        Download a KML file
-            - will normally be done Asynchronously if there is a worker alive
-
-        @param record_id: id of the record in db.gis_layer_kml
-        @param filename: name to save the file as
-        @param session_id_name: name of the session
-        @param session_id: id of the session
-        @param user_id: calling request's auth.user.id or None
-    """
-    if user_id:
-        # Authenticate
-        auth.s3_impersonate(user_id)
-    # Run the Task & return the result
-    result = gis.download_kml(record_id, filename, session_id_name, session_id)
-    db.commit()
-    return result
-
-tasks["gis_download_kml"] = gis_download_kml
-
-# -----------------------------------------------------------------------------
-def gis_update_location_tree(feature, user_id=None):
-    """
-        Update the Location Tree for a feature
-            - will normally be done Asynchronously if there is a worker alive
-
-        @param feature: the feature (in JSON format)
-        @param user_id: calling request's auth.user.id or None
-    """
-    if user_id:
-        # Authenticate
-        auth.s3_impersonate(user_id)
-    # Run the Task & return the result
-    feature = json.loads(feature)
-    path = gis.update_location_tree(feature)
-    db.commit()
-    return path
-
-tasks["gis_update_location_tree"] = gis_update_location_tree
-
-# -----------------------------------------------------------------------------
-def org_facility_geojson(user_id=None):
-    """
-        Export GeoJSON[P] Of Facility data
-
-        @param user_id: calling request's auth.user.id or None
-    """
-    if user_id:
-        # Authenticate
-        auth.s3_impersonate(user_id)
-    # Run the Task & return the result
-    s3db.org_facility_geojson()
-
-tasks["org_facility_geojson"] = org_facility_geojson
 
 # -----------------------------------------------------------------------------
 if has_module("hrm"):
@@ -582,6 +609,62 @@ if has_module("stats"):
 
     tasks["stats_demographic_update_location_aggregate"] = stats_demographic_update_location_aggregate
 
+    # --------------------e----------------------------------------------------
+    # Disease: Depends on Stats
+    # --------------------e----------------------------------------------------
+    if has_module("disease"):
+
+        def disease_stats_update_aggregates(records=None, all=False, user_id=None):
+            """
+                Update the disease_stats_aggregate table for the given
+                disease_stats_data record(s)
+
+                @param records: JSON of Rows of disease_stats_data records to
+                                update aggregates for
+                @param user_id: calling request's auth.user.id or None
+            """
+            if user_id:
+                # Authenticate
+                auth.s3_impersonate(user_id)
+            # Run the Task & return the result
+            result = s3db.disease_stats_update_aggregates(records, all)
+            db.commit()
+            return result
+
+        tasks["disease_stats_update_aggregates"] = disease_stats_update_aggregates
+
+        # ---------------------------------------------------------------------
+        def disease_stats_update_location_aggregates(location_id,
+                                                     children,
+                                                     parameter_id,
+                                                     dates,
+                                                     user_id=None):
+            """
+                Update the disease_stats_aggregate table for the given location and parameter
+                - called from within disease_stats_update_aggregates
+
+                @param location_id: location to aggregate at
+                @param children: locations to aggregate from
+                @param parameter_id: parameter to aggregate
+                @param dates: dates to aggregate for
+                @param user_id: calling request's auth.user.id or None
+            """
+            if user_id:
+                # Authenticate
+                auth.s3_impersonate(user_id)
+            # Run the Task & return the result
+            result = s3db.disease_stats_update_location_aggregates(location_id,
+                                                                   children,
+                                                                   parameter_id,
+                                                                   dates,
+                                                                   )
+            db.commit()
+            return result
+
+        tasks["disease_stats_update_location_aggregates"] = disease_stats_update_location_aggregates
+
+    # --------------------e----------------------------------------------------
+    # Vulnerability: Depends on Stats
     # -------------------------------------------------------------------------
     if has_module("vulnerability"):
 
@@ -635,58 +718,6 @@ if has_module("stats"):
             return result
 
         tasks["vulnerability_update_location_aggregate"] = vulnerability_update_location_aggregate
-
-# --------------------e--------------------------------------------------------
-if has_module("disease"):
-
-    def disease_stats_update_aggregates(records=None, all=False, user_id=None):
-        """
-            Update the disease_stats_aggregate table for the given
-            disease_stats_data record(s)
-
-            @param records: JSON of Rows of disease_stats_data records to
-                            update aggregates for
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-        # Run the Task & return the result
-        result = s3db.disease_stats_update_aggregates(records, all)
-        db.commit()
-        return result
-
-    tasks["disease_stats_update_aggregates"] = disease_stats_update_aggregates
-
-    # -------------------------------------------------------------------------
-    def disease_stats_update_location_aggregates(location_id,
-                                                 children,
-                                                 parameter_id,
-                                                 dates,
-                                                 user_id=None):
-        """
-            Update the disease_stats_aggregate table for the given location and parameter
-            - called from within disease_stats_update_aggregates
-
-            @param location_id: location to aggregate at
-            @param children: locations to aggregate from
-            @param parameter_id: parameter to aggregate
-            @param dates: dates to aggregate for
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-        # Run the Task & return the result
-        result = s3db.disease_stats_update_location_aggregates(location_id,
-                                                               children,
-                                                               parameter_id,
-                                                               dates,
-                                                               )
-        db.commit()
-        return result
-
-    tasks["disease_stats_update_location_aggregates"] = disease_stats_update_location_aggregates
 
 # -----------------------------------------------------------------------------
 if has_module("sync"):

@@ -1,0 +1,10 @@
+Language,Template,Question,Translation,Options,Tooltip
+id,Training Evaluation,"1. How much information from the training you attended do you still remember?","","['0%', '20%', '60%', '80%', '100%']",
+id,Training Evaluation,"2. I would recommend this training to my colleagues","","['', '', '', '']",
+id,Training Evaluation,"3. I shared the information received during the training with your colleagues","","['', '', '', '']",
+id,Training Evaluation,"4. Do you do anything differently in your daily work as a result of this training?","","['', '', '']",
+id,Training Evaluation,"Please provide example (in English or in your own language)","",,
+id,Training Evaluation,"5. If there were no or little change in your daily practice because of the training, why is that?","",,
+id,Training Evaluation,"6. Did you see any change in your unit / department / organization as a result of this training?","","['', '', '']",
+id,Training Evaluation,"7. If there were no or little change in your unit / department / organization, because of the training why is that?","",,
+id,Training Evaluation,"8. Would you be willing to be contacted again for further information?","","['', '']",
