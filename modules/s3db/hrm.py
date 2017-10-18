@@ -2986,7 +2986,8 @@ class S3HRSkillModel(S3Model):
 
         # Components
         add_components(tablename,
-                       hrm_certification = {"joinby": "training_id",
+                       hrm_certification = {"name": "certification_from_training", # Distinguish from that linked to the Person
+                                            "joinby": "training_id",
                                             "multiple": False,
                                             },
                        )
@@ -7972,7 +7973,7 @@ def hrm_training_event_controller():
             if settings.get_hrm_course_pass_marks():
                 list_fields.append("grade_details")
             if settings.get_hrm_use_certificates():
-                list_fields.append("certification.number")
+                list_fields.append("certification_from_training.number")
 
             current.s3db.configure("hrm_training",
                                    list_fields = list_fields

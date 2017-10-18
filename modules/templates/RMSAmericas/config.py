@@ -1990,26 +1990,15 @@ Thank you"""
                                         "end_date",
                                         "grade",
                                         "grade_details",
-                                        "certification.number",
-                                        #S3SQLInlineComponent("certification",
-                                        #                     fields = (("", "number"),),
-                                        #                     label = T("Registration Number"),
-                                        #                     multiple = False,
-                                        #                     )
+                                        "certification_from_training.number",
                                         )
         else:
             crud_form = S3SQLCustomForm("person_id",
                                         "end_date",
                                         "grade",
                                         "grade_details",
-                                        "certification.number",
-                                        #S3SQLInlineComponent("certification",
-                                        #                     fields = (("", "number"),),
-                                        #                     label = T("Registration Number"),
-                                        #                     multiple = False,
-                                        #                     )
+                                        "certification_from_training.number",
                                         )
-            
 
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
