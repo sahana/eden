@@ -31,6 +31,7 @@
          Hours
          Role
          Grade
+         Qualitative Feedback
          Trainee Organisation
          HR Type
          Department
@@ -1070,6 +1071,9 @@
                     <data field="grade">8</data>
                 </xsl:otherwise>
             </xsl:choose>
+            <data field="qualitative_feedback">
+                <xsl:value-of select="col[@field='Qualitative Feedback']"/>
+            </data>
         </resource>
 
     </xsl:template>

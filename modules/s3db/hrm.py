@@ -401,6 +401,7 @@ class S3HRModel(S3Model):
         tablename = "hrm_human_resource"
         realms = auth.permission.permitted_realms(tablename, method="create")
         define_table(tablename,
+                     # Instances
                      super_link("track_id", "sit_trackable"),
                      super_link("doc_id", "doc_entity"),
                      organisation_id(
@@ -1974,6 +1975,7 @@ class S3HRSkillModel(S3Model):
              "hrm_event_type",
              "hrm_training_event",
              "hrm_training_event_id",
+             "hrm_training_event_report",
              "hrm_certificate",
              "hrm_certification",
              "hrm_certification_onaccept",
@@ -2017,6 +2019,7 @@ class S3HRSkillModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         root_org = auth.root_org()
         if is_admin:
@@ -2590,7 +2593,7 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_training_event"
         define_table(tablename,
                      # Instance
-                     self.super_link("pe_id", "pr_pentity"),
+                     super_link("pe_id", "pr_pentity"),
                      event_type_id(),
                      Field("name",
                            label = T("Name"),
@@ -2603,18 +2606,19 @@ class S3HRSkillModel(S3Model):
                                           readable = not event_site,
                                           writable = not event_site,
                                           ),
-                     self.super_link("site_id", "org_site",
-                                     label = site_label,
-                                     instance_types = auth.org_site_types,
-                                     updateable = True,
-                                     not_filterby = "obsolete",
-                                     not_filter_opts = (True,),
-                                     default = auth.user.site_id if auth.is_logged_in() else None,
-                                     readable = event_site,
-                                     writable = event_site,
-                                     empty = not event_site,
-                                     represent = self.org_site_represent,
-                                     ),
+                     # Component, not instance
+                     super_link("site_id", "org_site",
+                                label = site_label,
+                                instance_types = auth.org_site_types,
+                                updateable = True,
+                                not_filterby = "obsolete",
+                                not_filter_opts = (True,),
+                                default = auth.user.site_id if auth.is_logged_in() else None,
+                                readable = event_site,
+                                writable = event_site,
+                                empty = not event_site,
+                                represent = self.org_site_represent,
+                                ),
                      s3_datetime("start_date",
                                  label = T("Start Date"),
                                  min = datetime.datetime(2000, 1, 1),
@@ -2745,6 +2749,10 @@ class S3HRSkillModel(S3Model):
                        # Format for list_fields
                        hrm_training_event_instructor = "training_event_id",
 
+                       hrm_training_event_report = {"joinby": "training_event_id",
+                                                    "multiple": False,
+                                                    },
+
                        hrm_programme = {"link": "hrm_event_programme",
                                         "joinby": "training_event_id",
                                         "key": "programme_id",
@@ -2767,6 +2775,61 @@ class S3HRSkillModel(S3Model):
                                     "actuate": "replace",
                                     },
                        )
+
+        # =====================================================================
+        # Training Event Report
+        # - this is currently configured for RMS Americas
+        #   (move custom labels there if need to make this more generic)
+        #
+
+        tablename = "hrm_training_event_report"
+        define_table(tablename,
+                     # Instance
+                     super_link("doc_id", "doc_entity"),
+                     training_event_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     person_id(),
+                     self.hrm_job_title_id(label = T("Position"),
+                                           ),
+                     organisation_id(),
+                     Field("purpose",
+                           label = T("Mission Purpose"),
+                           ),
+                     Field("code",
+                           label = T("Code"),
+                           ),
+                     s3_date(label = T("Report Date")),
+                     Field("objectives",
+                           label = T("Objectives"),
+                           widget = s3_comments_widget,
+                           ),
+                     Field("actions",
+                           label = T("Implemented Actions"),
+                           widget = s3_comments_widget,
+                           ),
+                     Field("participants",
+                           label = T("About the participants"),
+                           widget = s3_comments_widget,
+                           ),
+                     Field("results",
+                           label = T("Results and Lessons Learned"),
+                           widget = s3_comments_widget,
+                           ),
+                     Field("followup",
+                           label = T("Follow-up Required"),
+                           widget = s3_comments_widget,
+                           ),
+                     Field("additional",
+                           label = T("Additional relevant information"),
+                           widget = s3_comments_widget,
+                           ),
+                     s3_comments(label = T("General Comments")),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  super_entity = "doc_entity",
+                  )
 
         # =====================================================================
         # Training Intructors
@@ -2860,6 +2923,13 @@ class S3HRSkillModel(S3Model):
                                         ),
                            readable = course_pass_marks,
                            writable = course_pass_marks,
+                           ),
+                     Field("qualitative_feedback",
+                           label = T("Qualitative Feedback"),
+                           widget = s3_comments_widget,
+                           # Enable in templates as-required
+                           readable = False,
+                           writable = False,
                            ),
                      Field("file", "upload",
                            autodelete = True,
@@ -4302,15 +4372,15 @@ class S3HRExperienceModel(S3Model):
                                 writable = False,
                                 ),
                           # Component, not instance
-                          self.super_link("site_id", "org_site",
-                                          comment = site_comment,
-                                          label = site_label,
-                                          orderby = "org_site.name",
-                                          #readable = True,
-                                          represent = self.org_site_represent,
-                                          widget = site_widget,
-                                          #writable = True,
-                                          ),
+                          super_link("site_id", "org_site",
+                                     comment = site_comment,
+                                     label = site_label,
+                                     orderby = "org_site.name",
+                                     #readable = True,
+                                     represent = self.org_site_represent,
+                                     widget = site_widget,
+                                     #writable = True,
+                                     ),
                           self.hrm_job_title_id(),
                           # Alternate free-text form especially suitable for volunteers
                           Field("job_title",
@@ -6512,18 +6582,19 @@ def hrm_rheader(r, tabs=[], profile=False):
                       rheader_tabs)
 
     elif resourcename == "training_event":
-        # Tabs
-        tabs = [(T("Training Event Details"), None),
-                (T("Participants"), "participant"),
-                ]
         settings = current.deployment_settings
-        if settings.has_module("dc"):
-            label = settings.get_dc_response_label()
-            if label == "Survey":
-                label = T("Surveys")
-            else:
-                label = T("Assessments")
-            tabs.append((label, "target"),)
+        # Tabs
+        if not tabs:
+            tabs = [(T("Training Event Details"), None),
+                    (T("Participants"), "participant"),
+                    ]
+            if settings.has_module("dc"):
+                label = settings.get_dc_response_label()
+                if label == "Survey":
+                    label = T("Surveys")
+                else:
+                    label = T("Assessments")
+                tabs.append((label, "target"),)
         rheader_tabs = s3_rheader_tabs(r, tabs)
         action = ""
         if settings.has_module("msg"):

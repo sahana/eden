@@ -89,6 +89,7 @@ class S3DocumentLibrary(S3Model):
                                fire_station = T("Fire Station"),
                                hms_hospital = T("Hospital"),
                                hrm_human_resource = T("Human Resource"),
+                               hrm_training_event_report = T("Training Event Report"),
                                inv_adj = T("Stock Adjustment"),
                                inv_warehouse = T("Warehouse"),
                                # @ToDo: Deprecate

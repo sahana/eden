@@ -335,11 +335,11 @@ class S3MainMenu(default.S3MainMenu):
 
         # Language selector
         menu_lang = ML("Language", right=True)
-        for language in languages:
+        for code in languages:
             # Show Language in it's own Language
-            lang_name = represent_local(language)
+            lang_name = represent_local(code)
             menu_lang(
-                ML(lang_name, translate=False, lang_code=language, lang_name=lang_name)
+                ML(lang_name, translate=False, lang_code=code, lang_name=lang_name)
             )
 
         if not auth.is_logged_in():

@@ -163,14 +163,16 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu_lang(cls):
 
-        s3 = current.response.s3
+        languages = current.deployment_settings.get_L10n_languages()
+        represent_local = IS_ISO639_2_LANGUAGE_CODE.represent_local
 
         # Language selector
         menu_lang = ML("Language", right=True)
-        for language in s3.l10n_languages.items():
-            code, name = language
+        for code in languages:
+            # Show Language in it's own Language
+            lang_name = represent_local(code)
             menu_lang(
-                ML(name, translate=False, lang_code=code, lang_name=name)
+                ML(lang_name, translate=False, lang_code=code, lang_name=lang_name)
             )
         return menu_lang
 

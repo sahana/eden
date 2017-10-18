@@ -1512,8 +1512,18 @@ Thank you"""
         #                          user_org_and_children_default_filter,
         #                          tablename = "hrm_human_resource")
 
+        auth = current.auth
         s3db = current.s3db
+        s3 = current.response.s3
+
         s3db.org_organisation.root_organisation.label = T("National Society")
+
+        if not auth.s3_has_role("ADMIN") and \
+               auth.s3_has_roles(("training_coordinator", "training_assistant")):
+            # Filter People to just those trained by this Reference Center
+            from s3 import FS
+            filter = FS("training.training_event_id$organisation_id") == auth.user.organisation_id
+            s3.filter = filter
 
         def add_language(form):
             from gluon import LABEL, OPTION, SELECT
@@ -1537,8 +1547,6 @@ Thank you"""
                       "auth_user_language__row",
                       position = 3,
                       )
-
-        s3 = current.response.s3
 
         # Custom prep
         standard_prep = s3.prep
@@ -1938,6 +1946,16 @@ Thank you"""
         #                      user_org_default_filter,
         #                      tablename = "hrm_training")
 
+        auth = current.auth
+        if not auth.s3_has_role("ADMIN") and \
+               auth.s3_has_roles(("training_coordinator", "training_assistant")):
+            TC = True
+            # Filter People to just those trained by this Reference Center
+            filter = FS("~.training_event_id$organisation_id") == auth.user.organisation_id
+            s3.filter = filter
+        else:
+            TC = False
+
         s3 = current.response.s3
 
         # Custom prep
@@ -1954,9 +1972,7 @@ Thank you"""
                 s3db = current.s3db
                 # Default to Volunteers
                 s3db.hrm_human_resource.type.default = 2
-                has_role = current.auth.s3_has_role
-                if not has_role("ADMIN") and \
-                   (has_role("training_coordinator") or has_role("training_assistant")):
+                if TC:
                     # Doesn't work as email created after human_resource
                     #s3db.configure("hrm_human_resource",
                     #               create_onaccept = hrm_human_resource_create_onaccept,
@@ -1980,6 +1996,8 @@ Thank you"""
         table = s3db.hrm_training
         f = table.grade
         f.readable = f.writable = True
+        f = table.qualitative_feedback
+        f.readable = f.writable = True
 
         s3db.hrm_certification.number.label = T("Registration Number")
 
@@ -1990,6 +2008,7 @@ Thank you"""
                                         "end_date",
                                         "grade",
                                         "grade_details",
+                                        "qualitative_feedback",
                                         "certification_from_training.number",
                                         )
         else:
@@ -1997,6 +2016,7 @@ Thank you"""
                                         "end_date",
                                         "grade",
                                         "grade_details",
+                                        "qualitative_feedback",
                                         "certification_from_training.number",
                                         )
 
@@ -2052,8 +2072,6 @@ Thank you"""
         s3db = current.s3db
         table = s3db.hrm_training_event
 
-        # @ToDo: Default Filter for Training Center staff
-
         org_represent = s3db.org_OrganisationRepresent(parent=False)
 
         f = table.organisation_id
@@ -2069,8 +2087,7 @@ Thank you"""
                        "comments",
                        ]
 
-        has_role = auth.s3_has_role
-        if has_role("ADMIN"):
+        if auth.s3_has_role("ADMIN"):
             #f.readable = f.writable = True
             ttable = s3db.org_organisation_type
             try:
@@ -2093,18 +2110,14 @@ Thank you"""
                                        filter_opts = filter_opts,
                                        )
 
-        elif has_role("training_coordinator") or has_role("training_assistant"):
+        elif auth.s3_has_roles(("training_coordinator", "training_assistant")):
             organisation_id = auth.user.organisation_id
             f.default = organisation_id
             f.writable = False
-            list_fields.pop(0)
-            table.course_id.requires = IS_ONE_OF(db, "hrm_course.id",
-                                                 org_represent,
-                                                 orderby = "hrm_course.name",
-                                                 sort = True,
-                                                 filterby = "organisation_id",
-                                                 filter_opts = [organisation_id],
-                                                 )
+            list_fields.pop(0) # organisation_id
+            table.course_id.requires.set_filter(filterby = "organisation_id",
+                                                filter_opts = [organisation_id],
+                                                )
 
         # Hours are Optional
         from gluon import IS_EMPTY_OR
@@ -2158,6 +2171,228 @@ Thank you"""
                        )
 
     settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_report_pdf_export(r, **attr):
+        """
+            Generate a PDF Export of a training Event Report
+        """
+
+        from s3 import s3_fullname, s3_str
+
+        record = r.record
+
+        T = current.T
+
+        current_language = T.accepted_language
+        if current_language == "es":
+            # Reach different translation
+            title = T("Training Event Report")
+        else:
+            title = T("Training Report")
+
+        def callback(r):
+
+            from gluon.html import DIV, TABLE, TD, TH, TR
+        
+            db = current.db
+            s3db = current.s3db
+
+            rtable = s3db.hrm_training_event_report
+
+            date_represent = rtable.date.represent
+            org_represent = s3db.org_OrganisationRepresent(parent=False,
+                                                           acronym=False)
+
+            # Logo
+            otable = db.org_organisation
+            org_id = record.organisation_id
+            org = db(otable.id == org_id).select(otable.name,
+                                                 otable.acronym, # Present for consistent cache key
+                                                 otable.logo,
+                                                 limitby=(0, 1),
+                                                 ).first()
+            #if settings.get_L10n_translate_org_organisation():
+            org_name = org_represent(org_id)
+            #else:
+            #    org_name = org.name
+
+            logo = org.logo
+            if logo:
+                logo = s3db.org_organisation_logo(org)
+            elif current.deployment_settings.get_org_branches():
+                root_org = current.cache.ram(
+                    # Common key with auth.root_org
+                    "root_org_%s" % org_id,
+                    lambda: s3db.org_root_organisation(org_id),
+                    time_expire=120
+                    )
+                logo = s3db.org_organisation_logo(root_org)
+
+            # Read the report
+            report = db(rtable.training_event_id == r.id).select(limitby = (0, 1),
+                                                                 ).first()
+
+            # Header
+            header = TABLE(TR(TH("%s:" % T("Name")),
+                              TD(s3_fullname(report.person_id)),
+                              TH("%s:" % T("Mission Date")),
+                              TD(date_represent(record.start_date)),
+                              ),
+                           TR(TH("%s:" % T("Position")),
+                              TD(s3_fullname(report.job_title_id)),
+                              TH("%s:" % T("Finance Code")),
+                              TD(report.code),
+                              ),
+                           TR(TH("%s:" % T("National Society Visited")),
+                              TD(org_represent(report.organisation_id)),
+                              TH("%s:" % T("Report Date")),
+                              TD(date_represent(report.date)),
+                              ),
+                           TR(TH("%s:" % T("Mission Purpose")),
+                              TD(report.purpose,
+                                 _colspan = 3,
+                                 ),
+                              ),
+                           )
+
+            # Main
+            main = TABLE(TR(TH("1. %s" % T("Objectives"))),
+                         TR(TD(report.objectives)),
+                         TR(TH("2. %s" % T("Implemented Actions"))),
+                         TR(TD(report.actions)),
+                         TR(TH("3. %s" % T("About the participants"))),
+                         TR(TD(report.participants)),
+                         TR(TH("4. %s" % T("Results and Lessons Learned"))),
+                         TR(TD(report.results)),
+                         TR(TH("5. %s" % T("Follow-up Required"))),
+                         TR(TD(report.followup)),
+                         TR(TH("6. %s" % T("Additional relevant information"))),
+                         TR(TD(report.additional)),
+                         TR(TH("7. %s" % T("General Comments"))),
+                         TR(TD(report.comments)),
+                         )
+
+            output = DIV(TABLE(TR(TD(logo),
+                                  #TD(org_name), # This isn't rtl-proof, check vol_service_record for how to handle that if-required
+                                  )),
+                         TABLE(TR(TD(title))),
+                         TABLE(header),
+                         TABLE(main),
+                         )
+
+            return output
+
+        attr["rheader"] = None
+
+        from s3.s3export import S3Exporter
+
+        exporter = S3Exporter().pdf
+        pdf_title = s3_str(title)
+        return exporter(r.resource,
+                        request = r,
+                        method = "list",
+                        pdf_title = pdf_title,
+                        pdf_table_autogrow = "B",
+                        pdf_callback = callback,
+                        **attr
+                        )
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_event_controller(**attr):
+
+        T = current.T
+        auth = current.auth
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        if not auth.s3_has_role("ADMIN") and \
+               auth.s3_has_roles(("training_coordinator", "training_assistant")):
+            # Filter People to just those trained by this Reference Center
+            from s3 import FS
+            filter = FS("~.organisation_id") == auth.user.organisation_id
+            s3.filter = filter
+
+        s3db.set_method("hrm", "training_event",
+                        method = "report_pdf_export",
+                        action = hrm_training_event_report_pdf_export,
+                        )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.component_name == "training_event_report" and r.component_id:
+                from gluon.html import A, DIV, URL
+                from s3 import ICON
+                s3.rfooter = DIV(A(ICON("print"),
+                                 " ",
+                                 T("PDF Report"),
+                                   _href=URL(args=[r.id, "report_pdf_export"]),#, extension="pdf"),
+                                   _class="action-btn",
+                                   ),
+                                 )
+
+            return result
+        s3.prep = custom_prep
+
+        attr["rheader"] = lambda r: \
+            s3db.hrm_rheader(r, tabs=[(T("Training Event Details"), None),
+                                      (T("Participants"), "participant"),
+                                      (T("Report"), "training_event_report"),
+                                      ])
+        return attr
+
+    settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_event_report_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.hrm_training_event_report
+        table.person_id.default = current.auth.s3_logged_in_person()
+        table.person_id.label = T("Name")
+        ns_only("hrm_training_event_report",
+                required = False,
+                branches = False,
+                updateable = False,
+                )
+        table.organisation_id.label = T("National Society Visited")
+        table.code.label = T("Finance Code")
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("person_id",
+                                    "job_title_id",
+                                    "organisation_id",
+                                    "purpose",
+                                    "code",
+                                    "date",
+                                    (("1. %s" % table.objectives.label), "objectives"),
+                                    (("2. %s" % table.actions.label), "actions"),
+                                    (("3. %s" % table.participants.label), "participants"),
+                                    (("4. %s" % table.results.label), "results"),
+                                    (("5. %s" % table.followup.label), "followup"),
+                                    (("6. %s" % table.additional.label), "additional"),
+                                    (("7. %s" % table.comments.label), "comments"),
+                                    S3SQLInlineComponent("document",
+                                                         label = "8. %s" % T("Supporting Documentation"),
+                                                         link = False,
+                                                         fields = ["file"],
+                                                         ),
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_hrm_training_event_report_resource = customise_hrm_training_event_report_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_home():
@@ -2754,7 +2989,8 @@ Thank you"""
                     configure("hrm_certification",
                               deletable = False,
                               editable = False,
-                              insertable = False,
+                              #insertable = False,
+                              insertable = True,
                               )
                     configure("hrm_training",
                               deletable = False,
