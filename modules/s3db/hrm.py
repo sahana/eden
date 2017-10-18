@@ -3506,6 +3506,7 @@ class S3HRSkillModel(S3Model):
         except:
             certification_id = record.id
 
+        # Read the full record
         db = current.db
         table = db.hrm_certification
         data = table(table.id == certification_id)
@@ -3519,12 +3520,33 @@ class S3HRSkillModel(S3Model):
         except:
             return
 
+        if not person_id:
+            # This record is being created as a direct component of the Training,
+            # in order to set the Number (RMS Americas usecase).
+            training_id = data["training_id"]
+            # Find the other record (created onaccept of training)
+            query = (table.training_id == training_id) & \
+                    (table.id != certification_id)
+            original = db(query).select(table.id,
+                                        limitby = (0, 1)
+                                        ).first()
+            if original:
+                # Update it with the number
+                number = data["number"]
+                original.update_record(number = number)
+                # Delete this extraneous record
+                db(table.id == certification_id).delete()
+
+            # Don't update any competencies
+            return
+
         ctable = db.hrm_competency
         cstable = db.hrm_certificate_skill
 
         # Drop all existing competencies which came from certification
         # - this is a lot easier than selective deletion
-        # @ToDo: Avoid this method as it will break Inline Component Updates if we ever use those
+        # @ToDo: Avoid this method as it will break Inline Component Updates
+        #        if we ever use those (see hrm_training_onaccept)
         query = (ctable.person_id == person_id) & \
                 (ctable.from_certification == True)
         db(query).delete()

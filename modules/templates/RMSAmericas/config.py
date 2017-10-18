@@ -1990,22 +1990,24 @@ Thank you"""
                                         "end_date",
                                         "grade",
                                         "grade_details",
-                                        S3SQLInlineComponent("certification",
-                                                             fields = (("", "number"),),
-                                                             label = T("Registration Number"),
-                                                             multiple = False,
-                                                             )
+                                        "certification.number",
+                                        #S3SQLInlineComponent("certification",
+                                        #                     fields = (("", "number"),),
+                                        #                     label = T("Registration Number"),
+                                        #                     multiple = False,
+                                        #                     )
                                         )
         else:
             crud_form = S3SQLCustomForm("person_id",
                                         "end_date",
                                         "grade",
                                         "grade_details",
-                                        S3SQLInlineComponent("certification",
-                                                             fields = (("", "number"),),
-                                                             label = T("Registration Number"),
-                                                             multiple = False,
-                                                             )
+                                        "certification.number",
+                                        #S3SQLInlineComponent("certification",
+                                        #                     fields = (("", "number"),),
+                                        #                     label = T("Registration Number"),
+                                        #                     multiple = False,
+                                        #                     )
                                         )
             
 
