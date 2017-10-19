@@ -2249,8 +2249,7 @@ class PRGroupModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        messages = current.messages
-        NONE = messages["NONE"]
+        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Group Statuses
@@ -2334,8 +2333,7 @@ class PRGroupModel(S3Model):
                      Field("group_type", "integer",
                            default = 4,
                            label = T("Group Type"),
-                           represent = lambda opt: \
-                                       pr_group_types.get(opt, messages.UNKNOWN_OPT),
+                           represent = S3Represent(options = pr_group_types),
                            requires = IS_IN_SET(pr_group_types, zero=None),
                            ),
                      Field("system", "boolean",
@@ -2986,9 +2984,10 @@ class PRForumModel(S3Model):
         # ---------------------------------------------------------------------
         # Hard Coded Forum types. Add/Comment entries, but don't remove!
         #
-        pr_forum_types = {1 : T("Public"),
-                          2 : T("Private"),
-                          3 : T("Secret"),
+        pr_forum_types = {1 : T("Public"),  # Any user can join and post
+                          2 : T("Private"), # Anyone in the forum can post & see membership.
+                                            # Anyone else can see that the forum exists but not its members or posts.
+                          3 : T("Secret"),  # As 'private' but forum's presence is not visible to non-members
                           }
 
         tablename = "pr_forum"
@@ -6521,6 +6520,12 @@ def pr_rheader(r, tabs=[]):
                 return rheader
 
             elif tablename == "pr_forum":
+                if not tabs:
+                    title_display = current.response.s3.crud_strings["pr_forum"].title_display
+                    tabs = [(title_display, None),
+                            (T("Members"), "forum_membership")
+                            ]
+                    rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(
                                 TR(TH("%s: " % T("Name")),
                                    record.name,

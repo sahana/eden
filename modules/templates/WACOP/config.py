@@ -1190,7 +1190,7 @@ def config(settings):
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Group"),
-            title_display = T("Resource Details"),
+            title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
             label_list_button = T("List Groups"),

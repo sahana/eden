@@ -426,12 +426,7 @@ def check_duplicates():
 def forum():
     """ RESTful CRUD controller """
 
-    rheader = lambda r: \
-        s3db.pr_rheader(r, tabs = [(T("Forum Details"), None),
-                                   (T("Members"), "forum_membership")
-                                   ])
-
-    output = s3_rest_controller(rheader=rheader)
+    output = s3_rest_controller(rheader = s3db.pr_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -458,7 +453,7 @@ def group():
                                    (T("Members"), "group_membership")
                                    ])
 
-    output = s3_rest_controller(rheader=rheader)
+    output = s3_rest_controller(rheader = rheader)
 
     return output
 
