@@ -2241,7 +2241,7 @@ Thank you"""
                               ),
                            TR(TH("%s:" % T("Position")),
                               TD(s3_fullname(report.job_title_id)),
-                              TH("%s:" % T("Finance Code")),
+                              TH("%s:" % T("Finance Codes")),
                               TD(report.code),
                               ),
                            TR(TH("%s:" % T("National Society Visited")),
@@ -2363,7 +2363,7 @@ Thank you"""
                 updateable = False,
                 )
         table.organisation_id.label = T("National Society Visited")
-        table.code.label = T("Finance Code")
+        table.code.label = T("Finance Codes")
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
@@ -2986,12 +2986,11 @@ Thank you"""
                           insertable = False,
                           )
                 if not has_role("RIT_MEMBER"):
-                    configure("hrm_certification",
-                              deletable = False,
-                              editable = False,
-                              #insertable = False,
-                              insertable = True,
-                              )
+                    #configure("hrm_certification",
+                    #          deletable = True,
+                    #          editable = True,
+                    #          insertable = True,
+                    #          )
                     configure("hrm_training",
                               deletable = False,
                               editable = False,

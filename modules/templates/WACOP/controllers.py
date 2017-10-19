@@ -1159,6 +1159,26 @@ class event_Browse(custom_WACOP):
         return output
 
 # =============================================================================
+class group_Browse(custom_WACOP):
+    """
+        Custom browse page for Groups
+        - modelled as pr_forum
+    """
+
+    # -------------------------------------------------------------------------
+    def _html(self, r, **attr):
+        """
+            Handle HTML representation
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        self._view(output, "group_browse.html")
+
+        return output
+
+# =============================================================================
 class incident_Browse(custom_WACOP):
     """
         Custom browse page for Incidents
@@ -1299,6 +1319,7 @@ class incident_Browse(custom_WACOP):
 class resource_Browse(custom_WACOP):
     """
         Custom browse page for Resources
+        - modelled as pr_group as they are typically teams
     """
 
     # -------------------------------------------------------------------------
@@ -1634,6 +1655,26 @@ class event_Profile(custom_WACOP):
         self._updates_html(r, output, event_id, incident_id, updateable, **attr)
 
         self._view(output, "event_profile.html")
+
+        return output
+
+# =============================================================================
+class group_Profile(custom_WACOP):
+    """
+        Custom profile page for Groups
+        - modelled as pr_forum
+    """
+
+    # -------------------------------------------------------------------------
+    def _html(self, r, **attr):
+        """
+            Handle HTML representation
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        self._view(output, "group_browse.html")
 
         return output
 

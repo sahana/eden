@@ -74,7 +74,7 @@ def config(settings):
     #
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
-        ("es", "Español"),
+        ("es", "Spanish"),
     ])
     # Default Language
     settings.L10n.default_language = "en"
@@ -1184,6 +1184,42 @@ def config(settings):
                        )
 
     settings.customise_event_team_resource = customise_event_team_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_forum_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Group"),
+            title_display = T("Resource Details"),
+            title_list = T("Groups"),
+            title_update = T("Edit Group"),
+            label_list_button = T("List Groups"),
+            label_delete_button = T("Delete Group"),
+            msg_record_created = T("Group added"),
+            msg_record_modified = T("Group updated"),
+            msg_record_deleted = T("Group deleted"),
+            msg_list_empty = T("No Groups currently registered"))
+
+    settings.customise_pr_forum_resource = customise_pr_forum_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_forum_controller(**attr):
+
+        # Custom Browse
+        from templates.WACOP.controllers import group_Browse, group_Profile
+        set_method = current.s3db.set_method
+        set_method("pr", "forum",
+                   method = "browse",
+                   action = group_Browse)
+
+        # Custom Profile
+        set_method("pr", "forum",
+                   method = "custom",
+                   action = group_Profile)
+
+        return attr
+
+    settings.customise_pr_forum_controller = customise_pr_forum_controller
 
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):

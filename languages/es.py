@@ -2741,6 +2741,7 @@
 'Final Quantity': 'Cantidad Final',
 'Finance / Admin': 'Finanzas / administración',
 'Finance Code': 'Codigo de finanzas',
+'Finance Codes': 'Codigos de finanzas',
 'Finance Officer': 'Oficial de Finanzas',
 'Financial Risk Sharing ': 'Intercambio de Riesgos Financieros',
 'Financial Services': 'Servicios Financieros',
