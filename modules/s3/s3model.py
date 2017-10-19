@@ -49,6 +49,11 @@ from s3validators import IS_ONE_OF
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
 
+# Table options that are always JSON-serializable objects,
+# and can thus be passed as-is from dynamic model "settings"
+# to s3db.configure
+SERIALIZABLE_OPTS = ("subheadings")
+
 ogetattr = object.__getattribute__
 
 # =============================================================================
@@ -1695,10 +1700,12 @@ class S3DynamicModel(object):
                     else:
                         config["crud_form"] = crud_form
 
-                # Sub-headings for CRUD Form
-                subheadings = settings.get("subheadings")
-                if subheadings:
-                    config["subheadings"] = subheadings
+                # JSON-serializable config options can be configured
+                # without pre-processing
+                for key in SERIALIZABLE_OPTS:
+                    setting = settings.get(key)
+                    if setting:
+                        config[key] = setting
 
                 # Apply config
                 if config:
