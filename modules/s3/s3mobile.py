@@ -56,6 +56,11 @@ from s3validators import JSONERRORS, SEPARATORS
 
 DEFAULT = lambda: None
 
+# JSON-serializable table settings (SERIALIZABLE_OPTS)
+# which require preprocessing before they can be passed
+# to the mobile client (e.g. i18n)
+PREPROCESS_OPTS = ("subheadings", )
+
 # =============================================================================
 class S3MobileFormList(object):
     """
@@ -248,6 +253,9 @@ class S3MobileSchema(object):
         # Initialize subheadings
         self._subheadings = DEFAULT
 
+        # Initialize settings
+        self._settings = None
+
     # -------------------------------------------------------------------------
     def serialize(self):
         """
@@ -318,6 +326,29 @@ class S3MobileSchema(object):
                         = self.subheadings_l10n(setting)
 
         return subheadings
+
+    # -------------------------------------------------------------------------
+    @property
+    def settings(self):
+        """
+            Directly-serializable settings from s3db.configure (lazy property)
+        """
+
+        settings = self._settings
+
+        if settings is None:
+
+            settings = self._settings = {}
+            resource = self.resource
+
+            from s3model import SERIALIZABLE_OPTS
+            for key in SERIALIZABLE_OPTS:
+                if key not in PREPROCESS_OPTS:
+                    setting = resource.get_config(key, DEFAULT)
+                    if setting is not DEFAULT:
+                        settings[key] = setting
+
+        return settings
 
     # -------------------------------------------------------------------------
     # Introspection methods
@@ -838,6 +869,11 @@ class S3MobileForm(object):
         if subheadings:
             main["subheadings"] = subheadings
 
+        # Add directly-serializable settings
+        settings = ms.settings
+        if settings:
+            main["settings"] = settings
+
         # Required and provided schemas
         required = set(ms.references.keys())
         provided = set([resource.tablename])
@@ -859,6 +895,11 @@ class S3MobileForm(object):
 
             # Add super entity declarations
             hook["types"] = super_entities(cresource)
+
+            # Add directly-serializable settings
+            settings = cschema.settings
+            if settings:
+                hook["settings"] = settings
 
             # Mark as provided
             provided.add(tablename)
@@ -888,6 +929,11 @@ class S3MobileForm(object):
             spec = {"schema": schema,
                     "types": super_entities(ktablename),
                     }
+
+            # Add directly-serializable settings
+            settings = rs.settings
+            if settings:
+                spec["settings"] = settings
 
             # Include records as required
             if record_ids:
