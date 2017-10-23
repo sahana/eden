@@ -1174,6 +1174,8 @@ class group_Browse(custom_WACOP):
             @param attr: controller arguments
         """
 
+        output = {}
+
         self._view(output, "group_browse.html")
 
         return output
@@ -1674,7 +1676,9 @@ class group_Profile(custom_WACOP):
             @param attr: controller arguments
         """
 
-        self._view(output, "group_browse.html")
+        output = {}
+
+        sself._view(output, "group_browse.html")
 
         return output
 
