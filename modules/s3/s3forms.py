@@ -30,6 +30,7 @@
 __all__ = ("S3SQLCustomForm",
            "S3SQLDefaultForm",
            "S3SQLDummyField",
+           "S3SQLVirtualField",
            "S3SQLSubFormLayout",
            "S3SQLVerticalSubFormLayout",
            "S3SQLInlineComponent",
@@ -1057,14 +1058,23 @@ class S3SQLCustomForm(S3SQLForm):
             for alias, name, field in fields:
 
                 if alias is None:
+                    # Field in the master table
                     if name in record:
-                        data[field.name] = record[name]
+                        value = record[name]
+                        # Field Method?
+                        if callable(value):
+                            value = value()
+                        data[field.name] = value
+
                 elif alias in subtables:
+                    # Field in a subtable
                     if alias in subrows and \
                        subrows[alias] is not None and \
                        name in subrows[alias]:
                         data[field.name] = subrows[alias][name]
+
                 elif hasattr(alias, "extract"):
+                    # Form element with custom extraction method
                     data[field.name] = alias.extract(resource, record_id)
 
         else:
@@ -1794,6 +1804,56 @@ class S3SQLField(S3SQLFormElement):
                 return alias, field.name, renamed_field
 
             raise SyntaxError("Invalid subtable: %s" % tname)
+
+# =============================================================================
+class S3SQLVirtualField(S3SQLFormElement):
+    """
+        A form element to embed values of field methods (virtual fields),
+        always read-only
+    """
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        table = resource.table
+        selector = self.selector
+
+        if not hasattr(table, selector):
+            raise SyntaxError("Undefined virtual field: %s" % selector)
+
+        label = self.options.label
+        if not label:
+            label = " ".join(s.capitalize() for s in selector.split("_"))
+
+        field = Field(selector,
+                      label = label,
+                      widget = self,
+                      )
+
+        return None, selector, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for field method values, renders a simple
+            read-only DIV with the value
+        """
+
+        widget = DIV(value, **attributes)
+        widget.add_class("s3-virtual-field")
+
+        return widget
 
 # =============================================================================
 class S3SQLDummyField(S3SQLFormElement):
