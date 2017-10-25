@@ -454,6 +454,8 @@ def config(settings):
     settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     settings.hrm.record_tab = "record"
+    # Use Locations for Training Events, not Facilities
+    settings.hrm.event_site = False
     # Training Instructors are Multiple
     settings.hrm.training_instructors = "multiple"
     # Training Filters are Contains
@@ -1561,11 +1563,17 @@ Thank you"""
             if not r.id:
                 # Filter to just RC people
                 from s3 import FS
-                r.resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
+                resource = r.resource
+                resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
 
-                r.resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
-                                     form_postp = add_language,
-                                     )
+                resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
+                                   form_postp = add_language,
+                                   )
+
+                #if r.representation == "xls":
+                #    list_fields = resource.get_config("list_fields")
+                #    #resource.configure(list_fields = list_fields)
+                #    list_fields.append()
 
             table = r.table
 
@@ -2081,7 +2089,8 @@ Thank you"""
 
         list_fields = ["organisation_id",
                        "course_id",
-                       "site_id",
+                       #"site_id",
+                       "location_id",
                        "start_date",
                        "training_event_instructor.person_id",
                        "comments",
@@ -2124,34 +2133,35 @@ Thank you"""
         requires = table.hours.requires
         table.hours.requires = IS_EMPTY_OR(table.hours)
 
-        site_represent = S3Represent(lookup = "org_site")
+        #site_represent = S3Represent(lookup = "org_site")
 
         # Filter list of Venues
-        f = table.site_id
-        f.default = None
-        f.label = T("Country")
-        f.represent = site_represent
+        #f = table.site_id
+        #f.default = None
+        #f.label = T("Country")
+        #f.represent = site_represent
 
-        ftable = s3db.org_facility
-        ltable = s3db.org_site_facility_type
-        ttable = s3db.org_facility_type
-        query = (ftable.deleted == False) & \
-                (ftable.site_id == ltable.site_id) & \
-                (ltable.facility_type_id == ttable.id) & \
-                (ttable.name == "Venue")
-        rows = db(query).select(ftable.site_id)
-        filter_opts = [row.site_id for row in rows]
-        f.requires = IS_ONE_OF(db, "org_site.site_id",
-                               site_represent,
-                               filterby="site_id",
-                               filter_opts=filter_opts,
-                               )
+        #ftable = s3db.org_facility
+        #ltable = s3db.org_site_facility_type
+        #ttable = s3db.org_facility_type
+        #query = (ftable.deleted == False) & \
+        #        (ftable.site_id == ltable.site_id) & \
+        #        (ltable.facility_type_id == ttable.id) & \
+        #        (ttable.name == "Venue")
+        #rows = db(query).select(ftable.site_id)
+        #filter_opts = [row.site_id for row in rows]
+        #f.requires = IS_ONE_OF(db, "org_site.site_id",
+        #                       site_represent,
+        #                       filterby="site_id",
+        #                       filter_opts=filter_opts,
+        #                       )
 
         # Multiple Instructors
         crud_form = S3SQLCustomForm("organisation_id",
                                     # @ToDo: Filter Courses by Training Center
                                     "course_id",
-                                    "site_id",
+                                    #"site_id",
+                                    "location_id",
                                     "start_date",
                                     "end_date",
                                     S3SQLInlineComponent("training_event_instructor",
