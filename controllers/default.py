@@ -553,6 +553,10 @@ def user():
         auth_settings.actions_disabled = ("change_password",
                                           "retrieve_password",
                                           )
+    elif not settings.get_auth_password_retrieval():
+        # Block password retrieval
+        auth_settings.actions_disabled = ("retrieve_password",
+                                          )
 
     # Check for template-specific customisations
     customise = settings.customise_auth_user_controller

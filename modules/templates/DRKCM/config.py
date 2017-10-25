@@ -37,6 +37,7 @@ def config(settings):
                                                "volunteer": T("Volunteer"),
                                                }
     #settings.auth.registration_link_user_to_default = "staff"
+    settings.auth.password_retrieval = False
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"

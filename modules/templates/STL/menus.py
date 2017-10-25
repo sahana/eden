@@ -96,9 +96,12 @@ class S3MainMenu(default.S3MainMenu):
                            m="register", check=self_registration),
                         MP("Login", c="default", f="user",
                            m="login", vars=dict(_next=login_next)),
-                        MP("Lost Password", c="default", f="user",
-                           m="retrieve_password"),
-            )
+                        )
+            if settings.get_auth_password_retrieval():
+                menu_personal(MP("Lost Password", c="default", f="user",
+                                 m = "retrieve_password",
+                                 ),
+                              )
         else:
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
