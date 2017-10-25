@@ -428,7 +428,7 @@ def config(settings):
     # Uncomment to allow HRs to have multiple Job Titles
     #settings.hrm.multiple_job_titles = True
     # Uncomment to have each root Org use a different Job Title Catalog
-    #settings.hrm.org_dependent_job_titles = True
+    settings.hrm.org_dependent_job_titles = True
     settings.hrm.staff_departments = False
     settings.hrm.teams = False
     # Uncomment to disable the use of HR Credentials
@@ -1643,7 +1643,7 @@ Thank you"""
 
         f = s3db.hrm_job_title.type
         f.default = 3 # Both
-        f.readable  = f.writable = False
+        #f.readable  = f.writable = False
 
         label = T("Position")
         label_create = T("Create Position")
@@ -1672,24 +1672,44 @@ Thank you"""
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
-    #def customise_hrm_job_title_controller(**attr):
+    def customise_hrm_job_title_controller(**attr):
 
-    #    # Organisation needs to be an NS/Branch
-    #    ns_only("hrm_job_title",
-    #            required = False,
-    #            branches = False,
-    #            )
+        s3 = current.response.s3
 
-    #    # Don't show RDRT in the list
-    #    #from gluon import IS_IN_SET
-    #    #current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
-    #    #                                                      2: T("Volunteer"),
-    #    #                                                      3: T("Both")
-    #    #                                                      })
+        # Organisation needs to be an NS
+        ns_only("hrm_job_title",
+                required = False,
+                branches = False,
+                )
 
-    #    return attr
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
 
-    #settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
+            if current.auth.s3_has_role("ADMIN"):
+                from s3 import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                ],
+                                               label=T("Search")
+                                               ),
+                                  S3OptionsFilter("organisation_id",
+                                                  ),
+                                  ]
+                current.s3db.configure("hrm_job_title",
+                                       filter_widgets = filter_widgets,
+                                       )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
     # -------------------------------------------------------------------------
     #def customise_hrm_programme_controller(**attr):
