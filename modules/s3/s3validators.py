@@ -3390,10 +3390,8 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 return current.messages.UNKNOWN_OPT
 
         T = current.T
-        ui_language = current.session.s3.language
-        T.force(code)
-        name = s3_str(T(name))
-        T.force(ui_language)
+        name = s3_str(T(name, language=code))
+
         return name
 
     # -------------------------------------------------------------------------
