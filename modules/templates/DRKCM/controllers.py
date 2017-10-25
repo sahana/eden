@@ -262,6 +262,11 @@ class userstats(S3CustomController):
     def __call__(self):
         """ The userstats controller """
 
+        # Require ORG_GROUP_ADMIN
+        auth = current.auth
+        if not auth.s3_has_role("ORG_GROUP_ADMIN"):
+            auth.permission.fail()
+
         from s3 import S3CRUD, s3_get_extension, s3_request
 
         request = current.request
@@ -274,9 +279,9 @@ class userstats(S3CustomController):
                        args = args[1:],
                        extension = s3_get_extension(request),
                        )
-        resource = r.resource
 
         # Filter to root organisations
+        resource = r.resource
         resource.add_filter(FS("id").belongs(self.root_orgs))
 
         # Configure field methods
@@ -289,7 +294,7 @@ class userstats(S3CustomController):
 
         # Labels for field methods
         T = current.T
-        TOTAL = T("Total Accounts")
+        TOTAL = T("Total User Accounts")
         ACTIVE = T("Active")
         DISABLED = T("Inactive")
         ACTIVE30 = T("Logged-in Last 30 Days")
@@ -329,9 +334,11 @@ class userstats(S3CustomController):
                            list_fields = list_fields,
                            )
 
-        output = r()
+        output = r(rheader=self.rheader)
 
         if isinstance(output, dict):
+
+            output["title"] = T("User Statistics")
 
             # URL to open the resource
             open_url = resource.crud._linkto(r, update=False)("[id]")
@@ -346,6 +353,20 @@ class userstats(S3CustomController):
                            )
 
         return output
+
+    # -------------------------------------------------------------------------
+    def rheader(self, r):
+        """
+            Show the current date in the output
+
+            @param r: the S3Request
+            @returns: the page header (rheader)
+        """
+
+        from s3 import S3DateTime
+        today = S3DateTime.datetime_represent(r.utcnow, utc=True)
+
+        return P("%s: %s" % (current.T("Date"), today))
 
     # -------------------------------------------------------------------------
     @property

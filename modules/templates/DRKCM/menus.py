@@ -34,7 +34,7 @@ class S3MainMenu(default.S3MainMenu):
     # -------------------------------------------------------------------------
     @classmethod
     def menu_modules(cls):
-        """ Custom Modules Menu """
+        """ Modules Menu """
 
         auth = current.auth
 
@@ -43,26 +43,30 @@ class S3MainMenu(default.S3MainMenu):
            auth.s3_has_role("CASE_MANAGEMENT"):
             case_vars["mine"] = "1"
 
-        return [
-            MM("Cases", c=("dvr", "pr"), f="person", vars=case_vars),
-            MM("Case Consulting", c="dvr", f="index",
-               check = lambda this: not this.preceding()[-1].check_permission(),
-               ),
-            MM("ToDo", c="project", f="task"),
-            #MM("Map", c="gis", f="index"),
-            MM("Shelters", c="cr", f="shelter"),
-            MM("More", link=False)(
-                MM("Organizations", c="org", f="organisation"),
-                MM("Facilities", c="org", f="facility"),
-                MM("Staff", c="hrm", f="staff"),
-                MM("Volunteers", c="vol", f="volunteer"),
-                ),
-        ]
+        return [MM("Cases", c=("dvr", "pr"), f="person", vars=case_vars),
+                MM("Case Consulting", c="dvr", f="index",
+                   check = lambda this: not this.preceding()[-1].check_permission(),
+                   ),
+                MM("ToDo", c="project", f="task"),
+                #MM("Map", c="gis", f="index"),
+                MM("Shelters", c="cr", f="shelter"),
+                MM("More", link=False)(
+                    MM("Organizations", c="org", f="organisation"),
+                    MM("Facilities", c="org", f="facility"),
+                    MM("Staff", c="hrm", f="staff"),
+                    MM("Volunteers", c="vol", f="volunteer"),
+                    SEP(),
+                    MM("User Statistics", c="default", f="index",
+                       args = ["userstats"],
+                       restrict = ("ORG_GROUP_ADMIN",),
+                       ),
+                    ),
+                ]
 
     # -------------------------------------------------------------------------
     @classmethod
     def menu_org(cls):
-        """ Custom Organisation Menu """
+        """ Organisation Logo and Name """
 
         OM = S3OrgMenuLayout
         return OM()
@@ -70,24 +74,30 @@ class S3MainMenu(default.S3MainMenu):
     # -------------------------------------------------------------------------
     @classmethod
     def menu_lang(cls):
+        """ Language Selector """
 
         languages = current.deployment_settings.get_L10n_languages()
         represent_local = IS_ISO639_2_LANGUAGE_CODE.represent_local
 
-        # Language selector
         menu_lang = ML("Language", right=True)
+
         for code in languages:
-            # Show Language in it's own Language
+            # Show each language name in its own language
             lang_name = represent_local(code)
             menu_lang(
-                ML(lang_name, translate=False, lang_code=code, lang_name=lang_name)
+                ML(lang_name,
+                   translate = False,
+                   lang_code = code,
+                   lang_name = lang_name,
+                   )
             )
+
         return menu_lang
 
     # -------------------------------------------------------------------------
     @classmethod
     def menu_personal(cls):
-        """ Custom Personal Menu """
+        """ Personal Menu """
 
         auth = current.auth
         s3 = current.response.s3
@@ -330,7 +340,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def vol():
-        """ Volunteer Management """
+        """ VOL / Volunteer Management """
 
         settings = current.deployment_settings
 
