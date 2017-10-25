@@ -452,6 +452,12 @@ class S3Config(Storage):
         """
         return self.auth.get("password_changes", True)
 
+    def get_auth_password_retrieval(self):
+        """
+            Allow password retrieval?
+        """
+        return self.auth.get("password_retrieval", True)
+
     def get_auth_password_min_length(self):
         """
             To set the Minimum Password Length

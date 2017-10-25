@@ -55,7 +55,7 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Facilities", c="org", f="facility"),
                     MM("Staff", c="hrm", f="staff"),
                     MM("Volunteers", c="vol", f="volunteer"),
-                    SEP(),
+                    SEP(link=False),
                     MM("User Statistics", c="default", f="index",
                        args = ["userstats"],
                        restrict = ("ORG_GROUP_ADMIN",),
@@ -123,10 +123,12 @@ class S3MainMenu(default.S3MainMenu):
                            m = "login",
                            vars = {"_next": login_next},
                            ),
-                        MP("Lost Password", c="default", f="user",
-                           m = "retrieve_password",
-                           ),
                         )
+            if settings.get_auth_password_retrieval():
+                menu_personal(MP("Lost Password", c="default", f="user",
+                                 m = "retrieve_password",
+                                 ),
+                              )
         else:
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: not s3_has_role(ADMIN) and \

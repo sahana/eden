@@ -570,14 +570,15 @@ Thank you"""
                 buttons.append(register_link)
 
             # Lost-password action link
-            if lost_pw_link is None:
-                lost_pw_link = deployment_settings.get_auth_password_changes()
-            if lost_pw_link:
-                lost_pw_link = A(T("Lost Password"),
-                                 _href=URL(f="user", args="retrieve_password"),
-                                 _class="action-lnk",
-                                 )
-                buttons.append(lost_pw_link)
+            if deployment_settings.get_auth_password_retrieval():
+                if lost_pw_link is None:
+                    lost_pw_link = deployment_settings.get_auth_password_changes()
+                if lost_pw_link:
+                    lost_pw_link = A(T("Lost Password"),
+                                     _href=URL(f="user", args="retrieve_password"),
+                                     _class="action-lnk",
+                                     )
+                    buttons.append(lost_pw_link)
 
             # Add submit button
             #if buttons:
@@ -1420,7 +1421,7 @@ Thank you"""
         """
 
         mailer = self.settings.mailer
-        if not mailer:
+        if not mailer or not mailer.settings.server:
             return False
 
         import time
