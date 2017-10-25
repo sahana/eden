@@ -2689,29 +2689,48 @@ class S3HRSkillModel(S3Model):
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
-        filter_widgets = [
-            S3TextFilter(["name",
-                          "course_id$name",
-                          "site_id$name",
-                          "comments",
-                          ],
-                         label = T("Search"),
-                         comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
-                         ),
-            S3LocationFilter("site_id$location_id",
-                             levels = levels,
-                             hidden = True,
-                             ),
-            S3OptionsFilter("site_id",
-                            label = site_label,
-                            hidden = True,
-                            ),
-            S3DateFilter("start_date",
-                         label = T("Date"),
-                         hide_time = True,
-                         hidden = True,
-                         )
-            ]
+        if event_site:
+            filter_widgets = [S3TextFilter(["name",
+                                            "course_id$name",
+                                            "site_id$name",
+                                            "comments",
+                                            ],
+                                           label = T("Search"),
+                                           comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
+                                           ),
+                              S3LocationFilter("site_id$location_id",
+                                               levels = levels,
+                                               hidden = True,
+                                               ),
+                              S3OptionsFilter("site_id",
+                                              label = site_label,
+                                              hidden = True,
+                                              ),
+                              S3DateFilter("start_date",
+                                           label = T("Date"),
+                                           hide_time = True,
+                                           hidden = True,
+                                           )
+                              ]
+        else:
+            filter_widgets = [S3TextFilter(["name",
+                                            "course_id$name",
+                                            "location_id$name",
+                                            "comments",
+                                            ],
+                                           label = T("Search"),
+                                           comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
+                                           ),
+                              S3LocationFilter("location_id",
+                                               levels = levels,
+                                               hidden = True,
+                                               ),
+                              S3DateFilter("start_date",
+                                           label = T("Date"),
+                                           hide_time = True,
+                                           hidden = True,
+                                           )
+                              ]
 
         # Resource Configuration
         configure(tablename,
