@@ -216,7 +216,8 @@ class S3MainMenu(object):
                                vars=dict(_next=login_next),
                                check=self_registration)
 
-            if settings.get_auth_password_changes():
+            if settings.get_auth_password_changes() and \
+               settings.get_auth_password_retrieval():
                 lost_pw = MM("Lost Password", m="retrieve_password")
             else:
                 lost_pw = None

@@ -114,7 +114,9 @@ def config(settings):
     # Uncomment this to allow users to Login using OpenID
     #settings.auth.openid = True
     # Uncomment this to block password changes since managed externally (OpenID / SMTP / LDAP)
-    #settings.auth.password_changes = True
+    #settings.auth.password_changes = False
+    # Uncomment this to disable password retrieval (e.g. if impractical or unsafe)
+    #settings.auth.password_retrieval = False
     # Uncomment this to enable presence records on login based on HTML5 geolocations
     #settings.auth.set_presence_on_login = True
     # Uncomment this and specify a list of location levels to be ignored by presence records

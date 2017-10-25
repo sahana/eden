@@ -456,7 +456,7 @@ class S3Config(Storage):
         """
             Allow password retrieval?
         """
-        return self.auth.get("password_retrieval", True)
+        return self.__lazy("auth", "password_retrieval", default=True)
 
     def get_auth_password_min_length(self):
         """
