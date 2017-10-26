@@ -917,7 +917,7 @@ class S3MobileForm(object):
                 continue
 
             # Check if we need to include any records
-            record_ids = ms.references[ktablename]
+            record_ids = ms.references.get(ktablename)
             if record_ids:
                 rresource = s3db.resource(ktablename, id=list(record_ids))
             else:
