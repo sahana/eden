@@ -1606,10 +1606,10 @@ class S3ComponentTab(object):
             self.component = None
 
         if len(tab) > 2:
-            vars = self.vars = Storage(tab[2])
-            if "native" in vars:
-                self.native = True if vars["native"] else False
-                del vars["native"]
+            tab_vars = self.vars = Storage(tab[2])
+            if "native" in tab_vars:
+                self.native = True if tab_vars["native"] else False
+                del tab_vars["native"]
         else:
             self.vars = None
 
@@ -1690,9 +1690,9 @@ class S3ComponentTab(object):
             @param r: the S3Request
         """
 
-        get_vars = r.get_vars
         if self.vars is None:
             return True
+        get_vars = r.get_vars
         for k, v in self.vars.iteritems():
             if v is None:
                 continue
