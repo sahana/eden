@@ -6451,7 +6451,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                         (htable.deleted == False)
                 hr_records = db(query).count()
                 if hr_records > 1:
-                    duplicates_tab = (T("Duplicates"), "human_resource")
+                    duplicates_tab = (T("Duplicates"), "human_resource", {}) # Ensure no &human_resource.id=XXXX
         else:
             # Default
             record_method = "human_resource"
