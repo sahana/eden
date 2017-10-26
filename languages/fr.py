@@ -2091,6 +2091,7 @@
 'Hair Color': 'couleur des cheveux',
 'Hair Length': 'longeur des cheveux',
 'Hair Style': 'style des cheveux',
+'Haitian Creole': 'Créole Haïtien',
 'Has additional rights to modify records relating to this Organization or Site.': "A des droits supplémentaires pour modifier les enregistrements relatifs à cette organisation ou d'un emplacement.",
 'Has data from this Reference Document been entered into Sahana?': 'Est-ce que les données de ce document de référence a été entré dans Sahana?',
 'Has only read-only access to records relating to this Organization or Site.': "A seulement un accès en lecture-seule aux données relatives à cette Organisation ou d'un Emplacement.",

@@ -52,7 +52,10 @@ DEFAULT = lambda: None
 # Table options that are always JSON-serializable objects,
 # and can thus be passed as-is from dynamic model "settings"
 # to s3db.configure
-SERIALIZABLE_OPTS = ("subheadings")
+SERIALIZABLE_OPTS = ("grids",
+                     "autototals",
+                     "subheadings",
+                     )
 
 ogetattr = object.__getattribute__
 

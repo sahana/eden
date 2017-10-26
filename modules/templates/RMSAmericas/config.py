@@ -428,7 +428,7 @@ def config(settings):
     # Uncomment to allow HRs to have multiple Job Titles
     #settings.hrm.multiple_job_titles = True
     # Uncomment to have each root Org use a different Job Title Catalog
-    #settings.hrm.org_dependent_job_titles = True
+    settings.hrm.org_dependent_job_titles = True
     settings.hrm.staff_departments = False
     settings.hrm.teams = False
     # Uncomment to disable the use of HR Credentials
@@ -454,6 +454,8 @@ def config(settings):
     settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     settings.hrm.record_tab = "record"
+    # Use Locations for Training Events, not Facilities
+    settings.hrm.event_site = False
     # Training Instructors are Multiple
     settings.hrm.training_instructors = "multiple"
     # Training Filters are Contains
@@ -1561,11 +1563,17 @@ Thank you"""
             if not r.id:
                 # Filter to just RC people
                 from s3 import FS
-                r.resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
+                resource = r.resource
+                resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
 
-                r.resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
-                                     form_postp = add_language,
-                                     )
+                resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
+                                   form_postp = add_language,
+                                   )
+
+                #if r.representation == "xls":
+                #    list_fields = resource.get_config("list_fields")
+                #    #resource.configure(list_fields = list_fields)
+                #    list_fields.append()
 
             table = r.table
 
@@ -1635,7 +1643,7 @@ Thank you"""
 
         f = s3db.hrm_job_title.type
         f.default = 3 # Both
-        f.readable  = f.writable = False
+        #f.readable  = f.writable = False
 
         label = T("Position")
         label_create = T("Create Position")
@@ -1664,24 +1672,44 @@ Thank you"""
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
-    #def customise_hrm_job_title_controller(**attr):
+    def customise_hrm_job_title_controller(**attr):
 
-    #    # Organisation needs to be an NS/Branch
-    #    ns_only("hrm_job_title",
-    #            required = False,
-    #            branches = False,
-    #            )
+        s3 = current.response.s3
 
-    #    # Don't show RDRT in the list
-    #    #from gluon import IS_IN_SET
-    #    #current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
-    #    #                                                      2: T("Volunteer"),
-    #    #                                                      3: T("Both")
-    #    #                                                      })
+        # Organisation needs to be an NS
+        ns_only("hrm_job_title",
+                required = False,
+                branches = False,
+                )
 
-    #    return attr
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
 
-    #settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
+            if current.auth.s3_has_role("ADMIN"):
+                from s3 import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                ],
+                                               label=T("Search")
+                                               ),
+                                  S3OptionsFilter("organisation_id",
+                                                  ),
+                                  ]
+                current.s3db.configure("hrm_job_title",
+                                       filter_widgets = filter_widgets,
+                                       )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
     # -------------------------------------------------------------------------
     #def customise_hrm_programme_controller(**attr):
@@ -2081,7 +2109,8 @@ Thank you"""
 
         list_fields = ["organisation_id",
                        "course_id",
-                       "site_id",
+                       #"site_id",
+                       "location_id",
                        "start_date",
                        "training_event_instructor.person_id",
                        "comments",
@@ -2124,34 +2153,35 @@ Thank you"""
         requires = table.hours.requires
         table.hours.requires = IS_EMPTY_OR(table.hours)
 
-        site_represent = S3Represent(lookup = "org_site")
+        #site_represent = S3Represent(lookup = "org_site")
 
         # Filter list of Venues
-        f = table.site_id
-        f.default = None
-        f.label = T("Country")
-        f.represent = site_represent
+        #f = table.site_id
+        #f.default = None
+        #f.label = T("Country")
+        #f.represent = site_represent
 
-        ftable = s3db.org_facility
-        ltable = s3db.org_site_facility_type
-        ttable = s3db.org_facility_type
-        query = (ftable.deleted == False) & \
-                (ftable.site_id == ltable.site_id) & \
-                (ltable.facility_type_id == ttable.id) & \
-                (ttable.name == "Venue")
-        rows = db(query).select(ftable.site_id)
-        filter_opts = [row.site_id for row in rows]
-        f.requires = IS_ONE_OF(db, "org_site.site_id",
-                               site_represent,
-                               filterby="site_id",
-                               filter_opts=filter_opts,
-                               )
+        #ftable = s3db.org_facility
+        #ltable = s3db.org_site_facility_type
+        #ttable = s3db.org_facility_type
+        #query = (ftable.deleted == False) & \
+        #        (ftable.site_id == ltable.site_id) & \
+        #        (ltable.facility_type_id == ttable.id) & \
+        #        (ttable.name == "Venue")
+        #rows = db(query).select(ftable.site_id)
+        #filter_opts = [row.site_id for row in rows]
+        #f.requires = IS_ONE_OF(db, "org_site.site_id",
+        #                       site_represent,
+        #                       filterby="site_id",
+        #                       filter_opts=filter_opts,
+        #                       )
 
         # Multiple Instructors
         crud_form = S3SQLCustomForm("organisation_id",
                                     # @ToDo: Filter Courses by Training Center
                                     "course_id",
-                                    "site_id",
+                                    #"site_id",
+                                    "location_id",
                                     "start_date",
                                     "end_date",
                                     S3SQLInlineComponent("training_event_instructor",
