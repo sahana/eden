@@ -45,6 +45,9 @@ def config(settings):
     settings.auth.registration_link_user_to = ["staff"]
     settings.auth.registration_link_user_to_default = "staff"
 
+    # Password retrieval disabled
+    settings.auth.password_retrieval = False
+
     # Approval emails get sent to all admins
     #settings.mail.approver = "ADMIN"
 
