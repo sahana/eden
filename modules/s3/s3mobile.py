@@ -557,7 +557,7 @@ class S3MobileSchema(object):
                 uuid = self.get_uuid(lookup, default)
                 if uuid:
 
-                    if super_key:
+                    if superkey:
                         # Get the instance record ID
                         prefix, name, record_id = current.s3db.get_instance(lookup, default)
                         if record_id:
