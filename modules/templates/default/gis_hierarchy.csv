@@ -65,6 +65,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,PK,Province,District,Tehsil,Union Council,Village,
 ,PY,Department,District,"City / Town / Village",,,
 ,RS,District,"Municipality / City",,,,
+,SB,Province,Ward,,
 ,SE,County,Municipality,,,,
 ,SG,Region,,,
 ,SL,Province,District,Chiefdom,,,
@@ -78,5 +79,6 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,PR,Municipality,Barrio,,,,
 ,US,State,County,City,Neighborhood,,False
 ,UZ,Province,District,,,,
+,VU,Province,Area Council,,
 ,VN,Province,District,Commune,,,
 ,XK,District,Municipality,,,,

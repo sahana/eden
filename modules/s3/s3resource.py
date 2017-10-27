@@ -2824,7 +2824,8 @@ class S3Resource(object):
                                      resourcename=resourcename,
                                      extra_data=extra_data)
                 else:
-                    t = xml.parse(s)
+                    parser = etree.XMLParser(huge_tree=True) # Support large WKT fields
+                    t = xml.parse(s, parser)
                 if not t:
                     if xml.error:
                         raise SyntaxError(xml.error)

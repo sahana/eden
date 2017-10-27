@@ -230,7 +230,8 @@ class S3XML(S3Codec):
                 self.error = "XML Source error: %s" % sys.exc_info()[1]
                 return None
         try:
-            parser = etree.XMLParser(no_network = False,
+            parser = etree.XMLParser(huge_tree = True, # Support large WKT fields
+                                     no_network = False,
                                      remove_blank_text = True,
                                      )
             result = etree.parse(source, parser)
