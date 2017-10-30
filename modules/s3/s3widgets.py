@@ -1823,7 +1823,8 @@ class S3AgeWidget(FormWidget):
             s3_date("date_of_birth",
                     label = T("Age"),
                     widget = S3AgeWidget.widget,
-                    represent = S3AgeWidget.date_as_age,
+                    represent = lambda v: S3AgeWidget.date_as_age(v) \
+                                          if v else current.messages["NONE"],
                     ...
                     )
     """
@@ -1845,7 +1846,14 @@ class S3AgeWidget(FormWidget):
         age = cls.date_as_age(value)
 
         attr = IntegerWidget._attributes(field, {"value": age}, **attributes)
-        attr["requires"] = (IS_INT_IN_RANGE(0, 150), cls.age_as_date)
+
+        # Inner validation
+        requires = (IS_INT_IN_RANGE(0, 150), cls.age_as_date)
+
+        # Accept empty if field accepts empty
+        if isinstance(field.requires, IS_EMPTY_OR):
+            requires = IS_EMPTY_OR(requires)
+        attr["requires"] = requires
 
         return INPUT(**attr)
 
