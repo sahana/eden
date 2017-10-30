@@ -6161,7 +6161,9 @@ def hrm_rheader(r, tabs=[], profile=False):
 
     if resourcename == "person":
         record_id = r.id
+        db = current.db
         s3db = current.s3db
+        htable = s3db.hrm_human_resource
         settings = current.deployment_settings
         get_vars = r.get_vars
         hr = get_vars.get("human_resource.id", None)
@@ -6194,7 +6196,6 @@ def hrm_rheader(r, tabs=[], profile=False):
                 # - last month & last year
                 now = r.utcnow
                 last_year = now - datetime.timedelta(days=365)
-                db = current.db
                 if vol_experience == "activity":
                     ahtable = db.vol_activity_hours
                     attable = db.vol_activity_hours_activity_type
@@ -6286,7 +6287,6 @@ def hrm_rheader(r, tabs=[], profile=False):
                 if vol_active:
                     if not hr:
                         # @ToDo: Handle multiple active HR records
-                        htable = s3db.hrm_human_resource
                         query = (htable.person_id == record_id) & \
                                 (htable.deleted == False)
                         hr = db(query).select(htable.id, limitby=(0, 1)).first()
@@ -6441,10 +6441,17 @@ def hrm_rheader(r, tabs=[], profile=False):
             trainings_tab = (T("CV"), "cv")
 
         hr_tab = None
+        duplicates_tab = None
         if not record_tab:
             record_method = None
         elif record_tab == "record":
             record_method = "record"
+            if not profile and current.auth.s3_has_role("ADMIN"):
+                query = (htable.person_id == record_id) & \
+                        (htable.deleted == False)
+                hr_records = db(query).count()
+                if hr_records > 1:
+                    duplicates_tab = (T("Duplicates"), "human_resource", {"hr":"all"}) # Ensure no &human_resource.id=XXXX
         else:
             # Default
             record_method = "human_resource"
@@ -6530,10 +6537,13 @@ def hrm_rheader(r, tabs=[], profile=False):
                     awards_tab = (T("Awards"), "award")
                 else:
                     awards_tab = None
+            duplicates = None
             if record_method:
                 hr_tab = (T(hr_record), record_method)
+                    
             tabs = [(T("Person Details"), None),
                     hr_tab,
+                    duplicates_tab,
                     id_tab,
                     description_tab,
                     address_tab,
@@ -7502,7 +7512,8 @@ def hrm_human_resource_controller(extra_filter=None):
                         "url": URL(f="compose",
                                    vars = {"human_resource.id": "[id]"}),
                         "_class": "action-btn send",
-                        "label": str(T("Send Message"))})
+                        "label": str(T("Send Message"))
+                        })
 
         elif r.representation == "plain":
             # Map Popups

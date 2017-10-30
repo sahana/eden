@@ -205,17 +205,22 @@ class S3Merge(S3Method):
 
         T = current.T
         link = DIV(A(T("Mark as duplicate"),
-                       _class=mark),
+                     _class=mark,
+                     ),
                    A(T("Unmark as duplicate"),
-                       _class=unmark),
+                     _class=unmark,
+                     ),
                    A("",
                      _href=r.url(method="deduplicate", vars={}),
                      _id="markDuplicateURL",
-                     _class="hide"),
+                     _class="hide",
+                     ),
                    A(T("De-duplicate"),
                      _href=r.url(method="deduplicate", target=0, vars={}),
-                     _class=deduplicate),
-                   _id="markDuplicate")
+                     _class=deduplicate,
+                     ),
+                   _id="markDuplicate",
+                   )
 
         return link
 
@@ -554,7 +559,9 @@ class S3Merge(S3Method):
                                      _name="reset", _id="form-reset"),
                                A(T("Cancel"), _href=r.url(id=0, vars={}), _class="action-lnk"),
                                hidden = {"mode": mode,
-                                         "selected": ",".join(ids)})
+                                         "selected": ",".join(ids),
+                                         },
+                               )
 
         # Process the merge form
         formname = "merge_%s_%s_%s" % (tablename,
