@@ -155,6 +155,7 @@
                     });
                 form.find('input[type="submit"]').after(cancelButton);
                 // Show the form
+                frame.find('#popup').show();
                 form.show();
                 frame.insertAfter(button).slideDown('medium', function() {
                     $(button).siblings('.throbber').hide();
@@ -205,7 +206,7 @@
                 form.find('input[type="submit"]').after(cancelButton);
                 // Show the form
                 contact.after(frame).hide();
-                // Show the form
+                frame.find('#popup').show();
                 form.show();
                 frame.slideDown('medium');
             });
@@ -254,6 +255,7 @@
                 form.find('input[type="submit"]').after(cancelButton);
                 // Show the form
                 contact.after(frame).hide();
+                frame.find('#popup').show();
                 form.show();
                 frame.slideDown('medium');
             });
@@ -414,7 +416,7 @@
             var opts = {style: 'display: inline',
                         indicator : '<div class="throbber">'
                         };
-            element.find('.pr-contact-value').editable(function(value, settings) {
+            element.find('.pr-contact-value').editable(function(value) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'value': value})) {
                     contact.data('value', value);
@@ -423,7 +425,7 @@
                     return contact.data('value');
                 }
             }, opts);
-            element.find('.pr-contact-description').editable(function(value, settings) {
+            element.find('.pr-contact-description').editable(function(value) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'contact_description': value})) {
                     contact.data('description', value);
@@ -432,7 +434,7 @@
                     return contact.data('description');
                 }
             }, opts);
-            element.find('.pr-contact-comments').editable(function(value, settings) {
+            element.find('.pr-contact-comments').editable(function(value) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'comments': value})) {
                     contact.data('comments', value);
@@ -441,7 +443,7 @@
                     return contact.data('comments');
                 }
             }, opts);
-            element.find('.pr-emergency-name').editable(function(value, settings) {
+            element.find('.pr-emergency-name').editable(function(value) {
                 var contact = $(this).closest('.pr-emergency-contact');
                 if (self._inlineUpdateEmergencyContact(contact, {'name': value})) {
                     contact.data('name', value);
@@ -450,7 +452,7 @@
                     return contact.data('name');
                 }
             }, opts);
-            element.find('.pr-emergency-relationship').editable(function(value, settings) {
+            element.find('.pr-emergency-relationship').editable(function(value) {
                 var contact = $(this).closest('.pr-emergency-contact');
                 if (self._inlineUpdateEmergencyContact(contact, {'relationship': value})) {
                     contact.data('relationship', value);
@@ -459,7 +461,7 @@
                     return contact.data('relationship');
                 }
             }, opts);
-            element.find('.pr-emergency-phone').editable(function(value, settings) {
+            element.find('.pr-emergency-phone').editable(function(value) {
                 var contact = $(this).closest('.pr-emergency-contact');
                 if (self._inlineUpdateEmergencyContact(contact, {'phone': value})) {
                     contact.data('phone', value);
@@ -468,7 +470,7 @@
                     return contact.data('phone');
                 }
             }, opts);
-            element.find('.pr-emergency-address').editable(function(value, settings) {
+            element.find('.pr-emergency-address').editable(function(value) {
                 var contact = $(this).closest('.pr-emergency-contact');
                 if (self._inlineUpdateEmergencyContact(contact, {'address': value})) {
                     contact.data('address', value);
@@ -477,7 +479,7 @@
                     return contact.data('address');
                 }
             }, opts);
-            element.find('.pr-emergency-comments').editable(function(value, settings) {
+            element.find('.pr-emergency-comments').editable(function(value) {
                 var contact = $(this).closest('.pr-emergency-contact');
                 if (self._inlineUpdateEmergencyContact(contact, {'comments': value})) {
                     contact.data('comments', value);
@@ -488,7 +490,7 @@
             }, opts);
             var priority_opts = {
                 style: 'display: inline-block;',
-                data: function(value, settings) {
+                data: function(value) {
                     var opts = '{';
                     for (var i = 1; i < 10; i++) {
                         opts += '"' + i + '":"' + i + '",';
@@ -498,8 +500,8 @@
                 },
                 type: 'select',
                 submit: 'ok'
-            }
-            element.find('.pr-contact-priority').editable(function(value, settings) {
+            };
+            element.find('.pr-contact-priority').editable(function(value) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'priority': value})) {
                     contact.data('priority', value);
