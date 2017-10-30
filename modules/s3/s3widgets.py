@@ -36,6 +36,7 @@ __all__ = ("S3ACLWidget",
            "S3AddObjectWidget",
            "S3AddPersonWidget",
            "S3AddPersonWidget2",
+           "S3AgeWidget",
            "S3AutocompleteWidget",
            "S3BooleanWidget",
            "S3ColorPickerWidget",
@@ -1809,6 +1810,90 @@ i18n.grandfather_name_label="%s:"''' % (i18n,
                            _class="hide"),
                        rows,
                        )
+
+# =============================================================================
+class S3AgeWidget(FormWidget):
+    """
+        Widget to accept and represent date of birth as age in years,
+        mapping the age to a pseudo date-of-birth internally so that
+        it progresses over time; contains both widget and representation
+        method
+
+        @example:
+            s3_date("date_of_birth",
+                    label = T("Age"),
+                    widget = S3AgeWidget.widget,
+                    represent = S3AgeWidget.date_as_age,
+                    ...
+                    )
+    """
+
+    @classmethod
+    def widget(cls, field, value, **attributes):
+        """
+            The widget method, renders a simple integer-input
+
+            @param field: the Field
+            @param value: the current or default value
+            @param attributes: additional HTML attributes for the widget
+        """
+
+        if isinstance(value, basestring) and value and not value.isdigit():
+            # ISO String
+            value = current.calendar.parse_date(value)
+
+        age = cls.date_as_age(value)
+
+        attr = IntegerWidget._attributes(field, {"value": age}, **attributes)
+        attr["requires"] = (IS_INT_IN_RANGE(0, 150), cls.age_as_date)
+
+        return INPUT(**attr)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def date_as_age(value, row=None):
+        """
+            Convert a date value into age in years, can be used as
+            representation method
+
+            @param value: the date
+
+            @return: the age in years (integer)
+        """
+
+        if value and isinstance(value, datetime.date):
+            from dateutil.relativedelta import relativedelta
+            age = relativedelta(current.request.utcnow, value).years
+        else:
+            age = value
+        return age
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def age_as_date(value, error_message="invalid age"):
+        """
+            Convert age in years into an approximate date of birth, acts
+            as inner validator of the widget
+
+            @param value: age value
+            @param error_message: error message (override)
+
+            @returns: tuple (date, error)
+        """
+
+        try:
+            age = int(value)
+        except ValueError:
+            return None, error_message
+
+        from dateutil.relativedelta import relativedelta
+        date = (current.request.utcnow - relativedelta(years=age)).date()
+
+        # Map back to January 1st of the year of birth
+        # => common practice, but needs validation as requirement
+        date = date.replace(month=1, day=1)
+
+        return date, None
 
 # =============================================================================
 class S3AutocompleteWidget(FormWidget):
