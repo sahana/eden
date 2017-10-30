@@ -5227,6 +5227,16 @@ class PRPersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("age", "integer",
+                                label = T("Age"),
+                                requires = IS_EMPTY_OR(
+                                    IS_INT_IN_RANGE(0, 150)
+                                    ),
+                                # Enable as-required in template
+                                # (used when this is all that is available: normally use Date of Birth)
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("year_of_birth", "integer",
                                 label = T("Year of Birth"),
                                 requires = IS_EMPTY_OR(

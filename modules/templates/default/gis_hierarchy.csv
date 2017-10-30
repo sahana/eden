@@ -17,7 +17,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BO,Department,Province,Municipality,Canton
 ,BZ,District,,,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
-,CK,Island Council,,,,
+,CK,Island Council,Village Committee,,,
 ,CL,Region,Province,Commune,,
 ,CM,Region,Division,Sub-Division,Village,
 ,CO,Department,Municipality,Corregimiento,

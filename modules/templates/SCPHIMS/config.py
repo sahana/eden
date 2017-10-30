@@ -777,6 +777,8 @@ def config(settings):
         )
 
         s3db = current.s3db
+        f = s3db.pr_person_details.age
+        f.readable = f.writable = True
 
         mobile_list_fields = [# No need for Mobile client to know which Activity a Case is linked to
                               #"activity_person.activity_id$name",
@@ -785,7 +787,8 @@ def config(settings):
                               "first_name",
                               "middle_name",
                               "last_name",
-                              "date_of_birth",
+                              #"date_of_birth",
+                              "person_details.age",
                               "gender",
                               "person_details.disabled",
                               "phone.value",
@@ -812,7 +815,8 @@ def config(settings):
                        "first_name",
                        "middle_name",
                        "last_name",
-                       "date_of_birth",
+                       #"date_of_birth",
+                       "person_details.age",
                        "gender",
                        "person_details.disabled",
                        S3SQLInlineComponent(
@@ -909,7 +913,7 @@ def config(settings):
                        list_fields = ["first_name",
                                       "middle_name",
                                       "last_name",
-                                      "age",
+                                      "person_details.age",
                                       "gender",
                                       (T("Phone"), "phone.value"),
                                       "address.location_id",
@@ -1299,45 +1303,70 @@ def config(settings):
 
         s3 = current.response.s3
 
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.component_name == "person":
+                # Default Location to that of the Activity's lowest Lx
+                location_id = r.record.location_id
+                if location_id:
+                    s3db = current.s3db
+                    gtable = s3db.gis_location
+                    location = current.db(gtable.id == location_id).select(gtable.level,
+                                                                           gtable.parent,
+                                                                           limitby = (0, 1),
+                                                                           ).first()
+                    if not location.level:
+                        location_id = location.parent
+                    s3db.pr_address.location_id.default = location_id
+            return True
+        s3.prep = custom_prep
+
         # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
+        # No longer required as we switched case_activity to use person_id not case_id
+        #standard_postp = s3.postp
+        #def custom_postp(r, output):
+        #    # Call standard postp
+        #    if callable(standard_postp):
+        #        output = standard_postp(r, output)
 
-            if r.interactive:
-                if r.component_name == "case" and "showadd_btn" in output:
-                    # Replace add button with one for the Person perspective
-                    from gluon import URL
-                    from s3 import S3CRUD
-                    output["form"] = None
-                    output["showadd_btn"] = None
-                    url = URL(c="dvr", f="person",
-                              args = "create",
-                              vars = {"activity_id": r.id}
-                              )
-                    add_btn = S3CRUD.crud_button(tablename="dvr_case",
-                                                 name="label_create",
-                                                 icon="add",
-                                                 _id="add-btn",
-                                                 _href=url,
-                                                 )
-                    output["buttons"] = {"add_btn": add_btn}
-                elif r.component_name == "person" and \
-                     r.function != "distribution":
-                    # Only Logs should be editing Beneficiaries
-                    s3db.configure("pr_person",
-                                   insertable = False,
-                                   )
+        #    if r.interactive:
+        #        if r.component_name == "case" and "showadd_btn" in output:
+        #            # Replace add button with one for the Person perspective
+        #            from gluon import URL
+        #            from s3 import S3CRUD
+        #            output["form"] = None
+        #            output["showadd_btn"] = None
+        #            url = URL(c="dvr", f="person",
+        #                      args = "create",
+        #                      vars = {"activity_id": r.id}
+        #                      )
+        #            add_btn = S3CRUD.crud_button(tablename="dvr_case",
+        #                                         name="label_create",
+        #                                         icon="add",
+        #                                         _id="add-btn",
+        #                                         _href=url,
+        #                                         )
+        #            output["buttons"] = {"add_btn": add_btn}
 
-            return output
-        s3.postp = custom_postp
+        #        elif r.component_name == "person" and \
+        #             r.function != "distribution":
+        #            # Only Logs should be editing Beneficiaries
+        #            current.s3db.configure("pr_person",
+        #                                   insertable = False,
+        #                                   )
+
+        #    return output
+        #s3.postp = custom_postp
 
         return attr
 
-    # No longer required as we switched case_activity to use person_id not case_id
-    #settings.customise_project_activity_controller = customise_project_activity_controller
+    settings.customise_project_activity_controller = customise_project_activity_controller
 
     # -------------------------------------------------------------------------
     def customise_project_programme_resource(r, tablename):
