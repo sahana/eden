@@ -1011,45 +1011,84 @@ class S3MobileForm(object):
         pkey = resource._id.name
 
         options = self.config.get("options")
+
+        aliases = set()
         components = {}
 
-        # Expose static components
-        aliases = options.get("components") if options else None
+        # Dynamic components, exposed if:
+        # - "dynamic_components" is True for the master table, and
+        # - "mobile_component" for the component key is not set to False
+        dynamic_components = resource.get_config("dynamic_components")
+        if dynamic_components:
+
+            # Dynamic components of this table and all its super-entities
+            tablenames = [tablename]
+            supertables = resource.get_config("super_entity")
+            if supertables:
+                if isinstance(supertables, (list, tuple)):
+                    tablenames.extend(supertables)
+                elif supertables:
+                    tablenames.append(supertables)
+
+            # Look up corresponding component keys in s3_fields
+            s3db = current.s3db
+            ftable = s3db.s3_field
+            ttable = s3db.s3_table
+            join = ttable.on(ttable.id == ftable.table_id)
+            query = (ftable.component_key == True) & \
+                    (ftable.master.belongs(tablenames)) & \
+                    (ftable.deleted == False)
+            rows = current.db(query).select(ftable.name,
+                                            ftable.component_alias,
+                                            ftable.settings,
+                                            ttable.name,
+                                            join = join,
+                                            )
+
+            for row in rows:
+                component_key = row.s3_field
+
+                # Skip if mobile_component is set to False
+                settings = component_key.settings
+                if settings and settings.get("mobile_component") is False:
+                    continue
+
+                alias = component_key.component_alias
+                if not alias:
+                    # Default component alias
+                    alias = row.s3_table.name.split("_", 1)[-1]
+                aliases.add(alias)
+
+        # Static components, exposed if
+        # - configured in "components" option of settings.mobile.forms
+        static = options.get("components") if options else None
+        if static:
+            aliases |= set(static)
+
+        # Construct component descriptions for schema export
         if aliases:
             hooks = current.s3db.get_components(tablename, names=aliases)
             for alias, hook in hooks.items():
-                if hook.linktable or hook.pkey != pkey:
-                    # Link table or super-component => not supported (yet)
-                    continue
-                components[alias] = {"resource": hook.tablename,
-                                     "joinby": hook.fkey,
-                                     "multiple": hook.multiple,
-                                     }
 
-        # Expose dynamic components
-        ftable = current.s3db.s3_field
-        ttable = current.s3db.s3_table
-        join = ttable.on(ttable.id == ftable.table_id)
-        query = (ftable.component_key == True) & \
-                (ftable.master == tablename) & \
-                (ftable.deleted == False)
-        rows = current.db(query).select(ftable.name,
-                                        ftable.component_alias,
-                                        ftable.settings,
-                                        ttable.name,
-                                        join = join,
-                                        )
-        for row in rows:
-            component_key = row.s3_field
-            settings = component_key.settings
-            if not settings or \
-               settings.get("mobile_component") is not False:
-                alias = component_key.component_alias
-                multiple = settings.get("multiple", True)
-                components[alias] = {"resource": row.s3_table.name,
-                                     "joinby": component_key.name,
-                                     "multiple": multiple,
-                                     }
+                description = {"table": hook.tablename,
+                               "multiple": hook.multiple,
+                               }
+
+                if hook.pkey != pkey:
+                    description["pkey"] = hook.pkey
+
+                linktable = hook.linktable
+                if linktable:
+                    description.update({"link": str(linktable),
+                                        "joinby": hook.lkey,
+                                        "key": hook.rkey,
+                                        })
+                    if hook.fkey != "id":
+                        description["fkey"] = hook.fkey
+                else:
+                    description["joinby"] = hook.fkey
+
+                components[alias] = description
 
         return components
 
