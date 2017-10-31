@@ -901,15 +901,17 @@ class S3MobileForm(object):
             if settings:
                 hook["settings"] = settings
 
+            # Add link table schema
             link = hook.get("link")
             if link:
                 required.add(link)
 
-            # Mark as provided
-            provided.add(tablename)
-
+            # Add component reference schemas
             for tname in cschema.references:
                 required.add(tname)
+
+            # Mark as provided
+            provided.add(tablename)
 
         # Add schemas for referenced tables
         references = {}
