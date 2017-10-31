@@ -901,6 +901,10 @@ class S3MobileForm(object):
             if settings:
                 hook["settings"] = settings
 
+            link = hook.get("link")
+            if link:
+                required.add(link)
+
             # Mark as provided
             provided.add(tablename)
 
