@@ -1226,10 +1226,7 @@ def config(settings):
         crud_form = S3SQLCustomForm("organisation_id",
                                     "code",
                                     "name",
-                                    #S3SQLInlineLink("sector",
-                                    #                field = "sector_id",
-                                    #                label = T("Sectors"),
-                                    #                ),
+                                    "comments",
                                     )
 
         s3db.configure(tablename,
@@ -2213,26 +2210,29 @@ Thank you"""
         record = r.record
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
 
         current_language = T.accepted_language
         if current_language == "es":
             # Reach different translation
-            title = T("Training Event Report")
+            title = s3_str(T("Training Event Report"))
         else:
-            title = T("Training Report")
+            title = s3_str(T("Training Report"))
+
+        if record.course_id:
+            course_name = s3db.hrm_training_event.course_id.represent(record.course_id)
+            title = "%s: %s" % (title, course_name)
 
         def callback(r):
 
             from gluon.html import DIV, TABLE, TD, TH, TR
         
-            db = current.db
-            s3db = current.s3db
-
             rtable = s3db.hrm_training_event_report
 
             date_represent = rtable.date.represent
-            org_represent = s3db.org_OrganisationRepresent(parent=False,
-                                                           acronym=False)
+            org_represent = s3db.org_OrganisationRepresent(parent = False,
+                                                           acronym = False)
 
             # Logo
             otable = db.org_organisation
@@ -2266,7 +2266,7 @@ Thank you"""
             # Header
             header = TABLE(TR(TH("%s:" % T("Name")),
                               TD(s3_fullname(report.person_id)),
-                              TH("%s:" % T("Mission Date")),
+                              TH("%s:" % T("Training Date")),
                               TD(date_represent(record.start_date)),
                               ),
                            TR(TH("%s:" % T("Position")),
@@ -2279,7 +2279,7 @@ Thank you"""
                               TH("%s:" % T("Report Date")),
                               TD(date_represent(report.date)),
                               ),
-                           TR(TH("%s:" % T("Mission Purpose")),
+                           TR(TH("%s:" % T("Training Purpose")),
                               TD(report.purpose,
                                  _colspan = 3,
                                  ),
@@ -2289,17 +2289,19 @@ Thank you"""
             # Main
             main = TABLE(TR(TH("1. %s" % T("Objectives"))),
                          TR(TD(report.objectives)),
-                         TR(TH("2. %s" % T("Implemented Actions"))),
+                         TR(TH("2. %s" % T("Methodology"))),
+                         TR(TD(report.methodology)),
+                         TR(TH("3. %s" % T("Implemented Actions"))),
                          TR(TD(report.actions)),
-                         TR(TH("3. %s" % T("About the participants"))),
+                         TR(TH("4. %s" % T("About the participants"))),
                          TR(TD(report.participants)),
-                         TR(TH("4. %s" % T("Results and Lessons Learned"))),
+                         TR(TH("5. %s" % T("Results and Lessons Learned"))),
                          TR(TD(report.results)),
-                         TR(TH("5. %s" % T("Follow-up Required"))),
+                         TR(TH("6. %s" % T("Follow-up Required"))),
                          TR(TD(report.followup)),
-                         TR(TH("6. %s" % T("Additional relevant information"))),
+                         TR(TH("7. %s" % T("Additional relevant information"))),
                          TR(TD(report.additional)),
-                         TR(TH("7. %s" % T("General Comments"))),
+                         TR(TH("8. %s" % T("General Comments"))),
                          TR(TD(report.comments)),
                          )
 
@@ -2318,7 +2320,7 @@ Thank you"""
         from s3.s3export import S3Exporter
 
         exporter = S3Exporter().pdf
-        pdf_title = s3_str(title)
+        pdf_title = title
         return exporter(r.resource,
                         request = r,
                         method = "list",
@@ -2404,14 +2406,15 @@ Thank you"""
                                     "code",
                                     "date",
                                     (("1. %s" % table.objectives.label), "objectives"),
-                                    (("2. %s" % table.actions.label), "actions"),
-                                    (("3. %s" % table.participants.label), "participants"),
-                                    (("4. %s" % table.results.label), "results"),
-                                    (("5. %s" % table.followup.label), "followup"),
-                                    (("6. %s" % table.additional.label), "additional"),
-                                    (("7. %s" % table.comments.label), "comments"),
+                                    (("2. %s" % table.methodology.label), "methodology"),
+                                    (("3. %s" % table.actions.label), "actions"),
+                                    (("4. %s" % table.participants.label), "participants"),
+                                    (("5. %s" % table.results.label), "results"),
+                                    (("6. %s" % table.followup.label), "followup"),
+                                    (("7. %s" % table.additional.label), "additional"),
+                                    (("8. %s" % table.comments.label), "comments"),
                                     S3SQLInlineComponent("document",
-                                                         label = "8. %s" % T("Supporting Documentation"),
+                                                         label = "9. %s" % T("Supporting Documentation"),
                                                          link = False,
                                                          fields = ["file"],
                                                          ),
