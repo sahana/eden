@@ -2270,7 +2270,7 @@ Thank you"""
                               TD(date_represent(record.start_date)),
                               ),
                            TR(TH("%s:" % T("Position")),
-                              TD(s3_fullname(report.job_title_id)),
+                              TD(rtable.job_title_id.represent(report.job_title_id)),
                               TH("%s:" % T("Finance Codes")),
                               TD(report.code),
                               ),
