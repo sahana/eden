@@ -1678,7 +1678,7 @@ class group_Profile(custom_WACOP):
 
         output = {}
 
-        sself._view(output, "group_browse.html")
+        self._view(output, "group_profile.html")
 
         return output
 
