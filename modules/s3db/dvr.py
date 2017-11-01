@@ -2542,7 +2542,7 @@ class DVRCaseActivityModel(S3Model):
             )
 
         # Reusable field
-        represent = dvr_CaseActivityRepresent(show_link=True),
+        represent = dvr_CaseActivityRepresent(show_link=True)
         case_activity_id = S3ReusableField("case_activity_id",
                                            "reference %s" % tablename,
                                            ondelete = "CASCADE",
