@@ -69,6 +69,8 @@ __all__ = (# PR Base Entities
            "pr_PersonSearchAutocomplete",
 
            # REST Methods
+           "pr_AssignMethod",
+           "pr_compose",
            "pr_Contacts",
 
            # PE Hierarchy and Realms
@@ -3051,6 +3053,11 @@ class PRForumModel(S3Model):
                             pr_forum_membership = "forum_id",
                             )
 
+        # Custom Method to Assign People
+        self.set_method("pr", "forum",
+                        method = "assign",
+                        action = pr_AssignMethod(component="forum_membership"))
+
         # ---------------------------------------------------------------------
         # Forum membership
         #
@@ -3064,6 +3071,19 @@ class PRForumModel(S3Model):
                                        label = T("Person"),
                                        ondelete = "CASCADE",
                                        ),
+                     Field("admin", "boolean",
+                           default = False,
+                           label = T("Admin"),
+                           represent = s3_yes_no_represent,
+                           # Enable in Template if-required
+                           readable = False,
+                           writable = False,
+                           ),
+                     # If we need more types of role:
+                     #role_id(readable = False,
+                     #        writable = False,
+                     #        ondelete = "SET NULL",
+                     #        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -6533,9 +6553,23 @@ def pr_rheader(r, tabs=[]):
                 if not tabs:
                     title_display = current.response.s3.crud_strings["pr_forum"].title_display
                     tabs = [(title_display, None),
-                            (T("Members"), "forum_membership")
+                            (T("Members"), "forum_membership"),
+                            (T("Assign"), "assign"),
                             ]
                     rheader_tabs = s3_rheader_tabs(r, tabs)
+                action = ""
+                if current.deployment_settings.has_module("msg"):
+                    permit = current.auth.permission.has_permission
+                    if permit("update", c="pr", f="compose") and permit("update", c="msg"):
+                        # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
+                        action = A(T("Message Members"),
+                                   _href = URL(f = "compose",
+                                               vars = {"forum.id": record.id,
+                                                       "pe_id": record.pe_id,
+                                                       },
+                                               ),
+                                   _class = "action-btn send"
+                                   )
                 rheader = DIV(TABLE(
                                 TR(TH("%s: " % T("Name")),
                                    record.name,
@@ -6544,7 +6578,8 @@ def pr_rheader(r, tabs=[]):
                                    record.comments or "",
                                    TH(""),
                                    "",
-                                   )
+                                   ),
+                                TR(TH(action, _colspan=2)),
                                 ), rheader_tabs)
 
                 return rheader
@@ -6555,6 +6590,386 @@ def pr_rheader(r, tabs=[]):
 # Custom Resource Methods
 # =============================================================================
 #
+class pr_AssignMethod(S3Method):
+    """
+        Custom Method to allow people to be assigned to something
+        e.g. Team, Forum
+    """
+
+    def __init__(self, component, next_tab=None#, types=None
+                 ):
+        """
+            @param component: the Component in which to create records
+            @param next_tab: the component/method to redirect to after assigning
+            @param types: a list of types to pick from: Users (Staff/Vols/Members to come as-required)
+        """
+
+        self.component = component
+        if next_tab:
+            self.next_tab = next_tab
+        else:
+            self.next_tab = component
+        #self.types = types
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        component = r.resource.components[self.component]
+        if component.link:
+            component = component.link
+
+        tablename = component.tablename
+
+        # Requires permission to create component
+        authorised = current.auth.s3_has_permission("create", tablename)
+        if not authorised:
+            r.unauthorised()
+
+        settings = current.deployment_settings
+
+        #types = self.types
+        #if not types:
+        #    if settings.has_module("vol"):
+        #        types = (1, 2)
+        #    else:
+        #        # Staff
+        #        types = (1,)
+        #if types == (2,):
+        #    controller = "vol"
+        #else:
+        #    controller = "hrm"
+        if tablename == "pr_forum_membership":
+            USERS = True
+        else:
+            USERS = False
+        controller = "pr"
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db[tablename]
+        fkey = component.fkey
+        record = r.record
+        if fkey in record:
+            # SuperKey
+            record_id = record[fkey]
+        else:
+            record_id = r.id
+
+        get_vars = r.get_vars
+        response = current.response
+
+        if r.http == "POST":
+            added = 0
+            post_vars = r.post_vars
+            if all([n in post_vars for n in ("assign", "selected", "mode")]):
+
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    else:
+                        filters = None
+                    query = ~(FS("id").belongs(selected))
+                    presource = s3db.resource("pr_person",
+                                              alias = self.component,
+                                              filter=query, vars=filters)
+                    rows = presource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                # Prevent multiple entries in the link table
+                query = (table.person_id.belongs(selected)) & \
+                        (table[fkey] == record_id) & \
+                        (table.deleted != True)
+                rows = db(query).select(table.id)
+                rows = dict((row.id, row) for row in rows)
+                onaccept = component.get_config("create_onaccept",
+                                                component.get_config("onaccept", None))
+                for person_id in selected:
+                    try:
+                        pr_id = int(person_id.strip())
+                    except ValueError:
+                        continue
+                    if pr_id not in rows:
+                        link = Storage(person_id = person_id)
+                        link[fkey] = record_id
+                        _id = table.insert(**link)
+                        if onaccept:
+                            link["id"] = _id
+                            form = Storage(vars=link)
+                            onaccept(form)
+                        added += 1
+            current.session.confirmation = T("%(number)s assigned") % \
+                                           dict(number=added)
+            if added > 0:
+                redirect(URL(args=[r.id, self.next_tab], vars={}))
+            else:
+                redirect(URL(args=r.args, vars={}))
+
+        elif r.http == "GET":
+
+            # Filter widgets
+            #if controller == "vol":
+            #    resource_type = "volunteer"
+            #elif len(types) == 1:
+            #    resource_type = "staff"
+            #else:
+            #    # Both
+            #    resource_type = None
+            #if r.controller == "req":
+            #    module = "req"
+            #else:
+            #    module = controller
+            #filter_widgets = hrm_human_resource_filters(resource_type=resource_type,
+            #                                            module=module)
+            filter_widgets = None
+
+            # List fields
+            list_fields = ["id",
+                           "first_name",
+                           "middle_name",
+                           "last_name",
+                           #"organisation_id",
+                           ]
+            #if len(types) == 2:
+            #    list_fields.append((T("Type"), "type"))
+            #list_fields.append("job_title_id")
+            #if settings.get_hrm_use_certificates():
+            #    list_fields.append((T("Certificates"), "person_id$certification.certificate_id"))
+            #if settings.get_hrm_use_skills():
+            #    list_fields.append((T("Skills"), "person_id$competency.skill_id"))
+            #if settings.get_hrm_use_trainings():
+            #    list_fields.append((T("Trainings"), "person_id$training.course_id"))
+            if USERS:
+                db.auth_user.organisation_id.represent = s3db.org_OrganisationRepresent()
+                list_fields.append((current.messages.ORGANISATION, "user.organisation_id"))
+
+            # Data table
+            resource = s3db.resource("pr_person",
+                                     alias=r.component.alias if r.component else None,
+                                     vars=get_vars)
+            totalrows = resource.count()
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
+                if display_length == "None":
+                    display_length = None
+                else:
+                    display_length = int(display_length)
+            else:
+                display_length = 25
+            if display_length:
+                limit = 4 * display_length
+            else:
+                limit = None
+            filter_, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+            resource.add_filter(filter_)
+
+            # Hide people already in the link table
+            ptable = db.pr_person
+            query = (table[fkey] == record_id) & \
+                    (table.deleted != True)
+            rows = db(query).select(table.person_id)
+            already = [row.person_id for row in rows]
+            filter_ = (~ptable.id.belongs(already))
+            resource.add_filter(filter_)
+
+            if USERS:
+                # Restrict to just Users
+                ltable = s3db.pr_person_user
+                filter_ = (ptable.pe_id == ltable.pe_id)
+                resource.add_filter(filter_)
+
+            s3 = response.s3
+            if s3.filter:
+                resource.add_filter(s3.filter)
+
+            dt_id = "datatable"
+
+            # Bulk actions
+            dt_bulk_actions = [(T("Assign"), "assign")]
+
+            if r.representation == "html":
+                # Page load
+                resource.configure(deletable = False)
+
+                profile_url = URL(c = controller,
+                                  f = "person",
+                                  args = ["[id]", "profile"])
+                S3CRUD.action_buttons(r,
+                                      deletable = False,
+                                      read_url = profile_url,
+                                      update_url = profile_url)
+                s3.no_formats = True
+
+                # Filter form
+                if filter_widgets:
+
+                    # Where to retrieve filtered data from:
+                    submit_url_vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=submit_url_vars)
+
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets=filter_widgets)
+                    S3FilterForm.apply_filter_defaults(r, resource)
+
+                    # Where to retrieve updated filter options from:
+                    filter_ajax_url = URL(f="person",
+                                          args=["filter.options"],
+                                          vars={})
+
+                    get_config = resource.get_config
+                    filter_clear = get_config("filter_clear", True)
+                    filter_formstyle = get_config("filter_formstyle", None)
+                    filter_submit = get_config("filter_submit", True)
+                    filter_form = S3FilterForm(filter_widgets,
+                                               clear=filter_clear,
+                                               formstyle=filter_formstyle,
+                                               submit=filter_submit,
+                                               ajax=True,
+                                               url=filter_submit_url,
+                                               ajaxurl=filter_ajax_url,
+                                               _class="filter-form",
+                                               _id="datatable-filter-form",
+                                               )
+                    fresource = current.s3db.resource(resource.tablename)
+                    alias = r.component.alias if r.component else None
+                    ff = filter_form.html(fresource,
+                                          r.get_vars,
+                                          target="datatable",
+                                          alias=alias)
+                else:
+                    ff = ""
+
+                # Data table (items)
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_ajax_url=r.url(representation="aadata"),
+                                dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
+                                )
+
+                STAFF = settings.get_hrm_staff_label()
+
+                response.view = "list_filter.html"
+
+                return {"items": items,
+                        "title": T("Assign People"),
+                        "list_filter_form": ff,
+                        }
+
+            elif r.representation == "aadata":
+                # Ajax refresh
+                if "draw" in get_vars:
+                    echo = int(get_vars.draw)
+                else:
+                    echo = None
+
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo,
+                                dt_bulk_actions=dt_bulk_actions)
+                response.headers["Content-Type"] = "application/json"
+                return items
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+
+
+# =============================================================================
+def pr_compose():
+    """
+        Send message to people/teams/forums
+    """
+
+    #s3db = current.s3db
+    get_vars = current.request.get_vars
+    #pe_id = None
+
+    if "forum.id" in get_vars:
+        fieldname = "forum.id"
+        record_id = get_vars.get(fieldname)
+        pe_id = get_vars.pe_id
+        title = current.T("Message Members")
+        # URL to redirect to after message sent
+        url = URL(f="forum", args=record_id)
+
+    #elif "group.id" in get_vars:
+    #    fieldname = "group.id"
+    #    record_id = get_vars.get(fieldname)
+    #    pe_id = get_vars.pe_id
+    #    title = current.T("Message Members")
+    #    # URL to redirect to after message sent
+    #    url = URL(f="group", args=record_id)
+
+    else:
+        current.session.error = current.T("Record not found")
+        redirect(URL(f="index"))
+
+    #if not pe_id:
+    #    db = current.db
+    #    pe = db(query).select(table.pe_id,
+    #                          limitby=(0, 1)).first()
+    #    if not pe:
+    #        current.session.error = current.T("Record not found")
+    #        redirect(URL(f="index"))
+
+    #    pe_id = pe.pe_id
+
+    # Create the form
+    output = current.msg.compose(recipient = pe_id,
+                                 url = url)
+
+    output["title"] = title
+
+    response = current.response
+    representation = s3_get_extension()
+    response.headers["Content-Type"] = \
+        response.s3.content_type.get(representation, "text/html")
+    response.view = "msg/compose.html"
+
+    return output
+
+# =============================================================================
 class pr_Contacts(S3Method):
     """ Custom Method to edit person contacts """
 

@@ -1640,6 +1640,9 @@ class S3OptionsMenu(object):
                     M("Groups", f="group")(
                         M("Create", m="create"),
                     ),
+                    #M("Forums", f="forum")(
+                    #    M("Create", m="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------

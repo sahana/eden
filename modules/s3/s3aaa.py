@@ -2064,7 +2064,7 @@ $.filterOptionsS3({
                     # Don't check again
                     continue
 
-                if pe_tablename == "org_organisation":
+                if pe_tablename == "org_organisation" and pe_field == "name":
                     # This is a non-integer, so must be 1st or only phase
                     (record_id, pe_id) = org_lookup(pe_value)
                 else:

@@ -1255,7 +1255,7 @@ class S3SupplyDistributionModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ITEM = T("Add Distribution Item")
+        ADD_ITEM = T("Create Distribution Item")
         crud_strings[tablename] = Storage(
             label_create = ADD_ITEM,
             title_display = T("Distribution Item"),
@@ -1298,7 +1298,7 @@ class S3SupplyDistributionModel(S3Model):
                                                       f = "distribution_item",
                                                       vars = {"prefix": "supply",
                                                               "child": "parameter_id"},
-                                                      title=ADD_ITEM,
+                                                      title = ADD_ITEM,
                                                       ),
                                 ),
                      self.gis_location_id(),
@@ -1329,9 +1329,8 @@ class S3SupplyDistributionModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DIST = T("Add Distribution")
         crud_strings[tablename] = Storage(
-            label_create = ADD_DIST,
+            label_create = T("Add Distribution"),
             title_display = T("Distribution Details"),
             title_list = T("Distributions"),
             title_update = T("Edit Distribution"),

@@ -204,22 +204,25 @@ class S3MainMenu(default.S3MainMenu):
             )
         else:
             has_role = auth.s3_has_role
-            is_org_admin = lambda i: has_role("ORG_ADMIN") and \
-                                     not has_role("ADMIN")
-            menu_personal = MP()(
-                        MP("Administration", c="admin", f="index",
-                           check=has_role("ADMIN")),
-                        MP("Administration", c="admin", f="user",
-                           check=is_org_admin),
-                        MP("Profile", c="hrm", f="person",
-                           args=[str(auth.s3_logged_in_person())],
-                           vars={"profile":1},
-                           ),
-                        MP("Change Password", c="default", f="user",
-                           m="change_password"),
-                        MP("Logout", c="default", f="user",
-                           m="logout"),
-            )
+            if has_role("ADMIN"):
+                admin = MP("Administration", c="admin", f="index")
+            elif has_role("ORG_ADMIN"):
+                admin = MP("Administration", c="admin", f="user")
+            elif auth.s3_has_roles(("national_hr_manager", "training_coordinator")):
+                admin = MP("Administration", c="pr", f="forum")
+            else:
+                admin = None
+
+            menu_personal = MP()(admin,
+                                 MP("Profile", c="hrm", f="person",
+                                    args=[str(auth.s3_logged_in_person())],
+                                    vars={"profile":1},
+                                    ),
+                                 MP("Change Password", c="default", f="user",
+                                    m="change_password"),
+                                 MP("Logout", c="default", f="user",
+                                    m="logout"),
+                                 )
         return menu_personal
 
     # -------------------------------------------------------------------------
@@ -242,15 +245,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def admin(self):
         """ ADMIN menu """
 
-        # Standard Admin Menu
-        menu = super(S3OptionsMenu, self).admin()
+        if current.auth.s3_has_role("ADMIN"):
+            # Standard Admin Menu
+            menu = super(S3OptionsMenu, self).admin()
 
-        # Additional Items
-        menu(M("Map Settings", c="gis", f="config"),
-             M("Content Management", c="cms", f="index"),
-             )
+            # Additional Items
+            menu(M("Forums", c="pr", f="forum"),
+                 M("Map Settings", c="gis", f="config"),
+                 M("Content Management", c="cms", f="index"),
+                 )
 
-        return menu
+            return menu
+
+        else:
+            # OrgAdmin
+            return self.pr()
+
 
     # -------------------------------------------------------------------------
     def gis(self):
@@ -267,11 +277,40 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def pr(self):
         """ Person Registry """
 
-        if current.request.function == "person":
+        has_role = current.auth.s3_has_role
+        if has_role("ADMIN"):
+            if current.request.function == "forum":
+                return self.admin()
+            return M(c="pr")(
+                        M("Persons", f="person")(
+                            M("Create", m="create"),
+                        ),
+                        #M("Groups", f="group")(
+                        #    M("Create", m="create"),
+                        #),
+                        #M("Forums", f="forum")(
+                        #    M("Create", m="create"),
+                        #),
+                        )
+
+        elif current.request.function == "person":
             # Training Center access to external Trainees (not Staff/Volunteers)
             return self.hrm()
+
+        elif has_role("ORG_ADMIN"):
+            return M()(M("Users", c="admin", f="user")(
+                        ),
+                        M("Forums", c="pr", f="forum")(
+                            M("Create", m="create"),
+                        ),
+                       )
+
         else:
-            return super(S3OptionsMenu, self).pr()
+            # Managers (National HR or Training Center Coordinators)
+            return M()(M("Forums", c="pr", f="forum")(
+                        M("Create", m="create"),
+                        ),
+                       )
 
     # -------------------------------------------------------------------------
     @staticmethod

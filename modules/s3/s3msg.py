@@ -651,12 +651,20 @@ class S3Msg(object):
         ptable = s3db.pr_person
         gtable = s3db.pr_group
         mtable = db.pr_group_membership
+        ftable = s3db.pr_forum
+        fmtable = db.pr_forum_membership
 
         # Left joins for multi-recipient lookups
         gleft = [mtable.on((mtable.group_id == gtable.id) & \
                            (mtable.person_id != None) & \
                            (mtable.deleted != True)),
                  ptable.on((ptable.id == mtable.person_id) & \
+                           (ptable.deleted != True))
+                 ]
+        fleft = [fmtable.on((fmtable.forum_id == ftable.id) & \
+                           (fmtable.person_id != None) & \
+                           (fmtable.deleted != True)),
+                 ptable.on((ptable.id == fmtable.person_id) & \
                            (ptable.deleted != True))
                  ]
 
@@ -765,6 +773,21 @@ class S3Msg(object):
                 # Re-queue the message for each member in the group
                 gquery = (gtable.pe_id == pe_id)
                 recipients = db(gquery).select(ptable.pe_id, left=gleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      contact_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
+                status = True
+
+            elif entity_type == "pr_forum":
+                # Re-queue the message for each member in the group
+                fquery = (ftable.pe_id == pe_id)
+                recipients = db(fquery).select(ptable.pe_id, left=fleft)
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:

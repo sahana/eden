@@ -211,8 +211,8 @@ def config(settings):
             if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
 
-        # Facilities & Requisitions are owned by the user's organisation
-        elif tablename in ("org_facility", "req_req"):
+        # Facilities, Forums & Requisitions are owned by the user's organisation
+        elif tablename in ("org_facility", "pr_forum", "req_req"):
             use_user_organisation = True
 
         elif tablename == "hrm_training":
@@ -1965,6 +1965,8 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_hrm_training_controller(**attr):
 
+        s3 = current.response.s3
+
         # Default Filter
         #from s3 import s3_set_default_filter
         #s3_set_default_filter("~.person_id$human_resource.organisation_id",
@@ -1975,13 +1977,12 @@ Thank you"""
         if not auth.s3_has_role("ADMIN") and \
                auth.s3_has_roles(("training_coordinator", "training_assistant")):
             TC = True
-            # Filter People to just those trained by this Reference Center
+            # Filter Trainings to just those done by this Reference Center
+            from s3 import FS
             filter = FS("~.training_event_id$organisation_id") == auth.user.organisation_id
             s3.filter = filter
         else:
             TC = False
-
-        s3 = current.response.s3
 
         # Custom prep
         standard_prep = s3.prep
@@ -2270,7 +2271,7 @@ Thank you"""
                               TD(date_represent(record.start_date)),
                               ),
                            TR(TH("%s:" % T("Position")),
-                              TD(s3_fullname(report.job_title_id)),
+                              TD(rtable.job_title_id.represent(report.job_title_id)),
                               TH("%s:" % T("Finance Codes")),
                               TD(report.code),
                               ),
@@ -2950,6 +2951,49 @@ Thank you"""
                        )
 
     settings.customise_pr_education_resource = customise_pr_education_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_forum_resource(r, tablename):
+
+        table = current.s3db.pr_forum
+        table.forum_type.readable = table.forum_type.writable = False
+
+    settings.customise_pr_forum_resource = customise_pr_forum_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_forum_controller(**attr):
+
+        s3 = current.response.s3
+
+        type_filter = current.request.get_vars.get("organisation_type.name")
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "assign":
+                auth = current.auth
+                has_role = auth.s3_has_role
+                if not has_role("ADMIN") and has_role("training_coordinator"):
+                    # Filter people to just those Trained by this Reference Center or Staff of this Reference Center
+                    from s3 import FS
+                    organisation_id = auth.user.organisation_id
+                    filter = (FS("training.training_event_id$organisation_id") == organisation_id) | \
+                             (FS("user.organisation_id") == organisation_id)
+                    s3.filter = filter
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_forum_controller = customise_pr_forum_controller
 
     # -------------------------------------------------------------------------
     #def customise_pr_group_controller(**attr):
