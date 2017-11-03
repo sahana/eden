@@ -296,7 +296,7 @@ def config(settings):
                                        crud_form = crud_form,
                                        )
             elif r.component_name == "response":
-                # Don't start anseering Assessment when creating them here
+                # Don't start answering Assessment when creating them here
                 current.s3db.configure("dc_response",
                                        create_next = None,
                                        )
@@ -1328,42 +1328,44 @@ def config(settings):
         s3.prep = custom_prep
 
         # Custom postp
-        # No longer required as we switched case_activity to use person_id not case_id
-        #standard_postp = s3.postp
-        #def custom_postp(r, output):
-        #    # Call standard postp
-        #    if callable(standard_postp):
-        #        output = standard_postp(r, output)
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
 
-        #    if r.interactive:
-        #        if r.component_name == "case" and "showadd_btn" in output:
-        #            # Replace add button with one for the Person perspective
-        #            from gluon import URL
-        #            from s3 import S3CRUD
-        #            output["form"] = None
-        #            output["showadd_btn"] = None
-        #            url = URL(c="dvr", f="person",
-        #                      args = "create",
-        #                      vars = {"activity_id": r.id}
-        #                      )
-        #            add_btn = S3CRUD.crud_button(tablename="dvr_case",
-        #                                         name="label_create",
-        #                                         icon="add",
-        #                                         _id="add-btn",
-        #                                         _href=url,
-        #                                         )
-        #            output["buttons"] = {"add_btn": add_btn}
+            if r.interactive:
+                # No longer required as we switched case_activity to use person_id not case_id
+                #if r.component_name == "case" and "showadd_btn" in output:
+                #    # Replace add button with one for the Person perspective
+                #    from gluon import URL
+                #    from s3 import S3CRUD
+                #    output["form"] = None
+                #    output["showadd_btn"] = None
+                #    url = URL(c="dvr", f="person",
+                #              args = "create",
+                #              vars = {"activity_id": r.id}
+                #              )
+                #    add_btn = S3CRUD.crud_button(tablename="dvr_case",
+                #                                 name="label_create",
+                #                                 icon="add",
+                #                                 _id="add-btn",
+                #                                 _href=url,
+                #                                 )
+                #    output["buttons"] = {"add_btn": add_btn}
 
-        #        elif r.component_name == "person" and \
-        #             r.function != "distribution":
-        #            # Only Logs should be editing Beneficiaries
-        #            current.s3db.configure("pr_person",
-        #                                   insertable = False,
-        #                                   )
+                if r.component_name == "person" and \
+                     r.function != "distribution":
+                    # Only Logs should be editing Beneficiaries
+                    current.s3db.configure("pr_person",
+                                           insertable = False,
+                                           )
 
-        #    return output
-        #s3.postp = custom_postp
+            return output
+        s3.postp = custom_postp
 
+        if 
+            attr["rheader"] = 
         return attr
 
     settings.customise_project_activity_controller = customise_project_activity_controller
@@ -1594,6 +1596,24 @@ def config(settings):
         return attr
 
     settings.customise_project_project_controller = customise_project_project_controller
+
+    # -------------------------------------------------------------------------
+    def customise_supply_distribution_resource(r, tablename):
+
+        T = current.T
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Distribution Item"),
+            title_display = T("Distribution Item"),
+            title_list = T("Distribution Items"),
+            title_update = T("Edit Distribution Item"),
+            label_list_button = T("List Distribution Items"),
+            msg_record_created = T("Distribution Item Added"),
+            msg_record_modified = T("Distribution Item Updated"),
+            msg_record_deleted = T("Distribution Item Deleted"),
+            msg_list_empty = T("No Distribution Items Found")
+        )
+
+    settings.customise_supply_distribution_resource = customise_supply_distribution_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

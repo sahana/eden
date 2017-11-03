@@ -5832,10 +5832,9 @@ def hrm_human_resource_onaccept(form):
 # =============================================================================
 def hrm_compose():
     """
-        Send message to people/teams
+        Send message to people/teams/participants
     """
 
-    T = current.T
     s3db = current.s3db
     req_vars = current.request.get_vars
     pe_id = None
@@ -5847,7 +5846,7 @@ def hrm_compose():
         htable = s3db.hrm_human_resource
         query = (htable.id == record_id) & \
                 (htable.person_id == table.id)
-        title = T("Send a message to this person")
+        title = current.T("Send a message to this person")
         # URL to redirect to after message sent
         url = URL(f="compose",
                   vars={fieldname: record_id})
@@ -5856,7 +5855,7 @@ def hrm_compose():
         record_id = req_vars.group_id
         table = s3db.pr_group
         query = (table.id == record_id)
-        title = T("Send a message to this team")
+        title = current.T("Send a message to this team")
         # URL to redirect to after message sent
         url = URL(f="compose",
                   vars={fieldname: record_id})
@@ -5864,12 +5863,12 @@ def hrm_compose():
         fieldname = "training_event.id"
         record_id = req_vars.get(fieldname)
         pe_id = req_vars.pe_id
-        title = T("Message Participants")
+        title = current.T("Message Participants")
         # URL to redirect to after message sent
         url = URL(f="training_event", args=record_id)
 
     else:
-        current.session.error = T("Record not found")
+        current.session.error = current.T("Record not found")
         redirect(URL(f="index"))
 
     if not pe_id:
@@ -5877,7 +5876,7 @@ def hrm_compose():
         pe = db(query).select(table.pe_id,
                               limitby=(0, 1)).first()
         if not pe:
-            current.session.error = T("Record not found")
+            current.session.error = current.T("Record not found")
             redirect(URL(f="index"))
 
         pe_id = pe.pe_id
@@ -5891,7 +5890,7 @@ def hrm_compose():
         if contact:
             s3db.msg_outbox.contact_method.default = contact.contact_method
         else:
-            current.session.error = T("No contact method found")
+            current.session.error = current.T("No contact method found")
             redirect(URL(f="index"))
 
     # Create the form
