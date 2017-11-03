@@ -26,6 +26,19 @@ table {
 }
 
 // -------------------------------------
+// Drop Down
+
+.f-dropdown {
+  input[type="file"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select { margin-bottom: 0; }
+
+  a { padding: 0; }
+  > li { padding: .5em; }
+}
+
+// -------------------------------------
 // Buttons
 
 .button {
