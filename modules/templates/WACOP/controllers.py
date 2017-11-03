@@ -1177,7 +1177,7 @@ class group_Browse(custom_WACOP):
         output = {}
 
         # dataTable (& Create button)
-        #dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
         tablename = "pr_forum"
 
         customise = current.deployment_settings.customise_resource(tablename)
@@ -1186,7 +1186,8 @@ class group_Browse(custom_WACOP):
 
         self._datatable(output = output,
                         tablename = tablename,
-                        #dt_init = dt_init,
+                        dt_init = dt_init,
+                        search = False,
                         )
 
         # Filter Form
