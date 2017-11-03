@@ -4973,18 +4973,9 @@ class hrm_AssignMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        component = self.component
-        components = r.resource.components
-        for c in components:
-            if c == component:
-                component = components[c]
-                break
-        try:
-            if component.link:
-                component = component.link
-        except:
-            current.log.error("Invalid Component!")
-            raise
+        component = r.resource.components[self.component]
+        if component.link:
+            component = component.link
 
         tablename = component.tablename
 
@@ -5125,17 +5116,17 @@ class hrm_AssignMethod(S3Method):
                 limit = 4 * display_length
             else:
                 limit = None
-            filter, orderby, left = resource.datatable_filter(list_fields,
-                                                              get_vars)
-            resource.add_filter(filter)
+            filter_, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+            resource.add_filter(filter_)
 
             # Hide people already in the link table
             query = (table[fkey] == record_id) & \
                     (table.deleted != True)
             rows = db(query).select(table.human_resource_id)
             already = [row.human_resource_id for row in rows]
-            filter = (~db.hrm_human_resource.id.belongs(already))
-            resource.add_filter(filter)
+            filter_ = (~db.hrm_human_resource.id.belongs(already))
+            resource.add_filter(filter_)
 
             dt_id = "datatable"
 
@@ -5159,8 +5150,8 @@ class hrm_AssignMethod(S3Method):
                 if filter_widgets:
 
                     # Where to retrieve filtered data from:
-                    _vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=_vars)
+                    submit_url_vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=submit_url_vars)
 
                     # Default Filters (before selecting data!)
                     resource.configure(filter_widgets=filter_widgets)
@@ -5216,12 +5207,13 @@ class hrm_AssignMethod(S3Method):
                                 )
 
                 STAFF = settings.get_hrm_staff_label()
-                output = dict(items = items,
-                              title = T("Assign %(staff)s") % dict(staff=STAFF),
-                              list_filter_form = ff)
+                output = dict()
 
                 response.view = "list_filter.html"
-                return output
+                return {"items": items,
+                        "title": T("Assign %(staff)s") % dict(staff=STAFF),
+                        "list_filter_form": ff,
+                        }
 
             elif r.representation == "aadata":
                 # Ajax refresh
@@ -5836,12 +5828,12 @@ def hrm_compose():
     """
 
     s3db = current.s3db
-    req_vars = current.request.get_vars
+    get_vars = current.request.get_vars
     pe_id = None
 
-    if "human_resource.id" in req_vars:
+    if "human_resource.id" in get_vars:
         fieldname = "human_resource.id"
-        record_id = req_vars.get(fieldname)
+        record_id = get_vars.get(fieldname)
         table = s3db.pr_person
         htable = s3db.hrm_human_resource
         query = (htable.id == record_id) & \
@@ -5850,19 +5842,19 @@ def hrm_compose():
         # URL to redirect to after message sent
         url = URL(f="compose",
                   vars={fieldname: record_id})
-    elif "group_id" in req_vars:
+    elif "group_id" in get_vars:
         fieldname = "group_id"
-        record_id = req_vars.group_id
+        record_id = get_vars.group_id
         table = s3db.pr_group
         query = (table.id == record_id)
         title = current.T("Send a message to this team")
         # URL to redirect to after message sent
         url = URL(f="compose",
                   vars={fieldname: record_id})
-    elif "training_event.id" in req_vars:
+    elif "training_event.id" in get_vars:
         fieldname = "training_event.id"
-        record_id = req_vars.get(fieldname)
-        pe_id = req_vars.pe_id
+        record_id = get_vars.get(fieldname)
+        pe_id = get_vars.pe_id
         title = current.T("Message Participants")
         # URL to redirect to after message sent
         url = URL(f="training_event", args=record_id)
@@ -5881,7 +5873,7 @@ def hrm_compose():
 
         pe_id = pe.pe_id
 
-    if "hrm_id" in req_vars:
+    if "hrm_id" in get_vars:
         # Get the individual's communications options & preference
         ctable = s3db.pr_contact
         contact = db(ctable.pe_id == pe_id).select(ctable.contact_method,

@@ -1364,8 +1364,8 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
-        if 
-            attr["rheader"] = 
+        #if 
+        #    attr["rheader"] = 
         return attr
 
     settings.customise_project_activity_controller = customise_project_activity_controller

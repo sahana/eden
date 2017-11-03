@@ -6619,18 +6619,9 @@ class pr_AssignMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        component = self.component
-        components = r.resource.components
-        for c in components:
-            if c == component:
-                component = components[c]
-                break
-        try:
-            if component.link:
-                component = component.link
-        except:
-            current.log.error("Invalid Component!")
-            raise
+        component = r.resource.components[self.component]
+        if component.link:
+            component = component.link
 
         tablename = component.tablename
 
@@ -6782,9 +6773,9 @@ class pr_AssignMethod(S3Method):
                 limit = 4 * display_length
             else:
                 limit = None
-            filter, orderby, left = resource.datatable_filter(list_fields,
-                                                              get_vars)
-            resource.add_filter(filter)
+            filter_, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+            resource.add_filter(filter_)
 
             # Hide people already in the link table
             ptable = db.pr_person
@@ -6792,14 +6783,14 @@ class pr_AssignMethod(S3Method):
                     (table.deleted != True)
             rows = db(query).select(table.person_id)
             already = [row.person_id for row in rows]
-            filter = (~ptable.id.belongs(already))
-            resource.add_filter(filter)
+            filter_ = (~ptable.id.belongs(already))
+            resource.add_filter(filter_)
 
             if USERS:
                 # Restrict to just Users
                 ltable = s3db.pr_person_user
-                filter = (ptable.pe_id == ltable.pe_id)
-                resource.add_filter(filter)
+                filter_ = (ptable.pe_id == ltable.pe_id)
+                resource.add_filter(filter_)
 
             s3 = response.s3
             if s3.filter:
@@ -6827,8 +6818,8 @@ class pr_AssignMethod(S3Method):
                 if filter_widgets:
 
                     # Where to retrieve filtered data from:
-                    _vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=_vars)
+                    submit_url_vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=submit_url_vars)
 
                     # Default Filters (before selecting data!)
                     resource.configure(filter_widgets=filter_widgets)
@@ -6884,12 +6875,13 @@ class pr_AssignMethod(S3Method):
                                 )
 
                 STAFF = settings.get_hrm_staff_label()
-                output = dict(items = items,
-                              title = T("Assign People"),
-                              list_filter_form = ff)
 
                 response.view = "list_filter.html"
-                return output
+
+                return {"items": items,
+                        "title": T("Assign People"),
+                        "list_filter_form": ff,
+                        }
 
             elif r.representation == "aadata":
                 # Ajax refresh
@@ -6930,21 +6922,21 @@ def pr_compose():
     """
 
     #s3db = current.s3db
-    req_vars = current.request.get_vars
+    get_vars = current.request.get_vars
     #pe_id = None
 
-    if "forum.id" in req_vars:
+    if "forum.id" in get_vars:
         fieldname = "forum.id"
-        record_id = req_vars.get(fieldname)
-        pe_id = req_vars.pe_id
+        record_id = get_vars.get(fieldname)
+        pe_id = get_vars.pe_id
         title = current.T("Message Members")
         # URL to redirect to after message sent
         url = URL(f="forum", args=record_id)
 
-    #elif "group.id" in req_vars:
+    #elif "group.id" in get_vars:
     #    fieldname = "group.id"
-    #    record_id = req_vars.get(fieldname)
-    #    pe_id = req_vars.pe_id
+    #    record_id = get_vars.get(fieldname)
+    #    pe_id = get_vars.pe_id
     #    title = current.T("Message Members")
     #    # URL to redirect to after message sent
     #    url = URL(f="group", args=record_id)

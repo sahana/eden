@@ -1871,8 +1871,9 @@ def deploy_apply(r, **attr):
                           "sSortDir_0": "asc",
                           }
             get_vars.update(dt_sorting)
-        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
-        resource.add_filter(filter)
+        filter_, orderby, left = resource.datatable_filter(list_fields,
+                                                           get_vars)
+        resource.add_filter(filter_)
         data = resource.select(list_fields,
                                start = 0,
                                limit = limit,
@@ -1971,15 +1972,14 @@ def deploy_apply(r, **attr):
             else:
                 ff = ""
 
-            output = {"form": form,
-                      "items": items,
-                      "list_filter_form": ff,
-                      "title": T("Add %(team)s Members") % \
-                               {"team": T(deploy_team)},
-                      }
-
             response.view = "list_filter.html"
-            return output
+
+            return {"form": form,
+                    "items": items,
+                    "list_filter_form": ff,
+                    "title": T("Add %(team)s Members") % \
+                              {"team": T(deploy_team)},
+                    }
 
         elif r.representation == "aadata":
             # Ajax refresh
