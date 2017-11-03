@@ -3071,6 +3071,19 @@ class PRForumModel(S3Model):
                                        label = T("Person"),
                                        ondelete = "CASCADE",
                                        ),
+                     Field("admin", "boolean",
+                           default = False,
+                           label = T("Admin"),
+                           represent = s3_yes_no_represent,
+                           # Enable in Template if-required
+                           readable = False,
+                           writable = False,
+                           ),
+                     # If we need more types of role:
+                     #role_id(readable = False,
+                     #        writable = False,
+                     #        ondelete = "SET NULL",
+                     #        ),
                      s3_comments(),
                      *s3_meta_fields())
 

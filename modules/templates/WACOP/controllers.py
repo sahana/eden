@@ -273,6 +273,8 @@ class custom_WACOP(S3CRUD):
                     label = T("Add Organization")
                 elif tablename == "project_task":
                     label = T("Create Task")
+                elif tablename == "pr_forum":
+                    label = T("Create Group")
                 else:
                     # event_team
                     label = T("Add")
@@ -828,8 +830,7 @@ class custom_WACOP(S3CRUD):
                                    #    but /a/ form ID is still required for other
                                    #    scripts and styles
                                    _id = "%s-filter-form" % dataTable_id,
-                                   ajaxurl = URL(c = "project",
-                                                 f = "task",
+                                   ajaxurl = URL(c="project", f="task",
                                                  args = ["filter.options"],
                                                  vars = ajax_vars, # manually applied to s3.filter in customise()
                                                  ),
@@ -934,8 +935,7 @@ class custom_WACOP(S3CRUD):
                                    #    but /a/ form ID is still required for other
                                    #    scripts and styles
                                    _id = "%s-filter-form" % list_id,
-                                   ajaxurl = URL(c = "cms",
-                                                 f = "post",
+                                   ajaxurl = URL(c="cms", f="post",
                                                  args = ["filter.options"],
                                                  vars = ajax_vars, # manually applied to s3.filter in customise()
                                                  ),
@@ -1175,6 +1175,51 @@ class group_Browse(custom_WACOP):
         """
 
         output = {}
+
+        # dataTable (& Create button)
+        #dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+        tablename = "pr_forum"
+
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        self._datatable(output = output,
+                        tablename = tablename,
+                        #dt_init = dt_init,
+                        )
+
+        # Filter Form
+        ajax_vars = {}
+        ajaxurl = URL(c="pr", f="forum", args="datatable",
+                      vars=ajax_vars, extension="aadata")
+        dataTable_id = "custom-list-pr_forum"
+        # Widgets defined in customise() to be visible to filter.options
+        filter_widgets = current.s3db.get_config(tablename, "filter_widgets")
+
+        #ajax_vars.pop("list_id")
+        #ajax_vars.pop("refresh")
+        filter_form = S3FilterForm(filter_widgets,
+                                   formstyle = filter_formstyle_profile,
+                                   submit = True,
+                                   ajax = True,
+                                   url = ajaxurl,
+                                   # Ensure that Filter options update when
+                                   # entries are added/modified
+                                   # => done through target-parameter in html() now,
+                                   #    but /a/ form ID is still required for other
+                                   #    scripts and styles
+                                   _id = "%s-filter-form" % dataTable_id,
+                                   ajaxurl = URL(c="pr", f="forum",
+                                                 args = ["filter.options"],
+                                                 vars = ajax_vars, # would be manually applied to s3.filter in customise()
+                                                 ),
+                                   )
+
+        output["filter_form"] = filter_form.html(r.resource, r.get_vars,
+                                                 target = dataTable_id,
+                                                 alias = None,
+                                                 )
 
         self._view(output, "group_browse.html")
 

@@ -1188,6 +1188,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_forum_resource(r, tablename):
 
+        f = current.s3db.pr_forum.comments
+        f.label = T("Description")
+        f.comment = None
+
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Group"),
             title_display = T("Group Details"),
@@ -1205,9 +1209,13 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_forum_controller(**attr):
 
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
         # Custom Browse
-        from templates.WACOP.controllers import group_Browse, group_Profile
-        set_method = current.s3db.set_method
+        from templates.WACOP.controllers import group_Browse, group_Profile, text_filter_formstyle
+        set_method = s3db.set_method
         set_method("pr", "forum",
                    method = "browse",
                    action = group_Browse)
@@ -1217,9 +1225,130 @@ def config(settings):
                    method = "custom",
                    action = group_Profile)
 
+        from s3 import S3OptionsFilter, S3TextFilter
+        filter_widgets = [S3TextFilter(["name",
+                                        "description",
+                                        ],
+                                       formstyle = text_filter_formstyle,
+                                       label = T("Search"),
+                                       _placeholder = T("Enter search term…"),
+                                       _class = "filter-search",
+                                       ),
+                          #S3OptionsFilter("bookmark.user_id",
+                          #                label = "",
+                          #                options = {"*": T("All Groups"),
+                          #                           current.auth.user.id: T("My Groups"),
+                          #                           },
+                          #                cols = 2,
+                          #                multiple = False,
+                          #                table = False,
+                          #                ),
+                          ]
+
+        # Virtual Fields
+        from gluon import A, URL
+        from s3 import s3_fieldmethod
+        table = s3db.pr_forum
+
+        def forum_name(row):
+            return A(row["pr_forum.name"],
+                     _href = URL(c="pr", f="forum",
+                                 args = [row["pr_forum.id"], "custom"],
+                                 #vars = {"refresh": "custom-list-pr_forum",
+                                 #        },
+                                 extension = "", # ensure no .aadata
+                                 ),
+                     #_class = "s3_modal",
+                     )
+        table.name_click = s3_fieldmethod("name_click",
+                                          forum_name,
+                                          # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                          # @ToDo: Bulk lookups
+                                          represent = lambda v: v,
+                                          search_field = "name",
+                                          )
+
+        mtable = s3db.pr_forum_membership
+        ffield = mtable.forum_id
+        query = (mtable.deleted == False)
+        def forum_members(row):
+            forum_id = row["pr_forum.id"]
+            count = db(query & (ffield == forum_id)).count()
+            return count
+        table.members = s3_fieldmethod("members",
+                                       forum_members,
+                                       )
+
+        pfield = mtable.person_id
+        aquery = query & (mtable.admin == True)
+        NONE = current.messages["NONE"]
+        personRepresent = pfield.represent
+        def admin(row):
+            forum_id = row["pr_forum.id"]
+            admin = db(aquery & (ffield == forum_id)).select(pfield,
+                                                             limitby=(0, 1)
+                                                             ).first()
+            if admin:
+                return personRepresent(admin.person_id)
+            else:
+                return NONE
+        table.admin = s3_fieldmethod("admin",
+                                     admin,
+                                     )
+
+        list_fields = [(T("Name"), "name_click"),
+                       "comments",
+                       (T("Members"), "members"),
+                       (T("Updated"), "modified_on"),
+                       (T("Admin"), "admin"),
+                       ]
+
+        s3db.configure("pr_forum",
+                       extra_fields = ("name",
+                                       ),
+                       list_fields = list_fields,
+                       filter_widgets = filter_widgets,
+                       )
+
         return attr
 
     settings.customise_pr_forum_controller = customise_pr_forum_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_forum_membership_resource(r, tablename):
+
+        f = current.s3db.pr_forum_membership.admin
+        f.readable = f.writable = True
+
+        # CRUD strings
+        function = r.function
+        if function == "person":
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Membership"),
+                title_display = T("Membership Details"),
+                title_list = T("Memberships"),
+                title_update = T("Edit Membership"),
+                label_list_button = T("List Memberships"),
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Added to Group"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Removed from Group"),
+                msg_list_empty = T("Not yet a Member of any Group"))
+
+        elif function in ("forum", "forum_membership"):
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Member"),
+                title_display = T("Membership Details"),
+                title_list = T("Group Members"),
+                title_update = T("Edit Membership"),
+                label_list_button = T("List Members"),
+                label_delete_button = T("Remove Person from Group"),
+                msg_record_created = T("Person added to Group"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Person removed from Group"),
+                msg_list_empty = T("This Group has no Members yet"))
+
+    settings.customise_pr_forum_membership_resource = customise_pr_forum_membership_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
@@ -1457,10 +1586,14 @@ def config(settings):
         project_task_priority_opts = settings.get_project_task_priority_opts()
         project_task_status_opts = settings.get_project_task_status_opts()
 
+        from templates.WACOP.controllers import text_filter_formstyle
+
         filter_widgets = [S3TextFilter(["name",
                                         "description",
                                         ],
+                                       formstyle = text_filter_formstyle,
                                        label = T("Search"),
+                                       _placeholder = T("Enter search term…"),
                                        _class = "filter-search",
                                        ),
                           S3OptionsFilter("priority",

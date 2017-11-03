@@ -77,6 +77,7 @@ class S3Migration(object):
                      )
         migrate.migrate()
         migrate.compile()
+        migrate.refresh_roles()
         migrate.post(moves=[],
                      news=[],
                      strbools=[],
