@@ -632,9 +632,7 @@ class S3MobileSchema(object):
                     mobile_form.append(fname)
                     include(fname)
 
-        if resource.parent and \
-           not resource.linktable and \
-           resource.pkey == resource.parent._id.name:
+        if resource.parent and not resource.linktable:
 
             # Include the parent key
             fkey = resource.fkey
