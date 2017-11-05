@@ -97,6 +97,7 @@ class custom_WACOP(S3CRUD):
                    updateable = True,
                    export = False,
                    event_id = None,
+                   forum_id = None,
                    incident_id = None,
                    actions = None,
                    ajax_vars = None, # Used to be able to differentiate contexts in customise()
@@ -220,12 +221,21 @@ class custom_WACOP(S3CRUD):
         # Action Buttons on the right (no longer)
         #dtargs["dt_action_col"] = len(list_fields)
 
-        # Use Native controller for AJAX  calls
-        dtargs["dt_ajax_url"] = URL(c = c,
-                                    f = f,
-                                    vars = ajax_vars,
-                                    extension = "aadata",
-                                    )
+        if tablename == "pr_forum_membership":
+            # Use Native controller for AJAX calls
+            dtargs["dt_ajax_url"] = URL(c = "pr",
+                                        f = "forum",
+                                        args = [forum_id, "forum_membership"],
+                                        #vars = ajax_vars,
+                                        extension = "aadata",
+                                        )
+        else:
+            # Use Native controller for AJAX calls
+            dtargs["dt_ajax_url"] = URL(c = c,
+                                        f = f,
+                                        vars = ajax_vars,
+                                        extension = "aadata",
+                                        )
 
         datatable = dt.html(totalrows,
                             displayrows,
@@ -252,6 +262,12 @@ class custom_WACOP(S3CRUD):
                               args=[incident_id, "assign.popup"],
                               vars={"refresh": dataTable_id},
                               )
+            elif tablename == "pr_forum_membership":
+                label = T("Add Member")
+                url = URL(c="pr", f="forum",
+                          args=[forum_id, f, "create.popup"],
+                          vars={"refresh": dataTable_id},
+                          )
             else:
                 if event_id:
                     if f == "team":
@@ -1778,7 +1794,73 @@ class group_Profile(custom_WACOP):
             @param attr: controller arguments
         """
 
-        output = {}
+        from s3 import s3_fullname
+
+        db = current.db
+        s3db = current.s3db
+
+        table = r.table
+        record = r.record
+        forum_id = r.id
+
+        mtable = s3db.pr_forum_membership
+        query = (mtable.forum_id == forum_id) & \
+                (mtable.deleted == False)
+        members = db(query).select(mtable.person_id,
+                                   mtable.admin)
+        admins = [s3_fullname(m.person_id) for m in members if m.admin]
+ 
+        # @ToDo: Any filter here?
+        ptable = s3db.cms_post
+        query = (ptable.deleted == False)
+        updates = db(query).count()
+
+        date_represent = lambda dt: S3DateTime.date_represent(dt,
+                                                              format = "%b %d %Y %H:%M",
+                                                              utc = True,
+                                                              #calendar = calendar,
+                                                              )
+
+        group = Storage(name = record.name,
+                        description = record.comments,
+                        forum_type = table.forum_type.represent(record.forum_type),
+                        created_on = date_represent(record.created_on),
+                        modified_on = date_represent(record.modified_on),
+                        admin = ", ".join(admins),
+                        members = len(members),
+                        updates = updates,
+                        )
+
+        output = {"group": group,
+                  }
+
+        # Updates DataList
+        event_id = incident_id = None
+        self._updates_html(r, output, event_id, incident_id, True, **attr)
+
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+
+        # Members dataTable
+        tablename = "pr_forum_membership"
+
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        resource = s3db.resource(tablename)
+        resource.add_filter(FS("forum_id") == forum_id)
+
+        self._datatable(output = output,
+                        tablename = tablename,
+                        dt_init = dt_init,
+                        forum_id = forum_id,
+                        resource = resource,
+                        )
+
+        # Tasks dataTable
+        self._tasks_html(r, output,
+                         dt_init = dt_init,
+                         )
 
         self._view(output, "group_profile.html")
 

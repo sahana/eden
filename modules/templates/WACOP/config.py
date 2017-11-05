@@ -1319,7 +1319,7 @@ def config(settings):
                 result = standard_prep(r)
 
             # Override defalt redirects from custom methods
-            if r.component_name == "forum_membership":
+            if r.component_name == "forum_membership" and r.method is None:
                 from gluon.tools import redirect
                 current.session.confirmation = current.response.confirmation
                 redirect(URL(args=[r.id, "custom"]))
@@ -1336,7 +1336,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_forum_membership_resource(r, tablename):
 
-        f = current.s3db.pr_forum_membership.admin
+        s3db = current.s3db
+        f = s3db.pr_forum_membership.admin
         f.readable = f.writable = True
 
         # CRUD strings
@@ -1366,6 +1367,18 @@ def config(settings):
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Person removed from Group"),
                 msg_list_empty = T("This Group has no Members yet"))
+
+        list_fields = [#(T("Name"), "name_click"),
+                       "person_id",
+                       "admin",
+                       "comments",
+                       ]
+
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       list_fields = list_fields,
+                       )
 
     settings.customise_pr_forum_membership_resource = customise_pr_forum_membership_resource
 
@@ -1557,12 +1570,16 @@ def config(settings):
         table = s3db.project_task
 
         # Virtual Fields
-        # Always used from either the Event or Incident context
-        f = r.function
+        fn = r.function
+        if fn == "forum":
+            c = "pr"
+        else:
+            # Used from either the Event or Incident context
+            c = "event"
         record_id = r.id
         def task_name(row):
             return A(row["project_task.name"],
-                     _href = URL(c="event", f=f,
+                     _href = URL(c=c, f=fn,
                                  args=[record_id, "task", row["project_task.id"], "profile"],
                                  ),
                      )
@@ -1577,10 +1594,10 @@ def config(settings):
         etable = s3db.pr_pentity
         ltable = s3db.pr_person_user
         query = (ltable.pe_id == etable.pe_id)
-        set = current.db(query)
+        the_set = current.db(query)
         f = table.pe_id
         f.requires = IS_EMPTY_OR(
-                        IS_ONE_OF(set, "pr_pentity.pe_id",
+                        IS_ONE_OF(the_set, "pr_pentity.pe_id",
                                   f.represent))
 
         # Custom Form

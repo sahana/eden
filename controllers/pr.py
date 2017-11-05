@@ -464,6 +464,14 @@ def forum():
     return output
 
 # -----------------------------------------------------------------------------
+#def forum_membership():
+#    """ RESTful CRUD controller """
+#
+#    output = s3_rest_controller()
+#
+#    return output
+
+# -----------------------------------------------------------------------------
 def group():
     """ RESTful CRUD controller """
 

@@ -1,164 +1,167 @@
 {{extend "layout.html"}}
 {{=system_wide}}
 <div class='row'>
-  <div class='small-12 column group-greeting'>
-    <div class='row'>
-      <div class='small-12 medium-8 columns'>
-        <h2>
-          Hello <span class='group-name'>Group Name</span> <span class='label radius group_status'>Public</span>
-        </h2>
-        <p>Group description</p>
-      </div>
-      <div class='small-12 medium-4 columns text-right'>
-        <p class='meta'>
-          <span class='date-label'>created</span>: <span class='date'>OCT 05 2015 12:05</span>
-          <br>
-          <span class='date-label'>last updated</span>: <span class='date'>OCT 05 2015 12:05</span>
-          <br>
-          # Updates | # Members
-          <br>
-          Admin: <a href='#'>User name</a>
-        </p>
-        <a class='drop meta' data-options='ignore_repositioning:true;align:left' data-dropdown='settings' aria-controls='settings' aria-expanded='false'>Notifications (edit)</a>
-        <ul id='settings' class='f-dropdown text-left' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
-          <li><strong>Notification Settings</strong></li>
-          <li><strong>Frequency</strong>
-            <ul class='no-bullet'>
-              <li><label for='box1'><input type='checkbox' id='box1' name='box1'> Receive posts immediately</label></li>
-              <li><label for='box2'><input type='checkbox' id='box2' name='box2'> Receive daily digest</label></li>
-            </ul>
-          </li>
-          <li><strong>Channel</strong>
-            <ul class='no-bullet'>
-              <li><label for='box3'><input type='checkbox' id='box3' name='box3'> Via Email</label></li>
-              <li><label for='box4'><input type='checkbox' id='box4' name='box4'> Via SMS</label></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <hr>
-  </div>
+ <div class='small-12 column group-greeting'>
+  <div class='row'>
+   <div class='small-12 medium-8 columns'>
+    <h2>
+     Hello <span class='group-name'>{{=group.name}}</span> <span class='label radius group_status'>{{=group.forum_type}}</span>
+    </h2>
+    <p>{{=group.description}}</p>
+   </div>
+   <div class='small-12 medium-4 columns text-right'>
+    <p class='meta'>
+     <span class='date-label'>created</span>: <span class='date'>{{=group.created_on}}</span>
+     <br>
+     <span class='date-label'>last updated</span>: <span class='date'>{{=group.modified_on}}</span>
+     <br>
+     {{=group.updates}} Updates | {{=group.members}} Members
+     <br>
+     Admin: <a href='#'>{{=group.admin}}</a>
+    </p>
+    <!--
+    <a class='drop meta' data-options='ignore_repositioning:true;align:left' data-dropdown='settings' aria-controls='settings' aria-expanded='false'>Notifications (edit)</a>
+    <ul id='settings' class='f-dropdown text-left' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+     <li><strong>Notification Settings</strong></li>
+     <li><strong>Frequency</strong>
+      <ul class='no-bullet'>
+       <li><label for='box1'><input type='checkbox' id='box1' name='box1'> Receive posts immediately</label></li>
+       <li><label for='box2'><input type='checkbox' id='box2' name='box2'> Receive daily digest</label></li>
+      </ul>
+     </li>
+     <li><strong>Channel</strong>
+      <ul class='no-bullet'>
+       <li><label for='box3'><input type='checkbox' id='box3' name='box3'> Via Email</label></li>
+       <li><label for='box4'><input type='checkbox' id='box4' name='box4'> Via SMS</label></li>
+      </ul>
+     </li>
+    </ul>>-->
+   </div>
+  </div
+  <hr>
+ </div>
 </div>
 <div class='row'>
-  <div class='small-12 column'>
-    <ul class='tabs tab-navigation' data-tab>
-      <li class='tab-title active'><a href='#panel1'>Updates</a></li>
-      <li class='tab-title'><a href='#panel2'>Members</a></li>
-      <li class='tab-title'><a href='#panel3'>Tasks</a></li>
-    </ul>
-    <div class='tabs-content'>
-      <section class='content active' id='panel1'>
-        <div class='row'>
-          <div class='large-3 columns'>
+ <div class='small-12 column'>
+  <ul class='tabs tab-navigation' data-tab>
+   <li class='tab-title active'><a href='#panel1'>Updates</a></li>
+   <li class='tab-title'><a href='#panel2'>Members</a></li>
+   <li class='tab-title'><a href='#panel3'>Tasks</a></li>
+  </ul>
+  <div class='tabs-content'>
+   <section class='content active' id='panel1'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_post_button}}
+      {{=filter_form}}
+      
+        <!-- Fancy filter tbc (Currently Bookmarks are links between Users <> Event/Incidents...nothing to do with Groups
+        <div class='filter-group'>
+          <h1 class='title'>Bookmarked Events</h1>
 
-            <!-- Update Filter goes here  -->
-
-            <div class='filter-group'>
-              <h1 class='title'>Bookmarked Events</h1>
-
-              <div class='item'>
-                <label>
-                  <input type='checkbox'>
-                  Ladies go to lunch
-                </label>
-                <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
-                <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
-                  <li><a href='#'>Go to Event</a></li>
-                  <li><a href='#'>Remove from bookmarks</a></li>
-                  <li><a href='#'>Stop notifications</a></li>
-                </ul>
-              </div>
-
-              <div class='item'>
-                <label>
-                  <input type='checkbox'>
-                  Another group
-                </label>
-                <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
-                <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
-                  <li><a href='#'>Go to Event</a></li>
-                  <li><a href='#'>Remove from bookmarks</a></li>
-                  <li><a href='#'>Stop notifications</a></li>
-                </ul>
-              </div>
-
-            </div>
-
-            <div class='filter-group'>
-              <h1 class='title'>Bookmarked Incidents</h1>
-
-              <div class='item'>
-                <label>
-                  <input type='checkbox'>
-                  Ladies go to lunch
-                </label>
-                <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
-                <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
-                  <li><a href='#'>Go to Incident</a></li>
-                  <li><a href='#'>Remove from bookmarks</a></li>
-                  <li><a href='#'>Stop notifications</a></li>
-                </ul>
-              </div>
-
-              <div class='item'>
-                <label>
-                  <input type='checkbox'>
-                  Another group
-                </label>
-                <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
-                <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
-                  <li><a href='#'>Go to Incident</a></li>
-                  <li><a href='#'>Remove from bookmarks</a></li>
-                  <li><a href='#'>Stop notifications</a></li>
-                </ul>
-              </div>
-
-            </div>
-
-          </div>
-          <div class='large-9 columns'>
-            <ul class='dl' id='updates_datalist'>
-              {{#updates_datalist}}
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Ladies go to lunch
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Go to Event</a></li>
+              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop notifications</a></li>
             </ul>
           </div>
-        </div>
-      </section>
 
-      <section class='staff content' id='panel2'>
-        <div class='row'>
-          <div class='large-3 columns'>
-            {{#create_hrm_human_resource_popup}}
-            <div class='panel'>
-              <div class='search-wrapper' id='dt-search-hrm_human_resource'>
-                <span class='search-icon'><i class='fa fa-search'></i></span>
-              </div>
-            </div>
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Another group
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Go to Event</a></li>
+              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop notifications</a></li>
+            </ul>
           </div>
-          <div class='large-9 columns'>
-            <div id='dt-hrm_human_resource'>
-              {{#hrm_human_resource_datatable}}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section id='panel3' class='tasks content'>
-        <div class='row'>
-          <div class='large-3 columns'>
-            {{#create_project_task_popup}}
-            <div class='panel'>
-              {{#project_task_filter_form}}
-            </div>
-          </div>
-          <div class='large-9 columns'>
-            <div id='dt-project_task'>
-              {{#project_task_datatable}}
-            </div>
-          </div>
         </div>
-      </section>
 
+        <div class='filter-group'>
+          <h1 class='title'>Bookmarked Incidents</h1>
+
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Ladies go to lunch
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Go to Incident</a></li>
+              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop notifications</a></li>
+            </ul>
+          </div>
+
+          <div class='item'>
+            <label>
+              <input type='checkbox'>
+              Another group
+            </label>
+            <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
+            <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+              <li><a href='#'>Go to Incident</a></li>
+              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop notifications</a></li>
+            </ul>
+          </div>
+
+        </div>  -->
+
+     </div>
+     <div class='large-9 columns'>
+      <ul class='dl' id='updates_datalist'>
+       {{=updates_datalist}}
+      </ul>
+     </div>
     </div>
+   </section>
+
+   <section class='staff content' id='panel2'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_pr_forum_membership_popup}}
+      <div class='panel'>
+       <div class='search-wrapper' id='dt-search-pr_forum_membership'>
+        <span class='search-icon'><i class='fa fa-search'></i></span>
+       </div>
+      </div>
+     </div>
+     <div class='large-9 columns'>
+      <div id='dt-pr_forum_membership'>
+       {{=pr_forum_membership_datatable}}
+      </div>
+     </div>
+    </div>
+   </section>
+
+   <section id='panel3' class='tasks content'>
+    <div class='row'>
+     <div class='large-3 columns'>
+      {{=create_project_task_popup}}
+      <div class='panel'>
+       {{=project_task_filter_form}}
+      </div>
+     </div>
+     <div class='large-9 columns'>
+      <div id='dt-project_task'>
+       {{=project_task_datatable}}
+      </div>
+     </div>
+    </div>
+   </section>
+
   </div>
+ </div>
 </div>
+{{include "dataTables.html"}}
