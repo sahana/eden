@@ -98,6 +98,7 @@ class custom_WACOP(S3CRUD):
                    export = False,
                    event_id = None,
                    incident_id = None,
+                   actions = None,
                    ajax_vars = None, # Used to be able to differentiate contexts in customise()
                                      # & for filter_defaults
                    dt_init = None,
@@ -177,6 +178,7 @@ class custom_WACOP(S3CRUD):
         if not search:
             dtargs["dt_searching"] = False
 
+        # Action Buttons
         # @ToDo: Permissions
         #messages = current.messages
         #if f in ("event", "incident"):
@@ -198,26 +200,27 @@ class custom_WACOP(S3CRUD):
         #                   args = ["[id]", profile])
         #    delete_url = URL(c=c, f=f,
         #                     args=["[id]", "delete"])
-        # Hide the Action Buttons as we assume that the first column is clickable to open details
-        dtargs["dt_row_actions"] = [{#"label": messages.READ,
-                                     "label": "",
-                                     #"url": read_url,
-                                     "url": "",
-                                    ##"icon": "fa fa-eye",
-                                    # "icon": "fa fa-caret-right",
-                                    # #"_class": "s3_modal",
-                                     },
-                                    # @ToDo: AJAX delete
-                                    #{"label": messages.DELETE,
-                                    # "url": delete_url,
-                                    # "icon": "fa fa-trash",
-                                    # },
-                                    ]
+        if actions is None:
+            # Hide the Action Buttons as we assume that the first column is clickable to open details
+            actions = [{#"label": messages.READ,
+                        "label": "",
+                        #"url": read_url,
+                        "url": "",
+                        ##"icon": "fa fa-eye",
+                        # "icon": "fa fa-caret-right",
+                        # #"_class": "s3_modal",
+                        },
+                        # @ToDo: AJAX delete
+                        #{"label": messages.DELETE,
+                        # "url": delete_url,
+                        # "icon": "fa fa-trash",
+                        # },
+                       ]
+        dtargs["dt_row_actions"] = actions
         # Action Buttons on the right (no longer)
         #dtargs["dt_action_col"] = len(list_fields)
+
         # Use Native controller for AJAX  calls
-        #dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
-        #                              representation="aadata")
         dtargs["dt_ajax_url"] = URL(c = c,
                                     f = f,
                                     vars = ajax_vars,
@@ -226,7 +229,7 @@ class custom_WACOP(S3CRUD):
 
         datatable = dt.html(totalrows,
                             displayrows,
-                            id=dataTable_id,
+                            id = dataTable_id,
                             **dtargs)
 
         if dt.data:
@@ -1174,6 +1177,12 @@ class group_Browse(custom_WACOP):
             @param attr: controller arguments
         """
 
+        from s3 import s3_str
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
         output = {}
 
         # dataTable (& Create button)
@@ -1184,9 +1193,56 @@ class group_Browse(custom_WACOP):
         if customise:
             customise(r, tablename)
 
+        # Lookup person_id of current user
+        ptable = s3db.pr_person
+        person_id = db(ptable.pe_id == current.auth.user.pe_id).select(ptable.id,
+                                                                       limitby = (0, 1)
+                                                                       ).first().id
+
+        # Action Buttons
+        table = r.table
+        mtable = s3db.pr_forum_membership
+        # Groups that the User is a Member of
+        query = (table.deleted == False) & \
+                (table.id == mtable.forum_id) & \
+                (mtable.person_id == person_id) & \
+                (mtable.deleted == False)
+        groups = db(query).select(table.id)
+        groups_member_of = [g.id for g in groups]
+        restrict_l = [str(g) for g in groups_member_of]
+        # Public Groups that the User is not a Member of
+        query = (table.forum_type.belongs((1, 2))) & \
+                (~table.id.belongs(groups_member_of)) & \
+                (table.deleted == False)
+        groups = db(query).select(table.id,
+                                  table.forum_type)
+        restrict_j = [str(g.id) for g in groups if g.forum_type == 1]
+        # Private Groups that the User is not a Member of
+        restrict_r = [str(g.id) for g in groups if g.forum_type == 2]
+
+        actions = [dict(label = s3_str(T("Join")),
+                        url = URL(args=["[id]", "join"]),
+                        _class = "action-btn",
+                        restrict = restrict_j,
+                        ),
+                   dict(label = s3_str(T("Leave")),
+                        url = URL(args = ["[id]", "leave"]),
+                        _class = "action-btn",
+                        restrict = restrict_l,
+                        ),
+                   dict(label = s3_str(T("Request Invite")),
+                        url = URL(args = ["[id]", "request"]),
+                        _class = "action-btn",
+                        restrict = restrict_r,
+                        ),
+                   ]
+
+        resource = r.resource
         self._datatable(output = output,
                         tablename = tablename,
+                        actions = actions,
                         dt_init = dt_init,
+                        resource = resource,
                         search = False,
                         )
 
@@ -1217,7 +1273,7 @@ class group_Browse(custom_WACOP):
                                                  ),
                                    )
 
-        output["filter_form"] = filter_form.html(r.resource, r.get_vars,
+        output["filter_form"] = filter_form.html(resource, r.get_vars,
                                                  target = dataTable_id,
                                                  alias = None,
                                                  )

@@ -6265,6 +6265,13 @@ class S3Permission(object):
             @param record: the record or record ID (None for any record)
         """
 
+        # Auth override, system roles and login
+        auth = self.auth
+        if auth.override:
+            #_debug("==> auth.override")
+            #_debug("*** GRANTED ***")
+            return True
+
         # Multiple methods?
         if isinstance(method, (list, tuple)):
             for m in method:
@@ -6285,12 +6292,6 @@ class S3Permission(object):
         #       record,
         #       )
 
-        # Auth override, system roles and login
-        auth = self.auth
-        if auth.override:
-            #_debug("==> auth.override")
-            #_debug("*** GRANTED ***")
-            return True
         sr = auth.get_system_roles()
         logged_in = auth.s3_logged_in()
         self.check_settings()

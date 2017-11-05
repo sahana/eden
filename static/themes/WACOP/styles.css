@@ -276,7 +276,7 @@ table tr td {
 */
 table.dataTable tbody td:first-child,
 table.dataTable thead th:first-child {
-  display: none; /* Hide empty column by default */
+  display: none; /* Hide empty Actions column by default */
 }
 table.dataTable.dtr-inline.collapsed tbody td:first-child,
 table.dataTable.dtr-inline.collapsed thead th:first-child {
@@ -297,6 +297,16 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
   background-color: inherit;
   content: '\f0d7'; /* fa-caret-down */
 }
+
+/* Show Actions column on Group Browse page */
+div.group-browse table.dataTable tbody td:first-child,
+div.group-browse table.dataTable thead th:first-child {
+  display: block;
+}
+div.group-browse table.dataTable thead th:first-child {
+    border: 0;
+}  
+
 
 /**
  * Footer

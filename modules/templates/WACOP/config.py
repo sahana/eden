@@ -1212,6 +1212,7 @@ def config(settings):
         T = current.T
         db = current.db
         s3db = current.s3db
+        s3 = current.response.s3
 
         # Custom Browse
         from templates.WACOP.controllers import group_Browse, group_Profile, text_filter_formstyle
@@ -1309,6 +1310,24 @@ def config(settings):
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
                        )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            # Override defalt redirects from custom methods
+            if r.component_name == "forum_membership":
+                from gluon.tools import redirect
+                current.session.confirmation = current.response.confirmation
+                redirect(URL(args=[r.id, "custom"]))
+            elif r.method is None and r.representation != "aadata":
+                r.method = "browse"
+
+            return True
+        s3.prep = custom_prep
 
         return attr
 

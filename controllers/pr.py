@@ -426,6 +426,40 @@ def check_duplicates():
 def forum():
     """ RESTful CRUD controller """
 
+    # CRUD pre-process
+    def prep(r):
+        if auth.s3_has_role("ADMIN"):
+            # No restrictions
+            return True
+
+        from s3 import FS
+        if r.id:
+            if r.method == "join":
+                # Only possible for Public Groups
+                filter_ = FS("forum_type") == 1
+            elif r.method == "request":
+                # Only possible for Private Groups
+                filter_ = FS("forum_type") == 2
+            else:
+                # Can only see Public Groups
+                filter_ = FS("forum_type") == 1
+                user = auth.user
+                if user:
+                    # unless the User is a Member of them
+                    filter_ |= FS("forum_membership.person_id$pe_id") == user.pe_id
+        else:
+            # Cannot see Seceret Groups
+            filter_ = FS("forum_type") != 3
+            user = auth.user
+            if user:
+                # unless the User is a Member of them
+                filter_ |= FS("forum_membership.person_id$pe_id") == user.pe_id
+
+        r.resource.add_filter(filter_)
+
+        return True
+    s3.prep = prep
+
     output = s3_rest_controller(rheader = s3db.pr_rheader)
     return output
 
