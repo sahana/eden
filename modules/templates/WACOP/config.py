@@ -425,9 +425,15 @@ def config(settings):
                            )
 
             get_vars = r.get_vars
-            if method == "datalist" and get_vars.get("dashboard"):
-                from templates.WACOP.controllers import dashboard_filter
-                s3.filter = dashboard_filter()
+            if method == "datalist":
+                if get_vars.get("dashboard"):
+                    from templates.WACOP.controllers import dashboard_filter
+                    s3.filter = dashboard_filter()
+                else:
+                    forum_id = get_vars.get("forum")
+                    if forum_id:
+                        from templates.WACOP.controllers import group_filter
+                        s3.filter = group_filter(forum_id)
 
             elif method in ("custom", "dashboard", "filter"):
                 # Filter Widgets
@@ -443,6 +449,9 @@ def config(settings):
                         if k == "dashboard":
                             from templates.WACOP.controllers import dashboard_filter
                             s3.filter = dashboard_filter()
+                        elif k == "forum":
+                            from templates.WACOP.controllers import group_filter
+                            s3.filter = group_filter(v)
                         else:
                             from s3 import FS
                             s3.filter = (FS(k) == v)
@@ -1226,7 +1235,21 @@ def config(settings):
                    method = "custom",
                    action = group_Profile)
 
-        from s3 import S3OptionsFilter, S3TextFilter
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter
+
+        crud_form = S3SQLCustomForm("name",
+                                    "forum_type",
+                                    "comments",
+                                    S3SQLInlineComponent("forum_membership",
+                                         fields = [("", "person_id")],
+                                         label = T("Admin"),
+                                         #multiple = False,
+                                         filterby = dict(field = "admin",
+                                                         options = True,
+                                                         )
+                                         ),
+                                    )
+
         filter_widgets = [S3TextFilter(["name",
                                         "description",
                                         ],
@@ -1286,11 +1309,9 @@ def config(settings):
         personRepresent = pfield.represent
         def admin(row):
             forum_id = row["pr_forum.id"]
-            admin = db(aquery & (ffield == forum_id)).select(pfield,
-                                                             limitby=(0, 1)
-                                                             ).first()
-            if admin:
-                return personRepresent(admin.person_id)
+            admins = db(aquery & (ffield == forum_id)).select(pfield)
+            if admins:
+                return ", ".join([personRepresent(a.person_id) for a in admins])
             else:
                 return NONE
         table.admin = s3_fieldmethod("admin",
@@ -1305,6 +1326,7 @@ def config(settings):
                        ]
 
         s3db.configure("pr_forum",
+                       crud_form = crud_form,
                        extra_fields = ("name",
                                        ),
                        list_fields = list_fields,

@@ -8,6 +8,10 @@
      Hello <span class='group-name'>{{=group.name}}</span> <span class='label radius group_status'>{{=group.forum_type}}</span>
     </h2>
     <p>{{=group.description}}</p>
+   {{if updateable:}}
+    <a href='{{=URL(c="pr", f="forum", args=[forum_id, "update.popup"], vars={"refresh": 1})}}' class='button radius small s3_modal' title='Edit'><i class='fa-pencil fa'></i></a>
+    <a href='{{=URL(c="pr", f="forum", args=[forum_id, "delete"])}}' class='button radius small' title='Delete'><i class='fa-trash fa'></i></a>
+   {{pass}}
    </div>
    <div class='small-12 medium-4 columns text-right'>
     <p class='meta'>
@@ -55,9 +59,9 @@
       {{=create_post_button}}
       {{=filter_form}}
       
-        <!-- Fancy filter tbc (Currently Bookmarks are links between Users <> Event/Incidents...nothing to do with Groups
+        <!-- Fancy filter tbc
         <div class='filter-group'>
-          <h1 class='title'>Bookmarked Events</h1>
+          <h1 class='title'>Shared Events</h1>
 
           <div class='item'>
             <label>
@@ -67,7 +71,7 @@
             <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
             <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
               <li><a href='#'>Go to Event</a></li>
-              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop sharing</a></li>
               <li><a href='#'>Stop notifications</a></li>
             </ul>
           </div>
@@ -80,7 +84,7 @@
             <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
             <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
               <li><a href='#'>Go to Event</a></li>
-              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop sharing</a></li>
               <li><a href='#'>Stop notifications</a></li>
             </ul>
           </div>
@@ -88,7 +92,7 @@
         </div>
 
         <div class='filter-group'>
-          <h1 class='title'>Bookmarked Incidents</h1>
+          <h1 class='title'>Shared Incidents</h1>
 
           <div class='item'>
             <label>
@@ -98,7 +102,7 @@
             <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
             <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
               <li><a href='#'>Go to Incident</a></li>
-              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop sharing</a></li>
               <li><a href='#'>Stop notifications</a></li>
             </ul>
           </div>
@@ -111,7 +115,7 @@
             <a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a>
             <ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
               <li><a href='#'>Go to Incident</a></li>
-              <li><a href='#'>Remove from bookmarks</a></li>
+              <li><a href='#'>Stop sharing</a></li>
               <li><a href='#'>Stop notifications</a></li>
             </ul>
           </div>

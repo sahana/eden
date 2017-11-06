@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3ContentModel",
+           "S3ContentForumModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            "S3ContentOrgGroupModel",
@@ -425,6 +426,7 @@ class S3ContentModel(S3Model):
                        cms_comment = "post_id",
                        cms_post_layer = "post_id",
                        cms_post_module = "post_id",
+                       cms_post_forum = "post_id",
                        cms_post_user = {"name": "bookmark",
                                         "joinby": "post_id",
                                         },
@@ -944,6 +946,32 @@ class S3ContentModel(S3Model):
         output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
         current.response.headers["Content-Type"] = "application/json"
         return output
+
+# =============================================================================
+class S3ContentForumModel(S3Model):
+    """
+        Link Posts to Forums to allow Users to Share posts
+    """
+
+    names = ("cms_post_forum",)
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Forums <> Posts link table
+        #
+        tablename = "cms_post_forum"
+        self.define_table(tablename,
+                          self.cms_post_id(empty = False),
+                          self.pr_forum_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3ContentMapModel(S3Model):

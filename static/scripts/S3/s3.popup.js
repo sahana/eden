@@ -19,6 +19,9 @@ function s3_popup_refresh_caller(popupData) {
     //    refresh this one record
     var refresh = $_GET['refresh'];
     if (typeof refresh != 'undefined') {
+        if (! isNaN(parseInt(refresh))) {
+            self.parent.location.reload(true);
+        }
         // Update DataList/DataTable (if appropriate)
         var selector = self.parent.$('#' + refresh);
         if (selector.hasClass('dl')) {

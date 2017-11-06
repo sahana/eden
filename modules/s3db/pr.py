@@ -2997,15 +2997,15 @@ class PRForumModel(S3Model):
         define_table(tablename,
                      # Instances
                      self.super_link("pe_id", "pr_pentity"),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("forum_type", "integer",
                            default = 1,
                            label = T("Type"),
                            represent = S3Represent(options = pr_forum_types),
                            requires = IS_IN_SET(pr_forum_types, zero=None),
-                           ),
-                     Field("name",
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -3052,6 +3052,11 @@ class PRForumModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_forum_membership = "forum_id",
+                            cms_post = {"link": "cms_post_forum",
+                                        "joinby": "forum_id",
+                                        "key": "post_id",
+                                        "actuate": "replace",
+                                        },
                             )
 
         # Custom Methods
@@ -3139,7 +3144,8 @@ class PRForumModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"pr_forum_id": forum_id,
+                }
 
     # -----------------------------------------------------------------------------
     @staticmethod
