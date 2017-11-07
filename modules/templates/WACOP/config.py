@@ -425,9 +425,15 @@ def config(settings):
                            )
 
             get_vars = r.get_vars
-            if method == "datalist" and get_vars.get("dashboard"):
-                from templates.WACOP.controllers import dashboard_filter
-                s3.filter = dashboard_filter()
+            if method == "datalist":
+                if get_vars.get("dashboard"):
+                    from templates.WACOP.controllers import dashboard_filter
+                    s3.filter = dashboard_filter()
+                else:
+                    forum_id = get_vars.get("forum")
+                    if forum_id:
+                        from templates.WACOP.controllers import group_filter
+                        s3.filter = group_filter(forum_id)
 
             elif method in ("custom", "dashboard", "filter"):
                 # Filter Widgets
@@ -443,6 +449,9 @@ def config(settings):
                         if k == "dashboard":
                             from templates.WACOP.controllers import dashboard_filter
                             s3.filter = dashboard_filter()
+                        elif k == "forum":
+                            from templates.WACOP.controllers import group_filter
+                            s3.filter = group_filter(v)
                         else:
                             from s3 import FS
                             s3.filter = (FS(k) == v)
@@ -1212,6 +1221,7 @@ def config(settings):
         T = current.T
         db = current.db
         s3db = current.s3db
+        s3 = current.response.s3
 
         # Custom Browse
         from templates.WACOP.controllers import group_Browse, group_Profile, text_filter_formstyle
@@ -1225,7 +1235,21 @@ def config(settings):
                    method = "custom",
                    action = group_Profile)
 
-        from s3 import S3OptionsFilter, S3TextFilter
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter
+
+        crud_form = S3SQLCustomForm("name",
+                                    "forum_type",
+                                    "comments",
+                                    S3SQLInlineComponent("forum_membership",
+                                         fields = [("", "person_id")],
+                                         label = T("Admin"),
+                                         #multiple = False,
+                                         filterby = dict(field = "admin",
+                                                         options = True,
+                                                         )
+                                         ),
+                                    )
+
         filter_widgets = [S3TextFilter(["name",
                                         "description",
                                         ],
@@ -1285,11 +1309,9 @@ def config(settings):
         personRepresent = pfield.represent
         def admin(row):
             forum_id = row["pr_forum.id"]
-            admin = db(aquery & (ffield == forum_id)).select(pfield,
-                                                             limitby=(0, 1)
-                                                             ).first()
-            if admin:
-                return personRepresent(admin.person_id)
+            admins = db(aquery & (ffield == forum_id)).select(pfield)
+            if admins:
+                return ", ".join([personRepresent(a.person_id) for a in admins])
             else:
                 return NONE
         table.admin = s3_fieldmethod("admin",
@@ -1304,11 +1326,30 @@ def config(settings):
                        ]
 
         s3db.configure("pr_forum",
+                       crud_form = crud_form,
                        extra_fields = ("name",
                                        ),
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
                        )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            # Override defalt redirects from custom methods
+            if r.component_name == "forum_membership" and r.method is None:
+                from gluon.tools import redirect
+                current.session.confirmation = current.response.confirmation
+                redirect(URL(args=[r.id, "custom"]))
+            elif r.method is None and r.representation != "aadata":
+                r.method = "browse"
+
+            return True
+        s3.prep = custom_prep
 
         return attr
 
@@ -1317,7 +1358,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_forum_membership_resource(r, tablename):
 
-        f = current.s3db.pr_forum_membership.admin
+        s3db = current.s3db
+        f = s3db.pr_forum_membership.admin
         f.readable = f.writable = True
 
         # CRUD strings
@@ -1347,6 +1389,18 @@ def config(settings):
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Person removed from Group"),
                 msg_list_empty = T("This Group has no Members yet"))
+
+        list_fields = [#(T("Name"), "name_click"),
+                       "person_id",
+                       "admin",
+                       "comments",
+                       ]
+
+        s3db.configure(tablename,
+                       extra_fields = ("name",
+                                       ),
+                       list_fields = list_fields,
+                       )
 
     settings.customise_pr_forum_membership_resource = customise_pr_forum_membership_resource
 
@@ -1538,12 +1592,16 @@ def config(settings):
         table = s3db.project_task
 
         # Virtual Fields
-        # Always used from either the Event or Incident context
-        f = r.function
+        fn = r.function
+        if fn == "forum":
+            c = "pr"
+        else:
+            # Used from either the Event or Incident context
+            c = "event"
         record_id = r.id
         def task_name(row):
             return A(row["project_task.name"],
-                     _href = URL(c="event", f=f,
+                     _href = URL(c=c, f=fn,
                                  args=[record_id, "task", row["project_task.id"], "profile"],
                                  ),
                      )
@@ -1558,10 +1616,10 @@ def config(settings):
         etable = s3db.pr_pentity
         ltable = s3db.pr_person_user
         query = (ltable.pe_id == etable.pe_id)
-        set = current.db(query)
+        the_set = current.db(query)
         f = table.pe_id
         f.requires = IS_EMPTY_OR(
-                        IS_ONE_OF(set, "pr_pentity.pe_id",
+                        IS_ONE_OF(the_set, "pr_pentity.pe_id",
                                   f.represent))
 
         # Custom Form

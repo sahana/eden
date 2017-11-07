@@ -97,7 +97,9 @@ class custom_WACOP(S3CRUD):
                    updateable = True,
                    export = False,
                    event_id = None,
+                   forum_id = None,
                    incident_id = None,
+                   actions = None,
                    ajax_vars = None, # Used to be able to differentiate contexts in customise()
                                      # & for filter_defaults
                    dt_init = None,
@@ -177,6 +179,7 @@ class custom_WACOP(S3CRUD):
         if not search:
             dtargs["dt_searching"] = False
 
+        # Action Buttons
         # @ToDo: Permissions
         #messages = current.messages
         #if f in ("event", "incident"):
@@ -198,35 +201,45 @@ class custom_WACOP(S3CRUD):
         #                   args = ["[id]", profile])
         #    delete_url = URL(c=c, f=f,
         #                     args=["[id]", "delete"])
-        # Hide the Action Buttons as we assume that the first column is clickable to open details
-        dtargs["dt_row_actions"] = [{#"label": messages.READ,
-                                     "label": "",
-                                     #"url": read_url,
-                                     "url": "",
-                                    ##"icon": "fa fa-eye",
-                                    # "icon": "fa fa-caret-right",
-                                    # #"_class": "s3_modal",
-                                     },
-                                    # @ToDo: AJAX delete
-                                    #{"label": messages.DELETE,
-                                    # "url": delete_url,
-                                    # "icon": "fa fa-trash",
-                                    # },
-                                    ]
+        if actions is None:
+            # Hide the Action Buttons as we assume that the first column is clickable to open details
+            actions = [{#"label": messages.READ,
+                        "label": "",
+                        #"url": read_url,
+                        "url": "",
+                        ##"icon": "fa fa-eye",
+                        # "icon": "fa fa-caret-right",
+                        # #"_class": "s3_modal",
+                        },
+                        # @ToDo: AJAX delete
+                        #{"label": messages.DELETE,
+                        # "url": delete_url,
+                        # "icon": "fa fa-trash",
+                        # },
+                       ]
+        dtargs["dt_row_actions"] = actions
         # Action Buttons on the right (no longer)
         #dtargs["dt_action_col"] = len(list_fields)
-        # Use Native controller for AJAX  calls
-        #dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
-        #                              representation="aadata")
-        dtargs["dt_ajax_url"] = URL(c = c,
-                                    f = f,
-                                    vars = ajax_vars,
-                                    extension = "aadata",
-                                    )
+
+        if tablename == "pr_forum_membership":
+            # Use Native controller for AJAX calls
+            dtargs["dt_ajax_url"] = URL(c = "pr",
+                                        f = "forum",
+                                        args = [forum_id, "forum_membership"],
+                                        #vars = ajax_vars,
+                                        extension = "aadata",
+                                        )
+        else:
+            # Use Native controller for AJAX calls
+            dtargs["dt_ajax_url"] = URL(c = c,
+                                        f = f,
+                                        vars = ajax_vars,
+                                        extension = "aadata",
+                                        )
 
         datatable = dt.html(totalrows,
                             displayrows,
-                            id=dataTable_id,
+                            id = dataTable_id,
                             **dtargs)
 
         if dt.data:
@@ -249,6 +262,12 @@ class custom_WACOP(S3CRUD):
                               args=[incident_id, "assign.popup"],
                               vars={"refresh": dataTable_id},
                               )
+            elif tablename == "pr_forum_membership":
+                label = T("Add Member")
+                url = URL(c="pr", f="forum",
+                          args=[forum_id, f, "create.popup"],
+                          vars={"refresh": dataTable_id},
+                          )
             else:
                 if event_id:
                     if f == "team":
@@ -622,7 +641,8 @@ class custom_WACOP(S3CRUD):
                     if has_permission("update", etable, record_id):
                         edit = LI(A(ICON("pencil"),
                                     _href=URL(c="event", f="event",
-                                              args=["%s.popup" % record_id, "update"]
+                                              args = ["%s.popup" % record_id, "update"],
+                                              vars = {"refresh": 1},
                                               ),
                                     _title=T("Edit Event"),
                                     _class="s3_modal",
@@ -842,7 +862,12 @@ class custom_WACOP(S3CRUD):
                                                               )
 
     # -------------------------------------------------------------------------
-    def _updates_html(self, r, output, event_id, incident_id, updateable, **attr):
+    def _updates_html(self, r, output,
+                      event_id = None,
+                      incident_id = None,
+                      forum_id = None,
+                      updateable = True,
+                      **attr):
         """
             Create the HTML for the Updates section
 
@@ -868,6 +893,9 @@ class custom_WACOP(S3CRUD):
         elif incident_id:
             resource.add_filter(FS("event_post.incident_id") == incident_id)
             ajax_vars["event_post.incident_id"] = incident_id
+        elif forum_id:
+            resource.add_filter(group_filter(forum_id))
+            ajax_vars["forum"] = forum_id
         elif r.method == "dashboard":
             resource.add_filter(dashboard_filter())
             ajax_vars["dashboard"] = 1
@@ -959,6 +987,11 @@ class custom_WACOP(S3CRUD):
                           args = [incident_id, "post", "create.popup"],
                           vars={"refresh": list_id},
                           )
+            elif forum_id:
+                url = URL(c="pr", f="forum",
+                          args = [forum_id, "post", "create.popup"],
+                          vars={"refresh": list_id},
+                          )
             elif r.method == "dashboard":
                 url = URL(c="cms", f="post",
                           args = ["create.popup"],
@@ -1016,6 +1049,8 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
                                       args="tag_list.json"),
                                   readonly)
         s3.jquery_ready.append(script)
+
+        return numrows
 
     # -------------------------------------------------------------------------
     def _view(self, output, view):
@@ -1174,6 +1209,12 @@ class group_Browse(custom_WACOP):
             @param attr: controller arguments
         """
 
+        from s3 import s3_str
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
         output = {}
 
         # dataTable (& Create button)
@@ -1184,9 +1225,56 @@ class group_Browse(custom_WACOP):
         if customise:
             customise(r, tablename)
 
+        # Lookup person_id of current user
+        ptable = s3db.pr_person
+        person_id = db(ptable.pe_id == current.auth.user.pe_id).select(ptable.id,
+                                                                       limitby = (0, 1)
+                                                                       ).first().id
+
+        # Action Buttons
+        table = r.table
+        mtable = s3db.pr_forum_membership
+        # Groups that the User is a Member of
+        query = (table.deleted == False) & \
+                (table.id == mtable.forum_id) & \
+                (mtable.person_id == person_id) & \
+                (mtable.deleted == False)
+        groups = db(query).select(table.id)
+        groups_member_of = [g.id for g in groups]
+        restrict_l = [str(g) for g in groups_member_of]
+        # Public Groups that the User is not a Member of
+        query = (table.forum_type.belongs((1, 2))) & \
+                (~table.id.belongs(groups_member_of)) & \
+                (table.deleted == False)
+        groups = db(query).select(table.id,
+                                  table.forum_type)
+        restrict_j = [str(g.id) for g in groups if g.forum_type == 1]
+        # Private Groups that the User is not a Member of
+        restrict_r = [str(g.id) for g in groups if g.forum_type == 2]
+
+        actions = [dict(label = s3_str(T("Join")),
+                        url = URL(args=["[id]", "join"]),
+                        _class = "action-btn",
+                        restrict = restrict_j,
+                        ),
+                   dict(label = s3_str(T("Leave")),
+                        url = URL(args = ["[id]", "leave"]),
+                        _class = "action-btn",
+                        restrict = restrict_l,
+                        ),
+                   dict(label = s3_str(T("Request Invite")),
+                        url = URL(args = ["[id]", "request"]),
+                        _class = "action-btn",
+                        restrict = restrict_r,
+                        ),
+                   ]
+
+        resource = r.resource
         self._datatable(output = output,
                         tablename = tablename,
+                        actions = actions,
                         dt_init = dt_init,
+                        resource = resource,
                         search = False,
                         )
 
@@ -1217,7 +1305,7 @@ class group_Browse(custom_WACOP):
                                                  ),
                                    )
 
-        output["filter_form"] = filter_form.html(r.resource, r.get_vars,
+        output["filter_form"] = filter_form.html(resource, r.get_vars,
                                                  target = dataTable_id,
                                                  alias = None,
                                                  )
@@ -1503,7 +1591,6 @@ class event_Profile(custom_WACOP):
         """
 
         event_id = r.id
-        incident_id = None
 
         T = current.T
         auth = current.auth
@@ -1526,7 +1613,8 @@ class event_Profile(custom_WACOP):
         _map, button = self._map("Incidents", filter="~.event_id=%s" % event_id)
 
         # Output
-        output = {"map": _map,
+        output = {"event_id": event_id,
+                  "map": _map,
                   }
 
         # Event Details
@@ -1700,7 +1788,10 @@ class event_Profile(custom_WACOP):
                   )
 
         # Updates DataList
-        self._updates_html(r, output, event_id, incident_id, updateable, **attr)
+        self._updates_html(r, output,
+                           event_id = event_id,
+                           updateable = updateable,
+                           **attr)
 
         self._view(output, "event_profile.html")
 
@@ -1722,7 +1813,72 @@ class group_Profile(custom_WACOP):
             @param attr: controller arguments
         """
 
-        output = {}
+        from s3 import s3_fullname
+
+        db = current.db
+        s3db = current.s3db
+
+        table = r.table
+        record = r.record
+        forum_id = r.id
+
+        updateable = current.auth.s3_has_permission("update", table, record_id=forum_id, c="pr", f="forum")
+
+        output = {"forum_id": forum_id,
+                  "updateable": updateable,
+                  }
+
+        mtable = s3db.pr_forum_membership
+        query = (mtable.forum_id == forum_id) & \
+                (mtable.deleted == False)
+        members = db(query).select(mtable.person_id,
+                                   mtable.admin)
+        admins = [s3_fullname(m.person_id) for m in members if m.admin]
+
+        # Updates DataList
+        numrows = self._updates_html(r, output,
+                                     forum_id = forum_id,
+                                     **attr)
+
+        date_represent = lambda dt: S3DateTime.date_represent(dt,
+                                                              format = "%b %d %Y %H:%M",
+                                                              utc = True,
+                                                              #calendar = calendar,
+                                                              )
+
+        output["group"] = Storage(name = record.name,
+                                  description = record.comments,
+                                  forum_type = table.forum_type.represent(record.forum_type),
+                                  created_on = date_represent(record.created_on),
+                                  modified_on = date_represent(record.modified_on),
+                                  admin = ", ".join(admins),
+                                  members = len(members),
+                                  updates = numrows,
+                                  )
+
+        dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
+
+        # Members dataTable
+        tablename = "pr_forum_membership"
+
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            customise(r, tablename)
+
+        resource = s3db.resource(tablename)
+        resource.add_filter(FS("forum_id") == forum_id)
+
+        self._datatable(output = output,
+                        tablename = tablename,
+                        dt_init = dt_init,
+                        forum_id = forum_id,
+                        resource = resource,
+                        )
+
+        # Tasks dataTable
+        self._tasks_html(r, output,
+                         dt_init = dt_init,
+                         )
 
         self._view(output, "group_profile.html")
 
@@ -2018,8 +2174,10 @@ class incident_Profile(custom_WACOP):
                   )
 
         # Updates DataList
-        event_id = None # Don't pass Event in
-        self._updates_html(r, output, event_id, incident_id, updateable, **attr)
+        self._updates_html(r, output,
+                           incident_id = incident_id,
+                           updateable = updateable,
+                           **attr)
 
         self._view(output, "incident_profile.html")
 
@@ -2114,8 +2272,7 @@ class person_Dashboard(custom_WACOP):
                   )
 
         # Updates DataList
-        event_id = incident_id = None
-        self._updates_html(r, output, event_id, incident_id, True, **attr)
+        self._updates_html(r, output, **attr)
 
         self._view(output, "dashboard.html")
 
@@ -2129,17 +2286,20 @@ def dashboard_filter():
          - Updates linked to Incidents we have Bookmarked
          - Updates linked to Events we have Bookmarked
            (unless that update is also linked to an Incident)
-         - @ToDo: Updates linked to Groups which we are a Member of
+         - Updates linked to Groups which we are a Member of
     """
 
-    user_id = current.auth.user.id
+    db = current.db
+    s3db = current.s3db
+    user = current.auth.user
+    user_id = user.id
 
-    btable = current.s3db.event_bookmark
+    btable = s3db.event_bookmark
     query = (btable.user_id == user_id) & \
             (btable.deleted == False)
-    bookmarks = current.db(query).select(btable.event_id,
-                                         btable.incident_id,
-                                         )
+    bookmarks = db(query).select(btable.event_id,
+                                 btable.incident_id,
+                                 )
     incident_ids = []
     iappend = incident_ids.append
     event_ids = []
@@ -2151,7 +2311,51 @@ def dashboard_filter():
         else:
             eappend(b.event_id)
 
+    ptable = s3db.pr_person
+    mtable = s3db.pr_forum_membership
+    query = (ptable.pe_id == user.pe_id) & \
+            (mtable.person_id == ptable.id) & \
+            (mtable.deleted == False)
+    forums = db(query).select(mtable.forum_id,
+                              )
+    forum_ids = [f.forum_id for f in forums]
+
     filter = (FS("bookmark.user_id") == user_id) | \
+             (FS("post_forum.forum_id").belongs(forum_ids)) | \
+             (FS("incident_post.incident_id").belongs(incident_ids)) | \
+             ((FS("incident_post.event_id").belongs(event_ids)) & \
+              (FS("incident_post.incident_id") == None))
+
+    return filter
+
+# =============================================================================
+def group_filter(forum_id):
+    """
+        Filter Updates for a Group
+         - Updates shared to this Group
+         - Updates linked to Incidents shared to this Group
+         - Updates linked to Events shared to this Group
+           (unless that update is also linked to an Incident)
+    """
+
+    stable = current.s3db.event_forum
+    query = (stable.forum_id == forum_id) & \
+            (stable.deleted == False)
+    shared = current.db(query).select(stable.event_id,
+                                      stable.incident_id,
+                                      )
+    incident_ids = []
+    iappend = incident_ids.append
+    event_ids = []
+    eappend = event_ids.append
+    for s in shared:
+        incident_id = s.incident_id
+        if incident_id is not None:
+            iappend(incident_id)
+        else:
+            eappend(s.event_id)
+
+    filter = (FS("post_forum.forum_id") == forum_id) | \
              (FS("incident_post.incident_id").belongs(incident_ids)) | \
              ((FS("incident_post.event_id").belongs(event_ids)) & \
               (FS("incident_post.incident_id") == None))

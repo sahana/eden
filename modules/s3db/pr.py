@@ -2982,6 +2982,7 @@ class PRForumModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Hard Coded Forum types. Add/Comment entries, but don't remove!
@@ -2996,15 +2997,15 @@ class PRForumModel(S3Model):
         define_table(tablename,
                      # Instances
                      self.super_link("pe_id", "pr_pentity"),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("forum_type", "integer",
                            default = 1,
                            label = T("Type"),
                            represent = S3Represent(options = pr_forum_types),
                            requires = IS_IN_SET(pr_forum_types, zero=None),
-                           ),
-                     Field("name",
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -3051,12 +3052,29 @@ class PRForumModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_forum_membership = "forum_id",
+                            cms_post = {"link": "cms_post_forum",
+                                        "joinby": "forum_id",
+                                        "key": "post_id",
+                                        "actuate": "replace",
+                                        },
                             )
 
-        # Custom Method to Assign People
-        self.set_method("pr", "forum",
-                        method = "assign",
-                        action = pr_AssignMethod(component="forum_membership"))
+        # Custom Methods
+        set_method("pr", "forum",
+                   method = "assign",
+                   action = pr_AssignMethod(component="forum_membership"))
+
+        set_method("pr", "forum",
+                   method = "join",
+                   action = self.pr_forum_join)
+
+        set_method("pr", "forum",
+                   method = "leave",
+                   action = self.pr_forum_leave)
+
+        set_method("pr", "forum",
+                   method = "request",
+                   action = self.pr_forum_request)
 
         # ---------------------------------------------------------------------
         # Forum membership
@@ -3126,7 +3144,180 @@ class PRForumModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"pr_forum_id": forum_id,
+                }
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def pr_forum_join(r, **attr):
+        """
+            Join a (Public) Forum
+
+            S3Method for interactive requests
+        """
+
+        forum_id = r.id
+        if not forum_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+        user = current.auth.user
+        if not user:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        person_id = db(ptable.pe_id == user.pe_id).select(ptable.id,
+                                                          limitby = (0, 1)
+                                                          ).first().id
+
+        ltable = s3db.pr_forum_membership
+        query = (ltable.forum_id == forum_id) & \
+                (ltable.person_id == person_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(forum_id = forum_id,
+                                    person_id = person_id,
+                                    )
+
+        #output = current.xml.json_message(True, 200, current.T("Forum Joined"))
+        #current.response.headers["Content-Type"] = "application/json"
+        #return output
+        current.session.confirmation = current.T("Forum Joined")
+        redirect(URL(args=[r.id, "forum_membership"]))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def pr_forum_leave(r, **attr):
+        """
+            Leave a Forum
+
+            S3Method for interactive requests
+        """
+
+        forum_id = r.id
+        if not forum_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+        user = current.auth.user
+        if not user:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        ltable = s3db.pr_forum_membership
+        query = (ltable.forum_id == forum_id) & \
+                (ltable.person_id == ptable.id) & \
+                (ptable.pe_id == user.pe_id)
+        exists = current.db(query).select(ltable.id,
+                                          ltable.deleted,
+                                          limitby=(0, 1)
+                                          ).first()
+
+        if exists and not exists.deleted:
+            resource = s3db.resource("pr_forum_membership", id=exists.id)
+            success = resource.delete()
+            if not success:
+                current.session.error = resource.error
+                redirect(URL(args=None))
+
+        message = current.T("Forum Left")
+        #output = current.xml.json_message(True, 200, message)
+        #current.response.headers["Content-Type"] = "application/json"
+        #return output
+        current.session.confirmation = message
+        redirect(URL(args=None))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def pr_forum_request(r, **attr):
+        """
+            Request to Join a (Private) Forum
+
+            S3Method for interactive requests
+        """
+
+        forum_id = r.id
+        if not forum_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+        user = current.auth.user
+        if not user:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        person_id = db(ptable.pe_id == user.pe_id).select(ptable.id,
+                                                          limitby = (0, 1)
+                                                          ).first().id
+
+        mtable = s3db.pr_forum_membership
+        query = (mtable.forum_id == forum_id) & \
+                (mtable.person_id == person_id)
+        exists = db(query).select(mtable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            #output = current.xml.json_message(True, 200, current.T("Already a Member"))
+            message = current.T("Already a Member")
+        else:
+            # Send Notification to the Forum Admin(s)
+            from s3 import s3_str
+
+            T = current.T
+
+            forum_name = r.record.name
+            ltable = s3db.pr_person_user
+            utable = db.auth_user
+            query = (mtable.forum_id == forum_id) & \
+                    (mtable.admin == True) & \
+                    (mtable.deleted == False) & \
+                    (mtable.person_id == ptable.id) & \
+                    (ptable.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id)
+            admins = db(query).select(ptable.pe_id,
+                                      utable.language,
+                                      )
+            subject = "User has requested to join Forum %(forum_name)s"
+            url = URL(c="pr", f="forum",
+                      args=[r.id, "forum_membership", "create"],
+                      vars = {"person_id": person_id,
+                              }
+                      )
+            body = "To approve this request, click here: %(url)s"
+            translations = {}
+            languages = list(set([a["auth_user.language"] for a in persons]))
+            for l in languages:
+                translations[l] = {"s": s3_str(T(subject, language = l)) % dict(forum_name = forum_name),
+                                   "b": s3_str(T(body, language = l)) % dict(url = url),
+                                   }
+            send_email = current.msg.send_by_pe_id
+            for a in admins:
+                lang = a.get("auth_user.language")
+                translation = translations[lang]
+                pe_id = a.get("pr_person.pe_id")
+                send_email(pe_id,
+                           subject = translation["s"],
+                           message = translation["b"],
+                           )
+            #output = current.xml.json_message(True, 200, T("Invite Requested"))
+            message = T("Invite Requested")
+
+        #current.response.headers["Content-Type"] = "application/json"
+        #return output
+        current.session.confirmation = message
+        redirect(URL(args=None))
 
 # =============================================================================
 class PRAddressModel(S3Model):

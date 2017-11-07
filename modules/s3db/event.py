@@ -38,6 +38,7 @@ __all__ = ("S3EventModel",
            "S3EventBookmarkModel",
            "S3EventCMSModel",
            "S3EventDCModel",
+           "S3EventForumModel",
            "S3EventHRModel",
            "S3EventTeamModel",
            "S3EventImpactModel",
@@ -2276,7 +2277,7 @@ class S3EventBookmarkModel(S3Model):
         auth = current.auth
 
         # ---------------------------------------------------------------------
-        # Bookamrks: Link table between Users & Events/Incidents
+        # Bookmarks: Link table between Users & Events/Incidents
         tablename = "event_bookmark"
         self.define_table(tablename,
                           self.event_event_id(ondelete = "CASCADE"),
@@ -2423,6 +2424,46 @@ class S3EventDCModel(S3Model):
                   onaccept = lambda form: \
                     set_event_from_incident(form, "event_target"),
                   )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventForumModel(S3Model):
+    """
+        Shares for Events &/or Incidents
+        - the Incident shares do NOT populate the Event's
+    """
+
+    names = ("event_forum",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shares: Link table between Forums & Events/Incidents
+        tablename = "event_forum"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          self.pr_forum_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          *s3_meta_fields())
+
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Share Incident"), # or Event
+        #    title_display = T("Share Details"),
+        #    title_list = T("Shares"),
+        #    title_update = T("Edit Share"),
+        #    label_list_button = T("List Shares"),
+        #    label_delete_button = T("Remove Share for this Incident"),
+        #    msg_record_created = T("Share added"),
+        #    msg_record_modified = T("Share updated"),
+        #    msg_record_deleted = T("Share removed"),
+        #    msg_list_empty = T("No Incidents currently shared"))
 
         # Pass names back to global scope (s3.*)
         return {}
