@@ -1063,10 +1063,18 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
 
         current.menu.options = None
 
+        appname = current.request.application
         s3 = current.response.s3
-        s3.scripts.append("/%s/static/themes/WACOP/js/bookmarks.js" % current.request.application)
-        s3.jquery_ready.append('''S3.wacop_bookmarks()
+        scripts_append = s3.scripts.append
+        jqready_append = s3.jquery_ready.append
+
+        scripts_append("/%s/static/themes/WACOP/js/bookmarks.js" % appname)
+        jqready_append('''S3.wacop_bookmarks()
 S3.redraw_fns.push('wacop_bookmarks')''')
+
+        scripts_append("/%s/static/themes/WACOP/js/shares.js" % appname)
+        jqready_append('''S3.wacop_shares()
+S3.redraw_fns.push('wacop_shares')''')
 
         # System-wide Message
         output["system_wide"] = self._system_wide_html()
@@ -1644,11 +1652,93 @@ class event_Profile(custom_WACOP):
             bookmark["_data-f"] = "event"
             bookmark["_data-i"] = event_id
             # Done globally in _view
-            #script = '''wacop_bookmarks()'''
+            #script = '''S3.wacop_bookmarks()'''
             #s3.jquery_ready.append(script)
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark
+
+        if user:
+            ptable = s3db.pr_person
+            mtable = s3db.pr_forum_membership
+            ftable = s3db.pr_forum
+            query = (ptable.pe_id == user.pe_id) & \
+                    (ptable.id == mtable.person_id) & \
+                    (mtable.forum_id == ftable.id)
+            forums = db(query).select(ftable.id,
+                                      ftable.name)
+            if len(forums):
+                ADMIN = auth.s3_has_role("ADMIN")
+                forum_ids = [f.id for f in forums]
+                ltable = s3db.event_forum
+                query = (ltable.event_id == event_id) & \
+                        (ltable.forum_id.belongs(forum_ids))
+                shares = db(query).select(ltable.id,
+                                          ltable.created_by,
+                                          ).as_dict()
+                share_btn = A(I(_class="fa fa-share-alt",
+                                ),
+                               _href = "#",
+                               _class = "button radius small",
+                               _title = T("Share"),
+                               )
+                share_btn["_data-dropdown"] = "share_event_dropdown"
+                share_btn["_aria-controls"] = "share_event_dropdown"
+                share_btn["_aria-expanded"] = "false"
+
+                dropdown = UL(_id = "share_event_dropdown",
+                              _class = "f-dropdown share",
+                              tabindex = "-1",
+                              )
+                dropdown["_data-dropdown-content"] = ""
+                dropdown["_aria-hidden"] = "true"
+                dropdown["_data-c"] = "event"
+                dropdown["_data-f"] = "event"
+                dropdown["_data-i"] = event_id
+
+                dappend = dropdown.append
+                for f in forums:
+                    forum_id = f.id
+                    checkbox_id = "event_forum_%s" % forum_id
+                    if forum_id in shares:
+                        if ADMIN or shares[forum_id]["created_by"] == user_id:
+                            # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
+                            checkbox = INPUT(value = "on",
+                                             _id = checkbox_id,
+                                             _type = "checkbox",
+                                             _value = forum_id,
+                                             )
+                        else:
+                            # Shared by someone else, so render Checked checkbox which is disabled
+                            checkbox = INPUT(value = "on",
+                                             _disabled = "disabled",
+                                             _id = checkbox_id,
+                                             _type = "checkbox",
+                                             _value = forum_id,
+                                             )
+                    else:
+                        # Not Shared so render empty checkbox
+                        checkbox = INPUT(_id = checkbox_id,
+                                         _type = "checkbox",
+                                         _value = forum_id,
+                                         )
+                    dappend(LI(checkbox,
+                               LABEL(f.name,
+                                     _for = checkbox_id,
+                                     ),
+                               ))
+
+                share_btn = TAG[""](share_btn,
+                                    dropdown,
+                                    )
+                # Done globally in _view
+                #script = '''S3.wacop_shares()'''
+                #s3.jquery_ready.append(script)
+            else:
+                share_btn = ""
+        else:
+            share_btn = ""
+        output["share_btn"] = share_btn
 
         event = Storage()
         record = r.record
@@ -1702,13 +1792,13 @@ class event_Profile(custom_WACOP):
                 (eptable.deleted == False)
         updates = db(query).count()
         event.updates = A("%s %s" % (updates, T("Updates")),
-                            _href = URL(c="event", f="event",
-                                        args = "post.popup",
-                                        vars = {"view": 1},
-                                        ),
-                            _class = "s3_modal",
-                            _title = T("Updates"),
-                            )
+                          _href = URL(c="event", f="event",
+                                      args = "post.popup",
+                                      vars = {"view": 1},
+                                      ),
+                          _class = "s3_modal",
+                          _title = T("Updates"),
+                          )
 
         if record.exercise:
             event.status = T("Testing")
@@ -2029,7 +2119,7 @@ class incident_Profile(custom_WACOP):
             bookmark["_data-f"] = "incident"
             bookmark["_data-i"] = incident_id
             # Done globally in _view
-            #script = '''wacop_bookmarks()'''
+            #script = '''S3.wacop_bookmarks()'''
             #s3.jquery_ready.append(script)
         else:
             bookmark = ""

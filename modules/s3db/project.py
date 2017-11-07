@@ -54,6 +54,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectDRRModel",
            "S3ProjectDRRPPModel",
            "S3ProjectTaskModel",
+           "S3ProjectTaskForumModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
            "project_ActivityRepresent",
@@ -11555,6 +11556,46 @@ class S3ProjectTaskModel(S3Model):
             # Update the Activity
             query = (atable.id == activity_id)
             db(query).update(time_actual=hours)
+
+# =============================================================================
+class S3ProjectTaskForumModel(S3Model):
+    """
+        Shares for Tasks
+    """
+
+    names = ("project_task_forum",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shares: Link table between Forums & Tasks
+        tablename = "project_task_forum"
+        self.define_table(tablename,
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.pr_forum_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          *s3_meta_fields())
+
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Share Task"), #
+        #    title_display = T(" Shared Task Details"),
+        #    title_list = T("Shared Tasks"),
+        #    title_update = T("Edit Shared Task"),
+        #    label_list_button = T("List Shared Tasks"),
+        #    label_delete_button = T("Stop Sharing this Task"),
+        #    msg_record_created = T("Task Shared"),
+        #    msg_record_modified = T("Sharing updated"),
+        #    msg_record_deleted = T("Task no longer shared"),
+        #    msg_list_empty = T("No Tasks currently shared"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):
