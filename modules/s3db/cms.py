@@ -488,6 +488,14 @@ class S3ContentModel(S3Model):
 
         # Custom Methods
         set_method("cms", "post",
+                   method = "add_bookmark",
+                   action = self.cms_add_bookmark)
+
+        set_method("cms", "post",
+                   method = "remove_bookmark",
+                   action = self.cms_remove_bookmark)
+
+        set_method("cms", "post",
                    method = "add_tag",
                    action = self.cms_add_tag)
 
@@ -496,12 +504,12 @@ class S3ContentModel(S3Model):
                    action = self.cms_remove_tag)
 
         set_method("cms", "post",
-                   method = "add_bookmark",
-                   action = self.cms_add_bookmark)
+                   method = "share",
+                   action = self.cms_share)
 
         set_method("cms", "post",
-                   method = "remove_bookmark",
-                   action = self.cms_remove_bookmark)
+                   method = "unshare",
+                   action = self.cms_unshare)
 
         set_method("cms", "post",
                    method = "calendar",
@@ -780,6 +788,79 @@ class S3ContentModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
+    def cms_add_bookmark(r, **attr):
+        """
+            Bookmark a Post
+
+            S3Method for interactive requests
+        """
+
+        post_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not post_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        ltable = db.cms_post_user
+        query = (ltable.post_id == post_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(post_id = post_id,
+                                    user_id = user_id,
+                                    )
+
+        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def cms_remove_bookmark(r, **attr):
+        """
+            Remove a Bookmark for a Post
+
+            S3Method for interactive requests
+        """
+
+        post_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not post_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        ltable = db.cms_post_user
+        query = (ltable.post_id == post_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists and not exists.deleted:
+            resource = current.s3db.resource("cms_post_user", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
     def cms_add_tag(r, **attr):
         """
             Add a Tag to a Post
@@ -874,76 +955,92 @@ class S3ContentModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def cms_add_bookmark(r, **attr):
+    def cms_share(r, **attr):
         """
-            Bookmark a Post
+            Share a Post to a Forum
 
             S3Method for interactive requests
+            - designed to be called via AJAX
         """
 
         post_id = r.id
-        user = current.auth.user
-        user_id = user and user.id
-        if not post_id or not user_id:
+        if not post_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
         db = current.db
-        ltable = db.cms_post_user
+        s3db = current.s3db
+        auth = current.auth
+        forum_id = r.args[2]
+
+        if not auth.s3_has_role("ADMIN"):
+            # Check that user is a member of the forum
+            mtable = s3db.pr_forum_membership
+            ptable = s3db.pr_person
+            query = (ptable.pe_id == auth.user.pe_id) & \
+                    (mtable.person_id == ptable.id)
+            member = db(query).select(mtable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not member:
+                output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
+
+        ltable = s3db.cms_post_forum
         query = (ltable.post_id == post_id) & \
-                (ltable.user_id == user_id)
+                (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  ltable.deleted,
-                                  ltable.deleted_fk,
                                   limitby=(0, 1)
                                   ).first()
-        if exists:
-            link_id = exists.id
-            if exists.deleted:
-                if exists.deleted_fk:
-                    data = json.loads(exists.deleted_fk)
-                    data["deleted"] = False
-                else:
-                    data = dict(deleted=False)
-                db(ltable.id == link_id).update(**data)
-        else:
-            link_id = ltable.insert(post_id = post_id,
-                                    user_id = user_id,
-                                    )
+        if not exists:
+            ltable.insert(post_id = post_id,
+                          forum_id = forum_id,
+                          )
 
-        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
+        output = current.xml.json_message(True, 200, current.T("Post Shared"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def cms_remove_bookmark(r, **attr):
+    def cms_unshare(r, **attr):
         """
-            Remove a Bookmark for a Post
+            Unshare a Post from a Forum
 
             S3Method for interactive requests
+            - designed to be called via AJAX
         """
 
         post_id = r.id
-        user = current.auth.user
-        user_id = user and user.id
-        if not post_id or not user_id:
+        if not post_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
         db = current.db
-        ltable = db.cms_post_user
+        s3db = current.s3db
+        forum_id = r.args[2]
+
+        ltable = s3db.cms_post_forum
         query = (ltable.post_id == post_id) & \
-                (ltable.user_id == user_id)
+                (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  ltable.deleted,
+                                  ltable.created_by,
                                   limitby=(0, 1)
                                   ).first()
-        if exists and not exists.deleted:
-            resource = current.s3db.resource("cms_post_user", id=exists.id)
+        if exists:
+            auth = current.auth
+            if not auth.s3_has_role("ADMIN"):
+                # Check that user is the one that shared the Incident
+                if exists.created_by != auth.user.id:
+                    output = current.xml.json_message(False, 403, current.T("Only the Sharer, or Admin, can Unshare"))
+                    current.response.headers["Content-Type"] = "application/json"
+                    return output
+
+            resource = s3db.resource("cms_post_forum", id=exists.id)
             resource.delete()
 
-        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
+        output = current.xml.json_message(True, 200, current.T("Stopped Sharing Post"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 

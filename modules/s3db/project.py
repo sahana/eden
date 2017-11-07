@@ -10766,6 +10766,14 @@ class S3ProjectTaskModel(S3Model):
 
         # Custom Methods
         set_method("project", "task",
+                   method = "share",
+                   action = self.project_task_share)
+
+        set_method("project", "task",
+                   method = "unshare",
+                   action = self.project_task_unshare)
+
+        set_method("project", "task",
                    method = "dispatch",
                    action = self.project_task_dispatch)
 
@@ -11448,6 +11456,95 @@ class S3ProjectTaskModel(S3Model):
         # Resolve shelter inspection flags linked to this task
         if current.deployment_settings.get_cr_shelter_inspection_tasks():
             s3db.cr_resolve_shelter_flags(task_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_task_share(r, **attr):
+        """
+            Share a Task to a Forum
+
+            S3Method for interactive requests
+            - designed to be called via AJAX
+        """
+
+        task_id = r.id
+        if not task_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+        forum_id = r.args[2]
+
+        if not auth.s3_has_role("ADMIN"):
+            # Check that user is a member of the forum
+            mtable = s3db.pr_forum_membership
+            ptable = s3db.pr_person
+            query = (ptable.pe_id == auth.user.pe_id) & \
+                    (mtable.person_id == ptable.id)
+            member = db(query).select(mtable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not member:
+                output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
+
+        ltable = s3db.project_task_forum
+        query = (ltable.task_id == task_id) & \
+                (ltable.forum_id == forum_id)
+        exists = db(query).select(ltable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not exists:
+            ltable.insert(task_id = task_id,
+                          forum_id = forum_id,
+                          )
+
+        output = current.xml.json_message(True, 200, current.T("Task Shared"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_task_unshare(r, **attr):
+        """
+            Unshare a Task from a Forum
+
+            S3Method for interactive requests
+            - designed to be called via AJAX
+        """
+
+        task_id = r.id
+        if not task_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        forum_id = r.args[2]
+
+        ltable = s3db.project_task_forum
+        query = (ltable.task_id == task_id) & \
+                (ltable.forum_id == forum_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.created_by,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            auth = current.auth
+            if not auth.s3_has_role("ADMIN"):
+                # Check that user is the one that shared the Incident
+                if exists.created_by != auth.user.id:
+                    output = current.xml.json_message(False, 403, current.T("Only the Sharer, or Admin, can Unshare"))
+                    current.response.headers["Content-Type"] = "application/json"
+                    return output
+
+            resource = s3db.resource("project_task_forum", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, current.T("Stopped Sharing Task"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod

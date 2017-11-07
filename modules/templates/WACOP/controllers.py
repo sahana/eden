@@ -1673,9 +1673,9 @@ class event_Profile(custom_WACOP):
                 ltable = s3db.event_forum
                 query = (ltable.event_id == event_id) & \
                         (ltable.forum_id.belongs(forum_ids))
-                shares = db(query).select(ltable.id,
+                shares = db(query).select(ltable.forum_id,
                                           ltable.created_by,
-                                          ).as_dict()
+                                          ).as_dict(key="forum_id")
                 share_btn = A(I(_class="fa fa-share-alt",
                                 ),
                                _href = "#",
@@ -1703,14 +1703,16 @@ class event_Profile(custom_WACOP):
                     if forum_id in shares:
                         if ADMIN or shares[forum_id]["created_by"] == user_id:
                             # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
-                            checkbox = INPUT(value = "on",
+                            checkbox = INPUT(#value = "on",
+                                             _checked = "checked",
                                              _id = checkbox_id,
                                              _type = "checkbox",
                                              _value = forum_id,
                                              )
                         else:
                             # Shared by someone else, so render Checked checkbox which is disabled
-                            checkbox = INPUT(value = "on",
+                            checkbox = INPUT(#value = "on",
+                                             _checked = "checked",
                                              _disabled = "disabled",
                                              _id = checkbox_id,
                                              _type = "checkbox",
@@ -2124,6 +2126,90 @@ class incident_Profile(custom_WACOP):
         else:
             bookmark = ""
         output["bookmark_btn"] = bookmark
+
+        if user:
+            ptable = s3db.pr_person
+            mtable = s3db.pr_forum_membership
+            ftable = s3db.pr_forum
+            query = (ptable.pe_id == user.pe_id) & \
+                    (ptable.id == mtable.person_id) & \
+                    (mtable.forum_id == ftable.id)
+            forums = db(query).select(ftable.id,
+                                      ftable.name)
+            if len(forums):
+                ADMIN = auth.s3_has_role("ADMIN")
+                forum_ids = [f.id for f in forums]
+                ltable = s3db.event_forum
+                query = (ltable.incident_id == incident_id) & \
+                        (ltable.forum_id.belongs(forum_ids))
+                shares = db(query).select(ltable.forum_id,
+                                          ltable.created_by,
+                                          ).as_dict(key="forum_id")
+                share_btn = A(I(_class="fa fa-share-alt",
+                                ),
+                               _href = "#",
+                               _class = "button radius small",
+                               _title = T("Share"),
+                               )
+                share_btn["_data-dropdown"] = "share_incident_dropdown"
+                share_btn["_aria-controls"] = "share_incident_dropdown"
+                share_btn["_aria-expanded"] = "false"
+
+                dropdown = UL(_id = "share_incident_dropdown",
+                              _class = "f-dropdown share",
+                              tabindex = "-1",
+                              )
+                dropdown["_data-dropdown-content"] = ""
+                dropdown["_aria-hidden"] = "true"
+                dropdown["_data-c"] = "event"
+                dropdown["_data-f"] = "incident"
+                dropdown["_data-i"] = incident_id
+
+                dappend = dropdown.append
+                for f in forums:
+                    forum_id = f.id
+                    checkbox_id = "incident_forum_%s" % forum_id
+                    if forum_id in shares:
+                        if ADMIN or shares[forum_id]["created_by"] == user_id:
+                            # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
+                            checkbox = INPUT(#value = "on",
+                                             _checked = "checked",
+                                             _id = checkbox_id,
+                                             _type = "checkbox",
+                                             _value = forum_id,
+                                             )
+                        else:
+                            # Shared by someone else, so render Checked checkbox which is disabled
+                            checkbox = INPUT(#value = "on",
+                                             _checked = "checked",
+                                             _disabled = "disabled",
+                                             _id = checkbox_id,
+                                             _type = "checkbox",
+                                             _value = forum_id,
+                                             )
+                    else:
+                        # Not Shared so render empty checkbox
+                        checkbox = INPUT(_id = checkbox_id,
+                                         _type = "checkbox",
+                                         _value = forum_id,
+                                         )
+                    dappend(LI(checkbox,
+                               LABEL(f.name,
+                                     _for = checkbox_id,
+                                     ),
+                               ))
+
+                share_btn = TAG[""](share_btn,
+                                    dropdown,
+                                    )
+                # Done globally in _view
+                #script = '''S3.wacop_shares()'''
+                #s3.jquery_ready.append(script)
+            else:
+                share_btn = ""
+        else:
+            share_btn = ""
+        output["share_btn"] = share_btn
 
         # Is this Incident part of an Event?
         event_id = record.event_id
@@ -2630,28 +2716,28 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                       ),
                     _class="item",
                     ),
-                 LI(A(ICON("flag"), # @ToDo: Use flag-alt if not flagged & flag if already flagged (like for bookmarks)
-                      SPAN("flag this",
-                           _class = "show-for-sr",
-                           ),
-                      _href="#",
-                      _title=T("Flag"),
-                      ),
-                    _class="item",
-                    ),
+                 #LI(A(ICON("flag"), # @ToDo: Use flag-alt if not flagged & flag if already flagged (like for bookmarks)
+                 #     SPAN("flag this",
+                 #          _class = "show-for-sr",
+                 #          ),
+                 #     _href="#",
+                 #     _title=T("Flag"),
+                 #     ),
+                 #   _class="item",
+                 #   ),
                  LI(bookmark,
                     _class="item",
                     ),
-                 LI(A(I(_class="fa fa-users",
-                        ),
-                      SPAN("make public",
-                           _class = "show-for-sr",
-                           ),
-                      _href="#",
-                      _title=T("Make Public"),
-                      ),
-                    _class="item",
-                    ),
+                 #LI(A(I(_class="fa fa-users",
+                 #       ),
+                 #     SPAN("make public",
+                 #          _class = "show-for-sr",
+                 #          ),
+                 #     _href="#",
+                 #     _title=T("Make Public"),
+                 #     ),
+                 #   _class="item",
+                 #   ),
                  LI(edit_btn,
                     _class="item",
                     ),
