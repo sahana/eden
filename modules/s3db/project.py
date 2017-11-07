@@ -10812,6 +10812,8 @@ class S3ProjectTaskModel(S3Model):
                        event_task = {"name": "incident",
                                      "joinby": "task_id",
                                      },
+                       # Forums
+                       project_task_forum = "task_id",
                        # Milestones
                        project_milestone = {"link": "project_task_milestone",
                                             "joinby": "task_id",

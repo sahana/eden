@@ -3473,9 +3473,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
             for the real-input JSON
         """
 
-        if "filterby" in self.options:
-            filterby = self.options["filterby"]
-        else:
+        filterby = self.options.get("filterby")
+        if filterby is None:
             return None
 
         if not isinstance(filterby, (list, tuple)):
@@ -3527,6 +3526,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         field = table[fieldname]
 
         filterby = self.options["filterby"]
+        if filterby is None:
+            return None
         if not isinstance(filterby, (list, tuple)):
             filterby = [filterby]
 

@@ -674,49 +674,6 @@ def config(settings):
                 f = s3db.event_event.event_type_id
                 f.readable = f.writable = False
 
-            elif cname == "task":
-                from gluon import IS_EMPTY_OR
-                from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
-                itable = s3db.event_incident
-                query = (itable.event_id == r.id) & \
-                        (itable.closed == False) & \
-                        (itable.deleted == False)
-                set = current.db(query)
-                f = s3db.event_task.incident_id
-                f.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(set, "event_incident.id",
-                                          f.represent,
-                                          orderby="event_incident.name",
-                                          sort=True))
-                crud_form = S3SQLCustomForm(
-                    S3SQLInlineComponent("incident",
-                                         fields = [("", "incident_id")],
-                                         label = T("Incident"),
-                                         multiple = False,
-                                         filterby = dict(field = "event_id",
-                                                         options = r.id,
-                                                         )
-                                         ),
-                    "name",
-                    "description",
-                    "source",
-                    "priority",
-                    "pe_id",
-                    "date_due",
-                    "status",
-                    "comments",
-                    S3SQLInlineComponent("document",
-                                         name = "file",
-                                         label = T("Files"),
-                                         fields = [("", "file"),
-                                                   #"comments",
-                                                   ],
-                                         ),
-                                    
-                    )
-                r.component.configure(crud_form = crud_form,
-                                      )
-                
             elif r.representation == "popup" and r.get_vars.get("view"):
                 # Popups for lists in Parent Event of Incident Screen or Event Profile header
                 # No Title since this is on the Popup
@@ -1588,6 +1545,7 @@ def config(settings):
                 from s3 import FS
                 current.response.s3.filter = (FS(k) == v)
 
+        db = current.db
         s3db = current.s3db
         table = s3db.project_task
 
@@ -1615,30 +1573,87 @@ def config(settings):
         # Assignee must be a System User
         etable = s3db.pr_pentity
         ltable = s3db.pr_person_user
-        query = (ltable.pe_id == etable.pe_id)
-        the_set = current.db(query)
+        the_set = db(ltable.pe_id == etable.pe_id)
         f = table.pe_id
         f.requires = IS_EMPTY_OR(
                         IS_ONE_OF(the_set, "pr_pentity.pe_id",
                                   f.represent))
 
         # Custom Form
-        crud_form = S3SQLCustomForm("name",
-                                    "description",
-                                    "source",
-                                    "priority",
-                                    "pe_id",
-                                    "date_due",
-                                    "status",
-                                    "comments",
-                                    S3SQLInlineComponent("document",
-                                                         name = "file",
-                                                         label = T("Files"),
-                                                         fields = [("", "file"),
-                                                                   #"comments",
-                                                                   ],
-                                                         ),
-                                    )
+        crud_fields = ["name",
+                       "description",
+                       "source",
+                       "priority",
+                       "pe_id",
+                       "date_due",
+                       "status",
+                       "comments",
+                       S3SQLInlineComponent("document",
+                                            name = "file",
+                                            label = T("Files"),
+                                            fields = [("", "file"),
+                                                      #"comments",
+                                                      ],
+                                            ),
+                       ]
+
+        filterby = None
+        if r.tablename != "pr_forum":
+            auth = current.auth
+            ADMIN = auth.s3_has_role("ADMIN")
+            if not ADMIN:
+                # Can only Share to Groups that the User is a Member of
+                ptable = s3db.pr_person
+                mtable = s3db.pr_forum_membership
+                ftable = s3db.pr_forum
+                query = (ptable.pe_id == auth.user.pe_id) & \
+                        (ptable.id == mtable.person_id) & \
+                        (mtable.forum_id == ftable.id)
+                forums = db(query).select(ftable.id,
+                                          ftable.name)
+                forum_ids = [f.id for f in forums]
+                filterby = dict(field = "forum_id",
+                                options = forum_ids,
+                                )
+                
+            crud_fields.insert(-1,
+                               S3SQLInlineComponent("task_forum",
+                                                    name = "forum",
+                                                    label = T("Share to Group"),
+                                                    fields = [("", "forum_id"),
+                                                              ],
+                                                    filterby = filterby,
+                                                    ))
+
+            if r.tablename == "event_event":
+                # Can only link to Incidents within this Event
+                itable = s3db.event_incident
+                query = (itable.event_id == r.id) & \
+                        (itable.closed == False) & \
+                        (itable.deleted == False)
+                the_set = db(query)
+                f = s3db.event_task.incident_id
+                f.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(the_set, "event_incident.id",
+                                          f.represent,
+                                          orderby="event_incident.name",
+                                          sort=True))
+                filterby = dict(field = "event_id",
+                                options = r.id,
+                                )
+            else:
+                filterby = None
+
+        if r.tablename != "event_incident":
+            crud_fields.insert(0,
+                               S3SQLInlineComponent("incident",
+                                                    fields = [("", "incident_id")],
+                                                    label = T("Incident"),
+                                                    multiple = False,
+                                                    filterby = filterby,
+                                                    ))
+            
+        crud_form = S3SQLCustomForm(*crud_fields)
                                     
         # Filters
         project_task_priority_opts = settings.get_project_task_priority_opts()

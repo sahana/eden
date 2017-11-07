@@ -137,6 +137,13 @@ class custom_WACOP(S3CRUD):
             else:
                 resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
                 ajax_vars["event_%s.incident_id" % f] = incident_id
+        elif forum_id:
+            if tablename == "pr_forum_membership":
+                resource.add_filter(FS("forum_id") == forum_id)
+                ajax_vars["~.forum_id"] = forum_id
+            elif tablename == "project_task":
+                resource.add_filter(FS("task_forum.forum_id") == forum_id)
+                ajax_vars["task_forum.forum_id"] = forum_id
 
         dataTable_id = "custom-list-%s" % tablename
 
@@ -281,6 +288,11 @@ class custom_WACOP(S3CRUD):
                         f = "group"
                     url = URL(c="event", f="incident",
                               args=[incident_id, f, "create.popup"],
+                              vars={"refresh": dataTable_id},
+                              )
+                elif forum_id:
+                    url = URL(c="pr", f="forum",
+                              args=[forum_id, f, "create.popup"],
                               vars={"refresh": dataTable_id},
                               )
                 else:
@@ -789,6 +801,7 @@ class custom_WACOP(S3CRUD):
                     updateable = True,
                     event_id = None,
                     incident_id = None,
+                    forum_id = None,
                     dt_init = None,
                     ):
         """
@@ -813,6 +826,10 @@ class custom_WACOP(S3CRUD):
             # Done by _datatable
             #resource.add_filter(FS("event_task.incident_id") == incident_id)
             ajax_vars["event_task.incident_id"] = incident_id
+        elif forum_id:
+            # Done by _datatable
+            #resource.add_filter(FS("task_forum.forum_id") == forum_id)
+            ajax_vars["task_forum.forum_id"] = forum_id
         ajaxurl = URL(c="project", f="task", args="datatable",
                       vars=ajax_vars, extension="aadata")
 
@@ -828,6 +845,7 @@ class custom_WACOP(S3CRUD):
                         updateable = updateable,
                         event_id = event_id,
                         incident_id = incident_id,
+                        forum_id = forum_id,
                         ajax_vars = default_filters,
                         dt_init = dt_init,
                         resource = resource,
@@ -1703,16 +1721,14 @@ class event_Profile(custom_WACOP):
                     if forum_id in shares:
                         if ADMIN or shares[forum_id]["created_by"] == user_id:
                             # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
-                            checkbox = INPUT(#value = "on",
-                                             _checked = "checked",
+                            checkbox = INPUT(_checked = "checked",
                                              _id = checkbox_id,
                                              _type = "checkbox",
                                              _value = forum_id,
                                              )
                         else:
                             # Shared by someone else, so render Checked checkbox which is disabled
-                            checkbox = INPUT(#value = "on",
-                                             _checked = "checked",
+                            checkbox = INPUT(_checked = "checked",
                                              _disabled = "disabled",
                                              _id = checkbox_id,
                                              _type = "checkbox",
@@ -1907,9 +1923,6 @@ class group_Profile(custom_WACOP):
 
         from s3 import s3_fullname
 
-        db = current.db
-        s3db = current.s3db
-
         table = r.table
         record = r.record
         forum_id = r.id
@@ -1920,11 +1933,11 @@ class group_Profile(custom_WACOP):
                   "updateable": updateable,
                   }
 
-        mtable = s3db.pr_forum_membership
+        mtable = current.s3db.pr_forum_membership
         query = (mtable.forum_id == forum_id) & \
                 (mtable.deleted == False)
-        members = db(query).select(mtable.person_id,
-                                   mtable.admin)
+        members = current.db(query).select(mtable.person_id,
+                                           mtable.admin)
         admins = [s3_fullname(m.person_id) for m in members if m.admin]
 
         # Updates DataList
@@ -1957,19 +1970,16 @@ class group_Profile(custom_WACOP):
         if customise:
             customise(r, tablename)
 
-        resource = s3db.resource(tablename)
-        resource.add_filter(FS("forum_id") == forum_id)
-
         self._datatable(output = output,
                         tablename = tablename,
                         dt_init = dt_init,
                         forum_id = forum_id,
-                        resource = resource,
                         )
 
         # Tasks dataTable
         self._tasks_html(r, output,
                          dt_init = dt_init,
+                         forum_id = forum_id,
                          )
 
         self._view(output, "group_profile.html")
@@ -2172,16 +2182,14 @@ class incident_Profile(custom_WACOP):
                     if forum_id in shares:
                         if ADMIN or shares[forum_id]["created_by"] == user_id:
                             # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
-                            checkbox = INPUT(#value = "on",
-                                             _checked = "checked",
+                            checkbox = INPUT(_checked = "checked",
                                              _id = checkbox_id,
                                              _type = "checkbox",
                                              _value = forum_id,
                                              )
                         else:
                             # Shared by someone else, so render Checked checkbox which is disabled
-                            checkbox = INPUT(#value = "on",
-                                             _checked = "checked",
+                            checkbox = INPUT(_checked = "checked",
                                              _disabled = "disabled",
                                              _id = checkbox_id,
                                              _type = "checkbox",
@@ -2461,7 +2469,7 @@ def dashboard_filter():
          - Updates we have Bookmarked
          - Updates linked to Incidents we have Bookmarked
          - Updates linked to Events we have Bookmarked
-           (unless that update is also linked to an Incident)
+           #(unless that update is also linked to an Incident)
          - Updates linked to Groups which we are a Member of
     """
 
@@ -2499,8 +2507,9 @@ def dashboard_filter():
     filter = (FS("bookmark.user_id") == user_id) | \
              (FS("post_forum.forum_id").belongs(forum_ids)) | \
              (FS("incident_post.incident_id").belongs(incident_ids)) | \
-             ((FS("incident_post.event_id").belongs(event_ids)) & \
-              (FS("incident_post.incident_id") == None))
+             (FS("incident_post.event_id").belongs(event_ids))
+             #((FS("incident_post.event_id").belongs(event_ids)) & \
+             # (FS("incident_post.incident_id") == None))
 
     return filter
 
@@ -2511,7 +2520,7 @@ def group_filter(forum_id):
          - Updates shared to this Group
          - Updates linked to Incidents shared to this Group
          - Updates linked to Events shared to this Group
-           (unless that update is also linked to an Incident)
+           #(unless that update is also linked to an Incident)
     """
 
     stable = current.s3db.event_forum
@@ -2533,8 +2542,9 @@ def group_filter(forum_id):
 
     filter = (FS("post_forum.forum_id") == forum_id) | \
              (FS("incident_post.incident_id").belongs(incident_ids)) | \
-             ((FS("incident_post.event_id").belongs(event_ids)) & \
-              (FS("incident_post.incident_id") == None))
+             (FS("incident_post.event_id").belongs(event_ids))
+             #((FS("incident_post.event_id").belongs(event_ids)) & \
+             # (FS("incident_post.incident_id") == None))
 
     return filter
 

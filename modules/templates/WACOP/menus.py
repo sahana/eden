@@ -52,6 +52,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Incidents", c="event", f="incident", m="browse"),
                 MM("Events", c="event", f="event", m="browse"),
                 MM("Resources", c="pr", f="group", m="browse"),
+                MM("Groups", c="pr", f="forum", m="browse"),
                 MM("More", link=False)(
                    MM("Fire Stations", c="fire", f="station"),
                    MM("Police Stations", c="police", f="station"),
