@@ -74,7 +74,6 @@ class S3Notifications(object):
                 row.update_record(locked=True)
                 async("notify_notify", args=[row.id])
             message = "%s notifications scheduled." % len(subscriptions)
-            current.db.commit()
         else:
             message = "No notifications to schedule."
 

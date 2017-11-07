@@ -389,8 +389,10 @@ if has_module("msg"):
         """
         if user_id:
             auth.s3_impersonate(user_id)
-        notify = s3base.S3Notifications()
-        return notify.check_subscriptions()
+
+        result = s3base.S3Notifications().check_subscriptions()
+        db.commit()
+        return result
 
     tasks["notify_check_subscriptions"] = notify_check_subscriptions
 
