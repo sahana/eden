@@ -1684,7 +1684,8 @@ class event_Profile(custom_WACOP):
                     (ptable.id == mtable.person_id) & \
                     (mtable.forum_id == ftable.id)
             forums = db(query).select(ftable.id,
-                                      ftable.name)
+                                      ftable.name,
+                                      cache = s3db.cache)
             if len(forums):
                 ADMIN = auth.s3_has_role("ADMIN")
                 forum_ids = [f.id for f in forums]
@@ -1694,8 +1695,7 @@ class event_Profile(custom_WACOP):
                 shares = db(query).select(ltable.forum_id,
                                           ltable.created_by,
                                           ).as_dict(key="forum_id")
-                share_btn = A(I(_class="fa fa-share-alt",
-                                ),
+                share_btn = A(ICON("share"),
                                _href = "#",
                                _class = "button radius small",
                                _title = T("Share"),
@@ -2145,7 +2145,8 @@ class incident_Profile(custom_WACOP):
                     (ptable.id == mtable.person_id) & \
                     (mtable.forum_id == ftable.id)
             forums = db(query).select(ftable.id,
-                                      ftable.name)
+                                      ftable.name,
+                                      cache = s3db.cache)
             if len(forums):
                 ADMIN = auth.s3_has_role("ADMIN")
                 forum_ids = [f.id for f in forums]
@@ -2155,8 +2156,7 @@ class incident_Profile(custom_WACOP):
                 shares = db(query).select(ltable.forum_id,
                                           ltable.created_by,
                                           ).as_dict(key="forum_id")
-                share_btn = A(I(_class="fa fa-share-alt",
-                                ),
+                share_btn = A(ICON("share"),
                                _href = "#",
                                _class = "button radius small",
                                _title = T("Share"),
@@ -2648,8 +2648,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         delete_btn = ""
 
-    user = current.auth.user
+    # Bookmarks
+    auth = current.auth
+    user = auth.user
     if user: #and settings.get_cms_bookmarks():
+        # @ToDo: Bulk lookup
         ltable = s3db.cms_post_user
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)
@@ -2677,6 +2680,89 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         bookmark["_data-i"] = record_id
     else:
         bookmark = ""
+
+    # Shares
+    if user:
+        ptable = s3db.pr_person
+        mtable = s3db.pr_forum_membership
+        ftable = s3db.pr_forum
+        query = (ptable.pe_id == user.pe_id) & \
+                (ptable.id == mtable.person_id) & \
+                (mtable.forum_id == ftable.id)
+        forums = db(query).select(ftable.id,
+                                  ftable.name,
+                                  cache = s3db.cache)
+        if len(forums):
+            ADMIN = auth.s3_has_role("ADMIN")
+            forum_ids = [f.id for f in forums]
+            ltable = s3db.cms_post_forum
+            query = (ltable.post_id == record_id) & \
+                    (ltable.forum_id.belongs(forum_ids))
+            shares = db(query).select(ltable.forum_id,
+                                      ltable.created_by,
+                                      ).as_dict(key="forum_id")
+            share_btn = A(ICON("share"),
+                           _href = "#",
+                           _class = "button radius small",
+                           _title = T("Share"),
+                           )
+            dropdown_id = "share_post_dropdown_%s" % record_id
+            share_btn["_data-dropdown"] = dropdown_id
+            share_btn["_aria-controls"] = dropdown_id
+            share_btn["_aria-expanded"] = "false"
+
+            dropdown = UL(_id = dropdown_id,
+                          _class = "f-dropdown share",
+                          tabindex = "-1",
+                          )
+            dropdown["_data-dropdown-content"] = ""
+            dropdown["_aria-hidden"] = "true"
+            dropdown["_data-c"] = "cms"
+            dropdown["_data-f"] = "post"
+            dropdown["_data-i"] = record_id
+
+            dappend = dropdown.append
+            for f in forums:
+                forum_id = f.id
+                checkbox_id = "post_%s_forum_%s" % (record_id, forum_id)
+                if forum_id in shares:
+                    if ADMIN or shares[forum_id]["created_by"] == user_id:
+                        # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
+                        checkbox = INPUT(_checked = "checked",
+                                         _id = checkbox_id,
+                                         _type = "checkbox",
+                                         _value = forum_id,
+                                         )
+                    else:
+                        # Shared by someone else, so render Checked checkbox which is disabled
+                        checkbox = INPUT(_checked = "checked",
+                                         _disabled = "disabled",
+                                         _id = checkbox_id,
+                                         _type = "checkbox",
+                                         _value = forum_id,
+                                         )
+                else:
+                    # Not Shared so render empty checkbox
+                    checkbox = INPUT(_id = checkbox_id,
+                                     _type = "checkbox",
+                                     _value = forum_id,
+                                     )
+                dappend(LI(checkbox,
+                           LABEL(f.name,
+                                 _for = checkbox_id,
+                                 ),
+                           ))
+
+            share_btn = TAG[""](share_btn,
+                                dropdown,
+                                )
+            # Done globally in _view
+            #script = '''S3.wacop_shares()'''
+            #s3.jquery_ready.append(script)
+        else:
+            share_btn = ""
+    else:
+        share_btn = ""
 
     # Dropdown of available documents
     documents = raw["doc_document.file"]
@@ -2717,13 +2803,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     divider = LI("|")
     divider["_aria-hidden"] = "true"
 
-    toolbar = UL(LI(A(ICON("share"),
-                      SPAN("share this",
-                           _class = "show-for-sr",
-                           ),
-                      _href="#",
-                      _title="Share",
-                      ),
+    toolbar = UL(LI(share_btn,
                     _class="item",
                     ),
                  #LI(A(ICON("flag"), # @ToDo: Use flag-alt if not flagged & flag if already flagged (like for bookmarks)
