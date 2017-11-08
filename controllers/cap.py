@@ -1407,6 +1407,16 @@ def notify_approver():
                 subject = "%s: Alert Approval Required" % settings.get_system_name_short()
                 url = "%s%s" % (settings.get_base_public_url(),
                                 URL(c="cap", f="alert", args=[alert_id, "review"]))
+                try:
+                    from pyshorteners import Shortener
+                except ImportError:
+                    pass
+                else:
+                    try:
+                        url = s3_str(Shortener('Tinyurl', timeout=3).short(url))
+                    except:
+                        pass
+                        
                 message = """
 Hello Approver,
 %(full_name)s has created the alert message.
