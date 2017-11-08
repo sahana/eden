@@ -39,3 +39,5 @@ PyYAML>=3.11
 boto>=2.32.1
 # Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
 pyparsing>=2.0.1
+# Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)
+#pyshorteners>=0.6.1
