@@ -1149,16 +1149,17 @@ def config(settings):
 
         table = current.s3db.hrm_course
         auth = current.auth
-        has_role = auth.s3_has_role
-        if has_role("ADMIN"):
+        if auth.s3_has_role("ADMIN"):
             # See all Courses
-            current.response.s3.filter = (table.id > 0)
-        elif has_role("training_coordinator") or has_role("training_assistant"):
+            pass
+        elif auth.s3_has_roles(("training_coordinator",
+                                "training_assistant",
+                                )):
             # Only show this Center's courses
             current.response.s3.filter = (table.organisation_id == auth.user.organisation_id) | (table.organisation_id == None)
         else:
-            # See all Courses
-            current.response.s3.filter = (table.id > 0)
+            # See NS Courses
+            current.response.s3.filter = (table.organisation_id == auth.root_org()) | (table.organisation_id == None)
 
         return attr
 
@@ -1179,49 +1180,47 @@ def config(settings):
         f = table.code
         f.requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "hrm_course.code"))
 
-        f = table.organisation_id
-        f.label = T("Training Center")
-        f.comment = False # Don't create here
-        org_represent = s3db.org_OrganisationRepresent(parent=False)
-        f.represent = org_represent
+        if auth.s3_has_roles(("training_coordinator",
+                              "training_assistant",
+                              )):
+            f = table.organisation_id
+            f.label = T("Training Center")
+            f.comment = False # Don't create here
+            org_represent = s3db.org_OrganisationRepresent(parent=False)
+            f.represent = org_represent
 
-        list_fields = ["organisation_id",
-                       "code",
+        list_fields = ["code",
                        "name",
-                       #(T("Sectors"), "course_sector.sector_id"),
                        ]
 
         has_role = auth.s3_has_role
         if has_role("ADMIN"):
+            table.organisation_id.label = T("National Society / Training Center")
+            list_fields.insert(0, "organisation_id")
             #f.readable = f.writable = True
-            ttable = s3db.org_organisation_type
-            try:
-                type_id = db(ttable.name == "Training Center").select(ttable.id,
-                                                                      limitby=(0, 1),
-                                                                      ).first().id
-            except:
-                # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-                pass
-            else:
-                ltable = s3db.org_organisation_organisation_type
-                rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
-                filter_opts = [row.organisation_id for row in rows]
+            #ttable = s3db.org_organisation_type
+            #try:
+            #    type_id = db(ttable.name == "Training Center").select(ttable.id,
+            #                                                          limitby=(0, 1),
+            #                                                          ).first().id
+            #except:
+            #    # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            #    pass
+            #else:
+            #    ltable = s3db.org_organisation_organisation_type
+            #    rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
+            #    filter_opts = [row.organisation_id for row in rows]
 
-                f.requires = IS_ONE_OF(db, "org_organisation.id",
-                                       org_represent,
-                                       orderby = "org_organisation.name",
-                                       sort = True,
-                                       filterby = "id",
-                                       filter_opts = filter_opts,
-                                       )
+            #    f.requires = IS_ONE_OF(db, "org_organisation.id",
+            #                           org_represent,
+            #                           orderby = "org_organisation.name",
+            #                           sort = True,
+            #                           filterby = "id",
+            #                           filter_opts = filter_opts,
+            #                           )
 
         elif has_role("training_coordinator"):
             f.default = auth.user.organisation_id
-            #organisation_id = auth.user.organisation_id
-            #f.default = organisation_id
-            # Too late to do this here
-            #current.response.s3.filter = (table.organisation_id == organisation_id) | (table.organisation_id == None)
-            list_fields.pop(0)
 
         crud_form = S3SQLCustomForm("organisation_id",
                                     "code",
@@ -2773,6 +2772,14 @@ Thank you"""
 
                     resource = r.resource
                     table = resource.table
+
+                    if r.function == "training_center":
+                        auth = current.auth
+                        # See NS Training Centers only
+                        resource.add_filter(table.root_organisation == auth.root_org())
+
+                        if not auth.s3_has_role("ORG_ADMIN"):
+                            resource.configure(insertable = False)
 
                     type_label = T("Type")
 
