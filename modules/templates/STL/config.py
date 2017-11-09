@@ -186,6 +186,11 @@ def config(settings):
 
     settings.ui.hierarchy_cascade_option_in_tree = False
 
+    # Increase timeout on AJAX reports (ms)
+    settings.ui.report_timeout = 600000 # 10 mins, same as the webserver
+    # Increase the timeout on Report auto-submission
+    settings.ui.report_auto_submit = 1200 # 1.2s
+
     # =========================================================================
     # DVR Case Management
     #
