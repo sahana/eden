@@ -2,7 +2,7 @@
 S3.wacop_comments = function() {
     var url = S3.Ap.concat('/cms/comment.s3json');
     $('.add-comment').click(function(e) {
-        $this = $(this);
+        var $this = $(this);
         var list_id = $this.data('l'),
             record_id = $this.data('i'),
             card_selector = '#' + list_id + '-' + record_id

@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 {
+'Create Forum': 'Crear Foro',
+'Forum Details': 'Detalles del Foro',
+'Forums': 'Foros',
+'Edit Forum': 'Editar Foro',
+'List Forums': 'Listar Foros',
+'Delete Forum': 'Eliminar Foro',
+'Forum added': 'Foro Agregado',
+'Forum updated': 'Foro Actualizado',
+'Forum deleted': 'Foro Eliminado',
+'No Forums currently registered': 'No hay Foros actualmente registrados',
+'Select All': 'Seleccionar Todos',
 "'Cancel' will indicate an asset log entry did not occur": "'Cancelar' indicará que no se ha producido una entrada de registro de activo",
 "'Sounds-like' name search allowing search even the spelling of the name is not known exactly": "La búsqueda de nombres 'Suena como' permite buscar aún si la ortografía del nombre no se conoce con exactitud",
 "A location that specifies the geographic area for this region. This can be a location from the location hierarchy, or a 'group location', or a location that has a boundary for the area.": "Una ubicación que especifica el área geográfica para esta región. Esto puede ser una ubicación en la jerarquía de la ubicación, o una 'ubicación de grupo', o un lugar que tiene un límite para el área.",

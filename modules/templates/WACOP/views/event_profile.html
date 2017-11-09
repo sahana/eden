@@ -5,7 +5,7 @@
   <div class='callout-left'>
    <h1 class='title'>{{=event.name}}</h1>
    {{=bookmark_btn}}
-   <a href='#' class='button radius small' title='Share Event'><i class='fa fa-share-alt'></i></a>
+   {{=share_btn}}
   {{if updateable:}}
    <a href='{{=URL(c="event", f="event", args=[event_id, "update.popup"], vars={"refresh": 1})}}' class='button radius small s3_modal' title='Edit'><i class='fa-pencil fa'></i></a>
    <a href='{{=URL(c="event", f="event", args=[event_id, "delete"])}}' class='button radius small' title='Delete'><i class='fa-trash fa'></i></a>

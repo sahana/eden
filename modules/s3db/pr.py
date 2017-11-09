@@ -3057,6 +3057,11 @@ class PRForumModel(S3Model):
                                         "key": "post_id",
                                         "actuate": "replace",
                                         },
+                            project_task = {"link": "project_task_forum",
+                                            "joinby": "forum_id",
+                                            "key": "task_id",
+                                            "actuate": "replace",
+                                            },
                             )
 
         # Custom Methods

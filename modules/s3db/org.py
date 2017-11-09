@@ -572,7 +572,8 @@ class S3OrganisationModel(S3Model):
         append = filter_widgets.append
 
         # Don't add Type or Sector Filters for Supplier organizations in the asset and inv controllers
-        if current.request.function != "supplier":
+        # or for Training Centers
+        if current.request.function not in ("supplier", "training_center"):
             append(type_filter)
             if use_sector:
                 append(S3OptionsFilter("sector_organisation.sector_id",

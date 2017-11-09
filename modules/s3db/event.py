@@ -569,6 +569,14 @@ class S3EventModel(S3Model):
                    method = "remove_tag",
                    action = self.event_remove_tag)
 
+        set_method("event", "event",
+                   method = "share",
+                   action = self.event_share)
+
+        set_method("event", "event",
+                   method = "unshare",
+                   action = self.event_unshare)
+
         # Custom Method to Assign HRs
         set_method("event", "event",
                    method = "assign",
@@ -651,7 +659,7 @@ class S3EventModel(S3Model):
                     event_type_id = lambda **attr: dummy("event_type_id"),
                     )
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_add_bookmark(r, **attr):
         """
@@ -694,7 +702,7 @@ class S3EventModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_remove_bookmark(r, **attr):
         """
@@ -725,7 +733,7 @@ class S3EventModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_add_tag(r, **attr):
         """
@@ -739,9 +747,10 @@ class S3EventModel(S3Model):
         if not event_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
-        tag = r.args[2]
         db = current.db
         s3db = current.s3db
+        tag = r.args[2]
+
         ttable = s3db.cms_tag
         ltable = s3db.event_tag
         exists = db(ttable.name == tag).select(ttable.id,
@@ -784,7 +793,7 @@ class S3EventModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_remove_tag(r, **attr):
         """
@@ -798,9 +807,10 @@ class S3EventModel(S3Model):
         if not event_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
-        tag = r.args[2]
         db = current.db
         s3db = current.s3db
+        tag = r.args[2]
+
         ttable = s3db.cms_tag
         exists = db(ttable.name == tag).select(ttable.id,
                                                ttable.deleted,
@@ -820,6 +830,95 @@ class S3EventModel(S3Model):
                 resource.delete()
 
         output = current.xml.json_message(True, 200, current.T("Tag Removed"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_share(r, **attr):
+        """
+            Share an Event to a Forum
+
+            S3Method for interactive requests
+            - designed to be called via AJAX
+        """
+
+        event_id = r.id
+        if not event_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+        forum_id = r.args[2]
+
+        if not auth.s3_has_role("ADMIN"):
+            # Check that user is a member of the forum
+            mtable = s3db.pr_forum_membership
+            ptable = s3db.pr_person
+            query = (ptable.pe_id == auth.user.pe_id) & \
+                    (mtable.person_id == ptable.id)
+            member = db(query).select(mtable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not member:
+                output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
+
+        ltable = s3db.event_forum
+        query = (ltable.event_id == event_id) & \
+                (ltable.forum_id == forum_id)
+        exists = db(query).select(ltable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not exists:
+            ltable.insert(event_id = event_id,
+                          forum_id = forum_id,
+                          )
+
+        output = current.xml.json_message(True, 200, current.T("Event Shared"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_unshare(r, **attr):
+        """
+            Unshare an Event from a Forum
+
+            S3Method for interactive requests
+            - designed to be called via AJAX
+        """
+
+        event_id = r.id
+        if not event_id or len(r.args) < 3:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        forum_id = r.args[2]
+
+        ltable = s3db.event_forum
+        query = (ltable.event_id == event_id) & \
+                (ltable.forum_id == forum_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.created_by,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            auth = current.auth
+            if not auth.s3_has_role("ADMIN"):
+                # Check that user is the one that shared the Event
+                if exists.created_by != auth.user.id:
+                    output = current.xml.json_message(False, 403, current.T("Only the Sharer, or Admin, can Unshare"))
+                    current.response.headers["Content-Type"] = "application/json"
+                    return output
+
+            resource = s3db.resource("event_forum", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, current.T("Stopped Sharing Event"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -1135,6 +1234,14 @@ class S3IncidentModel(S3Model):
                    method = "remove_tag",
                    action = self.incident_remove_tag)
 
+        set_method("event", "incident",
+                   method = "share",
+                   action = self.incident_share)
+
+        set_method("event", "incident",
+                   method = "unshare",
+                   action = self.incident_unshare)
+
         # Custom Method to Assign HRs
         set_method("event", "incident",
                    method = "assign",
@@ -1338,6 +1445,80 @@ class S3IncidentModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
+    def incident_add_bookmark(r, **attr):
+        """
+            Bookmark an Incident
+
+            S3Method for interactive requests
+        """
+
+        incident_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not incident_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.incident_id == incident_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(incident_id = incident_id,
+                                    user_id = user_id,
+                                    )
+
+        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def incident_remove_bookmark(r, **attr):
+        """
+            Remove a Bookmark for an Incident
+
+            S3Method for interactive requests
+        """
+
+        incident_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not incident_id or not user_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        s3db = current.s3db
+        ltable = s3db.event_bookmark
+        query = (ltable.incident_id == incident_id) & \
+                (ltable.user_id == user_id)
+        exists = current.db(query).select(ltable.id,
+                                          ltable.deleted,
+                                          limitby=(0, 1)
+                                          ).first()
+        if exists and not exists.deleted:
+            resource = s3db.resource("event_bookmark", id=exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
     def incident_add_tag(r, **attr):
         """
             Add a Tag to an Incident
@@ -1434,77 +1615,92 @@ class S3IncidentModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def incident_add_bookmark(r, **attr):
+    def incident_share(r, **attr):
         """
-            Bookmark an Incident
+            Share an Incident to a Forum
 
             S3Method for interactive requests
+            - designed to be called via AJAX
         """
 
         incident_id = r.id
-        user = current.auth.user
-        user_id = user and user.id
-        if not incident_id or not user_id:
+        if not incident_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         s3db = current.s3db
-        ltable = s3db.event_bookmark
+        auth = current.auth
+        forum_id = r.args[2]
+
+        if not auth.s3_has_role("ADMIN"):
+            # Check that user is a member of the forum
+            mtable = s3db.pr_forum_membership
+            ptable = s3db.pr_person
+            query = (ptable.pe_id == auth.user.pe_id) & \
+                    (mtable.person_id == ptable.id)
+            member = db(query).select(mtable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not member:
+                output = current.xml.json_message(False, 403, current.T("Cannot Share to a Forum unless you are a Member"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
+
+        ltable = s3db.event_forum
         query = (ltable.incident_id == incident_id) & \
-                (ltable.user_id == user_id)
+                (ltable.forum_id == forum_id)
         exists = db(query).select(ltable.id,
-                                  ltable.deleted,
-                                  ltable.deleted_fk,
                                   limitby=(0, 1)
                                   ).first()
-        if exists:
-            link_id = exists.id
-            if exists.deleted:
-                if exists.deleted_fk:
-                    data = json.loads(exists.deleted_fk)
-                    data["deleted"] = False
-                else:
-                    data = dict(deleted=False)
-                db(ltable.id == link_id).update(**data)
-        else:
-            link_id = ltable.insert(incident_id = incident_id,
-                                    user_id = user_id,
-                                    )
+        if not exists:
+            ltable.insert(incident_id = incident_id,
+                          forum_id = forum_id,
+                          )
 
-        output = current.xml.json_message(True, 200, current.T("Bookmark Added"))
+        output = current.xml.json_message(True, 200, current.T("Incident Shared"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def incident_remove_bookmark(r, **attr):
+    def incident_unshare(r, **attr):
         """
-            Remove a Bookmark for an Incident
+            Unshare an Incident from a Forum
 
             S3Method for interactive requests
+            - designed to be called via AJAX
         """
 
         incident_id = r.id
-        user = current.auth.user
-        user_id = user and user.id
-        if not incident_id or not user_id:
+        if not incident_id or len(r.args) < 3:
             raise HTTP(405, current.ERROR.BAD_METHOD)
 
+        db = current.db
         s3db = current.s3db
-        ltable = s3db.event_bookmark
+        forum_id = r.args[2]
+
+        ltable = s3db.event_forum
         query = (ltable.incident_id == incident_id) & \
-                (ltable.user_id == user_id)
-        exists = current.db(query).select(ltable.id,
-                                          ltable.deleted,
-                                          limitby=(0, 1)
-                                          ).first()
-        if exists and not exists.deleted:
-            resource = s3db.resource("event_bookmark", id=exists.id)
+                (ltable.forum_id == forum_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.created_by,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            auth = current.auth
+            if not auth.s3_has_role("ADMIN"):
+                # Check that user is the one that shared the Incident
+                if exists.created_by != auth.user.id:
+                    output = current.xml.json_message(False, 403, current.T("Only the Sharer, or Admin, can Unshare"))
+                    current.response.headers["Content-Type"] = "application/json"
+                    return output
+
+            resource = s3db.resource("event_forum", id=exists.id)
             resource.delete()
 
-        output = current.xml.json_message(True, 200, current.T("Bookmark Removed"))
+        output = current.xml.json_message(True, 200, current.T("Stopped Sharing Incident"))
         current.response.headers["Content-Type"] = "application/json"
         return output
 
@@ -2455,14 +2651,14 @@ class S3EventForumModel(S3Model):
 
         #current.response.s3.crud_strings[tablename] = Storage(
         #    label_create = T("Share Incident"), # or Event
-        #    title_display = T("Share Details"),
-        #    title_list = T("Shares"),
-        #    title_update = T("Edit Share"),
-        #    label_list_button = T("List Shares"),
-        #    label_delete_button = T("Remove Share for this Incident"),
-        #    msg_record_created = T("Share added"),
-        #    msg_record_modified = T("Share updated"),
-        #    msg_record_deleted = T("Share removed"),
+        #    title_display = T(" Shared Incident Details"),
+        #    title_list = T("Shared Incidents"),
+        #    title_update = T("Edit Shared Incident"),
+        #    label_list_button = T("List Shared Incidents"),
+        #    label_delete_button = T("Stop Sharing this Incident"),
+        #    msg_record_created = T("Incident Shared"),
+        #    msg_record_modified = T("Sharing updated"),
+        #    msg_record_deleted = T("Incident no longer shared"),
         #    msg_list_empty = T("No Incidents currently shared"))
 
         # Pass names back to global scope (s3.*)
