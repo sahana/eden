@@ -1297,13 +1297,14 @@ def config(settings):
             if callable(standard_prep):
                 result = standard_prep(r)
 
-            # Override defalt redirects from custom methods
-            if r.component_name == "forum_membership" and r.method is None:
-                from gluon.tools import redirect
-                current.session.confirmation = current.response.confirmation
-                redirect(URL(args=[r.id, "custom"]))
-            elif r.method is None and r.representation != "aadata":
-                r.method = "browse"
+            if r.method is None:
+                # Override defalt redirects from custom methods
+                if r.component:
+                    from gluon.tools import redirect
+                    current.session.confirmation = current.response.confirmation
+                    redirect(URL(args=[r.id, "custom"]))
+                elif r.representation != "aadata":
+                    r.method = "browse"
 
             return True
         s3.prep = custom_prep
@@ -1704,8 +1705,9 @@ def config(settings):
                        extra_fields = ("name",
                                        ),
                        filter_widgets = filter_widgets,
-                       list_fields = ["status",
-                                      (T("Description"), "name_click"),
+                       list_fields = [(T("Description"), "name_click"),
+                                      "status",
+                                      "incident.incident_id",
                                       (T("Created"), "created_on"),
                                       (T("Due"), "date_due"),
                                       ],
@@ -1713,6 +1715,116 @@ def config(settings):
                        )
 
     settings.customise_project_task_resource = customise_project_task_resource
+
+    # -------------------------------------------------------------------------
+    def customise_project_task_controller(**attr):
+
+        # No sidebar menu
+        current.menu.options = None
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            task_id = r.id
+            if task_id:
+                # Share Button
+                auth = current.auth
+                user = auth.user
+                if user:
+                    db = current.db
+                    s3db = current.s3db
+                    ptable = s3db.pr_person
+                    mtable = s3db.pr_forum_membership
+                    ftable = s3db.pr_forum
+                    query = (ptable.pe_id == user.pe_id) & \
+                            (ptable.id == mtable.person_id) & \
+                            (mtable.forum_id == ftable.id)
+                    forums = db(query).select(ftable.id,
+                                              ftable.name,
+                                              cache = s3db.cache)
+                    if len(forums):
+                        from gluon import A, INPUT, LABEL, LI, TAG, UL
+                        from s3 import ICON
+                        ADMIN = auth.s3_has_role("ADMIN")
+                        forum_ids = [f.id for f in forums]
+                        ltable = s3db.project_task_forum
+                        query = (ltable.task_id == task_id) & \
+                                (ltable.forum_id.belongs(forum_ids))
+                        shares = db(query).select(ltable.forum_id,
+                                                  ltable.created_by,
+                                                  ).as_dict(key="forum_id")
+                        share_btn = A(ICON("share"),
+                                       _href = "#",
+                                       _class = "button radius small",
+                                       _title = current.T("Share"),
+                                       )
+                        share_btn["_data-dropdown"] = "share_event_dropdown"
+                        share_btn["_aria-controls"] = "share_event_dropdown"
+                        share_btn["_aria-expanded"] = "false"
+
+                        dropdown = UL(_id = "share_event_dropdown",
+                                      _class = "f-dropdown share",
+                                      tabindex = "-1",
+                                      )
+                        dropdown["_data-dropdown-content"] = ""
+                        dropdown["_aria-hidden"] = "true"
+                        dropdown["_data-c"] = "project"
+                        dropdown["_data-f"] = "task"
+                        dropdown["_data-i"] = task_id
+
+                        dappend = dropdown.append
+                        for f in forums:
+                            forum_id = f.id
+                            checkbox_id = "event_forum_%s" % forum_id
+                            if forum_id in shares:
+                                if ADMIN or shares[forum_id]["created_by"] == user_id:
+                                    # Shared by us (or we're ADMIN), so render Checked checkbox which we can deselect
+                                    checkbox = INPUT(_checked = "checked",
+                                                     _id = checkbox_id,
+                                                     _type = "checkbox",
+                                                     _value = forum_id,
+                                                     )
+                                else:
+                                    # Shared by someone else, so render Checked checkbox which is disabled
+                                    checkbox = INPUT(_checked = "checked",
+                                                     _disabled = "disabled",
+                                                     _id = checkbox_id,
+                                                     _type = "checkbox",
+                                                     _value = forum_id,
+                                                     )
+                            else:
+                                # Not Shared so render empty checkbox
+                                checkbox = INPUT(_id = checkbox_id,
+                                                 _type = "checkbox",
+                                                 _value = forum_id,
+                                                 )
+                            dappend(LI(checkbox,
+                                       LABEL(f.name,
+                                             _for = checkbox_id,
+                                             ),
+                                       ))
+
+                        share_btn = TAG[""](share_btn,
+                                            dropdown,
+                                            )
+
+                        s3.scripts.append("/%s/static/themes/WACOP/js/shares.js" % current.request.application)
+                        script = '''S3.wacop_shares()'''
+                        s3.jquery_ready.append(script)
+                        s3.rfooter = share_btn
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_project_task_controller = customise_project_task_controller
 
 # =============================================================================
 def event_team_rheader(incident_id, group_id, updates=False):
