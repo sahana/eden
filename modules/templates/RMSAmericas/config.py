@@ -805,6 +805,7 @@ def config(settings):
         try:
             type_id = db(ttable.name == RED_CROSS).select(ttable.id,
                                                           limitby=(0, 1),
+                                                          cache = s3db.cache,
                                                           ).first().id
         except:
             # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -1510,18 +1511,12 @@ Thank you"""
         #                          user_org_and_children_default_filter,
         #                          tablename = "hrm_human_resource")
 
-        auth = current.auth
-        s3db = current.s3db
         s3 = current.response.s3
 
-        s3db.org_organisation.root_organisation.label = T("National Society")
-
-        if not auth.s3_has_role("ADMIN") and \
-               auth.s3_has_roles(("training_coordinator", "training_assistant")):
-            # Filter People to just those trained by this Reference Center
-            from s3 import FS
-            filter = FS("training.training_event_id$organisation_id") == auth.user.organisation_id
-            s3.filter = filter
+        if current.request.function == "trainee":
+            EXTERNAL = True
+        else:
+            EXTERNAL = False
 
         def add_language(form):
             from gluon import LABEL, OPTION, SELECT
@@ -1555,38 +1550,85 @@ Thank you"""
                 if not result:
                     return False
 
-            #if "profile" not in request.get_vars:
-            if not r.id:
-                # Filter to just RC people
-                from s3 import FS
-                resource = r.resource
-                resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
+            from s3 import FS
 
-                resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
-                                   form_postp = add_language,
-                                   )
-
-                #if r.representation == "xls":
-                #    list_fields = resource.get_config("list_fields")
-                #    #resource.configure(list_fields = list_fields)
-                #    list_fields.append()
-
+            db = current.db
+            s3db = current.s3db
+            auth = current.auth
+            resource = r.resource
             table = r.table
+
+            if EXTERNAL:
+                f = table.organisation_id
+                f.label = T("Organization")
+
+                # Organisation cannot be an NS/Branch
+                # Lookup organisation_type_id for Red Cross
+                ttable = s3db.org_organisation_type
+                try:
+                    type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
+                                                                                              limitby=(0, 2),
+                                                                                              cache = s3db.cache,
+                                                                                              )
+                except:
+                    # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                    pass
+                else:
+                    from s3 import IS_ONE_OF
+                    ltable = db.org_organisation_organisation_type
+                    rows = db(~ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
+                    filter_opts = [row.organisation_id for row in rows]
+                    f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                           f.represent,
+                                           filterby = "id",
+                                           filter_opts = filter_opts,
+                                           updateable = True,
+                                           orderby = "org_organisation.name",
+                                           sort = True)
+
+                    resource.add_filter(FS("organisation_id").belongs(filter_opts))
+
+                    # Find the relevant filter widget & limit it's options
+                    filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+                    filter_widget = None
+                    if filter_widgets:
+                        from s3 import S3HierarchyFilter
+                        for w in filter_widgets:
+                            if isinstance(w, S3HierarchyFilter) and \
+                               w.field == "organisation_id":
+                                filter_widget = w
+                                break
+                    if filter_widget is not None:
+                        filter_widget.opts["filter"] = (FS("id").belongs(filter_opts))
+
+            else:
+                s3db.org_organisation.root_organisation.label = T("National Society")
+
+                # Organisation needs to be an NS/Branch
+                ns_only("hrm_human_resource",
+                        required = True,
+                        branches = True,
+                        # default
+                        #limit_filter_opts = True,
+                        )
+
+                if not r.id:
+                    # Filter to just RC people
+                    resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
+                    resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
+                                       form_postp = add_language,
+                                       )
+
+            if not auth.s3_has_role("ADMIN") and \
+                   auth.s3_has_roles(("training_coordinator", "training_assistant")):
+                # Filter People to just those trained by this Reference Center
+                resource.add_filter(FS("training.training_event_id$organisation_id") == auth.user.organisation_id)
 
             # Default to Volunteers
             table.type.default = 2
 
-            # Organisation needs to be an NS/Branch
-            ns_only("hrm_human_resource",
-                    required = True,
-                    branches = True,
-                    # default
-                    #limit_filter_opts = True,
-                    )
-
-            # Hide Venues from the list of Offices
+           # Hide Venues from the list of Offices
             from gluon import IS_EMPTY_OR
-            db = current.db
 
             ttable = s3db.org_facility_type
             ltable = s3db.org_site_facility_type
@@ -1620,7 +1662,9 @@ Thank you"""
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.method in (None, "create") and isinstance(output, dict):
+            if not EXTERNAL and \
+               r.method in (None, "create") and \
+               isinstance(output, dict):
                 form = output.get("form")
                 if form:
                     add_language(form)
@@ -2775,11 +2819,12 @@ Thank you"""
 
                     if r.function == "training_center":
                         auth = current.auth
-                        # See NS Training Centers only
-                        resource.add_filter(table.root_organisation == auth.root_org())
+                        if not auth.s3_has_role("ADMIN"):
+                            # See NS Training Centers only
+                            resource.add_filter(table.root_organisation == auth.root_org())
 
-                        if not auth.s3_has_role("ORG_ADMIN"):
-                            resource.configure(insertable = False)
+                            if not auth.s3_has_role("ORG_ADMIN"):
+                                resource.configure(insertable = False)
 
                     type_label = T("Type")
 
@@ -3029,18 +3074,7 @@ Thank you"""
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
-        request = current.request
         s3 = current.response.s3
-        has_role = current.auth.s3_has_role
-
-        # @ToDo: This will cause issues with opening up profiles from mixed lists of trainees
-        if request.controller == "pr" and \
-           not has_role("ADMIN"):
-            # Filter to just External Trainees
-            # People without an HR record or whose HR record isn't RC
-            from s3 import FS
-            s3.filter = (FS("human_resource.organisation_id") == None) | \
-                        (FS("human_resource.organisation_id$organisation_type.name") != RED_CROSS)
 
         # Custom prep
         standard_prep = s3.prep
@@ -3051,7 +3085,10 @@ Thank you"""
                 if not result:
                     return False
 
-            if "profile" in request.get_vars:
+            auth = current.auth
+            has_role = auth.s3_has_role
+            EXTERNAL = False
+            if "profile" in current.request.get_vars:
                 profile = True
             else:
                 len_roles = len(current.session.s3.roles)
@@ -3060,6 +3097,12 @@ Thank you"""
                     profile = True
                 else:
                     profile = False
+                    if r.function == "trainee_person":
+                        EXTERNAL = True
+                        s3.crud_strings["pr_person"].update(
+                            title_display = T("External Trainee Details"),
+                            title_update = T("External Trainee Details")
+                            )
             if profile:
                 # Configure for personal mode
                 # People can edit their own HR data
@@ -3093,18 +3136,49 @@ Thank you"""
                 #               )
                 pass
             elif method =="record" or component_name == "human_resource":
-                # Organisation needs to be an NS/Branch
-                ns_only("hrm_human_resource",
-                        required = True,
-                        branches = True,
-                        )
                 table = s3db.hrm_human_resource
+                if EXTERNAL:
+                    db = current.db
+                    f = table.organisation_id
+                    f.label = T("Organization")
+                    # Organisation cannot be an NS/Branch
+                    # Lookup organisation_type_id for Red Cross
+                    ttable = s3db.org_organisation_type
+                    try:
+                        type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
+                                                                                                  limitby=(0, 2),
+                                                                                                  cache = s3db.cache,
+                                                                                                  )
+                    except:
+                        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                        pass
+                    else:
+                        from s3 import IS_ONE_OF
+                        ltable = db.org_organisation_organisation_type
+                        rows = db(~ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
+                        filter_opts = [row.organisation_id for row in rows]
+                        f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                               f.represent,
+                                               filterby = "id",
+                                               filter_opts = filter_opts,
+                                               updateable = True,
+                                               orderby = "org_organisation.name",
+                                               sort = True)
+                else:
+                    # Organisation needs to be an NS/Branch
+                    ns_only("hrm_human_resource",
+                            required = True,
+                            branches = True,
+                            )
                 f = table.essential
                 f.readable = f.writable = False
                 f = table.site_contact
                 f.readable = f.writable = False
                 if method == "record":
-                    if not has_role("ORG_ADMIN"):
+                    if not auth.s3_has_roles(("ORG_ADMIN",
+                                              "hr_manager",
+                                              "hr_assistant",
+                                              )):
                         table.organisation_id.writable = False
                         # Hide the Site field as this data isn't loaded & we want to keep things simple
                         # @ToDo: Re-enable for specific NS as-required

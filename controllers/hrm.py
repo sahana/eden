@@ -190,6 +190,24 @@ def person():
     return s3db.hrm_person_controller()
 
 # -----------------------------------------------------------------------------
+def trainee():
+    """
+        HR Controller
+        - used by RMSAmericas to be able to filter to 'External Trainees'
+    """
+
+    return s3db.hrm_human_resource_controller()
+
+# -----------------------------------------------------------------------------
+def trainee_person():
+    """
+        Person Controller
+        - used by RMSAmericas to be able to configure for 'External Trainees'
+    """
+
+    return s3db.hrm_person_controller()
+
+# -----------------------------------------------------------------------------
 def profile():
     """
         Profile Controller
@@ -541,7 +559,6 @@ def training_center():
         msg_record_deleted = T("Training Center deleted"),
         msg_list_empty = T("No Training Centers currently registered")
         )
-
 
     # Open record in this controller after creation
     s3db.configure("org_organisation",

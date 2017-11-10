@@ -6536,7 +6536,7 @@ def hrm_rheader(r, tabs=[], profile=False):
             if record_method:
                 hr_tab = (T(hr_record), record_method)
                     
-            tabs = [(T("Person Details"), None),
+            tabs = [(T("Person Details"), None, {"native": True}),
                     hr_tab,
                     duplicates_tab,
                     id_tab,
@@ -7471,7 +7471,11 @@ def hrm_human_resource_controller(extra_filter=None):
                 vars = {"human_resource.id" : r.id,
                         "group" : "staff"
                         }
-                redirect(URL(f="person",
+                if r.function == "trainee":
+                    fn = "trainee_person"
+                else:
+                    fn = "person"
+                redirect(URL(f=fn,
                              vars=vars))
 
         elif r.representation == "xls" and not r.component:

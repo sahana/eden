@@ -9,7 +9,7 @@ except ImportError:
     pass
 import s3menus as default
 
-red_cross_filter = {"organisation_type.name" : "Red Cross / Red Crescent"}
+RC = {"organisation_type.name" : "Red Cross / Red Crescent"}
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
@@ -120,7 +120,7 @@ class S3MainMenu(default.S3MainMenu):
                    MM("Human Talent", c="hrm", f="human_resource", m="summary"),
                    #MM("Teams", c="hrm", f="group"),
                    MM("National Societies", c="org", f="organisation",
-                      vars = red_cross_filter),
+                      vars = RC),
                    #MM("Offices", c="org", f="office"),
                    MM("Positions", c="hrm", f="job_title"),
                    #MM("Training Events", c="hrm", f="training_event"),
@@ -130,7 +130,7 @@ class S3MainMenu(default.S3MainMenu):
                    MM("Training Centers", c="hrm", f="training_center"),
                    MM("Training Course Catalog", c="hrm", f="course"),
                    MM("Training Events", c="hrm", f="training_event"),
-                   MM("External Trainees", c="pr", f="person"),
+                   MM("External Trainees", c="hrm", f="trainee"),
                ),
                homepage("inv", "supply", "req", check=inv)(
                    MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
@@ -315,10 +315,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #),
                         )
 
-        elif current.request.function == "person":
-            # Training Center access to external Trainees (not Staff/Volunteers)
-            return self.hrm()
-
         elif has_role("ORG_ADMIN"):
             return M()(M("Users", c="admin", f="user")(
                         ),
@@ -359,8 +355,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         if request.function in ("certificate", "course", "course_certificate",
                                 "facility", "training", "training_center",
-                                "training_event") or \
-           request.controller == "pr":
+                                "training_event", "trainee", "trainee_person"):
             return M()( M("Training Centers", c="hrm", f="training_center")(
                         ),
                         M("Training Course Catalog", c="hrm", f="course")(
@@ -384,7 +379,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                         "training_assistant",
                                         )),
                         ),
-                        M("External Trainees", c="pr", f="person")(
+                        M("External Trainees", c="hrm", f="trainee")(
                             M("Create", m="create"),
                         ),
                         M("Report", c="hrm", f="training", m="report")(
@@ -410,9 +405,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #    M("Import", f="group_membership", m="import"),
                         #),
                         M("National Societies", c="org", f="organisation",
-                          vars=red_cross_filter)(
+                          vars=RC)(
                             M("Create", m="create",
-                              vars=red_cross_filter
+                              vars=RC
                               ),
                             M("Import", m="import", p="create",
                               restrict=[ORG_ADMIN])
@@ -656,7 +651,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   m="import", p="create"),
              ),
              M("National Societies",  c="org", f="organisation",
-                                      vars=red_cross_filter)(
+                                      vars=RC)(
                 #M("Create", m="create", restrict=[ADMIN]),
                 #M("Import", m="import", p="create", restrict=[ADMIN]),
              ),
