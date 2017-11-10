@@ -109,7 +109,7 @@ def config(settings):
 
         # Entity reference fields
         EID = "pe_id"
-        #OID = "organisation_id"
+        OID = "organisation_id"
         SID = "site_id"
         #GID = "group_id"
         PID = "person_id"
@@ -130,6 +130,7 @@ def config(settings):
                                 pr_note = PID,
                                 hrm_human_resource = SID,
                                 hrm_training = PID,
+                                hrm_training_event = OID,
                                 inv_recv = SID,
                                 inv_send = SID,
                                 inv_track_item = "track_org_id",
