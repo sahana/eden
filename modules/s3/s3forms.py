@@ -234,22 +234,6 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _insert_dummy_fields(form, formstyle, dummy_fields):
-        """
-            Insert dummy fields into forms
-            - these are simple DIVs placed into the correct place in the form
-              which are meant to be acted upon by custom JavaScript routines
-
-            @param form: the form
-            @param formstyle: the formstyle
-            @param dummy_fields:
-        """
-
-        if not dummy_fields:
-            return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def _insert_subheadings(form, tablename, formstyle, subheadings):
         """
             Insert subheadings into forms
@@ -1165,11 +1149,6 @@ class S3SQLCustomForm(S3SQLForm):
         if subheadings:
             self._insert_subheadings(form, tablename, formstyle, subheadings)
 
-        # Dummy Fields
-        dummy_fields = self.opts.get("dummy_fields", None)
-        if dummy_fields:
-            self._insert_dummy_fields(dummy_fields)
-
         # Process the form
         formname = "%s/%s" % (tablename, record_id)
         post_vars = request.post_vars
@@ -1877,12 +1856,14 @@ class S3SQLDummyField(S3SQLFormElement):
                         )
         """
 
-        field = Field(self.selector,
+        selector = self.selector
+
+        field = Field(selector,
                       label = "",
                       widget = self,
                       )
 
-        return self, None, field
+        return None, selector, field
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):

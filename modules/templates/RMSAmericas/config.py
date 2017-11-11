@@ -437,9 +437,9 @@ def config(settings):
     # Uncomment to disable the use of HR Certificates
     #settings.hrm.use_certificates = False
     # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
-    settings.hrm.filter_certificates = True
+    #settings.hrm.filter_certificates = True
     # Uncomment to auto-create certificates for courses
-    settings.hrm.create_certificates_from_courses = True
+    settings.hrm.create_certificates_from_courses = "organisation_id"
     settings.hrm.use_code = True
     settings.hrm.use_description = "Medical Information"
     # Uncomment to enable the use of HR Education
@@ -1145,6 +1145,32 @@ def config(settings):
             msg_list_empty = T("No Disaster Types currently defined"))
 
     settings.customise_event_event_type_resource = customise_event_event_type_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_certificate_controller(**attr):
+
+        table = current.s3db.hrm_course
+        auth = current.auth
+        if auth.s3_has_role("ADMIN"):
+            # See all Certificates
+            pass
+        elif auth.s3_has_roles(("training_coordinator",
+                                "training_assistant",
+                                )):
+            # Only show this Center's Certificates
+            organisation_id == auth.user.organisation_id
+            current.response.s3.filter = (table.organisation_id == organisation_id) | (table.organisation_id == None)
+            # Default to this Training Center
+            table.organisation_id.default = organisation_id
+        else:
+            # See NS Certificates
+            organisation_id == auth.root_org()
+            current.response.s3.filter = (table.organisation_id == organisation_id) | (table.organisation_id == None)
+            # Default to this NS
+            table.organisation_id.default = organisation_id
+        return attr
+
+    settings.customise_hrm_course_controller = customise_hrm_course_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_course_controller(**attr):

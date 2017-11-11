@@ -3553,7 +3553,7 @@ class S3HRSkillModel(S3Model):
     def hrm_course_onaccept(form):
         """
             Ensure that there is a Certificate created for each Course
-            - only called when create_certificates_from_courses == True
+            - only called when create_certificates_from_courses in (True, "organisation_id")
         """
 
         form_vars = form.vars
@@ -3567,11 +3567,15 @@ class S3HRSkillModel(S3Model):
                                                           )
         if not exists:
             name = form_vars.get("name")
-            if not name:
+            organisation_id = form_vars.get("organisation_id")
+            if not name or not organisation_id:
                 table = s3db.hrm_course
-                name = db(table.id == course_id).select(table.name,
-                                                        limitby = (0, 1)
-                                                        ).first().name
+                course = db(table.id == course_id).select(table.name,
+                                                          table.organisation_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+                name = course.name
+                organisation_id = course.organisation_id
             ctable = s3db.hrm_certificate
             certificate = db(ctable.name == name).select(ctable.id,
                                                          limitby = (0, 1)
@@ -3579,8 +3583,12 @@ class S3HRSkillModel(S3Model):
             if certificate:
                 certificate_id = certificate.id
             else:
-                # @ToDo: Setting to decide whether certificate should be restricted to Org
-                certificate_id = ctable.insert(name = name)
+                if current.deployment_settings.get_hrm_create_certificates_from_courses() is True:
+                    # Don't limit to Org
+                    organisation_id = None
+                certificate_id = ctable.insert(name = name,
+                                               organisation_id = organisation_id,
+                                               )
 
             ltable.insert(course_id = course_id,
                           certificate_id = certificate_id,

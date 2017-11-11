@@ -362,7 +362,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                     else:
                         # Grid Pseudo-Question
                         fname = question["code"]
-                        cappend((question["label"], S3SQLDummyField(fname)))
+                        cappend(S3SQLDummyField(fname))
                 # Next add those questions with a section (likely the only questions then)
                 subheadings = {}
                 for s in sections:
@@ -382,7 +382,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                         else:
                             # Grid Pseudo-Question
                             fname = question["code"]
-                            cappend((question["label"], S3SQLDummyField(fname)))
+                            cappend(S3SQLDummyField(fname))
                         _subheadings["fields"].append(fname)
                     # Next add those questions in a subsection
                     subsections = section["subsections"]
@@ -402,7 +402,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                             else:
                                 # Grid Pseudo-Question
                                 fname = question["code"]
-                                cappend((question["label"], S3SQLDummyField(fname)))
+                                cappend(S3SQLDummyField(fname))
                             __subheadings["fields"].append(fname)
                         # Next add those questions in a subsubsection
                         subsubsections = _sub["subsubsections"]
@@ -422,7 +422,7 @@ def respnse(): # Cannot call this 'response' or it will clobber the global
                                 else:
                                     # Grid Pseudo-Question
                                     fname = question["code"]
-                                    cappend((question["label"], S3SQLDummyField(fname)))
+                                    cappend(S3SQLDummyField(fname))
                                 ___subheadings["fields"].append(fname)
 
                 crud_form = S3SQLCustomForm(*crud_fields)

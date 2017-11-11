@@ -117,6 +117,7 @@ class S3Migration(object):
 
         # Needed as some Templates look at this & we don't wish to crash:
         response.s3 = Storage()
+        response.s3.gis = Storage()
 
         # Global variables for 000_config.py
         environment = build_environment(request, response, current.session)

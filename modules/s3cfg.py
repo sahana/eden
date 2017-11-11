@@ -2841,6 +2841,12 @@ class S3Config(Storage):
         """
         return self.dc.get("mobile_data", False)
 
+    def get_dc_mobile_inserts(self):
+        """
+            Whether Mobile Clients should create Assessments locally
+        """
+        return self.dc.get("mobile_inserts", True)
+
     # -------------------------------------------------------------------------
     # Deployments
     #
@@ -3535,7 +3541,9 @@ class S3Config(Storage):
 
     def get_hrm_create_certificates_from_courses(self):
         """
-            If set to True then Certificates are created automatically for each Course
+            If set Truthy then Certificates are created automatically for each Course
+                True: Create Certificates without an organisation_id
+                "organisation_id": Create Certificates with the organisation_id of the Course
         """
         return self.hrm.get("create_certificates_from_courses", False)
 

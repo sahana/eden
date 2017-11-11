@@ -55,6 +55,7 @@ DEFAULT = lambda: None
 SERIALIZABLE_OPTS = ("autosync",
                      "autototals",
                      "grids",
+                     "insertable",
                      "subheadings",
                      )
 

@@ -429,10 +429,17 @@ class DataCollectionTemplateModel(S3Model):
             return
 
         # Create the Dynamic Table
-        mobile_data = current.deployment_settings.get_dc_mobile_data()
+        settings = current.deployment_settings
+        mobile_data = settings.get_dc_mobile_data()
+        if settings.get_dc_mobile_inserts():
+            table_settings = "" # Default
+        else:
+            table_settings = {"insertable": False}
+
         table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
                                                 #mobile_form = False,
                                                 mobile_data = mobile_data,
+                                                settings = table_settings,
                                                 )
 
         # Add a Field to link Answers together

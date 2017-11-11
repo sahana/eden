@@ -173,6 +173,8 @@ def config(settings):
 
     # Download Assessments - as these have been created through Targetting
     settings.dc.mobile_data = True
+    # Don't Create Assessments on Mobile
+    settings.dc.mobile_inserts = False
 
     def dc_target_onaccept(form):
         """
@@ -484,6 +486,35 @@ def config(settings):
         return attr
 
     settings.customise_dc_response_controller = customise_dc_response_controller
+
+    # -------------------------------------------------------------------------
+    def customise_default_table_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.method == "mform":
+                # Mobile client downloading Assessment Schema
+                # @ToDo: Customise Form
+                pass
+
+            elif r.representation == "s3json":
+                # Mobile client downloading Assessment Data
+                # @ToDo: Filter Data to the relevant subset for this User
+                # tablename = "s3dt_%s" % r.name
+                pass
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_default_table_controller = customise_default_table_controller
 
     # =========================================================================
     # Documents
