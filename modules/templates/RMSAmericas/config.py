@@ -1170,7 +1170,7 @@ def config(settings):
             table.organisation_id.default = organisation_id
         return attr
 
-    settings.customise_hrm_course_controller = customise_hrm_course_controller
+    settings.customise_hrm_certificate_controller = customise_hrm_certificate_controller
 
     # -------------------------------------------------------------------------
     def customise_hrm_course_controller(**attr):
