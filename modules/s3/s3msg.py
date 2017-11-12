@@ -373,7 +373,8 @@ class S3Msg(object):
                       contact_method = "EMAIL",
                       document_ids = None,
                       from_address = None,
-                      system_generated = False):
+                      system_generated = False,
+                      **data):
         """
             Send a single message to a Person Entity (or list thereof)
 
@@ -461,6 +462,11 @@ class S3Msg(object):
         # Process OutBox async
         current.s3task.async("msg_process_outbox",
                              args = [contact_method])
+
+        # Perform post process after message sending
+        postp = current.deployment_settings.get_msg_send_postprocess()
+        if postp:
+            postp(message_id, **data)
 
         return message_id
 
