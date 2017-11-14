@@ -905,16 +905,16 @@ class S3OptionsMenu(object):
             EVENT_TYPES = "Event Types"
 
         return M()(
-                    M("Scenarios", c="scenario", f="scenario")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
+                    #M("Scenarios", c="scenario", f="scenario")(
+                    #    M("Create", m="create"),
+                    #    #M("Import", m="import", p="create"),
+                    #),
                     M(EVENTS, c="event", f="event")(
                         M("Create", m="create"),
                     ),
                     M(EVENT_TYPES, c="event", f="event_type")(
                         M("Create", m="create"),
-                        M("Import", m="import", p="create"),
+                        #M("Import", m="import", p="create"),
                     ),
                     M("Incidents", c="event", f="incident")(
                         M("Create", m="create"),
@@ -924,8 +924,12 @@ class S3OptionsMenu(object):
                     ),
                     M("Incident Types", c="event", f="incident_type")(
                         M("Create", m="create"),
-                        M("Import", m="import", p="create"),
+                        #M("Import", m="import", p="create"),
                     ),
+                    #M("Situation Reports", c="event", f="sitrep")(
+                    #    M("Create", m="create"),
+                    #    #M("Import", m="import", p="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------

@@ -111,7 +111,7 @@ class S3MainMenu(default.S3MainMenu):
                     #M("Report", m="report"),
                     #M("Map", m="map"),
                 ),
-                MM("SitReps", c="doc", f="sitrep")(
+                MM("SitReps", c="event", f="sitrep")(
                     #M("Report", m="report"),
                     #M("Map", m="map"),
                 ),
@@ -129,7 +129,7 @@ class S3MainMenu(default.S3MainMenu):
                 ),
                 MM("Projects", c="project", f="project", m="summary"),
                 MM("4W", c="project", f="activity", m="summary"),
-                MM("SitReps", c="doc", f="sitrep"),
+                MM("SitReps", c="event", f="sitrep"),
                 MM("Documents", c="doc", f="document"),
                 homepage("gis"),
             ]
@@ -151,7 +151,7 @@ class S3MainMenu(default.S3MainMenu):
                 ),
                 MM("Projects", c="project", f="project"),
                 MM("Activities", c="project", f="activity"),
-                MM("SitReps", c="doc", f="sitrep"),
+                MM("SitReps", c="event", f="sitrep"),
                 MM("Documents", c="doc", f="document"),
                 homepage("gis"),
             ]
@@ -161,7 +161,7 @@ class S3MainMenu(default.S3MainMenu):
                 homepage(),
                 MM("Calendar", c="cms", f="post", m="calendar"), # Weekly Schedule
                 MM("Assessments", c="dc", f="respnse", m="summary"),
-                MM("SitReps", c="doc", f="sitrep"),
+                MM("SitReps", c="event", f="sitrep"),
                 MM("4W", c="project", f="activity", m="summary"),
                 homepage("gis"),
             ]
@@ -171,7 +171,7 @@ class S3MainMenu(default.S3MainMenu):
                 homepage(),
                 homepage("gis"),
                 M("4W", c="project", f="activity", m="summary"),
-                MM("SitReps", c="doc", f="sitrep"),
+                MM("SitReps", c="event", f="sitrep"),
             ]
 
 # =============================================================================
@@ -255,6 +255,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def event():
         """ EVENT / Event Module """
 
+        ADMIN = current.session.s3.system_roles.ADMIN
+
         return M()(
                     M("Disasters", c="event", f="event")(
                         M("Create", m="create"),
@@ -262,6 +264,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Disaster Types", c="event", f="event_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
+                    ),
+                    M("Situation Reports", c="event", f="sitrep")(
+                        M("Create", m="create"),
+                        #M("Import", m="import", p="create"),
+                    ),
+                    M("Situation Report Templates", c="event", f="template",
+                      restrict=[ADMIN])(
+                        #M("Create", m="create"),
+                        #M("Import", m="import", p="create"),
                     ),
                 )
 

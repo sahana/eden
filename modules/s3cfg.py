@@ -3133,6 +3133,18 @@ class S3Config(Storage):
         """
         return self.event.get("exercise", False)
 
+    def get_event_sitrep_dynamic(self):
+        """
+            Whether the SitRep resource should include a Dynamic Table section
+        """
+        return self.event.get("sitrep_dynamic", False)
+
+    def get_event_sitrep_edxl(self):
+        """
+            Whether the SitRep resource should be configured for EDXL-Sitrep mode
+        """
+        return self.event.get("sitrep_edxl", False)
+
     def get_event_types_hierarchical(self):
         """
             Whether Event Types are Hierarchical or not

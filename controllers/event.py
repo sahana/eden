@@ -224,6 +224,80 @@ def incident_report():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def sitrep():
+    """ RESTful CRUD controller """
+
+    if settings.get_event_sitrep_dynamic():
+        # All templates use the same component name for answers so need to add the right component manually
+        try:
+            sitrep_id = int(request.args(0))
+        except:
+            # Multiple record method
+            pass
+        else:
+            dtable = s3db.s3_table
+            stable = s3db.event_sitrep
+            ttable = s3db.dc_template
+            query = (stable.id == sitrep_id) & \
+                    (stable.template_id == ttable.id) & \
+                    (ttable.table_id == dtable.id)
+            template = db(query).select(dtable.name,
+                                        limitby=(0, 1),
+                                        ).first()
+            try:
+                dtablename = template.name
+            except:
+                # Old URL?
+                pass
+            else:
+                components = {dtablename: {"name": "answer",
+                                           "joinby": "sitrep_id",
+                                           "multiple": False,
+                                           }
+                              }
+                s3db.add_components("event_sitrep", **components)
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "answer":
+                # CRUD Strings
+                tablename = r.component.tablename
+                #s3.crud_strings[tablename] = Storage(
+                #    label_create = T("Create Responses"),
+                #    title_display = T("Response Details"),
+                #    title_list = T("Responses"),
+                #    title_update = T("Edit Response"),
+                #    label_list_button = T("List Responses"),
+                #    label_delete_button = T("Clear Response"),
+                #    msg_record_created = T("Response created"),
+                #    msg_record_modified = T("Response updated"),
+                #    msg_record_deleted = T("Response deleted"),
+                #    msg_list_empty = T("No Responses currently defined"),
+                #)
+
+                # Custom Form with Questions & Subheadings sorted correctly
+                s3db.dc_answer_form(r, tablename)
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.event_rheader)
+
+# -----------------------------------------------------------------------------
+def template():
+    """ RESTful CRUD controller """
+
+    from s3 import FS
+    s3.filter = FS("master") == "event_sitrep"
+
+    s3db.dc_template.master.default = "event_sitrep"
+
+    return s3_rest_controller("dc", "template",
+                              rheader = s3db.dc_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def resource():
     """
         RESTful CRUD controller

@@ -7,6 +7,7 @@
 
          CSV fields:
          Name....................dc_template.name
+         Master..................dc_template.master
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -26,6 +27,7 @@
 
         <resource name="dc_template">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="master"><xsl:value-of select="col[@field='Master']"/></data>
         </resource>
 
     </xsl:template>

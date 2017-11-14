@@ -655,112 +655,6 @@ def config(settings):
 
     settings.customise_doc_image_resource = customise_doc_image_resource
 
-    # -------------------------------------------------------------------------
-    def customise_doc_sitrep_resource(r, tablename):
-        """
-            All SitReps are SAVE
-            All SitReps are National in scope
-        """
-
-        #if not current.auth.s3_has_role("AUTHENTICATED"):
-        #    # @ToDo: Just show the External (Public) parts
-        #    pass
-
-        from s3 import S3DateFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.doc_sitrep
-
-        # Always SC
-        otable = s3db.org_organisation
-        org = db(otable.name == SAVE).select(otable.id,
-                                             cache = s3db.cache,
-                                             limitby = (0, 1)
-                                             ).first()
-        try:
-            SCI = org.id
-        except:
-            current.log.error("Cannot find org %s - prepop not done?" % SAVE)
-        else:
-            f = table.organisation_id
-            f.default = SCI
-
-        # Always National
-        PH = "Philippines"
-        gtable = s3db.gis_location
-        loc = db((gtable.name == PH) & (gtable.level == "L0")).select(gtable.id,
-                                                                      cache = s3db.cache,
-                                                                      limitby = (0, 1)
-                                                                      ).first()
-        try:
-            PH = loc.id
-        except:
-            current.log.error("Cannot find loc %s - prepop not done?" % PH)
-        else:
-            f = table.location_id
-            f.default = PH
-
-        # Default to currently-open Event (if just 1)
-        s3db.event_sitrep.event_id.default = current.session.s3.event
-
-        crud_form = S3SQLCustomForm(S3SQLInlineComponent("event_sitrep",
-                                                         label = T("Disaster"),
-                                                         fields = [("", "event_id")],
-                                                         multiple = False,
-                                                         required = True,
-                                                         ),
-                                    "date",
-                                    "name",
-                                    "description",
-                                    "comments",
-                                    )
-
-        filter_widgets = [S3OptionsFilter("event_sitrep.event_id"),
-                          S3DateFilter("date"),
-                          ]
-
-        list_fields = ["event_sitrep.event_id",
-                       "date",
-                       "name",
-                       "comments",
-                       ]
-
-        s3db.configure("doc_sitrep",
-                       crud_form = crud_form,
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_doc_sitrep_resource = customise_doc_sitrep_resource
-
-    # -------------------------------------------------------------------------
-    def customise_doc_sitrep_controller(**attr):
-
-        # Default Filter: Only open Events
-        etable = current.s3db.event_event
-        query = (etable.closed == False) & \
-                (etable.deleted == False)
-        open = current.db(query).select(etable.id,
-                                        etable.name,
-                                        )
-        len_open = len(open)
-        if len_open:
-            if len_open == 1:
-                current.session.s3.event = open.first().id
-            else:
-                current.session.s3.event = None
-            open = {row.id: row.name for row in open}
-
-            from s3 import s3_set_default_filter
-            s3_set_default_filter("event_sitrep.event_id",
-                                  open,
-                                  tablename = "doc_sitrep")
-
-        return attr
-
-    settings.customise_doc_sitrep_controller = customise_doc_sitrep_controller
-
     # =========================================================================
     # Beneficiaries
     #
@@ -1064,6 +958,7 @@ def config(settings):
     # Events
     #
     settings.event.label = "Disaster"
+    settings.event.sitrep_dynamic = True
 
     def response_locations():
         """
@@ -1188,6 +1083,117 @@ def config(settings):
                        )
 
     settings.customise_event_event_resource = customise_event_event_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_sitrep_resource(r, tablename):
+        """
+            All SitReps are SAVE
+            All SitReps are National in scope
+        """
+
+        #if not current.auth.s3_has_role("AUTHENTICATED"):
+        #    # @ToDo: Just show the External (Public) parts
+        #    pass
+
+        from s3 import S3DateFilter, S3OptionsFilter, S3SQLCustomForm#, S3SQLInlineComponent
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.event_sitrep
+
+        # Always SC
+        otable = s3db.org_organisation
+        org = db(otable.name == SAVE).select(otable.id,
+                                             cache = s3db.cache,
+                                             limitby = (0, 1)
+                                             ).first()
+        try:
+            SCI = org.id
+        except:
+            current.log.error("Cannot find org %s - prepop not done?" % SAVE)
+        else:
+            table.organisation_id.default = SCI
+
+        # Always National
+        PH = "Philippines"
+        gtable = s3db.gis_location
+        loc = db((gtable.name == PH) & (gtable.level == "L0")).select(gtable.id,
+                                                                      cache = s3db.cache,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+        try:
+            PH = loc.id
+        except:
+            current.log.error("Cannot find loc %s - prepop not done?" % PH)
+        else:
+            table.location_id.default = PH
+
+        # Default to SitRep Template
+        ttable = s3db.dc_template
+        SITREP = db(ttable.name == "Situation Report").select(ttable.id,
+                                                              cache = s3db.cache,
+                                                              limitby = (0, 1)
+                                                              ).first()
+        try:
+            table.template_id.default = SITREP.id
+        except:
+            # Prepop not done
+            current.log.warning("Cannot default SitReps to Situation Report form")
+
+        # Default to currently-open Event (if just 1)
+        table.event_id.default = current.session.s3.event
+
+        crud_form = S3SQLCustomForm("event_id",
+                                    "number",
+                                    "date",
+                                    )
+
+        filter_widgets = [S3OptionsFilter("event_id"),
+                          S3DateFilter("date"),
+                          ]
+
+        list_fields = ["date",
+                       "event_id",
+                       "number",
+                       ]
+
+        from gluon import URL
+
+        s3db.configure("event_sitrep",
+                       create_next = URL(f="sitrep", args=["[id]", "answer"]),
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_event_sitrep_resource = customise_event_sitrep_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_sitrep_controller(**attr):
+
+        # Default Filter: Only open Events
+        etable = current.s3db.event_event
+        query = (etable.closed == False) & \
+                (etable.deleted == False)
+        open = current.db(query).select(etable.id,
+                                        etable.name,
+                                        )
+        len_open = len(open)
+        if len_open:
+            if len_open == 1:
+                current.session.s3.event = open.first().id
+            else:
+                current.session.s3.event = None
+            open = {row.id: row.name for row in open}
+
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("event_id",
+                                  open,
+                                  tablename = "event_sitrep")
+
+        return attr
+
+    settings.customise_event_sitrep_controller = customise_event_sitrep_controller
 
     # =========================================================================
     # Projects

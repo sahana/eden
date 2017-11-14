@@ -1859,6 +1859,7 @@ class S3SQLDummyField(S3SQLFormElement):
         selector = self.selector
 
         field = Field(selector,
+                      default = "",
                       label = "",
                       widget = self,
                       )

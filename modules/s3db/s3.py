@@ -621,11 +621,9 @@ def s3_table_rheader(r, tabs=None):
         # Resource headers only used in interactive views
         return None
 
-    record = r.record
-    resource = r.resource
-
     rheader = None
 
+    record = r.record
     if record:
 
         T = current.T
@@ -646,7 +644,7 @@ def s3_table_rheader(r, tabs=None):
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table = resource.table,
+                                                         table = r.resource.table,
                                                          record = record,
                                                          )
 

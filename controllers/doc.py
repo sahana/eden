@@ -208,12 +208,6 @@ def upload_bulk():
     response.headers["Content-Type"] = "text/html"  # This is what the file-uploader widget expects
     return json.dumps(msg)
 
-# -----------------------------------------------------------------------------
-def sitrep():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
 # =============================================================================
 def ck_upload():
     """

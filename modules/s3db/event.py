@@ -48,10 +48,10 @@ __all__ = ("S3EventModel",
            "S3EventRequestModel",
            "S3EventResourceModel",
            "S3EventSiteModel",
+           "S3EventShelterModel",
            "S3EventSitRepModel",
            "S3EventTagModel",
            "S3EventTaskModel",
-           "S3EventShelterModel",
            "event_notification_dispatcher",
            "event_event_list_layout",
            "event_incident_list_layout",
@@ -454,6 +454,7 @@ class S3EventModel(S3Model):
                             event_tag = "event_id",       # cms_tag
                             event_event_tag = "event_id", # Key-Value Store
                             event_incident = "event_id",
+                            event_sitrep = "event_id",
                             dc_response = {"link": "event_response",
                                            "joinby": "event_id",
                                            "key": "response_id",
@@ -464,11 +465,6 @@ class S3EventModel(S3Model):
                                          "key": "target_id",
                                          "actuate": "replace",
                                          },
-                            doc_sitrep = {"link": "event_sitrep",
-                                          "joinby": "event_id",
-                                          "key": "sitrep_id",
-                                          "actuate": "replace",
-                                          },
                             gis_location = {"link": "event_event_location",
                                             "joinby": "event_id",
                                             "key": "location_id",
@@ -1179,17 +1175,7 @@ class S3IncidentModel(S3Model):
                             # Should be able to do everything via the link table
                             #event_post = "incident_id",
                             event_site = "incident_id",
-                            # Should be able to do everything via the link table
-                            #event_sitrep = {"name": "incident_sitrep",
-                            #                "joinby": "incident_id",
-                            #                },
-                            doc_sitrep = {"link": "event_sitrep",
-                                          "joinby": "incident_id",
-                                          "key": "sitrep_id",
-                                          "actuate": "replace",
-                                          #"autocomplete": "name",
-                                          "autodelete": True,
-                                          },
+                            event_sitrep = "incident_id",
                             # Should be able to do everything via the link table
                             #event_task = {"name": "incident_task",
                             #              "joinby": "incident_id",
@@ -3195,65 +3181,412 @@ class S3EventSiteModel(S3Model):
         return {}
 
 # =============================================================================
-class S3EventSitRepModel(S3Model):
+class S3EventShelterModel(S3Model):
     """
-        Link SitReps to Events &/or Incidents
+        Link Shelters to Events
     """
 
-    names = ("event_sitrep",
-             #"event_sitrep_id",
+    names = ("event_event_shelter",
              )
 
     def model(self):
 
         T = current.T
 
-        if current.deployment_settings.get_event_cascade_delete_incidents():
-            ondelete = "CASCADE"
-        else:
-            ondelete = "SET NULL"
+        ondelete = "CASCADE"
+        #if current.deployment_settings.get_event_cascade_delete_incidents():
+        #    ondelete = "CASCADE"
+        #else:
+        #    ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
-        # SitReps
-        #
-
-        tablename = "event_sitrep"
+        # Shelters
+        #   Link table for cr_shelter <> event_event
+        tablename = "event_event_shelter"
         self.define_table(tablename,
-                          # @ToDo: Validate that SitRep is linked to either an Event or an Incident
-                          self.event_event_id(ondelete = ondelete,
-                                              ),
-                          self.event_incident_id(ondelete = "CASCADE",
-                                                 ),
-                          self.doc_sitrep_id(empty = False,
+                          self.event_event_id(ondelete = ondelete),
+                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.cr_shelter_id(empty = False,
                                              ondelete = "CASCADE",
                                              ),
-                          *s3_meta_fields())
+                          *s3_meta_fields()
+                          )
 
-        # Not used as we actuate = replace
-        #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Create SitRep"),
-        #    title_display = T("SitRep Details"),
-        #    title_list = T("SitReps"),
-        #    title_update = T("Edit Task"),
-        #    label_list_button = T("List SitReps"),
-        #    label_delete_button = T("Remove SitRep from this incident"),
-        #    msg_record_created = T("SitRep added"),
-        #    msg_record_modified = T("SitRep updated"),
-        #    msg_record_deleted = T("SitRep removed"),
-        #    msg_list_empty = T("No SitReps currently registered in this incident"))
+        function = current.request.function
+        if function == "event":
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Shelter"),
+                title_display = T("Shelter Details"),
+                title_list = T("Shelters"),
+                title_update = T("Edit Shelter"),
+                label_list_button = T("List Shelters"),
+                label_delete_button = T("Remove Shelter for this Event"),
+                msg_record_created = T("Shelter added"),
+                msg_record_modified = T("Shelter updated"),
+                msg_record_deleted = T("Shelter removed"),
+                msg_list_empty = T("No Shelters currently tagged to this event")
+                )
 
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("event_id",
-                                                            "incident_id",
-                                                            "sitrep_id",
-                                                            ),
-                                                 ),
-                       onaccept = lambda form: \
-                                set_event_from_incident(form, "event_sitrep"),
-                       )
+        elif function == "shelter":
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Associate Event"),
+                title_display = T("Event Details"),
+                title_list = T("Events"),
+                title_update = T("Edit Event"),
+                label_list_button = T("List Events"),
+                label_delete_button = T("Remove Event for this Shelter"),
+                msg_record_created = T("Event added"),
+                msg_record_modified = T("Event updated"),
+                msg_record_deleted = T("Event removed"),
+                msg_list_empty = T("No Events currently tagged to this Shelter")
+                )
 
         # Pass names back to global scope (s3.*)
         return {}
+
+# =============================================================================
+class S3EventSitRepModel(S3Model):
+    """
+        Situation Reports
+        - can be compliant with EDXL SitRep 1.0:
+        http://docs.oasis-open.org/emergency/edxl-sitrep/v1.0/cs02/edxl-sitrep-v1.0-cs02.html
+        messageID 1..1 uuid
+        preparedBy 1..1 created_by/modified_by + created_on/modified_on
+        authorizedBy 1..1 approved_by + approved_on
+        reportPurpose 1..1
+        reportNumber 1..1
+        reportVersion 1..1
+        forTimePeriod 1..1 date/end_date
+        reportTitle 0..1 name
+        incidentID 1..* incident_id (add separate link table to handle multiple incidents, if-required)
+        incidentLifecyclePhase 0..* phase
+        originatingMessageID 0..1 uuid (can be itself)
+        precedingMessageID 0..* uuid
+        urgency 0..1 urgency
+        reportConfidence 1..1 confidence
+        severity 1..1 severity
+        reportingLocation 0..1 location_id
+        actionPlan 0..1
+        nextContact 0..1 next_contact
+        report 0..1 Component: 1 of the 5 Report Types
+    """
+
+    names = ("event_sitrep",
+             "event_sitrep_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        settings = current.deployment_settings
+        sitrep_dynamic = settings.get_event_sitrep_dynamic()
+        sitrep_edxl = settings.get_event_sitrep_edxl()
+
+        # ---------------------------------------------------------------------
+        # Situation Reports
+        # - @ToDo: aggregate by OU (ARC)
+        #
+
+        #version_opts = OrderedDict([
+        #    ("Initial", T("Initial")),
+        #    ("Update", T("Update")),
+        #    ("Final", T("Final")),
+        #    ])
+
+        #phase_opts = OrderedDict([
+        #    ("Preparedness", T("Preparedness")),
+        #    ("Response", T("Response")),
+        #    ("Mitigation", T("Mitigation")),
+        #    ("Recovery", T("Recovery")),
+        #    ])
+
+        #urgency_opts = OrderedDict([
+        #    ("Immediate", T("Immediate - Response action should be taken immediately")),
+        #    ("Expected", T("Expected - Response action should be taken soon (within next hour)")),
+        #    ("Future", T("Future - Responsive action should be taken in the near future")),
+        #    ("Past", T("Past - Responsive action is no longer required")),
+        #    ("Unknown", T("Unknown")),
+        #    ])
+
+        #confidence_opts = OrderedDict([
+        #    ("HighlyConfident", T("Highly Confident")),
+        #    ("SomewhatConfident", T("Somewhat Confident")),
+        #    ("Unsure", T("Unsure")),
+        #    ("NoConfidence", T("No Confidence")),
+        #    ])
+
+        #severity_opts = OrderedDict([
+        #    ("Extreme", T("Extreme - Extraordinary threat to life or property")),
+        #    ("Severe", T("Severe - Significant threat to life or property")),
+        #    ("Moderate", T("Moderate - Possible threat to life or property")),
+        #    ("Minor", T("Minor - Minimal to no known threat to life or property")),
+        #    ("Unknown", T("Severity unknown")),
+        #    ])
+
+        tablename = "event_sitrep"
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          self.event_event_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          #Field("phase", "integer",
+                          #      label = T("Incident Lifecycle Phase"),
+                          #      represent = S3Represent(options = phase_opts),
+                          #      requires = IS_EMPTY_OR(
+                          #                  IS_IN_SET(phase_opts)
+                          #                  ),
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          Field("name", length=128,
+                                label = T("Title"),
+                                requires = IS_LENGTH(128),
+                                ),
+                          Field("number", "integer",
+                                label = T("Number"),
+                                requires = IS_INT_IN_RANGE(1, 999),
+                                ),
+                          #Field("version", length=16,
+                          #      label = T("Version"),
+                          #      represent = S3Represent(options = version_opts),
+                          #      requires = IS_IN_SET(version_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(version_opts)),
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          #Field("purpose", "text",
+                          #      label = T("Purpose"),
+                          #      #represent = lambda body: XML(body),
+                          #      #widget = s3_richtext_widget,
+                          #      widget = s3_comments_widget,
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          self.org_organisation_id(
+                                #readable = not sitrep_edxl,
+                                #writable = not sitrep_edxl,
+                                ),
+                          self.gis_location_id(
+                            widget = S3LocationSelector(show_map = False),
+                            ),
+                          #Field("action_plan", "text",
+                          #      label = T("Action Plan"),
+                          #      #represent = lambda body: XML(body),
+                          #      #widget = s3_richtext_widget,
+                          #      widget = s3_comments_widget,
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          #Field("urgency", length=16,
+                          #      label = T("Urgency"),
+                          #      represent = S3Represent(options = urgency_opts),
+                          #      requires = IS_EMPTY_OR(
+                          #                  IS_IN_SET(urgency_opts)
+                          #                  ),
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          #Field("Confidence", length=16,
+                          #      label = T("Confidence"),
+                          #      represent = S3Represent(options = confidence_opts),
+                          #      requires = IS_IN_SET(confidence_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(confidence_opts)),
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          #Field("severity", length=16,
+                          #      label = T("Severity"),
+                          #      represent = S3Represent(options = severity_opts),
+                          #      requires = IS_IN_SET(severity_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(severity_opts)),
+                          #      readable = sitrep_edxl,
+                          #      writable = sitrep_edxl,
+                          #      ),
+                          s3_datetime(default = "now",
+                                      represent = "date",
+                                      widget = "date",
+                                      #set_min = "#event_sitrep_end_date",
+                                      ),
+                          #s3_datetime("end_date",
+                          #            label = T("End Date"),
+                          #            represent = "date",
+                          #            widget = "date",
+                          #            set_max = "#event_sitrep_date",
+                          #            readable = sitrep_edxl,
+                          #            writable = sitrep_edxl,
+                          #            ),
+                          #s3_datetime("approved_on",
+                          #            readable = sitrep_edxl,
+                          #            writable = False,
+                          #            ),
+                          #s3_datetime("next_contact",
+                          #            readable = sitrep_edxl,
+                          #            writable = sitrep_edxl,
+                          #            ),
+                          self.dc_template_id(
+                                readable = sitrep_dynamic,
+                                writable = sitrep_dynamic,
+                                ),
+                          s3_comments(
+                                #readable = not sitrep_edxl,
+                                #writable = not sitrep_edxl,
+                                ),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Situation Report"),
+                title_display = T("Situation Report Details"),
+                title_list = T("Situation Reports"),
+                title_update = T("Edit Situation Report"),
+                title_upload = T("Import Situation Reports"),
+                label_list_button = T("List Situation Reports"),
+                label_delete_button = T("Delete Situation Report"),
+                msg_record_created = T("Situation Report added"),
+                msg_record_modified = T("Situation Report updated"),
+                msg_record_deleted = T("Situation Report deleted"),
+                msg_list_empty = T("No Situation Reports currently registered"))
+
+        if sitrep_edxl:
+            # All writable fields
+            crud_form = None
+        else:
+            crud_form = S3SQLCustomForm("event_id",
+                                        "incident_id",
+                                        "name",
+                                        "number",
+                                        "organisation_id",
+                                        "location_id",
+                                        "date",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "document",
+                                            label = T("Attachments"),
+                                            fields = [("", "file")],
+                                        ),
+                                        "comments",
+                                        )
+
+        if sitrep_edxl:
+            org_filter = None
+        elif settings.get_org_branches():
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           leafonly = False,
+                                           )
+        else:
+            org_filter = S3OptionsFilter("organisation_id",
+                                         #filter = True,
+                                         #header = "",
+                                         )
+
+        filter_widgets = [S3OptionsFilter("event_id"),
+                          org_filter,
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       # Question Answers are in a Dynamic Component
+                       # - however they all have the same component name so add correct one in controller instead!
+                       #dynamic_components = True,
+                       filter_widgets = filter_widgets,
+                       list_fields = ["date",
+                                      "event_id",
+                                      "incident_id",
+                                      "location_id$L1",
+                                      "location_id$L2",
+                                      "location_id$L3",
+                                      "organisation_id",
+                                      "name",
+                                      (T("Attachments"), "document.file"),
+                                      "comments",
+                                      ],
+                       orderby = "event_sitrep.date desc",
+                       super_entity = "doc_entity",
+                       )
+
+        # Components
+        #self.add_components(tablename,
+        #                    )
+
+        represent = S3Represent(lookup=tablename)
+
+        sitrep_id = S3ReusableField("sitrep_id", "reference %s" % tablename,
+                                    label = T("Situation Report"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(current.db, "event_sitrep.id",
+                                                          represent,
+                                                          orderby="event_sitrep.name",
+                                                          sort=True,
+                                                          )),
+                                    sortby = "name",
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict(event_sitrep_id = sitrep_id,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(event_sitrep_id = lambda **attr: dummy("sitrep_id"),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_sitrep_create_onaccept(form):
+        """
+            On-accept routine for event_sitrep:
+                - Create & link a Dynamic Table to use to store the Questions
+        """
+
+        form_vars = form.vars
+        try:
+            sitrep_id = form_vars.id
+        except AttributeError:
+            return
+
+        # Create the Dynamic Table
+        #settings = current.deployment_settings
+        #mobile_data = settings.get_dc_mobile_data()
+        #if settings.get_dc_mobile_inserts():
+        #    table_settings = "" # Default
+        #else:
+        #    table_settings = {"insertable": False}
+
+        table_id = current.s3db.s3_table.insert(title = form_vars.get("name"),
+                                                mobile_form = False, # Setting for SCPHIMS, deployment_setting if this needs changing for other contexts
+                                                #mobile_data = mobile_data, # False by default
+                                                #settings = table_settings,
+                                                )
+
+        # Add a Field to link Answers together
+        db = current.db
+        db.s3_field.insert(table_id = table_id,
+                           name = "sitrep_id",
+                           field_type = "reference event_sitrep",
+                           #label = "Response",
+                           require_not_empty = True,
+                           component_key = True,
+                           component_alias = "answer",
+                           component_tab = True,
+                           master = "dc_response",
+                           settings = {"component_multiple": False},
+                           )
+        # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+        # @ToDo: Call set_record_owner() once we start restricting these
+
+        # Link this Table to the Template
+        db(db.event_sitrep.id == sitrep_id).update(table_id=table_id)
 
 # =============================================================================
 class S3EventTagModel(S3Model):
@@ -3344,70 +3677,6 @@ class S3EventTaskModel(S3Model):
                        onaccept = lambda form: \
                                 set_event_from_incident(form, "event_task"),
                        )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class S3EventShelterModel(S3Model):
-    """
-        Link Shelters to Events
-    """
-
-    names = ("event_event_shelter",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        ondelete = "CASCADE"
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Shelters
-        #   Link table for cr_shelter <> event_event
-        tablename = "event_event_shelter"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = ondelete),
-                          #self.event_incident_id(ondelete = "CASCADE"),
-                          self.cr_shelter_id(empty = False,
-                                             ondelete = "CASCADE",
-                                             ),
-                          *s3_meta_fields()
-                          )
-
-        function = current.request.function
-        if function == "event":
-            current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Shelter"),
-                title_display = T("Shelter Details"),
-                title_list = T("Shelters"),
-                title_update = T("Edit Shelter"),
-                label_list_button = T("List Shelters"),
-                label_delete_button = T("Remove Shelter for this Event"),
-                msg_record_created = T("Shelter added"),
-                msg_record_modified = T("Shelter updated"),
-                msg_record_deleted = T("Shelter removed"),
-                msg_list_empty = T("No Shelters currently tagged to this event")
-                )
-
-        elif function == "shelter":
-            current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Associate Event"),
-                title_display = T("Event Details"),
-                title_list = T("Events"),
-                title_update = T("Edit Event"),
-                label_list_button = T("List Events"),
-                label_delete_button = T("Remove Event for this Shelter"),
-                msg_record_created = T("Event added"),
-                msg_record_modified = T("Event updated"),
-                msg_record_deleted = T("Event removed"),
-                msg_list_empty = T("No Events currently tagged to this Shelter")
-                )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3895,7 +4164,8 @@ def event_rheader(r):
         T = current.T
         settings = current.deployment_settings
 
-        if r.name == "event":
+        name = r.name
+        if name == "event":
             # Event Controller
             if settings.get_event_label(): # == "Disaster"
                 label = T("Disaster Details")
@@ -3939,15 +4209,18 @@ def event_rheader(r):
                 table = r.table
                 rheader = DIV(TABLE(TR(exercise),
                                     TR(TH("%s: " % table.name.label),
-                                       event.name),
+                                       event.name,
+                                       ),
                                     TR(TH("%s: " % table.comments.label),
-                                       event.comments),
+                                       event.comments,
+                                       ),
                                     TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
+                                       table.start_date.represent(event.start_date),
+                                       ),
                                     TR(closed),
                                     ), rheader_tabs)
 
-        elif r.name == "incident":
+        elif name == "incident":
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
             append = tabs.append
@@ -4003,12 +4276,48 @@ def event_rheader(r):
                 table = r.table
                 rheader = DIV(TABLE(TR(exercise),
                                     TR(TH("%s: " % table.name.label),
-                                       record.name),
+                                       record.name,
+                                       ),
                                     TR(TH("%s: " % table.comments.label),
-                                       record.comments),
+                                       record.comments,
+                                       ),
                                     TR(TH("%s: " % table.date.label),
-                                       table.date.represent(record.date)),
+                                       table.date.represent(record.date),
+                                       ),
                                     TR(closed),
+                                    ), rheader_tabs)
+
+        elif name == "sitrep":
+            # SitRep Controller
+            tabs = [(T("Header"), None)]
+
+            # Dynamic Answers tab
+            if settings.get_event_sitrep_dynamic():
+                tabs.append((T("Details"), "answer"))
+
+            # EDXL tabs
+            #if settings.get_event_sitrep_edxl():
+            #    tabs.extend(((T("Field Observation Report"), "field_observation"),
+            #                 (T("Situation Information"), "situation_information"),
+            #                 (T("Response Resources Totals"), "response_resources"),
+            #                 (T("Casualty And Illness Summary"), "casualty_illness"),
+            #                 (T("Management Reporting Summary"), "management"),
+            #                 ))
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            record = r.record
+            if record:
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.event_id.label),
+                                       table.event_id.represent(record.event_id),
+                                       ),
+                                    TR(TH("%s: " % table.number.label),
+                                       record.number,
+                                       ),
+                                    TR(TH("%s: " % table.date.label),
+                                       table.date.represent(record.date),
+                                       ),
                                     ), rheader_tabs)
 
     return rheader
