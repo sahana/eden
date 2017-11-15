@@ -961,6 +961,78 @@ def config(settings):
     settings.event.sitrep_dynamic = True
     settings.hrm.job_title_deploy = True
 
+    # -------------------------------------------------------------------------
+    def event_rheader(r):
+        """ Resource headers for component views """
+
+        rheader = None
+
+        record = r.record
+        if record and r.representation == "html":
+
+            from gluon.html import DIV, TABLE, TH, TR
+            from s3 import s3_rheader_tabs
+
+            T = current.T
+
+            name = r.name
+            if name == "event":
+                # Event Controller
+                tabs = [(T("Disaster Details"), None),
+                        (T("Contacts"), "human_resource", {"contacts":"1"}),
+                        (T("TA Backstops"), "human_resource", {"TA":"1"}),
+                        (T("Documents"), "document"),
+                        (T("Photos"), "image"),
+                        (T("Impact"), "impact"),
+                        (T("Assessment Targets"), "target"),
+                        (T("Assessments"), "response"),
+                        (T("Projects"), "project"),
+                        (T("Activities"), "activity"),
+                        (T("Deployment Tracker"), "human_resource", {"dt":"1"}),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                if record.closed:
+                    closed = TH(T("CLOSED"))
+                else:
+                    closed = TH()
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments,
+                                       ),
+                                    TR(TH("%s: " % table.start_date.label),
+                                       table.start_date.represent(record.start_date),
+                                       ),
+                                    TR(closed),
+                                    ), rheader_tabs)
+
+            elif name == "sitrep":
+                # SitRep Controller
+                tabs = [(T("Header"), None),
+                        (T("Details"), "answer"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.event_id.label),
+                                       table.event_id.represent(record.event_id),
+                                       ),
+                                    TR(TH("%s: " % table.number.label),
+                                       record.number,
+                                       ),
+                                    TR(TH("%s: " % table.date.label),
+                                       table.date.represent(record.date),
+                                       ),
+                                    ), rheader_tabs)
+
+        return rheader
+
+    # -------------------------------------------------------------------------
     def response_locations():
         """
             Called onaccept/ondelete from events & activities
@@ -1026,6 +1098,175 @@ def config(settings):
                               False,
                               tablename = "event_event")
 
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.component_name == "human_resource":
+                get_vars = r.get_vars
+                contacts = get_vars.get("contacts")
+                TA = get_vars.get("TA")
+
+                T = current.T
+                s3 = current.response.s3
+                s3db = current.s3db
+                table = s3db.event_human_resource
+                tablename = "event_human_resource"
+
+                if contacts:
+                    # Key Contacts
+                    from s3 import FS, IS_ONE_OF, S3SQLCustomForm
+
+                    s3.crud_strings[tablename] = Storage(
+                        label_create = T("Add Contact"),
+                        title_display = T("Contact Details"),
+                        title_list = T("Contacts"),
+                        title_update = T("Edit Contact"),
+                        label_list_button = T("List Contacts"),
+                        label_delete_button = T("Remove Contact"),
+                        msg_record_created = T("Contact created"),
+                        msg_record_modified = T("Contact updated"),
+                        msg_record_deleted = T("Contact deleted"),
+                        msg_list_empty = T("No Contacts currently defined for this event"))
+
+                    table.person_id.label = T("Name")
+
+                    not_filter_opts = ("TA Backstop",
+                                       "In-Country TA Lead",
+                                       )
+
+                    f = table.job_title_id
+                    f.label = T("Area")
+                    f.comment = None
+                    f.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
+                                           f.represent,
+                                           filterby = "type",
+                                           filter_opts = [4],
+                                           not_filterby = "name",
+                                           not_filter_opts = not_filter_opts,
+                                           orderby = "hrm_job_title.name",
+                                           sort = True,
+                                           )
+
+                    r.component.add_filter((~FS("job_title_id$name").belongs(not_filter_opts)) & \
+                                           (FS("job_title_id$type") == 4))
+
+                    crud_form = S3SQLCustomForm("job_title_id",
+                                                "person_id",
+                                                "start_date",
+                                                "end_date",
+                                                )
+
+                    list_fields = ["job_title_id",
+                                   "person_id",
+                                   (T("Email"), "person_id$email.value"),
+                                   (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
+                                   ]
+
+                elif TA:
+                    # TA Backstops
+                    from s3 import FS, IS_ONE_OF, S3SQLCustomForm
+
+                    s3.crud_strings[tablename] = Storage(
+                        label_create = T("Add TA Backstop"),
+                        title_display = T("TA Backstop Details"),
+                        title_list = T("TA Backstops"),
+                        title_update = T("Edit TA Backstop"),
+                        label_list_button = T("List TA Backstops"),
+                        label_delete_button = T("Remove TA Backstop"),
+                        msg_record_created = T("TA Backstop created"),
+                        msg_record_modified = T("TA Backstop updated"),
+                        msg_record_deleted = T("TA Backstop deleted"),
+                        msg_list_empty = T("No TA Backstops currently defined for this event"))
+
+                    table.person_id.label = T("Name")
+                    s3db.hrm_human_resource.organisation_id.label = T("Member")
+                    table.sector_id.readable = table.sector_id.writable = True
+
+                    filter_opts = ("TA Backstop",
+                                   "In-Country TA Lead",
+                                   )
+
+                    f = table.job_title_id
+                    f.label = T("Type")
+                    f.comment = None
+                    f.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
+                                           f.represent,
+                                           filterby = "name",
+                                           filter_opts = filter_opts,
+                                           orderby = "hrm_job_title.name",
+                                           sort = True,
+                                           )
+
+                    r.component.add_filter(FS("job_title_id$name").belongs(filter_opts))
+
+                    crud_form = S3SQLCustomForm("job_title_id",
+                                                "sector_id",
+                                                "person_id",
+                                                "start_date",
+                                                "end_date",
+                                                )
+
+                    list_fields = ["job_title_id",
+                                   "sector_id",
+                                   "person_id",
+                                   "person_id$human_resource.organisation_id",
+                                   (T("Email"), "person_id$email.value"),
+                                   (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
+                                   ]
+
+                else:
+                    # Deployment Tracker
+                    # @ToDo: Grade & Status
+                    from s3 import FS, S3SQLCustomForm
+
+                    s3.crud_strings[tablename] = Storage(
+                        label_create = T("Add Deployment"),
+                        title_display = T("Deployment Details"),
+                        title_list = T("Deployments"),
+                        title_update = T("Edit Deployment"),
+                        label_list_button = T("List Deployments"),
+                        label_delete_button = T("Remove Deployment"),
+                        msg_record_created = T("Deployment created"),
+                        msg_record_modified = T("Deployment updated"),
+                        msg_record_deleted = T("Deployment deleted"),
+                        msg_list_empty = T("No Deployments currently defined for this event"))
+
+                    table.job_title_id.label = T("Function/Position")
+                    table.person_id.label = T("Name")
+                    s3db.hrm_human_resource.organisation_id.label = T("Source/Member")
+                    table.start_date.label = T("Arrival Date")
+                    table.end_date.label = T("Departure Date") 
+
+                    r.component.add_filter(FS("job_title_id$type") != 4)
+
+                    crud_form = S3SQLCustomForm("job_title_id",
+                                                "person_id",
+                                                "start_date",
+                                                "end_date",
+                                                )
+
+                    list_fields = ["job_title_id",
+                                   "person_id",
+                                   "person_id$human_resource.organisation_id",
+                                   "start_date",
+                                   "end_date",
+                                   ]
+
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+            return True
+        s3.prep = custom_prep
+
+        attr["rheader"] = event_rheader
         return attr
 
     settings.customise_event_event_controller = customise_event_event_controller
@@ -1035,6 +1276,7 @@ def config(settings):
 
         from gluon import IS_EMPTY_OR, IS_INT_IN_RANGE
         from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+
         s3db = current.s3db
         s3db.event_event_location.location_id.widget = \
                                     S3LocationSelector(levels=("L1", "L2"))
@@ -1047,7 +1289,7 @@ def config(settings):
                                     "event_type_id",
                                     "start_date",
                                     S3SQLInlineComponent(
-                                        "tag",
+                                        "event_tag",
                                         fields = [("", "value"),
                                                   ],
                                         filterby = {"field": "tag",
@@ -1063,19 +1305,19 @@ def config(settings):
         list_fields = ["name",
                        "event_type_id",
                        "start_date",
-                       (T("Category"), "tag.value"),
+                       (T("Category"), "event_tag.value"),
                        "closed",
                        "comments",
                        ]
 
         # If we have default ones defined then need to add them in a cascade:
-        #onaccept = s3db.get_config("event_event", "onaccept")
-        #ondelete = s3db.get_config("event_event", "ondelete")
+        #onaccept = s3db.get_config(tablename, "onaccept")
+        #ondelete = s3db.get_config(tablename, "ondelete")
         onaccept = lambda form: response_locations()
-        update_onaccept = s3db.get_config("event_event", "update_onaccept")
+        update_onaccept = s3db.get_config(tablename, "update_onaccept")
         update_onaccept = [update_onaccept, onaccept]
         
-        s3db.configure("event_event",
+        s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,
                        onaccept = onaccept,
@@ -1192,6 +1434,7 @@ def config(settings):
                                   open,
                                   tablename = "event_sitrep")
 
+        attr["rheader"] = event_rheader
         return attr
 
     settings.customise_event_sitrep_controller = customise_event_sitrep_controller

@@ -143,6 +143,7 @@ class S3AssetModel(S3Model):
                                 5: T("Needs Maintenance"),
                                 }
 
+        # @ToDo: make this lookup Lazy (also in event.py)
         ctable = self.supply_item_category
         itable = self.supply_item
         supply_item_represent = self.supply_item_represent

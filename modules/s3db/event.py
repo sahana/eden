@@ -514,22 +514,7 @@ class S3EventModel(S3Model):
                                         "actuate": "hide",
                                         "autodelete": False,
                                         },
-                            # Should be able to do everything via the link table
-                            #event_human_resource = "event_id",
-                            hrm_human_resource = ({"link": "event_human_resource",
-                                                   "joinby": "event_id",
-                                                   "key": "human_resource_id",
-                                                   "actuate": "hide",
-                                                   "autodelete": False,
-                                                   },
-                                                  {"name": "assign",
-                                                   "link": "event_human_resource",
-                                                   "joinby": "event_id",
-                                                   "key": "human_resource_id",
-                                                   "actuate": "hide",
-                                                   "autodelete": False,
-                                                   },
-                                                  ),
+                            event_human_resource = "event_id",
                             req_req = {"link": "event_request",
                                        "joinby": "event_id",
                                        "key": "req_id",
@@ -576,7 +561,7 @@ class S3EventModel(S3Model):
         # Custom Method to Assign HRs
         set_method("event", "event",
                    method = "assign",
-                   action = self.hrm_AssignMethod(component="human_resource"))
+                   action = self.pr_AssignMethod(component="human_resource"))
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -1138,22 +1123,7 @@ class S3IncidentModel(S3Model):
                                         },
                             event_bookmark = "incident_id",
                             event_tag = "incident_id",  # cms_tag
-                            # Should be able to do everything via the link table
-                            #event_human_resource = "incident_id",
-                            hrm_human_resource = ({"link": "event_human_resource",
-                                                   "joinby": "incident_id",
-                                                   "key": "human_resource_id",
-                                                   "actuate": "hide",
-                                                   "autodelete": False,
-                                                   },
-                                                  {"name": "assign",
-                                                   "link": "event_human_resource",
-                                                   "joinby": "incident_id",
-                                                   "key": "human_resource_id",
-                                                   "actuate": "hide",
-                                                   "autodelete": False,
-                                                   },
-                                                  ),
+                            event_human_resource = "incident_id",
                             # Should be able to do everything via the link table
                             #event_organisation = "incident_id",
                             org_organisation = {"link": "event_organisation",
@@ -1231,7 +1201,7 @@ class S3IncidentModel(S3Model):
         # Custom Method to Assign HRs
         set_method("event", "incident",
                    method = "assign",
-                   action = self.hrm_AssignMethod(component="human_resource"))
+                   action = self.pr_AssignMethod(component="human_resource"))
 
         # Custom Method to Dispatch HRs
         set_method("event", "incident",
@@ -2361,38 +2331,40 @@ class S3EventAssetModel(S3Model):
 
         T = current.T
 
-        status_opts = {1: T("Alerted"),
-                       2: T("Standing By"),
-                       3: T("Active"),
-                       4: T("Deactivated"),
-                       5: T("Unable to activate"),
-                       }
-
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Assets
+
+        # @ToDo: make this lookup Lazy (also in asset.py)
+        ctable = self.supply_item_category
+        itable = self.supply_item
+        supply_item_represent = self.supply_item_represent
+        asset_items_set = current.db((ctable.can_be_asset == True) & \
+                                     (itable.item_category_id == ctable.id))
 
         tablename = "event_asset"
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
-                          #self.event_event_id(ondelete = ondelete),
+                          self.event_event_id(ondelete = ondelete),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE"),
-                          # @ToDo: Notification
+                          self.supply_item_id(represent = supply_item_represent,
+                                              requires = IS_ONE_OF(asset_items_set,
+                                                                   "supply_item.id",
+                                                                   supply_item_represent,
+                                                                   sort = True,
+                                                                   ),
+                                              script = None, # No Item Pack Filter
+                                              widget = None,
+                                              ),
                           self.asset_asset_id(empty = False,
                                               ondelete = "RESTRICT",
                                               ),
-                          Field("status", "integer",
-                                default = 1,
-                                represent = lambda opt: \
-                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
-                                requires = IS_IN_SET(status_opts),
-                                ),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2409,8 +2381,8 @@ class S3EventAssetModel(S3Model):
 
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
+                                        "item_id",
                                         "asset_id",
-                                        "status",
                                         S3SQLInlineComponent("allocation",
                                                              label = T("Budget"),
                                                              fields = ["budget_entity_id",
@@ -2426,19 +2398,20 @@ class S3EventAssetModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "item_id",
                                                             "asset_id",
                                                             ),
                                                  ),
                        list_fields = ["incident_id",
+                                      "item_id",
                                       "asset_id",
-                                      "status",
                                       "allocation.budget_entity_id",
                                       "allocation.start_date",
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
-                       #onaccept = lambda form: \
-                       # set_event_from_incident(form, "event_asset"),
+                       onaccept = lambda form: \
+                            set_event_from_incident(form, "event_asset"),
                        super_entity = "budget_cost_item",
                        )
 
@@ -2656,7 +2629,6 @@ class S3EventForumModel(S3Model):
 class S3EventHRModel(S3Model):
     """
         Link Human Resources to Events/Incidents
-        @ToDo: Replace with Deployment module?
     """
 
     names = ("event_human_resource",
@@ -2666,22 +2638,18 @@ class S3EventHRModel(S3Model):
 
         T = current.T
 
-        status_opts = {1: T("Alerted"),
-                       2: T("Standing By"),
-                       3: T("Active"),
-                       4: T("Deactivated"),
-                       5: T("Unable to activate"),
-                       }
+        settings = current.deployment_settings
+        sitrep_edxl = settings.get_event_sitrep_edxl()
 
-        if current.deployment_settings.get_event_cascade_delete_incidents():
+        if settings.get_event_cascade_delete_incidents():
             ondelete = "CASCADE"
         else:
             ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
-        # Staff/Volunteers
-        # @ToDo: Use Positions, not individual HRs
-        # @ToDo: Search Widget
+        # Positions required &, if they are filled, then who is filling them
+        # - NB If the Person filling a Role changes then a new record should be created with a new start_date/end_date
+        #
 
         tablename = "event_human_resource"
         self.define_table(tablename,
@@ -2693,16 +2661,29 @@ class S3EventHRModel(S3Model):
                                               writable = False,
                                               ),
                           self.event_incident_id(ondelete = "CASCADE"),
-                          # @ToDo: Add Warning?
-                          self.hrm_human_resource_id(empty = False,
-                                                     ondelete = "RESTRICT",
-                                                     ),
-                          Field("status", "integer",
-                                default = 1,
-                                represent = lambda opt: \
-                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
-                                requires = IS_IN_SET(status_opts),
-                                ),
+                          # Enable in-templates as-required (used by SCPHIMS)
+                          self.org_sector_id(readable = False,
+                                             writable = False,
+                                             ),
+                          self.org_organisation_id(label = T("Requesting Organization"),
+                                                   readable = sitrep_edxl,
+                                                   writable = sitrep_edxl,
+                                                   ),
+                          # Filter list to 'deploy' type in templates if-required
+                          self.hrm_job_title_id(ondelete = "RESTRICT"),
+                          self.pr_person_id(ondelete = "RESTRICT"),
+                          # reportsToAgency in EDXL-SitRep: person_id$human_resource.organisation_id
+                          s3_datetime("start_date",
+                                      label = T("Start Date"),
+                                      widget = "date",
+                                      ),
+                          s3_datetime("end_date",
+                                      label = T("End Date"),
+                                      # Not supported by s3_datetime
+                                      #start_field = "budget_allocation_start_date",
+                                      #default_interval = 12,
+                                      widget = "date",
+                                      ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -2718,36 +2699,47 @@ class S3EventHRModel(S3Model):
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this incident"))
 
+        list_fields = [#"incident_id", # Not being dropped in component view
+                       "job_title_id",
+                       "person_id",
+                       "start_date",
+                       "end_date",
+                       ]
+
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
-                                        "human_resource_id",
-                                        "status",
+                                        "job_title_id",
+                                        "person_id",
+                                        "start_date",
+                                        "end_date",
                                         S3SQLInlineComponent("allocation",
                                                              label = T("Budget"),
                                                              fields = ["budget_id",
-                                                                       "start_date",
-                                                                       "end_date",
+                                                                       # @ToDo: Populate these automatically from the master record
+                                                                       #"start_date",
+                                                                       #"end_date",
                                                                        "daily_cost",
                                                                        ],
                                                              ),
                                         )
+            list_fields.extend(("allocation.budget_id",
+                                #"allocation.start_date",
+                                #"allocation.end_date",
+                                "allocation.daily_cost",
+                                ))
         else:
             crud_form = None
 
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = S3Duplicate(primary = ("incident_id",
-                                                            "human_resource_id",
+                                                            "job_title_id",
+                                                            "person_id",
+                                                            "start_date",
+                                                            "end_date",
                                                             ),
                                                  ),
-                       list_fields = [#"incident_id", # Not being dropped in component view
-                                      "human_resource_id",
-                                      "status",
-                                      "allocation.budget_id",
-                                      "allocation.start_date",
-                                      "allocation.end_date",
-                                      "allocation.daily_cost",
-                                      ],
+                       list_fields = list_fields,
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_human_resource"),
                        super_entity = "budget_cost_item",
@@ -4161,7 +4153,8 @@ def event_rheader(r):
 
     rheader = None
 
-    if r.representation == "html":
+    record = r.record
+    if record and r.representation == "html":
 
         T = current.T
         settings = current.deployment_settings
@@ -4198,29 +4191,27 @@ def event_rheader(r):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            event = r.record
-            if event:
-                if event.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if event.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       event.name,
-                                       ),
-                                    TR(TH("%s: " % table.comments.label),
-                                       event.comments,
-                                       ),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date),
-                                       ),
-                                    TR(closed),
-                                    ), rheader_tabs)
+            if record.exercise:
+                exercise = TH(T("EXERCISE"))
+            else:
+                exercise = TH()
+            if record.closed:
+                closed = TH(T("CLOSED"))
+            else:
+                closed = TH()
+            table = r.table
+            rheader = DIV(TABLE(TR(exercise),
+                                TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                   ),
+                                TR(TH("%s: " % table.comments.label),
+                                   record.comments,
+                                   ),
+                                TR(TH("%s: " % table.start_date.label),
+                                   table.start_date.represent(record.start_date),
+                                   ),
+                                TR(closed),
+                                ), rheader_tabs)
 
         elif name == "incident":
             # Incident Controller
@@ -4265,29 +4256,27 @@ def event_rheader(r):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            record = r.record
-            if record:
-                if record.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if record.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       record.name,
-                                       ),
-                                    TR(TH("%s: " % table.comments.label),
-                                       record.comments,
-                                       ),
-                                    TR(TH("%s: " % table.date.label),
-                                       table.date.represent(record.date),
-                                       ),
-                                    TR(closed),
-                                    ), rheader_tabs)
+            if record.exercise:
+                exercise = TH(T("EXERCISE"))
+            else:
+                exercise = TH()
+            if record.closed:
+                closed = TH(T("CLOSED"))
+            else:
+                closed = TH()
+            table = r.table
+            rheader = DIV(TABLE(TR(exercise),
+                                TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                   ),
+                                TR(TH("%s: " % table.comments.label),
+                                   record.comments,
+                                   ),
+                                TR(TH("%s: " % table.date.label),
+                                   table.date.represent(record.date),
+                                   ),
+                                TR(closed),
+                                ), rheader_tabs)
 
         elif name == "sitrep":
             # SitRep Controller
@@ -4308,19 +4297,17 @@ def event_rheader(r):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            record = r.record
-            if record:
-                table = r.table
-                rheader = DIV(TABLE(TR(TH("%s: " % table.event_id.label),
-                                       table.event_id.represent(record.event_id),
-                                       ),
-                                    TR(TH("%s: " % table.number.label),
-                                       record.number,
-                                       ),
-                                    TR(TH("%s: " % table.date.label),
-                                       table.date.represent(record.date),
-                                       ),
-                                    ), rheader_tabs)
+            table = r.table
+            rheader = DIV(TABLE(TR(TH("%s: " % table.event_id.label),
+                                   table.event_id.represent(record.event_id),
+                                   ),
+                                TR(TH("%s: " % table.number.label),
+                                   record.number,
+                                   ),
+                                TR(TH("%s: " % table.date.label),
+                                   table.date.represent(record.date),
+                                   ),
+                                ), rheader_tabs)
 
     return rheader
 
