@@ -227,7 +227,7 @@ class S3HRModel(S3Model):
             hrm_type_opts = {1: STAFF}
             hrm_type_default = 1
 
-        if settings.has_module("deploy"):
+        if settings.get_hrm_job_title_deploy():
             hrm_types = True
             hrm_type_opts[4] = T("Deployment")
 

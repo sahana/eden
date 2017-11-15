@@ -959,6 +959,7 @@ def config(settings):
     #
     settings.event.label = "Disaster"
     settings.event.sitrep_dynamic = True
+    settings.hrm.job_title_deploy = True
 
     def response_locations():
         """

@@ -3416,6 +3416,15 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "event_types", default=False)
 
+    def get_hrm_job_title_deploy(self):
+        """
+            Whether the 'deploy' Job Title type should be used
+        """
+        job_title_deploy = self.hrm.get("job_title_deploy", None)
+        if job_title_deploy is None:
+            job_title_deploy = self.has_module("deploy")
+        return job_title_deploy
+
     def get_hrm_multiple_job_titles(self):
         """
             If set to True then HRs can have multiple Job Titles

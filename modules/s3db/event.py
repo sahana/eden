@@ -1892,6 +1892,8 @@ class S3EventResourceModel(S3Model):
         Whilst there is a Quantity option, this is envisaged to usually be 1
         - these are typically named, trackable resources
 
+        @UsedBy: MCOP (but not WACOP)
+
         @ToDo: Optional link to org_resource to e.g. mark resources as assigned
     """
 

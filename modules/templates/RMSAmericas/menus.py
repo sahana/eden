@@ -365,7 +365,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                         "ns_training_manager",
                                         "training_coordinator",
                                         )),
-                            M("Certificates", f="certificate"),
+                            #M("Certificates", f="certificate"),
                             # Just access this via Tabs of Courses & Certificates
                             #M("Course Certificates", f="course_certificate"),
                         ),

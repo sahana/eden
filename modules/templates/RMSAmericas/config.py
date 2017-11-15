@@ -1603,17 +1603,17 @@ Thank you"""
                 else:
                     from s3 import IS_ONE_OF
                     ltable = db.org_organisation_organisation_type
-                    rows = db(~ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
-                    filter_opts = [row.organisation_id for row in rows]
+                    rows = db(ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
+                    not_filter_opts = [row.organisation_id for row in rows]
                     f.requires = IS_ONE_OF(db, "org_organisation.id",
                                            f.represent,
-                                           filterby = "id",
-                                           filter_opts = filter_opts,
+                                           not_filterby = "id",
+                                           not_filter_opts = not_filter_opts,
                                            updateable = True,
                                            orderby = "org_organisation.name",
                                            sort = True)
 
-                    resource.add_filter(FS("organisation_id").belongs(filter_opts))
+                    resource.add_filter(~FS("organisation_id").belongs(not_filter_opts))
 
                     # Find the relevant filter widget & limit it's options
                     filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
@@ -1626,7 +1626,7 @@ Thank you"""
                                 filter_widget = w
                                 break
                     if filter_widget is not None:
-                        filter_widget.opts["filter"] = (FS("id").belongs(filter_opts))
+                        filter_widget.opts["filter"] = (~FS("id").belongs(not_filter_opts))
 
             else:
                 s3db.org_organisation.root_organisation.label = T("National Society")
@@ -3182,12 +3182,12 @@ Thank you"""
                     else:
                         from s3 import IS_ONE_OF
                         ltable = db.org_organisation_organisation_type
-                        rows = db(~ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
-                        filter_opts = [row.organisation_id for row in rows]
+                        rows = db(ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
+                        not_filter_opts = [row.organisation_id for row in rows]
                         f.requires = IS_ONE_OF(db, "org_organisation.id",
                                                f.represent,
-                                               filterby = "id",
-                                               filter_opts = filter_opts,
+                                               not_filterby = "id",
+                                               not_filter_opts = not_filter_opts,
                                                updateable = True,
                                                orderby = "org_organisation.name",
                                                sort = True)

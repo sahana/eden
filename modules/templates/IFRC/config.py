@@ -594,6 +594,7 @@ def config(settings):
     settings.pr.lookup_duplicates = True
 
     # RDRT
+    settings.hrm.job_title_deploy = True
     settings.deploy.hr_label = "Member"
     settings.deploy.team_label = "RDRT"
     # Responses only come in via Email
