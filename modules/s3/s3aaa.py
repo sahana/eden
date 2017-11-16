@@ -6970,16 +6970,19 @@ class S3Permission(object):
         if "t" in acl:
             default_table_acl = acl["t"]
         elif table_restricted:
-            default_table_acl = default_page_acl
+            default_table_acl = default_page_acl if page_restricted else NONE
         else:
-            default_table_acl = ALL
+            default_table_acl = default_page_acl if page_restricted else ALL
 
-        # Fall back to default ACLs
+        # No ACLs inevitably causes a "no applicable ACLs" permission failure,
+        # so for unrestricted pages or tables, we must create a default ACL
+        # here in order to have the default apply:
         if not acls:
-            if not (t and self.use_tacls):
+            if t and self.use_tacls:
+                if not table_restricted:
+                    acls[ANY] = {"t": default_table_acl}
+            elif not page_restricted:
                 acls[ANY] = {"c": default_page_acl}
-            else:
-                acls[ANY] = {"t": default_table_acl}
 
         # Order by precedence
         s3db = current.s3db
