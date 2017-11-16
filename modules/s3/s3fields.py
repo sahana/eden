@@ -366,13 +366,23 @@ class S3Represent(object):
         if self.slabels:
             # String Template or lazyT
             try:
-                v = labels % row.as_dict()
+                row_dict = row.as_dict()
             except AttributeError:
                 # Row just a dict/Storage after all? (e.g. custom lookup)
-                v = labels % row
+                row_dict = row
+
+            # Represent None as self.none
+            none = self.none
+            for k, v in row_dict.items():
+                if v is None:
+                    row_dict[k] = self.none
+
+            v = labels % row_dict
+
         elif self.clabels:
             # External Renderer
             v = labels(row)
+
         else:
             # Default
             values = [row[f] for f in self.fields if row[f] not in (None, "")]

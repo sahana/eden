@@ -1290,12 +1290,12 @@ def config(settings):
 
             # Represent person_id as link
             field = table.person_id
-            fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
-            field.represent = s3db.pr_PersonRepresent(fields = ("pe_label",
-                                                                "last_name",
-                                                                "first_name",
-                                                                ),
-                                                      labels = fmt,
+            #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+            field.represent = s3db.pr_PersonRepresent(#fields = ("pe_label",
+                                                      #          "last_name",
+                                                      #          "first_name",
+                                                      #          ),
+                                                      #labels = fmt,
                                                       show_link = True,
                                                       )
 
@@ -1618,6 +1618,7 @@ def config(settings):
 
                 # Custom list fields
                 list_fields = ["priority",
+                               (T("ID"), "person_id$pe_label"),
                                (T("Case"), "person_id"),
                                "sector_id",
                                "subject",
