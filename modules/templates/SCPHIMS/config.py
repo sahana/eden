@@ -261,7 +261,7 @@ def config(settings):
         #onaccept = s3db.get_config("dc_target", "onaccept")
         #ondelete = s3db.get_config("dc_target", "ondelete")
         onaccept = dc_target_onaccept
-        
+
         s3db.configure("dc_target",
                        onaccept = onaccept,
                        ondelete = onaccept,
@@ -340,7 +340,7 @@ def config(settings):
                                 label = T("Create Person"),
                                 vars = {"child": "person_id"},
                                 )
-                                      
+
         # Always at L4
         from s3 import S3LocationSelector
         table.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3", "L4"),
@@ -360,7 +360,7 @@ def config(settings):
         else:
             f = table.organisation_id
             f.default = SCI
-            f.readable = f.writable = False 
+            f.readable = f.writable = False
 
         has_role = current.auth.s3_has_role
         ttable = s3db.dc_template
@@ -501,6 +501,18 @@ def config(settings):
             if r.method == "mform":
                 # Mobile client downloading Assessment Schema
                 # @ToDo: Customise Form
+
+                from s3 import S3SQLCustomForm
+
+                # Mobile form for response:
+                # Expose limited form, avoid foreign keys that would
+                # trigger unnecessary reference schema exports (@todo)
+                mobile_form = S3SQLCustomForm("comments",
+                                              )
+                current.s3db.configure("dc_response",
+                                       mobile_form = mobile_form,
+                                       )
+
                 pass
 
             elif r.representation == "s3json":
@@ -1241,7 +1253,7 @@ def config(settings):
                     table.person_id.label = T("Name")
                     s3db.hrm_human_resource.organisation_id.label = T("Source/Member")
                     table.start_date.label = T("Arrival Date")
-                    table.end_date.label = T("Departure Date") 
+                    table.end_date.label = T("Departure Date")
 
                     r.component.add_filter(FS("job_title_id$type") != 4)
 
@@ -1316,7 +1328,7 @@ def config(settings):
         onaccept = lambda form: response_locations()
         update_onaccept = s3db.get_config(tablename, "update_onaccept")
         update_onaccept = [update_onaccept, onaccept]
-        
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,
@@ -1569,7 +1581,7 @@ def config(settings):
         #onaccept = s3db.get_config("project_activity", "onaccept")
         #ondelete = s3db.get_config("project_activity", "ondelete")
         onaccept = project_activity_onaccept
-        
+
         s3db.configure("project_activity",
                        crud_form = crud_form,
                        list_fields = list_fields,
@@ -1645,8 +1657,8 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
-        #if 
-        #    attr["rheader"] = 
+        #if
+        #    attr["rheader"] =
         return attr
 
     settings.customise_project_activity_controller = customise_project_activity_controller
@@ -1673,7 +1685,7 @@ def config(settings):
                                                          ),
                                     "comments",
                                     )
-        
+
         current.s3db.configure(tablename,
                                crud_form = crud_form,
                                )
@@ -1748,7 +1760,7 @@ def config(settings):
                                                          fields = ["file"],
                                                          multiple = False,
                                                          ),
-                                    # @ToDo: Be able to retrieve the correct document 
+                                    # @ToDo: Be able to retrieve the correct document
                                     #S3SQLInlineComponent("document",
                                     #                     name = "log_frame",
                                     #                     label = T("Log Frame"),

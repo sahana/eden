@@ -959,6 +959,9 @@ class S3MobileForm(object):
 
             provided.add(ktablename)
 
+        # @todo: collect+export foreign key defaults across all
+        #        resources, not only master
+
         form = {"main": main,
                 }
         if references:
