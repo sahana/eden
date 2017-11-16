@@ -6314,6 +6314,10 @@ class S3Permission(object):
             #_debug("*** GRANTED ***")
             return True
 
+        # Fall back to current request
+        c = c or self.controller
+        f = f or self.function
+
         if not self.use_cacls:
             #_debug("==> simple authorization")
             # Fall back to simple authorization
@@ -6341,10 +6345,6 @@ class S3Permission(object):
             owners = []
             is_owner = True
             entity = None
-
-        # Fall back to current request
-        c = c or self.controller
-        f = f or self.function
 
         permission_cache = self.permission_cache
         if permission_cache is None:
