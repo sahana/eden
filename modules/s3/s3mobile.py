@@ -401,7 +401,7 @@ class S3MobileSchema(object):
 
                     # @todo: add instance types if limited in validator
                     superkey = True
-                    reftype = {ktablename: []}
+                    reftype = (ktablename,) # [])
             else:
                 # Regular foreign key
 
