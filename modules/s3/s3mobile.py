@@ -570,11 +570,9 @@ class S3MobileSchema(object):
 
                         # Export the default lookup record as dependency
                         # (make sure the corresponding table schema is exported)
-                        if tablename not in self._references:
-                            references = self.references[tablename] = set()
-                        else:
-                            references = self.references[tablename]
+                        references = self.references.get(tablename) or set()
                         references.add(record_id)
+                        self.references[tablename] = references
 
                         # Resolve as UUID
                         default = uuid
@@ -874,94 +872,98 @@ class S3MobileForm(object):
 
         # Required and provided schemas
         required = set(ms.references.keys())
-        provided = set([resource.tablename])
+        provided = {resource.tablename: (ms, main)}
 
         # Add schemas for components
         components = self.components()
         for alias in components:
 
-            # Generate a resource for the component table
+            # Get the component resource
             cresource = resource.components.get(alias)
             if not cresource:
                 continue
             ctablename = cresource.tablename
 
-            # Get the schema for the component
-            cschema = S3MobileSchema(cresource)
-            hook = components[alias]
-            hook["schema"] = cschema.serialize()
+            # Serialize the table schema
+            schema = S3MobileSchema(cresource)
 
-            # Add super entity declarations
-            hook["types"] = super_entities(cresource)
-
-            # Add directly-serializable settings
-            settings = cschema.settings
+            # Add schema, super entities and directly-serializable settings
+            spec = components[alias]
+            spec["schema"] = schema.serialize()
+            spec["types"] = super_entities(ctablename)
+            settings = schema.settings
             if settings:
-                hook["settings"] = settings
+                spec["settings"] = settings
 
-            # Add link table schema
-            link = hook.get("link")
+            # If the component has a link table, add it to required schemas
+            link = spec.get("link")
             if link:
                 required.add(link)
 
             # Add component reference schemas
-            for tname in cschema.references:
+            for tname in schema.references:
                 required.add(tname)
 
             # Mark as provided
-            provided.add(tablename)
+            provided[tablename] = (schema, spec)
 
         # Add schemas for referenced tables
         references = {}
         required = list(required)
         while required:
 
+            # Get the referenced resource
             ktablename = required.pop()
             if ktablename in provided:
+                # Already provided
                 continue
-
-            # Check if we need to include any records
-            record_ids = ms.references.get(ktablename)
-            if record_ids:
-                rresource = s3db.resource(ktablename, id=list(record_ids))
-            else:
-                rresource = s3db.resource(ktablename)
+            kresource = s3db.resource(ktablename)
 
             # Serialize the table schema
-            rs = S3MobileSchema(rresource)
-            schema = rs.serialize()
-            spec = {"schema": schema,
+            schema = S3MobileSchema(kresource)
+
+            # Add schema, super entities and directly-serializable settings
+            spec = {"schema": schema.serialize(),
                     "types": super_entities(ktablename),
                     }
-
-            # Add directly-serializable settings
-            settings = rs.settings
+            settings = schema.settings
             if settings:
                 spec["settings"] = settings
 
-            # Include records as required
-            if record_ids:
-                fields = schema.keys()
-                tree = rresource.export_tree(fields = fields,
-                                             references = fields,
-                                             msince = msince,
-                                             )
-                if len(tree.getroot()):
-                    data = current.xml.tree2json(tree, as_dict=True)
-                    spec["data"] = data
-
-            references[ktablename] = spec
-
-            # Check for dependencies
-            for reference in rs.references:
+            # Check for unresolved dependencies
+            for reference in schema.references:
                 if reference not in provided:
                     required.append(reference)
 
-            provided.add(ktablename)
+            # Add to references
+            references[ktablename] = spec
 
-        # @todo: collect+export foreign key defaults across all
-        #        resources, not only master
+            # Mark as provided
+            provided[ktablename] = (schema, spec)
 
+        # Collect all required records (e.g. foreign key defaults)
+        required_records = {}
+        for ktablename in provided:
+            schema = provided[ktablename][0]
+            for tn, record_ids in schema.references.items():
+                if record_ids:
+                    all_ids = (required_records.get(tn) or set()) | record_ids
+                    required_records[tn] = all_ids
+
+        # Export required records and add them to the specs
+        for tn, record_ids in required_records.items():
+            kresource = s3db.resource(tn, id=list(record_ids))
+            spec = provided[tn][1]
+            fields = spec["schema"].keys()
+            tree = kresource.export_tree(fields = fields,
+                                         references = fields,
+                                         msince = msince,
+                                         )
+            if len(tree.getroot()):
+                data = current.xml.tree2json(tree, as_dict=True)
+                spec["data"] = data
+
+        # Complete the mobile schema spec
         form = {"main": main,
                 }
         if references:
