@@ -59,7 +59,8 @@ DEFAULT = lambda: None
 # JSON-serializable table settings (SERIALIZABLE_OPTS)
 # which require preprocessing before they can be passed
 # to the mobile client (e.g. i18n)
-PREPROCESS_OPTS = ("subheadings", )
+#PREPROCESS_OPTS = ("subheadings", )
+PREPROCESS_OPTS = []
 
 # =============================================================================
 class S3MobileFormList(object):
@@ -321,9 +322,7 @@ class S3MobileSchema(object):
         subheadings = self._subheadings
 
         if subheadings is DEFAULT:
-            setting = self.resource.get_config("subheadings")
-            subheadings = self._subheadings \
-                        = self.subheadings_l10n(setting)
+            subheadings = self._subheadings = self.resource.get_config("subheadings")
 
         return subheadings
 
@@ -733,35 +732,6 @@ class S3MobileSchema(object):
                                        ).first()
 
         return row.uuid or None if row else None
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def subheadings_l10n(cls, setting):
-        """
-            Helper to translate form subheadings
-
-            @param setting: the subheadings-setting (a dict)
-
-            @return: the subheadings dict with translated headers
-        """
-
-        if setting is None:
-            return None
-
-        T = current.T
-        output = {}
-
-        for header, fields in setting.items():
-            if isinstance(fields, dict):
-                # Nested format => recurse
-                subheadings = fields.get("subheadings")
-                fields = {"fields": fields.get("fields"),
-                          }
-                if subheadings:
-                    fields["subheadings"] = cls.subheadings_l10n(subheadings)
-            output[s3_str(T(header))] = fields
-
-        return output
 
 # =============================================================================
 class S3MobileForm(object):

@@ -62,7 +62,7 @@ class index(S3CustomController):
                        "event_location.location_id",
                        ]
         if internal:
-            list_fields.insert(1, (T("Category"), "tag.value"))
+            list_fields.insert(1, (T("Category"), "event_tag.value"))
 
         start = None
         limit = 5

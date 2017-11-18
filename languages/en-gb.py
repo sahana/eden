@@ -66,6 +66,7 @@
 'Edit Program': 'Edit Programme',
 'Edit Project Organization': 'Edit Project Organisation',
 'Edit Synchronization Settings': 'Edit Synchronisation Settings',
+'English': 'English',
 'Enter your organization': 'Enter your organisation',
 'Filter': 'Filter',
 'From Organization': 'From Organisation',

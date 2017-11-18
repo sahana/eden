@@ -1157,12 +1157,11 @@ class CholeraTreatmentCapabilityModel(S3Model):
         # Resource configuration
         self.configure(tablename,
                        list_fields = ["id"],
-                       subheadings = {
-                        "Activities": "ctc",
-                        "Medical Supplies Availability": "icaths_available",
-                        "Current Problems": "problem_types",
-                        "Comments": "comments"
-                        },
+                       subheadings = {"ctc": T("Activities"),
+                                      "icaths_available": T("Medical Supplies Availability"),
+                                      "problem_types": T("Current Problems"),
+                                      "comments": T("Comments"),
+                                      },
                        )
 
         # ---------------------------------------------------------------------

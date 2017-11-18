@@ -782,9 +782,8 @@ class S3AssessBuildingModel(S3Model):
         self.configure(tablename,
                        onvalidation = self.assess_building_onvalidation,
                        filter_widgets = filter_widgets,
-                       subheadings = {
-                        T("Damages"): "electricity",
-                        }
+                       subheadings = {"electricity": T("Damages"),
+                                      }
                        )
 
         # Generate Work Order

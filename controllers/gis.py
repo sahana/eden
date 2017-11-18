@@ -1111,8 +1111,8 @@ def config():
                                     "default_location_id",
                                     ]
                     s3db.configure("gis_config",
-                                   subheadings = {T("Map Settings"): "zoom",
-                                                  T("Form Settings"): "default_location_id",
+                                   subheadings = {"zoom": T("Map Settings"),
+                                                  "default_location_id": T("Form Settings"),
                                                   },
                                    )
                 else:

@@ -1964,64 +1964,64 @@ def rat():
 
     # Subheadings in forms:
     configure("assess_section2",
-              subheadings = {T("Population and number of households"): "population_total",
-                             T("Fatalities"): "dead_women",
-                             T("Casualties"): "injured_women",
-                             T("Missing Persons"): "missing_women",
-                             T("General information on demographics"): "household_head_elderly",
-                             T("Comments"): "comments"
+              subheadings = {"population_total": T("Population and number of households"),
+                             "dead_women": T("Fatalities"),
+                             "injured_women": T("Casualties"),
+                             "missing_women": T("Missing Persons"),
+                             "household_head_elderly": T("General information on demographics"),
+                             "comments": T("Comments"),
                              })
     configure("assess_section3",
-        subheadings = {
-            T("Access to Shelter"): "houses_total",
-            T("Water storage containers in households"): "water_containers_available",
-            T("Other non-food items"): "cooking_equipment_available",
-            T("Shelter/NFI Assistance"): "nfi_assistance_available",
-            T("Comments"): "comments"})
+              subheadings = {"houses_total": T("Access to Shelter"),
+                             "water_containers_available": T("Water storage containers in households"),
+                             "cooking_equipment_available": T("Other non-food items"),
+                             "nfi_assistance_available": T("Shelter/NFI Assistance"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section4",
-        subheadings = {
-            T("Water supply"): "water_source_pre_disaster_type",
-            T("Water collection"): "water_coll_time",
-            T("Places for defecation"): "defec_place_type",
-            T("Environment"): "close_industry",
-            T("Latrines"): "latrines_number",
-            T("Comments"): "comments"})
+              subheadings = {"water_source_pre_disaster_type": T("Water supply"),
+                             "water_coll_time": T("Water collection"),
+                             "defec_place_type": T("Places for defecation"),
+                             "close_industry": T("Environment"),
+                             "latrines_number": T("Latrines"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section5",
-        subheadings = {
-            T("Health services status"): "health_services_pre_disaster",
-            T("Current health problems"): "health_problems_adults",
-            T("Nutrition problems"): "malnutrition_present_pre_disaster",
-            T("Comments"): "comments"})
+              subheadings = {"health_services_pre_disaster": T("Health services status"),
+                             "health_problems_adults": T("Current health problems"),
+                             "malnutrition_present_pre_disaster": T("Nutrition problems"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section6",
-        subheadings = {
-            T("Existing food stocks"): "food_stocks_main_dishes",
-            T("food_sources") : "Food sources",
-            T("Food assistance"): "food_assistance_available",
-            T("Comments"): "comments"})
+              subheadings = {"food_stocks_main_dishes": T("Existing food stocks"),
+                             "Food sources": T("food_sources"),
+                             "food_assistance_available": T("Food assistance"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section7",
-        subheadings = {
-            "%s / %s" % (T("Sources of income"),
-                         T("Major expenses")): "income_sources_pre_disaster",
-            T("Business Damaged"): "Access to cash",
-            T("Current community priorities"): "rank_reconstruction_assistance",
-            T("Comments"): "comments"})
+              subheadings = {"income_sources_pre_disaster": "%s / %s" % \
+                                (T("Sources of income"), T("Major expenses")),
+                             "business_damaged": T("Access to cash"),
+                             "rank_reconstruction_assistance": T("Current community priorities"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section8",
-        subheadings = {
-            T("Access to education services"): "schools_total",
-            T("Alternative places for studying"): "alternative_study_places_available",
-            T("School activities"): "schools_open_pre_disaster",
-            T("School attendance"): "children_0612_female",
-            T("School assistance"): "school_assistance_available",
-            T("Comments"): "comments"})
+              subheadings = {"schools_total": T("Access to education services"),
+                             "alternative_study_places_available": T("Alternative places for studying"),
+                             "schools_open_pre_disaster": T("School activities"),
+                             "children_0612_female": T("School attendance"),
+                             "school_assistance_available": T("School assistance"),
+                             "comments": T("Comments"),
+                             })
     configure("assess_section9",
-        subheadings = {
-            T("Physical Safety"): "vulnerable_groups_safe_env",
-            T("Separated children, caregiving arrangements"): "children_separated",
-            T("Persons in institutions"): "children_in_disabled_homes",
-            T("Activities of children"): "child_activities_u12f_pre_disaster",
-            T("Coping Activities"): "coping_activities_elderly",
-            T("Current general needs"): "current_general_needs",
-            T("Comments"): "comments"})
+              subheadings = {"vulnerable_groups_safe_env": T("Physical Safety"),
+                             "children_separated": T("Separated children, caregiving arrangements"),
+                             "children_in_disabled_homes": T("Persons in institutions"),
+                             "child_activities_u12f_pre_disaster": T("Activities of children"),
+                             "coping_activities_elderly": T("Coping Activities"),
+                             "current_general_needs": T("Current general needs"),
+                             "comments": T("Comments"),
+                             })
 
     # @ToDo  Generalize this and make it available as a function that other
     # component prep methods can call to set the default for a join field.
@@ -2066,7 +2066,8 @@ def rat():
             (T("Nutrition"), "section6"),
             (T("Livelihood"), "section7"),
             (T("Education"), "section8"),
-            (T("Protection"), "section9") ]
+            (T("Protection"), "section9"),
+            ]
 
     rheader = lambda r: rat_rheader(r,
                                     tabs)
@@ -2180,13 +2181,12 @@ def assess():
     #                                _title="%s|%s" % (T("Incident"),
     #                                                  T("Optional link to an Incident which this Assessment was triggered by.")))
 
-    tabs = [
-            (T("Edit Details"), None),
+    tabs = [(T("Edit Details"), None),
             (T("Baselines"), "baseline"),
             (T("Impacts"), "impact"),
             (T("Summary"), "summary"),
             #(T("Requested"), "ritem"),
-           ]
+            ]
 
     rheader = lambda r: assess_rheader(r, tabs)
 
@@ -2256,8 +2256,7 @@ def basic_assess():
         else:
             irs_location_id = None
             location = None
-        custom_assess_fields = (
-                                ("impact", 1),
+        custom_assess_fields = (("impact", 1),
                                 ("impact", 2),
                                 ("impact", 3),
                                 ("impact", 4),
@@ -2265,13 +2264,12 @@ def basic_assess():
                                 ("impact", 6),
                                 ("impact", 7),
                                 ("assess", "comments"),
-                            )
+                                )
         form, form_accepted, assess_id = custom_assess(custom_assess_fields,
                                                        location_id=irs_location_id)
     else:
         location = None
-        custom_assess_fields = (
-                                ("assess", "location_id", "selector"),
+        custom_assess_fields = (("assess", "location_id", "selector"),
                                 ("impact", 1),
                                 ("impact", 2),
                                 ("impact", 3),
@@ -2280,7 +2278,7 @@ def basic_assess():
                                 ("impact", 6),
                                 ("impact", 7),
                                 ("assess", "comments"),
-                            )
+                                )
         form, form_accepted, assess_id = custom_assess(custom_assess_fields)
 
     if form_accepted:
@@ -2302,8 +2300,7 @@ def mobile_basic_assess():
     assess_tables()
     impact_tables()
 
-    custom_assess_fields = (
-                            ("assess", "location_id", "auto"),
+    custom_assess_fields = (("assess", "location_id", "auto"),
                             ("impact", 1),
                             ("impact", 2),
                             ("impact", 3),
@@ -2312,7 +2309,7 @@ def mobile_basic_assess():
                             ("impact", 6),
                             ("impact", 7),
                             ("assess", "comments"),
-                        )
+                            )
 
     form, form_accepted, assess_id = custom_assess(custom_assess_fields)
 

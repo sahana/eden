@@ -242,18 +242,7 @@ class S3SQLForm(object):
             @param tablename: the tablename
             @param formstyle: the formstyle
             @param subheadings:
-                OLD (maintained for backwards compatibility):
-                    a dict of {"Header": Fieldnames}, where
-                        Fieldname can be either a single field name or
-                        a list/tuple of field names belonging under that header
-                NEW (allows for multiple levels, used by DC):
-                    a dict of {"Header": {"fields": Fieldnames,
-                                          "subheadings": {"Header": {"fields": Fieldnames,
-                                                                     "subheadings": etc,
-                                                                     },
-                                                          },
-                                          },
-                               }
+                {"fieldname": "Heading"} or {"fieldname": ["Heading1", "Heading2"]}
         """
 
         if not subheadings:
@@ -263,43 +252,20 @@ class S3SQLForm(object):
         if formstyle.__name__ in ("formstyle_table",
                                   "formstyle_table_inline",
                                   ):
-            def create_subheading(represent, tablename, f):
+            def create_subheading(represent, tablename, f, level=""):
                 return TR(TD(represent, _colspan=3,
                              _class="subheading",
                              ),
                           _class = "subheading",
-                          _id = "%s_%s__subheading" % (tablename, f),
+                          _id = "%s_%s%s__subheading" % (tablename, f, level),
                           )
         else:
-            def create_subheading(represent, tablename, f):
+            def create_subheading(represent, tablename, f, level=""):
                 return DIV(represent,
                            _class = "subheading",
-                           _id = "%s_%s__subheading" % (tablename, f),
+                           _id = "%s_%s%s__subheading" % (tablename, f, level),
                            )
-        if "fields" in subheadings[subheadings.items()[0][0]]:
-            new_style = True
-            done = {1: [],
-                    2: [],
-                    3: [],
-                    }
-            fields = {}
-            for k, v in subheadings.items():
-                for f in v["fields"]:
-                    fields[f] = {1: k}
-                for _k, _v in v["subheadings"].items():
-                    for f in _v["fields"]:
-                        fields[f] = {1: k,
-                                     2: _k,
-                                     }
-                    for __k, __v in _v["subheadings"].items():
-                        for f in __v["fields"]:
-                            fields[f] = {1: k,
-                                         2: _k,
-                                         3: __k,
-                                         }
-        else:
-            new_style = False
-            done = []
+
         form_rows = iter(form[0])
         tr = form_rows.next()
         i = 0
@@ -333,52 +299,28 @@ class S3SQLForm(object):
                 elif f.startswith("sub_"):
                     # S3GroupedOptionsWidget
                     f = f[4:]
-                if new_style:
-                    headings = fields.get(f)
-                    if not headings:
-                        try:
-                            tr = form_rows.next()
-                        except StopIteration:
-                            break
-                        else:
-                            i += 1
-                        continue
-                    inserted = 0
-                    for j in (1, 2, 3):
-                        heading = headings.get(j)
-                        if heading and heading not in done[j]:
-                            done[j].append(heading)
-                            if j in (1, 2):
-                                # Clear lower level to avoid cross-section dupes
-                                done[j + 1] = []
-                            subheading = create_subheading(heading, tablename, f)
-                            form[0].insert(i, subheading)
-                            i += 1
-                            inserted += 1
-                    if inserted:
-                        tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
-                        for _i in range(0, inserted):
-                            # Iterate over the rows we just created
-                            tr = form_rows.next()
-                else:
-                    for k in subheadings.keys():
-                        if k in done:
-                            continue
-                        fields = subheadings[k]
-                        if not isinstance(fields, (list, tuple)):
-                            fields = [fields]
-                        if f in fields:
-                            done.append(k)
-                            if isinstance(k, int):
-                                # Don't display a section title
-                                represent = ""
-                            else:
-                                represent = k
-                            subheading = create_subheading(represent, tablename, f)
-                            form[0].insert(i, subheading)
-                            tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
-                            tr = form_rows.next()
-                            i += 1
+                headings = subheadings.get(f)
+                if not headings:
+                    try:
+                        tr = form_rows.next()
+                    except StopIteration:
+                        break
+                    else:
+                        i += 1
+                    continue
+                if not isinstance(headings, list):
+                    headings = [headings]
+                inserted = 0
+                for heading in headings:
+                    subheading = create_subheading(heading, tablename, f, inserted if inserted else "")
+                    form[0].insert(i, subheading)
+                    i += 1
+                    inserted += 1
+                if inserted:
+                    tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
+                    for _i in range(0, inserted):
+                        # Iterate over the rows we just created
+                        tr = form_rows.next()
             try:
                 tr = form_rows.next()
             except StopIteration:

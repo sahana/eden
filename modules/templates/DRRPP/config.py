@@ -630,14 +630,14 @@ def config(settings):
 
         s3db.configure(tablename,
                        crud_form = crud_form,
-                       subheadings = {1: "hazard",
-                                      2: "theme",
-                                      3: "objectives",
-                                      4: "drr_hfa",
-                                      5: "drrpp_rfa",
-                                      6: "drrpp_pifacc",
-                                      7: "drrpp_jnap",
-                                      8: "organisation_id",
+                       subheadings = {"hazard": 1,
+                                      "theme": 2,
+                                      "objectives": 3,
+                                      "drr_hfa": 4,
+                                      "drrpp_rfa": 5,
+                                      "drrpp_pifacc": 6,
+                                      "drrpp_jnap": 7,
+                                      "organisation_id": 8,
                                      },
                        )
 

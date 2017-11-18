@@ -4584,7 +4584,7 @@ class S3ProjectPlanningModel(S3Model):
                   list_fields = list_fields,
                   onaccept = self.project_indicator_onaccept,
                   orderby = "project_indicator.output_id",
-                  subheadings = {T("Measurement Procedure"): "numerator",
+                  subheadings = {"numerator": T("Measurement Procedure"),
                                  },
                   )
 

@@ -580,13 +580,12 @@ def nzseel1():
     s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
-        subheadings = {
-            ".": "name", # Description in ATC-20
-            "%s / %s" % (T("Overall Hazards"), T("Damage")): "collapse",
-            ".": "posting",
-            "%s:" % T("Further Action Recommended"): "barricades",
-            ".": "estimated_damage",
-            })
+        subheadings = {"name": ".", # Description in ATC-20
+                       "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
+                       "posting": ".",
+                       "barricades": "%s:" % T("Further Action Recommended"),
+                       "estimated_damage": ".",
+                       })
 
     rheader = nzseel1_rheader
 
@@ -656,16 +655,15 @@ def nzseel2():
     s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
-        subheadings = {
-            ".": "name", # Description in ATC-20
-            "%s / %s" % (T("Overall Hazards"), T("Damage")): "collapse",
-            ".": "posting_existing",
-            "%s:" % T("Further Action Recommended"): "barricades",
-            ".": "estimated_damage",
-            "%s / %s" % (T("Structural Hazards"), T("Damage")): "structural_foundations",
-            "%s / %s" % (T("Non-structural Hazards"), T("Damage")): "non_parapets",
-            "%s / %s" % (T("Geotechnical Hazards"), T("Damage")): "geotechnical_slope",
-            })
+        subheadings = {"name": ".", # Description in ATC-20
+                       "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
+                       "posting_existing": ".",
+                       "barricades": "%s:" % T("Further Action Recommended"),
+                       "estimated_damage": ".",
+                       "structural_foundations": "%s / %s" % (T("Structural Hazards"), T("Damage")),
+                       "non_parapets": "%s / %s" % (T("Non-structural Hazards"), T("Damage")),
+                       "geotechnical_slope": "%s / %s" % (T("Geotechnical Hazards"), T("Damage")),
+                       })
 
     rheader = nzseel2_rheader
 

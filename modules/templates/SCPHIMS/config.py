@@ -500,20 +500,38 @@ def config(settings):
 
             if r.method == "mform":
                 # Mobile client downloading Assessment Schema
-                # @ToDo: Customise Form
 
+                s3db = current.s3db
+
+                # Configure Answer form
+                s3db.dc_answer_form(r, r.tablename)
+
+                # Represent the record as the representation of the response_id
+                def response_represent(id):
+                    db = current.db
+                    table = db.dc_response
+                    respnse = db(table).select(table.location_id,
+                                               limitby = (0, 1)
+                                               ).first()
+                    try:
+                        location_id = respnse.location_id
+                    except:
+                        return id
+                    else:
+                        represent = table.location_id.represent(location_id)
+                        return represent
+
+                r.table.response_id.represent = response_represent
+
+                # Expose limited form for the master dc_response to avoid
+                # foreign keys that would trigger unnecessary reference schema
+                # exports
                 from s3 import S3SQLCustomForm
-
-                # Mobile form for response:
-                # Expose limited form, avoid foreign keys that would
-                # trigger unnecessary reference schema exports (@todo)
-                mobile_form = S3SQLCustomForm("comments",
+                mobile_form = S3SQLCustomForm("id",
                                               )
-                current.s3db.configure("dc_response",
-                                       mobile_form = mobile_form,
-                                       )
-
-                pass
+                s3db.configure("dc_response",
+                               mobile_form = mobile_form,
+                               )
 
             elif r.representation == "s3json":
                 # Mobile client downloading Assessment Data

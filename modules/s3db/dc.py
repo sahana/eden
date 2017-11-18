@@ -53,7 +53,6 @@ class DataCollectionTemplateModel(S3Model):
              "dc_section",
              "dc_question",
              "dc_question_l10n",
-             "dc_answer_form",
              )
 
     def model(self):
@@ -72,6 +71,7 @@ class DataCollectionTemplateModel(S3Model):
 
         master_opts = {"dc_response": T("Assessments"),
                        "event_sitrep": T("Situation Reports"),
+                       #"hrm_training_event": T("Training Events"), # Currently using dc_target
                        }
 
         # =====================================================================
@@ -144,7 +144,9 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Template Sections
         #
-        #Currently support Sections, SubSections & SubSubSections only
+        # Currently support Sections, SubSections & SubSubSections only
+        #
+        # @ToDo: l10n
         #
         hierarchical_sections = True # @ToDo: deployment_setting if need to support non-SCPHIMS contexts
 
@@ -413,7 +415,6 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Pass names back to global scope (s3.*)
         return dict(dc_template_id = template_id,
-                    dc_answer_form = self.dc_answer_form,
                     )
 
     # -------------------------------------------------------------------------
@@ -458,18 +459,20 @@ class DataCollectionTemplateModel(S3Model):
             title = record.name
             master = record.master
 
+        table_settings = {}
         if master == "dc_response":
             settings = current.deployment_settings
             mobile_form = True # For SCPHIMS at least
             mobile_data = settings.get_dc_mobile_data()
-            if settings.get_dc_mobile_inserts():
-                table_settings = "" # Default
-            else:
-                table_settings = {"insertable": False}
+            if not settings.get_dc_mobile_inserts():
+                table_settings["insertable"] = False
+            # @ToDo: Something other than default
+            # For SCPHIMS this should be response_id$location_id
+            table_settings["card"] = {"title": "Record #{{record.id}}",
+                                      }
         elif master == "event_sitrep":
             mobile_form = False # For SCPHIMS at least
             mobile_data = False
-            table_settings = "" # Default
         else:
             raise
 
@@ -496,302 +499,6 @@ class DataCollectionTemplateModel(S3Model):
 
         # Link this Table to the Template
         db(db.dc_template.id == template_id).update(table_id=table_id)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def dc_answer_form(r, tablename):
-        """
-            Create the Custom crud_form, subheadings, grids & autototals for
-            Answers to a Template
-        """
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
-
-        crud_fields = []
-        cappend = crud_fields.append
-        template_id = r.record.template_id
-        stable = db.dc_section
-
-        # Extract the Sections
-        query = (stable.template_id == template_id) & \
-                (stable.deleted == False)
-        sections = db(query).select(stable.id,
-                                    stable.parent,
-                                    stable.name,
-                                    stable.posn,
-                                    distinct = True,
-                                    )
-
-        # Put them into the hierarchy
-        root_sections = {}
-        subsections = {}
-        for section in sections:
-            parent = section.parent
-            if parent:
-                # Store this for next parse
-                if parent in subsections:
-                    subsections[parent].append(section)
-                else:
-                    subsections[parent] = [section]
-            else:
-                # Root section
-                root_sections[section.id] = {"id": section.id,
-                                             "name": section.name,
-                                             "posn": section.posn,
-                                             "questions": [],
-                                             "subsections": {},
-                                             }
-
-        # Add the subsections
-        subsubsections = {}
-        for parent in subsections:
-            _subsections = subsections[parent]
-            if parent in root_sections:
-                # SubSections
-                for sub in _subsections:
-                    root_sections[parent]["subsections"][sub.id] = {"id": sub.id,
-                                                                    "name": sub.name,
-                                                                    "posn": sub.posn,
-                                                                    "questions": [],
-                                                                    "subsubsections": {},
-                                                                    }
-            else:
-                # SubSubSections - store for next parse
-                subsubsections[parent] = _subsections
-
-        # Add the subsubsections
-        for parent in subsubsections:
-            for root in root_sections:
-                subsections = root_sections[root]["subsections"]
-                if parent in subsections:
-                    _subsubsections = subsubsections[parent]
-                    for subsub in _subsubsections:
-                        subsections[parent]["subsubsections"][subsub.id] = {"id": subsub.id,
-                                                                            "name": subsub.name,
-                                                                            "posn": subsub.posn,
-                                                                            "questions": [],
-                                                                            }
-
-        # Add the Questions
-        # Prep for Auto-Totals
-        # Prep for Grids
-        qtable = s3db.dc_question
-        ttable = s3db.dc_question_l10n
-        ftable = db.s3_field
-
-        language = current.session.s3.language
-        if language == current.deployment_settings.get_L10n_default_language():
-            translate = False
-        else:
-            translate = True
-
-        query = (qtable.template_id == template_id) & \
-                (qtable.deleted == False)
-        left = [stable.on(stable.id == qtable.section_id),
-                ftable.on(ftable.id == qtable.field_id),
-                ]
-        fields = [stable.id,
-                  ftable.name,
-                  ftable.label,
-                  qtable.code,
-                  qtable.posn,
-                  qtable.totals,
-                  qtable.grid,
-                  ]
-        if translate:
-            left.append(ttable.on((ttable.question_id == qtable.id) & \
-                                  (ttable.language == language)))
-            fields.append(ttable.name_l10n)
-        questions = db(query).select(*fields,
-                                     left = left
-                                     )
-        auto_totals = {}
-        codes = {}
-        grids = {}
-        grid_children = {}
-        root_questions = []
-        for question in questions:
-            field_name = question.get("s3_field.name")
-            code = question["dc_question.code"]
-            if code:
-                codes[code] = field_name
-            totals = question["dc_question.totals"]
-            if totals:
-                auto_totals[field_name] = {"codes": totals,
-                                           "fields": [],
-                                           }
-            grid = question["dc_question.grid"]
-            if grid:
-                len_grid = len(grid)
-                if len_grid == 2:
-                    # Grid Pseudo-Question
-                    if not code:
-                        s3.error("Code required for Grid Questions") # @ToDo: Make mandatory in onvalidation
-                        raise
-                    rows = [s3_str(T(v)) for v in grid[0]]
-                    cols = [s3_str(T(v)) for v in grid[1]]
-                    fields = [[0 for x in range(len(rows))] for y in range(len(cols))] 
-                    grids[code] = {"r": rows,
-                                   "c": cols,
-                                   "f": fields,
-                                   }
-                elif len_grid == 3:
-                    # Child Question
-                    grid_children[field_name] = grid
-                else:
-                    s3.warning("Invalid grid data for %s - ignoring" % (code or field_name))
-            
-            section_id = question["dc_section.id"]
-            label = None
-            if translate:
-                label = question.get("dc_question_l10n.name_l10n")
-            if not label:
-                label = question.get("s3_field.label")
-            question = {question["dc_question.posn"]: {"name": field_name,
-                                                       "code": code,
-                                                       "label": label,
-                                                       },
-                        }
-            if not section_id:
-                root_questions.append(question)
-                continue
-            if section_id in root_sections:
-                root_sections[section_id]["questions"].append(question)
-                continue
-            for section in root_sections:
-                if section_id in root_sections[section]["subsections"]:
-                    root_sections[section]["subsections"][section_id]["questions"].append(question)
-                    continue
-                for subsection in root_sections[section]["subsections"]:
-                    if section_id in root_sections[section]["subsections"][subsection]["subsubsections"]:
-                        root_sections[section]["subsections"][subsection]["subsubsections"][section_id]["questions"].append(question)
-
-        # Sort them by Position
-        root_questions.sort()
-        sections = [{v["posn"]: v} for k, v in root_sections.items()]
-        sections.sort()
-        for s in sections:
-            section = s[s.items()[0][0]]
-            subsections = [{v["posn"]: v} for k, v in section["subsections"].items()]
-            subsections.sort()
-            section["subsections"] = subsections
-            section["questions"].sort()
-            for sub in subsections:
-                _sub = sub[sub.items()[0][0]]
-                subsubsections = [{v["posn"]: v} for k, v in _sub["subsubsections"].items()]
-                subsubsections.sort()
-                _sub["subsubsections"] = subsubsections
-                _sub["questions"].sort()
-                for subsub in subsubsections:
-                    subsub[subsub.items()[0][0]]["questions"].sort()
-
-        # Append questions to the form, with subheadings
-        # 1st add those questions without a section (likely the only questions then)
-        for q in root_questions:
-            question = q[q.items()[0][0]]
-            fname = question["name"]
-            if fname:
-                cappend((question["label"], fname))
-            else:
-                # Grid Pseudo-Question
-                fname = question["code"]
-                cappend(S3SQLDummyField(fname))
-        # Next add those questions with a section (likely the only questions then)
-        subheadings = {}
-        for s in sections:
-            section = s[s.items()[0][0]]
-            section_name = section["name"]
-            # 1st add those questions without a subsection
-            _subheadings = {"fields": [],
-                            "subheadings": {},
-                            }
-            subheadings[section_name] = _subheadings
-            questions = section["questions"]
-            for question in questions:
-                question = question.items()[0][1] 
-                fname = question["name"]
-                if fname:
-                    cappend((question["label"], fname))
-                else:
-                    # Grid Pseudo-Question
-                    fname = question["code"]
-                    cappend(S3SQLDummyField(fname))
-                _subheadings["fields"].append(fname)
-            # Next add those questions in a subsection
-            subsections = section["subsections"]
-            for sub in subsections:
-                _sub = sub[sub.items()[0][0]]
-                section_name = _sub["name"]
-                __subheadings = {"fields": [],
-                                 "subheadings": {},
-                                 }
-                _subheadings["subheadings"][section_name] = __subheadings
-                questions = _sub["questions"]
-                for question in questions:
-                    question = question.items()[0][1] 
-                    fname = question["name"]
-                    if fname:
-                        cappend((question["label"], fname))
-                    else:
-                        # Grid Pseudo-Question
-                        fname = question["code"]
-                        cappend(S3SQLDummyField(fname))
-                    __subheadings["fields"].append(fname)
-                # Next add those questions in a subsubsection
-                subsubsections = _sub["subsubsections"]
-                for subsub in subsubsections:
-                    _subsub = subsub[subsub.items()[0][0]]
-                    section_name = _subsub["name"]
-                    ___subheadings = {"fields": [],
-                                      "subheadings": {},
-                                      }
-                    __subheadings["subheadings"][section_name] = ___subheadings
-                    questions = _subsub["questions"]
-                    for question in questions:
-                        question = question.items()[0][1] 
-                        fname = question["name"]
-                        if fname:
-                            cappend((question["label"], fname))
-                        else:
-                            # Grid Pseudo-Question
-                            fname = question["code"]
-                            cappend(S3SQLDummyField(fname))
-                        ___subheadings["fields"].append(fname)
-
-        crud_form = S3SQLCustomForm(*crud_fields)
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       subheadings = subheadings,
-                       )
-
-        # Compact JSON encoding
-        SEPARATORS = (",", ":")
-        jappend = s3.jquery_ready.append
-
-        # Auto-Totals
-        for field in auto_totals:
-            f = auto_totals[field]
-            append = f["fields"].append
-            for code in f["codes"]:
-                append(codes.get(code))
-            jappend('''S3.autoTotals('%s',%s,'%s')''' % (field, json.dumps(f["fields"], separators=SEPARATORS), tablename))
-
-        # Grids
-        # Place the child fields in the correct places in their grids
-        if len(grids):
-            for child in grid_children:
-                code, row, col = grid_children[child]
-                grids[code]["f"][col - 1][row - 1] = child
-            jappend('''S3.dc_grids(%s,'%s')''' % (json.dumps(grids, separators=SEPARATORS), tablename))
-
-        # Add JS
-        if s3.debug:
-            s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.js" % r.application)
-        else:
-            s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.min.js" % r.application)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -954,6 +661,7 @@ class DataCollectionModel(S3Model):
              "dc_target_id",
              "dc_response",
              "dc_response_id",
+             "dc_answer_form",
              )
 
     def model(self):
@@ -1143,6 +851,7 @@ class DataCollectionModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(dc_response_id = response_id,
                     dc_target_id = target_id,
+                    dc_answer_form = self.dc_answer_form,
                     )
 
     # -------------------------------------------------------------------------
@@ -1158,6 +867,358 @@ class DataCollectionModel(S3Model):
         return dict(dc_response_id = lambda **attr: dummy("response_id"),
                     dc_target_id = lambda **attr: dummy("target_id"),
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dc_answer_form(r, tablename):
+        """
+            Customise the form for Answers to a Template
+            Web UI:
+                Create the crud_form, autototals, grids & subheadings
+            Mobile Client:
+                Create the crud_form
+                (autototals, grids & subheadings are in the table.settings)
+        """
+
+        T = current.T
+        db = current.db
+
+        mform = r.method == "mform"
+        if mform:
+            # Going direct to Dynamic Table
+            dtable = db.s3_table
+            ttable = db.dc_template
+            query = (dtable.name == tablename) & \
+                    (ttable.table_id == dtable.id)
+            template = db(query).select(ttable.id,
+                                        limitby = (0, 1),
+                                        ).first()
+            template_id = template.id
+        else:
+            # Going via Component
+            template_id = r.record.template_id
+
+        # Extract the Sections
+        # @ToDo: l10n
+        stable = db.dc_section
+        query = (stable.template_id == template_id) & \
+                (stable.deleted == False)
+        sections = db(query).select(stable.id,
+                                    stable.parent,
+                                    stable.name,
+                                    stable.posn,
+                                    distinct = True,
+                                    )
+
+        # Put them into the hierarchy
+        root_sections = {}
+        subsections = {}
+        for section in sections:
+            parent = section.parent
+            if parent:
+                # Store this for next parse
+                if parent in subsections:
+                    subsections[parent].append(section)
+                else:
+                    subsections[parent] = [section]
+            else:
+                # Root section
+                root_sections[section.id] = {"id": section.id,
+                                             "name": section.name,
+                                             "posn": section.posn,
+                                             "questions": [],
+                                             "subsections": {},
+                                             }
+
+        # Add the subsections
+        subsubsections = {}
+        for parent in subsections:
+            _subsections = subsections[parent]
+            if parent in root_sections:
+                # SubSections
+                for sub in _subsections:
+                    root_sections[parent]["subsections"][sub.id] = {"id": sub.id,
+                                                                    "name": sub.name,
+                                                                    "posn": sub.posn,
+                                                                    "questions": [],
+                                                                    "subsubsections": {},
+                                                                    }
+            else:
+                # SubSubSections - store for next parse
+                subsubsections[parent] = _subsections
+
+        # Add the subsubsections
+        for parent in subsubsections:
+            for root in root_sections:
+                subsections = root_sections[root]["subsections"]
+                if parent in subsections:
+                    _subsubsections = subsubsections[parent]
+                    for subsub in _subsubsections:
+                        subsections[parent]["subsubsections"][subsub.id] = {"id": subsub.id,
+                                                                            "name": subsub.name,
+                                                                            "posn": subsub.posn,
+                                                                            "questions": [],
+                                                                            }
+
+        # Add the Questions
+        # Prep for Auto-Totals
+        # Prep for Grids
+        qtable = db.dc_question
+        ttable = db.dc_question_l10n
+        ftable = db.s3_field
+
+        language = current.session.s3.language
+        if language == current.deployment_settings.get_L10n_default_language():
+            translate = False
+        else:
+            # @ToDo: Translate Section names too (for Subheadings)
+            translate = True
+
+        query = (qtable.template_id == template_id) & \
+                (qtable.deleted == False)
+        left = [stable.on(stable.id == qtable.section_id),
+                ftable.on(ftable.id == qtable.field_id),
+                ]
+        fields = [stable.id,
+                  ftable.name,
+                  ftable.label,
+                  qtable.code,
+                  qtable.posn,
+                  qtable.totals,
+                  qtable.grid,
+                  ]
+        if translate:
+            left.append(ttable.on((ttable.question_id == qtable.id) & \
+                                  (ttable.language == language)))
+            fields.append(ttable.name_l10n)
+        questions = db(query).select(*fields,
+                                     left = left
+                                     )
+        auto_totals = {}
+        codes = {}
+        grids = {}
+        grid_children = {}
+        root_questions = []
+        for question in questions:
+            field_name = question.get("s3_field.name")
+            code = question["dc_question.code"]
+            if code:
+                codes[code] = field_name
+            totals = question["dc_question.totals"]
+            if totals:
+                auto_totals[field_name] = {"codes": totals,
+                                           "fields": [],
+                                           }
+            grid = question["dc_question.grid"]
+            if grid:
+                len_grid = len(grid)
+                if len_grid == 2:
+                    # Grid Pseudo-Question
+                    if not code:
+                        current.log.error("Code required for Grid Questions") # @ToDo: Make mandatory in onvalidation
+                        raise
+                    rows = [s3_str(T(v)) for v in grid[0]]
+                    cols = [s3_str(T(v)) for v in grid[1]]
+                    fields = [[0 for x in range(len(rows))] for y in range(len(cols))] 
+                    grids[code] = {"r": rows,
+                                   "c": cols,
+                                   "f": fields,
+                                   }
+                elif len_grid == 3:
+                    # Child Question
+                    grid_children[field_name] = grid
+                else:
+                    current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+
+            section_id = question["dc_section.id"]
+            label = None
+            if translate:
+                label = question.get("dc_question_l10n.name_l10n")
+            if not label:
+                label = question.get("s3_field.label")
+            question = {question["dc_question.posn"]: {"name": field_name,
+                                                       "code": code,
+                                                       "label": label,
+                                                       },
+                        }
+            if not section_id:
+                root_questions.append(question)
+                continue
+            if section_id in root_sections:
+                root_sections[section_id]["questions"].append(question)
+                continue
+            for section in root_sections:
+                if section_id in root_sections[section]["subsections"]:
+                    root_sections[section]["subsections"][section_id]["questions"].append(question)
+                    continue
+                for subsection in root_sections[section]["subsections"]:
+                    if section_id in root_sections[section]["subsections"][subsection]["subsubsections"]:
+                        root_sections[section]["subsections"][subsection]["subsubsections"][section_id]["questions"].append(question)
+
+        # Sort them by Position
+        root_questions.sort()
+        sections = [{v["posn"]: v} for k, v in root_sections.items()]
+        sections.sort()
+        for s in sections:
+            section = s[s.items()[0][0]]
+            subsections = [{v["posn"]: v} for k, v in section["subsections"].items()]
+            subsections.sort()
+            section["subsections"] = subsections
+            section["questions"].sort()
+            for sub in subsections:
+                _sub = sub[sub.items()[0][0]]
+                subsubsections = [{v["posn"]: v} for k, v in _sub["subsubsections"].items()]
+                subsubsections.sort()
+                _sub["subsubsections"] = subsubsections
+                _sub["questions"].sort()
+                for subsub in subsubsections:
+                    subsub[subsub.items()[0][0]]["questions"].sort()
+
+        # Append questions to the form, with subheadings
+        crud_fields = []
+        cappend = crud_fields.append
+
+        # 1st add those questions without a section (likely the only questions then)
+        for q in root_questions:
+            question = q[q.items()[0][0]]
+            fname = question["name"]
+            if fname:
+                cappend((question["label"], fname))
+            else:
+                # Grid Pseudo-Question
+                fname = question["code"]
+                cappend(S3SQLDummyField(fname))
+        # Next add those questions with a section (likely the only questions then)
+        subheadings = {}
+        for s in sections:
+            section = s[s.items()[0][0]]
+            section_name = section["name"]
+            # 1st add those questions without a subsection
+            questions = section["questions"]
+            first = True
+            for question in questions:
+                question = question.items()[0][1]
+                fname = question["name"]
+                if fname:
+                    cappend((question["label"], fname))
+                else:
+                    # Grid Pseudo-Question
+                    fname = question["code"]
+                    cappend(S3SQLDummyField(fname))
+                if first:
+                    subheadings[fname] = section_name
+                    first = False
+            # Next add those questions in a subsection
+            subsections = section["subsections"]
+            for sub in subsections:
+                _sub = sub[sub.items()[0][0]]
+                subsection_name = _sub["name"]
+                questions = _sub["questions"]
+                ffirst = True
+                for question in questions:
+                    question = question.items()[0][1]
+                    fname = question["name"]
+                    if fname:
+                        cappend((question["label"], fname))
+                    else:
+                        # Grid Pseudo-Question
+                        fname = question["code"]
+                        cappend(S3SQLDummyField(fname))
+                    if ffirst:
+                        if first:
+                            subheadings[fname] = [section_name, subsection_name]
+                            first = False
+                        else:
+                            subheadings[fname] = subsection_name
+                        ffirst = False
+                # Next add those questions in a subsubsection
+                subsubsections = _sub["subsubsections"]
+                for subsub in subsubsections:
+                    _subsub = subsub[subsub.items()[0][0]]
+                    subsubsection_name = _subsub["name"]
+                    questions = _subsub["questions"]
+                    fffirst = True
+                    for question in questions:
+                        question = question.items()[0][1]
+                        fname = question["name"]
+                        if fname:
+                            cappend((question["label"], fname))
+                        else:
+                            # Grid Pseudo-Question
+                            fname = question["code"]
+                            cappend(S3SQLDummyField(fname))
+                        if fffirst:
+                            if first:
+                                subheadings[fname] = [section_name, subsection_name, subsubsection_name]
+                                first = False
+                                ffirst = False
+                            elif ffirst:
+                                subheadings[fname] = [subsection_name, subsubsection_name]
+                                ffirst = False
+                            else:
+                                subheadings[fname] = subsubsection_name
+                            fffirst = False
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        # Grids
+        # Place the child fields in the correct places in their grids
+        if len(grids):
+            for child in grid_children:
+                code, row, col = grid_children[child]
+                grids[code]["f"][col - 1][row - 1] = child
+
+        if mform:
+            # Auto-Totals
+            autototals = {}
+            for field in auto_totals:
+                f = auto_totals[field]
+                append = f["fields"].append
+                for code in f["codes"]:
+                    append(codes.get(code))
+                autototals[field] = f["fields"]
+
+            current.s3db.configure(tablename,
+                                   crud_form = crud_form,
+                                   autototals = autototals,
+                                   grids = grids,
+                                   subheadings = subheadings,
+                                   )
+
+        else:
+            current.s3db.configure(tablename,
+                                   crud_form = crud_form,
+                                   subheadings = subheadings,
+                                   )
+
+            s3 = current.response.s3
+
+            # Compact JSON encoding
+            SEPARATORS = (",", ":")
+            jappend = s3.jquery_ready.append
+
+            # Auto-Totals
+            for field in auto_totals:
+                f = auto_totals[field]
+                append = f["fields"].append
+                for code in f["codes"]:
+                    append(codes.get(code))
+                jappend('''S3.autoTotals('%s',%s,'%s')''' % \
+                    (field,
+                     json.dumps(f["fields"], separators=SEPARATORS),
+                     tablename))
+
+            # Grids
+            if len(grids):
+                jappend('''S3.dc_grids(%s,'%s')''' % \
+                    (json.dumps(grids, separators=SEPARATORS),
+                     tablename))
+
+            # Add JS
+            if s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.js" % r.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.dc_answer.min.js" % r.application)
 
 # =============================================================================
 def dc_rheader(r, tabs=None):
