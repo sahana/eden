@@ -361,6 +361,12 @@ class S3Notifications(object):
             if attachment_fnc:
                 document_ids = attachment_fnc(resource, data, meta_data)
 
+        # **data for send_by_pe_id function in s3msg
+        send_data = {}
+        send_data_fnc = settings.get_msg_notify_send_data()
+        if callable(send_data_fnc):
+            send_data = send_data_fnc(resource, data, meta_data)
+
         # Helper function to find templates from a priority list
         join = lambda *f: os.path.join(current.request.folder, *f)
         def get_template(path, filenames):
@@ -433,7 +439,8 @@ class S3Notifications(object):
                             message=message,
                             contact_method=method,
                             system_generated=True,
-                            document_ids=document_ids)
+                            document_ids=document_ids,
+                            **send_data)
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))

@@ -475,7 +475,9 @@ def config(settings):
                         try:
                             # @ToDo: Handle the multi-message nicely?
                             # @ToDo: Send resource url with tweet
-                            current.msg.send_tweet(text=s3_str(twitter_text))
+                            current.msg.send_tweet(text=s3_str(twitter_text),
+                                                   alert_id=alert_id,
+                                                   )
                         except tweepy.error.TweepError, e:
                             current.log.debug("Sending tweets failed: %s" % e)
 
@@ -520,9 +522,16 @@ def config(settings):
                         send_by_pe_id(row.pe_id,
                                       subject,
                                       email_content,
-                                      document_ids=cap_document_id)
+                                      document_ids=cap_document_id,
+                                      alert_id=alert_id,
+                                      )
                         try:
-                            send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
+                            send_by_pe_id(row.pe_id,
+                                          subject,
+                                          sms_content,
+                                          contact_method="SMS",
+                                          alert_id=alert_id,
+                                          )
                         except ValueError:
                             current.log.error("No SMS Handler defined!")
                 else:
@@ -535,9 +544,16 @@ def config(settings):
                         send_by_pe_id(row.pe_id,
                                       subject,
                                       email_content,
-                                      document_ids=cap_document_id)
+                                      document_ids=cap_document_id,
+                                      alert_id=alert_id,
+                                      )
                         try:
-                            send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
+                            send_by_pe_id(row.pe_id,
+                                          subject,
+                                          sms_content,
+                                          contact_method="SMS",
+                                          alert_id=alert_id,
+                                          )
                         except ValueError:
                             current.log.error("No SMS Handler defined!")
 
@@ -844,6 +860,44 @@ def config(settings):
         return document_ids
 
     settings.msg.notify_attachment = custom_msg_notify_attachment
+
+    # -----------------------------------------------------------------------------
+    def custom_msg_notify_send_data(resource, data, meta_data):
+        """
+            Custom Method to send data containing alert_id to the s3msg.send_by_pe_id
+            @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
+            @param meta_data: the meta data for the notification
+        """
+
+        rows = data.rows
+        data = {}
+        if len(rows) == 1:
+            row = rows[0]
+            if "cap_alert.id" in row:
+                try:
+                    alert_id = int(row["cap_alert.id"])
+                    data["alert_id"] = alert_id
+                except ValueError:
+                    pass
+
+        return data
+
+    settings.msg.notify_send_data = custom_msg_notify_send_data
+
+    # -----------------------------------------------------------------------------
+    def msg_send_postprocess(message_id, **data):
+        """
+            Custom function that link alert_id in cap module to message_id in
+            message module
+        """
+
+        alert_id = data.get("alert_id", None)
+        if alert_id and message_id:
+            current.s3db.cap_alert_message.insert(alert_id = alert_id,
+                                                  message_id = message_id)
+
+    settings.msg.send_postprocess = msg_send_postprocess
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
