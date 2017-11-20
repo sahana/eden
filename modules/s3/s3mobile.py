@@ -48,7 +48,7 @@ from gluon import *
 from gluon.dal import Query
 from s3datetime import s3_encode_iso_datetime, s3_parse_datetime
 from s3error import S3PermissionError
-from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLField
+from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLDummyField, S3SQLField
 from s3query import S3ResourceField
 from s3rest import S3Method
 from s3utils import s3_get_foreign_key, s3_str, s3_unicode
@@ -611,6 +611,7 @@ class S3MobileSchema(object):
 
         fields = []
         mobile_form = self._form = []
+        mappend = mobile_form.append
 
         # Prevent duplicates
         fnames = set()
@@ -626,8 +627,14 @@ class S3MobileSchema(object):
 
                 if rfield.tname == tablename and fname not in fnames:
                     fields.append(rfield.field)
-                    mobile_form.append(fname)
+                    mappend(fname)
                     include(fname)
+
+            elif isinstance(element, S3SQLDummyField):
+                field = {"type": "dummy",
+                         "name": element.selector,
+                         }
+                mappend(field)
 
         if resource.parent and not resource.linktable:
 

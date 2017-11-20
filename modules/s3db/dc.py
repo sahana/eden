@@ -563,7 +563,7 @@ class DataCollectionTemplateModel(S3Model):
             db(current.s3db.s3_field.id == field_id).update(label = question.name,
                                                             field_type = field_type,
                                                             options = options,
-                                                            #settings = settings,
+                                                            #settings = field_settings,
                                                             require_not_empty = question.require_not_empty,
                                                             comments = question.comments,
                                                             )
@@ -582,7 +582,7 @@ class DataCollectionTemplateModel(S3Model):
                                                     name = name,
                                                     field_type = field_type,
                                                     options = options,
-                                                    #settings = settings,
+                                                    #settings = field_settings,
                                                     require_not_empty = question.require_not_empty,
                                                     comments = question.comments,
                                                     )
@@ -1166,7 +1166,10 @@ class DataCollectionModel(S3Model):
         if len(grids):
             for child in grid_children:
                 code, row, col = grid_children[child]
-                grids[code]["f"][col - 1][row - 1] = child
+                try:
+                    grids[code]["f"][col - 1][row - 1] = child
+                except:
+                    current.log.warning("Invalid grid data for %s - ignoring" % code)
 
         if mform:
             # Auto-Totals
