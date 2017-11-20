@@ -2329,9 +2329,15 @@ class S3EventAssetModel(S3Model):
 
     def model(self):
 
+        settings = current.deployment_settings
+        if not settings.has_module("supply"):
+            # Don't crash
+            #return self.defaults()
+            return {}
+
         T = current.T
 
-        if current.deployment_settings.get_event_cascade_delete_incidents():
+        if settings.get_event_cascade_delete_incidents():
             ondelete = "CASCADE"
         else:
             ondelete = "SET NULL"
