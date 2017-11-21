@@ -221,16 +221,16 @@ class S3MobileSchema(object):
     """
 
     # Field types supported for mobile resources
-    SUPPORTED_FIELD_TYPES =("string",
-                            "text",
-                            "integer",
-                            "double",
-                            "date",
-                            "datetime",
-                            "boolean",
-                            "reference",
-                            "upload",
-                            )
+    SUPPORTED_FIELD_TYPES = ("string",
+                             "text",
+                             "integer",
+                             "double",
+                             "date",
+                             "datetime",
+                             "boolean",
+                             "reference",
+                             "upload",
+                             )
 
     # -------------------------------------------------------------------------
     def __init__(self, resource):
@@ -458,6 +458,11 @@ class S3MobileSchema(object):
         #        (i.e. no custom lookup, no custom represent),
         #        and its field list is not just "name" => pass
         #        that field list as description["represent"]
+
+        # Add field settings to description (Dynamic Fields)
+        settings = hasattr(field, "settings") and field.settings
+        if settings:
+            description["settings"] = settings
 
         return description
 

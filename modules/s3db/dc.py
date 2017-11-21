@@ -529,6 +529,7 @@ class DataCollectionTemplateModel(S3Model):
                                                        ).first()
 
         field_type = question.field_type
+        field_settings = {}
         options = None
         if field_type == 1:
             field_type = "string"
@@ -536,6 +537,7 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "integer"
         elif field_type == 4:
             field_type = "boolean"
+            field_settings["widget"] = "checkbox"
         elif field_type == 5:
             T = current.T
             options = [T("Yes"),
@@ -563,7 +565,7 @@ class DataCollectionTemplateModel(S3Model):
             db(current.s3db.s3_field.id == field_id).update(label = question.name,
                                                             field_type = field_type,
                                                             options = options,
-                                                            #settings = field_settings,
+                                                            settings = field_settings,
                                                             require_not_empty = question.require_not_empty,
                                                             comments = question.comments,
                                                             )
@@ -582,7 +584,7 @@ class DataCollectionTemplateModel(S3Model):
                                                     name = name,
                                                     field_type = field_type,
                                                     options = options,
-                                                    #settings = field_settings,
+                                                    settings = field_settings,
                                                     require_not_empty = question.require_not_empty,
                                                     comments = question.comments,
                                                     )

@@ -1777,6 +1777,11 @@ class S3DynamicModel(object):
             if comments:
                 field.comment = T(comments)
 
+            # Field settings
+            settings = row.settings
+            if settings:
+                field.settings = settings
+
         return field
 
     # -------------------------------------------------------------------------
