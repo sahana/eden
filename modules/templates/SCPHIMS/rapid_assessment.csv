@@ -2,17 +2,17 @@ Template,Section,Section Position,SubSection,SubSection Position,SubSubSection,S
 Rapid Assessment,1. Assessment team information,1,,,,,a) Organizations participating,1,text,,,,,,
 Rapid Assessment,2. Geographic information,2,,,,,e) Name/Position of Person interviewed,5,text,,,,,,
 Rapid Assessment,2. Geographic information,2,,,,,f) Contact Details,6,text,,,,,,
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Grid,1,Grid,,,G332,,"[['Adults','Children(5-18)','Children <5'],['Male','Female','Total','Grand Total']]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,i. Male Adults,3,number,,,RAMaleAdults,,"['G332',1,1]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,ii. Female Adults,4,number,,,RAFemaleAdults,,"['G332',1,2]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,iii. Total Adults,5,number,,,RAAdults,"['RAMaleAdults','RAFemaleAdults']","['G332',1,3]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,iv. Male Children (5-18),6,number,,,RAMaleChildrenOlder,,"['G332',2,1]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,v. Female Children (5-18),7,number,,,RAFemaleChildrenOlder,,"['G332',2,2]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,vi. Male Children <5,8,number,,,RAMaleChildrenYounger,,"['G332',3,1]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,vii. Female Children <5,9,number,,,RAFemaleChildrenYounger,,"['G332',3,2]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,viii. Total Children,10,number,,,RAChildren,"['RAMaleChildrenOlder','RAFemaleChildrenOlder','RAMaleChildrenYounger','RAFemaleChildrenYounger']","['G332',2,3]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,ix. Grand Total,11,number,,,,"['RAAdults','RAChildren']","['G332',1,4]",
-Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,x. Total Households,12,number,,,,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Grid,1,Grid,,,G332,,"[['Adults','Children (5-18)','Children <5'],['Male','Female','Total','Grand Total']]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Male,2,number,,,RAMaleAdults,,"['G332',1,1]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Female,3,number,,,RAFemaleAdults,,"['G332',1,2]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Total,4,number,,,RAAdults,"['RAMaleAdults','RAFemaleAdults']","['G332',1,3]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Male,5,number,,,RAMaleChildrenOlder,,"['G332',2,1]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Female,6,number,,,RAFemaleChildrenOlder,,"['G332',2,2]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Male,7,number,,,RAMaleChildrenYounger,,"['G332',3,1]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Female,8,number,,,RAFemaleChildrenYounger,,"['G332',3,2]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Total,9,number,,,RAChildren,"['RAMaleChildrenOlder','RAFemaleChildrenOlder','RAMaleChildrenYounger','RAFemaleChildrenYounger']","['G332',2,3]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,Grand Total,10,number,,,,"['RAAdults','RAChildren']","['G332',1,4]",
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of barangay (if available, even if estimates)",2,,,x. Total Households,11,number,,,,,,
 Rapid Assessment,3. Demographic data,3,c),3,i.,1,Have people been forced or obliged to leave their homes or residences as consequence of this event (Internally Displaced People - IDPs)?,1,options,"['Yes','No']",,,,,
 Rapid Assessment,3. Demographic data,3,c),3,ii.,2,Name of Evacuation centre,1,text,,,,,,
 Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Families total,1,number,,,,,,
@@ -37,34 +37,34 @@ Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following spe
 Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,specify,16,text,,,,,,
 Rapid Assessment,3. Demographic data,3,e),5,,,Are there people staying outside of the Evacuation Centre who have also been displaced?,1,options,"['Yes','No']",,,,,
 Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grid,1,Grid,,,G336,,"[['Dead (confirmed)','Missing','Injured'],['Male Adult','Female Adult','Total Adult','Male Children','Female Children','Total Children','Grand Total']]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Male Adults,2,number,,,RADeadMaleAdults,,"['G336',1,1]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Female Adults,3,number,,,RADeadFemaleAdults,,"['G336',1,2]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead Adults,4,number,,,RADeadAdults,"['RADeadMaleAdults','RADeadFemaleAdults']","['G336',1,3]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Male Children,5,number,,,RADeadMaleChildren,,"['G336',1,4]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Dead Female Children,6,number,,,RADeadFemaleChildren,,"['G336',1,5]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead Children,7,number,,,RADeadChildren,"['RADeadMaleChildren','RADeadFemaleChildren']","['G336',1,6]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Dead,8,number,,,,"['RADeadAdults','RADeadChildren']","['G336',1,7]",Confirmed Deaths only
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Male Adults,9,number,,,RAMissingMaleAdults,,"['G336',2,1]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Female Adults,10,number,,,RAMissingFemaleAdults,,"['G336',2,2]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing Adults,11,number,,,RAMissingAdults,"['RAMissingMaleAdults','RAMissingFemaleAdults']","['G336',2,3]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Male Children,12,number,,,RAMissingMaleChildren,,"['G336',2,4]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Missing Female Children,13,number,,,RAMissingFemaleChildren,,"['G336',2,5]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing Children,14,number,,,RAMissingChildren,"['RAMissingMaleChildren','RAMissingFemaleChildren']","['G336',2,6]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Missing,15,number,,,,"['RAMissingAdults','RAMissingChildren']","['G336',2,7]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Male Adults,16,number,,,RAInjuredMaleAdults,,"['G336',3,1]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Female Adults,17,number,,,RAInjuredFemaleAdults,,"['G336',3,2]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured Adults,18,number,,,RAInjuredAdults,"['RAInjuredMaleAdults','RAInjuredFemaleAdults']","['G336',3,3]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Male Children,19,number,,,RAInjuredMaleChildren,,"['G336',3,4]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Female Children,20,number,,,RAInjuredFemaleChildren,,"['G336',3,5]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured Children,21,number,,,RAInjuredChildren,"['RAInjuredMaleChildren','RAInjuredFemaleChildren']","['G336',3,6]",
-Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Injured,22,number,,,,"['RAInjuredAdults','RAInjuredChildren']","['G336',3,7]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,2,number,,,RADeadMaleAdults,,"['G336',1,1]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,3,number,,,RADeadFemaleAdults,,"['G336',1,2]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Adult,4,number,,,RADeadAdults,"['RADeadMaleAdults','RADeadFemaleAdults']","['G336',1,3]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,5,number,,,RADeadMaleChildren,,"['G336',1,4]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,6,number,,,RADeadFemaleChildren,,"['G336',1,5]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,7,number,,,RADeadChildren,"['RADeadMaleChildren','RADeadFemaleChildren']","['G336',1,6]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,8,number,,,,"['RADeadAdults','RADeadChildren']","['G336',1,7]",Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,9,number,,,RAMissingMaleAdults,,"['G336',2,1]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,10,number,,,RAMissingFemaleAdults,,"['G336',2,2]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Adult,11,number,,,RAMissingAdults,"['RAMissingMaleAdults','RAMissingFemaleAdults']","['G336',2,3]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,12,number,,,RAMissingMaleChildren,,"['G336',2,4]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,13,number,,,RAMissingFemaleChildren,,"['G336',2,5]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,14,number,,,RAMissingChildren,"['RAMissingMaleChildren','RAMissingFemaleChildren']","['G336',2,6]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,15,number,,,,"['RAMissingAdults','RAMissingChildren']","['G336',2,7]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,16,number,,,RAInjuredMaleAdults,,"['G336',3,1]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,17,number,,,RAInjuredFemaleAdults,,"['G336',3,2]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Adult,18,number,,,RAInjuredAdults,"['RAInjuredMaleAdults','RAInjuredFemaleAdults']","['G336',3,3]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,19,number,,,RAInjuredMaleChildren,,"['G336',3,4]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,20,number,,,RAInjuredFemaleChildren,,"['G336',3,5]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,21,number,,,RAInjuredChildren,"['RAInjuredMaleChildren','RAInjuredFemaleChildren']","['G336',3,6]",
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,22,number,,,,"['RAInjuredAdults','RAInjuredChildren']","['G336',3,7]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,,,i. Has the community received any assistance?,1,options,"['Yes','No']",,,,,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Grid,1,Grid,,,G44,,"[['Blankets','Cooking Utensils','Clothes','Food','Hygiene Kit(s)','Tarpaulin','Mosquito Nets','Tents','Water','Water Kit(s)','Voucher/Cash','Others'],['Item','When provided (in days since event)','Qty','Unit','Govt','NNGO','INGO','PHL Red Cross','Church','Private Entities','Other']]",
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Grid,1,Grid,,,G44,,"[['Blankets','Cooking Utensils','Clothes','Food','Hygiene Kit(s)','Tarpaulin','Mosquito Nets','Tents','Water','Water Kit(s)','Voucher /Cash','Others'],['Item','When provided (in days since event)','Qty','Unit','Govt','NNGO','INGO','PHL Red Cross','Church','Private Entities','Other']]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Blankets,2,boolean,,,,,"['G44',1,1]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),3,number,,,,,"['G44',1,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,4,number,,,,,"['G44',1,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,5,text,,,,,"['G44',1,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,6,boolean,,,,,"['G44',1,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,6,boolean,,,,,"['G44',1,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,7,boolean,,,,,"['G44',1,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,8,boolean,,,,,"['G44',1,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,9,boolean,,,,,"['G44',1,8]",Source
@@ -75,7 +75,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),14,number,,,,,"['G44',2,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,15,number,,,,,"['G44',2,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,16,text,,,,,"['G44',2,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,17,boolean,,,,,"['G44',2,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,17,boolean,,,,,"['G44',2,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,18,boolean,,,,,"['G44',2,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,19,boolean,,,,,"['G44',2,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,20,boolean,,,,,"['G44',2,8]",Source
@@ -86,7 +86,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),25,number,,,,,"['G44',3,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,26,number,,,,,"['G44',3,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,27,text,,,,,"['G44',3,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,28,boolean,,,,,"['G44',3,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,28,boolean,,,,,"['G44',3,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,29,boolean,,,,,"['G44',3,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,30,boolean,,,,,"['G44',3,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,31,boolean,,,,,"['G44',3,8]",Source
@@ -97,7 +97,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),36,number,,,,,"['G44',4,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,37,number,,,,,"['G44',4,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,38,text,,,,,"['G44',4,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,39,boolean,,,,,"['G44',4,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,39,boolean,,,,,"['G44',4,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,40,boolean,,,,,"['G44',4,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,41,boolean,,,,,"['G44',4,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,42,boolean,,,,,"['G44',4,8]",Source
@@ -108,7 +108,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),47,number,,,,,"['G44',5,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,48,number,,,,,"['G44',5,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,49,text,,,,,"['G44',5,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,50,boolean,,,,,"['G44',5,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,50,boolean,,,,,"['G44',5,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,51,boolean,,,,,"['G44',5,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,52,boolean,,,,,"['G44',5,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,53,boolean,,,,,"['G44',5,8]",Source
@@ -119,7 +119,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),58,number,,,,,"['G44',6,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,59,number,,,,,"['G44',6,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,60,text,,,,,"['G44',6,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,61,boolean,,,,,"['G44',6,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,61,boolean,,,,,"['G44',6,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,62,boolean,,,,,"['G44',6,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,63,boolean,,,,,"['G44',6,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,64,boolean,,,,,"['G44',6,8]",Source
@@ -130,7 +130,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),69,number,,,,,"['G44',7,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,70,number,,,,,"['G44',7,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,71,text,,,,,"['G44',7,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,72,boolean,,,,,"['G44',7,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,72,boolean,,,,,"['G44',7,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,73,boolean,,,,,"['G44',7,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,74,boolean,,,,,"['G44',7,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,75,boolean,,,,,"['G44',7,8]",Source
@@ -141,7 +141,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),80,number,,,,,"['G44',8,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,81,number,,,,,"['G44',8,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,82,text,,,,,"['G44',8,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,83,boolean,,,,,"['G44',8,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,83,boolean,,,,,"['G44',8,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,84,boolean,,,,,"['G44',8,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,85,boolean,,,,,"['G44',8,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,86,boolean,,,,,"['G44',8,8]",Source
@@ -152,7 +152,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),91,number,,,,,"['G44',9,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,92,number,,,,,"['G44',9,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,93,text,,,,,"['G44',9,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,94,boolean,,,,,"['G44',9,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,94,boolean,,,,,"['G44',9,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,95,boolean,,,,,"['G44',9,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,96,boolean,,,,,"['G44',9,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,97,boolean,,,,,"['G44',9,8]",Source
@@ -163,18 +163,18 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),102,number,,,,,"['G44',10,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,103,number,,,,,"['G44',10,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,104,text,,,,,"['G44',10,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,105,boolean,,,,,"['G44',10,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,105,boolean,,,,,"['G44',10,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,106,boolean,,,,,"['G44',10,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,107,boolean,,,,,"['G44',10,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,108,boolean,,,,,"['G44',10,8]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,109,boolean,,,,,"['G44',10,9]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,110,boolean,,,,,"['G44',10,10]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,111,boolean,,,,,"['G44',10,11]",Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Voucher/Cash,112,boolean,,,,,"['G44',11,1]",
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Voucher /Cash,112,boolean,,,,,"['G44',11,1]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),113,number,,,,,"['G44',11,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,114,number,,,,,"['G44',11,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,115,text,,,,,"['G44',11,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,116,boolean,,,,,"['G44',11,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,116,boolean,,,,,"['G44',11,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,117,boolean,,,,,"['G44',11,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,118,boolean,,,,,"['G44',11,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,119,boolean,,,,,"['G44',11,8]",Source
@@ -185,7 +185,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),124,number,,,,,"['G44',12,2]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,125,number,,,,,"['G44',12,3]",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,126,text,,,,,"['G44',12,4]",
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Gov't,127,boolean,,,,,"['G44',12,5]",Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,127,boolean,,,,,"['G44',12,5]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,128,boolean,,,,,"['G44',12,6]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,129,boolean,,,,,"['G44',12,7]",Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,130,boolean,,,,,"['G44',12,8]",Source
