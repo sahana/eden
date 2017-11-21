@@ -30,6 +30,7 @@
 """
 
 __all__ = ("S3MobileFormList",
+           "S3MobileSchema",
            "S3MobileForm",
            "S3MobileCRUD",
            )
@@ -48,7 +49,7 @@ from gluon import *
 from gluon.dal import Query
 from s3datetime import s3_encode_iso_datetime, s3_parse_datetime
 from s3error import S3PermissionError
-from s3forms import S3SQLCustomForm, S3SQLDefaultForm, S3SQLDummyField, S3SQLField
+from s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDefaultForm, S3SQLDummyField, S3SQLField
 from s3query import S3ResourceField
 from s3rest import S3Method
 from s3utils import s3_get_foreign_key, s3_str, s3_unicode
@@ -257,6 +258,10 @@ class S3MobileSchema(object):
         # Initialize settings
         self._settings = None
 
+        # Initialize lookup list attributes
+        self._lookup_only = None
+        self._llrepr = None
+
     # -------------------------------------------------------------------------
     def serialize(self):
         """
@@ -272,12 +277,13 @@ class S3MobileSchema(object):
             schema = {}
             self._references = {}
 
-            # Introspect and build schema
-            fields = self.fields()
-            for field in fields:
-                description = self.describe(field)
-                if description:
-                    schema[field.name] = description
+            if not self.lookup_only:
+                # Introspect and build schema
+                fields = self.fields()
+                for field in fields:
+                    description = self.describe(field)
+                    if description:
+                        schema[field.name] = description
 
             # Store schema
             self._schema = schema
@@ -702,7 +708,7 @@ class S3MobileSchema(object):
 
         # Get the form definition from "mobile_form" table setting
         form = resource.get_config("mobile_form")
-        if form is None:
+        if not form or not isinstance(form, S3SQLCustomForm):
             # Fallback
             form = resource.get_config("crud_form")
 
@@ -715,6 +721,43 @@ class S3MobileSchema(object):
             form = S3SQLCustomForm(*fields)
 
         return form
+
+    # -------------------------------------------------------------------------
+    @property
+    def lookup_only(self):
+        """
+            Whether the resource shall be exposed as mere lookup list
+            without mobile form (lazy property)
+        """
+
+        lookup_only = self._lookup_only
+        if lookup_only is None:
+
+            resource = self.resource
+
+            mform = resource.get_config("mobile_form")
+            if mform is False:
+                from s3fields import S3Represent
+                self._llrepr = S3Represent(lookup=resource.tablename)
+                lookup_only = True
+            elif callable(mform) and not isinstance(mform, S3SQLForm):
+                self._llrepr = mform
+                lookup_only = True
+            else:
+                lookup_only = False
+
+            self._lookup_only = lookup_only
+
+        return lookup_only
+
+    # -------------------------------------------------------------------------
+    @property
+    def llrepr(self):
+        """
+            The lookup list representation method for the resource
+        """
+
+        return self._llrepr if self.lookup_only else None
 
     # -------------------------------------------------------------------------
     # Utility functions
