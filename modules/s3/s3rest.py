@@ -871,6 +871,9 @@ class S3Request(object):
             if get_vars["show_urls"].lower() == "false":
                 current.xml.show_urls = False
 
+        # Mobile data export (default: False)
+        mdata = get_vars.get("mdata") == "1"
+
         # Maxbounds (default: False)
         maxbounds = False
         if "maxbounds" in get_vars:
@@ -960,19 +963,20 @@ class S3Request(object):
         if target == resource.tablename:
             # Master resource targetted
             target = None
-        output = resource.export_xml(start=start,
-                                     limit=limit,
-                                     msince=msince,
-                                     fields=fields,
-                                     dereference=True,
+        output = resource.export_xml(start = start,
+                                     limit = limit,
+                                     msince = msince,
+                                     fields = fields,
+                                     dereference = True,
                                      # maxdepth in args
-                                     references=references,
-                                     mcomponents=mcomponents,
-                                     rcomponents=rcomponents,
-                                     stylesheet=stylesheet,
-                                     as_json=as_json,
-                                     maxbounds=maxbounds,
-                                     target= target,
+                                     references = references,
+                                     mdata = mdata,
+                                     mcomponents = mcomponents,
+                                     rcomponents = rcomponents,
+                                     stylesheet = stylesheet,
+                                     as_json = as_json,
+                                     maxbounds = maxbounds,
+                                     target = target,
                                      **args)
         # Transformation error?
         if not output:
