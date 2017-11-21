@@ -2,9 +2,12 @@ First Name,Last Name,Email,Password,Role,Organisation
 Myanmar,Map Admin,mm_mapadmin@example.com,eden,MAP_ADMIN,Department of Meteorology and Hydrology
 Philippines,Map Admin,ph_mapadmin@example.com,eden,MAP_ADMIN,Philippine Institute of Volcanology and Seismology
 Maldives,Map Admin,mv_mapadmin@example.com,eden,MAP_ADMIN,National Disaster Management Center
+Nepal,Map Admin,np_mapadmin@example.com,eden,MAP_ADMIN,Department of Hydrology and Meteorology
 Myanmar,Alert Editor,mm_editor@example.com,eden,ALERT_EDITOR,Department of Meteorology and Hydrology
 Philippines,Alert Editor,ph_editor@example.com,eden,ALERT_EDITOR,Philippine Institute of Volcanology and Seismology
 Maldives,Alert Editor,mv_editor@example.com,eden,ALERT_EDITOR,National Disaster Management Center
+Nepal,Alert Editor,np_editor@example.com,eden,ALERT_EDITOR,Department of Hydrology and Meteorology
 Myanmar,Alert Approver,mm_approver@example.com,eden,ALERT_APPROVER,Department of Meteorology and Hydrology
 Philippines,Alert Approver,ph_approver@example.com,eden,ALERT_APPROVER,Philippine Institute of Volcanology and Seismology
 Maldives,Alert Approver,mv_approver@example.com,eden,ALERT_APPROVER,National Disaster Management Center
+Nepal,Alert Approver,np_approver@example.com,eden,ALERT_APPROVER,Department of Hydrology and Meteorology
