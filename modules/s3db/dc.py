@@ -885,7 +885,9 @@ class DataCollectionModel(S3Model):
         T = current.T
         db = current.db
 
-        mform = r.method == "mform"
+        # Mobile form configuration required for both schema and data export
+        #mform = r.method == "mform"
+        mform = r.tablename == tablename
         if mform:
             # Going direct to Dynamic Table
             dtable = db.s3_table
@@ -1021,7 +1023,7 @@ class DataCollectionModel(S3Model):
                         raise
                     rows = [s3_str(T(v)) for v in grid[0]]
                     cols = [s3_str(T(v)) for v in grid[1]]
-                    fields = [[0 for x in range(len(rows))] for y in range(len(cols))] 
+                    fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
                     grids[code] = {"r": rows,
                                    "c": cols,
                                    "f": fields,
@@ -1353,7 +1355,7 @@ def dc_rheader(r, tabs=None):
                                          date_field,
                                          limitby=(0, 1)
                                          ).first()
-                
+
                 def event_name(record):
                     if event:
                         return event_id.represent(event.id)
@@ -1387,7 +1389,7 @@ def dc_rheader(r, tabs=None):
                 RESPONSES = T("Surveys")
             else:
                 RESPONSES = T("Responses")
-        
+
             tabs = ((T("Basic Details"), None),
                     (RESPONSES, "response"),
                     )

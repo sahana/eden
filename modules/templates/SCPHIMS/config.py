@@ -498,8 +498,11 @@ def config(settings):
                 if not standard_prep(r):
                     return False
 
-            if r.method == "mform":
-                # Mobile client downloading Assessment Schema
+            method = r.method
+            if method == "mform" or r.get_vars.get("mdata") == "1":
+
+                # Mobile client downloading Assessment Schema/Data
+                # (mobile form customisations must be done for both cases)
 
                 s3db = current.s3db
 
@@ -507,7 +510,7 @@ def config(settings):
                 s3db.dc_answer_form(r, r.tablename)
 
                 # Represent the record as the representation of the response_id
-                def response_represent(id):
+                def response_represent(id, show_link=False):
                     db = current.db
                     table = db.dc_response
                     respnse = db(table).select(table.location_id,
@@ -518,26 +521,26 @@ def config(settings):
                     except:
                         return id
                     else:
-                        represent = table.location_id.represent(location_id)
+                        represent = table.location_id.represent(location_id,
+                                                                show_link = show_link,
+                                                                )
                         return represent
 
                 r.table.response_id.represent = response_represent
 
-                # Expose limited form for the master dc_response to avoid
-                # foreign keys that would trigger unnecessary reference schema
-                # exports
-                from s3 import S3SQLCustomForm
-                mobile_form = S3SQLCustomForm("id",
-                                              )
+                # Configure dc_response as mere lookup-list
                 s3db.configure("dc_response",
-                               mobile_form = mobile_form,
+                               mobile_form = lambda record_id: \
+                                             response_represent(record_id,
+                                                                show_link = False,
+                                                                ),
                                )
 
-            elif r.representation == "s3json":
-                # Mobile client downloading Assessment Data
-                # @ToDo: Filter Data to the relevant subset for this User
-                # tablename = "s3dt_%s" % r.name
-                pass
+                if method != "mform":
+                    # Mobile client downloading Assessment Data
+                    # @ToDo: Filter Data to the relevant subset for this User
+                    # tablename = "s3dt_%s" % r.name
+                    pass
 
             return True
         s3.prep = custom_prep
