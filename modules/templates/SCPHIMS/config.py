@@ -510,6 +510,7 @@ def config(settings):
                 s3db.dc_answer_form(r, r.tablename)
 
                 # Represent the record as the representation of the response_id
+                # NB If we expected multiple records then we should make this an S3Represent, but in this case we wouldn't expect more then 3-4
                 def response_represent(id, show_link=False):
                     db = current.db
                     table = db.dc_response

@@ -1163,8 +1163,6 @@ class DataCollectionModel(S3Model):
                                 subheadings[fname] = subsubsection_name
                             fffirst = False
 
-        crud_form = S3SQLCustomForm(*crud_fields)
-
         # Grids
         # Place the child fields in the correct places in their grids
         if len(grids):
@@ -1185,6 +1183,13 @@ class DataCollectionModel(S3Model):
                     append(codes.get(code))
                 autototals[field] = f["fields"]
 
+            # Add response_id to form (but keep invisible) so that it can be used for the dataList represent
+            f = r.table.response_id
+            f.readable = f.writable = False
+            crud_fields.insert(0, "response_id")
+
+            crud_form = S3SQLCustomForm(*crud_fields)
+
             current.s3db.configure(tablename,
                                    crud_form = crud_form,
                                    autototals = autototals,
@@ -1193,6 +1198,8 @@ class DataCollectionModel(S3Model):
                                    )
 
         else:
+            crud_form = S3SQLCustomForm(*crud_fields)
+
             current.s3db.configure(tablename,
                                    crud_form = crud_form,
                                    subheadings = subheadings,
