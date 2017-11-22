@@ -537,7 +537,8 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "integer"
         elif field_type == 4:
             field_type = "boolean"
-            field_settings["widget"] = "checkbox"
+            field_settings["mobile"] = {}
+            field_settings["mobile"]["widget"] = "checkbox"
         elif field_type == 5:
             T = current.T
             options = [T("Yes"),

@@ -1780,7 +1780,7 @@ class S3DynamicModel(object):
             # Field settings
             settings = row.settings
             if settings:
-                field.settings = settings
+                field.s3_settings = settings
 
         return field
 

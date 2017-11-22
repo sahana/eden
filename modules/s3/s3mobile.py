@@ -465,10 +465,12 @@ class S3MobileSchema(object):
         #        and its field list is not just "name" => pass
         #        that field list as description["represent"]
 
-        # Add field settings to description (Dynamic Fields)
-        settings = hasattr(field, "settings") and field.settings
-        if settings:
-            description["settings"] = settings
+        # Add field's mobile settings to description (Dynamic Fields)
+        msettings = hasattr(field, "s3_settings") and \
+                    field.s3_settings and \
+                    field.s3_settings.get("mobile")
+        if msettings:
+            description["settings"] = msettings
 
         return description
 
