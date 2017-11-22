@@ -257,13 +257,13 @@ class S3SQLForm(object):
                              _class="subheading",
                              ),
                           _class = "subheading",
-                          _id = "%s_%s%s__subheading" % (tablename, f, level),
+                          _id = "%s_%s__subheading%s" % (tablename, f, level),
                           )
         else:
             def create_subheading(represent, tablename, f, level=""):
                 return DIV(represent,
                            _class = "subheading",
-                           _id = "%s_%s%s__subheading" % (tablename, f, level),
+                           _id = "%s_%s__subheading%s" % (tablename, f, level),
                            )
 
         form_rows = iter(form[0])

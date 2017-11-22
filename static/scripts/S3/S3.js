@@ -370,16 +370,16 @@ S3.autoTotals = function(sumField, sourceFields, tablename) {
         tablename = tablename + '_';
     }
     sumField = $('#' + tablename + sumField);
-    var field,
+    var fieldname,
         value,
         total;
     for (var i = 0; i < sourceFields.length; i++) {
-        field = sourceFields[i];
-        $('#' + tablename + field).change(function() {
+        fieldname = sourceFields[i];
+        $('#' + tablename + fieldname).change(function() {
              total = 0;
              for (var j = 0; j < sourceFields.length; j++) {
-                field = sourceFields[j];
-                value = $('#' + tablename + field).val();
+                fieldname = sourceFields[j];
+                value = $('#' + tablename + fieldname).val();
                 if (value) {
                     total += parseInt(value);
                 }
@@ -391,6 +391,40 @@ S3.autoTotals = function(sumField, sourceFields, tablename) {
     // @ToDo?: Clear the sourceFields when the sumField is entered manually?
     // @ToDo?: Flag to show that the sumField has been set manually & so shouldn't be over-ridden by the source_fields
     //sumField.data('manual', true);
+};
+
+// ============================================================================
+// Show Hiddens
+// - allow a field to hide/unhide a set of other fields
+S3.showHidden = function(controlField, affectedFields, tablename) {
+    if (tablename === undefined) {
+        // Assume that fieldnames include the tablename
+        tablename = '';
+    } else {
+        // Prepend fieldnames with the tablename
+        tablename = tablename + '_';
+    }
+    controlField = $('#' + tablename + controlField);
+    var fieldname,
+        selector;
+    controlField.change(function() {
+        if (controlField.prop('checked')) {
+            // Show
+            for (var i = 0; i < affectedFields.length; i++) {
+                fieldname = affectedFields[i];
+                selector = '#' + tablename + fieldname;
+                $(selector + '__row, ' + selector + '__subheading, ' + selector + '__subheading1, ' + selector + '__subheading2').show();
+            }
+        } else {
+            // Hide
+            for (var i = 0; i < affectedFields.length; i++) {
+                fieldname = affectedFields[i];
+                selector = '#' + tablename + fieldname;
+                $(selector + '__row, ' + selector + '__subheading, ' + selector + '__subheading1, ' + selector + '__subheading2').hide();
+            }
+        }
+    });
+    controlField.trigger('change');
 };
 
 // ============================================================================

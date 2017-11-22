@@ -22,6 +22,7 @@
          Code........................dc_question.code
          Totals......................dc_question.totals
          Grid........................dc_question.grid
+         Show Hidden.................dc_question.show_hidden
          Tooltip.....................dc_question.comments
 
     *********************************************************************** -->
@@ -85,6 +86,7 @@
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="totals"><xsl:value-of select="col[@field='Totals']"/></data>
             <data field="grid"><xsl:value-of select="col[@field='Grid']"/></data>
+            <data field="show_hidden"><xsl:value-of select="col[@field='Show Hidden']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Tooltip']"/></data>
 
             <!-- Sort Options

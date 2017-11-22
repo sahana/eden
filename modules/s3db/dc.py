@@ -257,7 +257,7 @@ class DataCollectionTemplateModel(S3Model):
                                         ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Code"),
-                                                           T("Unique code for the field - required if using Auto-Totals or Grids"),
+                                                           T("Unique code for the field - required if using Auto-Totals, Grids or Show Hidden"),
                                                            ),
                                          ),
                            ),
@@ -304,6 +304,15 @@ class DataCollectionTemplateModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Totals"),
                                                            T("List of fields (codes) which this one is the Total of"),
+                                                           ),
+                                         ),
+                           ),
+                     Field("show_hidden", "json",
+                           label = T("Show Hidden"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Show Hidden"),
+                                                           T("List of fields (codes) which this one unhides when selected"),
                                                            ),
                                          ),
                            ),
@@ -991,6 +1000,7 @@ class DataCollectionModel(S3Model):
                   qtable.posn,
                   qtable.totals,
                   qtable.grid,
+                  qtable.show_hidden,
                   ]
         if translate:
             left.append(ttable.on((ttable.question_id == qtable.id) & \
@@ -1003,6 +1013,7 @@ class DataCollectionModel(S3Model):
         codes = {}
         grids = {}
         grid_children = {}
+        show_hidden = {}
         root_questions = []
         for question in questions:
             field_name = question.get("s3_field.name")
@@ -1034,6 +1045,11 @@ class DataCollectionModel(S3Model):
                     grid_children[field_name] = grid
                 else:
                     current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+            hides = question["dc_question.show_hidden"]
+            if hides:
+                show_hidden[field_name] = {"codes": hides,
+                                           "fields": [],
+                                           }
 
             section_id = question["dc_section.id"]
             label = None
@@ -1164,6 +1180,15 @@ class DataCollectionModel(S3Model):
                                 subheadings[fname] = subsubsection_name
                             fffirst = False
 
+        # Auto-Totals
+        autototals = {}
+        for field in auto_totals:
+            f = auto_totals[field]
+            append = f["fields"].append
+            for code in f["codes"]:
+                append(codes.get(code))
+            autototals[field] = f["fields"]
+
         # Grids
         # Place the child fields in the correct places in their grids
         if len(grids):
@@ -1174,16 +1199,16 @@ class DataCollectionModel(S3Model):
                 except:
                     current.log.warning("Invalid grid data for %s - ignoring" % code)
 
-        if mform:
-            # Auto-Totals
-            autototals = {}
-            for field in auto_totals:
-                f = auto_totals[field]
-                append = f["fields"].append
-                for code in f["codes"]:
-                    append(codes.get(code))
-                autototals[field] = f["fields"]
+        # Auto-Totals
+        hides = {}
+        for field in show_hidden:
+            f = show_hidden[field]
+            append = f["fields"].append
+            for code in f["codes"]:
+                append(codes.get(code))
+            hides[field] = f["fields"]
 
+        if mform:
             # Add response_id to form (but keep invisible) so that it can be used for the dataList represent
             f = r.table.response_id
             f.readable = f.writable = False
@@ -1195,6 +1220,7 @@ class DataCollectionModel(S3Model):
                                    crud_form = crud_form,
                                    autototals = autototals,
                                    grids = grids,
+                                   show_hidden = hides,
                                    subheadings = subheadings,
                                    )
 
@@ -1213,20 +1239,23 @@ class DataCollectionModel(S3Model):
             jappend = s3.jquery_ready.append
 
             # Auto-Totals
-            for field in auto_totals:
-                f = auto_totals[field]
-                append = f["fields"].append
-                for code in f["codes"]:
-                    append(codes.get(code))
+            for field in autototals:
                 jappend('''S3.autoTotals('%s',%s,'%s')''' % \
                     (field,
-                     json.dumps(f["fields"], separators=SEPARATORS),
+                     json.dumps(autototals[field], separators=SEPARATORS),
                      tablename))
 
             # Grids
             if len(grids):
                 jappend('''S3.dc_grids(%s,'%s')''' % \
                     (json.dumps(grids, separators=SEPARATORS),
+                     tablename))
+
+            # Show Hidden
+            for field in hides:
+                jappend('''S3.showHidden('%s',%s,'%s')''' % \
+                    (field,
+                     json.dumps(hides[field], separators=SEPARATORS),
                      tablename))
 
             # Add JS
