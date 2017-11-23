@@ -233,6 +233,8 @@ class DataCollectionTemplateModel(S3Model):
                      7: T("Date"),
                      #8: T("Date/Time"),
                      9: T("Grid"), # Pseudo-question
+                     10: T("Large Text"),
+                     11: T("Rich Text"),
                      #: T("Organization"),
                      #: T("Location"),
                      #: T("Person"),
@@ -565,6 +567,12 @@ class DataCollectionTemplateModel(S3Model):
         elif field_type == 9:
             # Grid: Pseudo-question, no dynamic field
             return
+        elif field_type == 10:
+            field_type = "text"
+            field_settings["widget"] = "comments"
+        elif field_type == 11:
+            field_type = "text"
+            field_settings["widget"] = "richtext"
         else:
             current.log.debug(field_type)
             raise NotImplementedError

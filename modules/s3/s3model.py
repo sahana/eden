@@ -45,6 +45,7 @@ from s3dal import Table, Field
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
 from s3validators import IS_ONE_OF
+from s3widgets import s3_comments_widget, s3_richtext_widget
 
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None
@@ -1811,12 +1812,22 @@ class S3DynamicModel(object):
 
         if fieldtype in ("string", "text"):
             default = row.default_value
+            settings = row.settings or {}
+            widget = settings.get("widget")
+            if widget == "richtext":
+                widget = s3_richtext_widget
+            elif widget == "comments":
+                widget = s3_comments_widget
+            else:
+                widget = None
         else:
             default = None
+            widget = None
 
         field = Field(fieldname, fieldtype,
                       default = default,
                       requires = requires,
+                      widget = widget,
                       )
         return field
 

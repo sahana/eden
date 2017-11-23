@@ -19,7 +19,7 @@ ANONYMOUS,Anonymous,,,,gis_layer_tms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_wfs,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_wms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
-ANONYMOUS,Anonymous,,doc,sitrep,,,READ,,,,,Public access to External SitReps
+ANONYMOUS,Anonymous,,event,sitrep,,,READ,,,,,Public access to External SitReps
 ANONYMOUS,Anonymous,,event,event,,,READ,,,,,Public access to Responses from Homepage
 ANONYMOUS,Anonymous,,gis,location_tag,,,READ,,,,,Public access to Response Locations on Homepage Map
 ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,Public access to Responses on Homepage
@@ -58,16 +58,16 @@ ERT_LEADER,ERT Team Leader,"Manage Activities, Forward Distributions to Logistic
 ERT_LEADER,ERT Team Leader,,dc,,,,ALL,,,,,
 ERT_LEADER,ERT Team Leader,,,,dc_response,,ALL,,,,,
 ERT_LEADER,ERT Team Leader,,,,dc_target,,ALL,,,,,
-ERT_LEADER,ERT Team Leader,doc,sitrep,,,ALL,,,,,
+ERT_LEADER,ERT Team Leader,event,sitrep,,,ALL,,,,,
 ERT_LEADER,ERT Team Leader,,project,project,,,READ|CREATE|UPDATE|DELETE,,,,,
 ERT_LEADER,ERT Team Leader,,,,project_activity,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 HUM_MANAGER,Humanitarian Manager,"Manage Programmes & Projects, Sign-off on Stock Release/Procurement Requests",hrm,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,dc,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_response,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_target,,ALL,,,,,
-HUM_MANAGER,Humanitarian Manager,doc,sitrep,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,event,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,event,event,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,event,sitrep,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,event_event,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,event_location,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,org,,,,ALL,,,,,

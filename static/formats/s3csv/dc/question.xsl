@@ -194,6 +194,12 @@
                 <xsl:when test="$Type='GRID' or $Type='TABLE'">
                     <data field="field_type">9</data>
                 </xsl:when>
+                <xsl:when test="$Type='COMMENTS' or $Type='PARAGRAPH'">
+                    <data field="field_type">10</data>
+                </xsl:when>
+                <xsl:when test="$Type='RICHTEXT'">
+                    <data field="field_type">11</data>
+                </xsl:when>
                 <xsl:otherwise>
                     <!-- Default to String -->
                     <data field="field_type">1</data>

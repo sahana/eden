@@ -2314,7 +2314,7 @@ Thank you"""
                                                  limitby=(0, 1),
                                                  ).first()
             #if settings.get_L10n_translate_org_organisation():
-            org_name = org_represent(org_id)
+            #org_name = org_represent(org_id)
             #else:
             #    org_name = org.name
 
