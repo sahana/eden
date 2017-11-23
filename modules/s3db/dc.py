@@ -477,9 +477,8 @@ class DataCollectionTemplateModel(S3Model):
             mobile_data = settings.get_dc_mobile_data()
             if not settings.get_dc_mobile_inserts():
                 table_settings["insertable"] = False
-            # @ToDo: Something other than default
-            # For SCPHIMS this should be response_id$location_id
-            table_settings["card"] = {"title": "Record #{{record.id}}",
+            # Configure table.response_id.represent
+            table_settings["card"] = {"title": "{{record.response_id}}",
                                       }
         elif master == "event_sitrep":
             mobile_form = False # For SCPHIMS at least

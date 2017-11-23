@@ -527,7 +527,7 @@ def config(settings):
                                                                 )
                         return represent
 
-                r.table.response_id.represent = response_represent
+                #r.table.response_id.represent = response_represent
 
                 # Configure dc_response as mere lookup-list
                 s3db.configure("dc_response",

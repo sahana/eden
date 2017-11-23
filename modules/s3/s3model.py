@@ -55,6 +55,7 @@ DEFAULT = lambda: None
 # to s3db.configure (& thence to mobile table.settings)
 SERIALIZABLE_OPTS = ("autosync",
                      "autototals",
+                     "card",
                      "grids",
                      "insertable",
                      "show_hidden",
