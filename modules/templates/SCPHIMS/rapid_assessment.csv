@@ -58,21 +58,21 @@ Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or
 Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,20,number,,,RAInjuredFemaleChildren,,"['G336',3,5]",,
 Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,21,number,,,RAInjuredChildren,"['RAInjuredMaleChildren','RAInjuredFemaleChildren']","['G336',3,6]",,
 Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,22,number,,,,"['RAInjuredAdults','RAInjuredChildren']","['G336',3,7]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,,,i. Has the community received any assistance?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,,,i. Has the community received any assistance?,1,boolean,,,,,,"['G44','4411']",
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Grid,1,Grid,,,G44,,"[['Blankets','Cooking Utensils','Clothes','Food','Hygiene Kit(s)','Tarpaulin','Mosquito Nets','Tents','Water','Water Kit(s)','Voucher /Cash','Others'],['Item','When provided (in days since event)','Qty','Unit','Govt','NNGO','INGO','PHL Red Cross','Church','Private Entities','Other']]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Blankets,2,boolean,,,4412,,"['G44',1,1]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),3,number,,,4413,,"['G44',1,2]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,4,number,,,4414,,"['G44',1,3]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,5,text,,,4415,,"['G44',1,4]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,6,boolean,,,4416,,"['G44',1,5]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,7,boolean,,,4417,,"['G44',1,6]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,8,boolean,,,4418,,"['G44',1,7]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,9,boolean,,,4419,,"['G44',1,8]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,10,boolean,,,44110,,"['G44',1,9]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,11,boolean,,,44111,,"['G44',1,10]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,12,boolean,,,44112,,"['G44',1,11]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Cooking Utensils,13,boolean,,,44113,,"['G44',2,1]",,
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),14,number,,,44114,,"['G44',2,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Blankets,2,boolean,,,,,"['G44',1,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),3,number,,,,,"['G44',1,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,4,number,,,,,"['G44',1,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,5,text,,,,,"['G44',1,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,6,boolean,,,,,"['G44',1,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,7,boolean,,,,,"['G44',1,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,8,boolean,,,,,"['G44',1,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,9,boolean,,,,,"['G44',1,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,10,boolean,,,,,"['G44',1,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,11,boolean,,,,,"['G44',1,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,12,boolean,,,,,"['G44',1,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Cooking Utensils,13,boolean,,,,,"['G44',2,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),14,number,,,,,"['G44',2,2]",,
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,15,number,,,,,"['G44',2,3]",,
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,16,text,,,,,"['G44',2,4]",,
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,17,boolean,,,,,"['G44',2,5]",,Source
@@ -192,7 +192,7 @@ Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assista
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,131,boolean,,,,,"['G44',12,9]",,Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,132,boolean,,,,,"['G44',12,10]",,Source
 Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,133,boolean,,,,,"['G44',12,11]",,Source
-Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Specify Others assistance,134,text,,,,,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Specify Others assistance,134,text,,,4411,,,,
 Rapid Assessment,4. Relief Effort/Assistance,4,b),2,,,i.Is there any group which is not receiving any assistance?,1,options,"['Yes','No']",,,,,,
 Rapid Assessment,4. Relief Effort/Assistance,4,b),2,,,"ii.If yes, what groups (indigenous, elderly, vulnerable, GIDAs, etc)?",2,text,,,,,,,
 Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,a) Number or Percentage of destroyed houses (requires complete reconstruction and demolished),1,,,#,1,number,,,,,,,

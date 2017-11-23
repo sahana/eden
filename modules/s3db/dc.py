@@ -1199,13 +1199,14 @@ class DataCollectionModel(S3Model):
                 except:
                     current.log.warning("Invalid grid data for %s - ignoring" % code)
 
-        # Auto-Totals
+        # Hides
         hides = {}
         for field in show_hidden:
             f = show_hidden[field]
             append = f["fields"].append
             for code in f["codes"]:
-                append(codes.get(code))
+                fname = codes.get(code) or code
+                append(fname)
             hides[field] = f["fields"]
 
         if mform:
