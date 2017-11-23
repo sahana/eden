@@ -296,13 +296,8 @@ def project():
                 #r.component.configure(filter_widgets = filter_widgets)
 
             elif component_name == "indicator_criteria":
-                ctable = r.component.table
-                if r.method != "update":
-                    field = ctable.weighting
-                    field.readable = field.writable = False
-                    ctable.actual_progress_by_activities.readable = False
-                    ctable.planned_progress_by_activities.readable = False
                 # Filter to just those for this Project & make mandatory
+                ctable = r.component.table
                 ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
                                                          s3db.project_indicator_represent,
                                                          sort=True,
@@ -310,15 +305,15 @@ def project():
                                                          filter_opts=[r.id],
                                                          )
 
-            elif component_name == "criteria_activity":
+            elif component_name == "indicator_activity":
                 s3db.project_activity.name.requires = IS_NOT_EMPTY()
                 ctable = r.component.table
                 if r.method != "update":
                     field = ctable.weighting
                     field.readable = field.writable = False
                 # Filter to just those for this Project & make mandatory
-                ctable.criteria_id.requires = IS_ONE_OF(db, "project_indicator_criteria.id",
-                                                        s3db.project_criteria_represent,
+                ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
+                                                        s3db.project_indicator_represent,
                                                         sort=True,
                                                         filterby="project_id",
                                                         filter_opts=[r.id],
