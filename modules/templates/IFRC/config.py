@@ -3457,6 +3457,7 @@ def config(settings):
 
         from s3 import FS
 
+        T = current.T
         db = current.db
         s3db = current.s3db
         auth = current.auth
@@ -3572,8 +3573,6 @@ def config(settings):
 
             if EO:
                 from s3 import s3_fieldmethod
-                T = current.T
-                db = current.db
                 ptable = s3db.pr_person
                 ltable = s3db.pr_person_user
                 gtable = db.auth_group
@@ -4002,8 +4001,6 @@ def config(settings):
 
             elif controller == "deploy":
                 # Custom settings for RDRT
-
-                db = current.db
 
                 if not is_admin:
                     organisation_id = auth.user.organisation_id

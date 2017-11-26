@@ -344,7 +344,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 layer = layers[i];
                 if (layer && (layer.s3_layer_id == layer_id)) {
                     // Apply any URL filters
-                    if (queries.length) {
+                    if (queries && queries.length) {
                         url = layer.protocol.url;
                         url = S3.search.filterURL(url, queries);
                         //layer.protocol.options.url = url;
