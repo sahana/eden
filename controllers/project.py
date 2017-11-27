@@ -319,6 +319,16 @@ def project():
                                                         filter_opts=[r.id],
                                                         )
 
+            elif component_name == "activity_data":
+                ctable = r.component.table
+                # Filter to just those for this Project
+                ctable.indicator_activity_id.requires = IS_ONE_OF(db, "project_indicator_activity.id",
+                                                                  s3db.project_indicator_activity_represent,
+                                                                  sort=True,
+                                                                  filterby="project_id",
+                                                                  filter_opts=[r.id],
+                                                                  )
+
             elif component_name == "task":
                 if not auth.s3_has_role("STAFF"):
                     # Hide fields which are meant for staff members
