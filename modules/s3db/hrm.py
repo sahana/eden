@@ -5698,26 +5698,32 @@ def hrm_human_resource_onaccept(form):
                 update_location_from_site = True
         else:
             # location_lookup == "person_id"
-            # Set to the Home Address (if-present)
+            # Set to the Home Address
+            # Current Address preferred, otherwise Permanent if present
             atable = s3db.pr_address
             query = (atable.pe_id == ptable.pe_id) & \
                     (ptable.id == person_id) & \
-                    (atable.type == 1) & \
+                    (atable.type.belongs(1, 2)) & \
                     (atable.deleted == False)
             address = db(query).select(atable.location_id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1),
+                                       orderby = atable.type,
+                                       ).first()
     else:
         # Delete any links in the link table
         db(query).delete()
         if "person_id" in location_lookup:
-            # Set to the Home Address (if-present)
+            # Set to the Home Address
+            # Current Address preferred, otherwise Permanent if present
             atable = s3db.pr_address
             query = (atable.pe_id == ptable.pe_id) & \
                     (ptable.id == person_id) & \
-                    (atable.type == 1) & \
+                    (atable.type.belongs(1, 2)) & \
                     (atable.deleted == False)
             address = db(query).select(atable.location_id,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1),
+                                       orderby = atable.type,
+                                       ).first()
 
     if update_location_from_site:
         stable = db.org_site

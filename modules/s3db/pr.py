@@ -3473,73 +3473,92 @@ class PRAddressModel(S3Model):
                 # Hasn't yet been set so use this
                 S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
 
-        if person and str(form_vars.get("type")) == "1": # Home Address
-            if settings.has_module("hrm"):
-                # Also check for relevant HRM record(s)
-                staff_settings = settings.get_hrm_location_staff()
-                staff_person = "person_id" in staff_settings
-                vol_settings = settings.get_hrm_location_vol()
-                vol_person = "person_id" in vol_settings
-                if staff_person or vol_person:
-                    htable = s3db.hrm_human_resource
-                    query = (htable.person_id == person.id) & \
-                            (htable.deleted != True)
-                    fields = [htable.id]
-                    if staff_person and vol_person:
-                        # Unfiltered in query, need to separate afterwards
-                        fields.append(htable.type)
-                        vol_site = "site_id" == vol_settings[0]
-                        staff_site = "site_id" == staff_settings[0]
-                        if staff_site or vol_site:
-                            fields.append(htable.site_id)
-                    elif vol_person:
-                        vol_site = "site_id" == vol_settings[0]
-                        if vol_site:
-                            fields.append(htable.site_id)
-                        query &= (htable.type == 2)
-                    elif staff_person:
-                        staff_site = "site_id" == staff_settings[0]
-                        if staff_site:
-                            fields.append(htable.site_id)
-                        query &= (htable.type == 1)
-                    hrs = db(query).select(*fields)
-                    for hr in hrs:
-                        # @ToDo: Only update if not site_id 1st in list & a site_id exists!
-                        if staff_person and vol_person:
-                            vol = hr.type == 2
-                            if vol and vol_site and hr.site_id:
-                                # Volunteer who prioritises getting their location from their site
-                                pass
-                            elif not vol and staff_site and hr.site_id:
-                                # Staff who prioritises getting their location from their site
-                                pass
-                            else:
-                                # Update this HR's location from the Home Address
-                                db(htable.id == hr.id).update(location_id=location_id)
-                        elif vol_person:
-                            if vol_site and hr.site_id:
-                                # Volunteer who prioritises getting their location from their site
-                                pass
-                            else:
-                                # Update this HR's location from the Home Address
-                                db(htable.id == hr.id).update(location_id=location_id)
-                        else:
-                            # Staff-only
-                            if staff_site and hr.site_id:
-                                # Staff who prioritises getting their location from their site
-                                pass
-                            else:
-                                # Update this HR's location from the Home Address
-                                db(htable.id == hr.id).update(location_id=location_id)
+        if not person:
+            # Nothing we can do
+            return
 
-            if settings.has_module("member"):
-                # Also check for any Member record(s)
-                mtable = s3db.member_membership
-                query = (mtable.person_id == person.id) & \
-                        (mtable.deleted != True)
-                members = db(query).select(mtable.id)
-                for member in members:
-                    db(mtable.id == member.id).update(location_id=location_id)
+        address_type = str(form_vars.get("type"))
+        if address_type == "2": # Permanent Home Address
+            # Use this for Locating the person *if* they have no Current Address
+            query = (atable.pe_id == pe_id) & \
+                    (atable.type == 1) & \
+                    (atable.deleted != True)
+            exists = db(query).select(atable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+            if exists:
+                # Do nothing: prefer existing current address
+                return
+        elif address_type != "1": # Current Home Address
+            # Do nothing
+            return
+
+        if settings.has_module("hrm"):
+            # Also check for relevant HRM record(s)
+            staff_settings = settings.get_hrm_location_staff()
+            staff_person = "person_id" in staff_settings
+            vol_settings = settings.get_hrm_location_vol()
+            vol_person = "person_id" in vol_settings
+            if staff_person or vol_person:
+                htable = s3db.hrm_human_resource
+                query = (htable.person_id == person.id) & \
+                        (htable.deleted != True)
+                fields = [htable.id]
+                if staff_person and vol_person:
+                    # Unfiltered in query, need to separate afterwards
+                    fields.append(htable.type)
+                    vol_site = "site_id" == vol_settings[0]
+                    staff_site = "site_id" == staff_settings[0]
+                    if staff_site or vol_site:
+                        fields.append(htable.site_id)
+                elif vol_person:
+                    vol_site = "site_id" == vol_settings[0]
+                    if vol_site:
+                        fields.append(htable.site_id)
+                    query &= (htable.type == 2)
+                elif staff_person:
+                    staff_site = "site_id" == staff_settings[0]
+                    if staff_site:
+                        fields.append(htable.site_id)
+                    query &= (htable.type == 1)
+                hrs = db(query).select(*fields)
+                for hr in hrs:
+                    # @ToDo: Only update if not site_id 1st in list & a site_id exists!
+                    if staff_person and vol_person:
+                        vol = hr.type == 2
+                        if vol and vol_site and hr.site_id:
+                            # Volunteer who prioritises getting their location from their site
+                            pass
+                        elif not vol and staff_site and hr.site_id:
+                            # Staff who prioritises getting their location from their site
+                            pass
+                        else:
+                            # Update this HR's location from the Home Address
+                            db(htable.id == hr.id).update(location_id=location_id)
+                    elif vol_person:
+                        if vol_site and hr.site_id:
+                            # Volunteer who prioritises getting their location from their site
+                            pass
+                        else:
+                            # Update this HR's location from the Home Address
+                            db(htable.id == hr.id).update(location_id=location_id)
+                    else:
+                        # Staff-only
+                        if staff_site and hr.site_id:
+                            # Staff who prioritises getting their location from their site
+                            pass
+                        else:
+                            # Update this HR's location from the Home Address
+                            db(htable.id == hr.id).update(location_id=location_id)
+
+        if settings.has_module("member"):
+            # Also check for any Member record(s)
+            mtable = s3db.member_membership
+            query = (mtable.person_id == person.id) & \
+                    (mtable.deleted != True)
+            members = db(query).select(mtable.id)
+            for member in members:
+                db(mtable.id == member.id).update(location_id=location_id)
 
 # =============================================================================
 class PRContactModel(S3Model):
