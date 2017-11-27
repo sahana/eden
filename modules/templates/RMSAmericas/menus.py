@@ -132,6 +132,8 @@ class S3MainMenu(default.S3MainMenu):
                    MM("Training Events", c="hrm", f="training_event"),
                    MM("External Trainees", c="hrm", f="trainee"),
                ),
+               homepage("member", f="membership", name="Partners")(
+               ),
                homepage("inv", "supply", "req", check=inv)(
                    MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
                    MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
@@ -441,6 +443,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Personal Profile", c="hrm", f="person",
                         #  vars=dict(access="personal"))
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def member():
+        """ Membership Management """
+
+        return M(c="member")(
+                    M("Partners", f="membership", m="summary")(
+                        M("Create", m="create"),
+                        #M("Report", m="report"),
+                        M("Import", f="person", m="import"),
+                    ),
+                    M("Partner Types", f="membership_type")(
+                        M("Create", m="create"),
+                        #M("Import", m="import"),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     def org(self):
