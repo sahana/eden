@@ -5075,7 +5075,11 @@ class S3ProjectPlanningModel(S3Model):
                 else:
                     # Past result
                     total_percentage_target = 100
-                total_percentage_value = d.value / target_value * 100
+                value = d.value
+                if value:
+                    total_percentage_value = value / target_value * 100
+                else:
+                    total_percentage_value = 0
                 if end_date.year == current_year:
                     # Current Year
                     current_records += 1
