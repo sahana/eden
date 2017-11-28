@@ -1444,7 +1444,7 @@ class S3Msg(object):
             return None
 
     # -------------------------------------------------------------------------
-    def send_tweet(self, text="", recipient=None):
+    def send_tweet(self, text="", recipient=None, **data):
         """
             Function to tweet.
             If a recipient is specified then we send via direct message if the recipient follows us.
@@ -1472,6 +1472,8 @@ class S3Msg(object):
         table = s3db.msg_twitter
         otable = s3db.msg_outbox
 
+        message_id = None
+
         def log_tweet(tweet, recipient, from_address):
             # Log in msg_twitter
             _id = table.insert(body=tweet,
@@ -1489,6 +1491,7 @@ class S3Msg(object):
                           status = 2,
                           contact_method = "TWITTER",
                           )
+            return message_id
 
         if recipient:
             recipient = self._sanitise_twitter_account(recipient)
@@ -1506,7 +1509,7 @@ class S3Msg(object):
                         # See http://groups.google.com/group/tweepy/msg/790fcab8bc6affb5
                         if twitter_api.send_direct_message(screen_name=recipient,
                                                            text=c):
-                            log_tweet(c, recipient, from_address)
+                            message_id = log_tweet(c, recipient, from_address)
 
                     except tweepy.TweepError:
                         current.log.error("Unable to Tweet DM")
@@ -1520,7 +1523,7 @@ class S3Msg(object):
                     except tweepy.TweepError:
                         current.log.error("Unable to Tweet @mention")
                     else:
-                        log_tweet(c, recipient, from_address)
+                        message_id = log_tweet(c, recipient, from_address)
         else:
             chunks = self._break_to_chunks(text)
             for c in chunks:
@@ -1529,7 +1532,13 @@ class S3Msg(object):
                 except tweepy.TweepError:
                     current.log.error("Unable to Tweet")
                 else:
-                    log_tweet(c, recipient, from_address)
+                    message_id = log_tweet(c, recipient, from_address)
+
+        # Perform post process after message sending
+        if message_id:
+            postp = current.deployment_settings.get_msg_send_postprocess()
+            if postp:
+                postp(message_id, **data)
 
         return True
 

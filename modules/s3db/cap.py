@@ -3373,18 +3373,21 @@ def cap_rheader(r):
                     else:
                         error = ""
 
-                    if r.component_name == "info" and r.component_id:
+                    # Copy button is not working as create?from_record only works
+                    # with default form and not implemented for custom forms.
+                    # cap_info uses a custom form
+                    #if r.component_name == "info" and r.component_id:
                         # Display "Copy" Button to copy record from the opened info
-                        copy_btn = A(T("Copy Info Segment"),
-                                     _href = URL(f = "template",
-                                                 args = [r.id, "info", "create",],
-                                                 vars = {"from_record": r.component_id,
-                                                         },
-                                                 ),
-                                     _class = "action-btn"
-                                     )
-                    else:
-                        copy_btn = None
+                    #    copy_btn = A(T("Copy Info Segment"),
+                    #                 _href = URL(f = "template",
+                    #                             args = [r.id, "info", "create",],
+                    #                             vars = {"from_record": r.component_id,
+                    #                                     },
+                    #                             ),
+                    #                 _class = "action-btn"
+                    #                 )
+                    #else:
+                    #    copy_btn = None
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -3406,8 +3409,8 @@ def cap_rheader(r):
                                   rheader_tabs,
                                   error
                                   )
-                    if copy_btn is not None:
-                        rheader.insert(1, TR(TD(copy_btn)))
+                    #if copy_btn is not None:
+                    #    rheader.insert(1, TR(TD(copy_btn)))
                 else:
                     action_btn = None
                     msg_type_buttons = None
