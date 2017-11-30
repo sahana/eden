@@ -20,7 +20,7 @@ def download():
     try:
         filename = request.args[0]
     except:
-        session.error("Need to specify the file to download!")
+        session.error = T("Need to specify the file to download!")
         redirect(URL(f="index"))
 
     # Check Permissions
