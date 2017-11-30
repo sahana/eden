@@ -20,8 +20,13 @@ def download():
     try:
         filename = request.args[0]
     except:
-        session.error("Need to specify the file to download!")
-        redirect(URL(f="index"))
+        # No legitimate interactive request comes here without a filename,
+        # so this hits mainly non-interactive clients, and those do not
+        # recognize an error condition from a HTTP 303 => better to raise
+        # a proper error than to redirect:
+        raise HTTP(400, "No file specified")
+        #session.error = T("Need to specify the file to download!")
+        #redirect(URL(f="index"))
 
     # Check Permissions
     tablename = filename.split(".", 1)[0]
