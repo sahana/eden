@@ -143,6 +143,7 @@ class S3Msg(object):
         self.MSG_CONTACT_OPTS = {"EMAIL":   T("Email"),
                                  "SMS":     MOBILE,
                                  "TWITTER": T("Twitter"),
+                                 "FACEBOOK": T("Facebook"),
                                  #"XMPP":   "XMPP",
                                  }
 
@@ -1543,28 +1544,28 @@ class S3Msg(object):
         return True
 
     #------------------------------------------------------------------------------
-    def post_to_facebook(self, text="", channel_id=None):
+    def post_to_facebook(self, text="", channel_id=None, recipient=None, **data):
         """
             Posts a message on Facebook
 
             https://developers.facebook.com/docs/graph-api
-
-            @ToDo: Log messages in msg_facebook
         """
 
-        table = current.s3db.msg_facebook_channel
+        db = current.db
+        s3db = current.s3db
+        table = s3db.msg_facebook_channel
         if not channel_id:
             # Try the 1st enabled one in the DB
             query = (table.enabled == True)
         else:
             query = (table.channel_id == channel_id)
 
-        c = current.db(query).select(table.app_id,
-                                     table.app_secret,
-                                     table.page_id,
-                                     table.page_access_token,
-                                     limitby=(0, 1)
-                                     ).first()
+        c = db(query).select(table.app_id,
+                             table.app_secret,
+                             table.page_id,
+                             table.page_access_token,
+                             limitby=(0, 1)
+                             ).first()
 
         import facebook
 
@@ -1577,6 +1578,30 @@ class S3Msg(object):
             current.log.error("S3MSG: %s" % message)
             return
 
+        table = s3db.msg_facebook
+        otable = s3db.msg_outbox
+
+        message_id = None
+
+        def log_facebook(post, recipient, from_address):
+            # Log in msg_facebook
+            _id = table.insert(body=post,
+                               from_address=from_address,
+                               )
+            record = db(table.id == _id).select(table.id,
+                                                limitby=(0, 1)
+                                                ).first()
+            s3db.update_super(table, record)
+            message_id = record.message_id
+
+            # Log in msg_outbox
+            otable.insert(message_id = message_id,
+                          address = recipient,
+                          status = 2,
+                          contact_method = "FACEBOOK",
+                          )
+            return message_id
+
         graph = facebook.GraphAPI(app_access_token)
 
         page_id = c.page_id
@@ -1585,6 +1610,14 @@ class S3Msg(object):
             graph.put_object(page_id, "feed", message=text)
         else:
             graph.put_object(user_id, "feed", message=text)
+
+        message_id = log_facebook(text, recipient, channel_id)
+
+        # Perform post process after message sending
+        if message_id:
+            postp = current.deployment_settings.get_msg_send_postprocess()
+            if postp:
+                postp(message_id, **data)
 
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):

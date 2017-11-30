@@ -486,7 +486,9 @@ def config(settings):
                     # @ToDo: post resources too?
                     content = get_facebook_content(arow)
                     try:
-                        current.msg.post_to_facebook(text=content)
+                        current.msg.post_to_facebook(text=content,
+                                                     alert_id=alert_id,
+                                                     )
                     except Exception, e:
                         current.log.debug("Posting Alert to Facebook failed: %s" % e)
 
