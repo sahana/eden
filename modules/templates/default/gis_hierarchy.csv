@@ -48,6 +48,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,LA,Province,District,Village,,,
 ,LK,Province,District,Divisional Secretariat,Grama Niladhari,,
 ,LR,County,District,Clan,,,
+,LT,County,Municipality,Eldership,,,
 ,LY,District,"City / Town / Village",,,,
 ,MG,Region,District,Commune,Fokontany,
 ,MK,Municipality,,,,

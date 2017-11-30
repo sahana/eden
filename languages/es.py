@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 {
+'Add Activity Data': 'Añadir Datos de Actividad',
+'Activity Data': 'Datos de Actividad',
+'Edit Activity Data': 'Modificar Datos de Actividad',
+'List Activity Data': 'Lista de Datos de Actividad',
+'Activity Data added': 'Datos de Actividad añadidos',
+'Activity Data updated': 'Datos de Actividad actualizados',
+'Activity Data removed': 'Datos de Actividad eliminados',
+'No activity data defined': 'No hay datos de Actividad definidos',
 'Date Joined': 'Fecha de Registro',
 'Date Resigned': 'Fecha de Renuncia',
 'Membership Fee': 'Cuota de Membresía',

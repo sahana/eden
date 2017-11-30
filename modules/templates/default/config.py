@@ -142,6 +142,7 @@ def config(settings):
         ("km", "Khmer"), # Cambodia
         ("ko", "Korean"),
         #("lo", "Lao"),
+        #("lt", "Lithuanian"),
         #("mg", "Malagasy"),
         ("mn", "Mongolian"),
         #("ms", "Malaysian"),
