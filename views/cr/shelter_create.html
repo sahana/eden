@@ -4,7 +4,7 @@
 <script type="text/javascript">//<![CDATA[
 $(function(){
  var msg_workflow = '{{=T("The next screen will allow you to detail the number of people here & their needs.")}}<br />'
- $('.form-container :submit').before(msg_workflow)
+ $('.form-container :submit').first().before(msg_workflow)
 })
 //]]></script>
 {{pass}}

@@ -4,6 +4,6 @@
 <script type="text/javascript">//<![CDATA[
 $(function(){
  var msg_workflow='{{=T("The next screen will allow you to detail the number of people here & their needs.")}}<br />'
- $('input:submit').before(msg_workflow)
+ $('input:submit').first().before(msg_workflow)
 })
 //]]></script>{{else:}}{{pass}}
