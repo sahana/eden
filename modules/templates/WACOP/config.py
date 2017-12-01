@@ -514,33 +514,54 @@ def config(settings):
                 elif r.tablename == "pr_forum" or \
                    (method == "filter" and get_vars.get("forum_id")):
                     # Group Profile
-                    shared_events = {1: "Ladies go to lunch",
-                                     2: "Another group",
-                                     }
-                    event_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a><ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/event/{id}/custom'>Go to Event</a></li><li><a href='/%(app)s/event/event/{id}/unshare'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
-                        dict(app = r.application)
-                    shared_incidents = {1: "Ladies go to lunch",
-                                        2: "Another group",
-                                        }
-                    incident_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='drop1' aria-controls='drop1' aria-expanded='false'>…</a><ul id='drop1' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/incident/{id}/custom'>Go to Incident</a></li><li><a href='/%(app)s/event/incident/{id}/unshare'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
-                        dict(app = r.application)
-                    filter_widgets += [S3OptionsFilter("incident_post.event_id",
-                                                       label = T("Shared Events"),
-                                                       cols = 1,
-                                                       options = shared_events,
-                                                       table = False,
-                                                       option_comment = event_comment,
-                                                       _name = "events",
-                                                       ),
-                                       S3OptionsFilter("incident_post.event_id",
-                                                       label = T("Shared Incidents"),
-                                                       cols = 1,
-                                                       options = shared_incidents,
-                                                       table = False,
-                                                       option_comment = incident_comment,
-                                                       _name = "incidents",
-                                                       ),
-                                       ]
+                    if r.tablename == "pr_forum":
+                        forum_id = r.id
+                    else:
+                        forum_id = get_vars.get("forum_id")
+                    eftable = s3db.event_forum
+                    base_query = (eftable.forum_id == forum_id)
+                    etable = s3db.event_event
+                    query = base_query & (eftable.event_id == etable.id)
+                    events_shared = db(query).select(etable.id,
+                                                     etable.name,
+                                                     )
+                    if len(events_shared):
+                        shared_events = {}
+                        for e in events_shared:
+                            shared_events[e.id] = e.name
+                        event_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='event_drop{id}' aria-controls='event_drop{id}' aria-expanded='false'>…</a><ul id='event_drop{id}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/event/{id}/custom'>Go to Event</a></li><li><a href='/%(app)s/event/event/{id}/unshare/%(forum_id)s'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
+                            dict(app = r.application,
+                                 forum_id = forum_id,
+                                 )
+                        filter_widgets.append(S3OptionsFilter("incident_post.event_id",
+                                                              label = T("Shared Events"),
+                                                              cols = 1,
+                                                              options = shared_events,
+                                                              table = False,
+                                                              option_comment = event_comment,
+                                                              _name = "events",
+                                                              ))
+                    itable = s3db.event_incident
+                    query = base_query & (eftable.incident_id == itable.id)
+                    incidents_shared = db(query).select(itable.id,
+                                                        itable.name,
+                                                        )
+                    if len(incidents_shared):
+                        shared_incidents = {}
+                        for i in incidents_shared:
+                            shared_incidents[i.id] = i.name
+                        incident_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='incident_drop{id}' aria-controls='incident_drop{id}' aria-expanded='false'>…</a><ul id='incident_drop{id}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/incident/{id}/custom'>Go to Incident</a></li><li><a href='/%(app)s/event/incident/{id}/unshare/%(forum_id)s'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
+                            dict(app = r.application,
+                                 forum_id = forum_id,
+                                 )
+                        filter_widgets.append(S3OptionsFilter("incident_post.event_id",
+                                                              label = T("Shared Incidents"),
+                                                              cols = 1,
+                                                              options = shared_incidents,
+                                                              table = False,
+                                                              option_comment = incident_comment,
+                                                              _name = "incidents",
+                                                              ))
 
                 if method != "dashboard":
                     user = current.auth.user
