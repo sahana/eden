@@ -3060,14 +3060,14 @@ def filter_formstyle_profile(form, fields, *args, **kwargs):
 
         controls = DIV(widget, _class="controls")
 
-        if comment:
-            comment = render_tooltip(label,
-                                     comment,
-                                     _class="inline-tooltip tooltip",
-                                     )
-            if hasattr(comment, "add_class"):
-                comment.add_class("inline-tooltip")
-            controls_col.append(comment)
+        #if comment:
+        #    comment = render_tooltip(label,
+        #                             comment,
+        #                             _class="inline-tooltip tooltip",
+        #                             )
+        #    if hasattr(comment, "add_class"):
+        #        comment.add_class("inline-tooltip")
+        #    controls_col.append(comment)
 
         _class = "row hide" if hidden else "row"
         return DIV(DIV(label,

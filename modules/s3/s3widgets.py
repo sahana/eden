@@ -3395,6 +3395,7 @@ class S3GroupedOptionsWidget(FormWidget):
                  sort=True,
                  orientation=None,
                  table=True,
+                 option_comment=None,
                  ):
         """
             Constructor
@@ -3413,6 +3414,7 @@ class S3GroupedOptionsWidget(FormWidget):
             @param sort: sort the options (only effective if size==None)
             @param orientation: the ordering orientation, "columns"|"rows"
             @param table: whether to render options inside a table or not
+            @param comment: HTML template to render after the LABELs
         """
 
         self.options = options
@@ -3424,6 +3426,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.sort = sort
         self.orientation = orientation
         self.table = table
+        self.option_comment = option_comment
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -3466,6 +3469,11 @@ class S3GroupedOptionsWidget(FormWidget):
                        "sort": self.sort,
                        "table": self.table,
                        }
+
+        if self.option_comment:
+            widget_opts["comment"] = self.option_comment
+            s3_include_underscore()
+
         script = '''$('#%s').groupedopts(%s)''' % \
                  (_id, json.dumps(widget_opts, separators=SEPARATORS))
         jquery_ready = current.response.s3.jquery_ready

@@ -1998,6 +1998,7 @@ class S3OptionsFilter(S3FilterWidget):
                                        sort = opts_get("sort", True),
                                        orientation = opts_get("orientation"),
                                        table = opts_get("table", True),
+                                       option_comment = opts_get("option_comment", False),
                                        )
         else:
             # Default widget_type = "multiselect"

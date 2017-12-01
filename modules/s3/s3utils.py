@@ -1086,6 +1086,32 @@ def s3_include_ext():
     s3.ext_included = True
 
 # =============================================================================
+def s3_include_underscore():
+    """
+        Add Undercore JS into a page
+        - for Map templates
+        - for templates in GroupedOptsWidget comment
+    """
+
+    s3 = current.response.s3
+    debug = s3.debug
+    scripts = s3.scripts
+    if s3.cdn:
+        if debug:
+            script = \
+"//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"
+        else:
+            script = \
+"//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"
+    else:
+        if debug:
+            script = URL(c="static", f="scripts/underscore.js")
+        else:
+            script = URL(c="static", f="scripts/underscore-min.js")
+    if script not in scripts:
+        scripts.append(script)
+
+# =============================================================================
 def s3_is_mobile_client(request):
     """
         Simple UA Test whether client is a mobile device

@@ -73,7 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_str, s3_unicode
+from s3utils import s3_include_ext, s3_include_underscore, s3_str, s3_unicode
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -7120,22 +7120,11 @@ class MAP(DIV):
         if js_globals not in js_global:
             js_global_append(js_globals)
 
+        # Underscore for Popup Templates
+        s3_include_underscore()
+
         debug = s3.debug
         scripts = s3.scripts
-        if s3.cdn:
-            if debug:
-                script = \
-"//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"
-            else:
-                script = \
-"//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"
-        else:
-            if debug:
-                script = URL(c="static", f="scripts/underscore.js")
-            else:
-                script = URL(c="static", f="scripts/underscore-min.js")
-        if script not in scripts:
-            scripts.append(script)
 
         if self.opts.get("color_picker", False):
             if debug:
@@ -7186,7 +7175,7 @@ class MAP(DIV):
                 callback = '''null'''
         loader = \
 '''s3_gis_loadjs(%(debug)s,%(projection)s,%(callback)s,%(scripts)s)''' \
-            % dict(debug = "true" if s3.debug else "false",
+            % dict(debug = "true" if debug else "false",
                    projection = projection,
                    callback = callback,
                    scripts = self.scripts
@@ -8276,7 +8265,8 @@ class LayerGoogle(Layer):
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                 else:
-                    # v3 API (3.0 gives us the latest frozen version, currently 3.27)
+                    # v3 API (3.0 gives us the latest frozen version, currently 3.29)
+                    # Note that it does give a warning: "Google Maps API warning: RetiredVersion"
                     # https://developers.google.com/maps/documentation/javascript/versions
                     script = "//maps.google.com/maps/api/js?v=3.0&key=%s" % apikey
                     if script not in s3_scripts:

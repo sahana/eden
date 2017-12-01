@@ -52,7 +52,7 @@ fieldset {
   padding: 0.5625em;
 }
 
-/* Incident Profile page */
+/* Incident Profile page
 #incident-profile table.s3-groupedopts-widget {
     border: 0;
 }
@@ -64,7 +64,7 @@ fieldset {
     font-size: 1.6875rem;
     padding-bottom: 0;
 }
-
+*/
 /* Map */
 .x-toolbar table {
     width: auto;
@@ -298,12 +298,15 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
   content: '\f0d7'; /* fa-caret-down */
 }
 
-/* Show Actions column on Group Browse page */
+/* Show Actions column on Group Browse & Staff Assign pages */
 div.group-browse table.dataTable tbody td:first-child,
-div.group-browse table.dataTable thead th:first-child {
+div.group-browse table.dataTable thead th:first-child,
+body.assign table.dataTable tbody td:first-child,
+body.assign table.dataTable thead th:first-child {
   display: block;
 }
-div.group-browse table.dataTable thead th:first-child {
+div.group-browse table.dataTable thead th:first-child,
+body.assign table.dataTable thead th:first-child {
     border: 0;
 }  
 
