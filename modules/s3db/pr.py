@@ -6926,12 +6926,19 @@ class pr_AssignMethod(S3Method):
                             form = Storage(vars=link)
                             onaccept(form)
                         added += 1
-            current.session.confirmation = T("%(number)s assigned") % \
-                                           dict(number=added)
-            if added > 0:
-                redirect(URL(args=[r.id, self.next_tab], vars={}))
+            
+            if r.representation == "popup":
+                # Don't redirect, so we retain popup extension & so close popup
+                response.confirmation = T("%(number)s assigned") % \
+                                            dict(number=added)
+                return {}
             else:
-                redirect(URL(args=r.args, vars={}))
+                current.session.confirmation = T("%(number)s assigned") % \
+                                                    dict(number=added)
+                if added > 0:
+                    redirect(URL(args=[r.id, self.next_tab], vars={}))
+                else:
+                    redirect(URL(args=r.args, vars={}))
 
         elif r.http == "GET":
 
@@ -7018,8 +7025,7 @@ class pr_AssignMethod(S3Method):
             # Bulk actions
             dt_bulk_actions = [(T("Assign"), "assign")]
 
-            representation = r.representation
-            if representation in ("html", "popup"):
+            if r.representation in ("html", "popup"):
                 # Page load
                 resource.configure(deletable = False)
 
@@ -7094,16 +7100,12 @@ class pr_AssignMethod(S3Method):
 
                 response.view = "list_filter.html"
 
-                if r.representation == "popup":
-                    # Don't redirect, so we retain popup extension & so close popup
-                    self.next = None
-
                 return {"items": items,
                         "title": T("Assign People"),
                         "list_filter_form": ff,
                         }
 
-            elif representation == "aadata":
+            elif r.representation == "aadata":
                 # Ajax refresh
                 if "draw" in get_vars:
                     echo = int(get_vars.draw)
