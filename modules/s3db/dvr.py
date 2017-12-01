@@ -971,6 +971,16 @@ class DVRCaseFlagModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     Field("nostats", "boolean",
+                           default = False,
+                           label = T("Exclude from Reports"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Exclude from Reports"),
+                                                             T("Exclude cases with this flag from certain reports"),
+                                                             ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
