@@ -1005,9 +1005,13 @@ S3.search = {};
                 if (widget.hasClass('options-filter')) {
                     if (widget[0].tagName.toLowerCase() == 'select') {
                         // Standard SELECT
+                        // (which could be the hidden one in an s3.ui.groupedopts.widget.js)
 
                         // Update HTML
                         if (newopts.hasOwnProperty('empty')) {
+
+                            // Remove options
+                            widget.html('');
 
                             // Ensure the widget is hidden
                             if (widget.hasClass('multiselect-filter-widget') &&
@@ -1127,8 +1131,9 @@ S3.search = {};
      * ajaxUpdateOptions: Ajax-update the options in a filter form
      *
      * In global scope as called from s3.popup.js
+     * - indirectly now, as goes via $('.filter-form').trigger('dataChanged', refresh);
      */
-    S3.search.ajaxUpdateOptions = function(form) {
+    S3.search.ajaxUpdateOptions = function(form, callback) {
 
         // Ajax-load the item
         var $form = $(form);
@@ -1145,6 +1150,9 @@ S3.search = {};
             updateOptions(data);
             // Re-enable
             $form.data('noAutoSubmit', 0);
+            if (callback) {
+                callback.apply();
+            }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (errorThrown == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
@@ -1926,8 +1934,9 @@ S3.search = {};
      * target have changed => update filter options accordingly
      *
      * @param {string} targetID - the filter target ID
+     * @param {function} callback - optional callback function
      */
-    var dataChanged = function(targetID) {
+    var dataChanged = function(targetID, callback) {
 
         if (targetID) {
 
@@ -1935,7 +1944,7 @@ S3.search = {};
             if (target) {
                 targets = target.split(' ');
                 if (targets.length && $.inArray(targetID + '', targets) != -1) {
-                    S3.search.ajaxUpdateOptions(this);
+                    S3.search.ajaxUpdateOptions(this, callback);
                 }
             }
         }
@@ -1987,8 +1996,8 @@ S3.search = {};
 
         // Handle external target data updates
         // (e.g. add/update popups, or jeditable-Ajax)
-        $('.filter-form').on('dataChanged', function(e, targetID) {
-            dataChanged.call(this, targetID);
+        $('.filter-form').on('dataChanged', function(e, targetID, callback) {
+            dataChanged.call(this, targetID, callback);
             // No need (currently) to let this bubble up:
             return false;
         });

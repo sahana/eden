@@ -987,6 +987,24 @@ class custom_WACOP(S3CRUD):
                                                  ),
                                    )
 
+        #get_vars = r.get_vars
+        #if forum_id:
+        #    get_vars = dict((k, v) for k, v in get_vars.items())
+        #    eftable = s3db.event_forum
+        #    base_query = (eftable.forum_id == forum_id)
+        #    etable = s3db.event_event
+        #    query = base_query & (eftable.event_id == etable.id)
+        #    events = db(query).select(etable.id)
+        #    events = [e.id for e in events]
+        #    if events:
+        #        get_vars["event_post.event_id__belongs"] = events
+        #    itable = s3db.event_incident
+        #    query = base_query & (eftable.incident_id == itable.id)
+        #    incidents = db(query).select(itable.id)
+        #    incidents = [i.id for i in incidents]
+        #    if incidents:
+        #        get_vars["event_post.incident_id__belongs"] = incidents
+
         output["filter_form"] = filter_form.html(resource, r.get_vars,
                                                  target = list_id,
                                                  alias = None,
@@ -1046,6 +1064,7 @@ S3.redraw_fns.push('wacop_comments')'''
         else:
             s3.scripts.append("/%s/static/scripts/tag-it.min.js" % appname)
         if has_permission("update", s3db.cms_tag_post):
+            # @ToDo: Move the ajaxUpdateOptions into callback of getS3?
             readonly = '''afterTagAdded:function(event,ui){
 if(ui.duringInitialization){return}
 var post_id=$(this).attr('data-post_id')
@@ -2540,11 +2559,13 @@ def group_filter(forum_id):
         else:
             eappend(s.event_id)
 
-    filter = (FS("post_forum.forum_id") == forum_id) | \
-             (FS("incident_post.incident_id").belongs(incident_ids)) | \
-             (FS("incident_post.event_id").belongs(event_ids))
-             #((FS("incident_post.event_id").belongs(event_ids)) & \
-             # (FS("incident_post.incident_id") == None))
+    filter = (FS("post_forum.forum_id") == forum_id)
+    if incident_ids:
+        filter |= (FS("incident_post.incident_id").belongs(incident_ids))
+    if event_ids:
+        filter |= (FS("event_post.event_id").belongs(event_ids))
+                  #((FS("event_post.event_id").belongs(event_ids)) & \
+                  # (FS("event_post.incident_id") == None))
 
     return filter
 

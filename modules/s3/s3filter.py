@@ -29,11 +29,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DateFilter",
-           "S3Filter",
-           "S3FilterForm",
-           "S3FilterString",
-           "S3FilterWidget",
+__all__ = ("S3FilterWidget",
+           "S3DateFilter",
            "S3HierarchyFilter",
            "S3LocationFilter",
            "S3MapFilter",
@@ -41,6 +38,9 @@ __all__ = ("S3DateFilter",
            "S3RangeFilter",
            "S3SliderFilter",
            "S3TextFilter",
+           "S3FilterForm",
+           "S3Filter",
+           "S3FilterString",
            "s3_get_filter_opts",
            "s3_set_default_filter",
            )
@@ -1998,6 +1998,7 @@ class S3OptionsFilter(S3FilterWidget):
                                        sort = opts_get("sort", True),
                                        orientation = opts_get("orientation"),
                                        table = opts_get("table", True),
+                                       no_opts = opts_get("no_opts", None),
                                        option_comment = opts_get("option_comment", False),
                                        )
         else:

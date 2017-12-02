@@ -428,12 +428,16 @@ def config(settings):
             if method == "datalist":
                 if get_vars.get("dashboard"):
                     from templates.WACOP.controllers import dashboard_filter
-                    s3.filter = dashboard_filter()
+                    # Too late for s3.filter to take effect
+                    #s3.filter = dashboard_filter()
+                    r.resource.add_filter(dashboard_filter())
                 else:
                     forum_id = get_vars.get("forum")
                     if forum_id:
                         from templates.WACOP.controllers import group_filter
-                        s3.filter = group_filter(forum_id)
+                        # Too late for s3.filter to take effect
+                        #s3.filter = group_filter(forum_id)
+                        r.resource.add_filter(group_filter(forum_id))
 
             elif method in ("custom", "dashboard", "filter"):
                 # Filter Widgets
@@ -448,13 +452,19 @@ def config(settings):
                         # We only expect a maximum of 1 of these, no need to append
                         if k == "dashboard":
                             from templates.WACOP.controllers import dashboard_filter
-                            s3.filter = dashboard_filter()
+                            # Too late for s3.filter to take effect
+                            #s3.filter = dashboard_filter()
+                            r.resource.add_filter(dashboard_filter())
                         elif k == "forum":
                             from templates.WACOP.controllers import group_filter
-                            s3.filter = group_filter(v)
+                            # Too late for s3.filter to take effect
+                            #s3.filter = group_filter(v)
+                            r.resource.add_filter(group_filter(v))
                         else:
                             from s3 import FS
-                            s3.filter = (FS(k) == v)
+                            # Too late for s3.filter to take effect
+                            #s3.filter = (FS(k) == v)
+                            r.resource.add_filter((FS(k) == v))
 
                 date_filter = S3DateFilter("date",
                                            # If we introduce an end_date on Posts:
@@ -512,12 +522,13 @@ def config(settings):
                                                              ))
 
                 elif r.tablename == "pr_forum" or \
-                   (method == "filter" and get_vars.get("forum_id")):
+                   (method == "filter" and get_vars.get("forum")):
                     # Group Profile
                     if r.tablename == "pr_forum":
                         forum_id = r.id
                     else:
-                        forum_id = get_vars.get("forum_id")
+                        forum_id = get_vars.get("forum")
+                    appname = r.application
                     eftable = s3db.event_forum
                     base_query = (eftable.forum_id == forum_id)
                     etable = s3db.event_event
@@ -525,43 +536,41 @@ def config(settings):
                     events_shared = db(query).select(etable.id,
                                                      etable.name,
                                                      )
-                    if len(events_shared):
-                        shared_events = {}
-                        for e in events_shared:
-                            shared_events[e.id] = e.name
-                        event_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='event_drop{id}' aria-controls='event_drop{id}' aria-expanded='false'>…</a><ul id='event_drop{id}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/event/{id}/custom'>Go to Event</a></li><li><a href='/%(app)s/event/event/{id}/unshare/%(forum_id)s'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
-                            dict(app = r.application,
-                                 forum_id = forum_id,
-                                 )
-                        filter_widgets.append(S3OptionsFilter("incident_post.event_id",
-                                                              label = T("Shared Events"),
-                                                              cols = 1,
-                                                              options = shared_events,
-                                                              table = False,
-                                                              option_comment = event_comment,
-                                                              _name = "events",
-                                                              ))
+                    shared_events = {}
+                    for e in events_shared:
+                        shared_events[e.id] = e.name
+                    event_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='event_drop{v}' aria-controls='event_drop{v}' aria-expanded='false'>…</a><ul id='event_drop{v}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/event/{v}/custom'>Go to Event</a></li><li><a href='/%(app)s/event/event/{v}/unshare/%(forum_id)s' class='ajax_link'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
+                        dict(app = appname,
+                             forum_id = forum_id,
+                             )
+                    filter_widgets.append(S3OptionsFilter("event_post.event_id",
+                                                          label = T("Shared Events"),
+                                                          cols = 1,
+                                                          options = shared_events,
+                                                          no_opts = "",
+                                                          table = False,
+                                                          option_comment = event_comment,
+                                                          ))
                     itable = s3db.event_incident
                     query = base_query & (eftable.incident_id == itable.id)
                     incidents_shared = db(query).select(itable.id,
                                                         itable.name,
                                                         )
-                    if len(incidents_shared):
-                        shared_incidents = {}
-                        for i in incidents_shared:
-                            shared_incidents[i.id] = i.name
-                        incident_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='incident_drop{id}' aria-controls='incident_drop{id}' aria-expanded='false'>…</a><ul id='incident_drop{id}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/incident/{id}/custom'>Go to Incident</a></li><li><a href='/%(app)s/event/incident/{id}/unshare/%(forum_id)s'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
-                            dict(app = r.application,
-                                 forum_id = forum_id,
-                                 )
-                        filter_widgets.append(S3OptionsFilter("incident_post.event_id",
-                                                              label = T("Shared Incidents"),
-                                                              cols = 1,
-                                                              options = shared_incidents,
-                                                              table = False,
-                                                              option_comment = incident_comment,
-                                                              _name = "incidents",
-                                                              ))
+                    shared_incidents = {}
+                    for i in incidents_shared:
+                        shared_incidents[i.id] = i.name
+                    incident_comment = "<a class='drop' data-options='ignore_repositioning:true;align:right' data-dropdown='incident_drop{v}' aria-controls='incident_drop{v}' aria-expanded='false'>…</a><ul id='incident_drop{v}' class='f-dropdown' data-dropdown-content='' aria-hidden='true' tabindex='-1'><li><a href='/%(app)s/event/incident/{v}/custom'>Go to Incident</a></li><li><a href='/%(app)s/event/incident/{v}/unshare/%(forum_id)s' class='ajax_link'>Stop sharing</a></li><li><a href='#'>Stop notifications</a></li></ul>" % \
+                        dict(app = appname,
+                             forum_id = forum_id,
+                             )
+                    filter_widgets.append(S3OptionsFilter("incident_post.incident_id",
+                                                          label = T("Shared Incidents"),
+                                                          cols = 1,
+                                                          options = shared_incidents,
+                                                          no_opts = "",
+                                                          table = False,
+                                                          option_comment = incident_comment,
+                                                          ))
 
                 if method != "dashboard":
                     user = current.auth.user

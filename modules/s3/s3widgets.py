@@ -3395,6 +3395,7 @@ class S3GroupedOptionsWidget(FormWidget):
                  sort=True,
                  orientation=None,
                  table=True,
+                 no_opts=None,
                  option_comment=None,
                  ):
         """
@@ -3414,6 +3415,7 @@ class S3GroupedOptionsWidget(FormWidget):
             @param sort: sort the options (only effective if size==None)
             @param orientation: the ordering orientation, "columns"|"rows"
             @param table: whether to render options inside a table or not
+            @param no_opts: text to show if no options available
             @param comment: HTML template to render after the LABELs
         """
 
@@ -3426,6 +3428,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.sort = sort
         self.orientation = orientation
         self.table = table
+        self.no_opts = no_opts
         self.option_comment = option_comment
 
     # -------------------------------------------------------------------------
@@ -3462,9 +3465,12 @@ class S3GroupedOptionsWidget(FormWidget):
                 for option in options:
                     append(option)
 
+        no_opts = self.no_opts
+        if no_opts is None:
+            no_opts = s3_str(current.T("No options available"))
         widget.add_class("groupedopts-widget")
         widget_opts = {"columns": self.cols,
-                       "emptyText": s3_str(current.T("No options available")),
+                       "emptyText": no_opts,
                        "orientation": self.orientation or "columns",
                        "sort": self.sort,
                        "table": self.table,

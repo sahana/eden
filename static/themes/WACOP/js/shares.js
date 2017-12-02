@@ -23,4 +23,22 @@ S3.wacop_shares = function() {
             });
         });
     });
+    var ajaxLinks = function() {
+        $('.ajax_link').each(function() {
+            var $this = $(this);
+            $this.off('click.shares')
+                 .on('click.shares', function(event) {
+                // Action link via AJAX
+                var url = $this.attr('href');
+                $.getS3(url, function() {
+                    // Refresh Filter Widgets & then re-bind events
+                    $('#updates_datalist-filter-form').trigger('dataChanged', ['updates_datalist', ajaxLinks]);
+                });
+                // Don't follow link normally
+                event.preventDefault();
+                return false;
+            });
+        });
+    };
+    ajaxLinks();
 };

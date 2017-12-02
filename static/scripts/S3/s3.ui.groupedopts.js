@@ -288,9 +288,7 @@
             if (comment) {
                  _.templateSettings = {interpolate: /\{(.+?)\}/g};
                 var template = _.template(comment);
-                var ocomment = template({id: this.id,
-                                         v: value
-                                         });
+                var ocomment = template({v: value});
                 widget.append($(ocomment));
             }
             row.append(widget);
