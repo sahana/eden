@@ -212,10 +212,35 @@ def config(settings):
 
         shelter_id = record.id
 
+        # Get nostats flags
+        ftable = s3db.dvr_case_flag
+        query = (ftable.nostats == True) & \
+                (ftable.deleted == False)
+        rows = db(query).select(ftable.id)
+        nostats = set(row.id for row in rows)
+
+        # Get person_ids with nostats-flags
+        # (=persons who are registered as residents, but not BEA responsibility)
+        if nostats:
+            ltable = s3db.dvr_case_flag_case
+            query = (ltable.flag_id.belongs(nostats)) & \
+                    (ltable.deleted == False)
+            rows = db(query).select(ltable.person_id)
+            exclude = set(row.person_id for row in rows)
+        else:
+            exclude = set()
+
+        # Count total shelter registrations for non-BEA persons
+        query = (rtable.person_id.belongs(exclude)) & \
+                (rtable.shelter_id == shelter_id) & \
+                (rtable.deleted != True)
+        other_total = db(query).count()
+
         # Count number of shelter registrations for this shelter,
         # grouped by transitory-status of the housing unit
         left = utable.on(utable.id == rtable.shelter_unit_id)
-        query = (rtable.shelter_id == shelter_id) & \
+        query = (~(rtable.person_id.belongs(exclude))) & \
+                (rtable.shelter_id == shelter_id) & \
                 (rtable.deleted != True)
         count = rtable.id.count()
         rows = db(query).select(utable.transitory,
@@ -237,20 +262,22 @@ def config(settings):
         EIGHTEEN = r.utcnow - relativedelta(years=18)
         ptable = s3db.pr_person
         query = (ptable.date_of_birth > EIGHTEEN) & \
+                (~(ptable.id.belongs(exclude))) & \
                 (ptable.id == rtable.person_id) & \
                 (rtable.shelter_id == shelter_id)
         count = ptable.id.count()
         row = db(query).select(count).first()
         children = row[count]
 
-        CHILDREN = TR(TD(T("Number of Children")),
+        CHILDREN = TR(TD(T("Children")),
                          TD(children),
                          )
 
         # Families on-site
         gtable = s3db.pr_group
         mtable = s3db.pr_group_membership
-        join = [mtable.on((mtable.group_id == gtable.id) & \
+        join = [mtable.on((~(mtable.person_id.belongs(exclude))) & \
+                          (mtable.group_id == gtable.id) & \
                           (mtable.deleted != True)),
                 rtable.on((rtable.person_id == mtable.person_id) & \
                           (rtable.shelter_id == shelter_id) & \
@@ -265,20 +292,29 @@ def config(settings):
                                 join = join,
                                 )
         families = len(rows)
-        FAMILIES = TR(TD(T("Number of Families")),
+        FAMILIES = TR(TD(T("Families")),
                          TD(families),
                          )
 
+        # TODO: restructure output to make it more comprehensible
         # Transitory housing unit is called "PX" at BFV Mannheim
         # @todo: generalize, lookup transitory unit name(s) from db
-        TRANSITORY = TR(TD(T("How many in PX")),
-                        TD(transitory),
-                        )
-        REGULAR = TR(TD(T("How many in BEA (except in PX)")),
-                     TD(regular),
-                     )
-        TOTAL = TR(TD(T("How many in BEA (total)")),
+        TOTAL = TR(TD(T("Population BEA")),
                    TD(total),
+                   _class="dbstats-total",
+                   )
+        TRANSITORY = TR(TD(T("in staging area (PX)")),
+                        TD(transitory),
+                        _class="dbstats-sub",
+                        )
+        REGULAR = TR(TD(T("in housing units")),
+                     TD(regular),
+                     _class="dbstats-sub",
+                     )
+
+        OTHER = TR(TD(T("Population Other")),
+                   TD(other_total),
+                   _class="dbstats-total",
                    )
 
         # Get the IDs of open case statuses
@@ -292,6 +328,7 @@ def config(settings):
         left = [ltable.on((ltable.flag_id == ftable.id) & \
                           (ltable.deleted != True)),
                 ctable.on((ctable.person_id == ltable.person_id) & \
+                          (~(ctable.person_id.belongs(exclude))) & \
                           (ctable.status_id.belongs(OPEN)) & \
                           ((ctable.archived == False) | (ctable.archived == None)) & \
                           (ctable.deleted != True)),
@@ -307,14 +344,17 @@ def config(settings):
         rows = db(query).select(count, left=left)
         external = rows.first()[count] if rows else 0
 
-        EXTERNAL = TR(TD(T("How many external (Hospital / Police)")),
+        EXTERNAL = TR(TD(T("External (Hospital / Police)")),
                       TD(external),
                       )
 
         # Get the number of free places in the BEA
-        free = record.available_capacity_day
-        FREE = TR(TD(T("How many free places")),
+        # @todo: validate whether non-BEA residents count
+        #        as occupying BEA capacity or not
+        free = record.available_capacity_day # + other_total
+        FREE = TR(TD(T("Free places")),
                   TD(free),
+                  _class="dbstats-total",
                   )
 
         # Announcements
@@ -397,13 +437,15 @@ def config(settings):
                      HR(),
                      # Current population overview
                      TABLE(TR(TD(TABLE(TOTAL,
-                                    CHILDREN,
-                                    FAMILIES,
-                                    TRANSITORY,
-                                    REGULAR,
-                                    EXTERNAL,
-                                    FREE
-                                    ),
+                                       TRANSITORY,
+                                       REGULAR,
+                                       CHILDREN,
+                                       FAMILIES,
+                                       EXTERNAL,
+                                       OTHER,
+                                       FREE,
+                                       _class="dbstats",
+                                       ),
                                  ),
                               TD(weather,
                                  _class="show-for-large-up",
@@ -3753,29 +3795,51 @@ class DRKSiteActivityReport(object):
         site_id = self.site_id
         date = self.date
 
+        # Get all flags for which cases shall be excluded
+        ftable = s3db.dvr_case_flag
+        query = (ftable.nostats == True) & \
+                (ftable.deleted == False)
+        rows = db(query).select(ftable.id)
+        nostats = set(row.id for row in rows)
+
         # Identify the relevant cases
         ctable = s3db.dvr_case
+        ltable = s3db.dvr_case_flag_case
+
+        num_nostats_flags = ltable.id.count()
+        left = ltable.on((ltable.person_id == ctable.person_id) & \
+                         (ltable.flag_id.belongs(nostats)) & \
+                         (ltable.deleted == False))
+
         query = (ctable.site_id == site_id) & \
                 ((ctable.date == None) | (ctable.date <= date)) & \
                 ((ctable.closed_on == None) | (ctable.closed_on >= date)) & \
                 (ctable.archived != True) & \
                 (ctable.deleted != True)
+
+
         rows = db(query).select(ctable.id,
                                 ctable.person_id,
                                 ctable.date,
                                 ctable.closed_on,
+                                num_nostats_flags,
+                                groupby = ctable.id,
+                                left = left,
                                 )
 
         # Count them
         old_total, ins, outs = 0, 0, 0
         person_ids = set()
         for row in rows:
-            person_ids.add(row.person_id)
-            if not row.date or row.date < date:
+            if row[num_nostats_flags]:
+                continue
+            case = row.dvr_case
+            person_ids.add(case.person_id)
+            if not case.date or case.date < date:
                 old_total += 1
             else:
                 ins += 1
-            if row.closed_on and row.closed_on == date:
+            if case.closed_on and case.closed_on == date:
                 outs += 1
         result = {"old_total": old_total,
                   "new_total": old_total - outs + ins,
