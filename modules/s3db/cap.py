@@ -4210,7 +4210,7 @@ class CAPImportFeed(S3Method):
                 request = urllib2.Request(url)
                 if username and password:
                     import base64
-                    base64string = base64.encodestring("%s:%s" % (username, password))
+                    base64string = base64.b64encode("%s:%s" % (username, password))
                     request.add_header("Authorization", "Basic %s" % base64string)
                 try:
                     file = urllib2.urlopen(request).read()
