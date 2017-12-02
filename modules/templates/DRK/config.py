@@ -314,7 +314,7 @@ def config(settings):
 
         OTHER = TR(TD(T("Population Other")),
                    TD(other_total),
-                   _class="dbstats-total",
+                   _class="dbstats-extra",
                    )
 
         # Get the IDs of open case statuses
@@ -349,9 +349,9 @@ def config(settings):
                       )
 
         # Get the number of free places in the BEA
-        # @todo: validate whether non-BEA residents count
-        #        as occupying BEA capacity or not
-        free = record.available_capacity_day # + other_total
+        # => Non-BEA registrations do not occupy BEA capacity,
+        #    so need to re-add the total here:
+        free = record.available_capacity_day + other_total
         FREE = TR(TD(T("Free places")),
                   TD(free),
                   _class="dbstats-total",
@@ -442,8 +442,8 @@ def config(settings):
                                        CHILDREN,
                                        FAMILIES,
                                        EXTERNAL,
-                                       OTHER,
                                        FREE,
+                                       OTHER,
                                        _class="dbstats",
                                        ),
                                  ),

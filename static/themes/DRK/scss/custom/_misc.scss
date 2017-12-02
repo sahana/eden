@@ -279,17 +279,21 @@ body.rtl {
         text-align: left;
         padding-left: 2rem;
     }
-    .dbstats-total td {
+    .dbstats-total td,
+    .dbstats-extra td {
         &:first-child {
             padding-left: 0.7rem;
         }
+    }
+    .dbstats-total {
         font-weight: bold;
     }
+    .dbstats-extra td,
     .dbstats-sub td {
         font-style: italic;
         font-size: 0.8rem;
         line-height: 50%;
-        color: #7F7F7F;
+        color: #AAA;
     }
 }
 

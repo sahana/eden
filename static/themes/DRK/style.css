@@ -1679,23 +1679,25 @@ body.rtl .event-type-header {
   text-align: left;
   padding-left: 2rem;
 }
-/* line 282, ../scss/custom/_misc.scss */
-.dbstats .dbstats-total td {
-  font-weight: bold;
-}
-/* line 283, ../scss/custom/_misc.scss */
-.dbstats .dbstats-total td:first-child {
+/* line 284, ../scss/custom/_misc.scss */
+.dbstats .dbstats-total td:first-child,
+.dbstats .dbstats-extra td:first-child {
   padding-left: 0.7rem;
 }
 /* line 288, ../scss/custom/_misc.scss */
+.dbstats .dbstats-total {
+  font-weight: bold;
+}
+/* line 291, ../scss/custom/_misc.scss */
+.dbstats .dbstats-extra td,
 .dbstats .dbstats-sub td {
   font-style: italic;
   font-size: 0.8rem;
   line-height: 50%;
-  color: #7F7F7F;
+  color: #AAA;
 }
 
-/* line 297, ../scss/custom/_misc.scss */
+/* line 301, ../scss/custom/_misc.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1704,24 +1706,24 @@ body.rtl .event-type-header {
   font-weight: normal;
 }
 
-/* line 304, ../scss/custom/_misc.scss */
+/* line 308, ../scss/custom/_misc.scss */
 .prio-red {
   color: white;
   background-color: #D10000;
 }
 
-/* line 308, ../scss/custom/_misc.scss */
+/* line 312, ../scss/custom/_misc.scss */
 .prio-blue {
   color: white;
   background-color: #10427B;
 }
 
-/* line 312, ../scss/custom/_misc.scss */
+/* line 316, ../scss/custom/_misc.scss */
 .prio-lightblue {
   background-color: #B7DDFF;
 }
 
-/* line 315, ../scss/custom/_misc.scss */
+/* line 319, ../scss/custom/_misc.scss */
 .prio-grey {
   background-color: silver;
 }
