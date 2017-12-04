@@ -5677,9 +5677,9 @@ class S3ResourceData(object):
                                                cacheable = not as_rows,
                                                *qfields.values())
 
-            # Restore virtual fields
-            if not virtual:
-                osetattr(table, "virtualfields", vf)
+                # Restore virtual fields
+                if not virtual:
+                    osetattr(table, "virtualfields", vf)
 
         else:
             rows = Rows(current.db)
