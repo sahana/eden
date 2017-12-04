@@ -5637,31 +5637,45 @@ class S3ResourceData(object):
                     qfields[pkey] = resource._id
                 has_id = True
 
-            # Joins for master query
-            master_ijoins = ijoins.as_list(tablenames = master_tables,
-                                           aqueries = aqueries,
-                                           prefer = ljoins,
-                                           )
-            master_ljoins = ljoins.as_list(tablenames = master_tables,
-                                           aqueries = aqueries,
-                                           )
-
-            # Suspend (mandatory) virtual fields if so requested
-            if not virtual:
-                vf = table.virtualfields
-                osetattr(table, "virtualfields", [])
-
             # Execute master query
             db = current.db
-            rows = db(master_query).select(join = master_ijoins,
-                                           left = master_ljoins,
-                                           distinct = distinct,
-                                           groupby = groupby,
-                                           orderby = orderby,
-                                           limitby = limitby,
-                                           orderby_on_limitby = orderby_on_limitby,
-                                           cacheable = not as_rows,
-                                           *qfields.values())
+
+            master_fields = qfields.keys()
+            if not groupby and not pagination and \
+               has_id and ids and len(master_fields) == 1:
+                # We already have the ids, and master query doesn't select
+                # anything else => skip the master query, construct Rows from
+                # ids instead
+                master_id = table._id.name
+                rows = Rows(db,
+                            [Row({master_id: record_id}) for record_id in ids],
+                            colnames = [pkey],
+                            compact = False,
+                            )
+            else:
+                # Joins for master query
+                master_ijoins = ijoins.as_list(tablenames = master_tables,
+                                               aqueries = aqueries,
+                                               prefer = ljoins,
+                                               )
+                master_ljoins = ljoins.as_list(tablenames = master_tables,
+                                               aqueries = aqueries,
+                                               )
+
+                # Suspend (mandatory) virtual fields if so requested
+                if not virtual:
+                    vf = table.virtualfields
+                    osetattr(table, "virtualfields", [])
+
+                rows = db(master_query).select(join = master_ijoins,
+                                               left = master_ljoins,
+                                               distinct = distinct,
+                                               groupby = groupby,
+                                               orderby = orderby,
+                                               limitby = limitby,
+                                               orderby_on_limitby = orderby_on_limitby,
+                                               cacheable = not as_rows,
+                                               *qfields.values())
 
             # Restore virtual fields
             if not virtual:
