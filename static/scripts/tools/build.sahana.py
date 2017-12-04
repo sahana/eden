@@ -325,7 +325,8 @@ def dojs(dogis = False, warnings = True):
     merged = mergejs.run(sourceDirectory,
                          None,
                          configFilename)
-    minimized = minimize(merged)
+    # with(obj||{}){ in converse.nojquery.js gives ERROR - The with statement cannot be used in strict mode.
+    minimized = minimize(merged, extra_params = "--strict_mode_input false")
     open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
