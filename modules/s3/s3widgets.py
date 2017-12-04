@@ -2158,7 +2158,8 @@ class S3CalendarWidget(FormWidget):
         - uses jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
         - uses jQuery UI Timepicker-addon if using times: http://trentrichardson.com/examples/timepicker
         - uses Calendars for non-Gregorian calendars: http://keith-wood.name/calendars.html
-            (ensure that calendars/ui-smoothness.calendars.picker.css is in css.cfg for that)
+            (for this, ensure that css.cfg includes calendars/ui.calendars.picker.css and
+                                                    calendars/ui-smoothness.calendars.picker.css)
     """
 
     def __init__(self,
