@@ -221,8 +221,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("map", s3base.S3Map)
     set_handler("mform", s3base.S3MobileCRUD, representation="json")
     set_handler("profile", s3base.S3Profile)
-    set_handler("report", s3base.S3Report)
-    set_handler("report", s3base.S3Report, transform=True)
+    set_handler("report", s3base.S3Report) # For HTML, JSON
+    set_handler("report", s3base.S3Report, transform=True) # For GeoJSON
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
     set_handler("timeplot", s3base.S3TimePlot)

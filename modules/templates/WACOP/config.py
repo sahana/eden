@@ -415,6 +415,7 @@ def config(settings):
                                           "document.file",
                                           "comment.id",
                                           # Extra fields come in unsorted, so can't match up to records
+                                          # @ToDo: Can put these as extra_fields & use a Field.Method to keep them sorted so that we still get the bulk lookups
                                           #"comment.body",
                                           #"comment.created_by",
                                           #"comment.created_on",
@@ -1317,7 +1318,7 @@ def config(settings):
         s3 = current.response.s3
 
         # Custom Browse
-        from templates.WACOP.controllers import group_Browse, group_Profile, text_filter_formstyle
+        from templates.WACOP.controllers import group_Browse, group_Notify, group_Profile, text_filter_formstyle
         set_method = s3db.set_method
         set_method("pr", "forum",
                    method = "browse",
@@ -1327,6 +1328,11 @@ def config(settings):
         set_method("pr", "forum",
                    method = "custom",
                    action = group_Profile)
+
+        # Custom Notifications
+        set_method("pr", "forum",
+                   method = "notify_settings",
+                   action = group_Notify)
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter
 

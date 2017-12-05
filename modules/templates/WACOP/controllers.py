@@ -1942,21 +1942,28 @@ class group_Profile(custom_WACOP):
 
         from s3 import s3_fullname
 
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+
         table = r.table
         record = r.record
         forum_id = r.id
 
-        updateable = current.auth.s3_has_permission("update", table, record_id=forum_id, c="pr", f="forum")
+        updateable = auth.s3_has_permission("update", table,
+                                            record_id=forum_id,
+                                            c="pr",
+                                            f="forum")
 
         output = {"forum_id": forum_id,
                   "updateable": updateable,
                   }
 
-        mtable = current.s3db.pr_forum_membership
+        mtable = s3db.pr_forum_membership
         query = (mtable.forum_id == forum_id) & \
                 (mtable.deleted == False)
-        members = current.db(query).select(mtable.person_id,
-                                           mtable.admin)
+        members = db(query).select(mtable.person_id,
+                                   mtable.admin)
         admins = [s3_fullname(m.person_id) for m in members if m.admin]
 
         # Updates DataList
@@ -2000,6 +2007,29 @@ class group_Profile(custom_WACOP):
                          dt_init = dt_init,
                          forum_id = forum_id,
                          )
+
+        # Notifications
+        ftable = s3db.pr_filter
+        stable = s3db.pr_subscription
+
+        pe_id = auth.user.pe_id
+        filter_string = '[["~.id", %s]]' % forum_id
+
+        query = (ftable.pe_id == pe_id) & \
+                (ftable.resource == "pr_forum") & \
+                (ftable.query == filter_string) & \
+                (ftable.id == stable.filter_id)
+        exists = db(query).select(stable.frequency,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            output["notify"] = True
+            output["frequency"] = exists.frequency
+        else:
+            output["notify"] = False
+            output["frequency"] = "immediately"
+
+        current.response.s3.scripts.append("/%s/static/themes/WACOP/js/group_profile.js" % r.application)
 
         self._view(output, "group_profile.html")
 
@@ -2385,6 +2415,73 @@ class incident_Profile(custom_WACOP):
         self._view(output, "incident_profile.html")
 
         return output
+
+# =============================================================================
+def group_Notify(r, **attr):
+    """
+        Manage Notifications for a Group
+
+        S3Method for interactive requests
+        - designed to be called via AJAX
+    """
+
+    forum_id = r.id
+    if not forum_id or r.http != "POST":
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
+    filter_string = '[["~.id", %s]]' % forum_id
+
+    pe_id = current.auth.user.pe_id
+
+    post_vars_get = r.post_vars.get
+    email = post_vars_get("email")
+    frequency = post_vars_get("frequency")
+
+    db = current.db
+    s3db = current.s3db
+
+    ftable = s3db.pr_filter
+    stable = s3db.pr_subscription
+
+    query = (ftable.pe_id == pe_id) & \
+            (ftable.resource == "pr_forum") & \
+            (ftable.query == filter_string) & \
+            (ftable.id == stable.filter_id)
+    exists = db(query).select(ftable.id,
+                              stable.id,
+                              limitby=(0, 1)
+                              ).first()
+    if exists:
+        if email == "1":
+            db(stable.id == exists["pr_subscription.id"]).update(frequency = frequency)
+        else:
+            # Delete the Subscription
+            resource = s3db.resource("pr_subscription", id=exists["pr_subscription.id"])
+            resource.delete()
+            # Delete the Filter
+            resource = s3db.resource("pr_filter", id=exists["pr_filter.id"])
+            resource.delete()
+    else:
+        if email == "1":
+            # Create the Filter
+            filter_id = ftable.insert(pe_id = pe_id,
+                                      controller = "forum",
+                                      function = "forum",
+                                      resource = "pr_forum",
+                                      query = filter_string,
+                                      )
+            # Create the Subscription
+            stable.insert(pe_id = pe_id,
+                          filter_id = filter_id,
+                          notify_on = ["upd"],
+                          frequency = frequency,
+                          # Default:
+                          #method = ["EMAIL"],
+                          )
+
+    output = current.xml.json_message(True, 200, current.T("Notification Settings Updated"))
+    current.response.headers["Content-Type"] = "application/json"
+    return output
 
 # =============================================================================
 class person_Dashboard(custom_WACOP):

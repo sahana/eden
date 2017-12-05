@@ -136,8 +136,7 @@ class S3Notifications(object):
         db.commit()
 
         # Construct the send-URL
-        settings = current.deployment_settings
-        public_url = settings.get_base_public_url()
+        public_url = current.deployment_settings.get_base_public_url()
         lookup_url = "%s/%s/%s" % (public_url,
                                    current.request.application,
                                    r.url.lstrip("/"))

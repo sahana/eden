@@ -23,25 +23,23 @@
      <br>
      Admin: <a href='#'>{{=group.admin}}</a>
     </p>
-    <!-- Notification Settings tbc
-    <a class='drop meta' data-options='ignore_repositioning:true;align:left' data-dropdown='settings' aria-controls='settings' aria-expanded='false'>Notifications (edit)</a>
-    <ul id='settings' class='f-dropdown text-left' data-dropdown-content='' aria-hidden='true' tabindex='-1'>
+    <a class='drop meta' data-options='ignore_repositioning:true;align:left' data-dropdown='notify_settings' aria-controls='notify_settings' aria-expanded='false'>Notifications (edit)</a>
+    <ul id='notify_settings' class='f-dropdown text-left' data-dropdown-content='' data-forum_id='{{=forum_id}}' aria-hidden='true' tabindex='-1'>
      <li><strong>Notification Settings</strong></li>
       <ul class='no-bullet'>
-       <li><label for='box3'><input type='checkbox' id='box3' name='box3'> Receive Email</label></li>
+       <li><label for='notify_email'><input type='checkbox' id='notify_email' name='notify' {{="checked" if notify else ""}}> Receive Email</label></li>
        <!-- @ToDo: Hide this if user has no mobile phone# registered (skip completely in 1st iteration)
-       <li><label for='box4'><input type='checkbox' id='box4' name='box4'> Via SMS</label></li>-->
-      <!--
+       <li><label for='sms'><input type='checkbox' id='sms' name='notify'> Via SMS</label></li>-->
+      </ul>
+     </li>
+     <!-- Make Frequency a Radio -->
+     <li><strong>Frequency</strong>
+      <ul class='no-bullet'>
+       <li><label for='notify_immediately'><input type='radio' id='notify_immediately' name='frequency' value='immediately' {{="checked" if frequency == "immediately" else ""}}> Receive posts immediately</label></li>
+       <li><label for='notify_daily'><input type='radio' id='notify_daily' name='frequency' value='daily' {{="checked" if frequency == "daily" else ""}}> Receive daily digest</label></li>
       </ul>
      </li>
     </ul>
-     <!-- Make Frequency a Radio
-     <li><strong>Frequency</strong>
-      <ul class='no-bullet'>
-       <li><label for='box1'><input type='checkbox' id='box1' name='box1'> Receive posts immediately</label></li>
-       <li><label for='box2'><input type='checkbox' id='box2' name='box2'> Receive daily digest</label></li>
-      </ul>
-     </li>-->
    </div>
   </div
   <hr>
