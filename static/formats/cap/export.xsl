@@ -532,7 +532,7 @@
         exclusive, as we do not create or import a location that is both a
         polygon and a circle. The circle and polygon fallbacks are mutually
         exclusive as only one is constructed in xml_post_render.
-    -->
+
     <xsl:template match="resource[@name='cap_area_location']//resource[@name='gis_location_tag']">
         <xsl:choose>
             <xsl:when test="./data[@field='tag']/text()='cap_circle'">
@@ -557,6 +557,7 @@
             </xsl:when>
         </xsl:choose>
     </xsl:template>
+	-->
 
     <!-- ****************************************************************** -->
     <!-- cap_resource -->
