@@ -3636,7 +3636,7 @@ class S3Resource(object):
         return S3ResourceField(self, selector)
 
     # -------------------------------------------------------------------------
-    def split_fields(self, skip=[], data=None, references=None):
+    def split_fields(self, skip=DEFAULT, data=None, references=None):
         """
             Split the readable fields in the resource table into
             reference and non-reference fields.
@@ -3645,6 +3645,9 @@ class S3Resource(object):
             @param data: data fields to include (None for all)
             @param references: foreign key fields to include (None for all)
         """
+
+        if skip is DEFAULT:
+            skip = []
 
         rfields = self.rfields
         dfields = self.dfields
