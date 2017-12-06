@@ -307,6 +307,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_incident_report_controller(**attr):
 
+        from gluon import A, URL
+
         s3 = current.response.s3
 
         # Custom prep
@@ -327,7 +329,55 @@ def config(settings):
                                             (T("Explain the Situation?"), "description"),
                                             (T("What are your immediate needs?"), "needs"),
                                             )
-                r.resource.configure(crud_form = crud_form)
+                r.resource.configure(create_next = URL(args=["[id]", "assign"]),
+                                     crud_form = crud_form,
+                                     )
+
+            return True
+        s3.prep = custom_prep
+
+        # No sidebar menu
+        current.menu.options = None
+        req_args = current.request.args
+        if len(req_args) > 1 and req_args[1] == "assign":
+            attr["rheader"] = A(T("New Incident"),
+                                _class="action-btn",
+                                _href=URL(c="event", f="incident",
+                                          args=["create"],
+                                          vars={"incident_report_id": req_args[0]},
+                                          ),
+                                )
+
+        return attr
+
+    settings.customise_event_incident_report_controller = customise_event_incident_report_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_incident_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            if r.method == "create":
+                incident_report_id = r.get_vars.get("incident_report_id")
+                if incident_report_id:
+                    from s3 import s3_truncate
+                    rtable = current.s3db.event_incident_report
+                    incident_report = current.db(rtable.id == incident_report_id).select(rtable.name,
+                                                                                         rtable.incident_type_id,
+                                                                                         rtable.location_id,
+                                                                                         limitby = (0, 1),
+                                                                                         ).first()
+                    table = r.table
+                    table.name.default = s3_truncate(incident_report.name, 64)
+                    table.incident_type_id.default = incident_report.incident_type_id
+                    table.location_id.default = incident_report.location_id
 
             return True
         s3.prep = custom_prep
@@ -337,6 +387,6 @@ def config(settings):
 
         return attr
 
-    settings.customise_event_incident_report_controller = customise_event_incident_report_controller
+    settings.customise_event_incident_controller = customise_event_incident_controller
 
 # END =========================================================================

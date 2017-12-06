@@ -2607,14 +2607,14 @@ def config(settings):
                        (T("Deploying NS"), "human_resource_id$organisation_id"),
                       ]
         report_options = Storage(
-            rows=report_axis,
-            cols=report_axis,
-            fact=report_fact,
-            defaults=Storage(rows="mission_id$location_id",
-                             cols="mission_id$event_type_id",
-                             fact="count(human_resource_id)",
-                             totals=True
-                             )
+            rows = report_axis,
+            cols = report_axis,
+            fact = report_fact,
+            defaults = Storage(rows="mission_id$location_id",
+                               cols="mission_id$event_type_id",
+                               fact="count(human_resource_id)",
+                               totals=True
+                               )
             )
 
         s3db.configure("deploy_assignment",
@@ -7221,7 +7221,7 @@ def config(settings):
         from s3 import s3_set_default_filter
         s3_set_default_filter("~.organisation_id",
                               user_org_root_default_filter,
-                              tablename = "project_project")
+                              tablename = tablename)
 
         # Load standard model
         s3db = current.s3db

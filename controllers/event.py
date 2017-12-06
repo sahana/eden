@@ -157,7 +157,7 @@ def incident():
             elif r.method == "update":
                 # Can't change details after event activation
                 table = r.table
-                table.scenario_id.writable = False
+                #table.scenario_id.writable = False
                 table.exercise.writable = False
                 table.exercise.comment = None
                 table.date.writable = False

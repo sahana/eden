@@ -180,22 +180,26 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Link to Event -->
+            <!-- Link to Event. Done via Incident
             <xsl:if test="col[@field='Event']!=''">
-                <reference field="event_id" resource="event_event">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Event:', col[@field='Event'])"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+                <resource name="event_incident_report_event">
+                    <reference field="event_id" resource="event_event">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Event:', col[@field='Event'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if> -->
 
             <!-- Link to Incident -->
             <xsl:if test="col[@field='Incident']!=''">
-                <reference field="incident_id" resource="event_incident">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Incident:', col[@field='Incident'])"/>
-                    </xsl:attribute>
-                </reference>
+                <resource name="event_incident_report_incident">
+                    <reference field="incident_id" resource="event_incident">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Incident:', col[@field='Incident'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
             </xsl:if>
 
             <!-- Link to Organisation Group -->
@@ -254,6 +258,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Incident">
         <xsl:variable name="Incident" select="col[@field='Incident']"/>
+        <xsl:variable name="Event" select="col[@field='Event']"/>
 
         <xsl:if test="$Incident!=''">
             <resource name="event_incident">
@@ -261,6 +266,13 @@
                     <xsl:value-of select="concat('Incident:', $Incident)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Incident"/></data>
+                <xsl:if test="$Event!=''">
+                    <reference field="event_id" resource="event_event">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Event:', $Event)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
             </resource>
         </xsl:if>
     </xsl:template>
