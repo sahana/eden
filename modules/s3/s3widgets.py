@@ -7247,7 +7247,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             radius = None
 
         if errors:
-            error = "\n".join(errors[fn] for fn in errors)
+            error = "\n".join(s3_str(errors[fn]) for fn in errors)
             return (values, error)
 
         specific = values.get("specific")
