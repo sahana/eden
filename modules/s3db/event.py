@@ -1685,10 +1685,10 @@ class S3IncidentReportModel(S3Model):
 
         T = current.T
 
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Incident Reports
@@ -1697,17 +1697,34 @@ class S3IncidentReportModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           # @ToDo: Use link tables?
-                          self.event_event_id(ondelete = "CASCADE"),
-                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = ondelete),
+                          self.event_incident_id(ondelete = "CASCADE"),
                           s3_datetime(default="now"),
                           Field("name", notnull=True,
-                                label = T("Title"),
+                                label = T("Short Description"),
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           self.event_incident_type_id(),
+                          #self.pr_person_id(label = T("Reported By"),
+                          #                  ),
+                          Field("reported_by",
+                                label = T("Reported By"),
+                                ),
+                          Field("contact",
+                                label = T("Contact"),
+                                ),
                           self.gis_location_id(),
-                          self.pr_person_id(label = T("Reported By"),
-                                            ),
+                          Field("contact",
+                                label = T("Contact"),
+                                ),
+                          Field("description", "text",
+                                label = T("Long Description"),
+                                widget = s3_comments_widget,
+                                ),
+                          Field("needs", "text",
+                                label = T("Immediate Needs"),
+                                widget = s3_comments_widget,
+                                ),
                           Field("closed", "boolean",
                                 default = False,
                                 label = T("Closed"),
@@ -1722,11 +1739,14 @@ class S3IncidentReportModel(S3Model):
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_delete_button = T("Remove Incident Report from this event"),
+            #label_delete_button = T("Remove Incident Report from this event"),
+            label_delete_button = T("Delete Incident"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
             msg_record_deleted = T("Incident Report removed"),
-            msg_list_empty = T("No Incident Reports currently registered for this event"))
+            #msg_list_empty = T("No Incident Reports currently registered for this event"),
+            msg_list_empty = T("No Incident Reports currently registered"),
+            )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()

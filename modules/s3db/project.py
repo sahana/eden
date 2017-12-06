@@ -9738,6 +9738,18 @@ class S3ProjectStrategyModel(S3Model):
         return dict(project_strategy_id = strategy_id,
                     )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for model-global names if module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(project_strategy_id = lambda **attr: dummy("strategy_id"),
+                    )
+
 # =============================================================================
 class S3ProjectThemeModel(S3Model):
     """

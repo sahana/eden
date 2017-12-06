@@ -1,0 +1,4 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+CALL_LOGGER,Call Logger,,,,event_incident_report,,CREATE|READ|UPDATE,,,,,
+CALL_LOGGER,Call Logger,,,,event_incident,,CREATE|READ|UPDATE,,,,,
+CALL_SUPERVISOR,Call Supervisor,,,,event_incident,,CREATE|READ|UPDATE|DELETE,,,,,

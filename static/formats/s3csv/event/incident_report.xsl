@@ -6,14 +6,13 @@
          Incident Report - CSV Import Stylesheet
 
          CSV fields:
+         Event................................event_incident_report.event_id$name
+         Incident.............................event_incident_report.incident_id$name
          Name.................................event_incident_report.name
          Type.................................event_incident_report.incident_type_id
          Date.................................event_incident_report.date
-         Reported By First Name...............person_id.first_name
-         Reported By Last Name................person_id.first_name
-         Reported By Phone....................person_id -> pr_contact.value
-         Reported By Email....................person_id -> pr_contact.value
-         Organisation Group...................event_incident_report_group.group_id  
+         Reported By..........................event_incident_report.reported_by
+         Contact..............................event_incident_report.contact
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -22,6 +21,10 @@
          L3......................optional.....gis_location.L3
          Lat..................................gis_location.lat
          Lon..................................gis_location.lon
+         Description..........................event_incident_report.description
+         Needs................................event_incident_report.needs
+         Closed...............................event_incident_report.closed
+         Organisation Group...................event_incident_report_group.group_id$name
          Comments.............................event_incident_report.comments
 
     *********************************************************************** -->
@@ -42,6 +45,8 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+    <xsl:key name="events" match="row" use="col[@field='Event']"/>
+    <xsl:key name="incidents" match="row" use="col[@field='Incident']"/>
     <xsl:key name="type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
 
@@ -52,6 +57,20 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="Type"/>
+            </xsl:for-each>
+
+            <!-- Events -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('events',
+                                                        col[@field='Event'])[1])]">
+                <xsl:call-template name="Event"/>
+            </xsl:for-each>
+
+            <!-- Incidents -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('incidents',
+                                                        col[@field='Incident'])[1])]">
+                <xsl:call-template name="Incident"/>
             </xsl:for-each>
 
             <!-- Organisation Group -->
@@ -68,12 +87,53 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="Closed">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Closed']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- Incident Report -->
         <resource name="event_incident_report">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
-            
+            <data field="reported_by"><xsl:value-of select="col[@field='Reported By']"/></data>
+            <data field="contact"><xsl:value-of select="col[@field='Contact']"/></data>
+            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="needs"><xsl:value-of select="col[@field='Needs']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:choose>
+                <xsl:when test="$Closed=''">
+                    <!-- Use System Default -->
+                </xsl:when>
+                <xsl:when test="$Closed='Y'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='YES'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='T'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='TRUE'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='N'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='NO'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='F'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='FALSE'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
+
             <xsl:if test="col[@field='Type']!=''">
                 <reference field="incident_type_id" resource="event_incident_type">
                     <xsl:attribute name="tuid">
@@ -82,7 +142,7 @@
                 </reference>
             </xsl:if>
 
-            <!-- Person -->
+            <!-- Person
             <xsl:if test="col[@field='Reported By First Name']">
                 <reference field="person_id" resource="pr_person">
                     <resource name="pr_person">
@@ -107,18 +167,7 @@
                         </xsl:if>
                     </resource>
                 </reference>
-            </xsl:if>
-
-            <!-- Organisation Group -->
-            <xsl:if test="col[@field='Organisation Group']!=''">
-                <resource name="event_incident_report_group">
-                    <reference field="group_id" resource="org_group">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
+            </xsl:if> -->
 
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
@@ -131,7 +180,34 @@
                 </xsl:attribute>
             </reference>
 
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <!-- Link to Event -->
+            <xsl:if test="col[@field='Event']!=''">
+                <reference field="event_id" resource="event_event">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Event:', col[@field='Event'])"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <!-- Link to Incident -->
+            <xsl:if test="col[@field='Incident']!=''">
+                <reference field="incident_id" resource="event_incident">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Incident:', col[@field='Incident'])"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <!-- Link to Organisation Group -->
+            <xsl:if test="col[@field='Organisation Group']!=''">
+                <resource name="event_incident_report_group">
+                    <reference field="group_id" resource="org_group">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
         </resource>
         
@@ -157,6 +233,34 @@
                     <xsl:value-of select="concat('Type:', $Type)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Type"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Event">
+        <xsl:variable name="Event" select="col[@field='Event']"/>
+
+        <xsl:if test="$Event!=''">
+            <resource name="event_event">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Event:', $Event)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Event"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Incident">
+        <xsl:variable name="Incident" select="col[@field='Incident']"/>
+
+        <xsl:if test="$Incident!=''">
+            <resource name="event_incident">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Incident:', $Incident)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Incident"/></data>
             </resource>
         </xsl:if>
     </xsl:template>
