@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import dateutil.parser
+import json
 from gluon import current#, Field, SQLFORM
 from gluon.html import *
 from gluon.storage import Storage
@@ -2429,6 +2431,8 @@ def group_Notify(r, **attr):
     if not forum_id or r.http != "POST":
         raise HTTP(405, current.ERROR.BAD_METHOD)
 
+    tablename = "pr_forum"
+    controller, function = tablename.split("_", 1)
     filter_string = '[["~.id", %s]]' % forum_id
 
     pe_id = current.auth.user.pe_id
@@ -2444,7 +2448,6 @@ def group_Notify(r, **attr):
     stable = s3db.pr_subscription
 
     query = (ftable.pe_id == pe_id) & \
-            (ftable.resource == "pr_forum") & \
             (ftable.query == filter_string) & \
             (ftable.id == stable.filter_id)
     exists = db(query).select(ftable.id,
@@ -2456,6 +2459,7 @@ def group_Notify(r, **attr):
             db(stable.id == exists["pr_subscription.id"]).update(frequency = frequency)
         else:
             # Delete the Subscription
+            # (cascades to the subscription_resource)
             resource = s3db.resource("pr_subscription", id=exists["pr_subscription.id"])
             resource.delete()
             # Delete the Filter
@@ -2465,19 +2469,26 @@ def group_Notify(r, **attr):
         if email == "1":
             # Create the Filter
             filter_id = ftable.insert(pe_id = pe_id,
-                                      controller = "forum",
-                                      function = "forum",
-                                      resource = "pr_forum",
+                                      # Just used by Saved Filters, not Subscription
+                                      #controller = controller,
+                                      #function = function,
+                                      #resource = tablename,
                                       query = filter_string,
                                       )
             # Create the Subscription
-            stable.insert(pe_id = pe_id,
-                          filter_id = filter_id,
-                          notify_on = ["upd"],
-                          frequency = frequency,
-                          # Default:
-                          #method = ["EMAIL"],
-                          )
+            subscription_id = stable.insert(pe_id = pe_id,
+                                            filter_id = filter_id,
+                                            notify_on = ["upd"],
+                                            frequency = frequency,
+                                            # Default:
+                                            #method = ["EMAIL"],
+                                            )
+            # Create the Subscription Resource
+            db.pr_subscription_resource.insert(subscription_id = subscription_id,
+                                               resource = tablename,
+                                               url = "%s/%s" % (controller, function),
+                                               )
+            
 
     output = current.xml.json_message(True, 200, current.T("Notification Settings Updated"))
     current.response.headers["Content-Type"] = "application/json"
@@ -2770,7 +2781,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     auth = current.auth
     user = auth.user
     if user: #and settings.get_cms_bookmarks():
-        # @ToDo: Bulk lookup
+        # @ToDo: Bulk lookup (via list_fields?)
         ltable = s3db.cms_post_user
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)
@@ -2801,6 +2812,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     # Shares
     if user:
+        # @ToDo: Bulk lookup (via list_fields?)
         ptable = s3db.pr_person
         mtable = s3db.pr_forum_membership
         ftable = s3db.pr_forum
@@ -2976,28 +2988,18 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     #if settings.get_cms_comments():
     # Add existing comments (oldest 1st)
-    comment_ids = raw["cms_comment.id"]
+    # - should sort by default by ID which is equivalent to oldest first,
+    #   however they seem to come in in a random order (even if orderby set on the component) so need to be sorted manually here
+    comments = raw["cms_comment.json_dump"]
     ncomments = 0
-    if comment_ids:
-        # Read extra data (can't have this as separate list_fields since come in unsorted & unable to match whole records
-        ctable = s3db.cms_comment
-        if isinstance(comment_ids, list):
-            comments = db(ctable.id.belongs(comment_ids)).select(ctable.body,
-                                                                 ctable.created_on,
-                                                                 ctable.created_by,
-                                                                 # Will sort by default by ID which is equivalent to oldest first
-                                                                 # orderby
-                                                                 )
-        else:
-            comment = db(ctable.id == comment_ids).select(ctable.body,
-                                                          ctable.created_on,
-                                                          ctable.created_by,
-                                                          limitby=(0, 1)
-                                                          ).first()
-            comments = [comment]
+    if comments:
+        if not isinstance(comments, list):
+            comments = [comments]
+        comments = [json.loads(comment) for comment in comments]
+        comments.sort(key=lambda c: c["created_on"])
         for comment in comments:
-            author = s3_auth_user_represent(comment.created_by)
-            cdate = comment.created_on
+            author = s3_auth_user_represent(comment["created_by"])
+            cdate = dateutil.parser.parse(comment["created_on"])
             ctime = cdate.time().strftime("%H:%M")
             cdate = cdate.date().strftime("%b %d, %Y")
             comment = LI(TAG["ASIDE"](P(T("Updated %(date)s @ %(time)s by %(author)s") % \
@@ -3007,7 +3009,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                                      ),
                                         _class="meta",
                                         ),
-                                      DIV(comment.body,
+                                      DIV(comment["body"],
                                           _class="desc",
                                           ),
                                       # @ToDo: Show this if more than x chars?

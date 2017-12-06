@@ -402,8 +402,7 @@ if has_module("msg"):
             Asynchronous task to notify a subscriber about resource
             updates. This task is created by notify_check_subscriptions.
 
-            @param subscription: JSON with the subscription data
-            @param now: lookup date (@todo: remove this)
+            @param resource_id: the pr_subscription_resource record ID
         """
         if user_id:
             auth.s3_impersonate(user_id)

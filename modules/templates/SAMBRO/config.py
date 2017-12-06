@@ -824,18 +824,17 @@ def config(settings):
         """
 
         rows = data["rows"]
-        subject = "%s %s" % (current.deployment_settings.get_system_name_short(),
+        subject = "%s %s" % (settings.get_system_name_short(),
                              T("Alert Notification"))
         if len(rows) == 1:
             # Since if there are more than one row, the single email has content
             # for all rows
-            last_check_time = meta_data["last_check_time"]
-            db = current.db
             atable = current.s3db.cap_alert
-            row_ = db(atable.id == rows[0]["cap_alert.id"]).select(atable.approved_on,
-                                                                   limitby=(0, 1)).first()
+            row_ = current.db(atable.id == rows[0]["cap_alert.id"]).select(atable.approved_on,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
             if row_ and row_.approved_on is not None:
-                if s3_utc(row_.approved_on) >= last_check_time:
+                if s3_utc(row_.approved_on) >= meta_data["last_check_time"]:
                     subject = get_email_subject(rows[0])
 
         return subject
@@ -890,7 +889,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def msg_send_postprocess(message_id, **data):
         """
-            Custom function that link alert_id in cap module to message_id in
+            Custom function that links alert_id in cap module to message_id in
             message module
         """
 
@@ -1246,7 +1245,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def get_email_subject(row, system=True):
         """
-            prepare the subject for Email
+            Prepare the subject for Email
         """
 
         itable = current.s3db.cap_info
@@ -1272,7 +1271,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def get_sms_content(row, ack_id=None, system=True):
         """
-            prepare the content for SMS
+            Prepare the content for SMS
 
             @param row: the row from which the sms will be constructed
             @param ack_id: cap_alert_ack.id for including the acknowledgement link

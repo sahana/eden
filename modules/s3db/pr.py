@@ -5753,11 +5753,14 @@ class S3SavedFilterModel(S3Model):
         self.define_table(tablename,
                           self.super_link("pe_id", "pr_pentity"),
                           Field("title"),
+                          # Controller/Function/Resource/URL are used just for Saved Filters
                           Field("controller"),
                           Field("function"),
-                          Field("resource"),
+                          Field("resource"), # tablename
                           Field("url"),
                           Field("description", "text"),
+                          # Query is used for both Saved Filters and Subscriptions
+                          # Can use a Context to have this work across multiple resources if a simple selector is insufficient
                           Field("query", "text"),
                           s3_comments(),
                           *s3_meta_fields())
@@ -5811,7 +5814,10 @@ class S3SavedFilterModel(S3Model):
 
 # =============================================================================
 class S3SubscriptionModel(S3Model):
-    """ Model for subscriptions """
+    """
+        Model for Subscriptions & hence Notifications
+        http://eden.sahanafoundation.org/wiki/S3/Notifications
+    """
 
     names = ("pr_subscription",
              "pr_subscription_resource",
@@ -5853,6 +5859,8 @@ class S3SubscriptionModel(S3Model):
         FREQUENCY_OPTS = dict(frequency_opts)
 
         # ---------------------------------------------------------------------
+        # Subscription (Settings)
+        #
         tablename = "pr_subscription"
         self.define_table(tablename,
                           # Component not Instance
@@ -5932,13 +5940,17 @@ class S3SubscriptionModel(S3Model):
                             )
 
         # ---------------------------------------------------------------------
+        # Subscription Resources (Subscriptions)
+        # - a single Subscription Setting covers 1+ Resources
+        # - these all share a common Filter, which can be a Context if-required
+        #
         tablename = "pr_subscription_resource"
         self.define_table(tablename,
                           Field("subscription_id", "reference pr_subscription",
                                 ondelete = "CASCADE",
                                 ),
-                          Field("resource"),
-                          Field("url"),
+                          Field("resource"), # tablename
+                          Field("url"), # "%s/%s" % (controller, function)
                           Field("auth_token", length=40,
                                 readable = False,
                                 writable = False,

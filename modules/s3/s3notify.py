@@ -30,21 +30,19 @@
 import datetime
 import json
 import os
+import string
 import sys
 import urlparse
 import urllib2
 from urllib import urlencode
 from uuid import uuid4
-import string
 
 try:
     from cStringIO import StringIO # Faster, where available
 except:
     from StringIO import StringIO
 
-from gluon import *
-from gluon.storage import Storage
-from gluon.tools import fetch
+from gluon import current, TABLE, THEAD, TBODY, TR, TD, TH, XML
 
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from s3utils import s3_str, s3_truncate, s3_unicode
@@ -434,6 +432,7 @@ class S3Notifications(object):
             #_debug(message)
             try:
                 sent = send(pe_id,
+                            # RFC 2822
                             subject=s3_truncate(subject, 78),
                             message=message,
                             contact_method=method,
