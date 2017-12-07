@@ -388,6 +388,10 @@ class S3AssetModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  context = {"incident": "incident.id",
+                             "location": "location_id",
+                             "organisation": "organisation_id",
+                             },
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
@@ -417,6 +421,11 @@ class S3AssetModel(S3Model):
                        asset_human_resource = "asset_id",
                        asset_telephone = "asset_id",
                        asset_telephone_usage = "asset_id",
+                       event_incident = {"link": "event_asset",
+                                         "joinby": "asset_id",
+                                         "key": "incident_id",
+                                         "actuate": "hide",
+                                         },
                        hrm_human_resource = {"link": "asset_human_resource",
                                              "joinby": "asset_id",
                                              "key": "human_resource_id",

@@ -8524,8 +8524,9 @@ class hrm_CV(S3Method):
             if r.representation == "html":
                 response = current.response
                 # Maintain normal rheader for consistency
+                rheader = attr["rheader"]
                 profile_header = TAG[""](H2(response.s3.crud_strings["pr_person"].title_display),
-                                         DIV(hrm_rheader(r), _id="rheader"),
+                                         DIV(rheader(r), _id="rheader"),
                                          )
             else:
                 profile_header = None

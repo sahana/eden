@@ -273,6 +273,26 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
+
+                <!-- Inherit Type & Location from Report -->
+                <xsl:if test="col[@field='Type']!=''">
+                    <reference field="incident_type_id" resource="event_incident_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Type:', col[@field='Type'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+
+                <!-- Link to Location -->
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Location:', col[@field='Address'], 
+                                                                  col[@field='Lat'], 
+                                                                  col[@field='Lon'],
+                                                                  col[@field='L3']
+                                                                  )"/>
+                    </xsl:attribute>
+                </reference>
             </resource>
         </xsl:if>
     </xsl:template>

@@ -140,7 +140,8 @@ def incident():
                         field = atable.budget_entity_id
                         field.readable = field.writable = True
 
-                    s3.crud.submit_button = T("Assign")
+                    #s3.crud.submit_button = T("Assign")
+                    #s3.crud.submit_button = T("Add")
                     s3.crud_labels["DELETE"] = T("Remove")
 
                     # Default Event in the link to that of the Incident
@@ -152,7 +153,9 @@ def incident():
 
             elif r.method not in ("read", "update"):
                 # Create or ListCreate
-                r.table.closed.writable = r.table.closed.readable = False
+                table = r.table
+                table.closed.writable = table.closed.readable = False
+                table.end_date.writable = table.end_date.readable = False
 
             elif r.method == "update":
                 # Can't change details after event activation
