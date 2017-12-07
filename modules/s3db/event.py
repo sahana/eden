@@ -1177,7 +1177,9 @@ class S3IncidentModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Should be able to do everything via the link table
-                            #event_asset = "incident_id",
+                            event_asset = {"name": "incident_asset",
+                                           "joinby": "incident_id",
+                                           },
                             asset_asset = {"link": "event_asset",
                                            "joinby": "incident_id",
                                            "key": "asset_id",
@@ -1221,10 +1223,9 @@ class S3IncidentModel(S3Model):
                             #event_post = "incident_id",
                             event_site = "incident_id",
                             event_sitrep = "incident_id",
-                            # Should be able to do everything via the link table
-                            #event_task = {"name": "incident_task",
-                            #              "joinby": "incident_id",
-                            #              },
+                            event_task = {"name": "incident_task",
+                                          "joinby": "incident_id",
+                                          },
                             project_task = {"link": "event_task",
                                             "joinby": "incident_id",
                                             "key": "task_id",
@@ -3310,6 +3311,7 @@ class S3EventScenarioModel(S3Model):
                             #             "autodelete": False,
                             #             },
                             # Assets
+                            event_scenario_asset = "scenario_id",
                             asset_asset = {"link": "event_scenario_asset",
                                            "joinby": "scenario_id",
                                            "key": "asset_id",
@@ -4327,7 +4329,7 @@ class event_ActionPlan(S3Method):
             widget = dict(label = "Tasks",
                           label_create = "Add Task",
                           type = "datatable",
-                          actions = dt_row_actions("task", tablename),
+                          actions = dt_row_actions("incident_task", tablename),
                           tablename = tablename,
                           context = "incident",
                           create_controller = "event",
@@ -4363,7 +4365,7 @@ class event_ActionPlan(S3Method):
                           #label = "Equipment",
                           #label_create = "Add Equipment",
                           type = "datatable",
-                          actions = dt_row_actions("asset", tablename),
+                          actions = dt_row_actions("incident_asset", tablename),
                           tablename = tablename,
                           context = "incident",
                           create_controller = "event",
@@ -4506,7 +4508,7 @@ class event_ScenarioActionPlan(S3Method):
                           list_fields = ["task_id$name",
                                          #"task_id$status",
                                          #"task_id$date_due",
-                                         "comments",
+                                         "task_id$comments",
                                          ],
                             
                           )
@@ -4539,7 +4541,7 @@ class event_ScenarioActionPlan(S3Method):
                           #label = "Equipment",
                           #label_create = "Add Equipment",
                           type = "datatable",
-                          actions = dt_row_actions("asset", tablename),
+                          actions = dt_row_actions("scenario_asset", tablename),
                           tablename = tablename,
                           context = "scenario",
                           create_controller = "event",
@@ -5539,11 +5541,11 @@ def event_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
-                                   record.name,
-                                   ),
-                                TR(TH("%s: " % table.incident_type_id.label),
+            rheader = DIV(TABLE(TR(TH("%s: " % table.incident_type_id.label),
                                    table.incident_type_id.represent(record.incident_type_id),
+                                   ),
+                                TR(TH("%s: " % table.name.label),
+                                   record.name,
                                    ),
                                 TR(TH("%s: " % table.comments.label),
                                    record.comments,

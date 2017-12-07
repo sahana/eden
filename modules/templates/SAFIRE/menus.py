@@ -20,13 +20,14 @@ class S3MainMenu(default.S3MainMenu):
 
         menu= [MM("Incident Reports", c="event", f="incident_report"),
                MM("Incidents", c="event", f="incident"),
-               MM("Events", c="event", f="event"),
                MM("Scenarios", c="event", f="scenario"),
                MM("more", link=False)(
+                MM("Events", c="event", f="event"),
                 MM("Staff", c="hrm", f="staff"),
                 MM("Assets", c="asset", f="asset"),
                 MM("Organizations", c="org", f="organisation"),
                 MM("Facilities", c="org", f="facility"),
+                MM("Item Catalog", c="supply", f="catalog_item"),
                 ),
                ]
 

@@ -323,6 +323,26 @@ def config(settings):
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
+                incident_type_id = record.incident_type_id
+                # Dropdown of Scenarios to select
+                stable = current.s3db.event_scenario
+                query = (stable.incident_type_id == incident_type_id) & \
+                        (stable.deleted == False)
+                scenarios = current.db(query).select(stable.id,
+                                                     stable.name,
+                                                     )
+                if len(scenarios):
+                    from gluon import SELECT, OPTION
+                    dropdown = SELECT()
+                    dappend = dropdown.append
+                    for s in scenarios:
+                        dappend(OPTION(s.name, _value=s.id))
+                    scenarios = TR(TH("%s: " % T("Scenario")),
+                                   dropdown,
+                                   )
+                else:
+                    scenarios = ""
+
                 if record.exercise:
                     exercise = TH(T("EXERCISE"))
                 else:
@@ -336,6 +356,10 @@ def config(settings):
                                     TR(TH("%s: " % table.name.label),
                                        record.name,
                                        ),
+                                    TR(TH("%s: " % table.incident_type_id.label),
+                                       table.incident_type_id.represent(incident_type_id),
+                                       ),
+                                    scenarios,
                                     TR(TH("%s: " % table.location_id.label),
                                        table.location_id.represent(record.location_id),
                                        ),
@@ -361,11 +385,11 @@ def config(settings):
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
                 table = r.table
-                rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
-                                       record.name,
-                                       ),
-                                    TR(TH("%s: " % table.incident_type_id.label),
+                rheader = DIV(TABLE(TR(TH("%s: " % table.incident_type_id.label),
                                        table.incident_type_id.represent(record.incident_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.name.label),
+                                       record.name,
                                        ),
                                     TR(TH("%s: " % table.comments.label),
                                        record.comments,
