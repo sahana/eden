@@ -160,7 +160,6 @@ def incident():
             elif r.method == "update":
                 # Can't change details after event activation
                 table = r.table
-                #table.scenario_id.writable = False
                 table.exercise.writable = False
                 table.exercise.comment = None
                 table.date.writable = False
@@ -225,6 +224,14 @@ def incident_report():
     s3.prep = prep
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def scenario():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller(rheader = s3db.event_rheader)
 
 # -----------------------------------------------------------------------------
 def sitrep():

@@ -285,12 +285,6 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("scenario", Storage(
-        #    name_nice = "Scenarios",
-        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,
@@ -304,6 +298,8 @@ def config(settings):
         #)),
     ])
 
+    # -------------------------------------------------------------------------
+    # Events
     # -------------------------------------------------------------------------
     def event_rheader(r):
         rheader = None
@@ -322,6 +318,7 @@ def config(settings):
                         #(T("Human Resources"), "human_resource"),
                         #(T("Equipment"), "asset"),
                         (T("Action Plan"), "plan"),
+                        (T("Incident Reports"), "incident_report"),
                         ]
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -349,6 +346,30 @@ def config(settings):
                                        table.date.represent(record.date),
                                        ),
                                     TR(closed),
+                                    ), rheader_tabs)
+
+            elif name == "scenario":
+                # Scenarios Controller
+                tabs = [(T("Scenario Details"), None),
+                        #(T("Tasks"), "task"),
+                        #(T("Human Resources"), "human_resource"),
+                        #(T("Equipment"), "asset"),
+                        (T("Action Plan"), "plan"),
+                        (T("Incident Reports"), "incident_report"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % table.incident_type_id.label),
+                                       table.incident_type_id.represent(record.incident_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments,
+                                       ),
                                     ), rheader_tabs)
 
         return rheader
@@ -435,9 +456,9 @@ def config(settings):
                                                                                )
 
                         from gluon import URL
-                        r.resource.configure(create_next = create_next_url,
-                                             create_onaccept = URL(c="event", f="incident",
-                                                                   args=["[id]", "plan"]),
+                        r.resource.configure(create_next = URL(c="event", f="incident",
+                                                               args=["[id]", "plan"]),
+                                             create_onaccept = create_onaccept,
                                              )
                     
 
@@ -491,21 +512,93 @@ def config(settings):
     settings.customise_event_human_resource_resource = customise_event_human_resource_resource
 
     # -------------------------------------------------------------------------
+    def customise_event_scenario_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            if r.method == "create"and r.http == "POST":
+                from gluon import URL
+                r.resource.configure(create_next = URL(c="event", f="scenario",
+                                                       args=["[id]", "plan"]),
+                                     )
+
+            return True
+        s3.prep = custom_prep
+
+        # No sidebar menu
+        current.menu.options = None
+        attr["rheader"] = event_rheader
+
+        return attr
+
+    settings.customise_event_scenario_controller = customise_event_scenario_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_scenario_asset_resource(r, tablename):
+
+        table = current.s3db.event_scenario_asset
+        table.item_id.label = T("Item Type")
+        table.asset_id.label = T("Specific Item")
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Equipment"),
+            title_display = T("Equipment Details"),
+            title_list = T("Equipment"),
+            title_update = T("Edit Equipment"),
+            label_list_button = T("List Equipment"),
+            label_delete_button = T("Remove Equipment from this incident"),
+            msg_record_created = T("Equipment added"),
+            msg_record_modified = T("Equipment updated"),
+            msg_record_deleted = T("Equipment removed"),
+            msg_list_empty = T("No Equipment currently registered for this incident"))
+
+    settings.customise_event_scenario_asset_resource = customise_event_scenario_asset_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_scenario_human_resource_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Person"),
+            title_display = T("Person Details"),
+            title_list = T("Personnel"),
+            title_update = T("Edit Person"),
+            label_list_button = T("List Personnel"),
+            label_delete_button = T("Remove Person from this incident"),
+            msg_record_created = T("Person added"),
+            msg_record_modified = T("Person updated"),
+            msg_record_deleted = T("Person removed"),
+            msg_list_empty = T("No Persons currently registered for this incident"))
+
+    settings.customise_event_scenario_human_resource_resource = customise_event_scenario_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    # HRM
+    # -------------------------------------------------------------------------
+    settings.hrm.job_title_deploy = True
+
+    # -------------------------------------------------------------------------
     def customise_hrm_job_title_resource(r, tablename):
 
-        if r.controller == "event":
-            current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Position"),
-                title_display = T("Position Details"),
-                title_list = T("Positions"),
-                title_update = T("Edit Position"),
-                label_list_button = T("List Positions"),
-                label_delete_button = T("Remove Position"),
-                msg_record_created = T("Position added"),
-                msg_record_modified = T("Position updated"),
-                msg_record_deleted = T("Position removed"),
-                msg_list_empty = T("No Positions currently registered"))
+        #if r.controller == "event":
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Position"),
+            title_display = T("Position Details"),
+            title_list = T("Positions"),
+            title_update = T("Edit Position"),
+            label_list_button = T("List Positions"),
+            label_delete_button = T("Remove Position"),
+            msg_record_created = T("Position added"),
+            msg_record_modified = T("Position updated"),
+            msg_record_deleted = T("Position removed"),
+            msg_list_empty = T("No Positions currently registered"))
 
-    settings.customise_event_asset_resource = customise_event_asset_resource
+    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
 # END =========================================================================
