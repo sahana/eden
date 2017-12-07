@@ -3320,7 +3320,7 @@ class S3EventScenarioModel(S3Model):
                                       ondelete = "SET NULL",
                                       represent = represent,
                                       requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "event_scenario.id",
+                                                    IS_ONE_OF(current.db, "event_scenario.id",
                                                               represent,
                                                               orderby = "event_scenario.name",
                                                               sort = True,
