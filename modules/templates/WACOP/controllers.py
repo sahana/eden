@@ -1082,9 +1082,10 @@ S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
         else:
             readonly = '''readOnly:true'''
         script = \
-'''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
+'''S3.tagit=function(){$('.s3-tags').tagit({placeholderText:'%s',autocomplete:{source:'%s'},%s})}
 S3.tagit()
-S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
+S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
+                                  URL(c="cms", f="tag",
                                       args="tag_list.json"),
                                   readonly)
         s3.jquery_ready.append(script)
