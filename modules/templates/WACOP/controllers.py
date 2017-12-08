@@ -2054,6 +2054,7 @@ class incident_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         ptable = s3db.cms_post
@@ -2071,7 +2072,12 @@ class incident_Profile(custom_WACOP):
                                                               #calendar = calendar,
                                                               )
 
+        # Map of Incident
+        # @ToDo: Add Resources
+        _map, button = self._map("Incidents", filter="~.id=%s" % incident_id)
+
         output = {"incident_id": incident_id,
+                  "_map": _map,
                   }
 
         # Incident Details
@@ -2114,10 +2120,7 @@ class incident_Profile(custom_WACOP):
             output["lon"] = location.lon or ""
             # @ToDo: BBOX should include the resources too
             bbox = current.gis.get_bounds(features=[location])
-            output["lat_max"] = bbox["lat_max"]
-            output["lat_min"] = bbox["lat_min"]
-            output["lon_max"] = bbox["lon_max"]
-            output["lon_min"] = bbox["lon_min"]
+            s3.js_global.append('''incident_bounds=%s''' % json.dumps(bbox))
         else:
             output["L1"] = ""
             output["L3"] = ""
@@ -2125,11 +2128,13 @@ class incident_Profile(custom_WACOP):
             output["postcode"] = ""
             output["lat"] = ""
             output["lon"] = ""
-            # @ToDo: Defaults for Seattle
-            output["lat_max"] = ""
-            output["lat_min"] = ""
-            output["lon_max"] = ""
-            output["lon_min"] = ""
+            # Defaults for Washington
+            bbox = {"lat_max": "45.5437202453613",
+                    "lat_min": "49.00244140625",
+                    "lon_max": "-116.917427062988",
+                    "lon_min": "-124.836097717285",
+                    }
+            s3.js_global.append('''incident_bounds=%s''' % json.dumps(bbox))
 
         updateable = auth.s3_has_permission("update", itable, record_id=incident_id, c="event", f="incident")
         output["updateable"] = updateable
@@ -2153,7 +2158,7 @@ class incident_Profile(custom_WACOP):
             script = '''incident_tags(%s)''' % incident_id
         else:
             script = '''incident_tags(false)'''
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         user = auth.user
         if user:

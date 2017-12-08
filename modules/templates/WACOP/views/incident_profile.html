@@ -28,10 +28,12 @@
 <div class='row'>
  <div class='small-12 large-6 large-push-6 columns'>
   <h6 class='show-for-sr'>This incident on the map:</h6>
-  <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
+  {{if _map:}}
+    {{=XML(_map)}}
+  {{pass}}
  </div>
  <div class='small-12 large-6 large-pull-6 columns'>
-  <section class='incident-profile'>
+  <section class='incident-profile' id='sizeTo'>
    <header class='status-bar {{if active:}}active{{pass}}'>
     <ul class='status-bar-left'>
      <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
