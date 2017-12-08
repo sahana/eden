@@ -54,12 +54,27 @@
     <div class='incident-data' data-equalizer>
      <div class='incident-location adr'>
       <div class='box' data-equalizer-watch>
+       <span class='meta'>Address:</span>
+      {{if addr_street or L3 or L1 or postcode or lat:}}
+       {{if addr_street:}}
        <div class='street-address'>{{=addr_street}}</div>
+       {{pass}}
        <!-- <div class='extended-address'>Suite 207</div> -->
+       {{if L3:}}
        <span class='locality'>{{=L3}}</span>,
+       {{pass}}
+       {{if L1:}}
        <span class='region'>{{=L1}}</span>
+       {{pass}}
+       {{if postcode:}}
        <span class='postal-code'>{{=postcode}}</span>
+       {{pass}}
+       {{if lat:}}
        <div class='geo-location'>{{=lat}}, {{=lon}}</div>
+       {{pass}}
+      {{else:}}
+       <div class="address-empty">No Address Given</div>
+      {{pass}}
       </div>
      </div>
      <div class='incident-date'>

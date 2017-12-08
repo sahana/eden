@@ -486,12 +486,10 @@ class custom_WACOP(S3CRUD):
                     L3 = row["gis_location.L3"]
                     lat = row["gis_location.lat"]
                     lon = row["gis_location.lon"]
+                    location_full = "%s, %s; %s, %s" % (L3, L1_abrv, lat, lon)
                 else:
                     # No location or national
-                    L1_abrv = ""
-                    L3 = ""
-                    lat = ""
-                    lon = ""
+                    location_full = "No Address Given"
                 alerts.append(DIV(TAG["aside"](TAG["header"](UL(LI(_class="item icon",
                                                                    ),
                                                                 LI(status,
@@ -512,7 +510,7 @@ class custom_WACOP(S3CRUD):
                                                           _class="meta",
                                                           ),
                                                      BR(),
-                                                     SPAN("%s, %s; %s, %s" % (L3, L1_abrv, lat, lon),
+                                                     SPAN(location_full,
                                                           _class="meta-location",
                                                           ),
                                                      ),
@@ -683,7 +681,7 @@ class custom_WACOP(S3CRUD):
                     # No location
                     L1_abrv = ""
                     L3 = ""
-                    addr_street = ""
+                    addr_street = "No Address Given"
                     addr_postcode = ""
                 events.append(DIV(TAG["aside"](TAG["header"](UL(LI(status,
                                                                    _class="item primary status",
@@ -723,7 +721,13 @@ class custom_WACOP(S3CRUD):
                                                        end_date,
                                                        _class="event-date-location",
                                                        ),
-                                                   P(meta,
+                                                   P(meta + " ",
+                                                     A(T("Read More"),
+                                                       _href=URL(c="event", f="event",
+                                                                 args=[record_id, "custom"],
+                                                                 ),
+                                                       _class="more",
+                                                       ),
                                                      _class="meta",
                                                      ),
                                                    DIV(row["event_event.comments"],
@@ -731,15 +735,6 @@ class custom_WACOP(S3CRUD):
                                                        ),
                                                    _class="body",
                                                    ),
-                                               TAG["footer"](P(A(T("Read More"),
-                                                                 _href=URL(c="event", f="event",
-                                                                           args=[record_id, "custom"],
-                                                                           ),
-                                                                 _class="more",
-                                                                 ),
-                                                               ),
-                                                             _class="footer",
-                                                             ),
                                                _class="card-event",
                                                ),
                                   _class="medium-4 columns",
@@ -2489,7 +2484,7 @@ def group_Notify(r, **attr):
                                                resource = tablename,
                                                url = "%s/%s" % (controller, function),
                                                )
-            
+
 
     output = current.xml.json_message(True, 200, current.T("Notification Settings Updated"))
     current.response.headers["Content-Type"] = "application/json"
@@ -2536,7 +2531,7 @@ class person_Dashboard(custom_WACOP):
             if hr:
                 job_title = hrtable.organisation_id.represent(hr.job_title_id)
                 staff_role = XML("%s, %s" % (job_title, organisation))
-                
+
             else:
                 staff_role = organisation
         else:

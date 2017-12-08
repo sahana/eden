@@ -135,8 +135,10 @@ div.dl { border: 0; }
 
 // tagit
 ul.tagit {
-  box-shadow: $input-box-shadow;
-  padding: 5px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
   li.tagit-choice {
     margin-right: 5px;
   }
@@ -144,10 +146,15 @@ ul.tagit {
     padding: 0;
     margin-right:0;
     input[type="text"] {
+      background-color: $input-bg-color;
+      border: 1px solid $input-border-color;
+      box-shadow: $input-box-shadow;
+      border-radius: $input-border-radius;
       height: auto;
       line-height: inherit;
       padding: .25em 4px;
     }
+    input[disabled] { display: none; }
   }
 }
 
@@ -406,6 +413,7 @@ body.ltr .ui-multiselect {
   }
   .card-post-comments {
     margin-left: 0;
+    list-style: none;
   }
   .card-post-comment {
     background-color: $silver;
