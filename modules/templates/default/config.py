@@ -1262,12 +1262,6 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("scenario", Storage(
-        #    name_nice = T("Scenarios"),
-        #    #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         #("vulnerability", Storage(
         #    name_nice = T("Vulnerability"),
         #    #description = "Manages vulnerability indicators",

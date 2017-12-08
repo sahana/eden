@@ -140,24 +140,44 @@ def incident():
                         field = atable.budget_entity_id
                         field.readable = field.writable = True
 
-                    s3.crud.submit_button = T("Assign")
+                    #s3.crud.submit_button = T("Assign")
+                    #s3.crud.submit_button = T("Add")
                     s3.crud_labels["DELETE"] = T("Remove")
 
                     # Default Event in the link to that of the Incident
                     ltable = s3db.table("event_%s" % cname)
                     if ltable and "event_id" in ltable.fields:
-                        f = s3db["event_%s" % cname].event_id
+                        f = ltable.event_id
+                        f.default = r.record.event_id
+                        f.readable = f.writable = False
+
+                elif cname == "incident_asset":
+
+                    atable = s3db.table("budget_allocation")
+                    if atable:
+                        field = atable.budget_entity_id
+                        field.readable = field.writable = True
+
+                    #s3.crud.submit_button = T("Assign")
+                    #s3.crud.submit_button = T("Add")
+                    s3.crud_labels["DELETE"] = T("Remove")
+
+                    # Default Event in the link to that of the Incident
+                    ltable = s3db.table("event_asset")
+                    if ltable and "event_id" in ltable.fields:
+                        f = ltable.event_id
                         f.default = r.record.event_id
                         f.readable = f.writable = False
 
             elif r.method not in ("read", "update"):
                 # Create or ListCreate
-                r.table.closed.writable = r.table.closed.readable = False
+                table = r.table
+                table.closed.writable = table.closed.readable = False
+                table.end_date.writable = table.end_date.readable = False
 
             elif r.method == "update":
                 # Can't change details after event activation
                 table = r.table
-                #table.scenario_id.writable = False
                 table.exercise.writable = False
                 table.exercise.comment = None
                 table.date.writable = False
@@ -222,6 +242,14 @@ def incident_report():
     s3.prep = prep
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def scenario():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller(rheader = s3db.event_rheader)
 
 # -----------------------------------------------------------------------------
 def sitrep():

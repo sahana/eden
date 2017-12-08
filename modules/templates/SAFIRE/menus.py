@@ -19,6 +19,16 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         menu= [MM("Incident Reports", c="event", f="incident_report"),
+               MM("Incidents", c="event", f="incident"),
+               MM("Scenarios", c="event", f="scenario"),
+               MM("more", link=False)(
+                MM("Events", c="event", f="event"),
+                MM("Staff", c="hrm", f="staff"),
+                MM("Assets", c="asset", f="asset"),
+                MM("Organizations", c="org", f="organisation"),
+                MM("Facilities", c="org", f="facility"),
+                MM("Item Catalog", c="supply", f="catalog_item"),
+                ),
                ]
 
         return menu
@@ -38,7 +48,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
             EVENTS = "Events"
             EVENT_TYPES = "Event Types"
 
-        return M()(M("Scenarios", c="scenario", f="scenario")(
+        return M()(M("Scenarios", c="event", f="scenario")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                    ),

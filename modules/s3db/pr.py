@@ -921,6 +921,10 @@ class PRPersonModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
+                       context = {"incident": "incident.id",
+                                  "location": "location_id",
+                                  "organisation": "human_resource.organisation_id",
+                                  },
                        crud_form = crud_form,
                        deduplicate = self.person_duplicate,
                        filter_widgets = filter_widgets,
@@ -1067,6 +1071,13 @@ class PRPersonModel(S3Model):
                                         "joinby": "person_id",
                                         },
                             dvr_residence_status = "person_id",
+
+                            event_incident = {"link": "event_human_resource",
+                                              "joinby": "person_id",
+                                              "key": "incident_id",
+                                              "actuate": "hide",
+                                              },
+
                             # Evacuee Registry
                             evr_case = {"joinby": "person_id",
                                         "multiple": False,

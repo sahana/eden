@@ -158,13 +158,13 @@ def config(settings):
             restricted = False,
             module_type = None  # No Menu
         )),
-        #("sync", Storage(
-        #    name_nice = T("Synchronization"),
-        #    #description = "Synchronization",
-        #    restricted = True,
-        #    access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-        #    module_type = None  # This item is handled separately for the menu
-        #)),
+        ("sync", Storage(
+            name_nice = "Synchronization",
+            #description = "Synchronization",
+            restricted = True,
+            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+            module_type = None  # This item is handled separately for the menu
+        )),
         #("tour", Storage(
         #    name_nice = T("Guided Tour Functionality"),
         #    module_type = None,
@@ -255,12 +255,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("project", Storage(
-        #    name_nice = T("Projects"),
-        #    #description = "Tracking of Projects, Activities and Tasks",
-        #    restricted = True,
-        #    module_type = 2
-        #)),
+        ("project", Storage(
+            name_nice = "Tasks",
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 2
+        )),
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -285,12 +285,6 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        ("scenario", Storage(
-            name_nice = "Scenarios",
-            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-            restricted = True,
-            module_type = 10,
-        )),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,
@@ -303,6 +297,106 @@ def config(settings):
         #    module_type = None,
         #)),
     ])
+
+    # -------------------------------------------------------------------------
+    # Events
+    # -------------------------------------------------------------------------
+    def event_rheader(r):
+        rheader = None
+
+        record = r.record
+        if record and r.representation == "html":
+
+            from gluon import DIV, TABLE, TR, TH
+            from s3 import s3_rheader_tabs
+
+            name = r.name
+            if name == "incident":
+                # Incident Controller
+                tabs = [(T("Incident Details"), None),
+                        #(T("Tasks"), "task"),
+                        #(T("Human Resources"), "human_resource"),
+                        #(T("Equipment"), "asset"),
+                        (T("Action Plan"), "plan"),
+                        (T("Incident Reports"), "incident_report"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                incident_type_id = record.incident_type_id
+                # Dropdown of Scenarios to select
+                stable = current.s3db.event_scenario
+                query = (stable.incident_type_id == incident_type_id) & \
+                        (stable.deleted == False)
+                scenarios = current.db(query).select(stable.id,
+                                                     stable.name,
+                                                     )
+                if len(scenarios):
+                    from gluon import SELECT, OPTION
+                    dropdown = SELECT()
+                    dappend = dropdown.append
+                    for s in scenarios:
+                        dappend(OPTION(s.name, _value=s.id))
+                    scenarios = TR(TH("%s: " % T("Scenario")),
+                                   dropdown,
+                                   )
+                else:
+                    scenarios = ""
+
+                if record.exercise:
+                    exercise = TH(T("EXERCISE"))
+                else:
+                    exercise = TH()
+                if record.closed:
+                    closed = TH(T("CLOSED"))
+                else:
+                    closed = TH()
+                table = r.table
+                rheader = DIV(TABLE(TR(exercise),
+                                    TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % table.incident_type_id.label),
+                                       table.incident_type_id.represent(incident_type_id),
+                                       ),
+                                    scenarios,
+                                    TR(TH("%s: " % table.location_id.label),
+                                       table.location_id.represent(record.location_id),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments,
+                                       ),
+                                    TR(TH("%s: " % table.date.label),
+                                       table.date.represent(record.date),
+                                       ),
+                                    TR(closed),
+                                    ), rheader_tabs)
+
+            elif name == "scenario":
+                # Scenarios Controller
+                tabs = [(T("Scenario Details"), None),
+                        #(T("Tasks"), "task"),
+                        #(T("Human Resources"), "human_resource"),
+                        #(T("Equipment"), "asset"),
+                        (T("Action Plan"), "plan"),
+                        (T("Incident Reports"), "incident_report"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.incident_type_id.label),
+                                       table.incident_type_id.represent(record.incident_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments,
+                                       ),
+                                    ), rheader_tabs)
+
+        return rheader
 
     # -------------------------------------------------------------------------
     def customise_event_incident_report_controller(**attr):
@@ -367,26 +461,168 @@ def config(settings):
             if r.method == "create":
                 incident_report_id = r.get_vars.get("incident_report_id")
                 if incident_report_id:
-                    from s3 import s3_truncate
-                    rtable = current.s3db.event_incident_report
-                    incident_report = current.db(rtable.id == incident_report_id).select(rtable.name,
-                                                                                         rtable.incident_type_id,
-                                                                                         rtable.location_id,
-                                                                                         limitby = (0, 1),
-                                                                                         ).first()
-                    table = r.table
-                    table.name.default = s3_truncate(incident_report.name, 64)
-                    table.incident_type_id.default = incident_report.incident_type_id
-                    table.location_id.default = incident_report.location_id
+                    if r.http == "GET":
+                        from s3 import s3_truncate
+                        rtable = current.s3db.event_incident_report
+                        incident_report = current.db(rtable.id == incident_report_id).select(rtable.name,
+                                                                                             rtable.incident_type_id,
+                                                                                             rtable.location_id,
+                                                                                             limitby = (0, 1),
+                                                                                             ).first()
+                        table = r.table
+                        table.name.default = s3_truncate(incident_report.name, 64)
+                        table.incident_type_id.default = incident_report.incident_type_id
+                        table.location_id.default = incident_report.location_id
+                    elif r.http == "POST":
+                        def create_onaccept(form):
+                            current.s3db.event_incident_report_incident.insert(incident_id = form.vars.id,
+                                                                               incident_report_id = incident_report_id,
+                                                                               )
+
+                        from gluon import URL
+                        r.resource.configure(create_next = URL(c="event", f="incident",
+                                                               args=["[id]", "plan"]),
+                                             create_onaccept = create_onaccept,
+                                             )
+                    
 
             return True
         s3.prep = custom_prep
 
         # No sidebar menu
         current.menu.options = None
+        attr["rheader"] = event_rheader
 
         return attr
 
     settings.customise_event_incident_controller = customise_event_incident_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_asset_resource(r, tablename):
+
+        table = current.s3db.event_asset
+        table.item_id.label = T("Item Type")
+        table.asset_id.label = T("Specific Item")
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Equipment"),
+            title_display = T("Equipment Details"),
+            title_list = T("Equipment"),
+            title_update = T("Edit Equipment"),
+            label_list_button = T("List Equipment"),
+            label_delete_button = T("Remove Equipment from this incident"),
+            msg_record_created = T("Equipment added"),
+            msg_record_modified = T("Equipment updated"),
+            msg_record_deleted = T("Equipment removed"),
+            msg_list_empty = T("No Equipment currently registered for this incident"))
+
+    settings.customise_event_asset_resource = customise_event_asset_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_human_resource_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Person"),
+            title_display = T("Person Details"),
+            title_list = T("Personnel"),
+            title_update = T("Edit Person"),
+            label_list_button = T("List Personnel"),
+            label_delete_button = T("Remove Person from this incident"),
+            msg_record_created = T("Person added"),
+            msg_record_modified = T("Person updated"),
+            msg_record_deleted = T("Person removed"),
+            msg_list_empty = T("No Persons currently registered for this incident"))
+
+    settings.customise_event_human_resource_resource = customise_event_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_scenario_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard postp
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            if r.method == "create"and r.http == "POST":
+                from gluon import URL
+                r.resource.configure(create_next = URL(c="event", f="scenario",
+                                                       args=["[id]", "plan"]),
+                                     )
+
+            return True
+        s3.prep = custom_prep
+
+        # No sidebar menu
+        current.menu.options = None
+        attr["rheader"] = event_rheader
+
+        return attr
+
+    settings.customise_event_scenario_controller = customise_event_scenario_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_scenario_asset_resource(r, tablename):
+
+        table = current.s3db.event_scenario_asset
+        table.item_id.label = T("Item Type")
+        table.asset_id.label = T("Specific Item")
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Equipment"),
+            title_display = T("Equipment Details"),
+            title_list = T("Equipment"),
+            title_update = T("Edit Equipment"),
+            label_list_button = T("List Equipment"),
+            label_delete_button = T("Remove Equipment from this incident"),
+            msg_record_created = T("Equipment added"),
+            msg_record_modified = T("Equipment updated"),
+            msg_record_deleted = T("Equipment removed"),
+            msg_list_empty = T("No Equipment currently registered for this incident"))
+
+    settings.customise_event_scenario_asset_resource = customise_event_scenario_asset_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_scenario_human_resource_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Person"),
+            title_display = T("Person Details"),
+            title_list = T("Personnel"),
+            title_update = T("Edit Person"),
+            label_list_button = T("List Personnel"),
+            label_delete_button = T("Remove Person from this incident"),
+            msg_record_created = T("Person added"),
+            msg_record_modified = T("Person updated"),
+            msg_record_deleted = T("Person removed"),
+            msg_list_empty = T("No Persons currently registered for this incident"))
+
+    settings.customise_event_scenario_human_resource_resource = customise_event_scenario_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    # HRM
+    # -------------------------------------------------------------------------
+    settings.hrm.job_title_deploy = True
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_job_title_resource(r, tablename):
+
+        #if r.controller == "event":
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Position"),
+            title_display = T("Position Details"),
+            title_list = T("Positions"),
+            title_update = T("Edit Position"),
+            label_list_button = T("List Positions"),
+            label_delete_button = T("Remove Position"),
+            msg_record_created = T("Position added"),
+            msg_record_modified = T("Position updated"),
+            msg_record_deleted = T("Position removed"),
+            msg_list_empty = T("No Positions currently registered"))
+
+    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
 # END =========================================================================
