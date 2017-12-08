@@ -489,7 +489,7 @@ class custom_WACOP(S3CRUD):
                     location_full = "%s, %s; %s, %s" % (L3, L1_abrv, lat, lon)
                 else:
                     # No location or national
-                    location_full = "No Address Given"
+                    location_full = T("No Address Given")
                 alerts.append(DIV(TAG["aside"](TAG["header"](UL(LI(_class="item icon",
                                                                    ),
                                                                 LI(status,
@@ -681,7 +681,7 @@ class custom_WACOP(S3CRUD):
                     # No location
                     L1_abrv = ""
                     L3 = ""
-                    addr_street = "No Address Given"
+                    addr_street = T("No Address Given")
                     addr_postcode = ""
                 events.append(DIV(TAG["aside"](TAG["header"](UL(LI(status,
                                                                    _class="item primary status",
@@ -1375,18 +1375,18 @@ class incident_Browse(custom_WACOP):
         T = current.T
 
         # Alerts Cards
-        alerts = self._alerts_html()
+        #alerts = self._alerts_html()
 
         # Events Cards
-        events = self._events_html()
+        #events = self._events_html()
 
         # Map of Incidents
         map_id = "incident-gis_location_the_geom-map-filter-map"
         _map, button = self._map("Incidents", map_id=map_id, filter=True)
 
         # Output
-        output = {"alerts": alerts,
-                  "events": events,
+        output = {#"alerts": alerts,
+                  #"events": events,
                   "_map": _map,
                   }
 
@@ -1513,18 +1513,18 @@ class resource_Browse(custom_WACOP):
         T = current.T
 
         # Alerts Cards
-        alerts = self._alerts_html()
+        #alerts = self._alerts_html()
 
         # Events Cards
-        events = self._events_html()
+        #events = self._events_html()
 
         # Map of Resources
         map_id = "group-gis_location_the_geom-map-filter-map"
         _map, button = self._map("Resources", map_id=map_id, filter=True)
 
         # Output
-        output = {"alerts": alerts,
-                  "events": events,
+        output = {#"alerts": alerts,
+                  #"events": events,
                   "_map": _map,
                   }
 
