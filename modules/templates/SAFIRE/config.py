@@ -333,13 +333,20 @@ def config(settings):
                                                      )
                 if len(scenarios):
                     from gluon import SELECT, OPTION
-                    dropdown = SELECT()
+                    dropdown = SELECT(_id="scenarios")
+                    dropdown["_data-incident_id"] = r.id
                     dappend = dropdown.append
+                    dappend(OPTION(T("Select Scenario")))
                     for s in scenarios:
                         dappend(OPTION(s.name, _value=s.id))
                     scenarios = TR(TH("%s: " % T("Scenario")),
                                    dropdown,
                                    )
+                    s3 = current.response.s3
+                    script = "/%s/static/themes/SAFIRE/js/incident_profile.js" % r.application
+                    if script not in s3.scripts:
+                        s3.scripts.append(script)
+                        s3.js_global.append('''i18n.scenarioConfirm="%s"''' % T("Populate Incident with Tasks, Positions and Equipment from the Scenario?"))
                 else:
                     scenarios = ""
 
@@ -358,6 +365,9 @@ def config(settings):
                                        ),
                                     TR(TH("%s: " % table.incident_type_id.label),
                                        table.incident_type_id.represent(incident_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.person_id.label),
+                                       table.person_id.represent(record.person_id),
                                        ),
                                     scenarios,
                                     TR(TH("%s: " % table.location_id.label),
@@ -449,7 +459,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_incident_controller(**attr):
 
+        s3db = current.s3db
         s3 = current.response.s3
+
+        # Load default model, so we can over-ride
+        s3db.event_incident
+
+        from gluon import URL
+        s3db.configure("event_incident",
+                       create_next = URL(c="event", f="incident",
+                                         args=["[id]", "plan"]),
+                       )
 
         # Custom prep
         standard_prep = s3.prep
@@ -463,7 +483,7 @@ def config(settings):
                 if incident_report_id:
                     if r.http == "GET":
                         from s3 import s3_truncate
-                        rtable = current.s3db.event_incident_report
+                        rtable = s3db.event_incident_report
                         incident_report = current.db(rtable.id == incident_report_id).select(rtable.name,
                                                                                              rtable.incident_type_id,
                                                                                              rtable.location_id,
@@ -473,18 +493,15 @@ def config(settings):
                         table.name.default = s3_truncate(incident_report.name, 64)
                         table.incident_type_id.default = incident_report.incident_type_id
                         table.location_id.default = incident_report.location_id
+
                     elif r.http == "POST":
                         def create_onaccept(form):
-                            current.s3db.event_incident_report_incident.insert(incident_id = form.vars.id,
-                                                                               incident_report_id = incident_report_id,
-                                                                               )
+                            s3db.event_incident_report_incident.insert(incident_id = form.vars.id,
+                                                                       incident_report_id = incident_report_id,
+                                                                       )
 
-                        from gluon import URL
-                        r.resource.configure(create_next = URL(c="event", f="incident",
-                                                               args=["[id]", "plan"]),
-                                             create_onaccept = create_onaccept,
+                        r.resource.configure(create_onaccept = create_onaccept,
                                              )
-                    
 
             return True
         s3.prep = custom_prep
@@ -503,6 +520,13 @@ def config(settings):
         table = current.s3db.event_asset
         table.item_id.label = T("Item Type")
         table.asset_id.label = T("Specific Item")
+        # DateTime
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_UTC_DATETIME, S3CalendarWidget, S3DateTime
+        for f in (table.start_date, table.end_date):
+            f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
+            f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+            f.widget = S3CalendarWidget(timepicker = True)
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Equipment"),
@@ -520,6 +544,15 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_event_human_resource_resource(r, tablename):
+
+        table = current.s3db.event_human_resource
+        # DateTime
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_UTC_DATETIME, S3CalendarWidget, S3DateTime
+        for f in (table.start_date, table.end_date):
+            f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
+            f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+            f.widget = S3CalendarWidget(timepicker = True)
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Person"),

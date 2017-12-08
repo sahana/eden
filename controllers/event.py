@@ -146,10 +146,16 @@ def incident():
 
                     # Default Event in the link to that of the Incident
                     ltable = s3db.table("event_%s" % cname)
-                    if ltable and "event_id" in ltable.fields:
+                    if ltable:
                         f = ltable.event_id
                         f.default = r.record.event_id
                         f.readable = f.writable = False
+                        if cname in ("asset", "human_resource"):
+                            # DateTime
+                            for f in (ltable.start_date, ltable.end_date):
+                                f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
+                                f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+                                f.widget = S3CalendarWidget(timepicker = True)
 
                 elif cname == "incident_asset":
 
@@ -164,10 +170,14 @@ def incident():
 
                     # Default Event in the link to that of the Incident
                     ltable = s3db.table("event_asset")
-                    if ltable and "event_id" in ltable.fields:
-                        f = ltable.event_id
-                        f.default = r.record.event_id
-                        f.readable = f.writable = False
+                    f = ltable.event_id
+                    f.default = r.record.event_id
+                    f.readable = f.writable = False
+                    # DateTime
+                    for f in (ltable.start_date, ltable.end_date):
+                        f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
+                        f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+                        f.widget = S3CalendarWidget(timepicker = True)
 
             elif r.method not in ("read", "update"):
                 # Create or ListCreate

@@ -58,6 +58,7 @@ __all__ = ("S3EventModel",
            "S3EventTaskModel",
            #"event_ActionPlan",
            #"event_ScenarioActionPlan",
+           #"event_ApplyScenario",
            #"event_IncidentAssignMethod",
            "event_notification_dispatcher",
            "event_event_list_layout",
@@ -1049,6 +1050,8 @@ class S3IncidentModel(S3Model):
                                                    readable = False,
                                                    writable = False,
                                                    ),
+                          self.pr_person_id(label = T("Incident Commander"),
+                                            ),
                           self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
@@ -1279,6 +1282,10 @@ class S3IncidentModel(S3Model):
                    action = event_ActionPlan)
 
         set_method("event", "incident",
+                   method = "scenario",
+                   action = event_ApplyScenario)
+
+        set_method("event", "incident",
                    method = "assign",
                    action = self.pr_AssignMethod(component="human_resource"))
 
@@ -1312,102 +1319,118 @@ class S3IncidentModel(S3Model):
         """
 
         form_vars = form.vars
+        person_id = form_vars.get("person_id")
 
-        closed = form_vars.get("closed", False)
+        if person_id:
+            # Add the Incident Commander as an event_human_resource
+            incident_id = form_vars.get("id")
+            data = {"incident_id": incident_id,
+                    "person_id": person_id,
+                    "start_date": form_vars.get("date"),
+                    }
+            s3db = current.s3db
+            jtable = s3db.hrm_job_title
+            job_title = current.db(jtable.name == "Incident Commander").select(jtable.id,
+                                                                               limitby = (0, 1)
+                                                                               ).first()
+            if job_title:
+                data["job_title_id"] = job_title.id
+            s3db.event_human_resource.insert(**data)
 
-        incident = form_vars.get("id")
-        if incident and not closed:
-            # Set the Incident in the session
-            current.session.s3.incident = incident
-        event = form_vars.get("event_id")
-        if event and not closed:
-            # Set the Event in the session
-            current.session.s3.event = event
+        #closed = form_vars.get("closed", False)
 
-        s3db = current.s3db
-        db = current.db
-        ctable = s3db.gis_config
-        mapconfig = None
-        scenario = form_vars.get("scenario_id")
-        if scenario:
-            # We have been instantiated from a Scenario, so
-            # copy all resources from the Scenario to the Incident
+        #if incident_id and not closed:
+        #    # Set the Incident in the session
+        #    current.session.s3.incident = incident_id
+        #event = form_vars.get("event_id")
+        #if event and not closed:
+        #    # Set the Event in the session
+        #    current.session.s3.event = event
 
-            # Read the source resource tables
-            table = s3db.event_scenario
-            otable = s3db.event_scenario_organisation
-            stable = s3db.event_scenario_site
-            mtable = s3db.event_scenario_config
-            query = (table.id == scenario)
-            squery = query & (stable.scenario_id == table.id)
-            mquery = query & (mtable.scenario_id == table.id) & \
-                             (ctable.id == mtable.config_id)
-            facilities = db(squery).select(stable.site_id)
-            mapconfig = db(mquery).select(ctable.ALL).first()
+        #s3db = current.s3db
+        #db = current.db
+        #ctable = s3db.gis_config
+        #mapconfig = None
+        #scenario = form_vars.get("scenario_id")
+        #if scenario:
+        #    # We have been instantiated from a Scenario, so
+        #    # copy all resources from the Scenario to the Incident
 
-            # Write them to their respective destination tables
-            stable = s3db.event_site
-            for row in facilities:
-                stable.insert(incident_id=incident,
-                              site_id=row.site_id)
+        #    # Read the source resource tables
+        #    table = s3db.event_scenario
+        #    otable = s3db.event_scenario_organisation
+        #    stable = s3db.event_scenario_site
+        #    mtable = s3db.event_scenario_config
+        #    query = (table.id == scenario)
+        #    squery = query & (stable.scenario_id == table.id)
+        #    mquery = query & (mtable.scenario_id == table.id) & \
+        #                     (ctable.id == mtable.config_id)
+        #    facilities = db(squery).select(stable.site_id)
+        #    mapconfig = db(mquery).select(ctable.ALL).first()
 
-            # Modules which can be disabled
-            htable = s3db.table("event_scenario_human_resource", None)
-            if htable:
-                hquery = query & (htable.scenario_id == table.id)
-                hrms = db(hquery).select(htable.job_title_id)
-                htable = s3db.event_human_resource
-                for row in hrms:
-                    htable.insert(incident_id=incident,
-                                  job_title_id=row.job_title_id)
+        #    # Write them to their respective destination tables
+        #    stable = s3db.event_site
+        #    for row in facilities:
+        #        stable.insert(incident_id=incident_id,
+        #                      site_id=row.site_id)
 
-            atable = s3db.table("event_scenario_asset", None)
-            if atable:
-                aquery = query & (atable.scenario_id == table.id)
-                assets = db(aquery).select(atable.asset_id)
-                atable = s3db.event_asset
-                for row in assets:
-                    atable.insert(incident_id=incident,
-                                  asset_id=row.asset_id)
+        #    # Modules which can be disabled
+        #    htable = s3db.table("event_scenario_human_resource", None)
+        #    if htable:
+        #        hquery = query & (htable.scenario_id == table.id)
+        #        hrms = db(hquery).select(htable.job_title_id)
+        #        htable = s3db.event_human_resource
+        #        for row in hrms:
+        #            htable.insert(incident_id=incident_id,
+        #                          job_title_id=row.job_title_id)
 
-            ttable = s3db.table("event_scenario_task", None)
-            if ttable:
-                tquery = query & (ttable.scenario_id == table.id)
-                tasks = db(tquery).select(ttable.task_id)
-                ttable = s3db.event_task
-                for row in tasks:
-                    ttable.insert(incident_id=incident,
-                                  task_id=row.task_id)
+        #    atable = s3db.table("event_scenario_asset", None)
+        #    if atable:
+        #        aquery = query & (atable.scenario_id == table.id)
+        #        assets = db(aquery).select(atable.asset_id)
+        #        atable = s3db.event_asset
+        #        for row in assets:
+        #            atable.insert(incident_id=incident_id,
+        #                          asset_id=row.asset_id)
 
-        if mapconfig:
-            # Incident's Map Config is a copy of the Default / Scenario's
-            # so that it can be changed within the Incident without
-            # contaminating the base one
-            del mapconfig["id"]
-            del mapconfig["uuid"]
-            mapconfig["name"] = form_vars.name
-            config = ctable.insert(**mapconfig.as_dict())
-            mtable = s3db.event_config
-            mtable.insert(incident_id = incident,
-                          config_id = config,
-                          )
-            # Activate this config
-            if not closed:
-                current.gis.set_config(config)
-            # @ToDo: Add to GIS Menu? Separate Menu?
+        #    ttable = s3db.table("event_scenario_task", None)
+        #    if ttable:
+        #        tquery = query & (ttable.scenario_id == table.id)
+        #        tasks = db(tquery).select(ttable.task_id)
+        #        ttable = s3db.event_task
+        #        for row in tasks:
+        #            ttable.insert(incident_id=incident_id,
+        #                          task_id=row.task_id)
 
-        else:
-            # We have been created without a Scenario or from a Scenario without a Map Config
-            # Create a new Map Config
-            config = ctable.insert(name = form_vars.name)
-            mtable = s3db.event_config
-            mtable.insert(incident_id=incident,
-                          config_id=config)
-            # Activate this config
-            if not closed:
-                current.gis.set_config(config)
-            # Viewport can be saved from the Map's toolbar
-            # @ToDo: Add to GIS Menu? Separate Menu?
+        #if mapconfig:
+        #    # Incident's Map Config is a copy of the Default / Scenario's
+        #    # so that it can be changed within the Incident without
+        #    # contaminating the base one
+        #    del mapconfig["id"]
+        #    del mapconfig["uuid"]
+        #    mapconfig["name"] = form_vars.name
+        #    config = ctable.insert(**mapconfig.as_dict())
+        #    mtable = s3db.event_config
+        #    mtable.insert(incident_id = incident_id,
+        #                  config_id = config,
+        #                  )
+        #    # Activate this config
+        #    if not closed:
+        #        current.gis.set_config(config)
+        #    # @ToDo: Add to GIS Menu? Separate Menu?
+
+        #else:
+        #    # We have been created without a Scenario or from a Scenario without a Map Config
+        #    # Create a new Map Config
+        #    config = ctable.insert(name = form_vars.name)
+        #    mtable = s3db.event_config
+        #    mtable.insert(incident_id=incident_id,
+        #                  config_id=config)
+        #    # Activate this config
+        #    if not closed:
+        #        current.gis.set_config(config)
+        #    # Viewport can be saved from the Map's toolbar
+        #    # @ToDo: Add to GIS Menu? Separate Menu?
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1422,24 +1445,75 @@ class S3IncidentModel(S3Model):
         s3db = current.s3db
 
         form_vars = form.vars
-        incident_id = form_vars.id
+        incident_id = form_vars.get("id")
 
-        closed = form_vars.get("closed")
+        person_id = form_vars.get("person_id", False)
+        closed = form_vars.get("closed", False)
         event_id = form_vars.get("event_id", False)
-        if event_id is False or closed is None:
+        if person_id is False or event_id is False or closed is False:
             # Read the record
             itable = s3db.event_incident
             record = db(itable.id == incident_id).select(itable.closed,
                                                          itable.event_id,
+                                                         itable.person_id,
                                                          limitby=(0,1)
                                                          ).first()
             closed = record.closed
             event_id = record.event_id
+            person_id = record.person_id
+
+        jtable = s3db.hrm_job_title
+        job_title = db(jtable.name == "Incident Commander").select(jtable.id,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+
+        if job_title:
+            job_title_id = job_title.id
+            htable = s3db.event_human_resource
+            if person_id:
+                # Ensure the Incident Commander is current in event_human_resource
+                query = (htable.deleted == False) & \
+                        (htable.job_title_id == job_title_id) & \
+                        (htable.person_id != None) & \
+                        (htable.end_date == None)
+                hr = db(query).select(htable.id,
+                                      htable.person_id,
+                                      limitby=(0, 1)
+                                      ).first()
+                if hr:
+                    if hr.person_id == person_id:
+                        # All good :)
+                        pass
+                    else:
+                        now = current.request.utcnow
+                        hr.update_record(end_date = now)
+                        htable.insert(incident_id = incident_id,
+                                      job_title_id = job_title_id,
+                                      person_id = person_id,
+                                      start_date = now,
+                                      )
+                else:
+                    htable.insert(incident_id = incident_id,
+                                  job_title_id = job_title_id,
+                                  person_id = person_id,
+                                  start_date = current.request.utcnow,
+                                  )
+            else:
+                # Ensure no Incident Commander is current in event_human_resource
+                query = (htable.deleted == False) & \
+                        (htable.job_title_id == job_title_id) & \
+                        (htable.person_id != None) & \
+                        (htable.end_date == None)
+                hr = db(query).select(htable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+                if hr:
+                    hr.update_record(end_date = current.request.utcnow)
 
         if event_id:
             # Cascade to all relevant components
-            for tablename in (#"event_asset",
-                              #"event_human_resource",
+            for tablename in ("event_asset",
+                              "event_human_resource",
                               #"event_resource",
                               #"event_site",
                               #"event_incident_report",
@@ -1459,9 +1533,9 @@ class S3IncidentModel(S3Model):
 
         if closed:
             # Ensure this incident isn't active in the session
-            s3 = current.session.s3
-            if s3.incident == incident_id:
-                s3.incident = None
+            #s3 = current.session.s3
+            #if s3.incident == incident_id:
+            #    s3.incident = None
 
             # @ToDo: Hide the Incident from the Map menu
             #gis = current.gis
@@ -3255,6 +3329,7 @@ class S3EventScenarioModel(S3Model):
     """
 
     names = ("event_scenario",
+             "event_scenario_id",
              )
 
     def model(self):
@@ -3591,6 +3666,7 @@ class S3EventSiteModel(S3Model):
 
         T = current.T
         super_link = self.super_link
+        settings = current.deployment_settings
 
         status_opts = {1: T("Alerted"),
                        2: T("Standing By"),
@@ -3599,12 +3675,12 @@ class S3EventSiteModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
-        SITE_LABEL = current.deployment_settings.get_org_site_label()
+        SITE_LABEL = settings.get_org_site_label()
 
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
+        if settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
         # Facilities
@@ -3613,8 +3689,8 @@ class S3EventSiteModel(S3Model):
         self.define_table(tablename,
                           # Instance table
                           super_link("cost_item_id", "budget_cost_item"),
-                          #self.event_event_id(ondelete = ondelete,
-                          #                    ),
+                          self.event_event_id(ondelete = ondelete,
+                                              ),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE",
                                                  ),
@@ -3684,8 +3760,8 @@ class S3EventSiteModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
-                       #onaccept = lambda form: \
-                       #         set_event_from_incident(form, "event_site"),
+                       onaccept = lambda form: \
+                                set_event_from_incident(form, "event_site"),
                        super_entity = "budget_cost_item",
                        )
 
@@ -4336,7 +4412,8 @@ class event_ActionPlan(S3Method):
                           create_function = "incident",
                           create_component = "task",
                           #pagesize = None, # all records
-                          list_fields = ["task_id$name",
+                          list_fields = ["task_id$priority",
+                                         "task_id$name",
                                          "task_id$status",
                                          "task_id$date_due",
                                          ],
@@ -4505,7 +4582,8 @@ class event_ScenarioActionPlan(S3Method):
                           create_function = "scenario",
                           create_component = "task",
                           #pagesize = None, # all records
-                          list_fields = ["task_id$name",
+                          list_fields = ["task_id$priority",
+                                         "task_id$name",
                                          #"task_id$status",
                                          #"task_id$date_due",
                                          "task_id$comments",
@@ -4585,6 +4663,105 @@ class event_ScenarioActionPlan(S3Method):
 
         else:
             raise HTTP(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class event_ApplyScenario(S3Method):
+    """
+        Populate an Incident with a Scenario's:
+            * Tasks
+            * People
+            * Equipment
+    """
+
+    def __init__(self, form=None):
+        """
+            Constructor
+
+            @param form: widget config to inject at the top of the page,
+                         or a callable to produce such a widget config
+        """
+
+        self.form = form
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.http != "POST":
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        incident_id = r.id
+        scenario_id = r.post_vars.get("scenario_id")
+        if not incident_id or not scenario_id:
+            raise HTTP(405, current.ERROR.BAD_METHOD)
+
+        db = current.db
+        s3db = current.s3db
+
+        # Tasks
+        ttable = s3db.project_task
+        sltable = s3db.event_scenario_task
+        query = (sltable.scenario_id == scenario_id) & \
+                (sltable.task_id == ttable.id)
+        tasks = db(query).select(ttable.name,
+                                 ttable.priority,
+                                 ttable.comments,
+                                 )
+        if len(tasks):
+            iltable = s3db.event_task
+            tinsert = ttable.insert
+            linsert = iltable.insert
+            for t in tasks:
+                task_id = tinsert(name = t.name,
+                                  priority = t.priority,
+                                  comments = t.comments,
+                                  )
+                linsert(incident_id = incident_id,
+                        task_id = task_id,
+                        )
+
+        # Human Resources
+        sltable = s3db.event_scenario_human_resource
+        query = (sltable.scenario_id == scenario_id)
+        hrs = db(query).select(sltable.job_title_id,
+                               sltable.person_id,
+                               sltable.comments,
+                               )
+        if len(hrs):
+            iltable = s3db.event_human_resource
+            linsert = iltable.insert
+            for h in hrs:
+                linsert(incident_id = incident_id,
+                        job_title_id = h.job_title_id,
+                        person_id = h.person_id,
+                        comments = h.comments,
+                        )
+
+        # Equipment
+        sltable = s3db.event_scenario_asset
+        query = (sltable.scenario_id == scenario_id)
+        assets = db(query).select(sltable.item_id,
+                                  sltable.asset_id,
+                                  sltable.comments,
+                                  )
+        if len(assets):
+            iltable = s3db.event_asset
+            linsert = iltable.insert
+            for a in assets:
+                linsert(incident_id = incident_id,
+                        item_id = a.item_id,
+                        asset_id = a.asset_id,
+                        comments = a.comments,
+                        )
+
+        output = current.xml.json_message(True, 200, current.T("Scenario Applied"))
+        current.response.headers["Content-Type"] = "application/json"
+        return output
 
 # =============================================================================
 class event_IncidentAssignMethod(S3Method):

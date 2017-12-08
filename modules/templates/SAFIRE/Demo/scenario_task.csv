@@ -1,2 +1,15 @@
-Scenario,Task,Comments
-Aircraft Crash 1,Investigate,Task Comments
+Scenario,Parent,Priority,Task,Comments
+Aircraft Crash 1,,Normal,Investigate,Task Comments
+Search and Rescue,,Normal,Identify and share search area,
+Search and Rescue,Identify and share search area,Normal,Report number of missing persons,
+Water evacuation transport only,,Low,Report the number of people to evacuate,
+Water evacuation transport only,,High,Locate and assign water evacuation first responders,
+Water Evacuation Large Group,Locate and assign water evacuation first responders,High,Identify and share location of secure loading area,
+Water Evacuation Large Group,Identify and share location of secure loading area,Normal,Report the number of people to evacuate,
+Water Evacuation Large Group,,Urgent,Locate and assign water evacuation first responders,
+Water Evacuation Large Group,Report the number of people to evacuate,Normal,Locate and assign ground transportation (buses),
+High rise building,,Urgent,Evacuate people,
+High rise building,Evacuate people,High,Knock on all doors,
+High rise building,Evacuate people,Low,Count all people,
+High rise building,,Urgent,Contain fire,
+High rise building,Contain fire,Normal,Sweep and secure,
