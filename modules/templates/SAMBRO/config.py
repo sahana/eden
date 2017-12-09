@@ -967,12 +967,12 @@ def config(settings):
             module_type = 10
         )),
         # All modules below here should be possible to disable safely
-        #("hrm", Storage(
-        #    name_nice = T("Staff"),
-        #    #description = "Human Resources Management",
-        #    restricted = True,
-        #    module_type = 2,
-        #)),
+        ("hrm", Storage(
+            name_nice = T("Staff"),
+            #description = "Human Resources Management",
+            restricted = True,
+            module_type = 2,
+        )),
         ("cap", Storage(
             name_nice = T("Alerting"),
             #description = "Create & broadcast CAP alerts",
