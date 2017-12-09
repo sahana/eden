@@ -2900,6 +2900,12 @@ class S3EventHRModel(S3Model):
         # - NB If the Person filling a Role changes then a new record should be created with a new start_date/end_date
         #
 
+        if settings.has_module("hrm"):
+            # Re-use the same S3Represent() to allow caching
+            job_title_represent = self.hrm_human_resource.job_title_id.represent
+        else:
+            job_title_represent = S3Represent(lookup="hrm_job_title")
+
         tablename = "event_human_resource"
         self.define_table(tablename,
                           # Instance table
@@ -2922,7 +2928,7 @@ class S3EventHRModel(S3Model):
                                                 ondelete = "SET NULL",
                                                 requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(current.db, "hrm_job_title.id",
-                                                                      self.hrm_human_resource.job_title_id.represent,
+                                                                      job_title_represent,
                                                                       filterby="type",
                                                                       filter_opts=(4,), # Type: Deploy
                                                                       )),
