@@ -2895,7 +2895,7 @@ def config(settings):
                                          (T("Protection Response Sector"),"dvr_case_activity.dvr_case_activity_need.need_id"),
                                          (T("Protection Assessment"), "dvr_case_activity.dvr_vulnerability_type_case_activity.vulnerability_type_id"),
                                          "age_group",
-                                         "location_id$L2",
+                                         "address.location_id$L2",
                                          "dvr_case.date",
                                          )
 
