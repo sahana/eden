@@ -2895,6 +2895,13 @@ class S3EventHRModel(S3Model):
         else:
             ondelete = "SET NULL"
 
+        if settings.has_module("hrm"):
+            # Proper field
+            job_title_represent = S3Represent(lookup="hrm_job_title")
+        else:
+            # Dummy field - probably this model not being used but others from Event are
+            job_title_represent = None
+
         # ---------------------------------------------------------------------
         # Positions required &, if they are filled, then who is filling them
         # - NB If the Person filling a Role changes then a new record should be created with a new start_date/end_date
@@ -2922,7 +2929,7 @@ class S3EventHRModel(S3Model):
                                                 ondelete = "SET NULL",
                                                 requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(current.db, "hrm_job_title.id",
-                                                                      S3Represent(lookup="hrm_job_title"),
+                                                                      job_title_represent,
                                                                       filterby="type",
                                                                       filter_opts=(4,), # Type: Deploy
                                                                       )),
