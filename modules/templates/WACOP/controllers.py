@@ -486,12 +486,10 @@ class custom_WACOP(S3CRUD):
                     L3 = row["gis_location.L3"]
                     lat = row["gis_location.lat"]
                     lon = row["gis_location.lon"]
+                    location_full = "%s, %s; %s, %s" % (L3, L1_abrv, lat, lon)
                 else:
                     # No location or national
-                    L1_abrv = ""
-                    L3 = ""
-                    lat = ""
-                    lon = ""
+                    location_full = T("No Address Given")
                 alerts.append(DIV(TAG["aside"](TAG["header"](UL(LI(_class="item icon",
                                                                    ),
                                                                 LI(status,
@@ -512,7 +510,7 @@ class custom_WACOP(S3CRUD):
                                                           _class="meta",
                                                           ),
                                                      BR(),
-                                                     SPAN("%s, %s; %s, %s" % (L3, L1_abrv, lat, lon),
+                                                     SPAN(location_full,
                                                           _class="meta-location",
                                                           ),
                                                      ),
@@ -683,7 +681,7 @@ class custom_WACOP(S3CRUD):
                     # No location
                     L1_abrv = ""
                     L3 = ""
-                    addr_street = ""
+                    addr_street = T("No Address Given")
                     addr_postcode = ""
                 events.append(DIV(TAG["aside"](TAG["header"](UL(LI(status,
                                                                    _class="item primary status",
@@ -723,7 +721,13 @@ class custom_WACOP(S3CRUD):
                                                        end_date,
                                                        _class="event-date-location",
                                                        ),
-                                                   P(meta,
+                                                   P(meta + " ",
+                                                     A(T("Read More"),
+                                                       _href=URL(c="event", f="event",
+                                                                 args=[record_id, "custom"],
+                                                                 ),
+                                                       _class="more",
+                                                       ),
                                                      _class="meta",
                                                      ),
                                                    DIV(row["event_event.comments"],
@@ -731,15 +735,6 @@ class custom_WACOP(S3CRUD):
                                                        ),
                                                    _class="body",
                                                    ),
-                                               TAG["footer"](P(A(T("Read More"),
-                                                                 _href=URL(c="event", f="event",
-                                                                           args=[record_id, "custom"],
-                                                                           ),
-                                                                 _class="more",
-                                                                 ),
-                                                               ),
-                                                             _class="footer",
-                                                             ),
                                                _class="card-event",
                                                ),
                                   _class="medium-4 columns",
@@ -1082,9 +1077,10 @@ S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
         else:
             readonly = '''readOnly:true'''
         script = \
-'''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
+'''S3.tagit=function(){$('.s3-tags').tagit({placeholderText:'%s',autocomplete:{source:'%s'},%s})}
 S3.tagit()
-S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
+S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
+                                  URL(c="cms", f="tag",
                                       args="tag_list.json"),
                                   readonly)
         s3.jquery_ready.append(script)
@@ -1379,18 +1375,18 @@ class incident_Browse(custom_WACOP):
         T = current.T
 
         # Alerts Cards
-        alerts = self._alerts_html()
+        #alerts = self._alerts_html()
 
         # Events Cards
-        events = self._events_html()
+        #events = self._events_html()
 
         # Map of Incidents
         map_id = "incident-gis_location_the_geom-map-filter-map"
         _map, button = self._map("Incidents", map_id=map_id, filter=True)
 
         # Output
-        output = {"alerts": alerts,
-                  "events": events,
+        output = {#"alerts": alerts,
+                  #"events": events,
                   "_map": _map,
                   }
 
@@ -1517,18 +1513,18 @@ class resource_Browse(custom_WACOP):
         T = current.T
 
         # Alerts Cards
-        alerts = self._alerts_html()
+        #alerts = self._alerts_html()
 
         # Events Cards
-        events = self._events_html()
+        #events = self._events_html()
 
         # Map of Resources
         map_id = "group-gis_location_the_geom-map-filter-map"
         _map, button = self._map("Resources", map_id=map_id, filter=True)
 
         # Output
-        output = {"alerts": alerts,
-                  "events": events,
+        output = {#"alerts": alerts,
+                  #"events": events,
                   "_map": _map,
                   }
 
@@ -2058,6 +2054,7 @@ class incident_Profile(custom_WACOP):
         auth = current.auth
         db = current.db
         s3db = current.s3db
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         ptable = s3db.cms_post
@@ -2075,7 +2072,12 @@ class incident_Profile(custom_WACOP):
                                                               #calendar = calendar,
                                                               )
 
+        # Map of Incident
+        # @ToDo: Add Resources
+        _map, button = self._map("Incidents", filter="~.id=%s" % incident_id)
+
         output = {"incident_id": incident_id,
+                  "_map": _map,
                   }
 
         # Incident Details
@@ -2118,10 +2120,7 @@ class incident_Profile(custom_WACOP):
             output["lon"] = location.lon or ""
             # @ToDo: BBOX should include the resources too
             bbox = current.gis.get_bounds(features=[location])
-            output["lat_max"] = bbox["lat_max"]
-            output["lat_min"] = bbox["lat_min"]
-            output["lon_max"] = bbox["lon_max"]
-            output["lon_min"] = bbox["lon_min"]
+            s3.js_global.append('''incident_bounds=%s''' % json.dumps(bbox))
         else:
             output["L1"] = ""
             output["L3"] = ""
@@ -2129,11 +2128,13 @@ class incident_Profile(custom_WACOP):
             output["postcode"] = ""
             output["lat"] = ""
             output["lon"] = ""
-            # @ToDo: Defaults for Seattle
-            output["lat_max"] = ""
-            output["lat_min"] = ""
-            output["lon_max"] = ""
-            output["lon_min"] = ""
+            # Defaults for Washington
+            bbox = {"lat_max": "45.5437202453613",
+                    "lat_min": "49.00244140625",
+                    "lon_max": "-116.917427062988",
+                    "lon_min": "-124.836097717285",
+                    }
+            s3.js_global.append('''incident_bounds=%s''' % json.dumps(bbox))
 
         updateable = auth.s3_has_permission("update", itable, record_id=incident_id, c="event", f="incident")
         output["updateable"] = updateable
@@ -2157,7 +2158,7 @@ class incident_Profile(custom_WACOP):
             script = '''incident_tags(%s)''' % incident_id
         else:
             script = '''incident_tags(false)'''
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         user = auth.user
         if user:
@@ -2488,7 +2489,7 @@ def group_Notify(r, **attr):
                                                resource = tablename,
                                                url = "%s/%s" % (controller, function),
                                                )
-            
+
 
     output = current.xml.json_message(True, 200, current.T("Notification Settings Updated"))
     current.response.headers["Content-Type"] = "application/json"
@@ -2535,7 +2536,7 @@ class person_Dashboard(custom_WACOP):
             if hr:
                 job_title = hrtable.organisation_id.represent(hr.job_title_id)
                 staff_role = XML("%s, %s" % (job_title, organisation))
-                
+
             else:
                 staff_role = organisation
         else:

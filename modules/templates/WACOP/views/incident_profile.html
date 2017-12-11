@@ -28,10 +28,12 @@
 <div class='row'>
  <div class='small-12 large-6 large-push-6 columns'>
   <h6 class='show-for-sr'>This incident on the map:</h6>
-  <iframe class='large-12' width='425' height='350' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' src='http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}'></iframe>
+  {{if _map:}}
+    {{=XML(_map)}}
+  {{pass}}
  </div>
  <div class='small-12 large-6 large-pull-6 columns'>
-  <section class='incident-profile'>
+  <section class='incident-profile' id='sizeTo'>
    <header class='status-bar {{if active:}}active{{pass}}'>
     <ul class='status-bar-left'>
      <li class='item primary status'>{{if active:}}Active{{else:}}Inactive{{pass}}</li>
@@ -54,12 +56,27 @@
     <div class='incident-data' data-equalizer>
      <div class='incident-location adr'>
       <div class='box' data-equalizer-watch>
+       <span class='meta'>Address:</span>
+      {{if addr_street or L3 or L1 or postcode or lat:}}
+       {{if addr_street:}}
        <div class='street-address'>{{=addr_street}}</div>
+       {{pass}}
        <!-- <div class='extended-address'>Suite 207</div> -->
+       {{if L3:}}
        <span class='locality'>{{=L3}}</span>,
+       {{pass}}
+       {{if L1:}}
        <span class='region'>{{=L1}}</span>
+       {{pass}}
+       {{if postcode:}}
        <span class='postal-code'>{{=postcode}}</span>
+       {{pass}}
+       {{if lat:}}
        <div class='geo-location'>{{=lat}}, {{=lon}}</div>
+       {{pass}}
+      {{else:}}
+       <div class="address-empty">No Address Given</div>
+      {{pass}}
       </div>
      </div>
      <div class='incident-date'>

@@ -1,2 +1,14 @@
 Scenario,Item,Comments
 Aircraft Crash 1,Radio,Equipment Comments
+High rise building,Tower ladder
+High rise building,Command Unit
+High rise building,Tanker Truck
+Water Evacuation Large Group,Motor boat
+Water Evacuation Large Group,Safety line,rope (multiple)
+Water Evacuation Large Group,Life jacket,> 12 pieces
+Water Evacuation Large Group,Bus,1
+Water evacuation transport only,Motor boat
+Water evacuation transport only,Life jacket,> 6 pieces
+Search and Rescue,Robot
+Search and Rescue,Digging equipment
+Search and Rescue,Scanning device
