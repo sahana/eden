@@ -40,8 +40,8 @@
     </ul>
     <ul class='right'>
      <!--<li class='item flag'><a href='#' title='Flag'><i class='fa-flag fa'></i></a></li>-->
-     <li class='item bookmark'>{{=bookmark_btn}}</li>
-     <li class='item share'>{{=share_btn}}</li>
+     <li class='item'>{{=bookmark_btn}}</li>
+     <li class='item'>{{=share_btn}}</li>
     {{if updateable:}}
      <li class='item edit'><a href='{{=URL(c="event", f="incident", args=[incident_id, "update.popup"], vars={"refresh": 1})}}' class='s3_modal' title='Edit'><i class='fa-pencil fa'></i></a></li>
      <li class='item delete'><a href='{{=URL(c="event", f="incident", args=[incident_id, "delete"])}}' title='Delete'><i class='fa-trash fa'></i></a></li>
