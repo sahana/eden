@@ -3379,6 +3379,15 @@ class PRAddressModel(S3Model):
                                 widget = RadioWidget.widget,
                                 ),
                           self.gis_location_id(),
+                          # Whether this field has been the source of
+                          # the base location of the entity before, and
+                          # hence address updates should propagate to
+                          # the base location:
+                          Field("is_base_location", "boolean",
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -3453,8 +3462,10 @@ class PRAddressModel(S3Model):
         s3db = current.s3db
         atable = db.pr_address
 
-        row = db(atable.id == record_id).select(atable.location_id,
+        row = db(atable.id == record_id).select(atable.id,
+                                                atable.location_id,
                                                 atable.pe_id,
+                                                atable.is_base_location,
                                                 limitby=(0, 1)
                                                 ).first()
         try:
@@ -3464,14 +3475,15 @@ class PRAddressModel(S3Model):
             return
         pe_id = row.pe_id
 
-        req_vars = current.request.form_vars
-        settings = current.deployment_settings
+        req_vars = current.request.vars
         person = None
         ptable = s3db.pr_person
         if req_vars and "base_location" in req_vars and \
            req_vars.base_location == "on":
             # Specifically requested
             S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+            row.update_record(is_base_location=True)
+
             person = db(ptable.pe_id == pe_id).select(ptable.id,
                                                       limitby=(0, 1)).first()
         else:
@@ -3480,12 +3492,16 @@ class PRAddressModel(S3Model):
                                                       ptable.location_id,
                                                       limitby=(0, 1)
                                                       ).first()
-            if person and not person.location_id:
-                # Hasn't yet been set so use this
+
+            if person and (row.is_base_location or not person.location_id):
+                # This address was the source of the base location
+                # (=> update it), or no base location has been set
+                # yet (=> set it now)
                 S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+                row.update_record(is_base_location=True)
 
         if not person:
-            # Nothing we can do
+            # Nothing more we can do
             return
 
         address_type = str(form_vars.get("type"))
@@ -3504,6 +3520,7 @@ class PRAddressModel(S3Model):
             # Do nothing
             return
 
+        settings = current.deployment_settings
         if settings.has_module("hrm"):
             # Also check for relevant HRM record(s)
             staff_settings = settings.get_hrm_location_staff()
