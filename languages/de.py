@@ -4870,6 +4870,7 @@
 'Upload an image file here.': 'Laden Sie hier die Grafikdatei hoch.',
 'Upload an image, such as a photo': 'Laden Sie eine Grafikdatei hoch, wie beispielsweise ein Foto',
 'Uploaded Image': 'Hochgeladenes Bild',
+'Uploaded on': 'Hochgeladen am',
 'Upload translated files': 'Übersetzte Dateien hochladen',
 'Upon Request': 'Eingehende Anfrage',
 'Urban Fire': 'Siedlungsfeuer',

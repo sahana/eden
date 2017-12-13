@@ -1635,6 +1635,7 @@ class S3ComponentTab(object):
 
         resource = r.resource
         component = self.component
+        function = self.function
         if component:
             clist = get_components(resource.table, names=[component])
             is_component = False
@@ -1657,6 +1658,10 @@ class S3ComponentTab(object):
                 handler = r.get_handler(component)
             if handler is None:
                 return component in ("create", "read", "update", "delete")
+
+        elif function:
+            return current.auth.permission.has_permission("read", f=function)
+
         return True
 
     # -------------------------------------------------------------------------

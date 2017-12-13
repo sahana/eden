@@ -308,6 +308,7 @@ class DVRCaseModel(S3Model):
 
         tablename = "dvr_case"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
 
                      # The primary case beneficiary
                      person_id(represent = self.pr_PersonRepresent(show_link=True),
@@ -549,6 +550,7 @@ class DVRCaseModel(S3Model):
                   onvalidation = self.case_onvalidation,
                   create_onaccept = self.case_create_onaccept,
                   update_onaccept = self.case_onaccept,
+                  super_entity = ("doc_entity",),
                   )
 
         # Reusable field

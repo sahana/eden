@@ -401,6 +401,60 @@ def person_search():
     return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
+def document():
+
+    def prep(r):
+
+        table = r.table
+        resource = r.resource
+
+        get_vars = r.get_vars
+        if "viewing" in get_vars:
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+        else:
+            return False
+
+        ctable = s3db.dvr_case
+        auth = current.auth
+        has_permission = auth.s3_has_permission
+        if vtablename == "pr_person":
+            if not has_permission("read", "pr_person", record_id):
+                r.unauthorised()
+            query = auth.s3_accessible_query("read", ctable) & \
+                    (ctable.person_id == record_id) & \
+                    (ctable.deleted == False)
+        elif vtablename == "dvr_case":
+            query = auth.s3_accessible_query("read", ctable) & \
+                    (ctable.id == record_id) & \
+                    (ctable.deleted == False)
+        else:
+            # Unsupported
+            return False
+
+        case = db(query).select(ctable.doc_id,
+                                limitby = (0, 1),
+                                orderby = ~ctable.modified_on,
+                                ).first()
+        if case:
+            doc_id = case.doc_id
+            field = r.table.doc_id
+            field.default = doc_id
+            r.resource.add_filter(FS("doc_id") == doc_id)
+        else:
+            # No case found
+            r.error(404, "Case not found")
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("doc", "document",
+                              rheader = s3db.dvr_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def group_membership():
     """
         RESTful CRUD controller for person<=>group links, normally called

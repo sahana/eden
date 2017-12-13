@@ -81,6 +81,7 @@ class S3DocumentLibrary(S3Model):
                                deploy_mission = T("Mission"),
                                dc_response = T(settings.get_dc_response_label()),
                                doc_sitrep = T("Situation Report"),
+                               dvr_case = T("Case"),
                                dvr_case_activity = T("Case Activity"),
                                event_event = T("Event"),
                                event_incident = T("Incident"),
@@ -135,6 +136,7 @@ class S3DocumentLibrary(S3Model):
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
+                           label = T("File"),
                            autodelete = True,
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_file_represent,
