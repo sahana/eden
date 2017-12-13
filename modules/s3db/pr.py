@@ -3466,7 +3466,7 @@ class PRAddressModel(S3Model):
                                                 atable.location_id,
                                                 atable.pe_id,
                                                 atable.is_base_location,
-                                                limitby=(0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
         try:
             location_id = row.location_id
@@ -3475,30 +3475,38 @@ class PRAddressModel(S3Model):
             return
         pe_id = row.pe_id
 
-        req_vars = current.request.vars
-        person = None
         ptable = s3db.pr_person
+        person = None
+        new_base_location = False
+        req_vars = current.request.vars
         if req_vars and "base_location" in req_vars and \
            req_vars.base_location == "on":
             # Specifically requested
-            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
-            row.update_record(is_base_location=True)
-
+            new_base_location = True
             person = db(ptable.pe_id == pe_id).select(ptable.id,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1),
+                                                      ).first()
         else:
             # Check if a base location already exists
             person = db(ptable.pe_id == pe_id).select(ptable.id,
                                                       ptable.location_id,
-                                                      limitby=(0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
 
             if person and (row.is_base_location or not person.location_id):
                 # This address was the source of the base location
                 # (=> update it), or no base location has been set
                 # yet (=> set it now)
-                S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
-                row.update_record(is_base_location=True)
+                new_base_location = True
+
+        if new_base_location:
+            # Set new base location
+            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+            row.update_record(is_base_location=True)
+
+            # Reset is_base_location flag in all other addresses
+            query = (atable.pe_id == pe_id) & (atable.id != row.id)
+            db(query).update(is_base_location=False)
 
         if not person:
             # Nothing more we can do
