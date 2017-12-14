@@ -2211,65 +2211,6 @@ def config(settings):
             form.errors["value"] = current.T("ID already in database")
 
     # -------------------------------------------------------------------------
-    def get_service_ids():
-
-        db = current.db
-        s3db = current.s3db
-
-        # Get service IDs
-        stable = s3db.org_service
-        query = (stable.deleted != True)
-        rows = db(query).select(stable.id,
-                                stable.name,
-                                stable.parent,
-                                stable.root_service,
-                                cache = s3db.cache,
-                                orderby = stable.root_service,
-                                )
-
-        # Group service IDs by root service
-        mh_service_ids = []
-        is_service_ids = []
-        pss_service_ids = []
-        service_ids = pss_service_ids
-        group = set()
-        root_service = None
-        for row in rows:
-            # Rows are ordered by root service, so they come in
-            # groups each of which contains one root service
-
-            if row.root_service != root_service:
-                # Different root service => new group
-                if group:
-                    # Add previous group to its service_ids array
-                    service_ids.extend(group)
-                # Start new group
-                group = set()
-                root_service = row.root_service
-
-            if row.parent is None:
-                # This is the root service of the current group
-                # => choose the right service_ids array for the group
-                name = row.name
-                if name == INDIVIDUAL_SUPPORT:
-                    service_ids = is_service_ids
-                elif name == MENTAL_HEALTH:
-                    service_ids = mh_service_ids
-                else:
-                    # Everything else is PSS
-                    service_ids = pss_service_ids
-
-            group.add(row.id)
-
-        # Add the last group to its service_ids array
-        service_ids.extend(group)
-
-        return {"mh": mh_service_ids,
-                "is": is_service_ids,
-                "pss": pss_service_ids,
-                }
-
-    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -2317,34 +2258,6 @@ def config(settings):
 
         # Add contacts-method
         if r.controller == "dvr":
-
-            # Custom activity components (differentiated by service type)
-            if r.component_name in ("case_activity", "mh_activity", "pss_activity"):
-                service_ids = get_service_ids()
-            else:
-                service_ids = {"is": [], "mh": [], "pss": []}
-            s3db.add_components("pr_person",
-                                dvr_case_activity = (
-                                    {"name": "case_activity",
-                                        "joinby": "person_id",
-                                        "filterby": {
-                                            "service_id": service_ids["is"],
-                                            },
-                                    },
-                                    {"name": "mh_activity",
-                                        "joinby": "person_id",
-                                        "filterby": {
-                                            "service_id": service_ids["mh"],
-                                            },
-                                    },
-                                    {"name": "pss_activity",
-                                        "joinby": "person_id",
-                                        "filterby": {
-                                            "service_id": service_ids["pss"],
-                                            },
-                                    },
-                                   ),
-                                )
 
             # Use pr_Contacts as contacts-method
             s3db.set_method("pr", "person",
@@ -2487,11 +2400,108 @@ def config(settings):
             ptable.pe_label.default = template % (code, next_id)
 
     # -------------------------------------------------------------------------
+    def get_service_ids():
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get service IDs
+        stable = s3db.org_service
+        query = (stable.deleted != True)
+        rows = db(query).select(stable.id,
+                                stable.name,
+                                stable.parent,
+                                stable.root_service,
+                                cache = s3db.cache,
+                                orderby = stable.root_service,
+                                )
+
+        # Group service IDs by root service
+        mh_ids = []
+        is_ids = []
+        ps_ids = []
+        sids = ps_ids
+
+        group = set()
+        root_service = None
+        for row in rows:
+            # Rows are ordered by root service, so they come in
+            # groups each of which contains one root service
+
+            if row.root_service != root_service:
+                # Different root service => new group
+                if group:
+                    # Add previous group to its service_ids array
+                    sids.extend(group)
+                # Start new group
+                group = set()
+                root_service = row.root_service
+
+            if row.parent is None:
+                # This is the root service of the current group
+                # => choose the right service_ids array for the group
+                name = row.name
+                if name == INDIVIDUAL_SUPPORT:
+                    sids = is_ids
+                elif name == MENTAL_HEALTH:
+                    sids = mh_ids
+                else:
+                    # Everything else is PSS
+                    sids = ps_ids
+
+            group.add(row.id)
+
+        # Add the last group to its service_ids array
+        sids.extend(group)
+
+        return {"mh": mh_ids, "is": is_ids, "ps": ps_ids}
+
+    # -------------------------------------------------------------------------
+    def configure_case_activity_components(service_ids):
+
+        current.s3db.add_components("pr_person",
+                                    dvr_case_activity = (
+                                        {"name": "case_activity",
+                                            "joinby": "person_id",
+                                            "filterby": {
+                                                "service_id": service_ids["is"],
+                                                },
+                                        },
+                                        {"name": "mh_activity",
+                                            "joinby": "person_id",
+                                            "filterby": {
+                                                "service_id": service_ids["mh"],
+                                                },
+                                        },
+                                        {"name": "pss_activity",
+                                            "joinby": "person_id",
+                                            "filterby": {
+                                                "service_id": service_ids["ps"],
+                                                },
+                                        },
+                                       ),
+                                    )
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
+
+        # Split case activity tabs by service type
+        # NB this must happen before request parsing, so can neither be prep
+        #    nor customise_resource; but should still perform the service_id
+        #    look-up only when required, thus checking request args here:
+        args = current.request.args
+        if args and len(args) > 1 and \
+           args[1] in ("case_activity", "mh_activity", "pss_activity"):
+            service_ids = s3.stl_service_ids
+            if not service_ids:
+                s3.stl_service_ids = service_ids = get_service_ids()
+            configure_case_activity_components(service_ids)
+        else:
+            configure_case_activity_components({"is": [], "mh": [], "ps": []})
 
         # Custom prep
         standard_prep = s3.prep
