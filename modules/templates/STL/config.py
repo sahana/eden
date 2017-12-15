@@ -2843,9 +2843,10 @@ def config(settings):
                                             options = hr_filter_opts,
                                             hidden = True,
                                             ),
-                            S3LocationFilter("address.location_id",
-                                             hidden = True,
-                                             ),
+                            # Not scalable:
+                            #S3LocationFilter("address.location_id",
+                            #                 hidden = True,
+                            #                 ),
                             S3OptionsFilter("person_details.marital_status",
                                             options = s3db.pr_marital_status_opts,
                                             hidden = True,
@@ -3478,6 +3479,7 @@ def stl_dvr_rheader(r, tabs=[]):
                                         "dvr_case.organisation_id",
                                         "dvr_case.disclosure_consent",
                                         ],
+                                        limit = 1,
                                         represent = True,
                                         raw_data = True,
                                         ).rows

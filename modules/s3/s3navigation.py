@@ -731,7 +731,7 @@ class S3NavigationItem(object):
             mf = self.get("match_function")
             if function == f or function in mf:
                 level = 2
-            elif f == "index":
+            elif f == "index" or "index" in mf:
                 # "weak" match: homepage link matches any function
                 return 1
             elif f is not None:
