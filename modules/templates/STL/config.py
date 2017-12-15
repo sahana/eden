@@ -2013,11 +2013,10 @@ def config(settings):
                                                   label = T("Referred to Case Management by"),
                                                   hidden = True,
                                                   ),
-                                  # @todo: has scalability issues
-                                  # @todo: consider using a filtered "home_address" component
-                                  S3LocationFilter("person_id$address.location_id",
-                                                  hidden = True,
-                                                  ),
+                                  # Not scalable
+                                  #S3LocationFilter("person_id$address.location_id",
+                                  #                hidden = True,
+                                  #                ),
                                   S3OptionsFilter("completed",
                                                   hidden = True,
                                                   ),
