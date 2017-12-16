@@ -2844,8 +2844,9 @@ def config(settings):
                                             ),
                             # Not scalable:
                             #S3LocationFilter("address.location_id",
-                            #                 hidden = True,
-                            #                 ),
+                            #                hidden = True,
+                            #                bigtable = True,
+                            #                ),
                             S3OptionsFilter("person_details.marital_status",
                                             options = s3db.pr_marital_status_opts,
                                             hidden = True,
