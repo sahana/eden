@@ -1901,6 +1901,9 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -2490,6 +2493,9 @@ def config(settings):
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
+
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         # Split case activity tabs by service type
         # NB this must happen before request parsing, so can neither be prep
