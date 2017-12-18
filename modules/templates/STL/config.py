@@ -137,6 +137,9 @@ def config(settings):
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
 
+    # Enable scalability-optimized option lookups in location filters
+    settings.gis.location_filter_bigtable_lookups = True
+
     # =========================================================================
     # L10n Settings
     #
@@ -2844,9 +2847,8 @@ def config(settings):
                                             ),
                             # Not scalable:
                             #S3LocationFilter("address.location_id",
-                            #                hidden = True,
-                            #                bigtable = True,
-                            #                ),
+                            #                 hidden = True,
+                            #                 ),
                             S3OptionsFilter("person_details.marital_status",
                                             options = s3db.pr_marital_status_opts,
                                             hidden = True,

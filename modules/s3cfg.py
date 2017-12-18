@@ -870,6 +870,14 @@ class S3Config(Storage):
             self.base.public_url = public_url = "%s://%s" % (scheme, host)
         return public_url
 
+    def get_base_bigtable(self):
+        """
+            Prefer scalability-optimized over small-table-optimized
+            strategies (where alternatives exist)
+            - resource/feature-specific overrides possible
+      """
+        return self.base.get("bigtable", False)
+
     def get_base_cdn(self):
         """
             Should we use CDNs (Content Distribution Networks) to serve some common CSS/JS?
@@ -1268,6 +1276,15 @@ class S3Config(Storage):
     def get_gis_layers_label(self):
         " Label for the Map's Layer Tree "
         return self.gis.get("layers_label", "Layers")
+
+    def get_gis_location_filter_bigtable_lookups(self):
+        """
+            Location filter to use scalability-optimized option lookups
+            - can be overridden by filter widget option (bigtable)
+            - defaults to base.bigtable
+        """
+        setting = self.gis.get("location_filter_bigtable_lookups")
+        return setting if setting is not None else self.get_base_bigtable()
 
     def get_gis_location_represent_address_only(self):
         """
@@ -2274,7 +2291,7 @@ class S3Config(Storage):
             Custom function that processes messages after they have been sent, eg.
             link alert_id in cap module to message_id in message module
             The function can be of form msg_send_postprocess(message_id, **data),
-            where message_id is the msg_message_id and 
+            where message_id is the msg_message_id and
             **data is the additional arguments to pass to s3msg.send_by_pe_id
         """
 

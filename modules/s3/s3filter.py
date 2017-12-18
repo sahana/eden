@@ -1480,7 +1480,7 @@ class S3LocationFilter(S3FilterWidget):
         # Fields we want to extract for Lx ancestors
         fields = [ltable.id] + [ltable[level] for level in levels]
         if path:
-            fields += ltable.path
+            fields.append(ltable.path)
 
         # Suppress instantiation of LazySets in rows (we don't need them)
         rname = db._referee_name
@@ -1614,10 +1614,13 @@ class S3LocationFilter(S3FilterWidget):
             # Neither fixed options nor resource to look them up
             return default
 
-        db = current.db
+        # Determine look-up strategy
+        ancestor_lookup = opts.get("bigtable")
+        if ancestor_lookup is None:
+            ancestor_lookup = current.deployment_settings \
+                                     .get_gis_location_filter_bigtable_lookups()
 
         # Find the options
-        ancestor_lookup = opts.get("bigtable")
         if ancestor_lookup:
             rows = self.get_lx_ancestors(levels,
                                          resource,
@@ -1632,6 +1635,7 @@ class S3LocationFilter(S3FilterWidget):
             resource.clear_config("extra_fields")
 
             # Suppress instantiation of LazySets in rows (we don't need them)
+            db = current.db
             rname = db._referee_name
             db._referee_name = None
             rows = resource.select(fields = fields,
