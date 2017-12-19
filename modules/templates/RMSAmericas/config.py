@@ -1539,6 +1539,8 @@ Thank you"""
         #                          tablename = "hrm_human_resource")
 
         s3 = current.response.s3
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         if current.request.function == "trainee":
             EXTERNAL = True
@@ -3176,6 +3178,8 @@ Thank you"""
 
         s3db = current.s3db
         s3 = current.response.s3
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         # Custom prep
         standard_prep = s3.prep

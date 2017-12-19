@@ -3464,6 +3464,8 @@ def config(settings):
         s3 = current.response.s3
         request = current.request
         controller = request.controller
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         tablename = "hrm_human_resource"
 
@@ -6071,6 +6073,8 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
         request = current.request
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         # Special cases for different NS / Roles
         arcs = crmada = ircs = vnrc = False

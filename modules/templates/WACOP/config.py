@@ -389,17 +389,59 @@ def config(settings):
                 tags = ",".join(tags)
                 s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
 
-            # Processing Tags/auto-Bookmarks
+            def create_onaccept(form):
+                """
+                    Update the modified_on of any forums to which the Incident/Event this Post links to is Shared
+                """
+                post_id = form.vars.id
+                pltable = s3db.event_post
+                events = db(pltable.post_id == post_id).select(pltable.event_id,
+                                                               pltable.incident_id,
+                                                               )
+                if len(events):
+                    event_ids = []
+                    eappend = event_ids.append
+                    incident_ids = []
+                    iappend = incident_ids.append
+                    for e in events:
+                        incident_id = e.incident_id
+                        if incident_id:
+                            iappend(incident_id)
+                        else:
+                            eappend(e.event_id)
+
+                    fltable = s3db.event_forum
+                    if len(event_ids):
+                        query = (fltable.event_id.belongs(event_ids))
+                        if len(incident_ids):
+                            query |= (fltable.incident_id.belongs(incident_ids))
+                    else:
+                        query = (fltable.incident_id.belongs(incident_ids))
+                    forums = db(query).select(fltable.forum_id)
+                    len_forums = len(forums)
+                    if len_forums:
+                        ftable = s3db.pr_forum
+                        if len_forums == 1:
+                            query = (ftable.id == forums.first().forum_id)
+                        else:
+                            query = (ftable.id.belongs([f.forum_id for f in forums]))
+                        db(query).update(modified_on = r.utcnow)
+
             default = s3db.get_config(tablename, "onaccept")
             if isinstance(default, list):
                 onaccept = default
+                # Processing Tags/auto-Bookmarks
                 onaccept.append(cms_post_onaccept)
+                create_onaccept = list(onaccept) + [create_onaccept]
             else:
+                # Processing Tags/auto-Bookmarks
                 onaccept = [default, cms_post_onaccept]
+                create_onaccept = [create_onaccept, default, cms_post_onaccept]
 
             s3db.configure(tablename,
                            crud_form = crud_form,
                            onaccept = onaccept,
+                           create_onaccept = create_onaccept,
                            )
 
         elif method in ("custom", "dashboard", "datalist", "filter"):
@@ -625,17 +667,6 @@ def config(settings):
                 s3db.configure(tablename,
                                filter_widgets = filter_widgets,
                                )
-
-        #elif r.representation == "msg":
-        #    # Notifications
-        #    notify_fields = []
-        #    s3db.configure(tablename,
-        #                   notify_fields = notify_fields,
-        #                   #notify_renderer = notify_renderer,
-        #                   #notify_subject = notify_subject,
-        #                   # Keep default name, but it will use the one in the Template folder
-        #                   #notify_template = notify_template,
-        #                  )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 
@@ -1989,6 +2020,28 @@ def config(settings):
                                        ),
                           ]
 
+        def onaccept(form):
+            """
+                Update the modified_on of any forums to which the Task is Shared
+            """
+            task_id = form.vars.id
+            ltable = s3db.project_task_forum
+            forums = db(ltable.task_id == task_id).select(ltable.forum_id)
+            len_forums = len(forums)
+            if len_forums:
+                ftable = s3db.pr_forum
+                if len_forums == 1:
+                    query = (ftable.id == forums.first().forum_id)
+                else:
+                    query = (ftable.id.belongs([f.forum_id for f in forums]))
+                db(query).update(modified_on = r.utcnow)
+
+        update_onaccept = s3db.get_config(tablename, "update_onaccept")
+        if update_onaccept:
+            update_onaccept = [update_onaccept, onaccept]
+        else:
+            update_onaccept = onaccept
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        extra_fields = ("name",
@@ -2001,6 +2054,7 @@ def config(settings):
                                       (T("Due"), "date_due"),
                                       ],
                        orderby = "project_task.date_due",
+                       update_onaccept = update_onaccept,
                        )
 
     settings.customise_project_task_resource = customise_project_task_resource
