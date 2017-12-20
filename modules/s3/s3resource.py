@@ -5424,6 +5424,15 @@ class S3ResourceData(object):
                    not supported (yet)
         """
 
+        db = current.db
+
+        # Suppress instantiation of LazySets in rows where we don't need them
+        if not as_rows and not groupby:
+            rname = db._referee_name
+            db._referee_name = None
+        else:
+            rname = None
+
         # The resource
         self.resource = resource
         self.table = table = resource.table
@@ -5812,7 +5821,7 @@ class S3ResourceData(object):
                                             joined_query,
                                             jfields,
                                             records,
-                                            represent=represent,
+                                            represent = represent,
                                             )
 
             # Re-combine and represent the records
@@ -5828,9 +5837,10 @@ class S3ResourceData(object):
                     # results = {RecordID: {ColumnName: Representation}}
                     results = render(dfield,
                                      results,
-                                     none=NONE,
-                                     raw_data=raw_data,
-                                     show_links=show_links)
+                                     none = NONE,
+                                     raw_data = raw_data,
+                                     show_links = show_links,
+                                     )
 
                 else:
                     # results = {RecordID: {ColumnName: Value}}
@@ -5852,6 +5862,10 @@ class S3ResourceData(object):
                         result[colname] = data
 
             self.rows = [results[record_id] for record_id in page]
+
+        if rname:
+            # Restore referee name
+            db._referee_name = rname
 
     # -------------------------------------------------------------------------
     def init_field_data(self, rfields):
@@ -6284,6 +6298,7 @@ class S3ResourceData(object):
         """
 
         s3db = current.s3db
+
         ljoins = self.ljoins
         table = self.resource.table
         pkey = str(table._id)
@@ -6294,8 +6309,9 @@ class S3ResourceData(object):
 
         # Get all left joins for subtable
         tnames = ljoins.extend(l) + list(fields["_left"].tables)
-        sjoins = ljoins.as_list(tablenames=tnames,
-                                    aqueries=self.aqueries)
+        sjoins = ljoins.as_list(tablenames = tnames,
+                                aqueries = self.aqueries,
+                                )
         if not sjoins:
             return records
         del fields["_left"]
@@ -6310,18 +6326,19 @@ class S3ResourceData(object):
         sfields.insert(0, table._id)
 
         # Retrieve the subtable rows
-        rows = current.db(query).select(left=sjoins,
-                                        distinct=True,
-                                        cacheable=True,
+        rows = current.db(query).select(left = sjoins,
+                                        distinct = True,
+                                        cacheable = True,
                                         *sfields)
 
         # Extract and merge the data
         records = self.extract(rows,
                                pkey,
                                extract,
-                               records=records,
-                               join=True,
-                               represent=represent)
+                               records = records,
+                               join = True,
+                               represent = represent,
+                               )
 
         return records
 
