@@ -3386,8 +3386,14 @@ Thank you"""
                 dtable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+                dtable.allergic.writable = dtable.allergic.readable = True
+                dtable.allergies.writable = dtable.allergies.readable = True
                 dtable.ethnicity.writable = dtable.ethnicity.readable = False
                 dtable.other_details.writable = dtable.other_details.readable = False
+                import json
+                SEPARATORS = (",", ":")
+                s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
+                    ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
 
             return True
         s3.prep = custom_prep

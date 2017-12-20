@@ -4569,7 +4569,7 @@ class PRAvailabilityModel(S3Model):
 # =============================================================================
 class PRDescriptionModel(S3Model):
     """
-        Additional tables for DVI/MPR
+        Additional tables used mostly for DVI/MPR
     """
 
     names = ("pr_age_group",
@@ -4917,6 +4917,14 @@ class PRDescriptionModel(S3Model):
                      # Medical Details: scars, amputations, implants
                      Field("medical_conditions", "text",
                            label = T("Medical Conditions"),
+                           ),
+
+                     Field("allergic", "boolean",
+                           label = T("Allergic"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("allergies", "text",
+                           label = T("Allergies"),
                            ),
 
                      # Other details

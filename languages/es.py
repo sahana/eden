@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 {
+'Allergic': 'Alérgico',
+'Allergies': 'Alergias',
+'Place': 'Lugar',
+'Event Name': 'Nombre del Evento',
+'Number of hours': 'Número de Horas',
 'Add Activity Data': 'Añadir Datos de Actividad',
 'Activity Data': 'Datos de Actividad',
 'Edit Activity Data': 'Modificar Datos de Actividad',
