@@ -2836,7 +2836,7 @@ class DVRCaseActivityModel(S3Model):
             activity.update_record(**data)
 
             # Close any open response actions in this activity:
-            if settings.get_dvr_manage_response_actions:
+            if settings.get_dvr_manage_response_actions():
                 cls.case_activity_close_responses(activity.id)
 
         elif activity.end_date:
