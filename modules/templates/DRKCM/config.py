@@ -1838,6 +1838,24 @@ def config(settings):
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 
     # -------------------------------------------------------------------------
+    def customise_dvr_service_contact_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.dvr_service_contact
+
+        field = table.type_id
+        field.label = T("Type")
+
+        field = table.organisation_id
+        field.readable = field.writable = False
+
+        field = table.organisation
+        field.readable = field.writable = True
+
+    settings.customise_dvr_service_contact_resource = customise_dvr_service_contact_resource
+
+    # -------------------------------------------------------------------------
     # Shelter Registry Settings
     #
     settings.cr.people_registration = False
@@ -2564,6 +2582,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Family Members"), "group_membership/"),
                             (T("Activities"), "case_activity"),
                             (T("Appointments"), "case_appointment"),
+                            (T("Service Contacts"), "service_contact"),
                             (T("Photos"), "image"),
                             (T("Documents"), "document/"),
                             (T("Notes"), "case_note"),

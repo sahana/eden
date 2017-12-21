@@ -1056,7 +1056,6 @@ class PRPersonModel(S3Model):
                                              "autodelete": False,
                                              },
                             dvr_case_language = "person_id",
-                            dvr_case_service_contact = "person_id",
                             dvr_economy = {"joinby": "person_id",
                                            "multiple": False,
                                            },
@@ -1071,6 +1070,7 @@ class PRPersonModel(S3Model):
                                         "joinby": "person_id",
                                         },
                             dvr_residence_status = "person_id",
+                            dvr_service_contact = "person_id",
 
                             event_incident = {"link": "event_human_resource",
                                               "joinby": "person_id",

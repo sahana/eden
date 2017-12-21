@@ -22,6 +22,7 @@ AUTHENTICATED,Authenticated,,,,dvr_residence_permit_type,READ,,,,,All users can 
 AUTHENTICATED,Authenticated,,,,dvr_residence_status_type,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,dvr_response_status,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,dvr_response_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_service_contact_type,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,Normal users can read facility types
 AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,All users can read taxonomies
@@ -51,6 +52,7 @@ CASE_MANAGEMENT,Case Manager,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,Case Man
 CASE_MANAGEMENT,Case Manager,,dvr,response_action,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage response actions
 CASE_MANAGEMENT,Case Manager,,dvr,response_status,,NONE,,,,,Case Managers can not manage DVR taxonomies
 CASE_MANAGEMENT,Case Manager,,dvr,response_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
+CASE_MANAGEMENT,Case Manager,,dvr,service_contact_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
 CASE_MANAGEMENT,Case Manager,,dvr,,,READ,,,,,Default rule for DVR module
 CASE_MANAGEMENT,Case Manager,,msg,,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can send messages
 CASE_MANAGEMENT,Case Manager,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can comment on tasks
@@ -150,6 +152,7 @@ ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,residence_permit_type,,CREATE|READ
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_action,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_status,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,response_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,service_contact_type,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,dvr,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,msg,,,NONE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility,,READ,,,,,
@@ -194,6 +197,7 @@ REGISTRATION,Case Registration,,dvr,person,,CREATE|READ|UPDATE|DELETE,,,,,
 REGISTRATION,Case Registration,,dvr,response_action,,NONE,,,,,
 REGISTRATION,Case Registration,,dvr,response_status,,NONE,,,,,
 REGISTRATION,Case Registration,,dvr,response_type,,NONE,,,,,
+REGISTRATION,Case Registration,,dvr,service_contact_type,,NONE,,,,,
 REGISTRATION,Case Registration,,dvr,,,READ,,,,,
 REGISTRATION,Case Registration,,msg,,,NONE,,,,,
 REGISTRATION,Case Registration,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,
@@ -249,6 +253,7 @@ TRACING,Tracing Service,,dvr,response_action,,NONE,,,,,
 TRACING,Tracing Service,,dvr,response_status,,NONE,,,,,
 TRACING,Tracing Service,,dvr,response_type,,NONE,,,,,
 TRACING,Tracing Service,,dvr,,,READ,,,,,
+TRACING,Tracing Service,,dvr,service_contact_type,,NONE,,,,,
 TRACING,Tracing Service,,msg,,,NONE,,,,,
 TRACING,Tracing Service,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,
 TRACING,Tracing Service,,project,comments,,CREATE|READ|UPDATE|DELETE,,,,,

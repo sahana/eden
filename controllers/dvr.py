@@ -1112,6 +1112,14 @@ def residence_permit_type():
     return s3_rest_controller()
 
 # =============================================================================
+# Service Contacts
+#
+def service_contact_type():
+    """ Service Contact Types: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
 # Evaluations
 #
 def evaluation():
