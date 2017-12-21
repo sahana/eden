@@ -2781,7 +2781,7 @@ class DVRCaseActivityModel(S3Model):
         query = (rtable.case_activity_id == case_activity_id) & \
                 (rtable.deleted == False) & \
                 ((stable.is_closed == False) | (stable.id == None))
-        rows = db(query).select(rtable.id)
+        rows = db(query).select(rtable.id, left=left)
 
         if rows:
 
