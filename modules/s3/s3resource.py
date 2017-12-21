@@ -6064,10 +6064,9 @@ class S3ResourceData(object):
             # Don't penalize the smallest filter results (=effective filtering)
             if limit:
                 maxids = max(limit, 200)
-                limitby_ = (start, maxids)
+                limitby_ = (start, start + maxids)
             else:
                 limitby_ = None
-
 
             # Extract record IDs
             field = table._id
