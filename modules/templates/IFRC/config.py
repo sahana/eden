@@ -1731,7 +1731,7 @@ def config(settings):
 
             elif tablename == "dc_target":
 
-                tabs = ((T("Basic Details"), None, {"native": 1}),
+                tabs = ((T("Basic Details"), None),
                         (T("Responses"), "response"),
                         )
 
@@ -1976,8 +1976,8 @@ def config(settings):
             if r.interactive and r.component_name == "response":
                 from gluon import URL
                 from s3 import S3CRUD
-                update_url = URL(f="respnse", args = ["[id]", "answer"])
-                S3CRUD.action_buttons(r, update_url=update_url)
+                open_url = URL(f="respnse", args = ["[id]", "answer"])
+                S3CRUD.action_buttons(r, read_url=open_url, update_url=open_url)
 
             return output
         s3.postp = custom_postp
