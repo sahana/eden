@@ -1956,12 +1956,12 @@ def config(settings):
 
             if r.interactive and r.component_name == "response":
 
-                s3db.configure("dc_response",
-                               insertable = False,
-                               list_fields = ["person_id",
-                                              "date",
-                                              ],
-                               )
+                current.s3db.configure("dc_response",
+                                       insertable = False,
+                                       list_fields = ["person_id",
+                                                      "date",
+                                                      ],
+                                       )
 
             return result
         s3.prep = custom_prep
@@ -2123,6 +2123,7 @@ def config(settings):
                 lang = default_language
                 user = Storage(first_name = person.first_name,
                                last_name = person.last_name,
+                               language = lang,
                                email = email,
                                organisation_id = hr.organisation_id,
                                site_id = hr.site_id,
@@ -4999,7 +5000,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def hrm_training_event_onaccept(form):
         """
-            Create a Schduled Task to notify EO / MFP to run survey
+            Create a Scheduled Task to notify EO / MFP to run survey
         """
 
         form_vars = form.vars
