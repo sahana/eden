@@ -6114,7 +6114,7 @@ class S3ResourceData(object):
 
         else:
             # Only count, do not extract any IDs (constant effort)
-            field = table._id.count()
+            field = table._id.count(distinct=True)
             rows = db(query).select(field,
                                     join = join,
                                     left = left,
