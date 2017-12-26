@@ -6085,7 +6085,7 @@ class S3ResourceData(object):
             totalids = len(rows)
             if limit and totalids >= maxids or start != 0 and not totalids:
                 # Count all matching records
-                cnt = table._id.count()
+                cnt = table._id.count(distinct=True)
                 row = db(query).select(cnt,
                                        join = join,
                                        left = left,
