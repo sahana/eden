@@ -7525,8 +7525,12 @@ def hrm_human_resource_controller(extra_filter=None):
 
             elif r.id:
                 # Redirect to person controller
+                if r.record.type == 2:
+                    group = "volunteer"
+                else:
+                    group = "staff"
                 vars = {"human_resource.id" : r.id,
-                        "group" : "staff"
+                        "group" : group
                         }
                 if r.function == "trainee":
                     fn = "trainee_person"
@@ -8636,8 +8640,10 @@ class hrm_Record(S3Method):
             settings = current.deployment_settings
             tablename = r.tablename
             if r.controller == "vol":
+                VOL = True
                 controller = "vol"
             else:
+                VOL = r.get_vars["group"] == "volunteer"
                 controller = "hrm"
 
             # @ToDo: Check editable/deletable config if-necessary (see hrm_CV)
@@ -8663,7 +8669,7 @@ class hrm_Record(S3Method):
             table = s3db.hrm_human_resource
             label = settings.get_hrm_record_label()
             code = table.code
-            if controller == "vol":
+            if VOL:
                 widget_filter = FS("type") == 2
                 if settings.get_hrm_use_code() is True:
                     code.readable = code.writable = True
@@ -8683,17 +8689,26 @@ class hrm_Record(S3Method):
                      )
                 ]
 
-            if controller == "vol":
+            if VOL:
                 vol_experience = settings.get_hrm_vol_experience()
                 if vol_experience in ("programme", "both"):
-                    # Exclude records which are just to link to Programme & also Training Hours
-                    filter = (FS("hours") != None) & \
-                             (FS("programme_id") != None)
+                    # Exclude records which are just to link to Programme
+                    filter_ = (FS("hours") != None)
                     list_fields = ["id",
                                    "date",
-                                   "programme_id",
                                    ]
-                    if s3db.hrm_programme_hours.job_title_id.readable:
+                    phtable = s3db.hrm_programme_hours
+                    r.customise_resource("hrm_programme_hours")
+                    if phtable.programme_id.readable:
+                        list_fields.append("programme_id")
+                        # Exclude Training Hours
+                        filter_ &= (FS("programme_id") != None)
+                    else:
+                        # RMSAmericas
+                        list_fields += ["place",
+                                        "event",
+                                        ]
+                    if phtable.job_title_id.readable:
                         list_fields.append("job_title_id")
                     list_fields.append("hours")
                     hours_widget = dict(label = "Program Hours",
@@ -8702,7 +8717,7 @@ class hrm_Record(S3Method):
                                         actions = dt_row_actions("hours"),
                                         tablename = "hrm_programme_hours",
                                         context = "person",
-                                        filter = filter,
+                                        filter = filter_,
                                         list_fields = list_fields,
                                         create_controller = controller,
                                         create_function = "person",
@@ -8712,8 +8727,8 @@ class hrm_Record(S3Method):
                     profile_widgets.append(hours_widget)
                 elif vol_experience == "activity":
                     # Exclude records which are just to link to Activity & also Training Hours
-                    #filter = (FS("hours") != None) & \
-                    #         (FS("activity_id") != None)
+                    #filter_ = (FS("hours") != None) & \
+                    #          (FS("activity_id") != None)
                     list_fields = ["id",
                                    "date",
                                    "activity_id",
@@ -8731,7 +8746,7 @@ class hrm_Record(S3Method):
                                         actions = dt_row_actions("hours"),
                                         tablename = "vol_activity_hours",
                                         context = "person",
-                                        #filter = filter,
+                                        #filter = filter_,
                                         list_fields = list_fields,
                                         #create_controller = controller,
                                         #create_function = "person",
