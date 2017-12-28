@@ -657,7 +657,8 @@ class S3Profile(S3CRUD):
             # @todo: fix base URL (make configurable?) to fix export options
             s3.no_formats = True
             dtargs["dt_base_url"] = r.url(method="", vars={})
-            dtargs["dt_ajax_url"] = r.url(vars={"update": widget["index"]},
+            get_vars.update(update = widget["index"])
+            dtargs["dt_ajax_url"] = r.url(vars=get_vars,
                                           representation="aadata")
             actions = widget_get("actions")
             if callable(actions):

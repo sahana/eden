@@ -1814,6 +1814,19 @@ Thank you"""
 
         s3db = current.s3db
         phtable = s3db.hrm_programme_hours
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Hours of Service"),
+            title_display = T("Hours Details"),
+            title_list = T("Hours of Service"),
+            title_update = T("Edit Hours"),
+            label_list_button = T("List Hours"),
+            label_delete_button = T("Delete Hours"),
+            msg_record_created = T("Hours added"),
+            msg_record_modified = T("Hours updated"),
+            msg_record_deleted = T("Hours deleted"),
+            msg_list_empty = T("Currently no hours recorded"))
+
         # Show new custom fields
         phtable.event.readable = phtable.event.writable = True
         phtable.place.readable = phtable.place.writable = True
