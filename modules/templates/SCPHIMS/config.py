@@ -131,6 +131,12 @@ def config(settings):
     #
 
     settings.mobile.forms = [("Beneficiaries", "pr_person", {"c": "dvr",
+                                                             "data": True,
+                                                             "components": (
+                                                                 "contact",
+                                                                 "address",
+                                                                 "household_member",
+                                                                 ),
                                                              }),
                              # Done via the Answer resource, which is exposed through Dynamic Tables
                              #("Rapid Assessments", "dc_response", {"c": "dc",
@@ -1416,7 +1422,7 @@ def config(settings):
         def callback(r):
 
             from gluon.html import DIV, TABLE, TD, TH, TR
-        
+
             date_represent = r.table.date.represent
             org_represent = s3db.org_OrganisationRepresent(parent = False,
                                                            acronym = False)
