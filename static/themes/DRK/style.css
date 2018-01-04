@@ -278,28 +278,32 @@ form table.embeddedComponent tr.inline-form .postfix.calendar-clear-btn {
 form table.embeddedComponent tr.inline-form.single td:only-child {
   padding: 0;
 }
-/* line 107, ../scss/custom/_forms.scss */
+/* line 106, ../scss/custom/_forms.scss */
+form table.embeddedComponent tr.inline-form.single td:only-child div.form-row {
+  padding: 0 0.2rem 0.2rem;
+}
+/* line 110, ../scss/custom/_forms.scss */
 form table.embeddedComponent tr.inline-form select {
   max-width: 18rem;
 }
-/* line 113, ../scss/custom/_forms.scss */
+/* line 116, ../scss/custom/_forms.scss */
 form table.embeddedComponent tr.inline-form .zoom img,
 form table.embeddedComponent tr.read-row .zoom img {
   max-height: 8rem;
 }
-/* line 118, ../scss/custom/_forms.scss */
+/* line 121, ../scss/custom/_forms.scss */
 form .inline-open-add {
   display: inline-block;
   margin-bottom: 1.25rem;
   margin-left: 0;
 }
-/* line 125, ../scss/custom/_forms.scss */
+/* line 128, ../scss/custom/_forms.scss */
 form.auth_login #submit_record__row {
   white-space: pre;
 }
 
 /* General Widgets */
-/* line 131, ../scss/custom/_forms.scss */
+/* line 134, ../scss/custom/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -322,7 +326,7 @@ select {
   font-weight: normal;
 }
 
-/* line 152, ../scss/custom/_forms.scss */
+/* line 155, ../scss/custom/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -341,82 +345,82 @@ select {
   max-width: 100%;
 }
 
-/* line 169, ../scss/custom/_forms.scss */
+/* line 172, ../scss/custom/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
-/* line 173, ../scss/custom/_forms.scss */
+/* line 176, ../scss/custom/_forms.scss */
 input.datetimepicker {
   max-width: 8rem;
 }
 
-/* line 177, ../scss/custom/_forms.scss */
+/* line 180, ../scss/custom/_forms.scss */
 select {
   padding-right: 1rem !important;
 }
 
 /* Form and Item containers */
-/* line 181, ../scss/custom/_forms.scss */
+/* line 184, ../scss/custom/_forms.scss */
 #last_update {
   float: none;
 }
 
-/* line 184, ../scss/custom/_forms.scss */
+/* line 187, ../scss/custom/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 186, ../scss/custom/_forms.scss */
+/* line 189, ../scss/custom/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 189, ../scss/custom/_forms.scss */
+/* line 192, ../scss/custom/_forms.scss */
 .form-container form tr td,
 .item-container form tr td {
   padding: 0.1875rem;
 }
-/* line 192, ../scss/custom/_forms.scss */
+/* line 195, ../scss/custom/_forms.scss */
 .form-container form .embeddedComponent td,
 .item-container form .embeddedComponent td {
   padding-right: 0.5625rem;
 }
-/* line 198, ../scss/custom/_forms.scss */
+/* line 201, ../scss/custom/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 200, ../scss/custom/_forms.scss */
+/* line 203, ../scss/custom/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 205, ../scss/custom/_forms.scss */
+/* line 208, ../scss/custom/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 209, ../scss/custom/_forms.scss */
+/* line 212, ../scss/custom/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 214, ../scss/custom/_forms.scss */
+/* line 217, ../scss/custom/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 218, ../scss/custom/_forms.scss */
+/* line 221, ../scss/custom/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 224, ../scss/custom/_forms.scss */
+/* line 227, ../scss/custom/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -424,27 +428,27 @@ select {
 }
 
 /* Filter forms */
-/* line 233, ../scss/custom/_forms.scss */
+/* line 236, ../scss/custom/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
 }
-/* line 237, ../scss/custom/_forms.scss */
+/* line 240, ../scss/custom/_forms.scss */
 .filter-form table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 240, ../scss/custom/_forms.scss */
+/* line 243, ../scss/custom/_forms.scss */
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 243, ../scss/custom/_forms.scss */
+/* line 246, ../scss/custom/_forms.scss */
 .filter-form label.inline {
   line-height: normal;
   padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
-/* line 250, ../scss/custom/_forms.scss */
+/* line 253, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -452,13 +456,13 @@ select {
 }
 
 /* Help Popup */
-/* line 257, ../scss/custom/_forms.scss */
+/* line 260, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 261, ../scss/custom/_forms.scss */
+/* line 264, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -467,7 +471,7 @@ select {
   padding: 0;
   width: 60px;
 }
-/* line 269, ../scss/custom/_forms.scss */
+/* line 272, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -1127,13 +1131,17 @@ body.rtl .range-filter-field {
   margin-bottom: 0.5rem;
 }
 
+/* line 139, ../scss/custom/_widgets.scss */
+table.s3-groupedopts-widget {
+  margin-bottom: 0;
+}
 /* line 140, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td {
   white-space: nowrap;
 }
 /* line 142, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td input {
-  vertical-align: top;
+  vertical-align: text-top;
 }
 /* line 145, ../scss/custom/_widgets.scss */
 table.s3-groupedopts-widget td label {
@@ -1141,7 +1149,7 @@ table.s3-groupedopts-widget td label {
 }
 
 /* ImageCropWidget */
-/* line 152, ../scss/custom/_widgets.scss */
+/* line 153, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1149,36 +1157,36 @@ table.s3-groupedopts-widget td label {
 }
 
 /* pr_Contacts widgets */
-/* line 159, ../scss/custom/_widgets.scss */
+/* line 160, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 163, ../scss/custom/_widgets.scss */
+/* line 164, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 166, ../scss/custom/_widgets.scss */
+/* line 167, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 170, ../scss/custom/_widgets.scss */
+/* line 171, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 174, ../scss/custom/_widgets.scss */
+/* line 175, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 178, ../scss/custom/_widgets.scss */
+/* line 179, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1189,7 +1197,7 @@ table.s3-groupedopts-widget td label {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 187, ../scss/custom/_widgets.scss */
+/* line 188, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1197,46 +1205,46 @@ table.s3-groupedopts-widget td label {
 }
 
 /* Data Lists (including profile) */
-/* line 196, ../scss/custom/_widgets.scss */
+/* line 197, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 200, ../scss/custom/_widgets.scss */
+/* line 201, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 203, ../scss/custom/_widgets.scss */
+/* line 204, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 206, ../scss/custom/_widgets.scss */
+/* line 207, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 209, ../scss/custom/_widgets.scss */
+/* line 210, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 214, ../scss/custom/_widgets.scss */
+/* line 215, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 218, ../scss/custom/_widgets.scss */
+/* line 219, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 222, ../scss/custom/_widgets.scss */
+/* line 223, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 228, ../scss/custom/_widgets.scss */
+/* line 229, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1244,37 +1252,37 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 235, ../scss/custom/_widgets.scss */
+/* line 236, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 240, ../scss/custom/_widgets.scss */
+/* line 241, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 245, ../scss/custom/_widgets.scss */
+/* line 246, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Text representation */
-/* line 251, ../scss/custom/_widgets.scss */
+/* line 252, ../scss/custom/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
-/* line 254, ../scss/custom/_widgets.scss */
+/* line 255, ../scss/custom/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 258, ../scss/custom/_widgets.scss */
+/* line 259, ../scss/custom/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1282,18 +1290,18 @@ h4.profile-sub-header {
 }
 
 /* S3SQLInlineLink read-only list representation */
-/* line 265, ../scss/custom/_widgets.scss */
+/* line 266, ../scss/custom/_widgets.scss */
 ul.s3-inline-link {
   font-size: inherit;
 }
 
 /* AddPersonWidget */
-/* line 270, ../scss/custom/_widgets.scss */
+/* line 271, ../scss/custom/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 273, ../scss/custom/_widgets.scss */
+/* line 274, ../scss/custom/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
@@ -1301,14 +1309,14 @@ ul.s3-inline-link {
 }
 
 /* Data lists */
-/* line 280, ../scss/custom/_widgets.scss */
+/* line 281, ../scss/custom/_widgets.scss */
 .card_1_line {
   margin-bottom: 0;
   overflow: hidden;
   height: auto;
 }
 
-/* line 285, ../scss/custom/_widgets.scss */
+/* line 286, ../scss/custom/_widgets.scss */
 .card_1_line, .card_manylines {
   color: #666;
   font-size: 0.7rem;
@@ -1664,11 +1672,9 @@ body.rtl .event-type-header {
   font-size: 1rem;
 }
 
-/* line 268, ../scss/custom/_misc.scss */
-#sub-defaultaddress table tr td {
-  padding: 0.3rem;
-}
-
+/*#sub-defaultaddress table tr td {
+    padding: 0.3rem;
+}*/
 /* line 274, ../scss/custom/_misc.scss */
 .dbstats td {
   text-align: right;

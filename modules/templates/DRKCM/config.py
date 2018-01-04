@@ -726,9 +726,8 @@ def config(settings):
                                               "comments",
                                               ],
                                     label = T("Residence Status"),
-                                    #multiple = False,
+                                    multiple = False,
                                     layout = S3SQLVerticalSubFormLayout,
-                                    explicit_add = T("Add Residence Status"),
                                     ),
 
                             # Other Details ---------------------------
