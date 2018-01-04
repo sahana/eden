@@ -361,7 +361,16 @@ def config(settings):
         current.deployment_settings.ui.export_formats = None
 
         if current.request.controller == "dvr":
+
+            # Use custom rheader for case perspective
             attr["rheader"] = drk_dvr_rheader
+
+            # Set contacts-method to retain the tab
+            s3db = current.s3db
+            s3db.set_method("pr", "person",
+                            method = "contacts",
+                            action = s3db.pr_Contacts,
+                            )
 
         return attr
 

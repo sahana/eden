@@ -4388,6 +4388,7 @@
 'Spanish': 'Spanisch',
 'Special Ice': 'Besonderes Eis',
 'Special Marine': 'Spezielles Wasserfahrzeug',
+'Special Protection Needs': 'Besonderer Schutzbedarf',
 'Specialized Hospital': 'Spezialisiertes Krankenhaus',
 'Specific Area (e.g. Building/Room) within the Location that this Person/Group is seen.': 'Bestimmter Bereich (z.B. Gebäude/Raum) innerhalb eines Ortes in der diese Person/Gruppe gefunden werden kann.',
 'Specific locations need to have a parent of level': 'Bestimmte Orte benötigen ein übergeordnetes Element der Stufe',
