@@ -718,10 +718,7 @@ class S3Resource(object):
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
-    def delete(self,
-               format=None,
-               cascade=False,
-               replaced_by=None):
+    def delete(self, format=None, cascade=False, replaced_by=None):
         """
             Delete all (deletable) records in this resource
 
@@ -866,7 +863,8 @@ class S3Resource(object):
                             if DELETED in rtable:
                                 query &= (rtable[DELETED] != True)
                             rrow = db(query).select(rfield,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1),
+                                                    ).first()
                             if rrow:
                                 restricted = True
                                 break
@@ -885,23 +883,31 @@ class S3Resource(object):
                     query = (rfield == record_id)
                     if tn == self.tablename:
                         query &= (rfield != rtable._id)
-                    if rfield.ondelete == "CASCADE":
+
+                    rfield_ondelete = rfield.ondelete
+
+                    if rfield_ondelete == "CASCADE":
                         rresource = define_resource(tn,
-                                                    filter=query,
-                                                    unapproved=True)
+                                                    filter = query,
+                                                    unapproved = True,
+                                                    )
                         rresource.delete(cascade=True)
                         if rresource.error:
                             self.error = rresource.error
                             break
-                    elif rfield.ondelete == "SET NULL":
+                    else:
+                        if rfield_ondelete == "SET NULL":
+                            rfield_default = None
+                        elif rfield_ondelete == "SET DEFAULT":
+                            rfield_default = rfield.default
+                        else:
+                            continue
+
+                        if DELETED in rtable.fields:
+                            # Disregard already-deleted references
+                            query &= rtable[DELETED] == False
                         try:
-                            db(query).update(**{fn:None})
-                        except:
-                            self.error = INTEGRITY_ERROR
-                            break
-                    elif rfield.ondelete == "SET DEFAULT":
-                        try:
-                            db(query).update(**{fn:rfield.default})
+                            db(query).update(**{fn: rfield_default})
                         except:
                             self.error = INTEGRITY_ERROR
                             break
@@ -926,13 +932,15 @@ class S3Resource(object):
                             query = (table._id == record_id)
                             this = db(query).select(table._id,
                                                     table[rkey],
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1),
+                                                    ).first()
                             query = (table._id != this[pkey]) & \
                                     (table[rkey] == this[rkey])
                             if DELETED in table:
                                 query &= (table[DELETED] != True)
                             remaining = db(query).select(table._id,
-                                                         limitby=(0, 1)).first()
+                                                         limitby = (0, 1),
+                                                         ).first()
                             if not remaining:
                                 linked_table = s3db.table(linked.tablename)
                                 query = (linked_table[fkey] == this[rkey])
@@ -950,7 +958,7 @@ class S3Resource(object):
                     record = None
 
                     # "Park" foreign keys to resolve constraints, "un-delete"
-                    # would then restore any still-valid FKs from this field!
+                    # would then restore any still-valid FKs from this field
                     if "deleted_fk" in table_fields:
                         record = table[record_id]
                         fk = {}
@@ -958,7 +966,8 @@ class S3Resource(object):
                             if record[f] is not None and \
                                s3_has_foreign_key(table[f]):
                                 fk[f] = record[f]
-                                data[f] = None
+                                if not table[f].notnull:
+                                    data[f] = None
                             else:
                                 continue
                         if fk:

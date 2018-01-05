@@ -2611,7 +2611,7 @@ class S3EventAssetModel(S3Model):
                                       widget = "date",
                                       ),
                           s3_comments(),
-                          
+
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -3349,7 +3349,7 @@ class S3EventScenarioModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Scenarios
-        # 
+        #
         tablename = "event_scenario"
         self.define_table(tablename,
                           self.event_incident_type_id(),
@@ -3438,7 +3438,7 @@ class S3EventScenarioModel(S3Model):
 
         self.set_method("event", "scenario",
                         method = "plan",
-                        action = event_ScenarioActionPlan)                       
+                        action = event_ScenarioActionPlan)
 
         # Pass names back to global scope (s3.*)
         return dict(event_scenario_id = scenario_id,
@@ -3505,7 +3505,7 @@ class S3EventScenarioAssetModel(S3Model):
                           #            widget = "date",
                           #            ),
                           s3_comments(),
-                          
+
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -4428,7 +4428,7 @@ class event_ActionPlan(S3Method):
                                          "task_id$status",
                                          "task_id$date_due",
                                          ],
-                            
+
                           )
             profile_widgets.append(widget)
 
@@ -4599,7 +4599,7 @@ class event_ScenarioActionPlan(S3Method):
                                          #"task_id$date_due",
                                          "task_id$comments",
                                          ],
-                            
+
                           )
             profile_widgets.append(widget)
 

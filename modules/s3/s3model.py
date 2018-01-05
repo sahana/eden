@@ -110,15 +110,21 @@ class S3Model(object):
             self.__lock()
             if module in mandatory_models or \
                current.deployment_settings.has_module(module):
-                env = self.model()
+                try:
+                    env = self.model()
+                except Exception:
+                    self.__unlock()
+                    raise
             else:
-                env = self.defaults()
+                try:
+                    env = self.defaults()
+                except Exception:
+                    self.__unlock()
+                    raise
             if isinstance(env, (Storage, dict)):
                 response.s3.update(env)
             self.__loaded(True)
             self.__unlock()
-
-        return
 
     # -------------------------------------------------------------------------
     def __loaded(self, loaded=None):
