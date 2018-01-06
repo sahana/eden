@@ -976,7 +976,7 @@ def config(settings):
             db = current.db
             ertable = s3db.event_team
             def incident_resources(row):
-                query = (ertable.event_id == row["event_incident.id"]) & \
+                query = (ertable.incident_id == row["event_incident.id"]) & \
                         (ertable.deleted == False)
                 resources = db(query).count()
                 return resources
@@ -1758,6 +1758,21 @@ def config(settings):
                                        represent = lambda v: v,
                                        #search_field = "name",
                                        )
+
+        atable = db.s3_audit
+        stable = s3db.sync_repository
+        def team_source(row):
+            query = (atable.record_id == row["pr_group.id"]) & \
+                    (atable.tablename == "pr_group") & \
+                    (atable.repository_id == stable.id)
+            repo = db(query).select(stable.name,
+                                    limitby=(0, 1)
+                                    ).first()
+            if repo:
+                return repo.name
+            else:
+                return T("Internal")
+        table.source = s3_fieldmethod("source", team_source)
 
         list_fields = [(T("Name"), "name_click"),
                        "status_id",
