@@ -2099,11 +2099,13 @@ class PRPersonModel(S3Model):
         # If no results then search other fields
         # @ToDo: Do these searches anyway & merge results together
         if not len(rows):
+            rfilter = resource.rfilter
             if dob:
                 # Try DoB
                 # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("date_of_birth") == dob)
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2111,9 +2113,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and email:
                 # Try Email
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == email) & (FS("contact.contact_method") == "EMAIL")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2121,9 +2124,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and mobile_phone:
                 # Try Mobile Phone
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB or email filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == mobile_phone) & (FS("contact.contact_method") == "SMS")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2131,9 +2135,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and home_phone:
                 # Try Home Phone
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB or email or mobile filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == home_phone) & (FS("contact.contact_method") == "HOME_PHONE")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,

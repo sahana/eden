@@ -1563,8 +1563,20 @@ class S3LocationFilter(S3FilterWidget):
         if "label" not in opts:
             opts["label"] = T("Filter by Location")
 
+        # Initialise Options Storage & Hierarchy
+        hierarchy = {}
+        first = True
+        for level in levels:
+            if first:
+                hierarchy[level] = {}
+                _level = level
+                first = False
+            levels[level] = {"label": levels[level],
+                             "options": {} if translate else [],
+                             }
+
         ftype = "reference gis_location"
-        default = (ftype, levels.keys(), opts.get("no_opts", NOOPT))
+        default = (ftype, levels, opts.get("no_opts", NOOPT))
 
         # Resolve the field selector
         selector = None
@@ -1656,6 +1668,7 @@ class S3LocationFilter(S3FilterWidget):
             rfilter.filters.pop()
             rfilter.filters.pop()
             rfilter.query = None
+            rfilter.transformed = None
 
         rows2 = []
         if not rows:
@@ -1728,18 +1741,6 @@ class S3LocationFilter(S3FilterWidget):
                     rows2 &= _rows
                 else:
                     rows2 = _rows
-
-        # Initialise Options Storage & Hierarchy
-        hierarchy = {}
-        first = True
-        for level in levels:
-            if first:
-                hierarchy[level] = {}
-                _level = level
-                first = False
-            levels[level] = {"label": levels[level],
-                             "options": {} if translate else [],
-                             }
 
         # Generate a name localization lookup dict
         name_l10n = {}
