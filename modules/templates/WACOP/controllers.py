@@ -1390,6 +1390,19 @@ class incident_Browse(custom_WACOP):
                   "_map": _map,
                   }
 
+        # Report
+        method = "report"
+        # @ToDo: ajax_init = True when tab opened
+        visible = True
+        report_widget_id = "event_incident_report"
+        handler = r.get_widget_handler(method)
+        content = handler(r,
+                          method = method,
+                          widget_id = report_widget_id,
+                          visible = visible,
+                          **attr)
+        output["event_incident_report"] = content
+
         # Filter Form
         date_filter = S3DateFilter(["date", "end_date"],
                                    label = "",
@@ -1473,9 +1486,10 @@ class incident_Browse(custom_WACOP):
                                                  args=["filter.options"], vars={}),
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
-                                                 # Map & dataTable
-                                                 target="%s custom-list-event_incident" % map_id,
-                                                 alias=None)
+                                                 # Map, dataTable & Report
+                                                 target = "%s custom-list-event_incident %s" % (map_id, report_widget_id),
+                                                 alias = None
+                                                 )
 
         # Incidents dataTable
         tablename = "event_incident"
@@ -1496,6 +1510,7 @@ class incident_Browse(custom_WACOP):
                         ajax_vars = ajax_vars,
                         )
 
+        output["title"] = T("Incidents")
         self._view(output, "incident_browse.html")
 
         return output
@@ -1533,6 +1548,19 @@ class resource_Browse(custom_WACOP):
                   #"events": events,
                   "_map": _map,
                   }
+
+        # Report
+        method = "report"
+        # @ToDo: ajax_init = True when tab opened
+        visible = True
+        report_widget_id = "pr_group_report"
+        handler = r.get_widget_handler(method)
+        content = handler(r,
+                          method = method,
+                          widget_id = report_widget_id,
+                          visible = visible,
+                          **attr)
+        output["pr_group_report"] = content
 
         # Filter Form
         filter_widgets = [S3TextFilter(["name",
@@ -1581,11 +1609,12 @@ class resource_Browse(custom_WACOP):
                                                  args=["filter.options"], vars={}),
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
-                                                 # Map & dataTable
+                                                 # Map, dataTable & Report
                                                  # We also want to filter the Active Resources datatable, however the selectors don't match for that
                                                  #custom-list-event_team
-                                                 target="%s custom-list-pr_group" % map_id,
-                                                 alias=None)
+                                                 target = "%s custom-list-pr_group %s" % (map_id, report_widget_id),
+                                                 alias = None
+                                                 )
 
         # DataTables
         datatable = self._datatable
@@ -1626,6 +1655,7 @@ class resource_Browse(custom_WACOP):
                   dt_init = dt_init,
                   )
 
+        output["title"] = T("Resources")
         self._view(output, "resource_browse.html")
 
         return output

@@ -1020,8 +1020,10 @@ def config(settings):
                            (T("Type"), "incident_type_id"),
                            (T("Zero Hour"), "date"),
                            (T("Closed"), "end_date"),
-                           (T("City"), "location.location_id.L3"),
-                           (T("State"), "location.location_id.L1"),
+                           #(T("City"), "location.location_id.L3"),
+                           #(T("State"), "location.location_id.L1"),
+                           (T("City"), "location_id$L3"),
+                           (T("State"), "location_id$L1"),
                            (T("Tags"), "tags"),
                            (T("Resources"), "resources"),
                            (T("Event"), "event_id"),
@@ -1035,12 +1037,29 @@ def config(settings):
                            (T("Start"), "date"),
                            ]
 
+        report_fields = ["name",
+                         "incident_type_id",
+                         "status",
+                         (T("City"), "location_id$L3"),
+                         "source",
+                         "group.organisation_team.organisation_id",
+                         ]
+
         s3db.configure(tablename,
                        extra_fields = ("name",
                                        "end_date",
                                        "exercise",
                                        ),
                        list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "status",
+                                         cols = "incident_type_id",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        orderby = "event_incident.name",
                        )
 
@@ -1783,11 +1802,27 @@ def config(settings):
                        (T("Updates"), "updates"),
                        ]
 
+        report_fields = ["name",
+                         "status_id",
+                         (T("City"), "location_id$L3"),
+                         "source",
+                         "organisation_team.organisation_id",
+                         ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        extra_fields = ("name",
                                        ),
                        list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "status_id",
+                                         cols = "organisation_team.organisation_id",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        )
 
     settings.customise_pr_group_resource = customise_pr_group_resource

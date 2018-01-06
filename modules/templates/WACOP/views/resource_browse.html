@@ -3,7 +3,7 @@
 <main role='main' class='main'>
  <div class='row'>
   <div class='small-9 columns'>
-   <div class='row'>
+   <div class='row well'>
     <div id='ff' class='medium-4 columns'>
      {{=filter_form}}
     </div>
@@ -13,9 +13,26 @@
     {{pass}}
     </div>
    </div>
-   <div class='row'>
-    <div class="medium-12 column">
-     {{=pr_group_datatable}}
+   <div class='row well'>
+    <ul class='tabs tab-navigation' data-tab>
+      <li class='tab-title active'><a href='#panel1'>Resources</a></li>
+      <li class='tab-title'><a href='#panel2'>Reports</a></li>
+    </ul>
+    <div class='tabs-content'>
+      <section class='content active' id='panel1'>
+        <div class='row'>
+          <div class='medium-12 columns'>
+            {{=pr_group_datatable}}
+          </div>
+        </div>
+      </section>
+      <section class='staff content' id='panel2'>
+        <div class='row'>
+          <div class='medium-12 columns'>
+            {{=pr_group_report}}
+          </div>
+        </div>
+      </section>
     </div>
    </div>
   </div>
