@@ -1390,18 +1390,22 @@ class incident_Browse(custom_WACOP):
                   "_map": _map,
                   }
 
+        tablename = "event_incident"
+        form_id = "%s-filter-form" % tablename
+
         # Report
         method = "report"
-        # @ToDo: ajax_init = True when tab opened
-        visible = True
         report_widget_id = "event_incident_report"
         handler = r.get_widget_handler(method)
         content = handler(r,
                           method = method,
                           widget_id = report_widget_id,
-                          visible = visible,
+                          visible = False,
                           **attr)
         output["event_incident_report"] = content
+        jqr_append = current.response.s3.jquery_ready.append
+        jqr_append('''S3.search.setup_hidden_widget('%s','%s')''' % (form_id, report_widget_id))
+        jqr_append('''$(document).foundation({tab:{callback:function(tab){S3.search.unhide_section('%s',tab)}}})''' % form_id)
 
         # Filter Form
         date_filter = S3DateFilter(["date", "end_date"],
@@ -1484,6 +1488,7 @@ class incident_Browse(custom_WACOP):
                                              vars={}),
                                    ajaxurl = URL(c="event", f="incident",
                                                  args=["filter.options"], vars={}),
+                                   _id = form_id,
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map, dataTable & Report
@@ -1492,7 +1497,6 @@ class incident_Browse(custom_WACOP):
                                                  )
 
         # Incidents dataTable
-        tablename = "event_incident"
 
         ajax_vars = {"browse": 1}
         # Run already by the controller:
@@ -1549,18 +1553,22 @@ class resource_Browse(custom_WACOP):
                   "_map": _map,
                   }
 
+        tablename = "pr_group"
+        form_id = "%s-filter-form" % tablename
+
         # Report
         method = "report"
-        # @ToDo: ajax_init = True when tab opened
-        visible = True
         report_widget_id = "pr_group_report"
         handler = r.get_widget_handler(method)
         content = handler(r,
                           method = method,
                           widget_id = report_widget_id,
-                          visible = visible,
+                          visible = False,
                           **attr)
         output["pr_group_report"] = content
+        jqr_append = current.response.s3.jquery_ready.append
+        jqr_append('''S3.search.setup_hidden_widget('%s','%s')''' % (form_id, report_widget_id))
+        jqr_append('''$(document).foundation({tab:{callback:function(tab){S3.search.unhide_section('%s',tab)}}})''' % form_id)
 
         # Filter Form
         filter_widgets = [S3TextFilter(["name",
@@ -1607,6 +1615,7 @@ class resource_Browse(custom_WACOP):
                                    #          vars={}),
                                    ajaxurl = URL(c="pr", f="group",
                                                  args=["filter.options"], vars={}),
+                                   _id = form_id,
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map, dataTable & Report
@@ -1621,7 +1630,6 @@ class resource_Browse(custom_WACOP):
         #current.deployment_settings.ui.datatables_pagingType = "bootstrap"
 
         # Resources dataTable
-        tablename = "pr_group"
 
         #ajax_vars = {"browse": 1}
         # Run already by the controller:
