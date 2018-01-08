@@ -36,16 +36,11 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        #sysname = current.deployment_settings.get_system_name_short()
         return [
-            #homepage(),
-            MM("Beneficiaries", c=("dvr", "pr")),
-            #homepage("gis"),
-            MM("Organizations", c=("org", "project")),
-            #homepage("hrm"),
-            MM("Staff", c="hrm", f="staff"),
-            #homepage("cr"),
-            MM("Distributions", c="supply", f="distribution_item"),
+            MM("Beneficiaries", c=("dvr", "pr"), f=("person", "index")),
+            MM("Organizations", c=("org", "project"), f=("organisation", "index")),
+            MM("Staff", c="hrm", f=("staff", "index")),
+            MM("Distributions", c="supply", f=("distribution_item", "index")),
         ]
 
     # -------------------------------------------------------------------------
@@ -141,10 +136,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        due_followups = current.s3db.dvr_due_followups() or "0"
-        follow_up_label = "%s (%s)" % (current.T("Due Follow-ups"),
-                                       due_followups,
-                                       )
+        # Not scalable:
+        #due_followups = current.s3db.dvr_due_followups() or "0"
+        #follow_up_label = "%s (%s)" % (current.T("Due Follow-ups"),
+        #                               due_followups,
+        #                               )
+
+        follow_up_label = current.T("Due Follow-ups")
 
         ADMIN = current.auth.get_system_roles().ADMIN
 

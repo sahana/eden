@@ -893,10 +893,10 @@ class DataCollectionModel(S3Model):
         """
             Customise the form for Answers to a Template
             Web UI:
-                Create the crud_form, autototals, grids & subheadings
+                Create the crud_form, autototals, grids, hides & subheadings
             Mobile Client:
                 Create the crud_form
-                (autototals, grids & subheadings are in the table.settings)
+                (autototals, grids, hides & subheadings are in the table.settings)
         """
 
         T = current.T

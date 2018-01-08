@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 {
-'Malaysian': 'Bahasa Melayu',
 'agree': 'setuju',
 'all of it': 'semuanya',
 'Dear %(person_name)s': 'Kepada %(person_name)s',
 'disagree': 'tidak setuju',
+'Malaysian': 'Bahasa Melayu',
 'most of it': 'kebanyakannya',
 'no': 'tidak',
 'no change': 'tiada perubahan',

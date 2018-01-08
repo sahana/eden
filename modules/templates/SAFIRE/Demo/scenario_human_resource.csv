@@ -1,2 +1,14 @@
 Scenario,Job Title,Comments
 Aircraft Crash 1,Scout,HR Comments
+High rise building,Fire Marshall
+High rise building,Evacuation Team
+High rise building,Cleanup Team
+Water Evacuation Large Group,Boat Captain,1 person
+Water Evacuation Large Group,Boat Crew,1 person
+Water Evacuation Large Group,Docking Crew,6 people
+Water Evacuation Large Group,Evacuation Coordinator
+Water evacuation transport only,Boat Captain,1 person
+Water evacuation transport only,Boat Crew,1 person
+Search and Rescue,Emergency Medical Technician
+Search and Rescue,Mining Technician
+Search and Rescue,Search Dog

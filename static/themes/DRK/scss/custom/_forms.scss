@@ -103,6 +103,9 @@ form {
             }
             &.single td:only-child {
                 padding: 0;
+                div.form-row {
+                    padding: 0 0.2rem 0.2rem;
+                }
             }
             select {
                 max-width: 18rem;

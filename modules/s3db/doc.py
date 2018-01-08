@@ -81,6 +81,7 @@ class S3DocumentLibrary(S3Model):
                                deploy_mission = T("Mission"),
                                dc_response = T(settings.get_dc_response_label()),
                                doc_sitrep = T("Situation Report"),
+                               dvr_case = T("Case"),
                                dvr_case_activity = T("Case Activity"),
                                event_event = T("Event"),
                                event_incident = T("Incident"),
@@ -135,6 +136,7 @@ class S3DocumentLibrary(S3Model):
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
+                           label = T("File"),
                            autodelete = True,
                            length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_file_represent,
@@ -418,6 +420,22 @@ class S3DocumentLibrary(S3Model):
                 if not form_vars.name:
                     form_vars.name = filename
 
+        if not hasattr(doc, "file"):
+            # Record update without new file upload => keep existing
+            record_id = current.request.post_vars.id
+            if record_id:
+                db = current.db
+                if document:
+                    tablename = "doc_document"
+                else:
+                    tablename = "doc_image"
+                table = db[tablename]
+                record = db(table.id == record_id).select(table.file,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                if record:
+                    doc = record.file
+
         if not hasattr(doc, "file") and not doc and not form_vars.url:
             if document:
                 msg = current.T("Either file upload or document URL required.")
@@ -431,25 +449,8 @@ class S3DocumentLibrary(S3Model):
         if hasattr(doc, "file"):
             name = form_vars.name
             if not name:
-                # Use the filename
+                # Use filename as document/image title
                 form_vars.name = doc.filename
-        else:
-            id = current.request.post_vars.id
-            if id:
-                if document:
-                    tablename = "doc_document"
-                else:
-                    tablename = "doc_image"
-
-                db = current.db
-                table = db[tablename]
-                record = db(table.id == id).select(table.file,
-                                                   limitby=(0, 1)).first()
-                if record:
-                    name = form_vars.name
-                    if not name:
-                        # Use the filename
-                        form_vars.name = table.file.retrieve(record.file)[0]
 
         # Do a checksum on the file to see if it's a duplicate
         #import cgi

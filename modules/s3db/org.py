@@ -1298,7 +1298,7 @@ class S3OrganisationBranchModel(S3Model):
             Remove any duplicate memberships and update affiliations
         """
 
-        _id = form.vars.id
+        id_ = form.vars.id
         db = current.db
         s3db = current.s3db
 
@@ -1318,7 +1318,7 @@ class S3OrganisationBranchModel(S3Model):
         left = [otable.on(ltable.organisation_id == otable.id),
                 btable.on(ltable.branch_id == btable.id)]
 
-        record = db(ltable.id == _id).select(otable.root_organisation,
+        record = db(ltable.id == id_).select(otable.root_organisation,
                                              btable.root_organisation,
                                              ltable.branch_id,
                                              ltable.organisation_id,
@@ -1341,7 +1341,7 @@ class S3OrganisationBranchModel(S3Model):
                 # Eliminate duplicate affiliations
                 query = (ltable.branch_id == branch_id) & \
                         (ltable.organisation_id == organisation_id) & \
-                        (ltable.id != _id) & \
+                        (ltable.id != id_) & \
                         (ltable.deleted != True)
 
                 deleted_fk = {"branch_id": branch_id,

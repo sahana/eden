@@ -110,15 +110,21 @@ class S3Model(object):
             self.__lock()
             if module in mandatory_models or \
                current.deployment_settings.has_module(module):
-                env = self.model()
+                try:
+                    env = self.model()
+                except Exception:
+                    self.__unlock()
+                    raise
             else:
-                env = self.defaults()
+                try:
+                    env = self.defaults()
+                except Exception:
+                    self.__unlock()
+                    raise
             if isinstance(env, (Storage, dict)):
                 response.s3.update(env)
             self.__loaded(True)
             self.__unlock()
-
-        return
 
     # -------------------------------------------------------------------------
     def __loaded(self, loaded=None):
@@ -1463,6 +1469,10 @@ class S3Model(object):
 
         # Update the super_keys in the record
         if super_keys:
+            # System update => don't update modified_by/on
+            if "modified_on" in table.fields:
+                super_keys["modified_by"] = table.modified_by
+                super_keys["modified_on"] = table.modified_on
             db(table.id == record_id).update(**super_keys)
 
         record.update(super_keys)

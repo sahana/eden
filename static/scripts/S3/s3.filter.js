@@ -2049,7 +2049,7 @@ S3.search = {};
                     }
                     s3.layerRefreshed = function(layer) {
                         var polygonButton = s3.polygonButton;
-                        if (polygonButton.getIconClass() == 'drawpolygonclear-off') {
+                        if (polygonButton && polygonButton.getIconClass() == 'drawpolygonclear-off') {
                             // Hide the Polygon
                             if (s3.lastDraftFeature) {
                                 s3.lastDraftFeature.destroy();

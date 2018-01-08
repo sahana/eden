@@ -1056,7 +1056,6 @@ class PRPersonModel(S3Model):
                                              "autodelete": False,
                                              },
                             dvr_case_language = "person_id",
-                            dvr_case_service_contact = "person_id",
                             dvr_economy = {"joinby": "person_id",
                                            "multiple": False,
                                            },
@@ -1071,6 +1070,7 @@ class PRPersonModel(S3Model):
                                         "joinby": "person_id",
                                         },
                             dvr_residence_status = "person_id",
+                            dvr_service_contact = "person_id",
 
                             event_incident = {"link": "event_human_resource",
                                               "joinby": "person_id",
@@ -2099,11 +2099,13 @@ class PRPersonModel(S3Model):
         # If no results then search other fields
         # @ToDo: Do these searches anyway & merge results together
         if not len(rows):
+            rfilter = resource.rfilter
             if dob:
                 # Try DoB
                 # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("date_of_birth") == dob)
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2111,9 +2113,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and email:
                 # Try Email
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == email) & (FS("contact.contact_method") == "EMAIL")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2121,9 +2124,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and mobile_phone:
                 # Try Mobile Phone
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB or email filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == mobile_phone) & (FS("contact.contact_method") == "SMS")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -2131,9 +2135,10 @@ class PRPersonModel(S3Model):
                                        limit=MAX_SEARCH_RESULTS)["rows"]
             if not len(rows) and home_phone:
                 # Try Home Phone
-                # Remove the name filter (last one in)
-                resource.rfilter.filters.pop()
-                resource.rfilter.query = None
+                # Remove the name or DoB or email or mobile filter (last one in)
+                rfilter.filters.pop()
+                rfilter.query = None
+                rfilter.transformed = None
                 query = (FS("contact.value") == home_phone) & (FS("contact.contact_method") == "HOME_PHONE")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
@@ -3379,6 +3384,15 @@ class PRAddressModel(S3Model):
                                 widget = RadioWidget.widget,
                                 ),
                           self.gis_location_id(),
+                          # Whether this field has been the source of
+                          # the base location of the entity before, and
+                          # hence address updates should propagate to
+                          # the base location:
+                          Field("is_base_location", "boolean",
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -3453,9 +3467,11 @@ class PRAddressModel(S3Model):
         s3db = current.s3db
         atable = db.pr_address
 
-        row = db(atable.id == record_id).select(atable.location_id,
+        row = db(atable.id == record_id).select(atable.id,
+                                                atable.location_id,
                                                 atable.pe_id,
-                                                limitby=(0, 1)
+                                                atable.is_base_location,
+                                                limitby = (0, 1),
                                                 ).first()
         try:
             location_id = row.location_id
@@ -3464,28 +3480,41 @@ class PRAddressModel(S3Model):
             return
         pe_id = row.pe_id
 
-        req_vars = current.request.form_vars
-        settings = current.deployment_settings
-        person = None
         ptable = s3db.pr_person
+        person = None
+        new_base_location = False
+        req_vars = current.request.vars
         if req_vars and "base_location" in req_vars and \
            req_vars.base_location == "on":
             # Specifically requested
-            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+            new_base_location = True
             person = db(ptable.pe_id == pe_id).select(ptable.id,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1),
+                                                      ).first()
         else:
             # Check if a base location already exists
             person = db(ptable.pe_id == pe_id).select(ptable.id,
                                                       ptable.location_id,
-                                                      limitby=(0, 1)
+                                                      limitby = (0, 1),
                                                       ).first()
-            if person and not person.location_id:
-                # Hasn't yet been set so use this
-                S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+
+            if person and (row.is_base_location or not person.location_id):
+                # This address was the source of the base location
+                # (=> update it), or no base location has been set
+                # yet (=> set it now)
+                new_base_location = True
+
+        if new_base_location:
+            # Set new base location
+            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
+            row.update_record(is_base_location=True)
+
+            # Reset is_base_location flag in all other addresses
+            query = (atable.pe_id == pe_id) & (atable.id != row.id)
+            db(query).update(is_base_location=False)
 
         if not person:
-            # Nothing we can do
+            # Nothing more we can do
             return
 
         address_type = str(form_vars.get("type"))
@@ -3504,6 +3533,7 @@ class PRAddressModel(S3Model):
             # Do nothing
             return
 
+        settings = current.deployment_settings
         if settings.has_module("hrm"):
             # Also check for relevant HRM record(s)
             staff_settings = settings.get_hrm_location_staff()
@@ -4544,7 +4574,7 @@ class PRAvailabilityModel(S3Model):
 # =============================================================================
 class PRDescriptionModel(S3Model):
     """
-        Additional tables for DVI/MPR
+        Additional tables used mostly for DVI/MPR
     """
 
     names = ("pr_age_group",
@@ -4892,6 +4922,14 @@ class PRDescriptionModel(S3Model):
                      # Medical Details: scars, amputations, implants
                      Field("medical_conditions", "text",
                            label = T("Medical Conditions"),
+                           ),
+
+                     Field("allergic", "boolean",
+                           label = T("Allergic"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("allergies", "text",
+                           label = T("Allergies"),
                            ),
 
                      # Other details

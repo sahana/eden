@@ -112,7 +112,13 @@
         <xsl:variable name="Milestone" select="col[@field='Milestone']/text()"/>
         <xsl:variable name="TimeEstimated" select="col[@field='Time Estimated']/text()"/>
         <xsl:variable name="Assignee" select="col[@field='Assigned']/text()"/>
-        <xsl:variable name="Priority" select="col[@field='Priority']/text()"/>
+        <xsl:variable name="Priority">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Priority']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
 
         <resource name="project_task">
@@ -132,19 +138,19 @@
             <data field="description"><xsl:value-of select="col[@field='Detailed Description']/text()"/></data>
             <data field="source"><xsl:value-of select="col[@field='Source']/text()"/></data>
             <xsl:choose>
-                <xsl:when test="$Priority='Urgent'">
+                <xsl:when test="$Priority='URGENT'">
                     <data field="priority">1</data>
                 </xsl:when>
-                <xsl:when test="$Priority='High'">
+                <xsl:when test="$Priority='HIGH'">
                     <data field="priority">2</data>
                 </xsl:when>
-                <xsl:when test="$Priority='Medium'">
+                <xsl:when test="$Priority='MEDIUM'">
                     <data field="priority">3</data>
                 </xsl:when>
-                <xsl:when test="$Priority='Normal'">
+                <xsl:when test="$Priority='NORMAL'">
                     <data field="priority">3</data>
                 </xsl:when>
-                <xsl:when test="$Priority='Low'">
+                <xsl:when test="$Priority='LOW'">
                     <data field="priority">4</data>
                 </xsl:when>
                 <xsl:otherwise>

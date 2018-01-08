@@ -998,6 +998,8 @@ class S3ContentModel(S3Model):
             ltable.insert(post_id = post_id,
                           forum_id = forum_id,
                           )
+            # Update modified_on of the forum to allow subscribers to be notified
+            db(s3db.pr_forum.id == forum_id).update(modified_on = r.utcnow)
 
         output = current.xml.json_message(True, 200, current.T("Post Shared"))
         current.response.headers["Content-Type"] = "application/json"
