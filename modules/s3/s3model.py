@@ -662,6 +662,8 @@ class S3Model(object):
                     defaults = None
                     multiple = True
                     filterby = None
+                    label = None
+                    plural = None
 
                 elif isinstance(link, dict):
                     alias = link.get("name", name)
@@ -716,6 +718,8 @@ class S3Model(object):
                     defaults = link.get("defaults")
                     multiple = link.get("multiple", True)
                     filterby = link.get("filterby")
+                    label = link.get("label")
+                    plural = link.get("plural")
 
                 else:
                     continue
@@ -732,6 +736,8 @@ class S3Model(object):
                                     defaults=defaults,
                                     multiple=multiple,
                                     filterby=filterby,
+                                    label=label,
+                                    plural=plural,
                                     )
                 hooks[alias] = component
 
@@ -943,6 +949,8 @@ class S3Model(object):
                                 prefix=prefix,
                                 name=name,
                                 alias=alias,
+                                label=hook.label,
+                                plural=hook.plural,
                                 )
 
             if hook.supertable is not None:

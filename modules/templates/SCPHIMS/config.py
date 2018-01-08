@@ -133,9 +133,11 @@ def config(settings):
     settings.mobile.forms = [("Beneficiaries", "pr_person", {"c": "dvr",
                                                              "data": True,
                                                              "components": (
+                                                                 "person_details",
                                                                  "contact",
                                                                  "address",
                                                                  "household_member",
+                                                                 "dvr_case",
                                                                  ),
                                                              }),
                              # Done via the Answer resource, which is exposed through Dynamic Tables
@@ -702,23 +704,24 @@ def config(settings):
     settings.hrm.email_required = False
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_resource(r, tablename):
+    # We never access the dvr_case resource except via the person view
+    #def customise_dvr_case_resource(r, tablename):
 
-        current.s3db.configure("dvr_case",
-                               list_fields = ["person_id",
-                                              "reference",
-                                              "person_id$location_id",
-                                              (T("Phone"), "person_id$phone.value"),
-                                              "comments",
-                                              ],
-                               )
+    #    current.s3db.configure("dvr_case",
+    #                           list_fields = ["person_id",
+    #                                          "reference",
+    #                                          "person_id$location_id",
+    #                                          (T("Phone"), "person_id$phone.value"),
+    #                                          "comments",
+    #                                          ],
+    #                           )
 
-    settings.customise_dvr_case_resource = customise_dvr_case_resource
+    #settings.customise_dvr_case_resource = customise_dvr_case_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
-        if r.function not in ("activity", "distribution"):
+        if r.controller != "dvr" and r.function not in ("activity", "distribution"):
             return
 
         # Beneficiaries
@@ -726,6 +729,12 @@ def config(settings):
             activity_id = r.id
         else:
             activity_id = None
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        ptable.pe_label.label = T("Barcode")
 
         # CRUD Strings
         current.response.s3.crud_strings["pr_person"] = Storage(
@@ -741,42 +750,70 @@ def config(settings):
             msg_list_empty = T("No Beneficiaries Found")
         )
 
-        s3db = current.s3db
         f = s3db.pr_person_details.age
         f.readable = f.writable = True
 
-        mobile_list_fields = [# No need for Mobile client to know which Activity a Case is linked to
-                              #"activity_person.activity_id$name",
-                              #"dvr_case.reference", # Will always be empty in download
-                              #"dvr_case.date", # We don't need this in the mobile form
-                              "first_name",
-                              "middle_name",
-                              "last_name",
-                              #"date_of_birth",
-                              "person_details.age",
-                              "gender",
-                              "person_details.disabled",
-                              "phone.value",
-                              #"email.value",
-                              # @ToDo: Use just parent in Mobile LocationSelector
-                              #"address.location_id$L1",
-                              #"address.location_id$L2",
-                              #"address.location_id$L3",
-                              #"address.location_id$L4",
-                              "address.location_id$parent",
-                              # @ToDo: Workaround needed to avoid double-join of gis_location (e.g. VF?)
-                              #"address.location_id$parent$uuid",
-                              "address.location_id$addr_street",
-                              "household_member.age",
-                              "household_member.gender",
-                              "household_member.disabled",
-                              "household_member.comments",
-                              "dvr_case.comments",
-                              ]
+        mform = r.method == "mform"
+        if mform:
+            # Define Mobile forms - simplifies UX & also minimises downloads
+            # Mobile cannot currently use Filtered Components, so simulate this
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
-        crud_fields = [#"dvr_case.reference",
-                       #"dvr_case.date",
+            ctable = s3db.pr_contact
+            ctable.contact_method.default = "SMS"
+            ctable.value.label = T("Mobile Phone") # Mobile Forms don't use custom labels inside S3SQLCustomForm
+            s3db.configure("pr_contact",
+                           mobile_form = S3SQLCustomForm("value",
+                                                         ),
+                           )
+
+            atable = s3db.pr_address
+            atable.type.default = 1 # "Current Home Address"
+            atable.location_id.label = T("Current Address") # Mobile Forms don't use custom labels inside S3SQLCustomForm
+            s3db.configure("pr_address",
+                           mobile_form = S3SQLCustomForm("location_id",
+                                                         ),
+                           )
+
+            s3db.configure("pr_person_details",
+                           mobile_form = S3SQLCustomForm("age",
+                                                         "disabled",
+                                                         ),
+                           )
+
+            s3db.configure("dvr_case",
+                           mobile_form = S3SQLCustomForm("comments",
+                                                         ),
+                           )
+            # Redefine Components to make them 1:1 and add Labels
+            s3db.add_components("pr_person",
+                                dvr_case = {"name": "dvr_case",
+                                            "label": "Case",
+                                            "joinby": "person_id",
+                                            "multiple": False,
+                                            },
+                                dvr_household_member = {"plural": "Household Members",
+                                                        "joinby": "person_id",
+                                                        },
+                                pr_address = {"label": "Address",
+                                              "joinby": "pe_id",
+                                              "multiple": False,
+                                              },
+                                pr_contact = {"label": "Mobile Phone",
+                                              "joinby": "pe_id",
+                                              "multiple": False,
+                                              },
+                                pr_person_details = {"label": "Age and Disability",
+                                                     "joinby": "person_id",
+                                                     "multiple": False,
+                                                     },
+                                )
+            # Attach components (we're past resource initialization)
+            attach = r.resource._attach
+            hooks = s3db.get_components("pr_person", names=("dvr_case", "household_member", "address", "contact", "person_details"))
+            for component_alias in hooks:
+                attach(component_alias, hooks[component_alias])
+
+        crud_fields = [#"dvr_case.date",
                        "first_name",
                        "middle_name",
                        "last_name",
@@ -829,9 +866,9 @@ def config(settings):
                        "dvr_case.comments",
                        ]
 
-        if r.representation == "mdata":
+        if mform:
             # @ToDo: Scan this in from barcode on preprinted card
-            crud_fields.insert(0, "dvr_case.reference")
+            crud_fields.insert(0, "pe_label")
         else:
             db = current.db
             atable = s3db.pr_address
@@ -865,16 +902,18 @@ def config(settings):
             atable.location_id.widget = S3LocationSelector(show_address = True,
                                                            show_map = False,
                                                            )
-            ctable.reference.label = T("Barcode")
 
             #crud_fields.insert(0, "dvr_case.date")
             if r.method in ("read", "update"):
-                crud_fields.insert(0, "dvr_case.reference")
+                crud_fields.insert(0, "pe_label")
                 # @ToDo: Add InlineComponents for Distribution Items to be able to mark as received
 
         s3db.configure("pr_person",
+                       card = {"title": "{{record.first_name}} {{record.middle_name}} {{record.last_name}}",
+                               },
                        crud_form = S3SQLCustomForm(*crud_fields,
-                                                   postprocess = lambda form: pr_person_postprocess(form, activity_id)),
+                                                   postprocess = lambda form: pr_person_postprocess(form, activity_id)
+                                                   ),
                        list_fields = ["first_name",
                                       "middle_name",
                                       "last_name",
@@ -882,10 +921,9 @@ def config(settings):
                                       "gender",
                                       (T("Phone"), "phone.value"),
                                       "address.location_id",
-                                      "dvr_case.reference",
+                                      "pe_label",
                                       "dvr_case.comments",
                                       ],
-                       mobile_list_fields = mobile_list_fields,
                        )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
@@ -932,14 +970,22 @@ def config(settings):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             record_id = record.id
-            ctable = s3db.dvr_case
-            case = db(ctable.person_id == record_id).select(ctable.reference,
-                                                            limitby=(0, 1)
-                                                            ).first()
-            if case:
-                reference = case.reference or current.messages["NONE"]
+            #ctable = s3db.dvr_case
+            #case = db(ctable.person_id == record_id).select(ctable.reference,
+            #                                                limitby=(0, 1)
+            #                                                ).first()
+            #if case:
+            #    reference = case.reference or current.messages["NONE"]
+            #else:
+            #    reference = None
+            dtable = s3db.pr_person_details
+            details = db(dtable.person_id == record_id).select(dtable.age,
+                                                               limitby=(0, 1)
+                                                               ).first()
+            if details:
+                age = details.age or T("unknown")
             else:
-                reference = None
+                age = T("unknown")
 
             from gluon import A, DIV, TABLE, TR, TH, URL
             from s3 import s3_fullname, s3_avatar_represent
@@ -955,10 +1001,12 @@ def config(settings):
                             TR(TH("%s: " % T("Name")),
                                s3_fullname(record),
                                TH("%s: " % T("Barcode")),
-                               reference,
+                               record.pe_label,
                                ),
-                            TR(TH("%s: " % T("Date of Birth")),
-                               "%s" % (record.date_of_birth or T("unknown")),
+                            TR(#TH("%s: " % T("Date of Birth")),
+                               #"%s" % (record.date_of_birth or T("unknown")),
+                               TH("%s: " % T("Age")),
+                               age,
                                TH("%s: " % T("Gender")),
                                "%s" % s3db.pr_gender_opts.get(record.gender,
                                                               T("unknown"))
@@ -973,12 +1021,16 @@ def config(settings):
         s3 = current.response.s3
         standard_prep = s3.prep
         def custom_prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                if not standard_prep(r):
-                    return False
+            # Do NOT Call standard prep
+            # if callable(standard_prep):
+            #     if not standard_prep(r):
+            #         return False
 
             if r.controller == "dvr":
+                # Filter to persons who have a case registered
+                from s3 import FS
+                resource = r.resource
+                resource.add_filter(FS("dvr_case.id") != None)
                 # Beneficiaries are added via their Distributions
                 # @ToDo: Exception for Mobile?
                 r.resource.configure(insertable = False)

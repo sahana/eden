@@ -182,10 +182,11 @@ def person():
                 #     case perspective (dvr/case) for multiple cases
                 #     per person!
                 crud_form = S3SQLCustomForm(
-                                "dvr_case.reference",
+                                #"dvr_case.reference",
                                 "dvr_case.organisation_id",
                                 "dvr_case.date",
                                 "dvr_case.status_id",
+                                #"pe_label",
                                 "first_name",
                                 "middle_name",
                                 "last_name",
@@ -237,7 +238,7 @@ def person():
                                   "last_name",
                                   #"email.value",
                                   #"phone.value",
-                                  "dvr_case.reference",
+                                  #"dvr_case.reference",
                                   ],
                                   label = T("Search"),
                                   comment = T("You can search by name, ID or case number"),
@@ -363,7 +364,8 @@ def person():
                                )
 
         # Module-specific list fields (must be outside of r.interactive)
-        list_fields = ["dvr_case.reference",
+        list_fields = [#"dvr_case.reference",
+                       #"pe_label",
                        "first_name",
                        "middle_name",
                        "last_name",

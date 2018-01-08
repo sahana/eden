@@ -612,6 +612,8 @@ class S3MobileSchema(object):
         """
 
         resource = self.resource
+        resolve_selector = resource.resolve_selector
+
         tablename = resource.tablename
 
         fields = []
@@ -626,7 +628,7 @@ class S3MobileSchema(object):
         for element in form.elements:
 
             if isinstance(element, S3SQLField):
-                rfield = resource.resolve_selector(element.selector)
+                rfield = resolve_selector(element.selector)
 
                 fname = rfield.fname
 
@@ -647,7 +649,7 @@ class S3MobileSchema(object):
             fkey = resource.fkey
             if fkey not in fnames:
                 fields.append(resource.table[fkey])
-                include(fkey)
+                #include(fkey)
 
         return fields
 
@@ -1101,6 +1103,10 @@ class S3MobileForm(object):
                 description = {"table": hook.tablename,
                                "multiple": hook.multiple,
                                }
+                if hook.label:
+                    description["label"] = hook.label
+                if hook.plural:
+                    description["labelPlural"] = hook.plural
 
                 if hook.pkey != pkey:
                     description["pkey"] = hook.pkey
