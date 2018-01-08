@@ -784,6 +784,12 @@ def config(settings):
                            mobile_form = S3SQLCustomForm("comments",
                                                          ),
                            )
+
+            s3db.configure("dvr_household_member",
+                           card = {"title": "{{record.age}} {{record.gender}} {{record.disabled}}",
+                                   }
+                           )
+
             # Redefine Components to make them 1:1 and add Labels
             s3db.add_components("pr_person",
                                 dvr_case = {"name": "dvr_case",

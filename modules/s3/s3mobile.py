@@ -1097,6 +1097,7 @@ class S3MobileForm(object):
 
         # Construct component descriptions for schema export
         if aliases:
+            T = current.T
             hooks = current.s3db.get_components(tablename, names=aliases)
             for alias, hook in hooks.items():
 
@@ -1104,9 +1105,9 @@ class S3MobileForm(object):
                                "multiple": hook.multiple,
                                }
                 if hook.label:
-                    description["label"] = hook.label
+                    description["label"] = s3_str(T(hook.label))
                 if hook.plural:
-                    description["labelPlural"] = hook.plural
+                    description["labelPlural"] =  s3_str(T(hook.plural))
 
                 if hook.pkey != pkey:
                     description["pkey"] = hook.pkey
