@@ -287,6 +287,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def event():
+        """ Events """
+
+        return M(c="event")(
+                    M("Event Types", f="event_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import")
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     @classmethod
     def settings_messaging(cls):
         """ Messaging settings menu items:

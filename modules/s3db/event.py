@@ -3546,6 +3546,13 @@ class S3EventScenarioHRModel(S3Model):
 
         T = current.T
 
+        if current.deployment_settings.has_module("hrm"):
+            # Proper field
+            job_title_represent = S3Represent(lookup="hrm_job_title")
+        else:
+            # Dummy field - probably this model not being used but others from Event are
+            job_title_represent = None
+
         # ---------------------------------------------------------------------
         # Positions required &, potentially, then who would nromally fill them
         #
@@ -3558,7 +3565,7 @@ class S3EventScenarioHRModel(S3Model):
                                                 ondelete = "SET NULL",
                                                 requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(current.db, "hrm_job_title.id",
-                                                                      self.hrm_human_resource.job_title_id.represent,
+                                                                      job_title_represent,
                                                                       filterby="type",
                                                                       filter_opts=(4,), # Type: Deploy
                                                                       )),
