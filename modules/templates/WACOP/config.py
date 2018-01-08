@@ -1061,6 +1061,9 @@ def config(settings):
                                          totals = True)
                         ),
                        orderby = "event_incident.name",
+                       popup_url = URL(c="event", f="incident",
+                                       args=["[id]", "custom"],
+                                       ),
                        )
 
     settings.customise_event_incident_resource = customise_event_incident_resource
