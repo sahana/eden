@@ -3652,6 +3652,57 @@ class ResourceDeleteTests(unittest.TestCase):
         finally:
             component.drop()
 
+    # -------------------------------------------------------------------------
+    def testArchiveWithNotNullConstraint(self):
+        """ Test archiving of foreign keys with notnull constraints """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+
+        s3db = current.s3db
+
+        master_table = s3db.del_master
+
+        s3db.define_table("del_notnull",
+                          Field("del_master_id", master_table,
+                                notnull = True,
+                                ondelete = "RESTRICT",
+                                ),
+                          *s3_meta_fields())
+        table = s3db["del_notnull"]
+
+        try:
+            master_id = master_table.insert()
+
+            # Create a record
+            record_id = table.insert(del_master_id = master_id)
+            record = table[record_id]
+            assertNotEqual(record, None)
+
+            # Verify that master record is restricted by reference
+            resource = s3db.resource("del_master", id=master_id)
+            success = resource.delete()
+            assertEqual(success, 0)
+
+            # Delete the record
+            resource = s3db.resource("del_notnull", id=record_id)
+            success = resource.delete()
+            assertEqual(success, 1)
+            assertEqual(resource.error, None)
+
+            # Deleted record is still linked
+            record = table[record_id]
+            assertEqual(record.del_master_id, master_id)
+
+            # ...but doesn't block the master record for that
+            resource = s3db.resource("del_master", id=master_id)
+            success = resource.delete()
+            assertEqual(success, 1)
+            assertEqual(resource.error, None)
+
+        finally:
+            table.drop()
+
     ## -------------------------------------------------------------------------
     #def testDeleteSimple(self):
         #""" Test hard deletion of a record """

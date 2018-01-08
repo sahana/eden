@@ -298,13 +298,16 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
   content: '\f0d7'; /* fa-caret-down */
 }
 
-/* Show Actions column on Group Browse & Staff Assign pages */
+/* Show Actions column on Group Browse & Staff Assign pages & Reports */
+div.pt-table table.dataTable tbody td:first-child,
+div.pt-table table.dataTable thead th:first-child,
 div.group-browse table.dataTable tbody td:first-child,
 div.group-browse table.dataTable thead th:first-child,
 body.assign table.dataTable tbody td:first-child,
 body.assign table.dataTable thead th:first-child {
   display: block;
 }
+div.pt-table table.dataTable thead th:first-child,
 div.group-browse table.dataTable thead th:first-child,
 body.assign table.dataTable thead th:first-child {
     border: 0;

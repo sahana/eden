@@ -1731,7 +1731,7 @@ def config(settings):
 
             elif tablename == "dc_target":
 
-                tabs = ((T("Basic Details"), None, {"native": 1}),
+                tabs = ((T("Basic Details"), None),
                         (T("Responses"), "response"),
                         )
 
@@ -1956,12 +1956,12 @@ def config(settings):
 
             if r.interactive and r.component_name == "response":
 
-                s3db.configure("dc_response",
-                               insertable = False,
-                               list_fields = ["person_id",
-                                              "date",
-                                              ],
-                               )
+                current.s3db.configure("dc_response",
+                                       insertable = False,
+                                       list_fields = ["person_id",
+                                                      "date",
+                                                      ],
+                                       )
 
             return result
         s3.prep = custom_prep
@@ -1976,8 +1976,8 @@ def config(settings):
             if r.interactive and r.component_name == "response":
                 from gluon import URL
                 from s3 import S3CRUD
-                update_url = URL(f="respnse", args = ["[id]", "answer"])
-                S3CRUD.action_buttons(r, update_url=update_url)
+                open_url = URL(f="respnse", args = ["[id]", "answer"])
+                S3CRUD.action_buttons(r, read_url=open_url, update_url=open_url)
 
             return output
         s3.postp = custom_postp
@@ -2123,6 +2123,7 @@ def config(settings):
                 lang = default_language
                 user = Storage(first_name = person.first_name,
                                last_name = person.last_name,
+                               language = lang,
                                email = email,
                                organisation_id = hr.organisation_id,
                                site_id = hr.site_id,
@@ -3464,6 +3465,8 @@ def config(settings):
         s3 = current.response.s3
         request = current.request
         controller = request.controller
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         tablename = "hrm_human_resource"
 
@@ -4997,7 +5000,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def hrm_training_event_onaccept(form):
         """
-            Create a Schduled Task to notify EO / MFP to run survey
+            Create a Scheduled Task to notify EO / MFP to run survey
         """
 
         form_vars = form.vars
@@ -6071,6 +6074,8 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
         request = current.request
+        # Enable scalability-optimized strategies
+        settings.base.bigtable = True
 
         # Special cases for different NS / Roles
         arcs = crmada = ircs = vnrc = False

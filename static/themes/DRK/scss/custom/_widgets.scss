@@ -140,12 +140,13 @@ table.s3-groupedopts-widget {
     td {
         white-space: nowrap;
         input {
-            vertical-align: top;
+            vertical-align: text-top;
         }
         label {
             white-space: pre-wrap;
         }
     }
+    margin-bottom: 0;
 }
 
 /* ImageCropWidget */

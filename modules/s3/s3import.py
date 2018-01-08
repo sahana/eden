@@ -2778,35 +2778,50 @@ class S3ImportItem(object):
 
         if item_table is None:
             return None
+
+        item_id = self.item_id
         db = current.db
-        row = db(item_table.item_id == self.item_id).select(item_table.id,
-                                                            limitby=(0, 1)
-                                                            ).first()
+        row = db(item_table.item_id == item_id).select(item_table.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
         if row:
             record_id = row.id
         else:
             record_id = None
+
         record = Storage(job_id = self.job.job_id,
-                         item_id = self.item_id,
+                         item_id = item_id,
                          tablename = self.tablename,
                          record_uid = self.uid,
-                         error = self.error or "")
+                         error = self.error or "",
+                         )
+
         if self.element is not None:
             element_str = current.xml.tostring(self.element,
                                                xml_declaration=False)
             record.update(element=element_str)
-        if self.data is not None:
+
+        self_data = self.data
+        if self_data is not None:
+            table = self.table
+            fields = table.fields
             data = Storage()
-            for f in self.data.keys():
-                table = self.table
-                if f not in table.fields:
+            for f in self_data.keys():
+                if f not in fields:
                     continue
-                fieldtype = str(self.table[f].type)
-                if fieldtype == "id" or s3_has_foreign_key(self.table[f]):
+                field = table[f]
+                field_type = str(field.type)
+                if field_type == "id" or s3_has_foreign_key(field):
                     continue
-                data.update({f:self.data[f]})
+                data_ = self_data[f]
+                if isinstance(data_, Field):
+                    # Not picklable
+                    # This is likely to be a modified_on to avoid updating this field, which skipping does just fine too
+                    continue
+                data.update({f: data_})
             data_str = cPickle.dumps(data)
             record.update(data=data_str)
+
         ritems = []
         for reference in self.references:
             field = reference.field
@@ -2815,11 +2830,13 @@ class S3ImportItem(object):
             if entry:
                 if entry.item_id is not None:
                     store_entry = dict(field=field,
-                                       item_id=str(entry.item_id))
+                                       item_id=str(entry.item_id),
+                                       )
                 elif entry.uid is not None:
                     store_entry = dict(field=field,
                                        tablename=entry.tablename,
-                                       uid=str(entry.uid))
+                                       uid=str(entry.uid),
+                                       )
                 if store_entry is not None:
                     ritems.append(json.dumps(store_entry))
         if ritems:

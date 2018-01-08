@@ -389,17 +389,59 @@ def config(settings):
                 tags = ",".join(tags)
                 s3.jquery_ready.append('''wacop_update_tags("%s")''' % tags)
 
-            # Processing Tags/auto-Bookmarks
+            def create_onaccept(form):
+                """
+                    Update the modified_on of any forums to which the Incident/Event this Post links to is Shared
+                """
+                post_id = form.vars.id
+                pltable = s3db.event_post
+                events = db(pltable.post_id == post_id).select(pltable.event_id,
+                                                               pltable.incident_id,
+                                                               )
+                if len(events):
+                    event_ids = []
+                    eappend = event_ids.append
+                    incident_ids = []
+                    iappend = incident_ids.append
+                    for e in events:
+                        incident_id = e.incident_id
+                        if incident_id:
+                            iappend(incident_id)
+                        else:
+                            eappend(e.event_id)
+
+                    fltable = s3db.event_forum
+                    if len(event_ids):
+                        query = (fltable.event_id.belongs(event_ids))
+                        if len(incident_ids):
+                            query |= (fltable.incident_id.belongs(incident_ids))
+                    else:
+                        query = (fltable.incident_id.belongs(incident_ids))
+                    forums = db(query).select(fltable.forum_id)
+                    len_forums = len(forums)
+                    if len_forums:
+                        ftable = s3db.pr_forum
+                        if len_forums == 1:
+                            query = (ftable.id == forums.first().forum_id)
+                        else:
+                            query = (ftable.id.belongs([f.forum_id for f in forums]))
+                        db(query).update(modified_on = r.utcnow)
+
             default = s3db.get_config(tablename, "onaccept")
             if isinstance(default, list):
                 onaccept = default
+                # Processing Tags/auto-Bookmarks
                 onaccept.append(cms_post_onaccept)
+                create_onaccept = list(onaccept) + [create_onaccept]
             else:
+                # Processing Tags/auto-Bookmarks
                 onaccept = [default, cms_post_onaccept]
+                create_onaccept = [create_onaccept, default, cms_post_onaccept]
 
             s3db.configure(tablename,
                            crud_form = crud_form,
                            onaccept = onaccept,
+                           create_onaccept = create_onaccept,
                            )
 
         elif method in ("custom", "dashboard", "datalist", "filter"):
@@ -625,17 +667,6 @@ def config(settings):
                 s3db.configure(tablename,
                                filter_widgets = filter_widgets,
                                )
-
-        #elif r.representation == "msg":
-        #    # Notifications
-        #    notify_fields = []
-        #    s3db.configure(tablename,
-        #                   notify_fields = notify_fields,
-        #                   #notify_renderer = notify_renderer,
-        #                   #notify_subject = notify_subject,
-        #                   # Keep default name, but it will use the one in the Template folder
-        #                   #notify_template = notify_template,
-        #                  )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
 
@@ -945,7 +976,7 @@ def config(settings):
             db = current.db
             ertable = s3db.event_team
             def incident_resources(row):
-                query = (ertable.event_id == row["event_incident.id"]) & \
+                query = (ertable.incident_id == row["event_incident.id"]) & \
                         (ertable.deleted == False)
                 resources = db(query).count()
                 return resources
@@ -989,8 +1020,10 @@ def config(settings):
                            (T("Type"), "incident_type_id"),
                            (T("Zero Hour"), "date"),
                            (T("Closed"), "end_date"),
-                           (T("City"), "location.location_id.L3"),
-                           (T("State"), "location.location_id.L1"),
+                           #(T("City"), "location.location_id.L3"),
+                           #(T("State"), "location.location_id.L1"),
+                           (T("City"), "location_id$L3"),
+                           (T("State"), "location_id$L1"),
                            (T("Tags"), "tags"),
                            (T("Resources"), "resources"),
                            (T("Event"), "event_id"),
@@ -1004,12 +1037,29 @@ def config(settings):
                            (T("Start"), "date"),
                            ]
 
+        report_fields = ["name",
+                         "incident_type_id",
+                         "status",
+                         (T("City"), "location_id$L3"),
+                         "source",
+                         "group.organisation_team.organisation_id",
+                         ]
+
         s3db.configure(tablename,
                        extra_fields = ("name",
                                        "end_date",
                                        "exercise",
                                        ),
                        list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "status",
+                                         cols = "incident_type_id",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        orderby = "event_incident.name",
                        )
 
@@ -1728,6 +1778,21 @@ def config(settings):
                                        #search_field = "name",
                                        )
 
+        atable = db.s3_audit
+        stable = s3db.sync_repository
+        def team_source(row):
+            query = (atable.record_id == row["pr_group.id"]) & \
+                    (atable.tablename == "pr_group") & \
+                    (atable.repository_id == stable.id)
+            repo = db(query).select(stable.name,
+                                    limitby=(0, 1)
+                                    ).first()
+            if repo:
+                return repo.name
+            else:
+                return T("Internal")
+        table.source = s3_fieldmethod("source", team_source)
+
         list_fields = [(T("Name"), "name_click"),
                        "status_id",
                        (T("Current Incident"), "active_incident__link.incident_id"),
@@ -1737,11 +1802,27 @@ def config(settings):
                        (T("Updates"), "updates"),
                        ]
 
+        report_fields = ["name",
+                         "status_id",
+                         (T("City"), "location_id$L3"),
+                         "source",
+                         "organisation_team.organisation_id",
+                         ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        extra_fields = ("name",
                                        ),
                        list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "status_id",
+                                         cols = "organisation_team.organisation_id",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        )
 
     settings.customise_pr_group_resource = customise_pr_group_resource
@@ -1989,6 +2070,28 @@ def config(settings):
                                        ),
                           ]
 
+        def onaccept(form):
+            """
+                Update the modified_on of any forums to which the Task is Shared
+            """
+            task_id = form.vars.id
+            ltable = s3db.project_task_forum
+            forums = db(ltable.task_id == task_id).select(ltable.forum_id)
+            len_forums = len(forums)
+            if len_forums:
+                ftable = s3db.pr_forum
+                if len_forums == 1:
+                    query = (ftable.id == forums.first().forum_id)
+                else:
+                    query = (ftable.id.belongs([f.forum_id for f in forums]))
+                db(query).update(modified_on = r.utcnow)
+
+        update_onaccept = s3db.get_config(tablename, "update_onaccept")
+        if update_onaccept:
+            update_onaccept = [update_onaccept, onaccept]
+        else:
+            update_onaccept = onaccept
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        extra_fields = ("name",
@@ -2001,6 +2104,7 @@ def config(settings):
                                       (T("Due"), "date_due"),
                                       ],
                        orderby = "project_task.date_due",
+                       update_onaccept = update_onaccept,
                        )
 
     settings.customise_project_task_resource = customise_project_task_resource

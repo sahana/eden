@@ -26,6 +26,9 @@ def config(settings):
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
     settings.base.prepopulate.append("default")
 
+    # Uncomment this to prefer scalability-optimized strategies globally
+    #settings.base.bigtable = True
+
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "default"
 
@@ -295,6 +298,8 @@ def config(settings):
     #settings.gis.layer_tree_radio = True
     # Uncomment to display the Map Legend as a floating DIV
     #settings.gis.legend = "float"
+    # Uncomment to use scalability-optimized options lookups in location filters
+    #settings.gis.location_filter_bigtable_lookups = True
     # Uncomment to prevent showing LatLon in Location Represents
     #settings.gis.location_represent_address_only = True
     # Mouse Position: 'normal', 'mgrs' or None

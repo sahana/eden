@@ -560,10 +560,25 @@ def training_center():
         msg_list_empty = T("No Training Centers currently registered")
         )
 
-    # Open record in this controller after creation
+    def create_onaccept(form):
+        # Set this new Org to be a Branch of the User's Root Org
+        root_org = auth.root_org()
+        if root_org:
+            id_ = s3db.org_organisation_branch.insert(organisation_id = root_org,
+                                                      branch_id = form.vars.id,
+                                                      )
+            onaccept = s3db.get_config("org_organisation_branch", "onaccept")
+            onaccept(Storage(vars = Storage(id = id_)))
+
+        # Call normal onaccept
+        onaccept = s3db.get_config("org_organisation", "onaccept")
+        onaccept(form)
+
     s3db.configure("org_organisation",
+                   # Open record in this controller after creation
                    create_next = URL(c="hrm", f="training_center",
                                      args = ["[id]", "read"]),
+                   create_onaccept = create_onaccept,
                    )
 
     return s3db.org_organisation_controller()

@@ -438,9 +438,6 @@ class S3MobileSchema(object):
         # Add field options to description
         options = self.get_options(field, lookup=ktablename)
         if options:
-            # @todo: if reference, store the returned options
-            #        as representation labels rather than as
-            #        options
             description["options"] = options
 
         # Add default value to description
@@ -522,11 +519,6 @@ class S3MobileSchema(object):
             #    this is better done explicitly in order to run the
             #    data download through the lookup table's controller
             #    for proper authorization, customise_* and filtering
-
-            # @todo: deliver store uuid<=>label map instead, so that the
-            #        mobile client has labels for fk options - unless the
-            #        field has a base-class S3Represent with a field list
-            #        that can be encoded in the field description
             return None
 
         elif fieldtype in ("string", "integer"):
