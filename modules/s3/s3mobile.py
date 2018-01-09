@@ -1107,7 +1107,7 @@ class S3MobileForm(object):
                 if hook.label:
                     description["label"] = s3_str(T(hook.label))
                 if hook.plural:
-                    description["labelPlural"] =  s3_str(T(hook.plural))
+                    description["plural"] =  s3_str(T(hook.plural))
 
                 if hook.pkey != pkey:
                     description["pkey"] = hook.pkey
