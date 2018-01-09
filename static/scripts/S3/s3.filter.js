@@ -1290,143 +1290,6 @@ S3.search = {};
     };
 
     /**
-     * Set up the Tabs for an S3Summary page
-     * - in global scope as called from outside
-     *
-     * Parameters:
-     * form - {String} ID of the filter form
-     * active_tab - {Integer} Which Section is active to start with
-     */
-    S3.search.summary_tabs = function(form, active_tab, pending) {
-
-        // Schedule initially hidden widgets to Ajax-load their data
-        // layers, required here because otherwise this happens only
-        // during filter-submit, but the user could also simply switch
-        // tabs without prior filter-submit; list of initially hidden
-        // widgets with ajax-init option is provided by the page
-        // renderer (S3Summary.summary()).
-        if (pending) {
-            var ajaxurl,
-                config,
-                q = getCurrentFilters($('#' + form)),
-                t,
-                target_id,
-                targets = pending.split(',');
-            for (var i=0, len=targets.length; i < len; i++) {
-                target_id = targets[i];
-                if (!pendingTargets.hasOwnProperty(form)) {
-                    pendingTargets[form] = {};
-                }
-                if (pendingTargets[form].hasOwnProperty(target_id)) {
-                    // already scheduled
-                    continue;
-                }
-                t = $('#' + target_id);
-                if (t.hasClass('dl') ||
-                    t.hasClass('gi-container') ||
-                    t.hasClass('pt-container') ||
-                    t.hasClass('tp-container') ||
-                    t.hasClass('map_wrapper')) {
-                    // These targets handle their AjaxURL themselves
-                    ajaxurl = null;
-                } else if (t.hasClass('dataTable')) {
-                    // Lookup and filter the AjaxURL
-                    config = $('input#' + targets[i] + '_configurations');
-                    if (config.length) {
-                        settings = JSON.parse($(config).val());
-                        ajaxurl = settings['ajaxUrl'];
-                        if (typeof ajaxurl != 'undefined') {
-                            ajaxurl = filterURL(ajaxurl, q);
-                        } else {
-                            continue;
-                        }
-                    }
-                } else {
-                    continue;
-                }
-                pendingTargets[form][target_id] = {
-                    needs_reload: false,
-                    ajaxurl: ajaxurl,
-                    queries: q
-                };
-            }
-        }
-
-        /**
-         * Helper method to trigger re-calculation of column width in
-         * responsive data tables after unhiding them
-         *
-         * @param {jQuery} datatable - the datatable
-         */
-        var recalcResponsive = function(datatable) {
-            var dt = $(datatable).DataTable();
-            if (dt && dt.responsive) {
-                dt.responsive.recalc();
-            }
-        };
-
-        // Initialise jQueryUI Tabs
-        $('#summary-tabs').tabs({
-            active: active_tab,
-            activate: function(event, ui) {
-                var newPanel = $(ui.newPanel);
-                // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
-                newPanel.removeClass('hide');
-                // A New Tab has been selected
-                if (ui.newTab.length) {
-                    // Update the Filter Query URL to show which tab is active
-                    updateFilterSubmitURL(form, 't', $(ui.newTab).index());
-                }
-                // Find any Map widgets in this section
-                var maps = newPanel.find('.map_wrapper');
-                var maps_len = maps.length;
-                if (maps_len) {
-                    // Check that Maps JS is Loaded
-                    $.when(jsLoaded()).then(
-                        function(status) {
-                            // Success: Instantiate Maps
-                            var gis = S3.gis;
-                            for (var i=0; i < maps_len; i++) {
-                                var map_id = maps[i].attributes['id'].value;
-                                if (undefined === gis.maps[map_id]) {
-                                    // Instantiate the map (can't be done when the DIV is hidden)
-                                    var options = gis.options[map_id];
-                                    gis.show_map(map_id, options);
-                                }
-                            }
-                            // Update all just-unhidden widgets which have pending updates
-                            updatePendingTargets(form);
-                        },
-                        function(status) {
-                            // Failed
-                            s3_debug(status);
-                        },
-                        function(status) {
-                            // Progress
-                            s3_debug(status);
-                        }
-                    );
-                } else {
-                    // Update all just-unhidden widgets which have pending updates
-                    updatePendingTargets(form);
-                }
-                newPanel.find('table.dataTable.display.responsive')
-                        .each(function() {
-                    recalcResponsive(this);
-                });
-            }
-        }).css({visibility: 'visible'});
-
-        // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first()
-                                                .removeClass('hide')
-                                                .find('table.dataTable.display.responsive')
-                                                .each(function() {
-                                                    recalcResponsive(this);
-                                                });
-    };
-
-    /**
      * Check that Map JS is Loaded
      * - e.g. used if a tab containing a Map is unhidden
      */
@@ -1449,6 +1312,177 @@ S3.search = {};
 
         // Return the Promise so caller can't change the Deferred
         return dfd.promise();
+    };
+
+    /**
+     * Set up an initially hidden widget
+     * - e.g. for S3Summary page, or similar
+     *
+     * Parameters:
+     * form - {String} ID of the filter form
+     * widget - {String} ID of the widget
+     * queries - key, value tuples
+     */
+    var setup_hidden_widget = function(form, widget, queries) {
+        var ajaxurl;
+        if (undefined === queries) {
+            queries = getCurrentFilters($('#' + form))
+        }
+        if (!pendingTargets.hasOwnProperty(form)) {
+            pendingTargets[form] = {};
+        }
+        if (pendingTargets[form].hasOwnProperty(widget)) {
+            // already scheduled
+            return;
+        }
+        var t = $('#' + widget);
+        if (t.hasClass('dl') ||
+            t.hasClass('gi-container') ||
+            t.hasClass('pt-container') ||
+            t.hasClass('tp-container') ||
+            t.hasClass('map_wrapper')) {
+            // These targets handle their AjaxURL themselves
+            ajaxurl = null;
+        } else if (t.hasClass('dataTable')) {
+            // Lookup and filter the AjaxURL
+            var config = $('input#' + widget + '_configurations');
+            if (config.length) {
+                var settings = JSON.parse($(config).val());
+                ajaxurl = settings['ajaxUrl'];
+                if (typeof ajaxurl != 'undefined') {
+                    ajaxurl = filterURL(ajaxurl, queries);
+                } else {
+                    return;
+                }
+            }
+        } else {
+            return;
+        }
+        pendingTargets[form][widget] = {
+            needs_reload: false,
+            ajaxurl: ajaxurl,
+            queries: queries
+        };
+    }
+
+    // Pass to global scope to be called by external scripts (e.g. WACOP)
+    S3.search.setup_hidden_widget = setup_hidden_widget;
+
+    /**
+     * Helper method to trigger re-calculation of column width in
+     * responsive data tables after unhiding them
+     *
+     * @param {jQuery} datatable - the datatable
+     */
+    var recalcResponsive = function(datatable) {
+        var dt = $(datatable).DataTable();
+        if (dt && dt.responsive) {
+            dt.responsive.recalc();
+        }
+    };
+
+    /**
+     * Unhide an initially hidden section
+     * - e.g. for S3Summary page, or similar
+     *
+     * Parameters:
+     * form - {String} ID of the filter form
+     * section - {jQuery} the object just unhidden
+     */
+    var unhide_section = function(form, section) {
+        // Find any Map widgets in this section
+        var maps = section.find('.map_wrapper');
+        var maps_len = maps.length;
+        if (maps_len) {
+            // Check that Maps JS is Loaded
+            $.when(jsLoaded()).then(
+                function(status) {
+                    // Success: Instantiate Maps
+                    var gis = S3.gis;
+                    for (var i=0; i < maps_len; i++) {
+                        var map_id = maps[i].attributes['id'].value;
+                        if (undefined === gis.maps[map_id]) {
+                            // Instantiate the map (can't be done when the DIV is hidden)
+                            var options = gis.options[map_id];
+                            gis.show_map(map_id, options);
+                        }
+                    }
+                    // Update all just-unhidden widgets which have pending updates
+                    updatePendingTargets(form);
+                },
+                function(status) {
+                    // Failed
+                    s3_debug(status);
+                },
+                function(status) {
+                    // Progress
+                    s3_debug(status);
+                }
+            );
+        } else {
+            // Update all just-unhidden widgets which have pending updates
+            updatePendingTargets(form);
+        }
+        // Setup any Responsive dataTables
+        section.find('table.dataTable.display.responsive')
+               .each(function() {
+            recalcResponsive(this);
+        });
+    }
+
+    // Pass to global scope to be called by external scripts (e.g. WACOP)
+    S3.search.unhide_section = unhide_section;
+
+    /**
+     * Set up the (jQueryUI) Tabs for an S3Summary page
+     * - in global scope as called from outside
+     *
+     * Parameters:
+     * form - {String} ID of the filter form
+     * active_tab - {Integer} Which Section is active to start with
+     * pending - {String} comma-separated list of widget IDs which are initially hidden
+     */
+    S3.search.summary_tabs = function(form, active_tab, pending) {
+
+        // Schedule initially hidden widgets to Ajax-load their data
+        // layers, required here because otherwise this happens only
+        // during filter-submit, but the user could also simply switch
+        // tabs without prior filter-submit; list of initially hidden
+        // widgets with ajax-init option is provided by the page
+        // renderer (S3Summary.summary()).
+        if (pending) {
+            var queries = getCurrentFilters($('#' + form)),
+                widget,
+                targets = pending.split(',');
+            for (var i=0, len=targets.length; i < len; i++) {
+                widget = targets[i];
+                setup_hidden_widget(form, widget, queries);
+            }
+        }
+
+        // Initialise jQueryUI Tabs
+        $('#summary-tabs').tabs({
+            active: active_tab,
+            activate: function(event, ui) {
+                var newPanel = $(ui.newPanel);
+                // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
+                newPanel.removeClass('hide');
+                // A New Tab has been selected
+                if (ui.newTab.length) {
+                    // Update the Filter Query URL to show which tab is active
+                    updateFilterSubmitURL(form, 't', $(ui.newTab).index());
+                }
+                unhide_section(form, newPanel);
+            }
+        }).css({visibility: 'visible'});
+
+        // Activate not called? Unhide initial section anyway:
+        $('.ui-tabs-panel[aria-hidden="false"]').first()
+                                                .removeClass('hide')
+                                                .find('table.dataTable.display.responsive')
+                                                .each(function() {
+                                                    recalcResponsive(this);
+                                                });
     };
 
     /**

@@ -56,6 +56,9 @@ S3.wacop_mapFilter = function(map_id) {
                     var msg = 'Please wait while we update your results. Remove this filter any time by clicking the Clear button below.';
                     var div = '<div class="map_polygon_panel">' + msg + '<div class="map_polygon_buttons"><a class="button small map_polygon_clear">' + 'Clear' + '</a></div></div>';
                     $('#' + map_id).append(div);
+                    // Deactivate control
+                    control.deactivate();
+                    $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
                     // Click Handler
                     $('#' + map_id + ' .map_polygon_clear').click(function() {
                         if (s3.lastDraftFeature) {
@@ -64,8 +67,6 @@ S3.wacop_mapFilter = function(map_id) {
                             // Clear the one from the Current Location in S3LocationSelector
                             s3.draftLayer.features[0].destroy();
                         }
-                        control.deactivate();
-                        $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
                         if (undefined != s3.polygonPanelClear) {
                             // Call Custom Call-back (used by S3MapFilter in WACOP)
                             s3.polygonPanelClear();
@@ -79,11 +80,6 @@ S3.wacop_mapFilter = function(map_id) {
                 // Layer Refreshed
                 s3.layerRefreshed = function(layer) {
                     // Do Nothing - except override the default handler
-                    /*
-                    if ($('#map_filter_button').hasClass('disabled') {
-                        
-                    }
-                    */
                 };
 
                 // Clear button

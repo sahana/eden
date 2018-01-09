@@ -740,10 +740,11 @@ class S3CRUD(S3Method):
                     if popup_url is None:
                         popup_url = r.url(method="read", representation="html")
                     if popup_url:
+                        popup_url = popup_url.replace("%5Bid%5D", str(record_id))
                         details_btn = A(T("Open"),
-                                        _href=popup_url,
-                                        _class="btn",
-                                        _target="_blank",
+                                        _href = popup_url,
+                                        _class = "btn",
+                                        _target = "_blank",
                                         )
                         output["details_btn"] = details_btn
 

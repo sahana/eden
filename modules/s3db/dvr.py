@@ -338,6 +338,7 @@ class DVRCaseModel(S3Model):
                              ),
                      # @todo: rename into "code"?
                      # @ToDo: Option to autogenerate these, like Waybills, et al
+                     # @ToDo: Deprecate: We use pe_label as primary ID and Tags for any additional IDs to cross-reference to 3rd-party systems
                      Field("reference",
                            label = T("Case Number"),
                            ),
