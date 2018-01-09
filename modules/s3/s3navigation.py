@@ -1585,6 +1585,8 @@ class S3ComponentTab(object):
                         get_vars dict is optional.
         """
 
+        # @todo: use component hook label/plural as fallback for title
+        #        (see S3Model.add_components)
         title, component = tab[:2]
         if component and component.find("/") > 0:
             function, component = component.split("/", 1)

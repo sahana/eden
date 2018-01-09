@@ -663,6 +663,7 @@ class S3Model(object):
                     multiple = True
                     filterby = None
                     # @ToDo: use these as fallback for RHeader Tabs on Web App
+                    #        (see S3ComponentTab.__init__)
                     label = None
                     plural = None
 
