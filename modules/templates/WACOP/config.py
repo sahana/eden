@@ -314,6 +314,16 @@ def config(settings):
 
         method = r.method
         if method in ("create", "update"):
+            if r.get_vars.get("page") == "SYSTEM_WIDE":
+                # System-wide Alert
+                from s3 import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("body",
+                                            )
+                r.resource.configure(crud_form = crud_form)
+                # No sidebar menu
+                current.menu.options = None
+                return
+                
             # Custom Form
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
@@ -754,12 +764,19 @@ def config(settings):
                        (T("Status"), "status"),
                        (T("Zero Hour"), "start_date"),
                        (T("Closed"), "end_date"),
-                       (T("City"), "location.location_id.L3"),
-                       (T("State"), "location.location_id.L1"),
+                       (T("City"), "location.L3"),
+                       (T("State"), "location.L1"),
                        (T("Tags"), "tags"),
                        (T("Incidents"), "incidents"),
                        (T("Resources"), "resources"),
                        ]
+
+        report_fields = ["name",
+                         #"event_type_id",
+                         "status",
+                         (T("City"), "location.L3"),
+                         (T("State"), "location.L1"),
+                         ]
 
         s3db.configure(tablename,
                        extra_fields = ("name",
@@ -767,6 +784,16 @@ def config(settings):
                                        "exercise",
                                        ),
                        list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "status",
+                                         #cols = "event_type_id",
+                                         cols = "location.L3",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        orderby = "event_event.name",
                        )
 
@@ -1228,7 +1255,8 @@ def config(settings):
             person_id = row["event_human_resource.person_id"]
             return A(s3_fullname(person_id),
                      _href = URL(c="event", f=f,
-                                 args=[record_id, "person", person_id, "profile"],
+                                 args = [record_id, "person", person_id, "profile"],
+                                 extension = "", # ensure no .aadata
                                  ),
                      )
         ehrtable.name_click = s3_fieldmethod("name_click",

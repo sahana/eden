@@ -756,20 +756,33 @@ class custom_WACOP(S3CRUD):
         ADMIN = current.auth.s3_has_role("ADMIN")
 
         table = current.s3db.cms_post
-        record = current.db(table.name == "SYSTEM_WIDE").select(table.body,
-                                                                limitby=(0, 1)
-                                                                ).first()
+        query = (table.name == "SYSTEM_WIDE") & \
+                (table.deleted == False)
+        record = current.db(query).select(table.body,
+                                          limitby=(0, 1)
+                                          ).first()
         if record or ADMIN:
             if ADMIN:
-                edit_btn = P(A(current.T("Edit System-wide Alert"),
-                               _href = URL(c="cms", f="post",
-                                           args = "update",
-                                           vars = {"page": "SYSTEM_WIDE"},
-                                           ),
-                               _class = "button button-info",
-                               ),
-                             _class = "callout-right text-right",
-                             )
+                if record:
+                    edit_btn = P(A(current.T("Edit System-wide Alert"),
+                                   _href = URL(c="cms", f="post",
+                                               args = "update",
+                                               vars = {"page": "SYSTEM_WIDE"},
+                                               ),
+                                   _class = "button button-info",
+                                   ),
+                                 _class = "callout-right text-right",
+                                 )
+                else:
+                    edit_btn = P(A(current.T("Create System-wide Alert"),
+                                   _href = URL(c="cms", f="post",
+                                               args = "create",
+                                               vars = {"page": "SYSTEM_WIDE"},
+                                               ),
+                                   _class = "button button-info",
+                                   ),
+                                 _class = "callout-right text-right",
+                                 )
             else:
                 edit_btn = ""
             content = record and record.body or ""
@@ -1149,6 +1162,23 @@ class event_Browse(custom_WACOP):
                   "_map": _map,
                   }
 
+        tablename = "event_event"
+        form_id = "%s-filter-form" % tablename
+
+        # Report
+        method = "report"
+        report_widget_id = "event_event_report"
+        handler = r.get_widget_handler(method)
+        content = handler(r,
+                          method = method,
+                          widget_id = report_widget_id,
+                          visible = False,
+                          **attr)
+        output["event_event_report"] = content
+        jqr_append = current.response.s3.jquery_ready.append
+        jqr_append('''S3.search.setup_hidden_widget('%s','%s')''' % (form_id, report_widget_id))
+        jqr_append('''$(document).foundation({tab:{callback:function(tab){S3.search.unhide_section('%s',tab)}}})''' % form_id)
+
         # Filter Form
         date_filter = S3DateFilter(["start_date", "end_date"],
                                    label = "",
@@ -1209,14 +1239,15 @@ class event_Browse(custom_WACOP):
                                              vars={}),
                                    ajaxurl = URL(c="event", f="event",
                                                  args=["filter.options"], vars={}),
+                                   _id = form_id,
                                    )
         output["filter_form"] = filter_form.html(r.resource, r.get_vars,
                                                  # Map & dataTable
-                                                 target="%s custom-list-event_event" % map_id,
-                                                 alias=None)
+                                                 target = "%s custom-list-event_event" % map_id,
+                                                 alias = None
+                                                 )
 
         # Events dataTable
-        tablename = "event_event"
 
         #ajax_vars = {"browse": 1}
         # Run already by the controller:
@@ -1232,6 +1263,7 @@ class event_Browse(custom_WACOP):
                         #ajax_vars = ajax_vars,
                         )
 
+        output["title"] = T("Events")
         self._view(output, "event_browse.html")
 
         return output
@@ -1353,6 +1385,7 @@ class group_Browse(custom_WACOP):
                                                  alias = None,
                                                  )
 
+        output["title"] = T("Groups")
         self._view(output, "group_browse.html")
 
         return output
