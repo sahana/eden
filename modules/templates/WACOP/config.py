@@ -1337,11 +1337,19 @@ def config(settings):
 
         from gluon import A, URL
         from s3 import s3_fieldmethod, S3SQLCustomForm
+        from s3layouts import S3PopupLink
 
+        T = current.T
         s3db = current.s3db
         ertable = s3db.event_team
 
-        #ertable.group_id.label = T("Resource")
+        ertable.group_id.label = T("Resource")
+        ertable.group_id.comment = S3PopupLink(c = "pr",
+                                               f = "group",
+                                               label = T("Create Resource"),
+                                               title = T("Create Resource"),
+                                               tooltip = T("Create a new Resource"),
+                                               )
 
         # Form
         # @ToDo: Have both Team & Event_Team in 1 form
@@ -1401,12 +1409,17 @@ def config(settings):
 
         if f in ("group", "team"):
             # Resource Browse (inc aadata)
-            list_fields = [(T("Group"), "name_click"),
+            list_fields = [(T("Resource"), "name_click"),
                            "incident_id",
                            "status_id",
                            ]
+        elif f == "incident":
+            # Incident Profile
+            list_fields = [(T("Name"), "name_click"),
+                           "status_id",
+                           ]
         else:
-            # Event Profile or Incident Profile
+            # Event Profile
             list_fields = [(T("Name"), "name_click"),
                            "incident_id",
                            "status_id",

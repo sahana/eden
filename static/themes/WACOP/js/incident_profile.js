@@ -84,7 +84,6 @@ S3.wacop_resizeMap = function(map_id) {
     );
 };
 
-
 $(document).ready(function() {
     //$('main.main').attr('id', 'incident-profile');
 
