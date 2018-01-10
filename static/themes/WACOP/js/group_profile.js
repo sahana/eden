@@ -15,4 +15,16 @@ $(document).ready(function() {
         };
         $.ajaxS3(options);
     });
+    $('#leave_group').click(function() {
+        // Submit Data
+        var url = S3.Ap.concat('/pr/forum/' + $('#notify_settings').data('forum_id') + '/leave.json');
+        var options = {
+            type: 'GET',
+            url: url,
+            success: function(e) {
+                // Nothing we need to do here
+            }
+        };
+        $.ajaxS3(options);
+    });
 });

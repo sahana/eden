@@ -3254,11 +3254,13 @@ class PRForumModel(S3Model):
                 redirect(URL(args=None))
 
         message = current.T("Forum Left")
-        #output = current.xml.json_message(True, 200, message)
-        #current.response.headers["Content-Type"] = "application/json"
-        #return output
-        current.session.confirmation = message
-        redirect(URL(args=None))
+        if r.representation == "json":
+            output = current.xml.json_message(True, 200, message)
+            current.response.headers["Content-Type"] = "application/json"
+            return output
+        else:
+            current.session.confirmation = message
+            redirect(URL(args=None))
 
     # -----------------------------------------------------------------------------
     @staticmethod

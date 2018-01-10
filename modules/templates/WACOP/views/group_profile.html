@@ -32,12 +32,13 @@
        <li><label for='sms'><input type='checkbox' id='sms' name='notify'> Via SMS</label></li>-->
       </ul>
      </li>
-     <!-- Make Frequency a Radio -->
      <li><strong>Frequency</strong>
       <ul class='no-bullet'>
        <li><label for='notify_immediately'><input type='radio' id='notify_immediately' name='frequency' value='immediately' {{="checked" if frequency == "immediately" else ""}}> Receive posts immediately</label></li>
        <li><label for='notify_daily'><input type='radio' id='notify_daily' name='frequency' value='daily' {{="checked" if frequency == "daily" else ""}}> Receive daily digest</label></li>
       </ul>
+     </li>
+     <li id='leave_group'><strong>Leave Group</strong>
      </li>
     </ul>
    </div>
