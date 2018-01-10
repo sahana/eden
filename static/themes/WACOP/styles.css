@@ -299,6 +299,12 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child:before {
 }
 
 /* Show Actions column on Group Browse & Staff Assign pages & Reports */
+#custom-list-event_human_resource_wrapper table.dataTable tbody td:first-child,
+#custom-list-event_human_resource_wrapper table.dataTable thead th:first-child,
+#custom-list-event_organisation_wrapper table.dataTable tbody td:first-child,
+#custom-list-event_organisation_wrapper table.dataTable thead th:first-child,
+#custom-list-pr_forum_membership_wrapper table.dataTable tbody td:first-child,
+#custom-list-pr_forum_membership_wrapper table.dataTable thead th:first-child,
 div.pt-table table.dataTable tbody td:first-child,
 div.pt-table table.dataTable thead th:first-child,
 div.group-browse table.dataTable tbody td:first-child,
@@ -307,6 +313,9 @@ body.assign table.dataTable tbody td:first-child,
 body.assign table.dataTable thead th:first-child {
   display: block;
 }
+#custom-list-event_human_resource_wrapper thead th:first-child,
+#custom-list-event_organisation_wrapper thead th:first-child,
+#custom-list-pr_forum_membership_wrapper thead th:first-child,
 div.pt-table table.dataTable thead th:first-child,
 div.group-browse table.dataTable thead th:first-child,
 body.assign table.dataTable thead th:first-child {

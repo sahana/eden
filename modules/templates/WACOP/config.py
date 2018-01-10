@@ -1269,6 +1269,9 @@ def config(settings):
 
         s3db.configure(tablename,
                        #crud_form = crud_form,
+                       delete_next = URL(c="event", f=f,
+                                         args = [record_id, "custom"],
+                                         ),
                        extra_fields = ("person_id",
                                        ),
                        list_fields = [(T("Name"), "name_click"),
@@ -1315,6 +1318,9 @@ def config(settings):
 
         s3db.configure(tablename,
                        #crud_form = crud_form,
+                       delete_next = URL(c="event", f=f,
+                                         args = [record_id, "custom"],
+                                         ),
                        extra_fields = ("organisation_id",
                                        ),
                        list_fields = [(T("Name"), "name_click"),

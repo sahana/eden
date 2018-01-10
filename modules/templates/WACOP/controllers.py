@@ -1972,6 +1972,13 @@ class event_Profile(custom_WACOP):
                   updateable = updateable,
                   event_id = event_id,
                   dt_init = dt_init,
+                  # @ToDo: AJAX Delete
+                  actions = [{"label": T("Unassign"),
+                              "url": URL(c="event", f="event",
+                                         args=[event_id, "human_resource", "[id]", "delete"]),
+                              "icon": "fa fa-trash",
+                              },
+                             ],
                   )
 
         # Organisations dataTable
@@ -1986,6 +1993,13 @@ class event_Profile(custom_WACOP):
                   updateable = updateable,
                   event_id = event_id,
                   dt_init = dt_init,
+                  # @ToDo: AJAX Delete
+                  actions = [{"label": T("Remove"),
+                              "url": URL(c="event", f="event",
+                                         args=[event_id, "event_organisation", "[id]", "delete"]),
+                              "icon": "fa fa-trash",
+                              },
+                             ],
                   )
 
         # Updates DataList
@@ -2074,6 +2088,13 @@ class group_Profile(custom_WACOP):
                         tablename = tablename,
                         dt_init = dt_init,
                         forum_id = forum_id,
+                        # @ToDo: AJAX Delete
+                        actions = [{"label": current.T("Remove"),
+                                    "url": URL(c="pr", f="forum",
+                                               args=[forum_id, "forum_membership", "[id]", "delete"]),
+                                    "icon": "fa fa-trash",
+                                    },
+                                   ],
                         )
 
         # Tasks dataTable
@@ -2469,6 +2490,13 @@ class incident_Profile(custom_WACOP):
                   updateable = updateable,
                   incident_id = incident_id,
                   dt_init = dt_init,
+                  # @ToDo: AJAX Delete
+                  actions = [{"label": T("Unassign"),
+                              "url": URL(c="event", f="incident",
+                                         args=[incident_id, "human_resource", "[id]", "delete"]),
+                              "icon": "fa fa-trash",
+                              },
+                             ],
                   )
 
         # Organisations dataTable
@@ -2483,6 +2511,13 @@ class incident_Profile(custom_WACOP):
                   updateable = updateable,
                   incident_id = incident_id,
                   dt_init = dt_init,
+                  # @ToDo: AJAX Delete
+                  actions = [{"label": T("Remove"),
+                              "url": URL(c="event", f="incident",
+                                         args=[incident_id, "event_organisation", "[id]", "delete"]),
+                              "icon": "fa fa-trash",
+                              },
+                             ],
                   )
 
         # Updates DataList

@@ -507,7 +507,9 @@ class S3EventModel(S3Model):
                                             },
                             event_event_location = "event_id",
                             # Should be able to do everything via the link table
-                            #event_organisation = "event_id",
+                            event_organisation = {"name": "event_organisation",
+                                                  "joinby": "event_id",
+                                                  },
                             org_organisation = {"link": "event_organisation",
                                                 "joinby": "event_id",
                                                 "key": "organisation_id",
