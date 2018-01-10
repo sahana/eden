@@ -116,7 +116,8 @@ def post():
 
     def prep(r):
         if r.interactive:
-            if r.method in ("create", "update"):
+            method = r.method
+            if method in ("create", "update"):
                 table = r.table
 
                 # Filter from a Profile page?"
@@ -142,6 +143,17 @@ def post():
                 page = get_vars.get("page", None)
                 url = get_vars.get("url") # custom redirect
                 if page:
+                    if method == "create":
+                        query = (table.name == page) & \
+                                (table.deleted == False)
+                        record = current.db(query).select(table.id,
+                                                          limitby=(0, 1)
+                                                          ).first()
+                        if record:
+                            record_id = record.id
+                            r.id = record_id
+                            r.resource.add_filter(table.id == record_id)
+                            r.method = "update"
                     table.name.default = page
                     table.name.readable = table.name.writable = False
                     _crud = s3.crud_strings[tablename]

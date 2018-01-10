@@ -764,25 +764,18 @@ class custom_WACOP(S3CRUD):
         if record or ADMIN:
             if ADMIN:
                 if record:
-                    edit_btn = P(A(current.T("Edit System-wide Alert"),
-                                   _href = URL(c="cms", f="post",
-                                               args = "update",
-                                               vars = {"page": "SYSTEM_WIDE"},
-                                               ),
-                                   _class = "button button-info",
-                                   ),
-                                 _class = "callout-right text-right",
-                                 )
+                    label = current.T("Edit System-wide Alert")
                 else:
-                    edit_btn = P(A(current.T("Create System-wide Alert"),
-                                   _href = URL(c="cms", f="post",
-                                               args = "create",
-                                               vars = {"page": "SYSTEM_WIDE"},
-                                               ),
-                                   _class = "button button-info",
-                                   ),
-                                 _class = "callout-right text-right",
-                                 )
+                    label = current.T("Create System-wide Alert")
+                edit_btn = P(A(label,
+                               _href = URL(c="cms", f="post",
+                                           args = "create",
+                                           vars = {"page": "SYSTEM_WIDE"},
+                                           ),
+                               _class = "button button-info",
+                               ),
+                             _class = "callout-right text-right",
+                             )
             else:
                 edit_btn = ""
             content = record and record.body or ""
