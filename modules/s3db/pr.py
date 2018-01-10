@@ -3318,7 +3318,7 @@ class PRForumModel(S3Model):
                       )
             body = "To approve this request, click here: %(url)s"
             translations = {}
-            languages = list(set([a["auth_user.language"] for a in persons]))
+            languages = list(set([a["auth_user.language"] for a in admins]))
             for l in languages:
                 translations[l] = {"s": s3_str(T(subject, language = l)) % dict(forum_name = forum_name),
                                    "b": s3_str(T(body, language = l)) % dict(url = url),
