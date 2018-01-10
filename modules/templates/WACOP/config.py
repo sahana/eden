@@ -1673,17 +1673,24 @@ def config(settings):
                                )
 
             elif r.method is None:
-                # Override defalt redirects from custom methods
+                # Override default redirects from custom methods
                 if r.component:
-                    from gluon.tools import redirect
-                    current.session.confirmation = current.response.confirmation
-                    redirect(URL(args=[r.id, "custom"]))
+                    if r.representation != "aadata":
+                        from gluon.tools import redirect
+                        current.session.confirmation = current.response.confirmation
+                        redirect(URL(args=[r.id, "custom"],
+                                     extension = "", # ensure no .aadata
+                                     ))
                 elif r.representation != "aadata":
                     r.method = "browse"
 
             return True
         s3.prep = custom_prep
 
+        #if "forum_membership" in current.request.args:
+        #    # No sidebar menu
+        #    current.menu.options = None
+        #    attr["rheader"] = None
         return attr
 
     settings.customise_pr_forum_controller = customise_pr_forum_controller
@@ -1692,7 +1699,9 @@ def config(settings):
     def customise_pr_forum_membership_resource(r, tablename):
 
         s3db = current.s3db
-        f = s3db.pr_forum_membership.admin
+        table = s3db.pr_forum_membership
+
+        f = table.admin
         f.readable = f.writable = True
 
         # CRUD strings
@@ -1723,17 +1732,58 @@ def config(settings):
                 msg_record_deleted = T("Person removed from Group"),
                 msg_list_empty = T("This Group has no Members yet"))
 
-        list_fields = [#(T("Name"), "name_click"),
-                       "person_id",
-                       "admin",
-                       "comments",
-                       ]
+            if function == "forum":
+                # Virtual Fields
+                from gluon import A, URL
+                from s3 import s3_fieldmethod, s3_fullname
+                auth = current.auth
+                if auth.s3_has_role("ADMIN"):
+                    method = "update"
+                else:
+                    ltable = s3db.pr_person_user
+                    query = (table.forum_id == r.id) & \
+                            (table.admin == True) & \
+                            (table.deleted == False) & \
+                            (table.person_id == ptable.id) & \
+                            (ptable.pe_id == ltable.pe_id) & \
+                            (ltable.user_id == auth.user.id)
+                    admin = db(query).select(ltable.id,
+                                             limitby = (0, 1)
+                                             ).first()
+                    if admin:
+                        method = "update"
+                    else:
+                        method = "read"
+                def person_membership(row):
+                    return A(s3_fullname(row["pr_forum_membership.person_id"]),
+                             _href = URL(c="pr", f="forum",
+                                         args = [row["pr_forum_membership.forum_id"], "forum_membership", row["pr_forum_membership.id"], "%s.popup" % method],
+                                         vars = {"refresh": "custom-list-pr_forum_membership",
+                                                 },
+                                         extension = "", # ensure no .aadata
+                                         ),
+                             _class = "s3_modal",
+                             )
+                table.name_click = s3_fieldmethod("name_click",
+                                                  person_membership,
+                                                  # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                  # @ToDo: Bulk lookups
+                                                  represent = lambda v: v,
+                                                  search_field = "person_id",
+                                                  )
 
-        s3db.configure(tablename,
-                       extra_fields = ("name",
-                                       ),
-                       list_fields = list_fields,
-                       )
+                list_fields = [(T("Person"), "name_click"),
+                               #"person_id",
+                               "admin",
+                               "comments",
+                               ]
+
+                s3db.configure(tablename,
+                               extra_fields = ("forum_id",
+                                               "person_id",
+                                               ),
+                               list_fields = list_fields,
+                               )
 
     settings.customise_pr_forum_membership_resource = customise_pr_forum_membership_resource
 

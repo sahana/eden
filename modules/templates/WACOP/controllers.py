@@ -4,6 +4,7 @@ import dateutil.parser
 import json
 from gluon import current#, Field, SQLFORM
 from gluon.html import *
+from gluon.http import HTTP
 from gluon.storage import Storage
 from s3 import FS, ICON, s3_auth_user_represent, \
                S3CRUD, S3CustomController, \
