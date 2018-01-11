@@ -8721,7 +8721,7 @@ class hrm_Record(S3Method):
                     list_fields.append("programme_id")
                     # Exclude Training Hours
                     filter_ &= (FS("programme_id") != None)
-                else:
+                if phtable.place.readable:
                     # RMSAmericas
                     list_fields += ["place",
                                     "event",

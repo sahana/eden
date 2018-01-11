@@ -123,8 +123,7 @@ class S3MainMenu(default.S3MainMenu):
                       vars = RC),
                    #MM("Offices", c="org", f="office"),
                    MM("Positions", c="hrm", f="job_title"),
-                   #MM("Training Events", c="hrm", f="training_event"),
-                   #MM("Training Courses", c="hrm", f="course"),
+                   MM("Programs", c="hrm", f="programme"),
                ),
                homepage("hrm", f="training_event", name="Training", check=training)(
                    MM("Training Centers", c="hrm", f="training_center"),
@@ -400,6 +399,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             #M("Staff Report", m="report"),
                             #M("Expiring Staff Contracts Report",
                             #  vars=dict(expiring="1")),
+                            #M("Hours by Role Report", f="programme_hours", m="report",
+                            #  vars=Storage(rows="job_title_id",
+                            #               cols="month",
+                            #               fact="sum(hours)"),
+                            #  ),
+                            M("Hours by Program Report", f="programme_hours", m="report",
+                              vars=Storage(rows="programme_id",
+                                           cols="month",
+                                           fact="sum(hours)"),
+                              ),
                         ),
                         #M("Teams", c="hrm", f="group")(
                         #    M("Create", m="create"),
@@ -427,6 +436,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               restrict=(ORG_ADMIN,
                                         "hr_manager",
                                         )),
+                        ),
+                        M("Programs", c="hrm", f="programme")(
+                            M("Create", m="create"),
+                            M("Import Hours", f="programme_hours", m="import"),
                         ),
                         #M("Organization Types", c="org", f="organisation_type",
                         #  restrict=[ADMIN])(
