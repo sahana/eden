@@ -704,6 +704,11 @@ def programme():
 
     return s3_rest_controller()
 
+def programme_hours():
+    """ Programme Hours Controller """
+
+    return s3_rest_controller()
+
 # =============================================================================
 def strategy():
     """ Strategies Controller """

@@ -5950,7 +5950,6 @@ def config(settings):
 
             @ToDo: This should be based on the HRM record, not Person record
                    - could be active with Org1 but not with Org2
-            @ToDo: allow to be calculated differently per-Org
         """
 
         now = current.request.utcnow
