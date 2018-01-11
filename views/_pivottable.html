@@ -15,16 +15,19 @@
     <div class='pt-chart'></div>
    </div>
   </div>
-  <!-- Table Toggle -->
-  <div class='pt-toggle-table pt-hide-table'>
-   {{try:}}{{=hide}}{{except:}}{{pass}}
-  </div>
-  <div class='pt-toggle-table pt-show-table'>
-   {{try:}}{{=show}}{{except:}}{{pass}}
-  </div>
   <!-- Table Container -->
   <div class='pt-table-container'>
-   <div class='pt-table-controls'></div>
+   <div class='pt-table-controls'>
+    <!-- Table Toggle -->
+    <div class='pt-toggle-table'>
+     <div class='pt-hide-table'>{{try:}}{{=hide}}{{except:}}{{pass}}</div>
+     <div class='pt-show-table'>{{try:}}{{=show}}{{except:}}{{pass}}</div>
+    </div>
+    <!-- Export options -->
+    <div class='pt-export-table'>
+     <div class='pt-export-opt pt-export-xls'></div>
+    </div>
+   </div>
    <div class='pt-table-contents'>
     <div class='pt-table'></div>
    </div>

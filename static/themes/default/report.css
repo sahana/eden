@@ -209,18 +209,6 @@
   font-size: 0.8rem;
 }
 
-/* Table toggle */
-.pt-toggle-table {
-  font-size: 10px;
-  cursor: pointer;
-  color: #039;
-  text-decoration: underline;
-  margin-bottom: 3px;
-}
-.pt-toggle-table.pt-show-table {
-  display: none;
-}
-
 .tp-chart-controls,
 .tp-chart.contents,
 .pt-toggle-table,
@@ -229,6 +217,47 @@
 .pt-table-controls,
 .pt-table-contents {
   clear: left;
+}
+
+/* Table toggle */
+.pt-toggle-table {
+    display: inline-block;
+}
+.pt-show-table,
+.pt-hide-table {
+  font-size: 10px;
+  cursor: pointer;
+  color: #039;
+  text-decoration: underline;
+  margin-bottom: 3px;
+}
+.pt-show-table {
+  display: none;
+}
+
+.pt-table-controls {
+    position: relative;
+    padding: 0.4rem 0;
+}
+
+/* Export formats */
+.pt-export-table {
+    text-align: right;
+    margin: 0.3rem;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+}
+.pt-export-opt {
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    cursor: pointer;
+}
+.pt-export-xls {
+    background-image: url('../../img/icon-xls.png');
 }
 
 /* In grouped tables, separate groups visually */

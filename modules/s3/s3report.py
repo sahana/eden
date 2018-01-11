@@ -42,15 +42,16 @@ import sys
 from itertools import product
 
 from gluon import current
-from gluon.storage import Storage
+from gluon.contenttype import contenttype
 from gluon.html import *
 from gluon.languages import regex_translate
 from gluon.sqlhtml import OptionsWidget
+from gluon.storage import Storage
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
 from s3query import FS
 from s3rest import S3Method
-from s3utils import s3_flatlist, s3_has_foreign_key, s3_unicode, S3MarkupStripper, s3_represent_value
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_str, s3_unicode, S3MarkupStripper, s3_represent_value
 from s3xml import S3XMLFormat
 from s3validators import IS_NUMBER
 
@@ -157,11 +158,14 @@ class S3Report(S3Method):
         else:
             pivottable = None
 
-        # Render as JSON-serializable dict
-        if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
-        else:
-            pivotdata = None
+        representation = r.representation
+        if representation in ("html", "iframe", "json"):
+
+            # Generate JSON-serializable dict
+            if pivottable is not None:
+                pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
+            else:
+                pivotdata = None
 
         if r.representation in ("html", "iframe"):
 
@@ -177,16 +181,18 @@ class S3Report(S3Method):
 
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_form = S3FilterForm(filter_widgets,
-                                           formstyle=filter_formstyle,
-                                           advanced=advanced,
-                                           submit=False,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % widget_id)
+                                           formstyle = filter_formstyle,
+                                           advanced = advanced,
+                                           submit = False,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % widget_id,
+                                           )
                 fresource = current.s3db.resource(tablename)
                 alias = resource.alias if r.component else None
                 filter_widgets = filter_form.fields(fresource,
                                                     r.get_vars,
-                                                    alias=alias)
+                                                    alias = alias,
+                                                    )
             else:
                 # Render as empty string to avoid the exception in the view
                 filter_widgets = None
@@ -194,20 +200,22 @@ class S3Report(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = r.url(method="",
-                               representation="",
-                               vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                        if k not in report_vars)))
-            ajaxurl = attr.get("ajaxurl", r.url(method="report",
-                                                representation="json",
-                                                vars=ajax_vars))
+            filter_url = r.url(method = "",
+                               representation = "",
+                               vars = ajax_vars.fromkeys((k for k in ajax_vars
+                                                          if k not in report_vars)))
+            ajaxurl = attr.get("ajaxurl", r.url(method = "report",
+                                                representation = "json",
+                                                vars = ajax_vars,
+                                                ))
 
             output = S3ReportForm(resource).html(pivotdata,
                                                  get_vars = get_vars,
                                                  filter_widgets = filter_widgets,
                                                  ajaxurl = ajaxurl,
                                                  filter_url = filter_url,
-                                                 widget_id = widget_id)
+                                                 widget_id = widget_id,
+                                                 )
 
             output["title"] = self.crud_string(tablename, "title_report")
             output["report_type"] = "pivottable"
@@ -221,6 +229,34 @@ class S3Report(S3Method):
         elif r.representation == "json":
 
             output = json.dumps(pivotdata, separators=SEPARATORS)
+
+        elif r.representation == "xls":
+
+            if pivottable:
+
+                # Report title
+                title = self.crud_string(r.tablename, "title_report")
+                if title is None:
+                    title = current.T("Report")
+
+                # TODO: include current date?
+                filename = "%s_%s.xls" % (r.env.server_name,
+                                          s3_str(title).replace(" ", "_"),
+                                          )
+                disposition = "attachment; filename=\"%s\"" % filename
+
+                # Response headers
+                response = current.response
+                response.headers["Content-Type"] = contenttype(".xls")
+                response.headers["Content-disposition"] = disposition
+
+                # Convert pivot table to XLS
+                stream = pivottable.xls(title)
+                #stream.seek(0) # already done in encoder
+                output = stream.read()
+
+            else:
+                r.error(400, "No report parameters specified")
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
@@ -1105,46 +1141,50 @@ class S3PivotTableFact(object):
         if method is None or method == "list":
             return values if values else None
 
-        values = [v for v in values if v != None]
-
         if method == "count":
-            return len(values)
+            # Count all non-null values
+            return len([v for v in values if v is not None])
+        else:
+            # Numeric values required - some virtual fields
+            # return '-' for None, so must type-check here:
+            values = [v for v in values if isinstance(v, (int, long, float))]
 
-        elif method == "min":
-            try:
-                return min(values)
-            except (TypeError, ValueError):
-                return None
+            if method == "min":
+                try:
+                    return min(values)
+                except (TypeError, ValueError):
+                    return None
 
-        elif method == "max":
-            try:
-                return max(values)
-            except (TypeError, ValueError):
-                return None
+            elif method == "max":
+                try:
+                    return max(values)
+                except (TypeError, ValueError):
+                    return None
 
-        elif method == "sum":
-            try:
-                return sum(values)
-            except (TypeError, ValueError):
-                return None
+            elif method == "sum":
+                try:
+                    return sum(values)
+                except (TypeError, ValueError):
+                    return None
 
-        elif method == "avg":
-            try:
-                if len(values):
-                    return sum(values) / float(len(values))
-                else:
-                    return 0.0
-            except (TypeError, ValueError):
-                return None
+            elif method == "avg":
+                try:
+                    number = len(values)
+                    if number:
+                        return sum(values) / float(number)
+                    else:
+                        return 0.0
+                except (TypeError, ValueError):
+                    return None
 
-        #elif method == "std":
-            #import numpy
-            #if not values:
-                #return 0.0
-            #try:
-                #return numpy.std(values)
-            #except (TypeError, ValueError):
-                #return None
+            #elif method == "std":
+                #import numpy
+                #if not values:
+                    #return 0.0
+                #try:
+                    #return numpy.std(values)
+                #except (TypeError, ValueError):
+                    #return None
 
         return None
 
@@ -1972,6 +2012,21 @@ class S3PivotTable(object):
                             )
 
         return output
+
+    # -------------------------------------------------------------------------
+    def xls(self, title):
+        """
+            Convert this pivot table into an XLS file
+
+            @param title: the title of the report
+
+            @returns: the XLS file as stream
+        """
+
+        from s3codec import S3Codec
+        exporter = S3Codec.get_codec("xls")
+
+        return exporter.encode_pt(self, title)
 
     # -------------------------------------------------------------------------
     def _represents(self, layers):

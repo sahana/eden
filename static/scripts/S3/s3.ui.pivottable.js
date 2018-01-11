@@ -92,6 +92,9 @@
             this.table = null;
             this.chart = null;
             this.openRequest = null;
+
+            // Namespace for events
+            this.eventNamespace = '.pt';
         },
 
         /**
@@ -210,6 +213,7 @@
                 // Show the empty section
                 $el.find('.pt-hide-table').hide();
                 $el.find('.pt-show-table').hide();
+                $el.find('.pt-export-opt').hide();
             } else if (data.method == 'count') {
                 // Charts should show integers if method is 'count'
                 this.options.precision = 0;
@@ -224,6 +228,7 @@
                    .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
                 $el.find('.pt-hide-table').hide();
                 $el.find('.pt-show-table').hide();
+                $el.find('.pt-export-opt').hide();
                 this._renderChart();
             } else {
                 this._renderTable();
@@ -265,8 +270,7 @@
                     cols = data.cols,
                     rows = data.rows,
                     total = data.total,
-                    labels = data.labels,
-                    nodata = data.nodata;
+                    labels = data.labels;
 
                 var opts = this.options;
                 var showTotals = opts.showTotals;
@@ -284,10 +288,11 @@
                         cells[i] = [];
                     }
                 } else {
+                    var notOther = function(cell, cidx) {
+                        return cols[cidx][0] != '__other__';
+                    };
                     for (i=0; i<rows.length; i++) {
-                        cells[i] = cells[i].filter(function(cell, cidx) {
-                            return cols[cidx][0] != '__other__';
-                        });
+                        cells[i] = cells[i].filter(notOther);
                     }
                     cols = cols.filter(function(col) {
                         return col[0] != '__other__';
@@ -319,7 +324,7 @@
                 // Table header and column labels
                 table.append('thead')
                      .call(this._renderHeader, cols, labels, opts)
-                     .call(this._renderColumns, cols, labels, opts);
+                     .call(this._renderColumns, cols, labels);
 
                 // Table rows and cells
                 var pt = this;
@@ -338,13 +343,16 @@
                 if (this.table_options.hidden) {
                     $el.find('.pt-show-table').show();
                     $el.find('.pt-hide-table').hide();
+                    $el.find('.pt-export-opt').hide();
                 } else {
                     $el.find('.pt-show-table').hide();
                     $el.find('.pt-hide-table').show();
+                    $el.find('.pt-export-opt').show();
                 }
             } else {
                 $el.find('.pt-show-table').hide();
                 $el.find('.pt-hide-table').hide();
+                $el.find('.pt-export-opt').hide();
             }
         },
 
@@ -391,13 +399,12 @@
          * @param {node} thead - the table header D3 node
          * @param {array} cols - the pivot table columns
          * @param {object} labels - the labels
-         * @param {object} opts - the configuration options
          *
          * @todo: optimize parameter list (pass in data? use "this"?)
          * @todo: get cols, labels and opts from this or pass in pt?
          * @todo: use dashes in CSS classes instead of underscores
          */
-        _renderColumns: function(thead, cols, labels, opts) {
+        _renderColumns: function(thead, cols, labels) {
 
             var columns = thead.append('tr');
 
@@ -409,8 +416,7 @@
                    .text(labels.rows);
 
             // Append the column labels
-            var showTotals = opts.showTotals,
-                singleColumn = false;
+            var singleColumn = false;
             if (cols.length == 1 && cols[0][4] === null) {
                 singleColumn = true;
             }
@@ -450,17 +456,18 @@
          */
         _renderRows: function(tbody, pt, rows, cols, labels, cells, opts) {
 
-            var rows = tbody.selectAll('tr.pt-row')
-                            .data(rows)
-                            .enter()
-                            .append('tr')
-                            .attr('class', function(d, i) { return i % 2 ? 'odd': 'even'; });
-
-            // Render the row header
             var singleRow = false;
             if (rows.length == 1 && rows[0][4] === null) {
                 singleRow = true;
             }
+
+            rows = tbody.selectAll('tr.pt-row')
+                        .data(rows)
+                        .enter()
+                        .append('tr')
+                        .attr('class', function(d, i) { return i % 2 ? 'odd': 'even'; });
+
+            // Render the row header
             rows.append('td')
                 .text(function(d) {
                     if (singleRow) {
@@ -500,7 +507,6 @@
 
             var column = d3.select(this),
                 items = data.items,
-                keys = data.keys,
                 layer,
                 layer_keys;
 
@@ -717,8 +723,7 @@
                 colsTitle = labels.layer + ' ' + per + ' ' + labels.cols;
 
             var filter = data.filter;
-            var filter_url = this.options.filterURL,
-                rows_selector = filter[0],
+            var rows_selector = filter[0],
                 cols_selector = filter[1];
 
             if (chartType == 'piechart') {
@@ -761,8 +766,7 @@
 
             // Container width + height
             // @todo: adapt dynamically?
-            var width = 800,
-                height = 360;
+            var height = 360;
             $(chart).css({height: height + 'px'})
                     .closest('.pt-chart-contents')
                     .show()
@@ -841,7 +845,7 @@
                                   .rightAlign(false);
 
                 reportChart.pie.dispatch.on('elementMouseover', onhoverTooltip)
-                                        .on('elementMouseout', function(e) {
+                                        .on('elementMouseout', function() {
                     $('.pt-tooltip').remove();
                     pt.chartOptions.currentDataIndex = null;
                     pt.chartOptions.currentSeriesIndex = null;
@@ -928,15 +932,17 @@
 
             // On-hover data point tooltip
             var tooltipContent = function(data) {
-                var data = data.data,
-                    color = nv.utils.defaultColor()({}, data.index);
+
+                data = data.data;
+
+                var color = nv.utils.defaultColor()({}, data.index);
 
                 var tooltip = '<div class="pt-tooltip">' +
                               '<div class="pt-tooltip-label" style="color:' + color + '">' + data.label + '</div>' +
                               '<div class="pt-tooltip-text">' + data.value + '</div>' +
                               '</div>';
                 return tooltip;
-            }
+            };
             var pt = this,
                 valueFormat = this.options.numberFormatter;
             nv.addGraph(function() {
@@ -1032,7 +1038,7 @@
                 cdim = data.cols;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ri][ci]['values'][0];
+                    return cells[ri][ci].values[0];
                 };
                 rowsSelector = selectors[0];
                 colsSelector = selectors[1];
@@ -1041,7 +1047,7 @@
                 cdim = data.rows;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ci][ri]['values'][0];
+                    return cells[ci][ri].values[0];
                 };
                 rowsSelector = selectors[1];
                 colsSelector = selectors[0];
@@ -1070,15 +1076,14 @@
                               filterIndex: cols[c][0],
                               filterKey: cols[c][3]
                               },
-                    values = [],
-                    index, value;
+                    values = [];
                 for (var r=0; r < rows.length; r++) {
                     // Every row gives a value
                     values.push({label: rows[r][4],
                                  filterIndex: rows[r][0],
                                  filterKey: rows[r][3],
                                  value: getData(r, c)
-                                 })
+                                 });
                 }
                 series.values = values;
                 matrix.push(series);
@@ -1099,15 +1104,17 @@
 
             // Callback function to render the chart tooltip
             var tooltipContent = function(data) {
-                var data = data.data,
-                    color = nv.utils.defaultColor()({}, data.index);
+
+                data = data.data;
+
+                var color = nv.utils.defaultColor()({}, data.index);
 
                 var tooltip = '<div class="pt-tooltip">' +
                               '<div class="pt-tooltip-label" style="color:' + color + '">' + data.series + '</div>' +
                               '<div class="pt-tooltip-text">' + data.label + ': <span class="pt-tooltip-value">' + data.value + '</span></div>' +
                               '</div>';
                 return tooltip;
-            }
+            };
 
             // Chart
             var pt = this,
@@ -1118,8 +1125,8 @@
 
                 // Define the chart
                 var reportChart = nv.models.multiBarHorizontalChart()
-                                           .x(function(d) { return d.label })
-                                           .y(function(d) { return d.value })
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
                                            .margin({top: 20, right: 20, bottom: 20, left: 175})
                                            .showValues(true)
                                            .duration(350)
@@ -1168,7 +1175,7 @@
                         } else {
                             rowFilter = rowsSelector;
                         }
-                        var filterVars = [[rowFilter, rowKey], [columnFilter, columnKey]]
+                        var filterVars = [[rowFilter, rowKey], [columnFilter, columnKey]];
                         pt._chartExplore(filterVars);
                     });
                 }
@@ -1197,8 +1204,7 @@
                 defaultColor = 'silver';
 
             // Determine the x and y axes of the pivot table
-            var chartOptions = pt.chartOptions,
-                cells = data.cells,
+            var cells = data.cells,
                 labels = data.labels,
                 xAxis,
                 yAxis,
@@ -1338,18 +1344,20 @@
 
             // On-hover data point tooltip
             var barChartTooltip = function(data) {
-                var data = data.data,
-                    color = data.color || [defaultColor];
+
+                data = data.data;
+
+                var color = data.color || [defaultColor];
 
                 var tooltip = '<div class="pt-tooltip">' +
                               '<div class="pt-tooltip-label" style="color:' + color + '">' + data.label + '</div>' +
                               '<div class="pt-tooltip-text">' + valueFormat(data.value) + '</div>' +
                               '</div>';
                 return tooltip;
-            }
+            };
             var barChart = nv.models.discreteBarChart()
-                                    .x(function(d) { return d.label })
-                                    .y(function(d) { return d.value })
+                                    .x(function(d) { return d.label; })
+                                    .y(function(d) { return d.value; })
                                     .color([defaultColor])
                                     .staggerLabels(true)
                                     .showValues(true);
@@ -1364,13 +1372,13 @@
 
             var barChartContainer = d3.select($(barArea).get(0))
                                       .append('svg')
-                                      .attr('class', 'nv')
+                                      .attr('class', 'nv');
 
             // Define the pie chart
             var pieWidth = Math.floor(pieArea.width() / 2) - 30;
             var pieChart = nv.models.pieChart()
-                                    .x(function(d) { return d.label })
-                                    .y(function(d) { return d.value })
+                                    .x(function(d) { return d.label; })
+                                    .y(function(d) { return d.value; })
                                     .height(280)
                                     .width(pieWidth)
                                     .margin({top: -20, left: 20})
@@ -1386,11 +1394,11 @@
             pieChart.legend.align(true)
                            .rightAlign(false);
 
-            pieChart.pie.startAngle(function(d) { return d.startAngle/2 -Math.PI/2 })
-                        .endAngle(function(d) { return d.endAngle/2 -Math.PI/2 });
+            pieChart.pie.startAngle(function(d) { return d.startAngle/2 -Math.PI/2; })
+                        .endAngle(function(d) { return d.endAngle/2 -Math.PI/2; });
 
             pieChart.pie.dispatch.on('elementMouseover', onhoverTooltip)
-                                 .on('elementMouseout', function(e) {
+                                 .on('elementMouseout', function() {
                 $('.pt-tooltip').remove();
                 pt.chartOptions.currentDataIndex = null;
                 pt.chartOptions.currentSeriesIndex = null;
@@ -1439,7 +1447,7 @@
                 if (xIndex === null || pt.chartOptions.currentSpectrumIndex == xIndex) {
                     sliceColor = function(d, i) {
                         return nv.utils.defaultColor()({}, i);
-                    }
+                    };
                     pieChartContainer.selectAll('.nv-slice')
                                      .style('fill', sliceColor)
                                      .style('stroke', sliceColor);
@@ -1448,7 +1456,7 @@
                                               filterIndex: null,
                                               filterKey: null,
                                               values: items
-                                              }])
+                                              }]);
                     barChart.update();
                     pt.chartOptions.currentSpectrumIndex = null;
                     seriesSelector.property('value', 'null');
@@ -1462,7 +1470,7 @@
                         } else {
                             return defaultColor;
                         }
-                    }
+                    };
                     pieChartContainer.selectAll('.nv-slice')
                                      .style('fill', sliceColor)
                                      .style('stroke', sliceColor);
@@ -1471,7 +1479,7 @@
                                               filterIndex: seriesHeader.filterIndex,
                                               filterKey: seriesHeader.filterKey,
                                               values: items
-                                              }])
+                                              }]);
                     barChart.update();
                     pt.chartOptions.currentSpectrumIndex = xIndex;
                     seriesSelector.property('value', xIndex);
@@ -1485,14 +1493,14 @@
             });
 
             // Series selector change event
-            seriesSelector.on('change.pt', function(e) {
+            seriesSelector.on('change.pt', function() {
                 var xIndex = d3.select(this).property('value');
                 if (xIndex == 'null') {
                     selectSeries(null);
                 } else {
                     selectSeries(xIndex);
                 }
-            })
+            });
 
             // Render the pie chart
             nv.addGraph(function() {
@@ -1534,7 +1542,7 @@
                             } else {
                                 return selector;
                             }
-                        }
+                        };
                         if (xIndex !== null) {
                             var xFilter = filterExpression(xSelector, xIndex, xKey);
                             filters.push([xFilter, xKey || 'None']);
@@ -1628,16 +1636,14 @@
          */
         _getOptions: function() {
 
-            var $el = $(this.element);
-            var widgetID = '#' + $el.attr('id');
+            var widgetID = '#' + $(this.element).attr('id');
 
-            var options = {
+            return {
                 rows: $(widgetID + '-rows').val(),
                 cols: $(widgetID + '-cols').val(),
                 fact: $(widgetID + '-fact').val(),
                 totals: $(widgetID + '-totals').is(':checked') ? 1 : 0
             };
-            return options;
         },
 
         /**
@@ -1724,11 +1730,11 @@
 
             // Update URL
             var urlQuery = queries.join('&');
-            var filtered_url = urlParts[0];
+            var filteredURL = urlParts[0];
             if (urlQuery) {
-                filtered_url = filtered_url + '?' + urlQuery;
+                filteredURL = filteredURL + '?' + urlQuery;
             }
-            return filtered_url;
+            return filteredURL;
         },
 
         /**
@@ -1736,8 +1742,9 @@
          *
          * @param {object} options: the pivot table URL options
          * @param {object} filters: the URL filters
+         * @param {bool} noupdate: return the updated URL rather than setting it
          */
-        _updateAjaxURL: function(options, filters) {
+        _updateAjaxURL: function(options, filters, noupdate) {
 
             var ajaxURL = this.options.ajaxURL;
 
@@ -1841,12 +1848,64 @@
             }
 
             var urlQuery = query.join('&'),
-                filtered_url = urlParts[0];
+                filteredURL = urlParts[0];
             if (urlQuery) {
-                filtered_url = filtered_url + '?' + urlQuery;
+                filteredURL = filteredURL + '?' + urlQuery;
             }
-            this.options.ajaxURL = filtered_url;
-            return needsReload;
+
+            if (noupdate) {
+                return filteredURL;
+            } else {
+                this.options.ajaxURL = filteredURL;
+                return needsReload;
+            }
+        },
+
+        /**
+         * Utility function to replace the format extension in a REST URL
+         *
+         * @param {string} url - the URL
+         * @param {string} extension - the new format extension
+         *
+         * @returns {string} - the new URL
+         */
+        _setExtension: function(url, extension) {
+
+            var parser = document.createElement('a');
+
+            parser.href = url;
+
+            var path = parser.pathname.split('/'),
+                items = [];
+            if (path.length) {
+                // Remove any file extensions from path
+                path.forEach(function(item) {
+                    var idx = item.lastIndexOf('.');
+                    if (idx != -1) {
+                        items.push(item.slice(0, idx));
+                    } else {
+                        items.push(item);
+                    }
+                });
+                // Add file extension to last path element
+                items[items.length - 1] += '.' + extension;
+                // Reconstruct path
+                parser.pathname = items.join('/');
+            }
+
+            // Drop (or replace) 'format' parameter from query
+            var search = parser.search;
+            if (search) {
+                items = search.slice(1).split().filter(function(query) {
+                    return query.split('=')[0] != 'format';
+                });
+                if (!path.length) {
+                    items.push('format=' + extension);
+                }
+                parser.search = '?' + items.join('&');
+            }
+
+            return parser.href;
         },
 
         /**
@@ -1929,13 +1988,44 @@
         },
 
         /**
+         * Download the pivot table as XLS spreadsheet
+         */
+        _downloadXLS: function() {
+
+            // Make sure we actually have data in the pivot table
+            var pivotdata = this.element.find('input[type="hidden"][name="pivotdata"]');
+            if (!pivotdata.length) {
+                return;
+            }
+
+            // Update options and filters
+            var options = this._getOptions(),
+                filters = this._getFilters();
+
+            // Get updated ajaxURL (but do not set it so we do not
+            // forestall autoSubmit)
+            var ajaxURL = this._updateAjaxURL(options, filters, true);
+
+            // Construct download URL
+            var downloadURL = this._setExtension(ajaxURL, 'xls');
+
+            // Use searchDownloadS3 if present, or fallback to window.open
+            if ($.searchDownloadS3 !== undefined) {
+                $.searchDownloadS3(downloadURL, '_blank');
+            } else {
+                window.open(downloadURL);
+            }
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
 
             var pt = this,
                 $el = $(this.element),
-                data = this.data;
+                data = this.data,
+                ns = this.eventNamespace;
             var widgetID = '#' + $el.attr('id');
 
             // Show/hide report options
@@ -1953,13 +2043,20 @@
                 pt.table_options.hidden = true;
                 $el.find('.pt-table').hide();
                 $(this).siblings('.pt-show-table').show();
+                $el.find('.pt-export-opt').hide();
                 $(this).hide();
             });
             $el.find('.pt-show-table').click(function() {
                 pt.table_options.hidden = false;
                 $el.find('.pt-table').show();
                 $(this).siblings('.pt-hide-table').show();
+                $el.find('.pt-export-opt').show();
                 $(this).hide();
+            });
+
+            // Exports
+            $el.find('.pt-export-xls').on('click' + ns, function() {
+                pt._downloadXLS();
             });
 
             // Totals-option doesn't need Ajax-refresh
@@ -2071,6 +2168,7 @@
 
             var $el = $(this.element);
             var widgetID = '#' + $el.attr('id');
+            var ns = this.eventNamespace;
 
             $(widgetID + ' div.pt-table div.pt-cell-zoom').unbind('click');
             $(widgetID + '-options legend').unbind('click');
@@ -2084,6 +2182,8 @@
 
             $(widgetID + '-pt-form').unbind('optionChanged');
             $el.find('input.pt-submit').unbind('click');
+
+            $el.find('.pt-export-xls').off('click' + ns);
 
             $(widgetID + '-pchart-rows,' +
               widgetID + '-vchart-rows,' +
