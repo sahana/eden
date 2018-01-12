@@ -3298,7 +3298,7 @@ class S3Filter(S3Method):
             data = json.load(source)
         except ValueError:
             # Syntax error: no JSON data
-            r.error(501, current.ERROR.BAD_SOURCE)
+            r.error(400, current.ERROR.BAD_SOURCE)
 
         # Try to find the record
         db = current.db
@@ -3311,13 +3311,13 @@ class S3Filter(S3Method):
             query = (table.id == record_id) & (table.pe_id == pe_id)
             record = db(query).select(table.id, limitby=(0, 1)).first()
         if not record:
-            r.error(501, current.ERROR.BAD_RECORD)
+            r.error(404, current.ERROR.BAD_RECORD)
 
         resource = s3db.resource("pr_filter", id=record_id)
         success = resource.delete(format=r.representation)
 
         if not success:
-            raise(400, resource.error)
+            r.error(400, resource.error)
         else:
             current.response.headers["Content-Type"] = "application/json"
             return current.xml.json_message(deleted=record_id)
