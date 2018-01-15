@@ -28,3 +28,9 @@
 /modules/plugins/*
 !/modules/plugins/__init__.py
 !/modules/plugins/skeleton.py
+#
+#temporary file
+modules/templates/SAFIRE/Demo/scenario.csv
+modules/templates/SAFIRE/Demo/scenario_asset.csv
+modules/templates/SAFIRE/Demo/scenario_human_resource.csv
+modules/templates/SAFIRE/Demo/scenario_task.csv
