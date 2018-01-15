@@ -1,4 +1,4 @@
-OID,Organisation,Country,Feed URL,Forecast URL,Authorization
+﻿OID,Organisation,Country,Feed URL,Forecast URL,Authorization
 2.49.0.0.4.0,Afghan Meteorological Authority,AF,,http://www.worldweather.org/115/m115.htm,
 2.49.0.0.8.0,Hydrometeorological Institute,AL,,,
 2.49.0.0.12.0,Office National de la Météorologie,DZ,,http://www.worldweather.org/122/m122.htm,
@@ -139,8 +139,7 @@ OID,Organisation,Country,Feed URL,Forecast URL,Authorization
 2.49.0.0.454.0,Malawi Meteorological Services,MW,,http://www.worldweather.org/073/c00262.htm,No act of parliament establishing the Meteorological Service as of year 1997.
 2.49.0.0.454.1,Ministry of Water Department,MW,,,
 2.49.0.0.458.0,Malaysian Meteorological Department,MY,,http://www.worldweather.org/020/m020.htm,No act of parliament establishing the Meteorological Service as of year 1997.
-2.49.0.0.462.0,Maldives Meteorological Service,MV,,http://www.meteorology.gov.mv/generalweather,http://www.worldweather.org/118/m118.htm
-2.49.0.0.462.1,Maldives National Disaster Management Center,MV,http://www.dhandhaana.gov.mv/eden/cap/public.rss,http://www.meteorology.gov.mv/generalweather,
+2.49.0.0.462.0,Department of Meteorology,MV,,http://www.worldweather.org/118/m118.htm,
 2.49.0.0.466.0,Direction Nationale de la Météorologie du Mali,ML,,http://www.worldweather.org/034/m034.htm,No express provision for exclusive rights to the Met Service to issue forecasts and/or warnings
 2.49.0.0.466.1,Direction Nationale de l'Hydraulique,ML,,,
 2.49.0.0.470.0,Meteorological Office,MT,,http://www.worldweather.org/012/c00042.htm,Air Navigation Service Provider (Meteorology)

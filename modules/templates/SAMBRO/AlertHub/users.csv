@@ -1,6 +1,3 @@
 First Name,Last Name,Email,Password,Role,Organisation
 Gnewy,Admin,admin@example.com,testing,ADMIN,Sahana Software Foundation
 Normal,User,normaluser@example.com,testing,AUTHENTICATED,Sahana Software Foundation
-Map,Admin,mapadmin@example.com,testing,MAP_ADMIN,Sahana Software Foundation
-Alert,Editor,editor@example.com,testing,ALERT_EDITOR,Sahana Software Foundation
-Alert,Approver,approver@example.com,testing,ALERT_APPROVER,Sahana Software Foundation
