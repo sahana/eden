@@ -23,6 +23,7 @@ import os
 try:
     from robot import run_cli
 except:
+    import sys
     print >> sys.stderr, "Robot Framework is not installed"
     exit(1)
 

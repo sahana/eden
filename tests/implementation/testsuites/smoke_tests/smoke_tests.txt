@@ -22,7 +22,7 @@ ${EXT LINKS}  ${False}
 ${PAGE LOAD TIMEOUT}  0.25
 ${ELEMENT LOAD TIMEOUT}  0.50
 # Starting URL
-${START URL}  ${SERVER}/${APPNAME}/${SMOKETEST START}
+${START URL}  ${PROTO}://${SERVER}/${APPNAME}/${SMOKETEST START}
 # Every URL Must contain the root. If you want to test at a module level and
 # ignore other modules, just set the Root URL to that module
 ${ROOT URL}  ${SMOKETEST ROOT}
