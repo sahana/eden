@@ -63,7 +63,7 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        tablename = table._ot or table._tablename
+        tablename = original_tablename(table)
 
         realm_entity = 0
 

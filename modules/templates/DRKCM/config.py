@@ -8,6 +8,7 @@ from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, U
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
+from s3dal import original_tablename
 
 def config(settings):
     """
@@ -129,7 +130,7 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        tablename = table._ot or table._tablename
+        tablename = original_tablename(table)
 
         realm_entity = 0
 

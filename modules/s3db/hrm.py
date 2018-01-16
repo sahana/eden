@@ -1361,7 +1361,7 @@ class S3HRSiteModel(S3Model):
         tablename = "hrm_human_resource_site"
         self.define_table(tablename,
                           self.hrm_human_resource_id(ondelete = "CASCADE"),
-                          self.org_site_id,
+                          self.org_site_id(),
                           self.org_sector_id(),
                           Field("site_contact", "boolean",
                                 label = T("Facility Contact"),

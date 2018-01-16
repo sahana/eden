@@ -51,7 +51,7 @@ from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
-from s3dal import Row, Rows, Query, Table
+from s3dal import Row, Rows, Query, Table, original_tablename
 from s3datetime import S3DateTime
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
@@ -59,9 +59,6 @@ from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
 from s3validators import IS_ISO639_2_LANGUAGE_CODE
-
-# DRY helper to get the original name of a Table (_tablename can be an alias)
-original_tablename = lambda table: table._ot if table._ot else table._tablename
 
 # =============================================================================
 class AuthS3(Auth):
@@ -4907,10 +4904,11 @@ $.filterOptionsS3({
                     rows = db(query).select(ctable._id)
                     ids = list(set([row[ctable._id] for row in rows]))
                     if ids:
-                        if ctable._ot:
+                        ctablename = component.tablename
+                        if ctable._tablename != ctablename:
                             # Component with table alias => switch to
                             # original table for update:
-                            ctable = db[ctable._ot]
+                            ctable = db[ctablename]
                         db(ctable._id.belongs(ids)).update(**realm)
 
             # Update super-entity
