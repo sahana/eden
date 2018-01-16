@@ -5,7 +5,7 @@ Name,URL,Type
 "Anguilla Disaster Management",https://axa-primary.capews.com/capews/public/atom?type=cap,cap
 "Antigua and Barbuda Meteorological Services",https://alert.metoffice.gov.ag/capfeed.php,cms
 "Argentina Servicio Meteorologico Nacional",http://www.smn.gov.ar/?mod=feeds&id=2,cms
-"Badan Meteorologi, Klimatologi, dan Geofisika",https://inatews.bmkg.go.id/rss/capatomlast40event.xml,cap
+"Badan Meteorologi, Klimatologi, dan Geofisika",https://inatews.bmkg.go.id/rss/capatomlast40event.xml,cms
 "Brazilian Instituto Nacional de Meteorologia",http://alert-as.inmet.gov.br/cap_12/rss/alert-as.rss,cap
 "Central Institute for Meteorology and Geodynamics",http://meteoalarm.eu/ATOM/AT.xml,cms
 "Croatia: Državni hidrometeorološki zavod",http://meteoalarm.eu/ATOM/HR.xml,cms
