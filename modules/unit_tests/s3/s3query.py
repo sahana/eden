@@ -116,7 +116,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         # Verify joins of parent link
         joins = rfield.left.get("test_link")
         assertNotEqual(joins, None)
-        actual = [str(j) for j in joins]
+        actual = [str(j).replace("`", "") for j in joins]
         expected = ("test_link ON (test_master.id = test_link.child)",
                     "test_master AS test_parent_master ON (test_link.parent = test_parent_master.id)",
                     )
@@ -131,7 +131,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         # Verify joins of child link
         joins = rfield.left.get("test_link")
         assertNotEqual(joins, None)
-        actual = [str(j) for j in joins]
+        actual = [str(j).replace("`", "") for j in joins]
         expected = ("test_link ON (test_master.id = test_link.parent)",
                     "test_master AS test_child_master ON (test_link.child = test_child_master.id)",
                     )

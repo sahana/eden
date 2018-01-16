@@ -158,7 +158,7 @@ class S3ProcurementModel(S3Model):
         tablename = "proc_plan_item"
         define_table(tablename,
                      plan_id(),
-                     self.supply_item_entity_id,
+                     self.supply_item_entity_id(),
                      self.supply_item_id(),
                      self.supply_item_pack_id(),
                      Field("quantity", "double", notnull = True,
