@@ -3,8 +3,8 @@ Documentation       Keywords for authorization, usually automatically
 ...                 run during suite setup and tear down
 
 *** Variables ***
-${LOGIN URL}        http://${BASEURL}/default/user/login
-${LOGOUT URL}       http://${BASEURL}/default/user/logout
+${LOGIN URL}        ${BASEURL}/default/user/login
+${LOGOUT URL}       ${BASEURL}/default/user/logout
 ${UsernameField}    auth_user_email
 ${PasswordField}    auth_user_password
 
@@ -43,7 +43,7 @@ Login To Eden
 Self Register A New User
     [Documentation]  Opens up, fills and submits the registration form
     [Arguments]  ${fname}  ${lname}  ${email}  ${passwd}
-    Go To  http://${BASEURL}/default/user/register
+    Go To  ${BASEURL}/default/user/register
     Input Text  auth_user_first_name  ${fname}
     Input Text  auth_user_last_name  ${lname}
     Input Text  auth_user_email  ${email}

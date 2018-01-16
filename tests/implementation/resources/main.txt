@@ -14,8 +14,8 @@ Library  ../../execution/libs/edentest_robot.py  ${SERVER}  ${APPNAME}  ${ADMIN 
 Library  ../../execution/libs/edentest_database_local.py
 
 *** Variables ***
-${BASEURL}  ${SERVER}/${APPNAME}
-${HOMEPAGE}  http://${BASEURL}/default/index
+${BASEURL}  ${PROTO}://${SERVER}/${APPNAME}
+${HOMEPAGE}  ${BASEURL}/default/index
 
 *** Keywords ***
 Start Browser With Proxy

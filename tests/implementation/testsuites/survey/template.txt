@@ -24,7 +24,7 @@ Suite Setup  Survey Start
 
 
 *** Variables ***
-${TEMPLATE URL}  http://${BASEURL}/survey/template
+${TEMPLATE URL}  ${BASEURL}/survey/template
 ${TEMPLATE ID}  1
 ${TEMPLATE COUNT}
 ${QUESTION COUNT}

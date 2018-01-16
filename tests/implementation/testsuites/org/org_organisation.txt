@@ -4,8 +4,8 @@ Documentation     Test cases for org module
 Resource          ../../resources/main.txt
 
 *** Variables ***
-${ORGANIZATION URL}     http://${BASEURL}/org/organisation
-${OFFICE URL}           http://${BASEURL}/org/office
+${ORGANIZATION URL}     ${BASEURL}/org/organisation
+${OFFICE URL}           ${BASEURL}/org/office
 
 ${OrgNameField}         org_organisation_name
 ${OrgAcronymField}      org_organisation_acronym
