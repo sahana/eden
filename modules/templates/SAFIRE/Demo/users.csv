@@ -1,2 +1,8 @@
 First Name,Last Name,Email,Password,Role,Organisation,Link
 Call,Logger,call_logger@example.com,eden,CALL_LOGGER,NEOC,Staff
+Operations,Unit,operations_unit@example.com,eden,OPERATIONS,NEOC,Staff
+Planning,Unit,planning_unit@example.com,eden,PLANNING,NEOC,Staff
+Logistics,Unit,logistics_unit@example.com,eden,LOGISTICS,NEOC,Staff
+Communication,Unit,communication_unit@example.com,eden,COMMUNICATION,NEOC,Staff
+Manager,EOC,eoc_manager@example.com,eden,DASHBOARD,NEOC,Staff
+Incident,Commander,incident_commander@example.com,eden,INCIDENTCOMMANDER,NEOC,Staff

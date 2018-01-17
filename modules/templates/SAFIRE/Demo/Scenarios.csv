@@ -1,0 +1,38 @@
+Incident_Type,Scenario,Plan Attrib,Action/Resources
+Fire,High rise building,Task,Knock on all doors
+Fire,High rise building,Task,Evacuate people
+Fire,High rise building,Task,Count all people
+Fire,High rise building,Task,Contain fire
+Fire,High rise building,Task,Sweep and secure
+Fire,High rise building,Position,Fire Marshall
+Fire,High rise building,Position,Evacuation Team
+Fire,High rise building,Position,Cleanup Team
+Fire,High rise building,Item,Tower ladder
+Fire,High rise building,Item,Command Unit
+Fire,High rise building,Item,Tanker Truck
+Flash Flood,Water Evacuation Large Group,Tasks,Identify and share location of secure loading area
+Flash Flood,Water Evacuation Large Group,Tasks,Report the number of people to evacuate
+Flash Flood,Water Evacuation Large Group,Tasks,Locate and assign water evacuation first responders
+Flash Flood,Water Evacuation Large Group,Task,Locate and assign ground transportation (buses)
+Flash Flood,Water Evacuation Large Group,Position,Boat Captain (1 people)
+Flash Flood,Water Evacuation Large Group,Position,Boat Crew (1 people)
+Flash Flood,Water Evacuation Large Group,Position,Docking Crew (6 people)
+Flash Flood,Water Evacuation Large Group,Position,Evacuation Coordinator
+Flash Flood,Water Evacuation Large Group,Item,Motor boat
+Flash Flood,Water Evacuation Large Group,Item,Safety lines (rope)
+Flash Flood,Water Evacuation Large Group,Item,Life jackets (> 12 pieces)
+Flash Flood,Water Evacuation Large Group,Item,Buses (1)
+Flash Flood,Water evacuation transport only,Tasks,Report the number of people to evacuate
+Flash Flood,Water evacuation transport only,Tasks,Locate and assign water evacuation first responders
+Flash Flood,Water evacuation transport only,Position,Boat Captain (1 people)
+Flash Flood,Water evacuation transport only,Position,Boat Crew (1 people)
+Flash Flood,Water evacuation transport only,Items,Motor boat
+Flash Flood,Water evacuation transport only,Item,Life jackets (> 06 pieces)
+Landslide,Search and Rescue,Task,Identify and share search area
+Landslide,Search and Rescue,Task,Report number of missing persons
+Landslide,Search and Rescue,Position,Emergency Medical Technician
+Landslide,Search and Rescue,Position,Mining Technician
+Landslide,Search and Rescue,Position,Search Dog
+Landslide,Search and Rescue,Item,Robot
+Landslide,Search and Rescue,Item,Digging equipment
+Landslide,Search and Rescue,Item,Scanning device

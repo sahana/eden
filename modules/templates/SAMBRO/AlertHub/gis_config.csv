@@ -1,0 +1,4 @@
+Name,OU,OU Type,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker,WMS Browser
+MM,Department of Meteorology and Hydrology,organisation,MM,MM,,,5,19.4122,97.2266,900913,9,29,92,102,,
+MV,National Disaster Management Center,organisation,MV,MV,,,10,4.1552,73.5747,900913,-1,8,72,74,,
+PH,Philippine Institute of Volcanology and Seismology,organisation,PH,PH,,,6,12.567606,122.419227,900913,4,21,114,130,,
