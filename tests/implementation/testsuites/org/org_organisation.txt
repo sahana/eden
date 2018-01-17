@@ -42,6 +42,8 @@ Create Organisation Without Name
     Input Text  ${OrgAcronymField}  NO
     Submit CRUD Form
     Field Should Have Error  ${OrgNameField}
+    Go To  ${ORGANIZATION URL}
+    Handle Alert  # Navigate-Away-Confirm
 
 Update Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
