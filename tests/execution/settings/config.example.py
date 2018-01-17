@@ -31,3 +31,5 @@ SMOKETEST_START = ""
 # - must be part of every visited URL
 # - can be used to limit tests to a certain module
 SMOKETEST_ROOT = ""
+# Smoke test depth (0 = start page only)
+SMOKETEST_DEPTH = 0
