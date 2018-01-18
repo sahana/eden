@@ -1,0 +1,89 @@
+Name,URL,Type
+"Administration de l'Aéroport de Luxembourg",http://meteoalarm.eu/ATOM/LU.xml,cms
+"Agencia Estatal de Meteorología",http://meteoalarm.eu/ATOM/ES.xml,cms
+"Alberta Emergency Management Agency",http://emergencyalert.alberta.ca/aeapublic/feed.atom,cms
+"Anguilla Disaster Management",https://axa-primary.capews.com/capews/public/atom?type=cap,cap
+"Antigua and Barbuda Meteorological Services",https://alert.metoffice.gov.ag/capfeed.php,cms
+"Argentina Servicio Meteorologico Nacional",http://www.smn.gov.ar/?mod=feeds&id=2,cms
+"Badan Meteorologi, Klimatologi, dan Geofisika",https://inatews.bmkg.go.id/rss/capatomlast40event.xml,cms
+"Brazilian Instituto Nacional de Meteorologia",http://alert-as.inmet.gov.br/cap_12/rss/alert-as.rss,cap
+"Central Institute for Meteorology and Geodynamics",http://meteoalarm.eu/ATOM/AT.xml,cms
+"Croatia: Državni hidrometeorološki zavod",http://meteoalarm.eu/ATOM/HR.xml,cms
+"Cyprus Meteorological Service",http://meteoalarm.eu/ATOM/CY.xml,cms
+"Czech Hydrometeorological Institute",http://meteoalarm.eu/ATOM/CZ.xml,cms
+"Danish Meteorological Institute",http://meteoalarm.eu/ATOM/DK.xml,cms
+"Deutscher Wetterdienst",http://meteoalarm.eu/ATOM/DE.xml,cms
+"Environment Canada",http://rss.naad-adna.pelmorex.com,cms
+"Environmental Protection Agency",http://feeds.enviroflash.info/cap/aggregate.xml,cms
+"Estonian Meteorological and Hydrological Institute",http://meteoalarm.eu/ATOM/EE.xml,cms
+"Federal Hydrometeorological Institute of Bosnia and Herzegovina",http://meteoalarm.eu/ATOM/BA.xml,cms
+"Finnish Environment Institute",http://meteoalarm.eu/ATOM/FI.xml,cms
+"Global Disaster Alert and Coordination",http://www.gdacs.org/xml/gdacs_cap.xml,cms
+"GNS Science",https://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1.0/quake,cap
+"GNS Science",http://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1...,cap
+"Guyana Hydrometeorological Service",http://hydromet.gov.gy/cap/en/alerts/rss.xml,cap
+"Hellenic National Meteorological Service",http://meteoalarm.eu/ATOM/GR.xml,cms
+"Hungarian Meteorological Service",http://meteoalarm.eu/ATOM/HU.xml,cms
+"Icelandic Meteorological Office",http://meteoalarm.eu/ATOM/IS.xml,cms
+"Institut Royal Météorologique",http://meteoalarm.eu/ATOM/BE.xml,cms
+"Institute of Hydrometeorology and Seismology of Montenegro",http://meteoalarm.eu/ATOM/ME.xml,cms
+"Institute of Meteorology and Water Management",http://meteoalarm.eu/ATOM/PL.xml,cms
+"Instituto Português do Mar e da Atmosfera",http://meteoalarm.eu/ATOM/PT.xml,cms
+"International Federation of Red Cross and Red Crescent Societies",https://api.preparecenter.org/v1/alerts/rss,cms
+"Irish Meteorological Service",http://meteoalarm.eu/ATOM/IE.xml,cms
+"Israel",http://meteoalarm.eu/ATOM/IL.xml,cms
+"Japan Meteorological Agency",http://xml.kishou.go.jp/feed/eqvol.xml,cms
+"Japan Meteorological Agency",http://xml.kishou.go.jp/feed/extra.xml,cms
+"Japan Meteorological Agency",http://xml.kishou.go.jp/feed/other.xml,cms
+"Japan Meteorological Agency",http://xml.kishou.go.jp/feed/other2.xml,cms
+"Japan Meteorological Agency",http://xml.kishou.go.jp/feed/regular.xml,cms
+"Kazhydromet",http://meteoalarm.eu/ATOM/KS.xml,cms
+"Kuwait Meteorological Department",http://www.met.gov.kw/rss_eng/kuwait_cap.xml,cap
+"Kyrgyzhydromet",http://meteoalarm.eu/ATOM/KZ.xml,cms
+"Latvian Environment, Geology and Meteorology Centre",http://meteoalarm.eu/ATOM/LV.xml,cms
+"Lithuanian Hydrometeorological Service",http://meteoalarm.eu/ATOM/LT.xml,cms
+"Main Administration of Hydrometeorology and Monitoring of the Environment",http://meteoalarm.eu/ATOM/TJ.xml,cms
+"Maldives National Disaster Management Center",http://www.dhandhaana.gov.mv/eden/cap/public.rss,cap
+"Malta Meteorological Office",http://meteoalarm.eu/ATOM/MT.xml,cms
+"Météo-France",http://meteoalarm.eu/ATOM/FR.xml,cms
+"Meteorological Department Aruba (English)",http://201.229.69.218/cap/en/alerts/rss.xml,cms
+"Meteorological Department Aruba (Dutch)",http://201.229.69.218/cap/nl/alerts/rss.xml,cms
+"Meteorological Department Aruba (Papiamento)",http://201.229.69.218/cap/pap/alerts/rss.xml,cms
+"Meteorological Service of Canada",http://rss.naad-adna.pelmorex.com/,cms
+"Meteorological Service of New Zealand Limited",http://alerts.metservice.com/cap/rss,cap
+"Ministère de la Sécurité publique du Québec",http://rss.naad-adna.pelmorex.com/,cms
+"Moldova State Hydrometeorological Service",http://meteoalarm.eu/ATOM/MD.xml,cms
+"Myanmar Department of Meteorology and Hydrology",http://www.dmhwarning.gov.mm/eden/cap/public.rss,cap
+"National Centre for Aeronautical Meteorology and Climatology",http://meteoalarm.eu/ATOM/IT.xml,cms
+"National Institute of Meteorology and Hydrology",http://meteoalarm.eu/ATOM/BG.xml,cms
+"National Unit for Disaster Risk Management",http://www.gestiondelriesgo.gov.co/rss/AtomAlert.atom,cms
+"New South Wales Rural Fire Service",http://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml,cms
+"NOAA Earthquake Bulletins",http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.atom,cms
+"NOAA Earthquake Warning Center",http://earthquake.usgs.gov/earthquakes/feed/v1.0/s...,cms
+"NOAA National Weather Service",https://alerts.weather.gov/cap/us.php?x=0,cap
+"Pacific Tsunami Warning Center",http://ptwc.weather.gov/feeds/ptwc_rss.xml,cms
+"Pacific Tsunami Warning Center",http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,cms
+"Pacific Tsunami Warning Center",http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,cms
+"Papua New Guinea Meteorological Service",https://smartalert.pngmet.gov.pg/capfeed.php,cms
+"Philippine Atmospheric Geophysical and Astronomical Services Administration",http://publicalert.pagasa.dost.gov.ph/feeds/,cap
+"Republic Hydrometeorological Organization",http://meteoalarm.eu/ATOM/MK.xml,cms
+"Republic Hydrometeorological Service of Serbia",http://meteoalarm.eu/ATOM/RS.xml,cms
+"Romania National Meteorological Administration",http://meteoalarm.eu/ATOM/RO.xml,cms
+"Royal Netherlands Meteorological Institute",http://meteoalarm.eu/ATOM/NL.xml,cms
+"Russian Federal Service for Hydrometeorology and Environmental Monitoring",http://meteoalarm.eu/ATOM/RU.xml,cms
+"Samoa Meteorology Division",http://alert.samet.gov.ws/capfeed.php,cms
+"Servicio Meteorologico Nacional de Mexico",https://correo1.conagua.gob.mx/feedsmn/feedalert.aspx,cap
+"Servicio Meteorologico Nacional de Mexico",https://correo1.conagua.gob.mx/feedsmn/feedalert.aspx,cms
+"Slovak Hydrometeorological Institute",http://meteoalarm.eu/ATOM/SK.xml,cms
+"Slovenian National Meteorological Service",http://meteoalarm.eu/ATOM/SI.xml,cms
+"Solomon Islands Meteorological Service",https://smartalert.met.gov.sb/capfeed.php,cms
+"Swedish Meteorological and Hydrological Institute",http://meteoalarm.eu/ATOM/SE.xml,cms
+"Swiss Seismological Service",http://meteoalarm.eu/ATOM/CH.xml,cms
+"Taiwan National Center for Disaster Reduction",https://alerts.ncdr.nat.gov.tw/RssAtomFeed.ashx,cms
+"Thai Meteorological Department",http://www.tmd.go.th/feeds/CAPfeeds.php,cms
+"Togo Direction de la Météorologie Nationale",https://alerts.met.gov.to/capfeed.php,cms
+"UK Met Office",http://meteoalarm.eu/ATOM/UK.xml,cms
+"United States Geological Survey – Volcano",https://volcanoes.usgs.gov/hans2/cap/rss/,cap
+"Uzhydromet",http://meteoalarm.eu/ATOM/UZ.xml,cms
+"West Coast and Alaska Tsunami Warning Center",http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml,cms
+"Vanuatu Meteorology and Geo-Hazard Department",https://smartalert.vmgd.gov.vu/capfeed.php,cms
