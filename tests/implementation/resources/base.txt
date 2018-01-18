@@ -49,8 +49,10 @@ Do Not Run on Templates
 #Resources:main.txt;
 Catch Error If Available Else Take Screenshot
     [Documentation]  Run on failure mechanism of EdenTest
+    Run Keyword And Ignore Error  Handle Alert  DISMISS  1
     ${output}=  Check For Ticket And Catch Exception
-    Run Keyword If  ${output}==0  Capture Page Screenshot
+    ${ss}=  Run Keyword If  ${output}==0  Capture Page Screenshot
+    Run Keyword If  ${output}==0  Log  Screenshot: ${ss}  ERROR
 
 #Resources:base.txt; keyword:Catch Error If Available Else Take Screenshot
 Check for ticket and catch exception
@@ -87,8 +89,8 @@ Check for ticket and catch exception
 
     # Log it
     ${passed}=  Run Keyword and Return Status  Should Not Be Empty  ${Failed URL}
-    Run Keyword If  ${passed}  Log  @{With Failed URL}[0] @{With Failed URL}[1]  WARN
-    Run Keyword Unless  ${passed}  Log  @{Without Failed URL}[0] @{Without Failed URL}[1]  WARN
+    Run Keyword If  ${passed}  Log  @{With Failed URL}[0] @{With Failed URL}[1]  ERROR
+    Run Keyword Unless  ${passed}  Log  @{Without Failed URL}[0] @{Without Failed URL}[1]  ERROR
 
     # Return errors if the Failed URL is given
     Return From Keyword if  ${passed}  @{With Failed URL}
@@ -105,6 +107,14 @@ Login To Admin Interface If Not Logged In
 
 Go To URL If Not Already There
     [Arguments]  ${URL}
-    [Documentation]  Got to the URL if that is not the current page
+    [Documentation]  Go to the URL if that is not the current page
     ${status}  ${value}  Run Keyword And Ignore Error  Location Should Be  ${URL}
     Run keyword If  '${status}'=='FAIL'  Go To  ${URL}
+
+Open Page
+    [Arguments]  ${URL}
+    [Documentation]  Go to the URL, confirming any pending alerts
+    Go To  ${URL}
+    Register Keyword To Run On Failure  NOTHING
+    Run Keyword And Ignore Error  Alert Should Not Be Present
+    Register Keyword To Run On Failure  Catch Error If Available Else Take Screenshot
