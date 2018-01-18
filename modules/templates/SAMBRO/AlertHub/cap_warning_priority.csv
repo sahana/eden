@@ -1,0 +1,4 @@
+Priority Rank,Event Code,Name,Event Type,Urgency,Severity,Certainty,Color Code
+1,2099,Urgent,others,Immediate,Extreme,Observed,FF0000
+2,2099,High,others,Expected,Severe,Observed,FFA500
+3,2099,Low,others,Expected,Moderate,Observed,FFFF00
