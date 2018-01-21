@@ -164,7 +164,7 @@
 '"update" is an optional expression like "field1=\'newvalue\'". You cannot update or delete the results of a JOIN': '"update" es una expresión opcional, como "campo1 = \'nuevovalor\'". No se puede actualizar o eliminar los resultados de un JOIN',
 '# of Houses Damaged': 'número de Viviendas dañadas',
 '# of Houses Destroyed': 'número de Viviendas destruidas',
-'# of International Staff': '# de Personal Internacional',
+'# of International Staff': 'número del Personal Internacional',
 '# of National Staff': '# de Personal Nacional',
 '# of People Affected': 'número de personas afectadas',
 '# of People Deceased': 'número de personas fallecidas',
