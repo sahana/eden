@@ -171,7 +171,7 @@
 '# of People Injured': 'número de personas heridas',
 '# of Vehicles': 'número de vehiculos',
 '# selected': 'Número Seleccionado',
-'% Achieved': '% de Logro',
+'% Achieved': 'Porcentaje de Logro',
 '%(GRN)s Number': 'Número de Nota de Bienes Recibidos',
 '%(GRN)s Status': '%(GRN)s Estado',
 '%(PO)s Number': 'Número de Compra',
