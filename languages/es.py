@@ -170,7 +170,7 @@
 '# of People Deceased': 'número de personas fallecidas',
 '# of People Injured': 'número de personas heridas',
 '# of Vehicles': 'número de vehiculos',
-'# selected': '# Seleccionado',
+'# selected': 'Número Seleccionado',
 '% Achieved': '% de Logro',
 '%(GRN)s Number': 'Número de Nota de Bienes Recibidos',
 '%(GRN)s Status': '%(GRN)s Estado',
