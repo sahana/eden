@@ -102,7 +102,7 @@
 "Need a 'url' argument!": "¡Necesita una 'url' argumento!",
 "No SMS's currently in InBox": 'N SMS actualmente en Bandeja de entrada',
 "No SMS's currently in OutBox": 'No hay mensajes actualmente en la Bandeja de salida',
-"No SMS's currently in Sent": 'N de SMS enviados en la actualidad',
+"No SMS's currently in Sent": 'No hay mensajes enviados en la actualidad',
 "Note that the dropdowns won't refresh automatically. Refresh the page if you wish to verify that the locations have gone.": 'Observe que los menús desplegables no se renuevan automáticamente. Actualizar la página si desea verificar que las ubicaciones han desaparecido.',
 "Optional. The name of the geometry column. In PostGIS this defaults to 'the_geom'.": "opcional. El nombre de la columna de la geometría. En PostGIS este el valor predeterminado es 'the_geom'.",
 "Parent level should be higher than this record's level. Parent level is": 'El Nivel superior debe ser mayor que este nivel de registro. Nivel padre es',
