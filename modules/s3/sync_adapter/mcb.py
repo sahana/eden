@@ -140,14 +140,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         output = None
         log = repository.log
         if data and count:
-
-            #print data
-            #response, message = None, None
             response, message = self._send_request(method = "POST",
                                                    path = "BulkStream",
                                                    data = data,
                                                    )
-
             if response is None:
                 result = log.FATAL
                 remote = True
@@ -241,7 +237,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         message = None
         try:
             if method == "POST":
-                #print >> sys.stderr, request_data
                 f = urllib2.urlopen(req, data=request_data)
             else:
                 f = urllib2.urlopen(req)

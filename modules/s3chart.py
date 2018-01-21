@@ -68,14 +68,15 @@ class S3Chart(object):
             #import matplotlib.pyplot as plt
             #from pylab import savefig
             from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-            self.FigureCanvas = FigureCanvas
             from matplotlib.figure import Figure
-            self.Figure = Figure
-            MATPLOTLIB = True
         except ImportError:
             import sys
-            print >> sys.stderr, "WARNING: S3Chart unresolved dependency: matplotlib required for charting"
+            sys.stderr.write("WARNING: S3Chart unresolved dependency: matplotlib required for charting\n")
             MATPLOTLIB = False
+        else:
+            MATPLOTLIB = True
+            self.FigureCanvas = FigureCanvas
+            self.Figure = Figure
 
         self.filename = path
         self.width = width
@@ -126,8 +127,8 @@ class S3Chart(object):
         chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
         fullPath = "%s%s" % (path, chartFile)
         try:
-            f = open(fullPath, "w+")
-            print >> f, image
+            with open(fullPath, "w+") as f:
+                f.write(image)
         except:
             return None
         return chartFile

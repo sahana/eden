@@ -289,7 +289,7 @@ class S3Migration(object):
                         _skip.append(tablename)
                     except:
                         import sys
-                        print "Skipping %s: %s" % (tablename, sys.exc_info()[1])
+                        sys.stderr.write("Skipping %s: %s\n" % (tablename, sys.exc_info()[1]))
                 else:
                     try:
                         db_bak.define_table(tablename, db[tablename])
@@ -301,7 +301,7 @@ class S3Migration(object):
                         _skip.append(tablename)
                     except:
                         import sys
-                        print "Skipping %s: %s" % (tablename, sys.exc_info()[1])
+                        sys.stderr.write("Skipping %s: %s\n" % (tablename, sys.exc_info()[1]))
             skip = _skip
 
         # Which tables do we need to backup?
@@ -731,8 +731,7 @@ class S3Migration(object):
             db.executesql(sql)
         except:
             import sys
-            e = sys.exc_info()[1]
-            print >> sys.stderr, e
+            sys.stderr.write("%s\n" % sys.exc_info()[1])
 
         # Modify the .table file
         table = db[tablename]
@@ -778,8 +777,7 @@ class S3Migration(object):
             db.executesql(sql)
         except:
             import sys
-            e = sys.exc_info()[1]
-            print >> sys.stderr, e
+            sys.stderr.write("%s\n" % sys.exc_info()[1])
 
         # Modify the .table file
         table = db[tablename]
@@ -830,10 +828,9 @@ class S3Migration(object):
                 try:
                     executesql(sql)
                 except:
-                    print "Error: Cannot amend ondelete for Table %s and Field %s" % (tablename, fieldname)
                     import sys
-                    e = sys.exc_info()[1]
-                    print >> sys.stderr, e
+                    sys.stderr.write("Error: Cannot amend ondelete for Table %s and Field %s\n" % (tablename, fieldname))
+                    sys.stderr.write("%s\n" % sys.exc_info()[1])
 
             elif db_engine == "postgres":
                 # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
@@ -843,10 +840,9 @@ class S3Migration(object):
                 try:
                     executesql(sql)
                 except:
-                    print "Error: Cannot remove old ondelete for Table %s and Field %s" % (tablename, fieldname)
                     import sys
-                    e = sys.exc_info()[1]
-                    print >> sys.stderr, e
+                    sys.stderr.write("Error: Cannot remove old ondelete for Table %s and Field %s\n" % (tablename, fieldname))
+                    sys.stderr.write("%s\n" % sys.exc_info()[1])
 
                 sql = "ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
@@ -854,10 +850,9 @@ class S3Migration(object):
                 try:
                     executesql(sql)
                 except:
-                    print "Error: Cannot add new ondelete for Table %s and Field %s" % (tablename, fieldname)
                     import sys
-                    e = sys.exc_info()[1]
-                    print >> sys.stderr, e
+                    sys.stderr.write("Error: Cannot add new ondelete for Table %s and Field %s\n" % (tablename, fieldname))
+                    sys.stderr.write("%s\n" % sys.exc_info()[1])
 
             else:
                 raise NotImplementedError
@@ -903,10 +898,9 @@ class S3Migration(object):
             try:
                 executesql(sql)
             except:
-                print "Error: Table %s with FK %s" % (tablename, fk)
                 import sys
-                e = sys.exc_info()[1]
-                print >> sys.stderr, e
+                sys.stderr.write("Error: Table %s with FK %s\n" % (tablename, fk))
+                sys.stderr.write("%s\n" % sys.exc_info()[1])
 
     # -------------------------------------------------------------------------
     def remove_notnull(self, tablename, fieldname):
@@ -935,8 +929,7 @@ class S3Migration(object):
             db.executesql(sql)
         except:
             import sys
-            e = sys.exc_info()[1]
-            print >> sys.stderr, e
+            sys.stderr.write("%s\n" % sys.exc_info()[1])
 
         # Modify the .table file
         table = db[tablename]
@@ -980,8 +973,7 @@ class S3Migration(object):
             db.executesql(sql)
         except:
             import sys
-            e = sys.exc_info()[1]
-            print >> sys.stderr, e
+            sys.stderr.write("%s\n" % sys.exc_info()[1])
 
         # Modify the .table file
         table = db[tablename]
@@ -1067,7 +1059,8 @@ class S3Migration(object):
                                                     tablename_new)
             self.db.executesql(sql)
         except Exception, e:
-            print e
+            import sys
+            sys.stderr.write("%s\n" % e)
 
     # -------------------------------------------------------------------------
     def list_field_to_reference(self,

@@ -69,7 +69,7 @@ from gluon.languages import lazyT
 try:
     from lxml import etree
 except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
 from s3datetime import S3DateTime
@@ -89,7 +89,7 @@ except(ImportError):
         import ImageStat
         PILImported = True
     except(ImportError):
-        print >> sys.stderr, "S3 Debug: S3PDF: Python Image Library not installed"
+        sys.stderr.write("S3 Debug: S3PDF: Python Image Library not installed\n")
         PILImported = False
 try:
     from reportlab.lib.enums import TA_CENTER, TA_RIGHT
@@ -111,7 +111,7 @@ try:
     from reportlab.platypus.flowables import Flowable
     reportLabImported = True
 except ImportError:
-    print >> sys.stderr, "S3 Debug: S3PDF: Reportlab not installed"
+    sys.stderr.write("S3 Debug: S3PDF: Reportlab not installed\n")
     reportLabImported = False
 
 # Maximum number of options a field can have
@@ -575,10 +575,8 @@ class S3PDF(S3Method):
 
                     # Retrieve meta data
                     if row.job_has_errors == 1:
-                        #print "error", "1"
                         job_has_errors = True
                     else:
-                        #print "error", "0"
                         job_has_errors = False
 
                     self.setuuid = row.image_set_uuid
@@ -599,8 +597,6 @@ class S3PDF(S3Method):
                              "rb")
                     s3ocrxml = f.read()
                     f.close()
-
-                    # print etree.tostring(etree.fromstring(s3ocrxml), pretty_print=True)
 
                     s3ocrdict = self.__s3ocrxml2dict(s3ocrxml)
 
@@ -795,7 +791,6 @@ class S3PDF(S3Method):
                                             match_status[option.value] =\
                                                 self.dameraulevenshtein(cast2ascii(fieldtext),
                                                                         cast2ascii(value))
-                                            #print value, fieldtext, match_status[option.value]
 
                                         closematch_value = 1000000000
                                         closematch = []
@@ -833,7 +828,6 @@ class S3PDF(S3Method):
                                                 match_status[option.value] =\
                                                     self.dameraulevenshtein(cast2ascii(fieldtext),
                                                                             cast2ascii(value))
-                                                #print value, fieldtext, match_status[option.value]
 
                                             closematch_value = 1000000000
                                             closematch = []
@@ -855,13 +849,10 @@ class S3PDF(S3Method):
 
                         datafile_content = etree.tostring(s3xml_root)
 
-                    #print datafile_content
                     # import_xml routine
                     outputjson = self.resource.import_xml(StringIO(datafile_content),
                                                           commit_job=False,
                                                           ignore_errors=True)
-
-                    #print etree.tostring(etree.fromstring(datafile_content), pretty_print=True)
 
                     # Get metadata for review
                     jobuuid = self.resource.job.job_id
@@ -1218,7 +1209,6 @@ class S3PDF(S3Method):
                                     field_element.text = ""
 
                         s3xml_etree_dict[resource] = s3xml_root
-                        #print etree.tostring(s3xml_root, pretty_print=True)
 
                     errordict = {}
 
@@ -1269,7 +1259,6 @@ class S3PDF(S3Method):
                         store_success = import_job.store()
                         if store_success:
                             if import_job.error_tree:
-                                #print etree.tostring(import_job.error_tree, pretty_print=True)
                                 errordict = self.__parse_job_error_tree(import_job.error_tree)
                                 success = False
                             else:
@@ -1292,11 +1281,9 @@ class S3PDF(S3Method):
                                     import_job.commit()
 
                         else:
-                            #print etree.tostring(import_job.error_tree, pretty_print=True)
                             errordict = self.__parse_job_error_tree(import_job.error_tree)
                             success = False
                     else:
-                        #print etree.tostring(import_job.error_tree, pretty_print=True)
                         errordict = self.__parse_job_error_tree(import_job.error_tree)
                         success = False
 
@@ -1356,7 +1343,6 @@ class S3PDF(S3Method):
                 fieldname = field.attrib.get("field")
                 error = field.attrib.get("error")
                 if error:
-                    #print resourcename, fieldname
                     errordict["%s-%s" % (resourcename, fieldname)] = error
 
         return errordict
@@ -1420,7 +1406,6 @@ class S3PDF(S3Method):
         """
 
         s3ocrdataxml_etree = etree.fromstring(s3ocrdataxml)
-        #print etree.tostring(s3ocrdataxml_etree, pretty_print=True)
         s3ocrdatadict = Storage()
 
         s3xml_root = s3ocrdataxml_etree
@@ -1467,7 +1452,6 @@ class S3PDF(S3Method):
                         value = text
 
                 s3ocrdatadict[resourcename][fieldname] = value
-        #print s3ocrdatadict
         return s3ocrdatadict
 
     # -------------------------------------------------------------------------
@@ -1482,9 +1466,6 @@ class S3PDF(S3Method):
 
         s3ocrdata = Storage()
 
-        #print len(importjob.items)
-        #print importjob.items
-        #print importjob.error_tree
         import_item_dict = importjob.items
         for eachitem in import_item_dict.keys():
             import_item = import_item_dict[eachitem]
@@ -2250,7 +2231,6 @@ class S3PDF(S3Method):
                             s3ocrselect.remove(option)
                             continue
 
-        #print etree.tostring(s3ocr_root, pretty_print=True)
         return s3ocr_root
 
     # -------------------------------------------------------------------------
@@ -2443,9 +2423,6 @@ class S3PDF(S3Method):
 
                     else:
                         self.r.error(501, current.ERROR.PARSE_ERROR)
-                        print sys.stderr("%s :invalid field type: %s" % \
-                                             (get("name"),
-                                              fieldtype))
         return
 
     # -------------------------------------------------------------------------
@@ -2457,7 +2434,6 @@ class S3PDF(S3Method):
         """
 
         prettyprint = True if DEBUG else False
-        #print etree.tostring(self.layoutEtree, pretty_print=prettyprint)
         return etree.tostring(self.layoutEtree, pretty_print=prettyprint)
 
     # -------------------------------------------------------------------------
@@ -4368,7 +4344,6 @@ class S3OCRImageParser(object):
             os.remove(imgpath)
 
             stat = ImageStat.Stat(image)
-            #print resource_table, field_name, field_value
             if stat.mean[0] < 96 :
                 return True
             else:
@@ -4404,8 +4379,6 @@ class S3OCRImageParser(object):
             imgfile.close()
             os.remove(imgpath)
             os.remove(inputpath)
-
-            #print resource_table, field_name, field_seq
 
             try:
                 os.rmdir(ocr_temp_dir)

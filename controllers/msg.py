@@ -2287,7 +2287,6 @@ def readKeyGraph(queryID):
     visual_style["margin"] = 20
     #plot(g, **visual_style)
     #c =  g.clusters().subgraphs()
-    #print g.ecount()
     filename = "%s.svg" % queryID
     write_svg(g.community_fastgreedy().as_clustering().graph, layout=layout, **visual_style)
     #plot(g.community_fastgreedy().as_clustering(), layout=layout)

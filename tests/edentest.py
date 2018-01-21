@@ -30,7 +30,7 @@ import sys
 try:
     from robot import run_cli
 except:
-    print >> sys.stderr, "Robot Framework is not installed"
+    sys.stderr.write("ERROR: Robot Framework is not installed\n")
     exit(1)
 
 from robot.api import logger
@@ -38,24 +38,23 @@ from robot.api import logger
 TESTHOME = os.path.dirname(argv[0])
 testsuites_path = os.path.join(TESTHOME, "implementation/testsuites/")
 
-# if no argument given, run the whole testsuite
+# If no argument given, run the whole testsuite
 if len(argv) == 1:
     logger.warn("Running the whole testsuite")
     argv.append(testsuites_path)
     run_cli(argv[1:])
     exit(0)
 
-# if "-s" or "--suite" given as arguments, exit
+# If "-s" or "--suite" given as arguments, exit
 if set.intersection(set(["-s", "--suite"]), set(argv)):
-    logger.warn("-s/--suite command line argument is disabled. Please give the\
-     direct path to the testsuite")
+    logger.warn("-s/--suite command line argument is disabled." \
+                " Please give the direct path to the testsuite")
     exit(1)
 
-# find the index where the path to the testsuite is given
+# Determine run_cli arguments
 args = []
 isopt = False
 suitename = ""
-#position = None
 for i in xrange(1, len(argv)):
 
     arg = argv[i]

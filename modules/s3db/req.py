@@ -3918,7 +3918,7 @@ def req_match(rheader=None):
         try:
             customise(request, tablename)
         except:
-            s3_debug("customise_%s_resource is using attributes of r which aren't in request" % tablename)
+            current.log.error("customise_%s_resource is using attributes of r which aren't in request" % tablename)
             pass
 
     table = s3db[tablename]

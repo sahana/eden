@@ -7034,7 +7034,8 @@ class S3Permission(object):
                 result[key] = acl
 
         #for pe in result:
-        #    print "ACL for PE %s: %04X %04X" % (pe, result[pe][0], result[pe][1])
+        #    sys.stderr.write("ACL for PE %s: %04X %04X\n" %
+        #                        (pe, result[pe][0], result[pe][1]))
 
         return result
 

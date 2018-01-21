@@ -333,7 +333,7 @@ class S3Config(Storage):
         if os.path.exists(path):
             # Old-style config.py => deprecation warning (S3Log not available yet)
             import sys
-            print >> sys.stderr, "%s/config.py: script pattern deprecated." % name
+            sys.stderr.write("%s/config.py: script pattern deprecated.\n" % name)
             # Remember the non-standard location
             # (need to be in response.s3 for compiled views)
             # No longer supported
