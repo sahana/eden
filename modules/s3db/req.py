@@ -1502,7 +1502,7 @@ class S3RequestItemModel(S3Model):
         tablename = "req_req_item"
         define_table(tablename,
                      req_id(empty=False),
-                     self.supply_item_entity_id,
+                     self.supply_item_entity_id(),
                      self.supply_item_id(),
                      self.supply_item_pack_id(),
                      Field("quantity", "double", notnull=True,
@@ -1519,7 +1519,7 @@ class S3RequestItemModel(S3Model):
                      # @ToDo: Move this into a Currency Widget for the pack_value field
                      s3_currency(readable = track_pack_values,
                                  writable = track_pack_values),
-                     self.org_site_id,
+                     self.org_site_id(),
                      Field("quantity_commit", "double",
                            default = 0,
                            label = T("Quantity Committed"),
@@ -1856,7 +1856,7 @@ class S3RequestSkillModel(S3Model):
                            requires = IS_INT_IN_RANGE(1, 999999),
                            label = T("Number of People Required"),
                            ),
-                     self.org_site_id,
+                     self.org_site_id(),
                      Field("quantity_commit", "integer",
                            label = T("Quantity Committed"),
                            default = 0,
@@ -3918,7 +3918,7 @@ def req_match(rheader=None):
         try:
             customise(request, tablename)
         except:
-            s3_debug("customise_%s_resource is using attributes of r which aren't in request" % tablename)
+            current.log.error("customise_%s_resource is using attributes of r which aren't in request" % tablename)
             pass
 
     table = s3db[tablename]

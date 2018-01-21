@@ -4,7 +4,7 @@ Documentation     Test cases for hrm/staff
 Resource          ../../resources/main.txt
 
 *** Variables ***
-${STAFF URL}            http://${BASEURL}/hrm/staff
+${STAFF URL}            ${BASEURL}/hrm/staff
 ${OrganizationFilter}   human_resource-hrm_human_resource_organisation_id-options-filter
 ${FacilityFilter}       human_resource-hrm_human_resource_site_id-options-filter
 

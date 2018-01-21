@@ -93,7 +93,7 @@ try:
     from dateutil.relativedelta import relativedelta
 except ImportError:
     import sys
-    print >> sys.stderr, "ERROR: dateutil module needed for Date handling"
+    sys.stderr.write("ERROR: dateutil module needed for Date handling\n")
     raise
 
 from gluon import *

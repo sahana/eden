@@ -34,6 +34,7 @@ __all__ = ("Expression",
            "Rows",
            "SQLCustomType",
            "Table",
+           "original_tablename",
            )
 
 try:
@@ -77,5 +78,31 @@ class S3DAL(object):
             self.OR = dialect._or
             self.CONTAINS = dialect.contains
             self.AGGREGATE = dialect.aggregate
+
+    # -------------------------------------------------------------------------
+    dalname = staticmethod(lambda table: table._dalname)
+
+    @classmethod
+    def original_tablename(cls, table):
+        """
+            Get the original name of an aliased table, with fallback
+            cascade for PyDAL < 17.01
+
+            @param table: the Table
+        """
+
+        try:
+            return cls.dalname(table)
+        except AttributeError:
+            if hasattr(table, "_ot"):
+                dalname = lambda table: \
+                          table._ot if table._ot else table._tablename
+                cls.dalname = staticmethod(dalname)
+                return dalname(table)
+            else:
+                raise
+
+# =============================================================================
+original_tablename = S3DAL.original_tablename
 
 # END =========================================================================

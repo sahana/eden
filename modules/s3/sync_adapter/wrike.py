@@ -34,7 +34,7 @@ import urllib, urllib2
 try:
     from lxml import etree
 except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
 from gluon import *
@@ -367,7 +367,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             if resource.error_tree is not None:
                 result = log.WARNING
                 message = "%s" % resource.error
-                #print xml.tostring(resource.error_tree, pretty_print=True)
                 for element in resource.error_tree.findall("resource"):
                     for field in element.findall("data[@error]"):
                         error_msg = field.get("error", None)

@@ -147,7 +147,7 @@ def template():
                                           template_id=template_id,
                                           cloned_section_id=section_id)
             if id is None:
-                print "Failed to insert record"
+                current.log.error("Failed to insert record")
             return
 
     # Remove CRUD generated buttons in the tabs

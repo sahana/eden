@@ -6,10 +6,11 @@ import sys
 try:
     from gluon import current
 except ImportError:
-    print >> sys.stderr, """
+    sys.stderr.write("""
 The installed version of Web2py is too old -- it does not define current.
 Please upgrade Web2py to a more recent version.
-"""
+""")
+    raise
 
 # Version of 000_config.py
 # Increment this if the user should update their running instance

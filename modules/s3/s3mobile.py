@@ -35,25 +35,14 @@ __all__ = ("S3MobileFormList",
            "S3MobileCRUD",
            )
 
-import datetime
 import json
-import sys
-
-try:
-    from lxml import etree
-except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
 
 from gluon import *
-from gluon.dal import Query
-from s3datetime import s3_encode_iso_datetime, s3_parse_datetime
-from s3error import S3PermissionError
-from s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDefaultForm, S3SQLDummyField, S3SQLField
-from s3query import S3ResourceField
+from s3datetime import s3_parse_datetime
+from s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
 from s3rest import S3Method
-from s3utils import s3_get_foreign_key, s3_str, s3_unicode
-from s3validators import JSONERRORS, SEPARATORS
+from s3utils import s3_get_foreign_key, s3_str
+from s3validators import SEPARATORS
 
 DEFAULT = lambda: None
 

@@ -53,7 +53,7 @@ except:
 try:
     from lxml import etree # Needed to follow NetworkLinks
 except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
@@ -745,7 +745,7 @@ class GIS(object):
                         shape = wkt_loads(row.wkt)
                         ok = test.intersects(shape)
                         if ok:
-                            #print "Level: %s, id: %s" % (row.level, row.id)
+                            #sys.stderr.write("Level: %s, id: %s\n" % (row.level, row.id))
                             results[row.level] = row.id
         return results
 
@@ -2549,8 +2549,7 @@ class GIS(object):
                             # FieldMethod
                             ftype = None
                         except KeyError:
-                            from s3utils import s3_debug
-                            s3_debug("SGIS", "Field %s doesn't exist in table %s" % (fname, tname))
+                            current.log.debug("SGIS: Field %s doesn't exist in table %s" % (fname, tname))
                             continue
                         attr_cols[fieldname] = (ftype, fname)
 
@@ -3337,7 +3336,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     else:
                         name = db(table.id == id).select(table.name,
                                                          limitby=(0, 1)).first().name
-                        print >> sys.stderr, "No WKT: L0 %s %s" % (name, id)
+                        sys.stderr.write("No WKT: L0 %s %s\n" % (name, id))
                         continue
                 else:
                     id = row.id
@@ -3406,7 +3405,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         else:
                             name = db(table.id == id).select(table.name,
                                                              limitby=(0, 1)).first().name
-                            print >> sys.stderr, "No WKT: L1 %s %s" % (name, id)
+                            sys.stderr.write("No WKT: L1 %s %s\n" % (name, id))
                             continue
                     else:
                         id = row.id
@@ -3467,7 +3466,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                             else:
                                 name = db(table.id == id).select(table.name,
                                                                  limitby=(0, 1)).first().name
-                                print >> sys.stderr, "No WKT: L2 %s %s" % (name, id)
+                                sys.stderr.write("No WKT: L2 %s %s\n" % (name, id))
                                 continue
                         else:
                             id = row.id
@@ -3531,7 +3530,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                 else:
                                     name = db(table.id == id).select(table.name,
                                                                      limitby=(0, 1)).first().name
-                                    print >> sys.stderr, "No WKT: L3 %s %s" % (name, id)
+                                    sys.stderr.write("No WKT: L3 %s %s\n" % (name, id))
                                     continue
                             else:
                                 id = row.id
@@ -3598,7 +3597,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                     else:
                                         name = db(table.id == id).select(table.name,
                                                                          limitby=(0, 1)).first().name
-                                        print >> sys.stderr, "No WKT: L4 %s %s" % (name, id)
+                                        sys.stderr.write("No WKT: L4 %s %s\n" % (name, id))
                                         continue
                                 else:
                                     id = row.id

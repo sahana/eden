@@ -1066,10 +1066,11 @@ class S3PDFTable(object):
         """
 
         tableWidth = 0
+
         for colWidth in table._colWidths:
             tableWidth += colWidth
         colWidths = table._colWidths
-        #print "Doc size %s x %s Table width %s" % (self.tempDoc.printable_width, self.tempDoc.height, total)
+
         if tableWidth > self.tempDoc.printable_width:
             # self.pdf.setMargins(0.5*inch, 0.5*inch)
             # First massage any comment column by putting it in a paragraph
@@ -1078,7 +1079,6 @@ class S3PDFTable(object):
                 # Wrap comments in a paragraph
                 if label.lower() == "comments":
                     currentWidth = table._colWidths[colNo]
-                    # print "%s %s" % (colNo, currentWidth)
                     if currentWidth > self.MIN_COMMENT_COL_WIDTH:
                         for i in range(1, len(self.data)): # skip the heading
                             try:
@@ -1411,7 +1411,7 @@ class S3html2pdf():
             else:
                 request = current.request
                 base_url = "/%s/" % request.application
-                STATIC = "%sstatic" % base_url 
+                STATIC = "%sstatic" % base_url
                 if src.startswith(STATIC):
                     # Assume that filename is specified as a URL in static
                     src = src.split(base_url)[-1]

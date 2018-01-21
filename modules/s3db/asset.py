@@ -155,7 +155,7 @@ class S3AssetModel(S3Model):
                      # Instances
                      super_link("track_id", "sit_trackable"),
                      super_link("doc_id", "doc_entity"),
-                     item_entity_id,
+                     item_entity_id(),
                      Field("number",
                            label = T("Asset Number"),
                            ),
@@ -443,7 +443,7 @@ class S3AssetModel(S3Model):
         #
         tablename = "asset_item"
         define_table(tablename,
-                     item_entity_id,
+                     item_entity_id(),
                      asset_id(ondelete = "CASCADE"),
                      item_id(represent = supply_item_represent,
                              requires = IS_ONE_OF(asset_items_set,

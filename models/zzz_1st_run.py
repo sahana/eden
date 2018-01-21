@@ -17,14 +17,22 @@ else:
 
 if len(pop_list) > 0:
 
+    import sys
+
+    def info(msg):
+        sys.stderr.write("%s\n" % msg)
+
+    def duration(msg, start):
+        delta = datetime.datetime.now() - start
+        info("%s (%s secs)" %
+            (msg, "{:.2f}".format(delta.total_seconds())))
+
+    info("\n*** FIRST RUN - SETTING UP DATABASE ***\n")
+
     # =========================================================================
     # Populate default roles and permissions
     #
-
-    # Allow debug
-    import sys
-
-    print >> sys.stdout, "Please be patient whilst the database is populated"
+    info("Setting Up System Roles...")
 
     # Shortcuts
     acl = auth.permission
@@ -107,6 +115,7 @@ if len(pop_list) > 0:
     # =========================================================================
     # Configure Scheduled Tasks
     #
+    info("Setting Up Scheduler Tasks...")
 
     has_module = settings.has_module
     if has_module("msg"):
@@ -151,6 +160,9 @@ if len(pop_list) > 0:
     # =========================================================================
     # Import PrePopulate data
     #
+    info("Creating Database Tables (this can take a minute)...")
+
+    start = datetime.datetime.now()
 
     # Override authorization
     auth.override = True
@@ -219,9 +231,12 @@ if len(pop_list) > 0:
     # Ensure DB population committed when running through shell
     db.commit()
 
+    duration("Database Tables Created.", start)
+
     # =========================================================================
     # PrePopulate import (from CSV)
     #
+    info("\nPlease be patient whilst the database is populated...")
 
     # Create the bulk Importer object
     bi = s3base.S3BulkImporter()
@@ -258,55 +273,44 @@ if len(pop_list) > 0:
 
     grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:
+
         start = datetime.datetime.now()
+
         # Clear Tasklist
         bi.tasks = []
+
         # Import data specific to the prepopulate setting
         if pop_setting == 1:
             # Populate with the default data
-            path = path_join(request_folder,
-                             "modules",
-                             "templates",
-                             "default")
-            bi.perform_tasks(path)
+            task = "default"
         else:
-            path = path_join(request_folder,
-                             "modules",
-                             "templates",
-                             pop_setting)
-            if not os.path.exists(path):
-                # Legacy template?
-                path = path_join(request_folder,
-                                 "private",
-                                 "templates",
-                                 pop_setting)
-                if not os.path.exists(path):
-                    print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
-                    continue
-            bi.perform_tasks(path)
+            task = pop_setting
+        info("\nImporting %s..." % task)
 
-        grandTotalEnd = datetime.datetime.now()
-        duration = grandTotalEnd - grandTotalStart
-        try:
-            # Python 2.7
-            duration = '{:.2f}'.format(duration.total_seconds()/60)
-            print >> sys.stdout, "Pre-populate task completed in %s mins" % duration
-        except AttributeError:
-            # older Python
-            print >> sys.stdout, "Pre-populate task completed in %s" % duration
+        path = path_join(request_folder, "modules", "templates", task)
+        if task != "default" and not os.path.exists(path):
+            # Legacy template?
+            path = path_join(request_folder, "private", "templates", task)
+            if not os.path.exists(path):
+                info("Unable to install data %s no valid directory found" % task)
+                continue
+
+        bi.perform_tasks(path)
+
+        duration("Imports for %s complete" % task, start)
+
         bi.resultList = []
-    for errorLine in bi.errorList:
-        try:
-            print >> sys.stderr, errorLine
-        except:
-            s3_unicode = s3base.s3_unicode
-            _errorLine = ""
-            for i in range(0, len(errorLine)):
-                try:
-                    _errorLine += s3_unicode(errorline[i])
-                except:
-                    pass
-            print >> sys.stderr, _errorLine
+
+    if bi.errorList:
+        info("\nImport Warnings (some data could not be imported):")
+        for error in bi.errorList:
+            try:
+                info(error)
+            except:
+                s3_str = s3base.s3_str
+                info("\n".join(s3_str(el) for el in error))
+
+    info("\nUpdating database...")
 
     # Restore setting for strict email-matching
     settings.pr.import_update_requires_email = email_required
@@ -319,8 +323,7 @@ if len(pop_list) > 0:
     # Update Location Tree (disabled during prepop)
     start = datetime.datetime.now()
     gis.update_location_tree()
-    end = datetime.datetime.now()
-    print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
+    duration("Location Tree update completed", start)
 
     # Countries are only editable by MapAdmin
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
@@ -330,38 +333,28 @@ if len(pop_list) > 0:
         # - needs to be done after locations
         start = datetime.datetime.now()
         s3db.disease_stats_rebuild_all_aggregates()
-        end = datetime.datetime.now()
-        print >> sys.stdout, "Disease Statistics data aggregation completed in %s" % (end - start)
+        duration("Disease Statistics data aggregation completed", start)
 
     if has_module("stats"):
         # Populate stats_demographic_aggregate (disabled during prepop)
         # - needs to be done after locations
         start = datetime.datetime.now()
         s3db.stats_demographic_rebuild_all_aggregates()
-        end = datetime.datetime.now()
-        print >> sys.stdout, "Demographic data aggregation completed in %s" % (end - start)
+        duration("Demographic Data aggregation completed", start)
 
     if has_module("vulnerability"):
         # Populate vulnerability_aggregate (disabled during prepop)
         # - needs to be done after locations
         start = datetime.datetime.now()
         s3db.vulnerability_rebuild_all_aggregates()
-        end = datetime.datetime.now()
-        print >> sys.stdout, "Vulnerability data aggregation completed in %s" % (end - start)
+        duration("Vulnerability data aggregation completed", start)
 
-    grandTotalEnd = datetime.datetime.now()
-    duration = grandTotalEnd - grandTotalStart
-    try:
-        # Python 2.7
-        duration = '{:.2f}'.format(duration.total_seconds()/60)
-        print >> sys.stdout, "Pre-populate completed in %s mins" % duration
-    except AttributeError:
-        # older Python
-        print >> sys.stdout, "Pre-populate completed in %s" % duration
+    duration("\nPre-populate complete", grandTotalStart)
 
     # =========================================================================
     # Indexes
     #
+    info("\nCreating indexes...")
 
     # Person Registry
     tablename = "pr_person"
@@ -387,6 +380,9 @@ if len(pop_list) > 0:
         # Vacuum cannot run in a transaction block
         # autovacuum should be on anyway so will run ANALYZE after 50 rows inserted/updated/deleted
         #db.executesql("VACUUM ANALYZE;")
+
+    # =========================================================================
+    info("\n*** FIRST RUN COMPLETE ***\n")
 
     # Restore view
     response.view = "default/index.html"
