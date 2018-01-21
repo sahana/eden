@@ -100,7 +100,7 @@
 "Mother's Surname": 'Apellido Materno',
 "NB SMS requests are filtered to just those which are 'actionable', whilst the Tweet requests are unfiltered, so that is likely to be a good place to start Searching.": 'Nota: las solicitudes de SMS son filtradas sólo a los que son "acciones concretas", mientras que las solicitudes Tweet no tienen filtro, de modo que es probable que sea un buen lugar para comenzar la búsqueda.',
 "Need a 'url' argument!": "¡Necesita una 'url' argumento!",
-"No SMS's currently in InBox": 'N SMS actualmente en Bandeja de entrada',
+"No SMS's currently in InBox": 'No hay mensajes de texto actualmente en la Bandeja de entrada',
 "No SMS's currently in OutBox": 'N SMS actualmente en Bandeja de salida',
 "No SMS's currently in Sent": 'N de SMS enviados en la actualidad',
 "Note that the dropdowns won't refresh automatically. Refresh the page if you wish to verify that the locations have gone.": 'Observe que los menús desplegables no se renuevan automáticamente. Actualizar la página si desea verificar que las ubicaciones han desaparecido.',
