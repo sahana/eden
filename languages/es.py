@@ -112,7 +112,7 @@
 "Press the 'Delete Old' button to have all records which reference this one be repointed at the new one & then the old record will be deleted.": "Oprima el botón de 'Eliminar viejor' para que todos los registros con referencia a éste sean apuntados al nuevo y el registro viejo sea eliminado.",
 "Quantity in %s's Inventory": 'Cantidad en Inventario de %s',
 "Search here for a person's record in order to:": 'Buscar aquí por un registro de una persona a fin de:',
-"Select a Room from the list or click 'Create Room'": "Elegir una Sala de la lista o hacer click en 'Añadir Sala'",
+"Select a Room from the list or click 'Create Room'": "Elegir una Sala de la lista or hacer click en 'Añadir Sala'",
 "Select a person in charge for status 'assigned'": "Seleccione una persona encargada para el estado 'asignado'",
 "Select this if all specific locations need a parent at the deepest level of the location hierarchy. For example, if 'district' is the smallest division in the hierarchy, then all specific locations would be required to have a district as a parent.": "Seleccione esta opción si todos los lugares específicos que se necesitan un padre en lo más profundo de la jerarquía de ubicación. Por ejemplo, si 'distrito' es la división más pequeño en la jerarquía, entonces todas las ubicaciones específicas deben tener un distrito como padre.",
 "Select this if all specific locations need a parent location in the location hierarchy. This can assist in setting up a 'region' representing an affected area.": 'Seleccione esta opción si todos los lugares específicos que se necesitan un lugar principal en la jerarquía de ubicación. Esto puede ayudar a configurar una "region " que representa un área afectada.',
