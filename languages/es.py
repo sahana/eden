@@ -124,7 +124,7 @@
 "The URL of the image file. If you don't upload an image file, then you must specify its location here.": 'La dirección URL del archivo de imagen. Si no cargar un archivo de imagen, a continuación, debe especificar su ubicación aquí.',
 "The person's manager within this Office/Project.": 'El administrador de personas dentro de esta Oficina/Proyecto.',
 "The provided 'formuuid' is invalid. You have selected a Form revision which does not exist on this server.": "La proporcionado 'formuuid' no es válido. Ha seleccionado una revisión formulario que no existe en este servidor.",
-"The provided 'jobuuid' is invalid. The session of Form upload is invalid. You should retry uploading.": "La proporcionado 'jobuuid' no es válido. La sesión de subida formulario no es válido. Usted debe volver a intentar la carga.",
+"The provided 'jobuuid' is invalid. The session of Form upload is invalid. You should retry uploading.": "El 'nombre de usuario' proporcionado no es válido. La sesión de carga del formulario no es válida. Debe volver a intentar la carga.",
 "The staff member's official job title": 'Título oficial El trabajo del miembro del personal',
 "The volunteer's role": 'El papel del voluntariado',
 "There are no details for this person yet. Add Person's Details.": 'No hay detalles de esta persona todavía. Añadir detalles de la persona.',
