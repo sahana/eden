@@ -23,7 +23,7 @@ def config(settings):
     # L10n (Localization) settings
     languages = OrderedDict([
         ("en-US", "English"),
-        ("tl", "Tagalog"), # Filipino
+ #       ("tl", "Tagalog"), # Filipino
     ])
     settings.L10n.languages = languages
 
