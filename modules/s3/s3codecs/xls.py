@@ -668,7 +668,6 @@ class S3PivotTableXLS(object):
         XLS encoder for S3PivotTables
 
         @todo: merge+DRY with S3XLS?
-        @todo: "list" aggregation method not supported yet
         @todo: support multiple layers (=write multiple sheets)
         @todo: handle huge pivot tables (=exceeding XLS rows/cols limits)
     """
@@ -685,6 +684,9 @@ class S3PivotTableXLS(object):
         # Initialize properties
         self._styles = None
         self._formats = None
+
+        self.lookup = {}
+        self.valuemap = {}
 
     # -------------------------------------------------------------------------
     def encode(self, title):
@@ -820,6 +822,17 @@ class S3PivotTableXLS(object):
 
         # Determine the number format for cell values
         numfmt = self.number_format()
+        totfmt = "integer" if fact.method in ("count", "list") else numfmt
+
+        # Choose cell value style according to number format
+        fact_style = "numeric" if numfmt else None
+
+        # Get fact representation method
+        if fact.method == "list":
+            listrepr = self.listrepr
+            fk, fact_repr = pt._represents([layer])[fact.selector]
+        else:
+            listrepr = fk = fact_repr = None
 
         # Write data rows (if any)
         rowindex += 1
@@ -838,14 +851,19 @@ class S3PivotTableXLS(object):
                 if cols_dim:
                     for j in xrange(numcols):
                         cell = icell[row[0]][cols[j][0]]
-                        write(sheet, rowindex + i, j + 1, cell[layer],
+                        if listrepr:
+                            value = listrepr(cell, fact_rfield, fact_repr, fk=fk)
+                        else:
+                            value = cell[layer]
+                        write(sheet, rowindex + i, j + 1, value,
                               numfmt = numfmt,
+                              style = fact_style,
                               )
 
                 # Row-total
                 write(sheet, rowindex + i, total_column, row[1],
                       style = "total",
-                      numfmt = numfmt,
+                      numfmt = totfmt,
                       )
 
             rowindex += numrows
@@ -863,14 +881,14 @@ class S3PivotTableXLS(object):
             for i in xrange(numcols):
                 write(sheet, rowindex, i + 1, cols[i][1],
                       style = "total",
-                      numfmt = numfmt,
+                      numfmt = totfmt,
                       )
 
         # Grand total
         total = pt.totals[layer]
         write(sheet, rowindex, total_column, total,
               style = "grand_total",
-              numfmt = numfmt,
+              numfmt = totfmt,
               )
 
         return book
@@ -915,6 +933,13 @@ class S3PivotTableXLS(object):
         # Get the row
         row = sheet.row(rowindex)
 
+        if type(value) is list:
+            labels = [s3_str(v) for v in value]
+            contents = "\n".join(labels)
+        else:
+            labels = [s3_str(value)]
+            contents = value
+
         # Apply rowspan and colspan
         rowspan = 0 if not rowspan or rowspan < 1 else rowspan - 1
         colspan = 0 if not colspan or colspan < 1 else colspan - 1
@@ -922,39 +947,53 @@ class S3PivotTableXLS(object):
             # Write-merge
             sheet.write_merge(rowindex, rowindex + rowspan,
                               colindex, colindex + colspan,
-                              value,
+                              contents,
                               style,
                               )
         else:
             # Just write
-            row.write(colindex, value, style)
+            row.write(colindex, contents, style)
 
         # Reset number format
         style.num_format_str = ""
 
-        # Adjust column width and row height (approximations)
+        # Adjust column width and row height
+        # NB approximations, no exact science (not possible except by
+        #    enforcing a particular fixed-width font, which we don't
+        #    want), so manual adjustments after export may still be
+        #    necessary. Better solutions welcome!
         if adjust:
 
-            label = s3_str(value)
-            fontsize = style.font.height
-            if style.font.bold:
-                fontsize *= 1.4
+            fontsize = float(style.font.height)
 
-            # Compute column width
+            # Adjust column width
             col = sheet.col(colindex)
             if not colspan:
-                width = int(min(len(label), 28) * fontsize)
+                if labels:
+                    width = int(min(max(len(l) for l in labels), 28) *
+                                fontsize * 5.0 / 3.0)
+                else:
+                    width = 0
                 if width > col.width:
                     col.width = width
 
-            # Compute row height
+            # Adjust row height
             if not rowspan:
-                numlines = len(label) * fontsize / (col.width * (colspan + 1))
+
+                lineheight = 1.2 if style.font.bold else 1.0
+
+                import math
+                numlines = 0
+                width = (col.width * 0.8 * (colspan + 1))
+                for label in labels:
+                    numlines += math.ceil(len(label) * fontsize / width)
+
                 if numlines > 1:
-                    import math
-                    height = int(min(math.ceil(numlines), 10) * fontsize)
+                    lines = min(numlines, 10)
+                    height = int((lines + 0.8 / lineheight) *
+                                 fontsize * lineheight)
                 else:
-                    height = int(fontsize)
+                    height = int(fontsize * lineheight)
                 if height > row.height:
                     row.height = height
                     row.height_mismatch = 1
@@ -996,6 +1035,21 @@ class S3PivotTableXLS(object):
             bottomleft.vert = Alignment.VERT_BOTTOM
             bottomleft.wrap = 1
 
+            bottomright = Alignment()
+            bottomright.horz = Alignment.HORZ_RIGHT
+            bottomright.vert = Alignment.VERT_BOTTOM
+            bottomright.wrap = 1
+
+            topleft = Alignment()
+            topleft.horz = Alignment.HORZ_LEFT
+            topleft.vert = Alignment.VERT_TOP
+            topleft.wrap = 1
+
+            topright = Alignment()
+            topright.horz = Alignment.HORZ_RIGHT
+            topright.vert = Alignment.VERT_TOP
+            topright.wrap = 1
+
             # Determine XLS datetime format
             settings = current.deployment_settings
             dtfmt = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
@@ -1017,17 +1071,18 @@ class S3PivotTableXLS(object):
                 return style
 
             self._styles = styles = {
-                "default": style(),
+                "default": style(align=topleft),
+                "numeric": style(align=bottomright),
                 "title": style(fontsize=14, bold=True, align=bottomleft),
                 "subheader": style(fontsize=8, italic=True, align=bottomleft),
-                "row_label": style(bold=True, align=bottomleft),
+                "row_label": style(bold=True, align=topleft),
                 "col_label": style(bold=True, align=bottomcentered),
                 "fact_label": style(fontsize=13, bold=True, align=centerleft),
                 "axis_title": style(fontsize=11, bold=True, align=center),
-                "total": style(fontsize=11, bold=True, italic=True),
-                "total_left": style(fontsize=11, bold=True, italic=True, align=bottomleft),
+                "total": style(fontsize=11, bold=True, italic=True, align=topright),
+                "total_left": style(fontsize=11, bold=True, italic=True, align=topleft),
                 "total_right": style(fontsize=11, bold=True, italic=True, align=center),
-                "grand_total": style(fontsize=12, bold=True, italic=True),
+                "grand_total": style(fontsize=12, bold=True, italic=True, align=topright),
                 }
 
         return styles
@@ -1081,7 +1136,10 @@ class S3PivotTableXLS(object):
 
         ftype = rfield.ftype
 
-        if ftype == "integer":
+        if fact.method == "count":
+            numfmt = "integer"
+
+        elif ftype == "integer":
             if fact.method == "avg":
                 # Average value of ints is a float
                 numfmt = "double"
@@ -1160,6 +1218,66 @@ class S3PivotTableXLS(object):
         pt._sortdim(cols, cols_rfield, index=2)
 
         return rows, cols
+
+    # -------------------------------------------------------------------------
+    def listrepr(self, cell, rfield, represent, fk=True):
+        """
+            Represent and sort a list of cell values (for "list" aggregation
+            method)
+
+            @param cell - the cell data
+            @param rfield - the fact S3ResourceField
+            @param represent - representation method for the fact field
+            @param fk - fact field is a foreign key
+
+            @returns: sorted list of represented cell values
+        """
+
+        pt = self.pt
+        records = pt.records
+
+        colname = rfield.colname
+
+        lookup = self.lookup
+        valuemap = self.valuemap
+
+        keys = []
+
+        for record_id in cell["records"]:
+            record = records[record_id]
+            try:
+                fvalue = record[colname]
+            except AttributeError:
+                continue
+
+            if fvalue is None:
+                continue
+            if type(fvalue) is not list:
+                fvalue = [fvalue]
+
+            for v in fvalue:
+                if v is None:
+                    continue
+                if fk:
+                    if v not in keys:
+                        keys.append(v)
+                    if v not in lookup:
+                        lookup[v] = represent(v)
+                else:
+                    if v not in valuemap:
+                        next_id = len(valuemap)
+                        valuemap[v] = next_id
+                        keys.append(next_id)
+                        lookup[next_id] = represent(v)
+                    else:
+                        prev_id = valuemap[v]
+                        if prev_id not in keys:
+                            keys.append(prev_id)
+
+        keys.sort(key=lambda i: lookup[i])
+        items = [s3_str(lookup[key]) for key in keys if key in lookup]
+
+        return items
 
 # =============================================================================
 #class S3HTML2XLS(object):

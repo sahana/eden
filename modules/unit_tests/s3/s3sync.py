@@ -196,7 +196,6 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_organisation")
         msg = resource.import_xml(xmltree)
-        #print msg
         self.assertEqual(resource.error, None)
 
         # Check the result
@@ -274,7 +273,6 @@ class ImportMergeWithExistingOriginal(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_organisation")
         msg = resource.import_xml(xmltree)
-        #print msg
         self.assertEqual(resource.error, None)
 
         # Check the result: the duplicate should never be imported
@@ -351,7 +349,6 @@ class ImportMergeWithExistingDuplicate(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_organisation")
         msg = resource.import_xml(xmltree)
-        #print msg
         self.assertEqual(resource.error, None)
 
         # Check the result: new record gets imported, duplicate merged into it
@@ -414,7 +411,6 @@ class ImportMergeWithoutExistingRecords(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_organisation")
         msg = resource.import_xml(xmltree)
-        #print msg
         self.assertEqual(resource.error, None)
 
         # Check the result: only the final record gets imported

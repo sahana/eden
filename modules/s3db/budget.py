@@ -1541,7 +1541,7 @@ class S3BudgetMonitoringModel(S3Model):
                                                   limitby=(0, 1)
                                                   ).first()
         if not record:
-            s3_debug("Cannot find Budget Monitoring record (no record for this ID), so can't update start_date")
+            current.log.debug("Cannot find Budget Monitoring record (no record for this ID), so can't update start_date")
             return
         budget_entity_id = record.budget_entity_id
         start_date = record.start_date
@@ -1589,7 +1589,7 @@ class S3BudgetMonitoringModel(S3Model):
                                                    limitby=(0, 1)
                                                    ).first()
         if not record:
-            s3_debug("Cannot find Budget Monitoring record (no record for this ID), so can't check whether Total Budget is exceeded")
+            current.log.debug("Cannot find Budget Monitoring record (no record for this ID), so can't check whether Total Budget is exceeded")
             return
         budget_entity_id = record.budget_entity_id
 
@@ -1600,7 +1600,7 @@ class S3BudgetMonitoringModel(S3Model):
                                   limitby=(0, 1)
                                   ).first()
         if not budget:
-            s3_debug("Cannot find Budget record (no record for this super_key), so can't check whether Total Budget is exceeded")
+            current.log.debug("Cannot find Budget record (no record for this super_key), so can't check whether Total Budget is exceeded")
             return
 
         # Read the total Planned
@@ -1646,7 +1646,7 @@ class S3BudgetMonitoringModel(S3Model):
 
         if hasattr(row, "id"):
             # Reload the record
-            #s3_debug("Reloading budget_monitoring record")
+            #current.log.debug("Reloading budget_monitoring record")
             table = current.s3db.budget_monitoring
             r = current.db(table.id == row.id).select(table.planned,
                                                       table.value,

@@ -102,7 +102,7 @@ if site_type == "active":
     #else:
     #    success = s3base.S3Sync().request_registration(repository)
     #    if not success:
-    #        print >>sys.stderr, "Could not auto-register repository, please register manually"
+    #        sys.stderr.write("Could not auto-register repository, please register manually\n")
 
     # Resources
     sync_policies = s3base.S3ImportItem.POLICY

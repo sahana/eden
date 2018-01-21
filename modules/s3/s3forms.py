@@ -51,7 +51,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3query import FS
-from s3utils import s3_debug, s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_unicode, s3_validate
+from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_unicode, s3_validate
 from s3widgets import S3Selector, S3UploadWidget
 
 # Compact JSON encoding
@@ -3112,7 +3112,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 if person:
                                     values["pe_id"] = person.pe_id
                                 else:
-                                    s3_debug("S3Forms", "Cannot find person with ID: %s" % master[pkey])
+                                    current.log.debug("S3Forms: Cannot find person with ID: %s" % master[pkey])
                             elif resource.tablename == "pr_person" and \
                                  fkey == "case_id" and pkey == "id":
                                 # Using dvr_case as a link between pr_person & e.g. project_activity
@@ -3125,7 +3125,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 if link_record:
                                     values[fkey] = link_record[pkey]
                                 else:
-                                    s3_debug("S3Forms", "Cannot find case for person ID: %s" % master[pkey])
+                                    current.log.debug("S3Forms: Cannot find case for person ID: %s" % master[pkey])
 
                             else:
                                 values[fkey] = master[pkey]
@@ -3135,7 +3135,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     try:
                         record_id = component._table.insert(**values)
                     except:
-                        s3_debug("S3Forms", "Cannot insert values %s into table: %s" % (values, component._table))
+                        current.log.debug("S3Forms: Cannot insert values %s into table: %s" % (values, component._table))
                         raise
 
                     # Post-process create

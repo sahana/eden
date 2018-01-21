@@ -14,7 +14,7 @@ def minimize(code):
         ('output_format', 'text'),
         ('output_info', 'compiled_code'),
       ])
-    
+
     t = time.time()
     # Always use the following value for the Content-type header.
     headers = { "Content-type": "application/x-www-form-urlencoded" }
@@ -25,5 +25,5 @@ def minimize(code):
     conn.close()
     if data.startswith("Error"):
         raise Exception(data)
-    print "%.3f seconds to compile" % (time.time() - t) 
+    sys.stderr.write("%.3f seconds to compile\n" % (time.time() - t))
     return data

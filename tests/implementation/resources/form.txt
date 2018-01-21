@@ -16,7 +16,7 @@ Create A New Entry
     # ...      arguments. eg: Create A New Entry  ${NV}  ${Sub Url}
 
     [Arguments]  ${Name Value}  ${Sub Url}
-    ${url}  Catenate  SEPARATOR=  http://  ${BASEURL}
+    ${url}  Catenate  SEPARATOR=  ${BASEURL}
     :FOR  ${substring}  IN  @{Sub Url}
     \  ${url}  Catenate  SEPARATOR=/  ${url}  ${substring}
     Go To  ${url}

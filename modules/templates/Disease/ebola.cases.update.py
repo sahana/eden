@@ -12,6 +12,7 @@
 # Needs to be run in the web2py environment:
 # cd web2py
 # python web2py.py -S eden -M -R applications/eden/modules/templates/Disease/ebola.cases.update.py
+import sys
 
 from time import gmtime, strftime
 todays_date = strftime("%Y-%m-%d", gmtime())
@@ -58,7 +59,7 @@ import xlrd
 
 # Open the file from the remote server
 # @todo write the remote file to a temp file and then pass to load_workbook
-print "Downloading data..."
+sys.stderr.write("Downloading data...\n")
 u = urllib2.urlopen(SOURCE_URL)
 wb = xlrd.open_workbook(file_contents=u.read())
 ws = wb.sheet_by_name(SOURCE_SHEET)
@@ -207,7 +208,7 @@ def extractRow(row):
         storeRow(location, row, country)
 
 
-print "Extracting data..."
+sys.stderr.write("Extracting data...\n")
 location_list = {}
 statistics = {}
 
@@ -216,7 +217,7 @@ for rcnt in xrange(1, ws.nrows):
     extractRow(row)
 
 
-print "Dis-aggregating data..."
+sys.stderr.write("Dis-aggregating data...\n")
 rejected_data = {}
 suspect_data = {}
 
@@ -254,7 +255,7 @@ for d in statistics:
     statistics[d] = disaggregate(d, statistics[d])
 
 # Write this out in Sahana CSV format
-print "Writing out in Sahana format..."
+sys.stderr.write("Writing out in Sahana format...\n")
 import csv
 import os
 from urlparse import urlparse
@@ -295,7 +296,7 @@ new_file.close()
 # Save the prepop file
 
 # Import the new data into the database
-print "Importing data..."
+sys.stderr.write("Importing data...\n")
 auth.override = True
 stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "disease", "stats_data.xsl")
 resource = s3db.resource("disease_stats_data")
@@ -330,4 +331,4 @@ if len(rejected_loc) or len(rejected_data) or len(suspect_data) or len(new_org):
         for (org, details) in new_org.items():
             error_file.write("organisation %s was seen %s times\r\n" % (org, details))
 
-    print "See Error Log for issues: cat %s" % error_filename
+    sys.stderr.write("See Error Log for issues: cat %s\n" % error_filename)

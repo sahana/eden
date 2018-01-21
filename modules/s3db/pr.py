@@ -8997,7 +8997,7 @@ def pr_image_modify(image_file,
             #apt-get install libjpeg-dev
             #pip install pillow
             msg = sys.exc_info()[1]
-            s3_debug(msg)
+            current.log.error(msg)
             current.session.error = msg
             return
 
