@@ -292,7 +292,7 @@ def main(argv):
     try:
         xlspath = argv[0]
     except:
-        print "Usage: python xls2xml <XLS File> [<XSLT Stylesheet>]"
+        sys.stderr.write("Usage: python xls2xml.py <XLS File> [<XSLT Stylesheet>]\n")
         return
     try:
         xslpath = argv[1]
@@ -305,7 +305,7 @@ def main(argv):
     if xslpath is not None:
         tree = transform(tree, xslpath)
 
-    print etree.tostring(tree, pretty_print=True)
+    sys.stdout.write(etree.tostring(tree, pretty_print=True))
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

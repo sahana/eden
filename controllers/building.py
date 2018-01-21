@@ -789,7 +789,6 @@ def getformatedData(dbresult):
         hour = trueDate.strftime("%H")
         keyT = (date, "Total")
         keyH = (date, hour)
-        #print date, hour, keyT, keyH, cntT, cntH
         if (cntT == -1) or (result[cntT][0] != keyT):
             result.append([keyT, 0, 0, 0, 0, 0, 0, 0, 0])
             cntT = cntH + 1

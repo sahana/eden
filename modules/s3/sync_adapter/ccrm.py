@@ -340,7 +340,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # Parse the response
             tree = current.xml.parse(f)
             root = tree.getroot()
-            #print current.xml.tostring(tree, pretty_print=True)
             is_error = root.xpath("//ResultSet[1]/Result[1]/is_error")
             if len(is_error) and int(is_error[0].text):
                 error = root.xpath("//ResultSet[1]/Result[1]/error_message")

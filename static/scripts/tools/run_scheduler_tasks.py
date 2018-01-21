@@ -62,12 +62,12 @@ if __name__ == "__main__":
 
     adir = os.path.join("applications", app)
     if not os.path.exists(adir):
-        print >> sys.stderr, "Application not found: %s" % adir
+        sys.stderr.write("Application not found: %s\n" % adir)
         sys.exit(1)
 
     from gluon.custom_import import custom_import_install
     custom_import_install()
-    
+
     from gluon.shell import env
     _env = env(app, c=None, import_models=True)
     globals().update(**_env)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         task_name = task_row.task_name
         task_function = posted_tasks.get(task_name, None)
         if not task_function:
-            print >> sys.stderr, "Skipping task %s as no function in task list" % task_name
+            sys.stderr.write("Skipping task %s as no function in task list\n" % task_name)
             continue
         # That args list and vars dict are stored as strings.
         if task_row.args:
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             # here, then step into the function.
             task_function(*task_args, **task_vars)  # SET BREAKPOINT HERE
         except Exception:
-            print >> sys.stderr, "Task %s threw:\n" % task_name
+            sys.stderr.write("Task %s threw:\n\n" % task_name)
             import traceback
             exc_type, exc_value, exc_trace = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_trace, file=sys.stderr)

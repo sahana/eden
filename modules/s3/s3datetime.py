@@ -49,7 +49,7 @@ try:
     import dateutil.tz
 except ImportError:
     import sys
-    print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
+    sys.stderr.write("ERROR: python-dateutil module needed for date handling\n")
     raise
 import math
 import re
