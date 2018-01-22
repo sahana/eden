@@ -1,20 +1,24 @@
 # Tests for each migrations made in the migration_scripts file
-# has been made in order to call the tests just run the this script 
+# has been made in order to call the tests just run the this script
 # using
 # cd web2py
-# python web2py.py -S eden -R applications/eden/tests/dbmigration/test_migrations.py 
-# 
+# python web2py.py -S eden -R applications/eden/tests/dbmigration/test_migrations.py
+#
 # Choose from the menu whatever migration methods you want to test,
+import sys
 
 s3migration = local_import("s3migration")
 s3migrate = s3migration.S3Migration()
 db = s3migrate.db
 
+def info(msg):
+    sys.stderr.write("%s\n" % msg)
+
 class mapping_function():
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def fields(db):    
+    def fields(db):
         """
             This function specify the fields that are needed for the select query
         """
@@ -25,7 +29,7 @@ class mapping_function():
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def query(db):    
+    def query(db):
         """
             This function specify the query for the select query
         """
@@ -51,18 +55,18 @@ def rename_field():
     """
 
     tablename = "pr_person"
-    print "Testing table: %s" % tablename
+    info("Testing table: %s" % tablename)
     table = db[tablename]
     for row in db(table.id > 0).select():
-        print "id: %s, first_name: %s" % (row["id"], row["first_name"])
+        info("id: %s, first_name: %s" % (row["id"], row["first_name"]))
     attributes_to_copy = ["type", "length", "default", "required", "requires", "ondelete", "notnull", "unique",
         "uploadfield", "widget", "label", "comment", "writable", "readable", "update", "authorize",
         "autodelete", "represent", "uploadfolder", "uploadseparate", "uploadfs", "compute", "custom_store",
-        "custom_retrieve", "custom_retrieve_file_properties", "custom_delete", "filter_in", "filter_out"]        
+        "custom_retrieve", "custom_retrieve_file_properties", "custom_delete", "filter_in", "filter_out"]
     s3migrate.rename_field(tablename, "first_name", "first_name_test", attributes_to_copy)
-    print "Migrated data:"
+    info("Migrated data:")
     for row in db(table.id > 0).select():
-        print "id: %s, first_name_test: %s" % (row["id"], row["first_name_test"])
+        info("id: %s, first_name_test: %s" % (row["id"], row["first_name_test"]))
 
 # -----------------------------------------------------------------------------
 def rename_table():
@@ -71,7 +75,7 @@ def rename_table():
     """
 
     s3migrate.rename_table("vehicle_vehicle", "rename_vehicle")
-    print "renamed vehicle_vehicle to rename_vehicle"
+    info("renamed vehicle_vehicle to rename_vehicle")
 
 # -----------------------------------------------------------------------------
 def add_new_field():
@@ -85,7 +89,7 @@ def add_new_field():
                                       ["org_organisation_type", "org_sector"])
     table = db[tablename]
     for row in db(table.id > 0).select(["id"], table[field_to_update]):
-        print "id = ", row["id"], field_to_update, " = ", row[field_to_update]
+        info("id = ", row["id"], field_to_update, " = ", row[field_to_update])
 
 # -----------------------------------------------------------------------------
 def list_field_to_reference():
@@ -110,12 +114,12 @@ def list_field_to_reference():
                                       list_field_name,
                                       tablename_old_id_field,
                                       tablename_old)
-    print tablename_old
+    info(tablename_old)
     for row in db(table_old).select():
-        print "id: ", row[tablename_old_id_field], "sector_id: ", row[list_field_name]
-    print tablename_new
+        info("id: ", row[tablename_old_id_field], "sector_id: ", row[list_field_name])
+    info(tablename_new)
     for row in db(db[tablename_new]).select():
-        print "id: ", row["%s_%s" % (tablename_old, tablename_old_id_field)], "sector_id: ", row[new_list_field]
+        info("id: ", row["%s_%s" % (tablename_old, tablename_old_id_field)], "sector_id: ", row[new_list_field])
 
 # -----------------------------------------------------------------------------
 # The menu with all the options of migration for test
@@ -126,7 +130,7 @@ Select the migration that you want to test:
 3. Addding a unique field
 4. List field to table
 '''
-print prt_str
+info(prt_str)
 option_chosen = int(raw_input())
 if option_chosen == 1:
     rename_field()
