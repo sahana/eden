@@ -484,17 +484,23 @@ class S3Notifications(object):
         stable = s3db.pr_subscription
         rtable = db.pr_subscription_resource
 
-        # Find all resources with due suscriptions
-        query = ((rtable.next_check_time == None) |
-                 (rtable.next_check_time <= now)) & \
-                (rtable.locked != True) & \
-                (rtable.deleted != True)
+        # Find all resources with due subscriptions
+        next_check = rtable.next_check_time
+        locked_deleted = (rtable.locked != True) & \
+                         (rtable.deleted != True)
+        query = ((next_check == None) |
+                 (next_check <= now)) & \
+                locked_deleted
 
         tname = rtable.resource
-        mtime = rtable.last_check_time.min()
+        last_check = rtable.last_check_time
+        mtime = last_check.min()
         rows = db(query).select(tname,
                                 mtime,
                                 groupby=tname)
+
+        if not rows:
+            return None
 
         # Select those which have updates
         resources = set()
@@ -505,8 +511,7 @@ class S3Notifications(object):
             if not table or not "modified_on" in table.fields:
                 # Can't notify updates in resources without modified_on
                 continue
-            else:
-                modified_on = table.modified_on
+            modified_on = table.modified_on
             msince = row[mtime]
             if msince is None:
                 query = (table.id > 0)
@@ -518,29 +523,29 @@ class S3Notifications(object):
             if update:
                 radd((tablename, update.modified_on))
 
+        if not resources:
+            return None
+
         # Get all active subscriptions to these resources which
         # may need to be notified now:
-        if resources:
-            join = rtable.on((rtable.subscription_id == stable.id) & \
-                             (rtable.locked != True) & \
-                             (rtable.deleted != True))
-            query = None
-            for rname, modified_on in resources:
-                q = (rtable.resource == rname) & \
-                    ((rtable.last_check_time == None) |
-                     (rtable.last_check_time <= modified_on))
-                if query is None:
-                    query = q
-                else:
-                    query |= q
-            query = (stable.frequency != "never") & \
-                    (stable.deleted != True) & \
-                    ((rtable.next_check_time == None) | \
-                     (rtable.next_check_time <= now)) & \
-                    query
-            return db(query).select(rtable.id, join=join)
-        else:
-            return None
+        join = rtable.on((rtable.subscription_id == stable.id) & \
+                         locked_deleted)
+        query = None
+        for rname, modified_on in resources:
+            q = (tname == rname) & \
+                ((last_check == None) |
+                 (last_check <= modified_on))
+            if query is None:
+                query = q
+            else:
+                query |= q
+
+        query = (stable.frequency != "never") & \
+                (stable.deleted != True) & \
+                ((next_check == None) | \
+                 (next_check <= now)) & \
+                query
+        return db(query).select(rtable.id, join=join)
 
     # -------------------------------------------------------------------------
     @classmethod

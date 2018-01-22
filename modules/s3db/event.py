@@ -1441,8 +1441,8 @@ class S3IncidentModel(S3Model):
     def incident_update_onaccept(form):
         """
             When an Incident is updated
-                - set correct event_id for all relevant components
-                - check for closure
+             - set correct event_id for all relevant components
+             - check for closure
         """
 
         db = current.db
