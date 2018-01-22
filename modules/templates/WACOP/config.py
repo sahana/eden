@@ -1487,7 +1487,7 @@ def config(settings):
                 append(P(update["body"]))
         # Events
         events = row["event_event.json_dump"]
-        if updates:
+        if events:
             events = "[%s]" % events
             events = json.loads(events)
             for event in events:

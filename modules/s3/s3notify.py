@@ -143,12 +143,13 @@ class S3Notifications(object):
         purl = list(urlparse.urlparse(lookup_url))
 
         # Subscription parameters
+        # Date (must ensure we pass to REST as tz-aware)
         last_check_time = s3_encode_iso_datetime(r.last_check_time)
         query = {"subscription": auth_token, "format": "msg"}
         if "upd" in s.notify_on:
-            query["~.modified_on__ge"] = last_check_time
+            query["~.modified_on__ge"] = "%sZ" % last_check_time
         else:
-            query["~.created_on__ge"] = last_check_time
+            query["~.created_on__ge"] = "%sZ" % last_check_time
 
         # Filters
         if f.query:
