@@ -2531,33 +2531,115 @@ textarea::-webkit-input-placeholder h6 {
 }
 
 /* line 88, ../scss/custom/_wacop.scss */
+.alert-wrapper {
+  max-width: 300px;
+  position: fixed;
+  width: 50%;
+  z-index: 98;
+  right: 0;
+  top: 0;
+}
+
+/* line 97, ../scss/custom/_wacop.scss */
+.alert-space {
+  background-color: #112E51;
+}
+/* line 99, ../scss/custom/_wacop.scss */
+.alert-space .alert {
+  margin: 0 0 1px 0;
+  padding: 5px;
+}
+/* line 103, ../scss/custom/_wacop.scss */
+.alert-space > .alert:first-child {
+  margin-top: 2.8125rem;
+}
+/* line 106, ../scss/custom/_wacop.scss */
+.alert-space > .alert:last-child {
+  margin-bottom: 0;
+}
+
+/* line 111, ../scss/custom/_wacop.scss */
+.alert-bar {
+  background-color: #112E51;
+  border-left: 4px solid #235ea5;
+  color: #FFFFFF;
+  cursor: pointer;
+  padding: 5px;
+  text-align: right;
+}
+
+/* line 121, ../scss/custom/_wacop.scss */
+.alert button.close {
+  color: inherit;
+  float: right;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* line 129, ../scss/custom/_wacop.scss */
+.alert-success {
+  background: #7EB94D;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: #b3d696;
+  color: #344e1f;
+}
+
+/* line 137, ../scss/custom/_wacop.scss */
+.alert-error {
+  background: #FF5959;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: #ffbfbf;
+  color: #590000;
+}
+
+/* line 145, ../scss/custom/_wacop.scss */
+.alert-warning {
+  background: #E5AA07;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: #facf58;
+  color: #513c02;
+}
+
+/* line 153, ../scss/custom/_wacop.scss */
+.alert-info {
+  background: #e7e7e7;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: white;
+  color: #9b9b9b;
+}
+
+/* line 164, ../scss/custom/_wacop.scss */
 .tabs .tab-title:not(:last-child) {
   margin-right: 1.5rem;
 }
-/* line 91, ../scss/custom/_wacop.scss */
+/* line 167, ../scss/custom/_wacop.scss */
 .tabs .tab-title a {
   border-bottom-style: solid;
   border-bottom-width: 4px;
   border-bottom-color: transparent;
   padding: 0 0.25rem;
 }
-/* line 96, ../scss/custom/_wacop.scss */
+/* line 172, ../scss/custom/_wacop.scss */
 .tabs .tab-title a:hover {
   border-bottom-color: inherit;
 }
-/* line 100, ../scss/custom/_wacop.scss */
+/* line 176, ../scss/custom/_wacop.scss */
 .tabs .tab-title.active a {
   border-bottom-color: inherit;
   font-weight: bold;
 }
 
-/* line 109, ../scss/custom/_wacop.scss */
+/* line 185, ../scss/custom/_wacop.scss */
 ul.data-list,
 ul.dl {
   list-style-type: none;
   margin: 0;
 }
-/* line 113, ../scss/custom/_wacop.scss */
+/* line 189, ../scss/custom/_wacop.scss */
 ul.data-list li,
 ul.data-list ol,
 ul.dl li,
@@ -2566,40 +2648,40 @@ ul.dl ol {
   list-style: none;
 }
 
-/* line 120, ../scss/custom/_wacop.scss */
+/* line 196, ../scss/custom/_wacop.scss */
 div.dl {
   border: 0;
 }
 
-/* line 124, ../scss/custom/_wacop.scss */
+/* line 200, ../scss/custom/_wacop.scss */
 .data-list .dl-row,
 .dl .dl-row {
   border: 0;
 }
-/* line 126, ../scss/custom/_wacop.scss */
+/* line 202, ../scss/custom/_wacop.scss */
 .data-list .dl-row.odd, .data-list .dl-row.odd .dl-item,
 .dl .dl-row.odd,
 .dl .dl-row.odd .dl-item {
   background-color: #FFF;
 }
 
-/* line 137, ../scss/custom/_wacop.scss */
+/* line 213, ../scss/custom/_wacop.scss */
 ul.tagit {
   background: transparent;
   border: 0;
   box-shadow: none;
   padding: 0;
 }
-/* line 142, ../scss/custom/_wacop.scss */
+/* line 218, ../scss/custom/_wacop.scss */
 ul.tagit li.tagit-choice {
   margin-right: 5px;
 }
-/* line 145, ../scss/custom/_wacop.scss */
+/* line 221, ../scss/custom/_wacop.scss */
 ul.tagit li.tagit-new {
   padding: 0;
   margin-right: 0;
 }
-/* line 148, ../scss/custom/_wacop.scss */
+/* line 224, ../scss/custom/_wacop.scss */
 ul.tagit li.tagit-new input[type="text"] {
   background-color: #FFFFFF;
   border: 1px solid #cccccc;
@@ -2609,18 +2691,18 @@ ul.tagit li.tagit-new input[type="text"] {
   line-height: inherit;
   padding: .25em 4px;
 }
-/* line 157, ../scss/custom/_wacop.scss */
+/* line 233, ../scss/custom/_wacop.scss */
 ul.tagit li.tagit-new input[disabled] {
   display: none;
 }
 
-/* line 162, ../scss/custom/_wacop.scss */
+/* line 238, ../scss/custom/_wacop.scss */
 body.ltr .ui-multiselect {
   font-size: 0.875rem;
   padding: 0.5rem;
 }
 
-/* line 170, ../scss/custom/_wacop.scss */
+/* line 246, ../scss/custom/_wacop.scss */
 .filter-form {
   background-color: #EFEFEF;
   padding: 1.25rem;
@@ -2751,21 +2833,21 @@ body.ltr .ui-multiselect {
   margin-right: 6px;
 }
 
-/* line 176, ../scss/custom/_wacop.scss */
+/* line 252, ../scss/custom/_wacop.scss */
 .date-filter .range-picker-wrapper {
   margin-bottom: 1.25rem;
 }
-/* line 180, ../scss/custom/_wacop.scss */
+/* line 256, ../scss/custom/_wacop.scss */
 .date-filter .range-picker .process {
   background-color: #4D7EB9;
 }
-/* line 183, ../scss/custom/_wacop.scss */
+/* line 259, ../scss/custom/_wacop.scss */
 .date-filter .range-picker .select-label {
   background-color: #4D7EB9;
   box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.25);
   margin-bottom: 10px;
 }
-/* line 187, ../scss/custom/_wacop.scss */
+/* line 263, ../scss/custom/_wacop.scss */
 .date-filter .range-picker .select-label::before {
   content: "";
   position: absolute;
@@ -2779,11 +2861,11 @@ body.ltr .ui-multiselect {
   border-top-color: inherit;
   background-color: #fff;
 }
-/* line 200, ../scss/custom/_wacop.scss */
+/* line 276, ../scss/custom/_wacop.scss */
 .date-filter .range-picker .select-label::after {
   border-top-color: #4D7EB9;
 }
-/* line 206, ../scss/custom/_wacop.scss */
+/* line 282, ../scss/custom/_wacop.scss */
 .date-filter .range-coarse,
 .date-filter .range-filter {
   margin: 0 -0.625rem;
@@ -2802,7 +2884,7 @@ body.ltr .ui-multiselect {
 .date-filter .range-filter:after {
   clear: both;
 }
-/* line 210, ../scss/custom/_wacop.scss */
+/* line 286, ../scss/custom/_wacop.scss */
 .date-filter .range-coarse-start,
 .date-filter .range-coarse-end,
 .date-filter .range-filter-field {
@@ -2812,7 +2894,7 @@ body.ltr .ui-multiselect {
   float: left;
 }
 
-/* line 220, ../scss/custom/_wacop.scss */
+/* line 296, ../scss/custom/_wacop.scss */
 .filter-group {
   background-color: #EFEFEF;
   padding: 1.25rem;
@@ -2872,30 +2954,30 @@ body.ltr .ui-multiselect {
   border-radius: 3px;
 }
 
-/* line 267, ../scss/custom/_wacop.scss */
+/* line 343, ../scss/custom/_wacop.scss */
 .well {
   padding-top: 1.25rem;
 }
-/* line 269, ../scss/custom/_wacop.scss */
+/* line 345, ../scss/custom/_wacop.scss */
 .well .well-title {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 100%;
   float: left;
 }
-/* line 271, ../scss/custom/_wacop.scss */
+/* line 347, ../scss/custom/_wacop.scss */
 .well .well-title small {
   margin-left: 20px;
 }
-/* line 275, ../scss/custom/_wacop.scss */
+/* line 351, ../scss/custom/_wacop.scss */
 .well.blue {
   background-color: #4D7EB9;
 }
-/* line 277, ../scss/custom/_wacop.scss */
+/* line 353, ../scss/custom/_wacop.scss */
 .well.blue .well-title {
   color: white;
 }
-/* line 279, ../scss/custom/_wacop.scss */
+/* line 355, ../scss/custom/_wacop.scss */
 .well.blue .well-title a {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -2908,18 +2990,18 @@ body.ltr .ui-multiselect {
 .well.blue .well-title a p, .well.blue .well-title a ul, .well.blue .well-title a h1, .well.blue .well-title a h2, .well.blue .well-title a h3, .well.blue .well-title a h4, .well.blue .well-title a h5, .well.blue .well-title a h6 {
   font-size: inherit;
 }
-/* line 285, ../scss/custom/_wacop.scss */
+/* line 361, ../scss/custom/_wacop.scss */
 .well .card-alert .desc,
 .well .card-event .desc {
   display: none;
 }
-/* line 288, ../scss/custom/_wacop.scss */
+/* line 364, ../scss/custom/_wacop.scss */
 .well .card-alert .desc p,
 .well .card-event .desc p {
   margin-bottom: .75rem;
 }
 
-/* line 297, ../scss/custom/_wacop.scss */
+/* line 373, ../scss/custom/_wacop.scss */
 .callout {
   border-style: none;
   border-width: 0;
@@ -2974,7 +3056,7 @@ body.ltr .ui-multiselect {
   float: left;
 }
 
-/* line 303, ../scss/custom/_wacop.scss */
+/* line 379, ../scss/custom/_wacop.scss */
 .callout.event-parent {
   border-style: none;
   border-width: 0;
@@ -3028,21 +3110,21 @@ body.ltr .ui-multiselect {
   width: 50%;
   float: left;
 }
-/* line 305, ../scss/custom/_wacop.scss */
+/* line 381, ../scss/custom/_wacop.scss */
 .callout.event-parent .callout-right {
   text-align-last: right;
 }
-/* line 308, ../scss/custom/_wacop.scss */
+/* line 384, ../scss/custom/_wacop.scss */
 .callout.event-parent .meta .date::after {
   content: "|";
   margin: 0 0.375rem;
 }
-/* line 312, ../scss/custom/_wacop.scss */
+/* line 388, ../scss/custom/_wacop.scss */
 .callout.event-parent .button {
   margin: 0;
 }
 
-/* line 319, ../scss/custom/_wacop.scss */
+/* line 395, ../scss/custom/_wacop.scss */
 .card-event {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3211,7 +3293,7 @@ body.ltr .ui-multiselect {
 .card-event .body {
   padding-top: 1.25rem;
 }
-/* line 321, ../scss/custom/_wacop.scss */
+/* line 397, ../scss/custom/_wacop.scss */
 .card-event .event-date-location {
   background-color: #DDDDDD;
   padding: 1.25rem;
@@ -3241,14 +3323,14 @@ body.ltr .ui-multiselect {
 .card-event .event-date-location .date-label p, .card-event .event-date-location .date-label ul, .card-event .event-date-location .date-label h1, .card-event .event-date-location .date-label h2, .card-event .event-date-location .date-label h3, .card-event .event-date-location .date-label h4, .card-event .event-date-location .date-label h5, .card-event .event-date-location .date-label h6 {
   font-size: inherit;
 }
-/* line 324, ../scss/custom/_wacop.scss */
+/* line 400, ../scss/custom/_wacop.scss */
 .card-event .event-date-location .adr,
 .card-event .event-date-location .date {
   font-size: 1.4375rem;
   font-weight: bold;
 }
 
-/* line 335, ../scss/custom/_wacop.scss */
+/* line 411, ../scss/custom/_wacop.scss */
 .card-alert {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3417,11 +3499,11 @@ body.ltr .ui-multiselect {
 .card-alert .body {
   padding-top: 1.25rem;
 }
-/* line 337, ../scss/custom/_wacop.scss */
+/* line 413, ../scss/custom/_wacop.scss */
 .card-alert .title {
   font-size: 1.6875rem;
 }
-/* line 340, ../scss/custom/_wacop.scss */
+/* line 416, ../scss/custom/_wacop.scss */
 .card-alert .meta-location {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-size: 0.75rem;
@@ -3446,7 +3528,7 @@ body.ltr .ui-multiselect {
   font-size: inherit;
 }
 
-/* line 349, ../scss/custom/_wacop.scss */
+/* line 425, ../scss/custom/_wacop.scss */
 .incident-profile {
   background-color: #EFEFEF;
   margin-bottom: 1.25rem;
@@ -3615,7 +3697,7 @@ body.ltr .ui-multiselect {
 .incident-profile .body {
   padding-top: 1.25rem;
 }
-/* line 351, ../scss/custom/_wacop.scss */
+/* line 427, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data {
   margin: 0 -0.625rem;
   max-width: none;
@@ -3633,14 +3715,14 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-data:after {
   clear: both;
 }
-/* line 356, ../scss/custom/_wacop.scss */
+/* line 432, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 358, ../scss/custom/_wacop.scss */
+/* line 434, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-location .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
@@ -3669,14 +3751,14 @@ body.ltr .ui-multiselect {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* line 362, ../scss/custom/_wacop.scss */
+/* line 438, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 50%;
   float: left;
 }
-/* line 364, ../scss/custom/_wacop.scss */
+/* line 440, ../scss/custom/_wacop.scss */
 .incident-profile .incident-data .incident-date .box {
   background-color: #DDDDDD;
   padding: 0.625rem;
@@ -3693,7 +3775,7 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-data .incident-date .box .date-label p, .incident-profile .incident-data .incident-date .box .date-label ul, .incident-profile .incident-data .incident-date .box .date-label h1, .incident-profile .incident-data .incident-date .box .date-label h2, .incident-profile .incident-data .incident-date .box .date-label h3, .incident-profile .incident-data .incident-date .box .date-label h4, .incident-profile .incident-data .incident-date .box .date-label h5, .incident-profile .incident-data .incident-date .box .date-label h6 {
   font-size: inherit;
 }
-/* line 370, ../scss/custom/_wacop.scss */
+/* line 446, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources {
   margin: 0 -0.625rem;
   max-width: none;
@@ -3708,14 +3790,14 @@ body.ltr .ui-multiselect {
 .incident-profile .incident-resources:after {
   clear: both;
 }
-/* line 372, ../scss/custom/_wacop.scss */
+/* line 448, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-rail {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
   width: 33.33333%;
   float: left;
 }
-/* line 375, ../scss/custom/_wacop.scss */
+/* line 451, ../scss/custom/_wacop.scss */
 .incident-profile .incident-resources .incident-resources-data {
   padding-left: 0.625rem;
   padding-right: 0.625rem;
@@ -3723,7 +3805,7 @@ body.ltr .ui-multiselect {
   float: left;
 }
 
-/* line 385, ../scss/custom/_wacop.scss */
+/* line 461, ../scss/custom/_wacop.scss */
 .card-notification {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -3892,7 +3974,7 @@ body.ltr .ui-multiselect {
 .card-notification .body {
   padding-top: 1.25rem;
 }
-/* line 387, ../scss/custom/_wacop.scss */
+/* line 463, ../scss/custom/_wacop.scss */
 .card-notification .body .desc .img {
   max-width: 40%;
   height: auto;
@@ -3900,7 +3982,7 @@ body.ltr .ui-multiselect {
   margin: 0 0.5rem 0.5rem 0;
 }
 
-/* line 398, ../scss/custom/_wacop.scss */
+/* line 474, ../scss/custom/_wacop.scss */
 .card-post {
   background-color: #FFF;
   margin-bottom: 1.25rem;
@@ -4072,38 +4154,38 @@ body.ltr .ui-multiselect {
 .card-post .body {
   padding-top: 1.25rem;
 }
-/* line 404, ../scss/custom/_wacop.scss */
+/* line 480, ../scss/custom/_wacop.scss */
 .card-post .body .meta-update {
   width: 50%;
 }
-/* line 407, ../scss/custom/_wacop.scss */
+/* line 483, ../scss/custom/_wacop.scss */
 .card-post .body .meta-comments {
   white-space: nowrap;
 }
-/* line 408, ../scss/custom/_wacop.scss */
+/* line 484, ../scss/custom/_wacop.scss */
 .card-post .body .meta-comments::before {
   content: "\00a0\00a0";
 }
-/* line 414, ../scss/custom/_wacop.scss */
+/* line 490, ../scss/custom/_wacop.scss */
 .card-post .card-post-comments {
   margin-left: 0;
   list-style: none;
 }
-/* line 418, ../scss/custom/_wacop.scss */
+/* line 494, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment {
   background-color: #EFEFEF;
   margin-bottom: 0.625rem;
   padding: 1.25rem;
 }
-/* line 422, ../scss/custom/_wacop.scss */
+/* line 498, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment textarea {
   min-height: 10em;
 }
-/* line 425, ../scss/custom/_wacop.scss */
+/* line 501, ../scss/custom/_wacop.scss */
 .card-post .card-post-comment p:last-child {
   margin-bottom: 0;
 }
-/* line 429, ../scss/custom/_wacop.scss */
+/* line 505, ../scss/custom/_wacop.scss */
 .card-post .add-comment,
 .card-post .submit {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
