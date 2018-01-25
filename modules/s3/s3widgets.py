@@ -43,6 +43,7 @@ __all__ = ("S3ACLWidget",
            "S3CalendarWidget",
            "S3DateWidget",
            "S3DateTimeWidget",
+           "S3HoursWidget",
            "S3EmbeddedComponentWidget",
            "S3GroupedOptionsWidget",
            #"S3RadioOptionsWidget",
@@ -3045,6 +3046,126 @@ if($('#%(selector)s_clear').length==0){
             jquery_ready.append(script)
 
         return
+
+# =============================================================================
+class S3HoursWidget(FormWidget):
+    """
+        Widget to enter a duration in hours (e.g. of a task), supporting
+        flexible input format (e.g. "1h 15min", "1.75", "2:10")
+    """
+
+    PARTS = re.compile(r"((?:[+-]{0,1}\s*)(?:[0-9,.:]+)\s*(?:[^0-9,.:+-]*))")
+    TOKEN = re.compile(r"([+-]{0,1}\s*)([0-9,.:]+)([^0-9,.:+-]*)")
+
+    def __init__(self, interval=None, precision=2):
+        """
+            Constructor
+
+            @param interval: standard interval to round up to (minutes),
+                             None to disable rounding
+            @param precision: number of decimal places to keep
+        """
+
+        self.interval = interval
+        self.precision = precision
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Entry point for form processing
+
+            @param field: the Field
+            @param value: the current/default value
+            @param attributes: HTML attributes for the widget
+        """
+
+        default = {"value": (value != None and str(value)) or ""}
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        attr["requires"] = self.validate
+
+        widget = INPUT(**attr)
+        widget.add_class("hours")
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def validate(self, value):
+        """
+            Pre-validator to parse the input value before validating it
+
+            @param value: the input value
+
+            @returns: tuple (parsed, error)
+        """
+
+        try:
+            return self.s3_parse(value), None
+        except:
+            return value, "invalid value"
+
+    # -------------------------------------------------------------------------
+    def s3_parse(self, value):
+        """
+            Function to parse the input value (if it is a string)
+
+            @param value: the value
+            @returns: the value as float (hours)
+        """
+
+        hours = 0.0
+
+        if not value:
+            return hours, None
+
+        parts = self.PARTS.split(value)
+        for part in parts:
+
+            token = part.strip()
+            if not token:
+                continue
+
+            m = self.TOKEN.match(token)
+            if not m:
+                continue
+
+            sign = m.group(1).strip()
+            num = m.group(2)
+
+            unit = m.group(3).lower()
+            unit = unit[0] if unit else "h"
+            if unit == "s":
+                length = 1
+                factor = 3600.0
+            elif unit == "m":
+                length = 2
+                factor = 60.0
+            else:
+                length = 3
+                factor = 1.0
+
+            segments = (num.replace(",", ".").split(":") + ["0", "0", "0"])[:length]
+            total = 0.0
+            for segment in segments:
+                try:
+                    v = float(segment)
+                except ValueError:
+                    v = 0.0
+                total += v / factor
+                factor *= 60
+
+            if sign == "-":
+                hours -= total
+            else:
+                hours += total
+
+        interval = self.interval
+        if interval:
+            import math
+            interval = float(interval)
+            hours = math.ceil(hours * 60.0 / interval) * interval / 60.0
+
+        return round(hours, self.precision)
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):

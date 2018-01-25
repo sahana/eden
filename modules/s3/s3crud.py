@@ -2166,23 +2166,31 @@ class S3CRUD(S3Method):
                 else:
                     field = table[fname]
 
-                # Convert numeric type (does not always happen in the widget)
-                field = table[fname]
+                # Convert numeric types (does not always happen in the widget)
+                widget = field.widget
+                if widget and hasattr(widget, "s3_parse"):
+                    parser = widget.s3_parse
+                else:
+                    parser = None
                 ftype = field.type
                 if ftype == "integer":
                     if value not in (None, ""):
+                        if not callable(parser):
+                            parser = int
                         try:
-                            value = int(value)
+                            value = parser(value)
                         except ValueError:
                             value = 0
                     else:
                         value = None
                 elif ftype == "double":
                     if value not in (None, ""):
+                        if not callable(parser):
+                            parser = float
                         try:
-                            value = float(value)
+                            value = parser(value)
                         except ValueError:
-                            value = 0
+                            value = 0.0
                     else:
                         value = None
 
@@ -2203,7 +2211,7 @@ class S3CRUD(S3Method):
                         skip_formatting = not isinstance(fullname, basestring) or \
                                           not os.path.isfile(fullname)
 
-                widget = field.widget
+                # Validate and serialize the value
                 if isinstance(widget, S3Selector):
                     # Use widget-validator instead of field-validator
                     if not skip_validation:
