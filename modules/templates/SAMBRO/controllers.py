@@ -48,8 +48,7 @@ class index(S3CustomController):
         try:
             layer_id = layer.layer_id
         except:
-            from s3 import s3_debug
-            s3_debug("Cannot find Layer for Map")
+            current.log.error("Cannot find Layer for Map")
             layer_id = None
 
         feature_resources = [{"name"      : T("Alerts"),
@@ -1165,7 +1164,6 @@ $('#method_selector').change(function(){
         if subscribe:
             now = datetime.utcnow()
             resources = subscription["resources"]
-            print "Get resources", resources
 
             subscribed = {}
             timestamps = {}
@@ -1606,8 +1604,7 @@ class alert_hub_cop(S3CustomController):
         try:
             layer_id = layer.layer_id
         except:
-            from s3 import s3_debug
-            s3_debug("Cannot find Layer for Map")
+            current.log.error("Cannot find Layer for Map")
             layer_id = None
 
         time_filter = request.utcnow + timedelta(-7)

@@ -9,13 +9,14 @@ Resource  widgets.txt
 Resource  form.txt
 Library  Selenium2Library  run_on_failure=Catch Error If Available Else Take Screenshot
 Library  Collections
+Library  String
 Variables  ../../execution/settings/config.py
 Library  ../../execution/libs/edentest_robot.py  ${SERVER}  ${APPNAME}  ${ADMIN EMAIL}  ${ADMIN PASSWORD}
 Library  ../../execution/libs/edentest_database_local.py
 
 *** Variables ***
-${BASEURL}  ${SERVER}/${APPNAME}
-${HOMEPAGE}  http://${BASEURL}/default/index
+${BASEURL}  ${PROTO}://${SERVER}/${APPNAME}
+${HOMEPAGE}  ${BASEURL}/default/index
 
 *** Keywords ***
 Start Browser With Proxy

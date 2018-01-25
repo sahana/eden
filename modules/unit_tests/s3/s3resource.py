@@ -1926,7 +1926,6 @@ class ResourceSelectTests(unittest.TestCase):
             assertNotEqual(len(ids), 0)
 
             # Remember ids to verify that no unnecessary items are passed
-            #print "called with %s" % str(ids)
             seen.extend(ids)
 
             # Verify correct expression is passed

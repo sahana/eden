@@ -4,8 +4,8 @@ Documentation     Test cases for org module
 Resource          ../../resources/main.txt
 
 *** Variables ***
-${ORGANIZATION URL}     http://${BASEURL}/org/organisation
-${OFFICE URL}           http://${BASEURL}/org/office
+${ORGANIZATION URL}     ${BASEURL}/org/organisation
+${OFFICE URL}           ${BASEURL}/org/office
 
 ${OrgNameField}         org_organisation_name
 ${OrgAcronymField}      org_organisation_acronym
@@ -42,6 +42,8 @@ Create Organisation Without Name
     Input Text  ${OrgAcronymField}  NO
     Submit CRUD Form
     Field Should Have Error  ${OrgNameField}
+    Go To  ${ORGANIZATION URL}
+    Handle Alert  # Navigate-Away-Confirm
 
 Update Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}

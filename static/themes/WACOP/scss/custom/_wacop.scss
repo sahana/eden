@@ -83,6 +83,82 @@ textarea {
 }
 
 // -------------------------------------
+// Alerts
+
+.alert-wrapper {
+  max-width: 300px;
+  position: fixed;
+  width: 50%;
+  z-index: 98;
+  right: 0;
+  top: 0;
+}
+
+.alert-space {
+  background-color: $darkblue;
+  .alert {
+    margin: 0 0 1px 0;
+    padding: 5px;
+  }
+  > .alert:first-child {
+    margin-top: 2.8125rem;
+  }
+  > .alert:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.alert-bar {
+  background-color: $darkblue;
+  border-left: 4px solid lighten($darkblue, 20%);
+  color: $white;
+  cursor: pointer;
+  padding: 5px;
+  text-align: right;
+}
+
+.alert {
+  button.close {
+    color: inherit;
+    float: right;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+.alert-success {
+  background: $success-color;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: lighten($success-color, 20%);
+  color: darken($success-color, 30%)
+}
+
+.alert-error {
+  background: $alert-color;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: lighten($alert-color, 20%);
+  color: darken($alert-color, 50%)
+}
+
+.alert-warning {
+  background: $warning-color;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: lighten($warning-color, 20%);
+  color: darken($warning-color, 30%)
+}
+
+.alert-info {
+  background: $secondary-color;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  border-color: lighten($secondary-color, 20%);
+  color: darken($secondary-color, 30%)
+}
+
+// -------------------------------------
 // Tabs
 .tabs {
   .tab-title:not(:last-child) {

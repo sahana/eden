@@ -113,12 +113,17 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         assertEqual(rfield.tname, "test_link")
         assertEqual(rfield.fname, "parent")
 
+        master = s3db.test_master
+        link = s3db.test_link
+        parent = master.with_alias("test_parent_master")
+        child = master.with_alias("test_child_master")
+
         # Verify joins of parent link
         joins = rfield.left.get("test_link")
         assertNotEqual(joins, None)
         actual = [str(j) for j in joins]
-        expected = ("test_link ON (test_master.id = test_link.child)",
-                    "test_master AS test_parent_master ON (test_link.parent = test_parent_master.id)",
+        expected = (str(link.on(master.id == link.child)),
+                    str(parent.on(link.parent == parent.id)),
                     )
         for expression in expected:
             assertIn(expression, actual)
@@ -132,8 +137,8 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         joins = rfield.left.get("test_link")
         assertNotEqual(joins, None)
         actual = [str(j) for j in joins]
-        expected = ("test_link ON (test_master.id = test_link.parent)",
-                    "test_master AS test_child_master ON (test_link.child = test_child_master.id)",
+        expected = (str(link.on(master.id == link.parent)),
+                    str(child.on(link.child == child.id)),
                     )
         for expression in expected:
             assertIn(expression, actual)

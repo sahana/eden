@@ -56,27 +56,6 @@ URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
 RCVARS = "rcvars"
 
 # =============================================================================
-def s3_debug(message, value=None):
-    """
-       Debug Function (same name/parameters as JavaScript one)
-
-       Provide an easy, safe, systematic way of handling Debug output
-       (print to stdout doesn't work with WSGI deployments)
-
-       @ToDo: Deprecate & replace with current.log.debug
-    """
-
-    output = "S3 Debug: %s" % s3_unicode(message)
-    if value:
-        output = "%s: %s" % (output, s3_unicode(value))
-
-    try:
-        print >> sys.stderr, output
-    except:
-        # Unicode string
-        print >> sys.stderr, "Debug crashed"
-
-# =============================================================================
 def s3_get_last_record_id(tablename):
     """
         Reads the last record ID for a resource from a session
@@ -1707,8 +1686,7 @@ def s3_jaro_winkler_distance_row(row1, row2):
     dw = 0
     num_similar = 0
     if len(row1) != len(row2):
-            #print "The records columns does not match."
-            return
+        return
     for x in range(0, len(row1)):
         str1 = row1[x]    # get row fields
         str2 = row2[x]    # get row fields

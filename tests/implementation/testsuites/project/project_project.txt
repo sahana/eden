@@ -5,7 +5,7 @@ Documentation     Test cases for project module
 Resource          ../../resources/main.txt
 
 *** Variables ***
-${PROJECT URL}      http://${BASEURL}/project/project
+${PROJECT URL}      ${BASEURL}/project/project
 
 *** Test Cases ***
 

@@ -702,7 +702,7 @@ class S3Request(object):
 
         # Redirection
         if self.next is not None and \
-           (self.http != "GET" or self.method == "clear"):
+           (http != "GET" or self.method == "clear"):
             if isinstance(output, dict):
                 form = output.get("form")
                 if form:

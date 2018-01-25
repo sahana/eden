@@ -1,4 +1,5 @@
-dist: precise
+dist: trusty
+sudo: false
 
 language: python
 
@@ -10,11 +11,10 @@ python:
 env:
  - DB=mysql
  - DB=sqlite3
- - DB=postgres-9.1
- - DB=postgres-9.3
- - DB=postgres-9.3+postgis
  - DB=postgres-9.4
  - DB=postgres-9.4+postgis
+ - DB=postgres-9.6
+ - DB=postgres-9.6+postgis
 
 virtualenv:
   system_site_packages: true

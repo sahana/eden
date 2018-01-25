@@ -57,4 +57,4 @@ db.commit()
 
 auth.override = False
 
-print "Total Time: %s" % (time.mktime(time.localtime()) - secs)
+sys.stderr.write("Total Time: %s\n" % (time.mktime(time.localtime()) - secs))

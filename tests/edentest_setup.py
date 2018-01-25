@@ -1,10 +1,13 @@
 """
     Installation script for EdenTest
 """
-from sys import exit
-from importlib import import_module
-from sys import exc_info, path
 import os
+
+from importlib import import_module
+from sys import exc_info, exit, path, stderr
+
+def info(string):
+    stderr.write("%s\n" % string)
 
 def module_exists(module):
     """
@@ -24,11 +27,10 @@ def easy_install(package):
    try:
         easy.main(["-U", package])
         return True
-
    except:
-        print "Unable to install %s using easy_install. Please read the instructions for \
-        manual installation.. Exiting" % package
-        print "Error: %s: %s" % (exc_info()[0] ,exc_info()[1])
+        info("Unable to install %s using easy_install." % package)
+        info("Please read the instructions for manual installation.")
+        info("Error: %s: %s" % (exc_info()[0] ,exc_info()[1]))
         return False
 
 def pip_install(package):
@@ -38,52 +40,51 @@ def pip_install(package):
     try:
         pip.main(["install", "--upgrade", package])
         return True
-
     except:
-        print "Unable to install %s using pip. Please read the instructions for \
-        manual installation.. Exiting" % package
-        print "Error: %s: %s" % (exc_info()[0] ,exc_info()[1])
+        info("Unable to install %s using pip." % package)
+        info("Please read the instructions for manual installation.")
+        info("Error: %s: %s" % (exc_info()[0] ,exc_info()[1]))
         return False
 
 if __name__ == "__main__":
 
     if module_exists("pip"):
         import pip
-        print "Installing packages with pip ..."
+        info("Installing packages with pip ...")
 
         if not pip_install("robotframework"):
-            print "Could not install Robot Framework. Exiting..."
+            info("Could not install Robot Framework.")
             exit(1)
 
         if not pip_install("robotframework-selenium2library"):
-            print "Could not install Selenium2Library. Exiting..."
+            info("Could not install Selenium2Library.")
             exit(1)
 
         if not pip_install("requests"):
-            print "Could not install Requests. Exiting..."
+            info("Could not install Requests.")
             exit(1)
 
         if not pip_install("robotframework-databaselibrary"):
-            print "Could not install DatabaseLibrary. Exiting..."
+            info("Could not install DatabaseLibrary.")
             exit(1)
 
-        print "Installation successful"
+        info("Installation successful")
         exit(0)
 
     elif module_exists("setuptools.command.easy_install"):
         import setuptools.command.easy_install as easy
-        print "Installing packages with easy_install ..."
+        info("Installing packages with easy_install ...")
 
         if not easy_install("robotframework"):
-            print "Could not install Robot Framework. Exiting..."
+            info("Could not install Robot Framework.")
             exit(1)
 
         if not easy_install("robotframework-databaselibrary"):
-            print "Could not install DatabaseLibrary. Exiting..."
+            info("Could not install DatabaseLibrary.")
             exit(1)
 
         if not easy_install("requests"):
-            print "Could not install Requests. Exiting..."
+            info("Could not install Requests.")
             exit(1)
 
         # installing the dependencies of Selenium2Library
@@ -91,8 +92,8 @@ if __name__ == "__main__":
         easy_install("decorator")
         easy_install("docutils")
         if not easy_install("robotframework-selenium2library"):
-            print "Could not install Selenium2Library. Exiting..."
+            info("Could not install Selenium2Library.")
             exit(1)
 
-        print "Installation successful"
+        info("Installation successful")
         exit(0)

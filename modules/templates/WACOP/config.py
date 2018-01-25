@@ -263,6 +263,7 @@ def config(settings):
         """
             Handle Tags in Create / Update forms
             Auto-Bookmark Updates created from the Dashboard
+            Update the forum modified_on when created from the Forum
         """
 
         post_id = form.vars.id
@@ -276,6 +277,9 @@ def config(settings):
             s3db.cms_post_user.insert(post_id = post_id,
                                       user_id = current.auth.user.id,
                                       )
+        elif request.function == "forum":
+            # Update modified_on to ensure that the Update is visible to subscribers
+            db(s3db.pr_forum.id == request.args[0]).update(modified_on = request.utcnow)
 
         # Process Tags
         ttable = s3db.cms_tag
@@ -1473,23 +1477,40 @@ def config(settings):
         # Updates
         updates = row["cms_post.json_dump"]
         if updates:
-            if not isinstance(updates, list):
-                updates = [updates]
-            #updates = [json.loads(update) for update in updates]
-            #updates.sort(key=lambda c: c["created_on"])
+            updates = "[%s]" % updates
+            updates = json.loads(updates)
             for update in updates:
-                update = json.loads(update)
-                #"update.date"
-                #"update.series_id"
-                #"update.priority"
-                #"update.status_id"
-                append(P("update.body"))
+                #update["date"]
+                #update["series_id"]
+                #update["priority"]
+                #update["status_id"]
+                append(P(update["body"]))
         # Events
+        events = row["event_event.json_dump"]
+        if events:
+            events = "[%s]" % events
+            events = json.loads(events)
+            for event in events:
+                #event["date"]
+                append(P(event["name"]))
         # Incidents
+        incidents = row["event_incident.json_dump"]
+        if incidents:
+            incidents = "[%s]" % incidents
+            incidents = json.loads(incidents)
+            for incident in incidents:
+                #incident["date"]
+                append(P(incident["name"]))
         # Tasks
+        tasks = row["project_task.json_dump"]
+        if tasks:
+            tasks = "[%s]" % tasks
+            tasks= json.loads(tasks)
+            for task in tasks:
+                #task["date"]
+                append(P(task["name"]))
 
-        return {"notification": notification,
-                }
+        return {"notification": notification}
 
     # -------------------------------------------------------------------------
     def customise_pr_forum_resource(r, tablename):
@@ -1644,10 +1665,10 @@ def config(settings):
             if r.representation == "msg":
                 # Notifications
 
-                # Add a Virtual Field for Posts
+                # Add Virtual Fields for Components
                 # - to keep their data together
-                table = s3db.cms_post
-                    
+
+                ptable = s3db.cms_post
                 def cms_post_as_json(row):
                     body = row["cms_post.body"]
                     if not body:
@@ -1659,7 +1680,7 @@ def config(settings):
                                        "status_id": row["cms_post.status_id"],
                                        })
 
-                table.json_dump = s3_fieldmethod("json_dump",
+                ptable.json_dump = s3_fieldmethod("json_dump",
                                                   cms_post_as_json,
                                                   )
                 s3db.configure("cms_post",
@@ -1671,11 +1692,65 @@ def config(settings):
                                                ),
                                )
 
+                etable = s3db.event_event
+                def event_event_as_json(row):
+                    name = row["event_event.name"]
+                    if not name:
+                        return None
+                    return json.dumps({"name": name,
+                                       "date": row["event_event.start_date"].isoformat(),
+                                       })
+
+                etable.json_dump = s3_fieldmethod("json_dump",
+                                                  event_event_as_json,
+                                                  )
+                s3db.configure("event_event",
+                               extra_fields = ("name",
+                                               "start_date",
+                                               ),
+                               )
+
+                itable = s3db.event_incident
+                def event_incident_as_json(row):
+                    name = row["event_incident.name"]
+                    if not name:
+                        return None
+                    return json.dumps({"name": name,
+                                       "date": row["event_incident.date"].isoformat(),
+                                       })
+
+                itable.json_dump = s3_fieldmethod("json_dump",
+                                                  event_incident_as_json,
+                                                  )
+                s3db.configure("event_incident",
+                               extra_fields = ("name",
+                                               "date",
+                                               ),
+                               )
+
+                ttable = s3db.project_task
+                def project_task_as_json(row):
+                    name = row["project_task.name"]
+                    if not name:
+                        return None
+                    return json.dumps({"name": name,
+                                       "date": row["project_task.date_due"].isoformat(),
+                                       })
+
+                ttable.json_dump = s3_fieldmethod("json_dump",
+                                                  project_task_as_json,
+                                                  )
+                s3db.configure("project_task",
+                               extra_fields = ("name",
+                                               "date_due",
+                                               ),
+                               )
+
                 notify_fields = ["name",
                                  "post.json_dump",
-                                 #"event.json_dump",
-                                 #"incident.json_dump",
-                                 #"task.json_dump",
+                                 "event.json_dump",
+                                 "incident.json_dump",
+                                 "task.json_dump",
                                  ]
                 s3db.configure("pr_forum",
                                notify_fields = notify_fields,
@@ -1754,15 +1829,16 @@ def config(settings):
                     method = "update"
                 else:
                     ltable = s3db.pr_person_user
+                    ptable = s3db.pr_person
                     query = (table.forum_id == r.id) & \
                             (table.admin == True) & \
                             (table.deleted == False) & \
                             (table.person_id == ptable.id) & \
                             (ptable.pe_id == ltable.pe_id) & \
                             (ltable.user_id == auth.user.id)
-                    admin = db(query).select(ltable.id,
-                                             limitby = (0, 1)
-                                             ).first()
+                    admin = current.db(query).select(ltable.id,
+                                                     limitby = (0, 1)
+                                                     ).first()
                     if admin:
                         method = "update"
                     else:

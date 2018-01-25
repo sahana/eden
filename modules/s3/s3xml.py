@@ -42,7 +42,7 @@ import urllib2
 try:
     from lxml import etree
 except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
 from gluon import *
@@ -1023,8 +1023,7 @@ class S3XML(S3Codec):
                 try:
                     attrs = attributes[tablename][record_id]
                 except KeyError:
-                    from s3utils import s3_debug
-                    s3_debug("S3XML", "record not found in lookup")
+                    current.log.debug("S3XML: record not found in lookup")
                     attrs = {}
                 if attrs:
                     # Encode in a way which we can decode in static/formats/geojson/export.xsl
@@ -2555,7 +2554,7 @@ class S3XML(S3Codec):
                 record_idx += 1
 
         # Use this to debug the source tree if needed:
-        #print >>sys.stderr, cls.tostring(root, pretty_print=True)
+        #sys.stderr.write(cls.tostring(root, pretty_print=True))
 
         return  etree.ElementTree(root)
 
@@ -2676,7 +2675,7 @@ class S3XML(S3Codec):
             raise HTTP(400, body=cls.json_message(False, 400, e))
 
         # Use this to debug the source tree if needed:
-        #print >>sys.stderr, cls.tostring(root, pretty_print=True)
+        #sys.stderr.write(cls.tostring(root, pretty_print=True))
 
         return  etree.ElementTree(root)
 

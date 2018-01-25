@@ -36,7 +36,7 @@ def main(argv):
     try:
         xmlpath = argv[0]
     except:
-        print "Usage: python xsltransform <XML File> [<XSLT Stylesheet>] [<name>]"
+        sys.stderr.write("Usage: python xsltransform <XML File> [<XSLT Stylesheet>] [<name>]\n")
         return
     try:
         xslpath = argv[1]
@@ -52,7 +52,7 @@ def main(argv):
         except:
             tree = transform(tree, xslpath)
 
-    print etree.tostring(tree, pretty_print=True)
+    sys.stdout.write(etree.tostring(tree, pretty_print=True))
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

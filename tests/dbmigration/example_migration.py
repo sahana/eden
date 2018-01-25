@@ -20,12 +20,7 @@ from gluon.shell import env
 from gluon import DAL, Field
 
 old_env = env(APP, c=None, import_models=True)
-old_str ='''
-try:
-    s3db.load_all_models()
-except NameError:
-    print "s3db not defined"
-'''
+old_str ='''s3db.load_all_models()'''
 globals().update(**old_env)
 exec old_str in globals(), locals()
 
@@ -65,7 +60,7 @@ for old_row in temp_db().select(temp_db[changed_table][old_field]):
         row = temp_db[new_table].insert(name = old_row[old_field])
         new_id = int(row["id"])
         temp_db(temp_db[changed_table][old_field] == old_row[old_field]).update(type_id = new_id)
-    
+
 temp_db.commit()
 
 # END =========================================================================

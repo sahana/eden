@@ -3,8 +3,8 @@ Documentation       Keywords for authorization, usually automatically
 ...                 run during suite setup and tear down
 
 *** Variables ***
-${LOGIN URL}        http://${BASEURL}/default/user/login
-${LOGOUT URL}       http://${BASEURL}/default/user/logout
+${LOGIN URL}        ${BASEURL}/default/user/login
+${LOGOUT URL}       ${BASEURL}/default/user/logout
 ${UsernameField}    auth_user_email
 ${PasswordField}    auth_user_password
 
@@ -13,12 +13,16 @@ ${PasswordField}    auth_user_password
 Open Browser To Login Page
     [Documentation]  Open the browser at the login page
     Go To  ${LOGIN URL}
+    Run Keyword And Ignore Error  Alert Should Not Be Present
     Maximize Browser Window
 
 #Resource: auth.txt; Keyword: Login to Eden if Not Logged In
-Check If Logged Out
-    [Documentation]  Checks if the user is logged out
-    Page should contain  Logout
+Check If Logged In
+    [Documentation]  Checks if the user is logged in
+    ${EXPR}=  Catenate  xpath=//a[@href="/${APPNAME}/default/user/logout"]
+    ${count}=  Get Element Count  ${EXPR}
+    Return From Keyword If  ${count} == 0  FAIL
+    Return From Keyword  PASS
 
 #Testsuite: hrm; testcase: Find Staff By Organization
 Login To Eden If Not Logged In
@@ -26,8 +30,8 @@ Login To Eden If Not Logged In
     ...                      login using Login To Eden Helper and given email
     ...                      and password
     [Arguments]  ${email}  ${passwd}
-    ${status}  ${value} =  Run Keyword And Ignore Error  Check If Logged Out
-    Run Keyword if  '${status}' == 'FAIL'  Login To Eden  ${email}  ${passwd}
+    ${status}=  Check If Logged In
+    Run Keyword If  '${status}' == 'FAIL'  Login To Eden  ${email}  ${passwd}
 
 #Similar to the keyword: Login to Eden if not logged in
 Login To Eden
@@ -38,12 +42,13 @@ Login To Eden
     Input Text  ${UsernameField}  ${email}
     Input Text  ${PasswordField}  ${passwd}
     Click Button  xpath=//input[contains(@class,"btn") and @type="submit"]
-    Should Show Confirmation  Logged in
+    Should Show Confirmation
+    Go To  ${BASEURL}?_language=${LANGUAGE}
 
 Self Register A New User
     [Documentation]  Opens up, fills and submits the registration form
     [Arguments]  ${fname}  ${lname}  ${email}  ${passwd}
-    Go To  http://${BASEURL}/default/user/register
+    Go To  ${BASEURL}/default/user/register
     Input Text  auth_user_first_name  ${fname}
     Input Text  auth_user_last_name  ${lname}
     Input Text  auth_user_email  ${email}
@@ -54,5 +59,5 @@ Self Register A New User
 #Resources: main.txt; keyword: End testing
 Logout From Eden
     [Documentation]  Logout from Eden
-    ${status}  ${value} =  Run Keyword And Ignore Error  Check If Logged Out
-    Run Keyword if  '${status}' == 'PASS'  Go To  ${LOGOUT URL}
+    ${status}=  Check If Logged In
+    Run Keyword If  '${status}' == 'PASS'  Go To  ${LOGOUT URL}

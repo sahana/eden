@@ -52,10 +52,10 @@ from s3widgets import S3CalendarWidget, S3DateWidget
 # =============================================================================
 class FieldS3(Field):
     """
-        S3 extensions of the gluon.sql.Field clas
+        S3 extensions of the gluon.sql.Field class
+            - add "sortby" attribute (used by IS_ONE_OF)
 
-        If Server Side Pagination is on, the proper CAST is needed to
-        match the lookup table id
+        @todo: add parameters supported by newer PyDAL
     """
 
     def __init__(self, fieldname,
@@ -85,49 +85,27 @@ class FieldS3(Field):
 
         Field.__init__(self,
                        fieldname,
-                       type,
-                       length,
-                       default,
-                       required,
-                       requires,
-                       ondelete,
-                       notnull,
-                       unique,
-                       uploadfield,
-                       widget,
-                       label,
-                       comment,
-                       writable,
-                       readable,
-                       update,
-                       authorize,
-                       autodelete,
-                       represent,
-                       uploadfolder,
-                       compute)
-
-    # -------------------------------------------------------------------------
-    def join_via(self, value):
-        if self.type.find("reference") == 0:
-            return Query(self, "=", value)
-        else:
-            return QueryS3(self, "join_via", value)
-
-# =============================================================================
-class QueryS3(Query):
-    """
-        S3 extensions of the gluon.sql.Query class
-
-        If Server Side Pagination is on, the proper CAST is needed to match
-        the string-typed id to lookup table id
-    """
-
-    def __init__(self, left, op=None, right=None):
-
-        if op != "join_via":
-            Query.__init__(self, left, op, right)
-        else:
-            self.sql = "CAST(TRIM(%s,"|") AS INTEGER)=%s" % (left, right)
+                       type=type,
+                       length=length,
+                       default=default,
+                       required=required,
+                       requires=requires,
+                       ondelete=ondelete,
+                       notnull=notnull,
+                       unique=unique,
+                       uploadfield=uploadfield,
+                       widget=widget,
+                       label=label,
+                       comment=comment,
+                       writable=writable,
+                       readable=readable,
+                       update=update,
+                       authorize=authorize,
+                       autodelete=autodelete,
+                       represent=represent,
+                       uploadfolder=uploadfolder,
+                       compute=compute,
+                       )
 
 # =============================================================================
 def s3_fieldmethod(name, f, represent=None, search_field=None):

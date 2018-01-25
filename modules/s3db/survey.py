@@ -98,9 +98,9 @@ from s3chart import S3Chart
 DEBUG = False
 if DEBUG:
     import sys
-    print >> sys.stderr, "S3Survey: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
+    sys.stderr.write("S3Survey: DEBUG MODE\n")
+    def _debug(msg):
+        sys.stderr.write("%s\n" % msg)
 else:
     _debug = lambda m: None
 
@@ -3147,7 +3147,8 @@ class S3SurveyTranslateModel(S3Model):
             try:
                 import xlrd
             except ImportError:
-                print >> sys.stderr, "ERROR: xlrd & xlwt modules are needed for importing spreadsheets"
+                import sys
+                sys.stderr.write("ERROR: xlrd & xlwt modules are needed for importing spreadsheets\n")
                 return None
 
             from gluon.languages import read_dict, write_dict

@@ -57,20 +57,18 @@ if update_check_needed:
     if warnings:
         # Report (non-fatal) warnings.
         prefix = "\n%s: " % T("WARNING")
-        msg = prefix + prefix.join(warnings)
-        print >> sys.stderr, msg
+        sys.stderr.write("%s%s\n" % (prefix, prefix.join(warnings)))
     if errors:
         # Report errors and stop.
         actionrequired = T("ACTION REQUIRED")
         prefix = "\n%s: " % actionrequired
-        msg = prefix + prefix.join(errors)
-        print >> sys.stderr, msg
+        sys.stderr.write("%s%s\n" % (prefix, prefix.join(errors)))
         htmlprefix = "\n<br /><b>%s</b>: " % actionrequired
         html = "<errors>" + htmlprefix + htmlprefix.join(errors) + "\n</errors>"
         raise HTTP(500, body=html)
 
     # Create or update the canary file.
-    from gluon import portalocker
+    from s3dal import portalocker
     canary = open("applications/%s/models/0000_update_check.py" % appname, "w")
     portalocker.lock(canary, portalocker.LOCK_EX)
 

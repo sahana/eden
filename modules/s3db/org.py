@@ -3178,16 +3178,16 @@ class S3SiteModel(S3Model):
 
         org_site_represent = org_SiteRepresent(show_link=True)
 
-        site_id = self.super_link("site_id", "org_site",
-                                  comment = comment,
-                                  #default = auth.user.site_id if auth.is_logged_in() else None,
-                                  label = org_site_label,
-                                  orderby = "org_site.name",
-                                  #readable = True,
-                                  represent = org_site_represent,
-                                  widget = widget,
-                                  #writable = True,
-                                  )
+        site_id = lambda: self.super_link("site_id", "org_site",
+                                          comment = comment,
+                                          #default = auth.user.site_id if auth.is_logged_in() else None,
+                                          label = org_site_label,
+                                          orderby = "org_site.name",
+                                          #readable = True,
+                                          represent = org_site_represent,
+                                          widget = widget,
+                                          #writable = True,
+                                          )
 
         # Custom Method for S3SiteAutocompleteWidget
         set_method("org", "site",
@@ -4495,7 +4495,7 @@ class S3RoomModel(S3Model):
         #
         tablename = "org_room"
         self.define_table(tablename,
-                          self.org_site_id, # site_id
+                          self.org_site_id(), # site_id
                           Field("name", length=128, notnull=True,
                                 label = T("Name"),
                                 requires = [IS_NOT_EMPTY(),
