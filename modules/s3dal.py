@@ -39,14 +39,17 @@ __all__ = ("Expression",
 
 try:
     from pydal import Field, SQLCustomType
+    from pydal.contrib import portalocker
     from pydal.objects import Expression, Query, Row, Rows, Table
 except ImportError:
     # older web2py
     try:
+        from gluon import portalocker
         from gluon.dal import Field, SQLCustomType
         from gluon.dal.objects import Expression, Query, Row, Rows, Table
     except ImportError:
         # even older web2py
+        from gluon import portalocker
         from gluon.dal import Field, SQLCustomType
         from gluon.dal import Expression, Query, Row, Rows, Table
 

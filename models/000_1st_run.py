@@ -68,7 +68,7 @@ if update_check_needed:
         raise HTTP(500, body=html)
 
     # Create or update the canary file.
-    from gluon import portalocker
+    from s3dal import portalocker
     canary = open("applications/%s/models/0000_update_check.py" % appname, "w")
     portalocker.lock(canary, portalocker.LOCK_EX)
 
