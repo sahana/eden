@@ -175,6 +175,7 @@ class S3DynamicTablesModel(S3Model):
 
     names = ("s3_table",
              "s3_table_id",
+             "s3_table_name",
              "s3_field",
              "s3_field_id",
              )
@@ -397,6 +398,7 @@ class S3DynamicTablesModel(S3Model):
         #
         return {"s3_table_id": table_id,
                 "s3_field_id": field_id,
+                "s3_table_name": self.random_name,
                 }
 
     # -------------------------------------------------------------------------
@@ -420,16 +422,22 @@ class S3DynamicTablesModel(S3Model):
             e.g. schema imports)
 
             @param name: the name currently being written
+
+            NB This isn't called in Web2Py 2.16.1!
+            table.filter_in is always empty in pydal/objects.py
+            _filter_fields_for_operation even though it is there outside that!
         """
 
         table = current.s3db.s3_table
         field = table.name
 
         if not name:
+            current.log.debug("no name")
             return field.default
         elif name == field.default:
             # The name currently being written is the default,
             # => set a new default for subsequent writes
+            current.log.debug("default name")
             field.default = "%s_%s" % (DYNAMIC_PREFIX, cls.random_name())
         return name
 

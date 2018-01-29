@@ -1464,7 +1464,7 @@ class S3ProjectActivityModel(S3Model):
         tablename = "project_activity_activity_type"
         define_table(tablename,
                      activity_id(empty = False,
-                                 ondelete = "CASCADE",
+                                 #ondelete = "CASCADE",
                                  ),
                      self.project_activity_type_id(empty = False,
                                                    ondelete = "CASCADE",
@@ -1814,7 +1814,8 @@ class S3ProjectActivityPersonModel(S3Model):
         tablename = "project_activity_person"
         self.define_table(tablename,
                           self.project_activity_id(empty = False,
-                                                   ondelete = "CASCADE",
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
                                                    ),
                           #self.dvr_case_id(empty = False,
                           #                 ondelete = "CASCADE",
@@ -1883,7 +1884,8 @@ class S3ProjectActivityOrganisationModel(S3Model):
         tablename = "project_activity_organisation"
         define_table(tablename,
                      project_activity_id(empty = False,
-                                         ondelete = "CASCADE",
+                                         # Default:
+                                         #ondelete = "CASCADE",
                                          ),
                      self.org_organisation_id(empty = False,
                                               ondelete = "CASCADE",
@@ -1916,7 +1918,8 @@ class S3ProjectActivityOrganisationModel(S3Model):
         tablename = "project_activity_group"
         define_table(tablename,
                      project_activity_id(empty = False,
-                                         ondelete = "CASCADE",
+                                         # Default:
+                                         #ondelete = "CASCADE",
                                          ),
                      self.org_group_id(empty = False,
                                        ondelete = "CASCADE",
@@ -1956,7 +1959,8 @@ class S3ProjectActivitySectorModel(S3Model):
                                              ondelete = "CASCADE",
                                              ),
                           self.project_activity_id(empty = False,
-                                                   ondelete = "CASCADE",
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
                                                    ),
                           *s3_meta_fields())
 
@@ -2375,7 +2379,8 @@ class S3ProjectBeneficiaryModel(S3Model):
         tablename = "project_beneficiary_activity"
         define_table(tablename,
                      self.project_activity_id(empty = False,
-                                              ondelete = "CASCADE",
+                                              # Default:
+                                              #ondelete = "CASCADE",
                                               ),
                      beneficiary_id(empty = False,
                                     ondelete = "CASCADE",
@@ -4870,8 +4875,10 @@ class S3ProjectPlanningModel(S3Model):
         #
         tablename = "project_indicator_activity_activity"
         define_table(tablename,
-                     indicator_activity_id(),
+                     indicator_activity_id(ondelete = "CASCADE"),
                      self.project_activity_id(empty = False,
+                                              # Default:
+                                              #ondelete = "CASCADE",
                                               ),
                      *s3_meta_fields())
 
@@ -10358,6 +10365,7 @@ class S3ProjectTaskModel(S3Model):
         project_id = self.project_project_id
 
         messages = current.messages
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_components = self.add_components
@@ -11116,10 +11124,13 @@ class S3ProjectTaskModel(S3Model):
                                  future=0
                                  ),
                      Field("hours", "double",
-                           label = "%s (%s)" % (T("Time"),
-                                                T("hours")),
-                           represent=lambda v: \
-                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                           label = T("Effort (Hours)"),
+                           requires = IS_EMPTY_OR(
+                                       IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda hours: "%.2f" % hours if hours else NONE,
+                           widget = S3HoursWidget(precision = 2,
+                                                  ),
+                           ),
                      Field.Method("day", project_time_day),
                      Field.Method("week", project_time_week),
                      s3_comments(),
