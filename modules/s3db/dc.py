@@ -487,8 +487,7 @@ class DataCollectionTemplateModel(S3Model):
             raise
 
         # Create the Dynamic Table
-        table_id = s3db.s3_table.insert(name = "%s_%s" % (DYNAMIC_PREFIX, s3db.s3_table_name()),
-                                        title = title,
+        table_id = s3db.s3_table.insert(title = title,
                                         mobile_form = mobile_form,
                                         mobile_data = mobile_data,
                                         settings = table_settings,
