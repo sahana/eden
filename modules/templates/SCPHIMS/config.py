@@ -132,6 +132,8 @@ def config(settings):
 
     settings.mobile.forms = [("Beneficiaries", "pr_person", {"c": "dvr",
                                                              "data": True,
+                                                             "label": "Beneficiary",
+                                                             "plural": "Beneficiaries",
                                                              "components": (
                                                                  "person_details",
                                                                  "contact",
@@ -793,11 +795,12 @@ def config(settings):
             # Redefine Components to make them 1:1 and add Labels
             s3db.add_components("pr_person",
                                 dvr_case = {"name": "dvr_case",
-                                            "label": "Case",
+                                            "label": "Case Notes",
                                             "joinby": "person_id",
                                             "multiple": False,
                                             },
-                                dvr_household_member = {"plural": "Household Members",
+                                dvr_household_member = {"label": "Household Member",
+                                                        "plural": "Household Members",
                                                         "joinby": "person_id",
                                                         },
                                 pr_address = {"label": "Address",
