@@ -1412,6 +1412,8 @@ class DVRResponseModel(S3Model):
 
         hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
 
+        NONE = current.messages["NONE"]
+
         # ---------------------------------------------------------------------
         # Response Types
         #
@@ -1571,6 +1573,14 @@ class DVRResponseModel(S3Model):
                              ),
                      self.hrm_human_resource_id(),
                      response_status_id(),
+                     Field("hours", "double",
+                           label = T("Effort (Hours)"),
+                           requires = IS_EMPTY_OR(
+                                       IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda hours: "%.2f" % hours if hours else NONE,
+                           widget = S3HoursWidget(precision = 2,
+                                                  ),
+                           ),
                      s3_comments(label = T("Details"),
                                  comment = None,
                                  ),
@@ -1583,6 +1593,7 @@ class DVRResponseModel(S3Model):
                        "human_resource_id",
                        "date_due",
                        "date",
+                       "hours",
                        "status_id",
                        ]
 
