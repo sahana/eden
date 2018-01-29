@@ -1020,9 +1020,9 @@ class S3MobileForm(object):
         # Build strings-dict
         strings = {}
         if label:
-            strings["name"] = s3_str(label)
+            strings["label"] = s3_str(label)
         if plural:
-            strings["namePlural"] = s3_str(plural)
+            strings["plural"] = s3_str(plural)
 
         return strings
 
