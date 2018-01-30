@@ -563,9 +563,10 @@ def config(settings):
             else:
                 result = True
 
+            crud_strings = s3.crud_strings["pr_person"]
+
             archived = r.get_vars.get("archived")
             if archived in ("1", "true", "yes"):
-                crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
 
             if r.controller == "dvr":
@@ -638,6 +639,7 @@ def config(settings):
                                          },
                             }
                         configure(report_options = report_options)
+                        crud_strings["title_report"] = T("Case Statistic")
 
                     if r.interactive and r.method != "import":
 
@@ -1385,6 +1387,8 @@ def config(settings):
             s3db.configure("dvr_case_activity",
                            report_options = report_options,
                            )
+            crud_strings = current.response.s3.crud_strings["dvr_case_activity"]
+            crud_strings["title_report"] = T("Activity Statistic")
 
         if r.interactive or r.representation == "aadata":
 
@@ -1931,6 +1935,8 @@ def config(settings):
             s3db.configure("dvr_response_action",
                            report_options = report_options,
                            )
+            crud_strings = current.response.s3.crud_strings["dvr_response_action"]
+            crud_strings["title_report"] = T("Action Statistic")
 
         if r.interactive or r.representation == "aadata":
 

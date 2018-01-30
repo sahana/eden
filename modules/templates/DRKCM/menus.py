@@ -273,7 +273,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Statistics", c="dvr", link=False)(
                         M("Actions", f="response_action", m="report"),
                         M("Activities", f="case_activity", m="report"),
-                        M("Clients", f="person", m="report", vars={"closed": "0"}),
+                        M("Cases", f="person", m="report", vars={"closed": "0"}),
                         ),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
