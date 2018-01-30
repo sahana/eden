@@ -612,6 +612,33 @@ def config(settings):
 
                     configure_person_tags()
 
+                    if r.method == "report":
+
+                        # Custom Report Options
+                        facts = ((T("Number of Clients"), "count(pe_label)"),
+                                 (T("Number of Actions"), "count(case_activity.response_action.id)"),
+                                 )
+                        axes = ("gender",
+                                "person_details.nationality",
+                                "person_details.marital_status",
+                                "dvr_case.status_id",
+                                "dvr_case.site_id",
+                                "residence_status.status_type_id",
+                                "residence_status.permit_type_id",
+                                )
+
+                        report_options = {
+                            "rows": axes,
+                            "cols": axes,
+                            "fact": facts,
+                            "defaults": {"rows": axes[0],
+                                         "cols": axes[1],
+                                         "fact": facts[0],
+                                         "totals": True,
+                                         },
+                            }
+                        configure(report_options = report_options)
+
                     if r.interactive and r.method != "import":
 
                         from s3 import S3SQLCustomForm, \
@@ -1330,6 +1357,35 @@ def config(settings):
 
         human_resource_id = auth.s3_logged_in_human_resource()
 
+        if r.method == "report":
+
+            # Custom Report Options
+            facts = ((T("Number of Activities"), "count(id)"),
+                     (T("Number of Clients"), "count(person_id$pe_label)"),
+                     )
+            axes = ("person_id$gender",
+                    "person_id$person_details.nationality",
+                    "person_id$person_details.marital_status",
+                    "status_id",
+                    "priority",
+                    "sector_id",
+                    "case_activity_need.need_id",
+                    "response_action.response_type_id",
+                    )
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": "sector_id",
+                             "cols": "person_id$person_details.nationality",
+                             "fact": "count(id)",
+                             "totals": True,
+                             },
+                }
+            s3db.configure("dvr_case_activity",
+                           report_options = report_options,
+                           )
+
         if r.interactive or r.representation == "aadata":
 
             from gluon.sqlhtml import OptionsWidget
@@ -1844,6 +1900,77 @@ def config(settings):
         field.represent = s3db.dvr_CaseActivityRepresent(fmt = fmt,
                                                          show_link = True,
                                                          )
+
+        is_report = r.method == "report"
+
+        if is_report:
+
+            # Custom Report Options
+            facts = ((T("Number of Clients"), "count(case_activity_id$person_id$pe_label)"),
+                     (T("Hours (Average)"), "avg(hours)"),
+                     (T("Hours (Total)"), "sum(hours)"),
+                     (T("Number of Actions"), "count(id)"),
+                     )
+            axes = ("case_activity_id$person_id$gender",
+                    "case_activity_id$person_id$person_details.nationality",
+                    "case_activity_id$person_id$person_details.marital_status",
+                    "case_activity_id$sector_id",
+                    "case_activity_id$case_activity_need.need_id",
+                    "response_type_id",
+                    )
+            report_options = {
+                "rows": axes,
+                "cols": axes,
+                "fact": facts,
+                "defaults": {"rows": "response_type_id",
+                             "cols": "case_activity_id$case_activity_need.need_id",
+                             "fact": "count(id)",
+                             "totals": True,
+                             },
+                }
+            s3db.configure("dvr_response_action",
+                           report_options = report_options,
+                           )
+
+        if r.interactive or r.representation == "aadata":
+
+            # Custom Filter Options
+            from s3 import S3DateFilter, \
+                           S3HierarchyFilter, \
+                           S3OptionsFilter, \
+                           S3TextFilter, \
+                           s3_get_filter_opts
+
+            filter_widgets = [S3TextFilter(
+                                ["case_activity_id$person_id$pe_label",
+                                 "case_activity_id$person_id$first_name",
+                                 "case_activity_id$person_id$middle_name",
+                                 "case_activity_id$person_id$last_name",
+                                 "comments",
+                                 ],
+                                label = T("Search"),
+                                ),
+                              S3OptionsFilter(
+                                "status_id",
+                                options = lambda: \
+                                          s3_get_filter_opts("dvr_response_status"),
+                                          cols = 3,
+                                          translate = True,
+                                          ),
+                              S3DateFilter("date", hidden=not is_report),
+                              S3DateFilter("date_due", hidden=is_report),
+                              S3HierarchyFilter("response_type_id",
+                                                lookup = "dvr_response_type",
+                                                hidden = True,
+                                                ),
+                              S3DateFilter("case_activity_id$person_id$date_of_birth",
+                                           label = T("Client Date of Birth"),
+                                           hidden = True,
+                                           ),
+                              ]
+            s3db.configure("dvr_response_action",
+                           filter_widgets = filter_widgets,
+                           )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 
