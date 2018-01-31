@@ -802,6 +802,7 @@
 'Click on the link %(url)s to verify your email': 'Klicken sie auf den Link %(url)s zum Überprüfen ihrer EMail Adresse',
 'Click where you want to open Streetview': 'Auswahl um Streetview zu öffnen',
 'Client Date of Birth': 'Geburtsdatum Klient',
+'Client Nationality': 'Nationalität Klient',
 'Client Registration': 'Personenregistrierung',
 'Client Reservation': 'Personenreservierung',
 'Client was already checked-in': 'Person war bereits eingecheckt',
