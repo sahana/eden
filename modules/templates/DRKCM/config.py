@@ -1933,7 +1933,8 @@ def config(settings):
         if r.interactive or r.representation == "aadata":
 
             # Custom Filter Options
-            from s3 import S3DateFilter, \
+            from s3 import S3AgeFilter, \
+                           S3DateFilter, \
                            S3HierarchyFilter, \
                            S3OptionsFilter, \
                            S3TextFilter, \
@@ -1965,10 +1966,14 @@ def config(settings):
                                               label = T("Client Nationality"),
                                               hidden = True,
                                               ),
-                              S3DateFilter("case_activity_id$person_id$date_of_birth",
-                                           label = T("Client Date of Birth"),
-                                           hidden = True,
-                                           ),
+                              S3AgeFilter("case_activity_id$person_id$date_of_birth",
+                                          label = T("Client Age"),
+                                          hidden = True,
+                                          )
+                              #S3DateFilter("case_activity_id$person_id$date_of_birth",
+                              #             label = T("Client Date of Birth"),
+                              #             hidden = True,
+                              #             ),
                               ]
             s3db.configure("dvr_response_action",
                            filter_widgets = filter_widgets,
