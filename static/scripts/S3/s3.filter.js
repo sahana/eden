@@ -620,10 +620,16 @@ S3.search = {};
             urlVar = $('#' + id + '-data').val();
             value = $this.val();
 
-            if (value) {
-                // Convert value (years) into a date 10 years ago
+            var years = value - 0;
+            if (value && !isNaN(years)) {
+                if (urlVar.split('__')[1] == 'gt') {
+                    // Age in years is the same until one day before
+                    // the next birthday, so must add one year here:
+                    years += 1;
+                }
+                // Convert years (ago) into a date
                 var dt = new Date();
-                dt.setYear(dt.getFullYear() - value);
+                dt.setYear(dt.getFullYear() - years);
                 // Convert to ISO format
                 dt = dt.getFullYear() + '-' +
                        ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +

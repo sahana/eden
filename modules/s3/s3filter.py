@@ -629,10 +629,10 @@ class S3AgeFilter(S3RangeFilter):
     # Class for visible input boxes.
     _input_class = "%s-%s" % (_class, "input")
 
-    operator = ["le", "ge"]
+    operator = ["le", "gt"]
 
     # Untranslated labels for individual input boxes.
-    input_labels = {"le": "From", "ge": "To"}
+    input_labels = {"le": "", "gt": "To"}
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):
@@ -693,21 +693,25 @@ class S3AgeFilter(S3RangeFilter):
                 input_box["_value"] = value
                 input_box["value"] = value
 
-            ie_append(DIV(DIV(LABEL("%s:" % T(input_labels[operator]),
-                                    _for = input_id,
-                                    ),
-                              _class = "range-filter-label",
-                              ),
+            label = input_labels[operator]
+            if label:
+                label = DIV(LABEL("%s:" % T(input_labels[operator]),
+                                  _for = input_id,
+                                  ),
+                            _class = "age-filter-label",
+                            )
+
+            ie_append(DIV(label,
                           DIV(input_box,
-                              _class = "range-filter-widget",
+                              _class = "age-filter-widget",
                               ),
                           _class = "range-filter-field",
                           ))
 
         ie_append(DIV(LABEL(T("Years")),
-                      _class = "age-filter-label",
+                      _class = "age-filter-unit",
                       # TODO move style into CSS
-                      _style = "float:left;margin-top:1.2rem;vertical-align:text-bottom",
+                      #_style = "float:left;margin-top:1.2rem;vertical-align:text-bottom",
                       ))
 
         return input_elements
