@@ -43,7 +43,7 @@ from itertools import product
 
 from gluon import current
 from gluon.contenttype import contenttype
-from gluon.html import *
+from gluon.html import BUTTON, DIV, FIELDSET, FORM, INPUT, LABEL, LEGEND, TAG, XML
 from gluon.languages import regex_translate
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
@@ -59,7 +59,7 @@ from s3validators import IS_NUMBER
 DEFAULT = lambda: None
 SEPARATORS = (",", ":")
 
-LAYER = re.compile("([a-zA-Z]+)\((.*)\)\Z")
+LAYER = re.compile(r"([a-zA-Z]+)\((.*)\)\Z")
 FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
 SELECTOR = re.compile(r"^[a-zA-Z0-9_.$:\~]+\Z")
 
@@ -561,6 +561,7 @@ class S3ReportForm(object):
     def __init__(self, resource):
 
         self.resource = resource
+        self.show_totals = True
 
     # -------------------------------------------------------------------------
     def html(self,
@@ -584,7 +585,8 @@ class S3ReportForm(object):
 
         # Report options
         report_options = self.report_options(get_vars = get_vars,
-                                             widget_id = widget_id)
+                                             widget_id = widget_id,
+                                             )
 
         # Pivot data
         hidden = {"pivotdata": json.dumps(pivotdata, separators=SEPARATORS)}
@@ -1593,7 +1595,7 @@ class S3PivotTable(object):
             location_ids = []
         else:
             numeric = lambda x: isinstance(x, (int, long, float))
-            row_repr = lambda v: s3_unicode(v)
+            row_repr = s3_unicode
 
             ids = {}
             irows = self.row
@@ -1633,10 +1635,10 @@ class S3PivotTable(object):
                                            ).first()
                         try:
                             _id = row.id
-                            # Cache
-                            ids[rval] = _id
-                        except:
+                        except AttributeError:
                             continue
+                        # Cache
+                        ids[rval] = _id
 
                     attribute = dict(name=s3_unicode(rval),
                                      value=rtotal)
@@ -1892,8 +1894,11 @@ class S3PivotTable(object):
                         items = items_array[layer_index]
                         okeys = None
 
-                        # Build a lookup table for field values if counting
-                        if method in ("count", "list"):
+                        # Build a lookup table for field values if method is
+                        # count (...of something else than ids), or list
+                        expand = method == "count" and \
+                                 rfield.field.represent or rfield.ftype != "id"
+                        if expand or method == "list":
                             keys = []
                             for record_id in cell["records"]:
                                 record = self.records[record_id]
