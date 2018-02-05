@@ -11427,6 +11427,9 @@ class S3ProjectTaskModel(S3Model):
         changed = {}
         if record: # Not True for a record merger
             for var in form_vars:
+                if isinstance(var, Field):
+                    # modified_by/modified_on
+                    continue
                 vvar = form_vars[var]
                 rvar = record[var]
                 if vvar != rvar:
@@ -11459,7 +11462,7 @@ class S3ProjectTaskModel(S3Model):
         post_vars = current.request.post_vars
         if "project_id" in post_vars:
             ltable = db.project_task_project
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             project = post_vars.project_id
             if project:
                 # Create the link to the Project
@@ -11478,14 +11481,14 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             project_id = project,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_project", filter=filter)
+            links = s3db.resource("project_task_project", filter=filter_)
             links.delete()
 
         if "activity_id" in post_vars:
             ltable = db.project_task_activity
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             activity = post_vars.activity_id
             if post_vars.activity_id:
                 # Create the link to the Activity
@@ -11504,14 +11507,14 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             activity_id = activity,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_activity", filter=filter)
+            links = s3db.resource("project_task_activity", filter=filter_)
             links.delete()
 
         if "milestone_id" in post_vars:
             ltable = db.project_task_milestone
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             milestone = post_vars.milestone_id
             if milestone:
                 # Create the link to the Milestone
@@ -11530,9 +11533,9 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             milestone_id = milestone,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_milestone", filter=filter)
+            links = s3db.resource("project_task_milestone", filter=filter_)
             links.delete()
 
         # Notify Assignee
