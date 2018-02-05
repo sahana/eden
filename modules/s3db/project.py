@@ -11427,15 +11427,15 @@ class S3ProjectTaskModel(S3Model):
         changed = {}
         if record: # Not True for a record merger
             for var in form_vars:
+                vvar = form_vars[var]
                 if isinstance(var, Field):
                     # modified_by/modified_on
                     continue
-                vvar = form_vars[var]
                 rvar = record[var]
                 if vvar != rvar:
-                    type = table[var].type
-                    if type == "integer" or \
-                       type.startswith("reference"):
+                    type_ = table[var].type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
                         if vvar:
                             vvar = int(vvar)
                         if vvar == rvar:
