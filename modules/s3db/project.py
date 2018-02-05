@@ -11428,7 +11428,7 @@ class S3ProjectTaskModel(S3Model):
         if record: # Not True for a record merger
             for var in form_vars:
                 vvar = form_vars[var]
-                if isinstance(var, Field):
+                if isinstance(vvar, Field):
                     # modified_by/modified_on
                     continue
                 rvar = record[var]
