@@ -5952,6 +5952,18 @@ class S3LocationSelector(S3Selector):
         return load_levels
 
     # -------------------------------------------------------------------------
+    @property
+    def mobile(self):
+        """
+            Mobile widget settings
+        """
+
+        widget = {"type": "location",
+                  }
+
+        return widget
+
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
         """
             Widget renderer
