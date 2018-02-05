@@ -1,4 +1,0 @@
-First Name,Last Name,Email,Password,Role,Organisation,Home Address,Home Postcode,Home Country,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,Year,Institute,Teams
-Anonymous,(%(org)s),anonymous@%(org_lower)s.com,eden,ANONYMOUS/org_organisation.name=%(org)s,%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,2013,Institute,%(org)s Team
-Authenticated,(%(org)s),authenticated@%(org_lower)s.com,eden,AUTHENTICATED/org_organisation.name=%(org)s,%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,2013,Institute,%(org)s Team
-Org Admin,(%(org)s),org_admin@%(org_lower)s.com,eden,ORG_ADMIN/org_organisation.name=%(org)s,%(org)s,Home Address,Home Postcode,TL,Passport No,Passport Country,Education Level,Degree Name,Major,Grade,2013,Institute,%(org)s Team
