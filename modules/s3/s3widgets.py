@@ -5956,6 +5956,8 @@ class S3LocationSelector(S3Selector):
     def mobile(self):
         """
             Mobile widget settings
+
+            @ToDo: Expose configuration options
         """
 
         widget = {"type": "location",
