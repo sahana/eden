@@ -313,8 +313,8 @@ class DVRCaseModel(S3Model):
 
                      # The primary case beneficiary
                      person_id(represent = self.pr_PersonRepresent(show_link=True),
-                               requires = IS_ADD_PERSON_WIDGET2(),
-                               widget = S3AddPersonWidget2(controller="dvr"),
+                               widget = S3AddPersonWidget(controller="dvr"),
+                               empty = False,
                                ),
 
                      # Case type and reference number

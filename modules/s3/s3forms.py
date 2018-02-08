@@ -51,7 +51,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3query import FS
-from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_unicode, s3_validate
+from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_str, s3_validate
 from s3widgets import S3Selector, S3UploadWidget
 
 # Compact JSON encoding
@@ -587,11 +587,26 @@ class S3SQLDefaultForm(S3SQLForm):
             pkey = table._id.name
             post_vars = request.post_vars
             if not post_vars[pkey]:
+
                 lkey = linked.lkey
                 rkey = linked.rkey
-                _lkey = post_vars[lkey]
-                _rkey = post_vars[rkey]
-                query = (table[lkey] == _lkey) & (table[rkey] == _rkey)
+
+                def parse_key(value):
+                    key = s3_str(value)
+                    if key.startswith("{"):
+                        # JSON-based selector (e.g. S3LocationSelector)
+                        return json.loads(key).get("id")
+                    else:
+                        # Normal selector (e.g. OptionsWidget)
+                        return value
+
+                try:
+                    lkey_ = parse_key(post_vars[lkey])
+                    rkey_ = parse_key(post_vars[rkey])
+                except Exception:
+                    return record_id
+
+                query = (table[lkey] == lkey_) & (table[rkey] == rkey_)
                 row = current.db(query).select(table._id, limitby=(0, 1)).first()
                 if row is not None:
                     tablename = self.tablename
@@ -2499,7 +2514,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     rfields.append(rfield)
 
             headers = [{"name": rfield.fname,
-                        "label": s3_unicode(rfield.label)}
+                        "label": s3_str(rfield.label),
+                        }
                         for rfield in rfields if rfield.fname != pkey]
 
             self.widgets = widgets
@@ -2536,7 +2552,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Virtual Field
                         value = row[colname]
 
-                    text = s3_unicode(record[colname])
+                    text = s3_str(record[colname])
                     # Text representation is only used in read-forms where
                     # representation markup cannot interfere with the inline
                     # form logic - so stripping the markup should not be
@@ -4111,9 +4127,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                             text = s3_represent_value(field,
                                                       value = value,
                                                       strip_markup = True,
-                                                      xml_escape = True)
+                                                      xml_escape = True,
+                                                      )
                         except:
-                            text = s3_unicode(value)
+                            text = s3_str(value)
                     else:
                         value = None
                         text = ""

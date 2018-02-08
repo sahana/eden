@@ -668,7 +668,6 @@ def config(settings):
                 elif r.method == "profile":
 
                     # Customise tables used by widgets
-                    #customise_cms_post_fields()
                     #customise_project_project_fields()
 
                     # gis_location table (Sub-Locations)
@@ -933,7 +932,6 @@ def config(settings):
                 s3db = current.s3db
                 if r.method == "profile":
                     # Customise tables used by widgets
-                    #customise_cms_post_fields()
                     customise_hrm_human_resource_fields()
                     #customise_org_office_fields()
                     customise_project_project_fields()

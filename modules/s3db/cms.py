@@ -37,7 +37,7 @@ __all__ = ("S3ContentModel",
            "cms_index",
            "cms_documentation",
            "cms_rheader",
-           "cms_customise_post_fields",
+           "cms_configure_newsfeed_post_fields",
            "cms_post_list_layout",
            "S3CMS",
            #"cms_Calendar",
@@ -1501,7 +1501,7 @@ class S3CMS(S3Method):
         return output
 
 # =============================================================================
-def cms_customise_post_fields():
+def cms_configure_newsfeed_post_fields():
     """
         Customize cms_post fields for the Newsfeed / Home Pages
     """
@@ -1535,9 +1535,7 @@ def cms_customise_post_fields():
         field.readable = True
         field.writable = True
         field.comment = None
-        # Default now
-        #field.requires = IS_ADD_PERSON_WIDGET2()
-        field.widget = S3AddPersonWidget2(controller="pr")
+        field.widget = S3AddPersonWidget(controller="pr")
 
     field = table.location_id
     field.label = ""

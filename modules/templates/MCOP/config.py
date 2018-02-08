@@ -853,7 +853,6 @@ def config(settings):
                 customise_pr_person_resource(r, "pr_person")
                 customise_event_incident_resource(r, "event_incident")
                 # Customise tables used by widgets
-                #customise_cms_post_fields()
                 #customise_hrm_human_resource_fields()
                 #customise_org_office_fields()
                 s3db.org_customise_org_resource_fields("profile")

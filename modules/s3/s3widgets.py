@@ -524,10 +524,15 @@ class S3AddPersonWidget(FormWidget):
         formfields = []
         fappend = formfields.append
 
+        values = {}
+
         # Organisation ID
         if hrm:
             htable = s3db.hrm_human_resource
-            fields["organisation_id"] = htable.organisation_id
+            f = htable.organisation_id
+            if f.default:
+                values["organisation_id"] = s3_str(f.default)
+            fields["organisation_id"] = f
             fappend("organisation_id")
 
         # ID Label
@@ -612,7 +617,10 @@ class S3AddPersonWidget(FormWidget):
 
         # Gender
         if settings.get_pr_request_gender():
-            fields["gender"] = ptable.gender
+            f = ptable.gender
+            if f.default:
+                values["gender"] = s3_str(f.default)
+            fields["gender"] = f
             fappend("gender")
 
         # Occupation
@@ -635,7 +643,6 @@ class S3AddPersonWidget(FormWidget):
         self.fields = fields
 
         # Extract existing values
-        values = {}
         if value:
             record_id = None
             if isinstance(value, basestring) and not value.isdigit():
@@ -698,7 +705,14 @@ class S3AddPersonWidget(FormWidget):
 
         # Create and return the main input
         attr["_class"] = "hide"
-        attr["requires"] = self.validate
+
+        # Prepend internal validation
+        requires = field.requires
+        if requires:
+            requires = (self.validate, requires)
+        else:
+            requires = self.validate
+        attr["requires"] = requires
 
         return TAG[""](DIV(INPUT(**attr), _class = "hide"), formrows)
 
@@ -890,15 +904,15 @@ class S3AddPersonWidget(FormWidget):
             label = LABEL(label, _for=field_id)
 
             widget = self.get_widget(fname, field)
-            value = s3_str(values.get(fname, ""))
+            value = values.get(fname, "")
             if not widget:
+                value = s3_str(value)
                 widget = INPUT(_id = field_id,
                                _name = fname,
                                _value = value,
                                old_value = value,
                                )
             else:
-                value = values.get(fname, "")
                 widget = widget(field,
                                 value,
                                 requires = None,
@@ -1269,7 +1283,8 @@ class S3AddPersonWidget(FormWidget):
                 continue
             value, error = s3_validate(ptable, f, data[f])
             if error:
-                return (None, error)
+                label = ptable[f].label or f
+                return (None, "%s: %s" % (label, error))
             else:
                 person[f] = value
 
@@ -1323,7 +1338,7 @@ class S3AddPersonWidget(FormWidget):
             details["person_id"] = person_id
             s3db.pr_person_details.insert(**details)
 
-        return (person_id, None)
+        return person_id, None
 
 # =============================================================================
 class S3AddPersonWidget2(FormWidget):

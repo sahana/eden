@@ -1109,8 +1109,7 @@ class S3ProjectActivityModel(S3Model):
                      # Beneficiary could be a person_id
                      # Either way label should be clear
                      self.pr_person_id(label = T("Contact Person"),
-                                       requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
-                                       widget = S3AddPersonWidget2(controller="pr"),
+                                       widget = S3AddPersonWidget(controller="pr"),
                                        ),
                      Field("time_estimated", "double",
                            label = "%s (%s)" % (T("Time Estimate"),
@@ -3640,11 +3639,10 @@ class S3ProjectLocationModel(S3Model):
         tablename = "project_location_contact"
         define_table(tablename,
                      project_location_id(),
-                     self.pr_person_id(
-                        comment = None,
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="pr"),
-                        ),
+                     self.pr_person_id(comment = None,
+                                       widget = S3AddPersonWidget(controller="pr"),
+                                       empty = False,
+                                       ),
                      *s3_meta_fields())
 
         # CRUD Strings

@@ -3168,7 +3168,7 @@ class S3SiteModel(S3Model):
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
         if settings.get_org_site_autocomplete():
-            widget=S3SiteAutocompleteWidget(),
+            widget=S3SiteAutocompleteWidget()
             comment=DIV(_class="tooltip",
                         _title="%s|%s" % (org_site_label,
                                           messages.AUTOCOMPLETE_HELP))
@@ -3194,7 +3194,7 @@ class S3SiteModel(S3Model):
                    method = "search_ac",
                    action = self.site_search_ac)
 
-        # Custom Method for S3AddPersonWidget2
+        # Custom Method for S3AddPersonWidget
         # @ToDo: One for HRMs
         set_method("org", "site",
                    method = "site_contact_person",
@@ -3434,7 +3434,7 @@ class S3SiteModel(S3Model):
     @staticmethod
     def site_contact_person(r, **attr):
         """
-            JSON lookup method for S3AddPersonWidget2
+            JSON lookup method for S3AddPersonWidget
         """
 
         site_id = r.id
@@ -3453,10 +3453,9 @@ class S3SiteModel(S3Model):
                                   limitby=(0, 1)).first()
 
         if person:
-            fake = Storage(id = person.person_id,
-                           tablename = "org_site",
-                           )
-            return s3db.pr_person_lookup(fake, **attr)
+            attr = dict(attr)
+            attr["person_id"] = person.person_id
+            return s3db.pr_person_lookup(r, **attr)
         else:
             current.response.headers["Content-Type"] = "application/json"
             output = json.dumps(None, separators=SEPARATORS)
@@ -6853,7 +6852,7 @@ def org_site_staff_config(r):
 
     # Filter out people which are already staff for this office
     # - this only works for an IS_ONE_OF dropdown
-    # - @ToDo: Pass a flag to pr_search_ac via S3AddPersonWidget2 to do the same thing
+    # - @ToDo: Pass a flag to pr_search_ac via S3AddPersonWidget to do the same thing
     #site_id = record.site_id
     #try:
     #    person_id_field = r.target()[2].person_id
