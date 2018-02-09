@@ -429,10 +429,10 @@ class S3HRModel(S3Model):
                                 ),
                      self.pr_person_id(
                         comment = None,
+                        empty = False,
                         ondelete = "CASCADE",
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="hrm"),
-                     ),
+                        widget = S3AddPersonWidget(controller="hrm"),
+                        ),
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
@@ -612,7 +612,7 @@ class S3HRModel(S3Model):
                                             comment = comment,
                                             )
 
-        # Custom Method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget2
+        # Custom Method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget
         set_method = self.set_method
         set_method("hrm", "human_resource",
                    method = "search_ac",
@@ -1076,7 +1076,7 @@ class S3HRModel(S3Model):
     @staticmethod
     def hrm_search_ac(r, **attr):
         """
-            JSON search method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget2
+            JSON search method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget
             - full name search
             - include Organisation & Job Role in the output
         """
@@ -1182,7 +1182,7 @@ class S3HRModel(S3Model):
     @staticmethod
     def hrm_lookup(r, **attr):
         """
-            JSON lookup method for S3AddPersonWidget2
+            JSON lookup method for S3AddPersonWidget
         """
 
         id = r.id
@@ -4178,8 +4178,7 @@ class S3HRAppraisalModel(S3Model):
                            ),
                      person_id("supervisor_id",
                                label = T("Supervisor"),
-                               requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
-                               widget = S3AddPersonWidget2(),
+                               widget = S3AddPersonWidget(),
                                ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4441,8 +4440,7 @@ class S3HRExperienceModel(S3Model):
                           self.gis_location_id(),
                           person_id("supervisor_id",
                                     label = T("Supervisor"),
-                                    requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
-                                    widget = S3AddPersonWidget2(),
+                                    widget = S3AddPersonWidget(),
                                     ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -7153,7 +7151,7 @@ def hrm_human_resource_controller(extra_filter=None):
     """
         Human Resources Controller, defined in the model for use from
         multiple controllers for unified menus
-         - used for Summary & Profile views, Imports and S3AddPersonWidget2
+         - used for Summary & Profile views, Imports and S3AddPersonWidget
     """
 
     T = current.T

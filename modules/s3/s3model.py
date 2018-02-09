@@ -41,7 +41,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3dal import Table, Field
+from s3dal import Table, Field, original_tablename
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
 from s3validators import IS_ONE_OF
@@ -382,8 +382,8 @@ class S3Model(object):
         s3.all_models_loaded = True
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def define_table(cls, tablename, *fields, **args):
+    @staticmethod
+    def define_table(tablename, *fields, **args):
         """
             Same as db.define_table except that it does not repeat
             a table definition if the table is already defined.
@@ -395,6 +395,34 @@ class S3Model(object):
         else:
             table = db.define_table(tablename, *fields, **args)
         return table
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_aliased(table, alias):
+        """
+            Helper method to get a Table instance with alias; prevents
+            re-instantiation of an already existing alias for the same
+            table (which can otherwise lead to name collisions in PyDAL).
+
+            @param table: the original table
+            @param alias: the alias
+
+            @return: the aliased Table instance
+        """
+
+        db = current.db
+
+        if hasattr(db, alias):
+            aliased = ogetattr(db, alias)
+            if original_tablename(aliased) == original_tablename(table):
+                return aliased
+
+        aliased = table.with_alias(alias)
+        if not hasattr(aliased, "_id"):
+            # Older PyDAL not copying _id attribute
+            aliased._id = aliased[table._id.name]
+
+        return aliased
 
     # -------------------------------------------------------------------------
     # Resource configuration

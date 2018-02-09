@@ -34,7 +34,7 @@ def human_resource():
     """
         HR Controller
         - combined Staff/Volunteers
-        Used for Summary view, Imports and S3AddPersonWidget2
+        Used for Summary view, Imports and S3AddPersonWidget
     """
 
     return s3db.hrm_human_resource_controller()

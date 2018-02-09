@@ -34,7 +34,7 @@ def human_resource():
     """
         HR Controller
         - combined
-        Used for Summary view, Imports, S3AddPersonWidget2 and the service record
+        Used for Summary view, Imports, S3AddPersonWidget and the service record
     """
 
     # Custom method for Service Record
@@ -347,7 +347,7 @@ def staff_org_site_json():
 
 # =============================================================================
 def activity_type():
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -410,7 +410,7 @@ def activity():
             s3db.configure("vol_activity_hours",
                            crud_form = crud_form,
                            )
-        
+
         return True
     s3.prep = prep
 

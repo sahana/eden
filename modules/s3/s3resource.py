@@ -207,9 +207,7 @@ class S3Resource(object):
             if parent.tablename == self.tablename:
                 # Component table same as parent table => must use table alias
                 table_alias = "%s_%s_%s" % (prefix, alias, name)
-                pkey = table._id.name
-                table = table.with_alias(table_alias)
-                table._id = table[pkey]
+                table = s3db.get_aliased(table, table_alias)
 
         self.table = table
         self._alias = table_alias or tablename
@@ -340,8 +338,7 @@ class S3Resource(object):
             table_alias = "%s_%s_%s" % (hook.prefix,
                                         hook.alias,
                                         hook.name)
-            table = hook.table.with_alias(table_alias)
-            table._id = table[table._id.name]
+            table = current.s3db.get_aliased(hook.table, table_alias)
             hook.table = table
         else:
             table_alias = None
@@ -3974,6 +3971,7 @@ class S3Resource(object):
         """
 
         db = current.db
+        get_aliased = current.s3db.get_aliased
 
         left_joins = S3Joins(self.tablename)
 
@@ -4038,13 +4036,13 @@ class S3Resource(object):
                             alias = "%s_%s_%s" % (parent.prefix,
                                                   "linked",
                                                   parent.name)
-                            ktable = db[tn].with_alias(alias)
+                            ktable = get_aliased(db[tn], alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
                         elif tn == field.tablename:
                             prefix, name = field.tablename.split("_", 1)
                             alias = "%s_%s_%s" % (prefix, field.name, name)
-                            ktable = db[tn].with_alias(alias)
+                            ktable = get_aliased(db[tn], alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
                         else:
@@ -4184,13 +4182,13 @@ class S3Resource(object):
                     if parent is not None and \
                        parent.tablename == tn and field.name != fkey:
                         alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
-                        ktable = db[tn].with_alias(alias)
+                        ktable = get_aliased(db[tn], alias)
                         ktable._id = ktable[ktable._id.name]
                         tn = alias
                     elif tn == field.tablename:
                         prefix, name = field.tablename.split("_", 1)
                         alias = "%s_%s_%s" % (prefix, field.name, name)
-                        ktable = db[tn].with_alias(alias)
+                        ktable = get_aliased(db[tn], alias)
                         ktable._id = ktable[ktable._id.name]
                         tn = alias
                     else:

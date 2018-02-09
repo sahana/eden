@@ -585,9 +585,9 @@ class S3AddPersonWidget(FormWidget):
             # Not specified => apply deployment setting
             father_name = settings.get_pr_request_father_name()
         if father_name:
-            field = dtable.father_name
-            i18n["father_name_label"] = field.label
-            fields["father_name"] = field
+            f = dtable.father_name
+            i18n["father_name_label"] = f.label
+            fields["father_name"] = f
             details = True
             fappend("father_name")
 
@@ -596,9 +596,9 @@ class S3AddPersonWidget(FormWidget):
             # Not specified => apply deployment setting
             grandfather_name  = settings.get_pr_request_grandfather_name()
         if grandfather_name:
-            field = dtable.grandfather_name
-            i18n["grandfather_name_label"] = field.label
-            fields["grandfather_name"] = dtable.grandfather_name
+            f = dtable.grandfather_name
+            i18n["grandfather_name_label"] = f.label
+            fields["grandfather_name"] = f
             details = True
             fappend("grandfather_name")
 
