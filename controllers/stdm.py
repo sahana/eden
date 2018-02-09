@@ -35,12 +35,11 @@ def group():
     def prep(r):
         if r.component_name == "group_membership":
 
-            from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2, S3SQLCustomForm
+            from s3 import S3AddPersonWidget, S3SQLCustomForm
 
             table = s3db.pr_group_membership
             f = table.person_id
-            f.requires = IS_ADD_PERSON_WIDGET2()
-            f.widget = S3AddPersonWidget2(controller="stdm")
+            f.widget = S3AddPersonWidget(controller="stdm")
 
             if auth.s3_has_role("INFORMAL_SETTLMENT"):
                 f = table.role_id
@@ -113,7 +112,7 @@ def tenure():
     """ RESTful CRUD controller """
 
     def prep(r):
-        
+
         has_role = auth.s3_has_role
         if has_role("ADMIN"):
             # Unfiltered

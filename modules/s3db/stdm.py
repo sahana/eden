@@ -695,10 +695,9 @@ class S3LocalGovernmentModel(S3Model):
         #
         tablename = "stdm_planner"
         define_table(tablename,
-                     person_id(
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="stdm"),
-                     ),
+                     person_id(empty = False,
+                               widget = S3AddPersonWidget(controller="stdm"),
+                               ),
                      job_title_id(),
                      s3_comments(),
                      *s3_meta_fields()
@@ -722,10 +721,9 @@ class S3LocalGovernmentModel(S3Model):
         #
         tablename = "stdm_surveyor"
         define_table(tablename,
-                     person_id(
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="stdm"),
-                     ),
+                     person_id(empty = False,
+                               widget = S3AddPersonWidget(controller="stdm"),
+                               ),
                      job_title_id(),
                      s3_comments(),
                      *s3_meta_fields()
@@ -762,17 +760,16 @@ class S3LocalGovernmentModel(S3Model):
                                 ),
                      s3_date(label = T("Date of Survey")),
                      person_id("surveyor",
+                               empty = False,
                                label = T("Surveyor"),
-                               # @ToDo: Fix multiple Widgets in a form!
-                               #requires = IS_ADD_PERSON_WIDGET2(),
                                # @ToDo: Filter to Surveyors
-                               #widget = S3AddPersonWidget2(controller="stdm"),
+                               widget = S3AddPersonWidget(controller="stdm"),
                                ),
                      person_id("planner",
+                               empty = False,
                                label = T("Planner"),
-                               #requires = IS_ADD_PERSON_WIDGET2(),
                                # @ToDo: Filter to Planners
-                               #widget = S3AddPersonWidget2(controller="stdm"),
+                               widget = S3AddPersonWidget(controller="stdm"),
                                ),
                      s3_comments(),
                      *s3_meta_fields()
@@ -863,10 +860,9 @@ class S3RuralAgricultureModel(S3Model):
         #
         tablename = "stdm_farmer"
         define_table(tablename,
-                     person_id(
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="stdm"),
-                     ),
+                     person_id(empty = False,
+                               widget = S3AddPersonWidget(controller="stdm"),
+                               ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -1091,15 +1087,14 @@ class S3RuralAgricultureModel(S3Model):
                      #self.super_link("spatial_unit_id", "stdm_spatial_unit"),
                      s3_date(label = T("Enumeration Date")),
                      person_id("enumerator",
+                               empty = False,
                                label = T("Enumerator"),
-                               # @ToDo: Fix multiple Widgets in a form!
-                               #requires = IS_ADD_PERSON_WIDGET2(),
-                               #widget = S3AddPersonWidget2(controller="stdm"),
+                               widget = S3AddPersonWidget(controller="stdm"),
                                ),
                      person_id("respondent",
+                               empty = False,
                                label = T("Respondent"),
-                               #requires = IS_ADD_PERSON_WIDGET2(),
-                               #widget = S3AddPersonWidget2(controller="stdm"),
+                               widget = S3AddPersonWidget(controller="stdm"),
                                ),
                      Field("role", "integer",
                            label = T("Respondent Role"),
@@ -1110,8 +1105,7 @@ class S3RuralAgricultureModel(S3Model):
                            ),
                      person_id("witness",
                                label = T("Witness"),
-                               #requires = IS_ADD_PERSON_WIDGET2(),
-                               #widget = S3AddPersonWidget2(controller="stdm"),
+                               widget = S3AddPersonWidget(controller="stdm"),
                                ),
                      Field("relationship", "integer",
                            label = T("Witness Relationship"),
