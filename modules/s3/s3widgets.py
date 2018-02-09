@@ -3686,8 +3686,13 @@ class S3GroupedOptionsWidget(FormWidget):
             options = options.items()
         none = self.none
         exclude = ("",) if none is not None else ("", None)
+
         options = [(s3_unicode(k) if k is not None else none,
-                    v.flatten() if hasattr(v, "flatten") else s3_unicode(v))
+                    # Not working with multi-byte str components:
+                    #v.flatten()
+                    #    if hasattr(v, "flatten") else s3_unicode(v))
+                    s3_unicode(s3_strip_markup(v.xml()))
+                        if isinstance(v, DIV) else s3_unicode(v))
                    for k, v in options if k not in exclude]
 
         # No options available?
