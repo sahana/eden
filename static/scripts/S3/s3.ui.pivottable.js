@@ -255,8 +255,8 @@
          */
         _renderTable: function() {
 
-            var $el = $(this.element);
-            var container = $el.find('.pt-table').first().empty();
+            var $el = $(this.element),
+                container = $el.find('.pt-table').first().empty();
 
             this.table = null;
 
@@ -266,28 +266,36 @@
             }
 
             if (this.options.renderTable) {
-                var cells = data.cells,
+                var cells = data.cells.slice(0),
                     cols = data.cols,
                     rows = data.rows,
                     total = data.total,
                     labels = data.labels;
 
-                var opts = this.options;
-                var showTotals = opts.showTotals;
-
-                // @todo: explain
-                var singleColumn = false;
-                if (cols.length == 1 && cols[0][4] === null) {
-                    singleColumn = true;
+                var singleRow = false,
+                    singleCol = false,
+                    facts = data.facts;
+                if (facts.length == 1 && facts[0][1] != "list") {
+                    if (rows.length == 1 && rows[0][4] === null) {
+                        singleRow = true;
+                    }
+                    if (cols.length == 1 && cols[0][4] === null) {
+                        singleCol = true;
+                    }
                 }
-                cells = data.cells.slice(0);
-                var i;
-                if (singleColumn && showTotals) {
+
+                var opts = this.options,
+                    showTotals = opts.showTotals,
+                    i;
+
+                if (singleCol && showTotals) {
+                    // Render no columns (totals column only)
                     cols = [];
                     for (i=0; i<rows.length; i++) {
                         cells[i] = [];
                     }
                 } else {
+                    // Filter out the "others" column
                     var notOther = function(cell, cidx) {
                         return cols[cidx][0] != '__other__';
                     };
@@ -299,15 +307,12 @@
                     });
                 }
 
-                // @todo: explain
-                var singleRow = false;
-                if (cols.length == 1 && cols[0][4] === null) {
-                    singleRow = true;
-                }
                 if (singleRow && showTotals) {
+                    // Render no rows (totals row only)
                     rows = [];
                     cells = [];
                 } else {
+                    // Filter out the "others" row
                     cells = cells.filter(function(row, ridx) {
                         return rows[ridx][0] != '__other__';
                     });
@@ -324,15 +329,17 @@
                 // Table header and column labels
                 table.append('thead')
                      .call(this._renderHeader, cols, labels, opts)
-                     .call(this._renderColumns, cols, labels);
+                     .call(this._renderColumns, cols, labels, singleCol);
 
                 // Table rows and cells
-                var pt = this;
-                table.append('tbody')
-                     .call(this._renderRows, pt, rows, cols, labels, cells, opts);
+                if (!singleRow || !showTotals) {
+                    var pt = this;
+                    table.append('tbody')
+                         .call(this._renderRows, pt, rows, cols, labels, cells, opts);
+                }
 
                 // Table footer with totals
-                if (opts.showTotals) {
+                if (showTotals) {
                     table.append('tfoot')
                          .call(this._renderFooter, rows, cols, labels, total);
                 }
@@ -404,7 +411,7 @@
          * @todo: get cols, labels and opts from this or pass in pt?
          * @todo: use dashes in CSS classes instead of underscores
          */
-        _renderColumns: function(thead, cols, labels) {
+        _renderColumns: function(thead, cols, labels, singleCol) {
 
             var columns = thead.append('tr');
 
@@ -415,11 +422,6 @@
                           })
                    .text(labels.rows);
 
-            // Append the column labels
-            var singleColumn = false;
-            if (cols.length == 1 && cols[0][4] === null) {
-                singleColumn = true;
-            }
             columns.selectAll('th.pt-data')
                    .data(cols)
                    .enter()
@@ -428,7 +430,7 @@
                           'class': 'pt-col-label'
                           })
                    .text(function(d) {
-                       if (singleColumn) {
+                       if (singleCol) {
                            return '';
                        } else {
                            return d[4];
@@ -456,11 +458,6 @@
          */
         _renderRows: function(tbody, pt, rows, cols, labels, cells, opts) {
 
-            var singleRow = false;
-            if (rows.length == 1 && rows[0][4] === null) {
-                singleRow = true;
-            }
-
             rows = tbody.selectAll('tr.pt-row')
                         .data(rows)
                         .enter()
@@ -468,14 +465,7 @@
                         .attr('class', function(d, i) { return i % 2 ? 'odd': 'even'; });
 
             // Render the row header
-            rows.append('td')
-                .text(function(d) {
-                    if (singleRow) {
-                        return '';
-                    } else {
-                        return d[4];
-                    }
-                });
+            rows.append('td').text(function(d) { return d[4]; });
 
             // Render the cells in this row
             rows.selectAll('td.pt-cell')

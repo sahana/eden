@@ -412,17 +412,6 @@ def person_search():
     return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------
-def check_duplicates():
-    """
-        Person REST controller
-        - limited to just check_duplicates for use in S3AddPersonWidget2
-        - allows differential access permissions
-    """
-
-    s3.prep = lambda r: r.method == "check_duplicates"
-    return s3_rest_controller(module, "person")
-
-# -----------------------------------------------------------------------------
 def forum():
     """ RESTful CRUD controller """
 

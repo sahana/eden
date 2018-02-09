@@ -440,6 +440,9 @@ class S3MobileSchema(object):
         if not field.writable:
             description["writable"] = False
 
+        if hasattr(field.widget, "mobile"):
+            description["widget"] = field.widget.mobile
+
         # Add required flag if True (False is assumed)
         if self.is_required(field):
             description["required"] = True

@@ -30,6 +30,7 @@
 """
 
 __all__ = ("S3FilterWidget",
+           "S3AgeFilter",
            "S3DateFilter",
            "S3HierarchyFilter",
            "S3LocationFilter",
@@ -568,6 +569,8 @@ class S3RangeFilter(S3FilterWidget):
             @param values: the search values from the URL query
         """
 
+        T = current.T
+
         attr = self.attr
         _class = self._class
         if "_class" in attr and attr["_class"]:
@@ -605,13 +608,111 @@ class S3RangeFilter(S3FilterWidget):
                 input_box["_value"] = value
                 input_box["value"] = value
 
-            ie_append(DIV(
-                        DIV(LABEL(current.T(input_labels[operator] + ":"),
-                                  _for=input_id),
-                            _class="range-filter-label"),
-                        DIV(input_box,
-                            _class="range-filter-widget"),
-                        _class="range-filter-field"))
+            ie_append(DIV(DIV(LABEL("%s:" % T(input_labels[operator]),
+                                    _for = input_id,
+                                    ),
+                              _class = "range-filter-label",
+                              ),
+                          DIV(input_box,
+                              _class = "range-filter-widget",
+                              ),
+                          _class = "range-filter-field",
+                          ))
+
+        return input_elements
+
+# =============================================================================
+class S3AgeFilter(S3RangeFilter):
+
+    _class = "age-filter"
+
+    # Class for visible input boxes.
+    _input_class = "%s-%s" % (_class, "input")
+
+    operator = ["le", "gt"]
+
+    # Untranslated labels for individual input boxes.
+    input_labels = {"le": "", "gt": "To"}
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        T = current.T
+
+        attr = self.attr
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+
+        input_class = self._input_class
+        input_labels = self.input_labels
+        input_elements = DIV()
+        ie_append = input_elements.append
+
+        _id = attr["_id"]
+        _variable = self._variable
+        selector = self.selector
+
+        opts = self.opts
+        minimum = opts.get("minimum", 0)
+        maximum = opts.get("maximum", 120)
+
+        for operator in self.operator:
+
+            input_id = "%s-%s" % (_id, operator)
+
+            # Selectable options
+            input_opts = [OPTION("%s" % i, value=i)
+                          for i in range(minimum, maximum + 1)
+                          ]
+            input_opts.insert(0, OPTION("", value=""))
+
+            # Input Element
+            input_box = SELECT(input_opts,
+                               _id = input_id,
+                               _class = input_class,
+                               )
+
+            variable = _variable(selector, operator)
+
+            # Populate with the value, if given
+            # if user has not set any of the limits, we get [] in values.
+            value = values.get(variable, None)
+            if value not in [None, []]:
+                if type(value) is list:
+                    value = value[0]
+                input_box["_value"] = value
+                input_box["value"] = value
+
+            label = input_labels[operator]
+            if label:
+                label = DIV(LABEL("%s:" % T(input_labels[operator]),
+                                  _for = input_id,
+                                  ),
+                            _class = "age-filter-label",
+                            )
+
+            ie_append(DIV(label,
+                          DIV(input_box,
+                              _class = "age-filter-widget",
+                              ),
+                          _class = "range-filter-field",
+                          ))
+
+        ie_append(DIV(LABEL(T("Years")),
+                      _class = "age-filter-unit",
+                      # TODO move style into CSS
+                      #_style = "float:left;margin-top:1.2rem;vertical-align:text-bottom",
+                      ))
 
         return input_elements
 

@@ -159,8 +159,8 @@ class S3MembersModel(S3Model):
                       self.pr_person_id(
                         comment = None,
                         ondelete = "CASCADE",
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="member"),
+                        widget = S3AddPersonWidget(controller="member"),
+                        empty = False,
                       ),
                       membership_type_id(),
                       # History

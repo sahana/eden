@@ -1308,8 +1308,20 @@ ul.x-tree-root-ct {
     font-size: 85%;
 }
 .range-filter-field {
-    float: left;
-    padding-right: 10px;
+    display: inline-block;
+    margin-right: 0.7rem;
+}
+.age-filter-widget {
+    display: inline-block;
+}
+.age-filter-label{
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+.age-filter-unit {
+    display: inline-block;
+    vertical-align:text-bottom;
+    line-height: normal;
 }
 
 .filter-form td,

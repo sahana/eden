@@ -997,7 +997,7 @@ class PRPersonModel(S3Model):
                                     widget = S3PersonAutocompleteWidget(),
                                     )
 
-        # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget2
+        # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget
         set_method = self.set_method
         set_method("pr", "person",
                    method = "search_ac",
@@ -1504,7 +1504,8 @@ class PRPersonModel(S3Model):
     @staticmethod
     def pr_search_ac(r, **attr):
         """
-            JSON search method for S3PersonAutocompleteWidget and S3AddPersonWidget2
+            JSON search method for S3PersonAutocompleteWidget and
+            S3AddPersonWidget:
             - full name search
         """
 
@@ -1708,20 +1709,27 @@ class PRPersonModel(S3Model):
     @staticmethod
     def pr_person_lookup(r, **attr):
         """
-            JSON lookup method for S3AddPersonWidget2
+            JSON lookup method for S3AddPersonWidget:
+            - extract form data for a match in duplicate list
         """
 
-        record_id = r.id
+        if r.tablename == "org_site":
+            # Coming from site_contact_person
+            site_contact_person = True
+            record_id = attr.get("person_id")
+            resource = current.s3db.resource("pr_person", id=record_id)
+        else:
+            site_contact_person = False
+            record_id = r.id
+            resource = r.resource
 
         current.response.headers["Content-Type"] = "application/json"
 
         get_vars = r.get_vars
-
         if not record_id:
             if get_vars.get("search") == "1":
                 # Allow other URL filters to identify the record
                 # (e.g. pe_id, uuid or pe_label)
-                resource = r.resource
                 resource.load(start=0, limit=2)
                 if len(resource) == 1:
                     # Found exactly one match
@@ -1762,9 +1770,7 @@ class PRPersonModel(S3Model):
                   ]
 
         separate_name_fields = settings.get_pr_separate_name_fields()
-        site_contact_person = r.tablename == "org_site" # Coming from site_contact_person()
-        if separate_name_fields or \
-           site_contact_person:
+        if separate_name_fields or site_contact_person:
             middle_name = separate_name_fields == 3
             fields.extend((ptable.first_name,
                            ptable.middle_name,
@@ -1895,7 +1901,8 @@ class PRPersonModel(S3Model):
     @staticmethod
     def pr_person_check_duplicates(r, **attr):
         """
-            JSON lookup method for S3AddPersonWidget2
+            JSON lookup method for S3AddPersonWidget:
+            - find potential duplicates from the current input data
         """
 
         settings = current.deployment_settings

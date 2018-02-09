@@ -1109,8 +1109,7 @@ class S3ProjectActivityModel(S3Model):
                      # Beneficiary could be a person_id
                      # Either way label should be clear
                      self.pr_person_id(label = T("Contact Person"),
-                                       requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
-                                       widget = S3AddPersonWidget2(controller="pr"),
+                                       widget = S3AddPersonWidget(controller="pr"),
                                        ),
                      Field("time_estimated", "double",
                            label = "%s (%s)" % (T("Time Estimate"),
@@ -3640,11 +3639,10 @@ class S3ProjectLocationModel(S3Model):
         tablename = "project_location_contact"
         define_table(tablename,
                      project_location_id(),
-                     self.pr_person_id(
-                        comment = None,
-                        requires = IS_ADD_PERSON_WIDGET2(),
-                        widget = S3AddPersonWidget2(controller="pr"),
-                        ),
+                     self.pr_person_id(comment = None,
+                                       widget = S3AddPersonWidget(controller="pr"),
+                                       empty = False,
+                                       ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -11428,11 +11426,14 @@ class S3ProjectTaskModel(S3Model):
         if record: # Not True for a record merger
             for var in form_vars:
                 vvar = form_vars[var]
+                if isinstance(vvar, Field):
+                    # modified_by/modified_on
+                    continue
                 rvar = record[var]
                 if vvar != rvar:
-                    type = table[var].type
-                    if type == "integer" or \
-                       type.startswith("reference"):
+                    type_ = table[var].type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
                         if vvar:
                             vvar = int(vvar)
                         if vvar == rvar:
@@ -11459,7 +11460,7 @@ class S3ProjectTaskModel(S3Model):
         post_vars = current.request.post_vars
         if "project_id" in post_vars:
             ltable = db.project_task_project
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             project = post_vars.project_id
             if project:
                 # Create the link to the Project
@@ -11478,14 +11479,14 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             project_id = project,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_project", filter=filter)
+            links = s3db.resource("project_task_project", filter=filter_)
             links.delete()
 
         if "activity_id" in post_vars:
             ltable = db.project_task_activity
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             activity = post_vars.activity_id
             if post_vars.activity_id:
                 # Create the link to the Activity
@@ -11504,14 +11505,14 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             activity_id = activity,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_activity", filter=filter)
+            links = s3db.resource("project_task_activity", filter=filter_)
             links.delete()
 
         if "milestone_id" in post_vars:
             ltable = db.project_task_milestone
-            filter = (ltable.task_id == task_id)
+            filter_ = (ltable.task_id == task_id)
             milestone = post_vars.milestone_id
             if milestone:
                 # Create the link to the Milestone
@@ -11530,9 +11531,9 @@ class S3ProjectTaskModel(S3Model):
                     link_id = ltable.insert(task_id = task_id,
                                             milestone_id = milestone,
                                             )
-                filter = filter & (ltable.id != link_id)
+                filter_ = filter_ & (ltable.id != link_id)
             # Remove any other links
-            links = s3db.resource("project_task_milestone", filter=filter)
+            links = s3db.resource("project_task_milestone", filter=filter_)
             links.delete()
 
         # Notify Assignee

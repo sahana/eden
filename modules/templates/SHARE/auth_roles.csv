@@ -1,0 +1,4 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+REQUEST_LOGGER,Request Logger,,,,req_req_item,,CREATE|READ|UPDATE,,,,,
+REQUEST_LOGGER,Request Logger,,,,req_req,,CREATE|READ|UPDATE,,,,,
+REQUEST_SUPERVISOR,Request Supervisor,,,,req_req,,CREATE|READ|UPDATE|DELETE,,,,,

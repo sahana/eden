@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, IS_NOT_EMPTY
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import S3CustomController
+from s3 import S3CustomController
+
+from templates.Philippines.config import req_customise_commit_fields, \
+                                         req_customise_req_fields, \
+                                         req_req_list_layout, \
+                                         req_commit_list_layout
 
 THEME = "Philippines"
 
@@ -26,10 +31,10 @@ class index(S3CustomController):
         # Latest 4 Requests
         s3db = current.s3db
         list_id = "latest_reqs"
-        layout = s3db.req_req_list_layout
+        layout = req_req_list_layout
         limit = 4
         resource = s3db.resource("req_req")
-        s3db.req_customise_req_fields()
+        req_customise_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
         from s3.s3query import FS
         resource.add_filter(FS("cancel") != True)
@@ -39,11 +44,11 @@ class index(S3CustomController):
 
         # Latest 4 Offers
         list_id = "latest_offers"
-        layout = s3db.req_commit_list_layout
+        layout = req_commit_list_layout
         #limit = 4
 
         resource = s3db.resource("req_commit")
-        s3db.req_customise_commit_fields()
+        req_customise_commit_fields()
         list_fields = s3db.get_config("req_commit", "list_fields")
         resource.add_filter(FS("cancel") != True)
         # Order with most recent first

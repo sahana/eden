@@ -274,6 +274,7 @@
                 opts = this.options;
 
             this._unbindEvents();
+            this.pendingAC = false;
 
             // Autocomplete throbber
             var throbber = this.throbber;
@@ -299,8 +300,16 @@
                     this.data = {'id': value};
                     this._serialize();
                 }
-                this._disableInputs();
-                this._toggleActions({cancel: false});
+                if (this.data.id) {
+                    // Disable input if we have a valid ID
+                    this._disableInputs();
+                    this._toggleActions({cancel: false});
+                } else {
+                    // We have some input data, but no ID
+                    // => probably a validation error, so leave editable
+                    this._enableAutocomplete();
+                    this._toggleActions({edit: false});
+                }
             } else {
                 this._serialize();
                 this._enableAutocomplete();
@@ -630,6 +639,13 @@
 
             var previous = this.previousSelection;
 
+            // Cancel pending AC
+            if (this.pendingAC) {
+                this.pendingAC.abort();
+                this.pendingAC = false;
+                this.throbber.hide();
+            }
+
             if (previous && Object.values(previous).length) {
 
                 this.data = $.extend({}, this.previousSelection);
@@ -739,7 +755,10 @@
 
                 source: function(request, response) {
                     // Patch the source so that we can handle "None of the above"
-                    $.ajax({
+                    if (self.pendingAC) {
+                        self.pendingAC.abort();
+                    }
+                    self.pendingAC = $.ajax({
                         url: self.acURL,
                         data: {
                             term: request.term

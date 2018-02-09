@@ -7,6 +7,8 @@ S3.search = {};
 // Module pattern to hide internal vars
 (function() {
 
+    "use strict";
+
     /**
      * Rewrite the Ajax options for a filtered GET, converting into a POST
      *
@@ -222,8 +224,8 @@ S3.search = {};
         if (!value) {
             return value;
         }
-        var values = [];
-        var quote = false;
+        var values = [],
+            quote = false;
         for (var idx=0, i=0; i < value.length; i++) {
             var c = value[i];
             values[idx] = values[idx] || '';
@@ -249,14 +251,17 @@ S3.search = {};
     var clearFilters = function(form) {
 
         // If no form has been specified, find the first one
-        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
+        if (undefined === form) {
+            form = $('body').find('form.filter-form').first();
+        }
 
         // Temporarily disable auto-submit
         form.data('noAutoSubmit', 1);
 
-        form.find('.text-filter').each(function() {
-            $(this).val('');
-        });
+        // Clear text filters
+        form.find('.text-filter').val('');
+
+        // Clear option/location filters
         form.find('.options-filter, .location-filter').each(function() {
             var $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
@@ -279,6 +284,8 @@ S3.search = {};
                 hierarchical_location_change(this);
             }
         });
+
+        // Clear map filters
         form.find('.map-filter').each(function() {
             var $this = $(this);
             $this.val('');
@@ -291,9 +298,11 @@ S3.search = {};
                 polygonButton.items[0].btnEl.dom.click();
             }
         });
-        form.find('.range-filter-input').each(function() {
-            $(this).val('');
-        });
+
+        // Clear range filters
+        form.find('.range-filter-input').val('');
+
+        // Clear date filters
         form.find('.date-filter-input').each(function() {
             var $this = $(this);
             $this.calendarWidget('clear');
@@ -303,10 +312,14 @@ S3.search = {};
                 $(this).trigger('clear');
             });
         });
-        // Hierarchy filter widget (experimental)
+
+        // Clear hierarchy filters
         form.find('.hierarchy-filter').each(function() {
             $(this).hierarchicalopts('reset');
         });
+
+        // Clear age filters
+        form.find('.age-filter-input').val('');
 
         // Other widgets go here
 
@@ -376,7 +389,7 @@ S3.search = {};
                     }
                 }
                 if (match == "any") {
-                    queries.push([urlVar, anyValue.join(',')])
+                    queries.push([urlVar, anyValue.join(',')]);
                 }
             } else {
                 queries.push([urlVar, null]);
@@ -446,7 +459,7 @@ S3.search = {};
         // Map widgets
         form.find('.map-filter').each(function() {
 
-            $this = $(this),
+            $this = $(this);
             id = $this.attr('id');
             urlVar = $('#' + id + '-data').val();
             value = $this.val();
@@ -461,7 +474,7 @@ S3.search = {};
         // Numerical range widgets -- each widget has two inputs.
         form.find('.range-filter-input:visible').each(function() {
 
-            $this = $(this),
+            $this = $(this);
             id = $this.attr('id');
             urlVar = $('#' + id + '-data').val();
             value = $this.val();
@@ -476,8 +489,8 @@ S3.search = {};
         // Date(time) range widgets -- each widget has two inputs.
         form.find('.date-filter-input:visible').each(function() {
 
-            $this = $(this),
-            id = $this.attr('id'),
+            $this = $(this);
+            id = $this.attr('id');
             urlVar = $('#' + id + '-data').val();
             value = $this.val();
 
@@ -599,6 +612,34 @@ S3.search = {};
             }
         });
 
+        // Age filter widgets -- each widget has two inputs.
+        form.find('.age-filter-input:visible').each(function() {
+
+            $this = $(this);
+            id = $this.attr('id');
+            urlVar = $('#' + id + '-data').val();
+            value = $this.val();
+
+            var years = value - 0;
+            if (value && !isNaN(years)) {
+                if (urlVar.split('__')[1] == 'gt') {
+                    // Age in years is the same until one day before
+                    // the next birthday, so must add one year here:
+                    years += 1;
+                }
+                // Convert years (ago) into a date
+                var dt = new Date();
+                dt.setYear(dt.getFullYear() - years);
+                // Convert to ISO format
+                dt = dt.getFullYear() + '-' +
+                       ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                       ('0' + dt.getDate()).slice(-2);
+                queries.push([urlVar, dt]);
+            } else {
+                queries.push([urlVar, null]);
+            }
+        });
+
         // Other widgets go here...
 
         // return queries to caller
@@ -613,7 +654,9 @@ S3.search = {};
      */
     var setCurrentFilters = function(form, queries) {
 
-        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
+        if (undefined === form) {
+            form = $('body').find('form.filter-form').first();
+        }
 
         // Temporarily disable auto-submit
         form.data('noAutoSubmit', 1);
@@ -654,6 +697,7 @@ S3.search = {};
                 values = q[expression];
                 value = '';
                 if (values) {
+                    var v;
                     for (i=0, len=values.length; i < len; i++) {
                         v = values[i];
                         if (!v) {
@@ -733,14 +777,15 @@ S3.search = {};
                     toggleAdvanced(form);
                 }
                 values = q[expression];
+                var map_id;
                 if (values) {
                     $this.val(values[0]);
-                    var map_id = id + '-map';
+                    map_id = id + '-map';
                     // Display the Polygon
                     S3.gis.maps[map_id].s3.polygonButtonLoaded();
                 } else {
                     $this.val('');
-                    var map_id = id + '-map';
+                    map_id = id + '-map';
                     // Hide the Polygon
                     S3.gis.maps[map_id].s3.layerRefreshed();
                 }
@@ -885,7 +930,7 @@ S3.search = {};
 
                 var qstr = url_parts[1];
                 var a = qstr.split('&'), b, c;
-                for (i=0; i<a.length; i++) {
+                for (var i=0; i<a.length; i++) {
                     b = a[i].split('=');
                     if (b.length > 1) {
                         c = decodeURIComponent(b[0]);
@@ -1007,6 +1052,8 @@ S3.search = {};
                         // Standard SELECT
                         // (which could be the hidden one in an s3.ui.groupedopts.widget.js)
 
+                        var noopt = widget.siblings('.no-options-available');
+
                         // Update HTML
                         if (newopts.hasOwnProperty('empty')) {
 
@@ -1026,7 +1073,6 @@ S3.search = {};
                             }
 
                             // Show the no-opts
-                            var noopt = widget.siblings('.no-options-available');
                             if (noopt.length) {
                                 noopt.html(newopts.empty);
                                 noopt.removeClass('hide').show();
@@ -1035,10 +1081,10 @@ S3.search = {};
                         } else {
 
                             var selected = widget.val(),
-                                s=[], opts='', group, item, value, label, tooltip;
+                                s=[], opts='', group, item, value, label, tooltip, i, len;
 
                             if (newopts.hasOwnProperty('groups')) {
-                                for (var i=0, len=newopts.groups.length; i < len; i++) {
+                                for (i=0, len=newopts.groups.length; i < len; i++) {
                                     group = newopts.groups[i];
                                     if (group.label) {
                                         opts += '<optgroup label="' + group.label + '">';
@@ -1063,7 +1109,7 @@ S3.search = {};
                                 }
 
                             } else {
-                                for (var i=0, len=newopts.length; i < len; i++) {
+                                for (i=0, len=newopts.length; i < len; i++) {
                                     item = newopts[i];
                                     value = item[0];
                                     if (null === value) {
@@ -1086,7 +1132,6 @@ S3.search = {};
                             }
 
                             // Hide the no-opts
-                            var noopt = widget.siblings('.no-options-available');
                             if (noopt.length) {
                                 noopt.hide();
                             }
@@ -1108,18 +1153,18 @@ S3.search = {};
                     }
 
                 } else if (widget.hasClass('date-filter')) {
-                    var min = newopts.min;
-                    var max = newopts.max;
-                    $('#' + filter_id + '-ge').calendarWidget('instance').option('minDateTime', min)
-                                                                         .option('maxDateTime', max)
-                                                                         .refresh();
-                    $('#' + filter_id + '-le').calendarWidget('instance').option('minDateTime', min)
-                                                                         .option('maxDateTime', max)
-                                                                         .refresh();
-                    widget.find('.range-picker').each(function() {
-                        var ts = newopts.ts;
-                        $(this).trigger('resize', [min, max, ts]);
-                    });
+                    var min = newopts.min,
+                        max = newopts.max;
+                    $('#' + filter_id + '-ge').calendarWidget('instance')
+                                              .option('minDateTime', min)
+                                              .option('maxDateTime', max)
+                                              .refresh();
+                    $('#' + filter_id + '-le').calendarWidget('instance')
+                                              .option('minDateTime', min)
+                                              .option('maxDateTime', max)
+                                              .refresh();
+                    widget.find('.range-picker')
+                          .trigger('resize', [min, max, newopts.ts]);
                 } else {
                     // @todo: other filter types (e.g. S3LocationFilter)
                 }
@@ -1154,6 +1199,7 @@ S3.search = {};
                 callback.apply();
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
+            var msg;
             if (errorThrown == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
             } else {
@@ -1214,7 +1260,7 @@ S3.search = {};
 
             target_data = targets[target_id];
 
-            needs_reload = target_data['needs_reload'];
+            needs_reload = target_data.needs_reload;
             if (visible) {
                 if (needs_reload) {
                     // reload immediately
@@ -1237,24 +1283,22 @@ S3.search = {};
             target_data = targets[target_id];
             t = $('#' + target_id);
             if (t.hasClass('dl')) {
-                t.datalist('ajaxReload', target_data['queries']);
+                t.datalist('ajaxReload', target_data.queries);
             } else if (t.hasClass('dataTable')) {
                 // Refresh Data
                 var dt = t.dataTable(),
-                    dtAjaxURL = target_data['ajaxurl'];
+                    dtAjaxURL = target_data.ajaxurl;
                 dt.fnReloadAjax(dtAjaxURL);
                 updateFormatURLs(dt, queries);
-                $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                    $(this).val(dtAjaxURL);
-                });
+                $('#' + dt[0].id + '_dataTable_filterURL').val(dtAjaxURL);
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('gi-container')) {
-                t.groupedItems('reload', null, target_data['queries']);
+                t.groupedItems('reload', null, target_data.queries);
             } else if (t.hasClass('pt-container')) {
-                t.pivottable('reload', null, target_data['queries']);
+                t.pivottable('reload', null, target_data.queries);
             } else if (t.hasClass('tp-container')) {
-                t.timeplot('reload', null, target_data['queries']);
+                t.timeplot('reload', null, target_data.queries);
             }
         }
     };
@@ -1326,7 +1370,7 @@ S3.search = {};
     var setup_hidden_widget = function(form, widget, queries) {
         var ajaxurl;
         if (undefined === queries) {
-            queries = getCurrentFilters($('#' + form))
+            queries = getCurrentFilters($('#' + form));
         }
         if (!pendingTargets.hasOwnProperty(form)) {
             pendingTargets[form] = {};
@@ -1348,7 +1392,7 @@ S3.search = {};
             var config = $('input#' + widget + '_configurations');
             if (config.length) {
                 var settings = JSON.parse($(config).val());
-                ajaxurl = settings['ajaxUrl'];
+                ajaxurl = settings.ajaxUrl;
                 if (typeof ajaxurl != 'undefined') {
                     ajaxurl = filterURL(ajaxurl, queries);
                 } else {
@@ -1363,7 +1407,7 @@ S3.search = {};
             ajaxurl: ajaxurl,
             queries: queries
         };
-    }
+    };
 
     // Pass to global scope to be called by external scripts (e.g. WACOP)
     S3.search.setup_hidden_widget = setup_hidden_widget;
@@ -1396,11 +1440,11 @@ S3.search = {};
         if (maps_len) {
             // Check that Maps JS is Loaded
             $.when(jsLoaded()).then(
-                function(status) {
+                function() {
                     // Success: Instantiate Maps
                     var gis = S3.gis;
                     for (var i=0; i < maps_len; i++) {
-                        var map_id = maps[i].attributes['id'].value;
+                        var map_id = maps[i].attributes.id.value;
                         if (undefined === gis.maps[map_id]) {
                             // Instantiate the map (can't be done when the DIV is hidden)
                             var options = gis.options[map_id];
@@ -1428,7 +1472,7 @@ S3.search = {};
                .each(function() {
             recalcResponsive(this);
         });
-    }
+    };
 
     // Pass to global scope to be called by external scripts (e.g. WACOP)
     S3.search.unhide_section = unhide_section;
@@ -1496,7 +1540,7 @@ S3.search = {};
             var map = maps[i];
             if (!map.hidden) {
                 var gis = S3.gis;
-                var map_id = map.attributes['id'].value;
+                var map_id = map.attributes.id.value;
                 if (undefined === gis.maps[map_id]) {
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
@@ -1539,11 +1583,14 @@ S3.search = {};
             base = name.slice(0, -1),
             level = parseInt(name.slice(-1)),
             $widget = $('#' + name),
-            values = $widget.val();
+            values = $widget.val(),
+            next_widget,
+            select,
+            l;
         if (!values) {
             // Clear the values from all subsequent widgets
-            for (var l = level + 1; l <= 5; l++) {
-                var select = $('#' + base + l);
+            for (l = level + 1; l <= 5; l++) {
+                select = $('#' + base + l);
                 if (select.length) {
                     select.html('');
                     if (select.hasClass('groupedopts-filter-widget') &&
@@ -1560,7 +1607,7 @@ S3.search = {};
             }
             // Hide all subsequent widgets
             // Hide the next widget down
-            var next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
+            next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
             if (next_widget.length) {
                 next_widget.hide();
                 // Hide the next widget down
@@ -1603,12 +1650,14 @@ S3.search = {};
             S3[fn]();
             $next.next('.ui-multiselect').show();
 
-            var hierarchy = S3.location_filter_hierarchy;
+            var hierarchy = S3.location_filter_hierarchy,
+                location_name_l10n,
+                translate;
             if (S3.location_name_l10n != undefined) {
-                var translate = true;
-                var location_name_l10n = S3.location_name_l10n;
+                translate = true;
+                location_name_l10n = S3.location_name_l10n;
             } else {
-                var translate = false;
+                translate = false;
             }
             // Initialise vars in a way in which we can access them via dynamic names
             widget.options1 = [];
@@ -1650,18 +1699,17 @@ S3.search = {};
                                         //if (typeof(thatHierarchy[thatOpt]) === 'object') {
                                         //}
                                     }
-                            }
+                                }
                             }
                         }
                     }
                 }
-            }
+            };
             // Recursive Function to populate the lists which will populate the widget options
             var showOptions = function(thisHierarchy, thisLevel) {
                 var i,
                     nextLevel,
                     thisOpt,
-                    thatHierarchy,
                     theseValues = $('#' + base + thisLevel).val();
                 for (thisOpt in thisHierarchy) {
                     if (thisHierarchy.hasOwnProperty(thisOpt)) {
@@ -1698,24 +1746,23 @@ S3.search = {};
                         }
                     }
                 }
-            }
+            };
             // Start with the base Hierarchy level
             var _hierarchy = hierarchy['L' + hierarchy_level];
             showOptions(_hierarchy, hierarchy_level);
 
             // Populate the widget options from the lists
-            var name,
-                name_l10n,
+            var name_l10n,
                 options,
                 htmlOptions;
-            for (var l = new_level; l <= 5; l++) {
-                var select = $('#' + base + l);
+            for (l = new_level; l <= 5; l++) {
+                select = $('#' + base + l);
                 if (select.length) {
                     options = widget['options' + l];
                     // @ToDo: Sort by name_l10n not by name
                     options.sort();
                     htmlOptions = '';
-                    for (i in options) {
+                    for (var i in options) {
                         if (options.hasOwnProperty(i)) {
                             name = options[i];
                             if (translate) {
@@ -1743,7 +1790,7 @@ S3.search = {};
                             select.next('button').removeClass('hidden').show();
                             // Hide all subsequent widgets
                             // Select the next widget down
-                            var next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
+                            next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
                             if (next_widget.length) {
                                 // Don't hide the immediate next one
                                 //next_widget.hide();
@@ -1831,7 +1878,7 @@ S3.search = {};
                     config = $('input#' + targets[i] + '_configurations');
                     if (config.length) {
                         settings = JSON.parse($(config).val());
-                        ajaxurl = settings['ajaxUrl'];
+                        ajaxurl = settings.ajaxUrl;
                         if (typeof ajaxurl != 'undefined') {
                             ajaxurl = filterURL(ajaxurl, queries);
                         } else {
@@ -1894,9 +1941,7 @@ S3.search = {};
                         dtAjaxURL = dt_ajaxurl[target_id];
                     dt.fnReloadAjax(dtAjaxURL);
                     updateFormatURLs(dt, queries);
-                    $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                        $(this).val(dtAjaxURL);
-                    });
+                    $('#' + dt[0].id + '_dataTable_filterURL').val(dtAjaxURL);
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('gi-container')) {
@@ -1927,7 +1972,7 @@ S3.search = {};
                 widget.removeClass('hide')
                         .show()
                         .find(selectors).each( function() {
-                            selector = $(this);
+                            var selector = $(this);
                             // Mark them as Active
                             selector.addClass('active');
                             // Refresh the contents
@@ -1976,7 +2021,7 @@ S3.search = {};
 
             var target = $(this).find('input.filter-submit-target').val();
             if (target) {
-                targets = target.split(' ');
+                var targets = target.split(' ');
                 if (targets.length && $.inArray(targetID + '', targets) != -1) {
                     S3.search.ajaxUpdateOptions(this, callback);
                 }
@@ -2050,7 +2095,7 @@ S3.search = {};
         $('.text-filter, .range-filter-input').on('input.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
-        $('.options-filter, .location-filter, .date-filter-input, .map-filter').on('change.autosubmit', function () {
+        $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter').on('change.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
         $('.hierarchy-filter').on('select.s3hierarchy', function() {
@@ -2059,7 +2104,7 @@ S3.search = {};
         $('.map-filter').each(function() {
             var $this = $(this);
             $.when(jsLoaded()).then(
-                function(status) {
+                function() {
                     // Success: Add Callbacks
                     var widget_name = $this.attr('id'),
                         widget = $('#' + widget_name),
@@ -2076,12 +2121,12 @@ S3.search = {};
                         wkt = new OpenLayers.Format.WKT(out_options).write(feature);
                         // Store the data & trigger the autosubmit
                         widget.val('"' + wkt + '"').trigger('change');
-                    }
+                    };
                     s3.polygonButtonOff = function() {
                         // Clear the data & trigger the autosubmit
                         widget.val('').trigger('change');
-                    }
-                    s3.layerRefreshed = function(layer) {
+                    };
+                    s3.layerRefreshed = function() {
                         var polygonButton = s3.polygonButton;
                         if (polygonButton && polygonButton.getIconClass() == 'drawpolygonclear-off') {
                             // Hide the Polygon
@@ -2095,7 +2140,7 @@ S3.search = {};
                             polygonButton.control.deactivate();
                             polygonButton.items[0].pressed = true;
                         }
-                    }
+                    };
                     s3.polygonButtonLoaded = function() {
                         wkt = widget.val();
                         if (wkt) {
@@ -2114,7 +2159,7 @@ S3.search = {};
                             s3.lastDraftFeature = feature;
                             map.zoomToExtent(draftLayer.getDataExtent());
                         }
-                    }
+                    };
                     s3.polygonButtonLoaded();
                 },
                 function(status) {
@@ -2135,17 +2180,19 @@ S3.search = {};
             var $this = $(this);
             var fmt = $this.data('fmt');
             var minValue = $this.data('min');
+            var minDate;
             if (minValue) {
-                var minDate = moment(minValue);
+                minDate = moment(minValue);
             } else {
-                var minDate = moment().subtract(5, 'minutes');
+                minDate = moment().subtract(5, 'minutes');
                 $this.data('min', minDate.format());
             }
-            var maxValue = $this.data('max');
+            var maxValue = $this.data('max'),
+                maxDate;
             if (maxValue) {
-                var maxDate = moment(maxValue);
+                maxDate = moment(maxValue);
             } else {
-                var maxDate = moment().subtract(5, 'minutes');
+                maxDate = moment().subtract(5, 'minutes');
                 $this.data('max', maxDate.format());
             }
             var widget_name = $this.parent().attr('id');
@@ -2173,13 +2220,13 @@ S3.search = {};
                     year = new_year;
                     i++;
                 }
-                years[i]['months'].push(optDate.format(cfmt));
+                years[i].months.push(optDate.format(cfmt));
                 optDate.add(1, 'month');
             }
             for (i = 0; i < years.length; i++) {
                 year = years[i];
-                months = year['months'];
-                year = year['year'];
+                months = year.months;
+                year = year.year;
                 optgroups += '<optgroup label="' + year + '">';
                 for (j = 0; j < months.length; j++) {
                     optgroups += '<option value="' + months[j] + '">' + months[j] + '</option>';
@@ -2270,7 +2317,7 @@ S3.search = {};
                               '<div class="pt-tooltip-text">' + point.y + '</div>' +
                               '</div>';
                 return tooltip;
-            }
+            };
             rangePicker.graph = function() {
                 nv.addGraph(function() {
                     var chart = nv.models.lineChart()
@@ -2299,7 +2346,7 @@ S3.search = {};
                       .call(chart);          // Finally, render the chart!
 
                     // Update the chart when window resizes.
-                    nv.utils.windowResize(function() { chart.update() });
+                    nv.utils.windowResize(function() { chart.update(); });
                     return chart;
                 });
             };
@@ -2318,11 +2365,11 @@ S3.search = {};
                 endDate;
 
             // If the slider is updated then update the INPUTs & trigger a form refresh
-            $this.on('update', function(e) {
+            $this.on('update', function() {
                 values = rangePicker.getSelectValue();
-                totalPosition = values['totalWidth'];
-                startValue = values['start'];
-                endValue = values['end'];
+                totalPosition = values.totalWidth;
+                startValue = values.start;
+                endValue = values.end;
                 minDate = new Date($this.data('min'));
                 maxDate = new Date($this.data('max'));
                 offset = maxDate - minDate;
@@ -2336,7 +2383,7 @@ S3.search = {};
             });
 
             // If the Coarse Filters are updated then update the slider min/max & the INPUTs & trigger a form refresh
-            coarseStart.on('change', function(e) {
+            coarseStart.on('change', function() {
                 minDate = moment($(this).val(), cfmt);
                 $this.data('min', minDate.format());
                 startDate = minDate.format(fmt);
@@ -2345,7 +2392,7 @@ S3.search = {};
                 startField.val(startDate);
                 $this.closest('form').trigger('optionChanged');
             });
-            coarseEnd.on('change', function(e) {
+            coarseEnd.on('change', function() {
                 maxDate = moment($(this).val(), cfmt).endOf('month');
                 $this.data('max', maxDate.format());
                 endDate = maxDate.format(fmt);
@@ -2377,16 +2424,16 @@ S3.search = {};
                     endValue = '100%';
                 }
                 rangePicker.updatePosition(endValue, startValue);
-            };
-            startField.on('change', function(e) {
+            }
+            startField.on('change', function() {
                 updatePosition();
             });
-            endField.on('change', function(e) {
+            endField.on('change', function() {
                 updatePosition();
             });
 
             // Handle clear
-            $this.on('clear', function(e) {
+            $this.on('clear', function() {
                 rangePicker.updatePosition('100%', '0%');
             });
 
@@ -2417,12 +2464,13 @@ S3.search = {};
                 slot_wait = 0,    // 1st will happen immediately
                 timers = [];
             function playSlot(slot) {
-                var start = slots[slot].x;
+                var start = slots[slot].x,
+                    end;
                 try {
-                    var end = slots[slot + 1].x;
+                    end = slots[slot + 1].x;
                 } catch(e) {
                     // Final slot
-                    var end =  moment($this.data('max'));
+                    end =  moment($this.data('max'));
                 }
                 var timeout = slot_wait;
                 slot_wait = slot_wait + slot_speed;
@@ -2843,7 +2891,7 @@ S3.search = {};
                 id: id
             };
 
-            var url = new String(this.options.ajaxURL);
+            var url = '' + this.options.ajaxURL;
             if (url.search(/.*\?.*/) != -1) {
                 url += '&delete=1';
             } else {
