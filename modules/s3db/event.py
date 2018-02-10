@@ -5632,9 +5632,10 @@ def event_rheader(r):
                                 TR(TH("%s: " % table.name.label),
                                    record.name,
                                    ),
-                                TR(TH("%s: " % table.location_id.label),
-                                   table.location_id.represent(record.location_id),
-                                   ),
+                                # FIXME Moved into event_location component:
+                                #TR(TH("%s: " % table.location_id.label),
+                                #   table.location_id.represent(record.location_id),
+                                #   ),
                                 TR(TH("%s: " % table.comments.label),
                                    record.comments,
                                    ),
