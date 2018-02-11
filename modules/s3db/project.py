@@ -7376,8 +7376,8 @@ class project_SummaryReport(S3Method):
                 planned_progress = planned_progress * weighting
                 if outcome_id not in outcomes:
                     outcomes[outcome_id] = {"actual_progress": actual_progress,
-                                          "planned_progress": planned_progress,
-                                          }
+                                            "planned_progress": planned_progress,
+                                            }
                 else:
                     # Add this data to Totals
                     o = outcomes[outcome_id]
@@ -7475,12 +7475,10 @@ class project_SummaryReport(S3Method):
                 goal_id = row.id
                 goal_name = row.name
                 if goal_id in goals:
-                    actual_progress = outcomes[goal_id]["actual_progress"]
-                    planned_progress = outcomes[goal_id]["planned_progress"]
                     goals[goal_id].update(code = row.code,
                                           name = goal_name,
-                                          actual_progress = actual_progress,
-                                          planned_progress = planned_progress,
+                                          #actual_progress = actual_progress,
+                                          #planned_progress = planned_progress,
                                           )
                 else:
                     actual_progress = 0
