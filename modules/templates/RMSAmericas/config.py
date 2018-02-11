@@ -3544,6 +3544,44 @@ Thank you"""
     settings.customise_supply_item_category_resource = customise_supply_item_category_resource
 
     # -------------------------------------------------------------------------
+    def customise_project_activity_data_resource(r, tablename):
+
+        table = current.s3db.project_activity_data
+        #f = table.start_date
+        #f.readable = f.writable = True
+        #f.label = T("Start Date")
+        #table.end_date.label = T("End Date")
+
+        if r.method == "update":
+            has_role = current.auth.s3_has_role
+            if has_role("monitoring_evaluation") or has_role("ORG_ADMIN"):
+                # Normal Access
+                return
+            # Project Manager
+            if r.tablename == "project_activity_data":
+                record_id = r.id
+            else:
+                record_id = r.component_id
+            record = current.db(table.id == record_id).select(table.value,
+                                                              limitby=(0, 1)
+                                                              ).first()
+            if record.value:
+                # Redirect to Read-only mode
+                # @ToDo: Remove 'Update' button from the read-only page
+                from gluon.http import redirect
+                redirect(r.url(method="read"))
+            else:
+                # Cannot edit anything
+                for f in table.fields:
+                    table[f].writable = False
+                # Except add a Real value
+                table.value.writable = True
+                # Or Amend the Comments
+                table.comments.writable = True
+
+    settings.customise_project_activity_data_resource = customise_project_activity_data_resource
+
+    # -------------------------------------------------------------------------
     def customise_project_organisation_resource(r, tablename):
 
         root_org = current.auth.root_org_name()

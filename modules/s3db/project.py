@@ -7239,7 +7239,45 @@ class project_SummaryReport(S3Method):
                 else:
                     actual_progress = 0
                     planned_progress = 0
-                if indicator_id in goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"]:
+                if goal_id not in goals:
+                    goals[goal_id] = {"actual_progress": 0,
+                                      "planned_progress": 0,
+                                      "outcomes": {outcome_id: {"outputs": {output_id: {"indicators": {indicator_id: {"activities": {},
+                                                                                                                      "code": row.code,
+                                                                                                                      "name": indicator_name,
+                                                                                                                      "actual_progress": actual_progress,
+                                                                                                                      "planned_progress": planned_progress,
+                                                                                                                      }
+                                                                                                       }
+                                                                                        }
+                                                                            }
+                                                                }
+                                                   }
+                                      }
+
+                elif outcome_id not in goals[goal_id]["outcomes"]:
+                    goals[goal_id]["outcomes"][outcome_id] = {"outputs": {output_id: {"indicators": {indicator_id: {"activities": {},
+                                                                                                                    "code": row.code,
+                                                                                                                    "name": indicator_name,
+                                                                                                                    "actual_progress": actual_progress,
+                                                                                                                    "planned_progress": planned_progress,
+                                                                                                                    }
+                                                                                                     }
+                                                                                      }
+                                                                          }
+                                                              }
+
+                elif output_id not in goals[goal_id]["outcomes"][outcome_id]["outputs"]:
+                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id] = {"indicators": {indicator_id: {"activities": {},
+                                                                                                                  "code": row.code,
+                                                                                                                  "name": indicator_name,
+                                                                                                                  "actual_progress": actual_progress,
+                                                                                                                  "planned_progress": planned_progress,
+                                                                                                                  }
+                                                                                                   }
+                                                                                    }
+
+                elif indicator_id in goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"]:
                     goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id].update(code = row.code,
                                                                                                                     name = indicator_name,
                                                                                                                     actual_progress = actual_progress,
@@ -7296,7 +7334,31 @@ class project_SummaryReport(S3Method):
                 else:
                     actual_progress = 0
                     planned_progress = 0
-                if output_id in goals[goal_id]["outcomes"][outcome_id]["outputs"]:
+                if goal_id not in goals:
+                    goals[goal_id] = {"actual_progress": 0,
+                                      "planned_progress": 0,
+                                      "outcomes": {outcome_id: {"outputs": {output_id: {"indicators": {},
+                                                                                        "code": row.code,
+                                                                                        "name": output_name,
+                                                                                        "actual_progress": actual_progress,
+                                                                                        "planned_progress": planned_progress,
+                                                                                        }
+                                                                            }
+                                                                }
+                                                   }
+                                      }
+
+                elif outcome_id not in goals[goal_id]["outcomes"]:
+                    goals[goal_id]["outcomes"][outcome_id] = {"outputs": {output_id: {"indicators": {},
+                                                                                      "code": row.code,
+                                                                                      "name": output_name,
+                                                                                      "actual_progress": actual_progress,
+                                                                                      "planned_progress": planned_progress,
+                                                                                      }
+                                                                          }
+                                                              }
+
+                elif output_id in goals[goal_id]["outcomes"][outcome_id]["outputs"]:
                     goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id].update(code = row.code,
                                                                                         name = output_name,
                                                                                         actual_progress = actual_progress,
@@ -7351,7 +7413,18 @@ class project_SummaryReport(S3Method):
                 else:
                     actual_progress = 0
                     planned_progress = 0
-                if outcome_id in goals[goal_id]["outcomes"]:
+                if goal_id not in goals:
+                    goals[goal_id] = {"actual_progress": 0,
+                                      "planned_progress": 0,
+                                      "outcomes": {"outputs": {},
+                                                   "code": row.code,
+                                                   "name": outcome_name,
+                                                   "actual_progress": actual_progress,
+                                                   "planned_progress": planned_progress,
+                                                   }
+                                      }
+
+                elif outcome_id in goals[goal_id]["outcomes"]:
                     goals[goal_id]["outcomes"][outcome_id].update(code = row.code,
                                                                   name = outcome_name,
                                                                   actual_progress = actual_progress,
