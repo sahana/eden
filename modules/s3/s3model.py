@@ -33,11 +33,8 @@ __all__ = ("S3Model",
 
 from collections import OrderedDict
 
-from gluon import *
-# Here are dependencies listed for reference:
-#from gluon import current
-#from gluon.dal import Field
-#from gluon.validators import IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY
+from gluon import current, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, \
+                  IS_IN_SET, IS_NOT_EMPTY, SQLFORM, TAG
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -542,7 +539,7 @@ class S3Model(object):
                 if current_cb:
                     callbacks[m] = extend(current_cb, cb)
         else:
-            current_cb = callbacks[m]
+            current_cb = callbacks[method]
             if current_cb:
                 callbacks[method] = extend(current_cb, cb)
             else:
@@ -670,7 +667,7 @@ class S3Model(object):
             hooks = Storage()
         for tablename, ll in links.items():
 
-            prefix, name = tablename.split("_", 1)
+            name = tablename.split("_", 1)[1]
             if not isinstance(ll, (tuple, list)):
                 ll = [ll]
 
@@ -894,9 +891,7 @@ class S3Model(object):
                 return None
 
         # Single alias?
-        single = False
         if isinstance(names, str):
-            single = True
             names = set([names])
         elif names is not None:
             names = set(names)
@@ -1134,7 +1129,7 @@ class S3Model(object):
                 for alias in hooks:
                     hook = hooks[alias]
                     if hook.linktable:
-                        prefix, name = hook.linktable.split("_", 1)
+                        name = hook.linktable.split("_", 1)[1]
                         if name == link:
                             return alias
             return None
@@ -1749,6 +1744,7 @@ class S3DynamicModel(object):
                 # CRUD Form
                 crud_fields = settings.get("form")
                 if crud_fields:
+                    from s3forms import S3SQLCustomForm
                     try:
                         crud_form = S3SQLCustomForm(**crud_fields)
                     except:
@@ -2065,7 +2061,6 @@ class S3DynamicModel(object):
         ktable = current.s3db.table(ktablename)
         if ktable:
             from s3fields import S3Represent
-            from s3validators import IS_ONE_OF
             if "name" in ktable.fields:
                 represent = S3Represent(lookup = ktablename,
                                         translate = True,

@@ -34,15 +34,11 @@ import sys
 from itertools import chain
 from uuid import uuid4
 
-from gluon import *
-# Here are dependencies listed for reference:
-#from gluon import current
-#from gluon.html import *
-#from gluon.validators import *
+from gluon import current, A, DIV, Field, IS_EMPTY_OR, IS_IN_SET, TAG, URL, XML
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
-from s3dal import Query, SQLCustomType
+from s3dal import SQLCustomType
 from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
 from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
@@ -294,6 +290,10 @@ class S3Represent(object):
 
         self.rows = {}
 
+        self.clabels = None
+        self.slabels = None
+        self.htemplate = None
+
         # Attributes to simulate being a function for sqlhtml's represent()
         # Make sure we indicate only 1 position argument
         self.func_code = Storage(co_argcount = 1)
@@ -356,7 +356,7 @@ class S3Represent(object):
             none = self.none
             for k, v in row_dict.items():
                 if v is None:
-                    row_dict[k] = self.none
+                    row_dict[k] = none
 
             v = labels % row_dict
 
@@ -376,7 +376,7 @@ class S3Represent(object):
                     values = [T(v) if not type(v) is lazyT else v for v in values]
                     translated = True
                 sep = self.field_sep
-                v = sep.join([s3_str(v) for v in values])
+                v = sep.join(s3_str(value) for value in values)
             elif values:
                 v = s3_str(values[0])
             else:
@@ -981,16 +981,15 @@ def s3_deletion_status():
 s3_meta_created_on = S3ReusableField("created_on", "datetime",
                                      readable = False,
                                      writable = False,
-                                     default = lambda: \
-                                        datetime.datetime.utcnow())
+                                     default = datetime.datetime.utcnow,
+                                     )
 
 s3_meta_modified_on = S3ReusableField("modified_on", "datetime",
                                       readable = False,
                                       writable = False,
-                                      default = lambda: \
-                                        datetime.datetime.utcnow(),
-                                      update = lambda: \
-                                        datetime.datetime.utcnow())
+                                      default = datetime.datetime.utcnow,
+                                      update = datetime.datetime.utcnow,
+                                      )
 
 def s3_timestamp():
     return (s3_meta_created_on(),
