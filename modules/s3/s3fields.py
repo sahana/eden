@@ -306,7 +306,7 @@ class S3Represent(object):
             self.custom_lookup = False
 
     # -------------------------------------------------------------------------
-    def _lookup_rows(self, key, values, fields=[]):
+    def _lookup_rows(self, key, values, fields=None):
         """
             Lookup all rows referenced by values.
             (in foreign key representations)
@@ -316,7 +316,10 @@ class S3Represent(object):
             @param fields: the fields to retrieve
         """
 
+        if fields is None:
+            fields = []
         fields.append(key)
+
         if len(values) == 1:
             query = (key == values[0])
         else:

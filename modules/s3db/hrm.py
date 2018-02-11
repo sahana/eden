@@ -1054,17 +1054,18 @@ class S3HRModel(S3Model):
             human_resource.job_title_id accordingly
         """
 
-        vars = form.vars
+        formvars = form.vars
 
-        if vars.main:
+        if formvars.main:
             # Read the record
             # (safer than relying on vars which might be missing on component tabs)
             db = current.db
             ltable = db.hrm_job_title_human_resource
-            record = db(ltable.id == vars.id).select(ltable.human_resource_id,
-                                                     ltable.job_title_id,
-                                                     limitby=(0, 1)
-                                                     ).first()
+            record = db(ltable.id == formvars.id).select(
+                                                    ltable.human_resource_id,
+                                                    ltable.job_title_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
 
             # Set the HR's job_title_id to the new job title
             htable = db.hrm_human_resource
@@ -1185,8 +1186,8 @@ class S3HRModel(S3Model):
             JSON lookup method for S3AddPersonWidget
         """
 
-        id = r.id
-        if not id:
+        hrm_id = r.id
+        if not hrm_id:
             output = current.xml.json_message(False, 400, "No id provided!")
             raise HTTP(400, body=output)
 
@@ -1225,7 +1226,7 @@ class S3HRModel(S3Model):
             fields.append(dtable.occupation)
             left = dtable.on(dtable.person_id == ptable.id)
 
-        query = (htable.id == id) & \
+        query = (htable.id == hrm_id) & \
                 (ptable.id == htable.person_id)
         row = db(query).select(left=left,
                                *fields).first()
@@ -1644,7 +1645,7 @@ class hrm_OrgSpecificTypeRepresent(S3Represent):
                                                            )
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -1668,7 +1669,8 @@ class hrm_OrgSpecificTypeRepresent(S3Represent):
                                         otable.id,
                                         otable.name,
                                         otable.acronym,
-                                        left = left)
+                                        left = left,
+                                        )
         self.queries += 1
         return rows
 
@@ -1817,6 +1819,18 @@ class S3HRJobModel(S3Model):
              )
 
     def model(self):
+
+        s3db = current.s3db
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        define_table = self.define_table
+
+        job_title_id = self.hrm_job_title_id
+        organisation_id = self.org_organisation_id
+        site_id = self.org_site_id
+        group_id = self.pr_group_id
+        human_resource_id = self.hrm_human_resource_id
+        hrm_type_opts = self.hrm_type_opts
 
         # =========================================================================
         # Positions
@@ -5306,7 +5320,7 @@ class hrm_HumanResourceRepresent(S3Represent):
         return A(v, _href = url)
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -5399,7 +5413,7 @@ class hrm_TrainingRepresent(S3Represent):
         super(hrm_TrainingRepresent, self).__init__(lookup = "hrm_training")
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -5419,7 +5433,8 @@ class hrm_TrainingRepresent(S3Represent):
 
         rows = current.db(query).select(ttable.id,
                                         ctable.name,
-                                        left = left)
+                                        left = left,
+                                        )
         self.queries += 1
         return rows
 
@@ -6318,7 +6333,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     else:
                         activity_types = activity_types.values()
                         activity_types.remove(NONE)
-                        activity_types = ", ".join([s3_unicode(v) for v in activity_types])
+                        activity_types = ", ".join([s3_str(v) for v in activity_types])
                 else:
                     for row in rows:
                         hours = row.hours
@@ -7244,7 +7259,7 @@ def hrm_human_resource_controller(extra_filter=None):
             comments = table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
                 comments = (SPAN("%s, " % \
-                                 s3_unicode(table.job_title_id.represent(record.job_title_id))),
+                                 s3_str(table.job_title_id.represent(record.job_title_id))),
                             comments)
 
             # Configure widgets
@@ -7374,8 +7389,10 @@ def hrm_human_resource_controller(extra_filter=None):
                                                 P(comments),
                                                 _class="profile-header",
                                                 ),
-                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["hrm_human_resource"].title_display),
-                                                        name),
+                           profile_title = "%s : %s" % (
+                               s3_str(s3.crud_strings["hrm_human_resource"].title_display),
+                               s3_str(name),
+                               ),
                            profile_widgets = profile_widgets,
                            )
 
@@ -7531,15 +7548,15 @@ def hrm_human_resource_controller(extra_filter=None):
                     group = "volunteer"
                 else:
                     group = "staff"
-                vars = {"human_resource.id" : r.id,
-                        "group" : group
-                        }
                 if r.function == "trainee":
                     fn = "trainee_person"
                 else:
                     fn = "person"
-                redirect(URL(f=fn,
-                             vars=vars))
+                redirect(URL(f = fn,
+                             vars = {"human_resource.id" : r.id,
+                                     "group" : group
+                                     },
+                             ))
 
         elif r.representation == "xls" and not r.component:
             hrm_xls_list_fields(r)
@@ -7598,7 +7615,7 @@ def hrm_person_controller(**attr):
     T = current.T
     db = current.db
     s3db = current.s3db
-    auth = current.auth
+    #auth = current.auth
     response = current.response
     session = current.session
     settings = current.deployment_settings
@@ -9585,7 +9602,6 @@ def hrm_human_resource_filters(resource_type=None,
     """
 
     T = current.T
-    s3 = current.response.s3
     settings = current.deployment_settings
 
     if not module:
