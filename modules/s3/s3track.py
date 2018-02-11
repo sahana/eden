@@ -37,7 +37,8 @@ from gluon.html import *
 from s3dal import Table, Rows, Row
 from s3rest import S3Method
 
-__all__ = ("S3Tracker",
+__all__ = ("S3Trackable",
+           "S3Tracker",
            "S3CheckInMethod",
            "S3CheckOutMethod",
            )
