@@ -32,7 +32,6 @@
 import collections
 import copy
 import datetime
-import json
 import os
 import re
 import sys
@@ -42,16 +41,18 @@ import HTMLParser
 
 from collections import OrderedDict
 
-from gluon import *
+from gluon import current, redirect, HTTP, URL, \
+                  A, BEAUTIFY, CODE, DIV, IMG, PRE, SPAN, TABLE, TAG, TR, XML, \
+                  IS_EMPTY_OR, IS_NOT_IN_DB, IS_TIME
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
 
-from s3dal import Expression, Row, S3DAL
+from s3dal import Expression, Field, Row, S3DAL
 from s3datetime import ISOFORMAT, s3_decode_iso_datetime
 
-URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
-                       "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
+URLSCHEMA = re.compile(r"((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
+                       r"(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
 
 RCVARS = "rcvars"
 
@@ -273,11 +274,11 @@ def s3_represent_value(field,
 
     # Link ID field
     if fname == "id" and linkto:
-        id = str(val)
+        link_id = str(val)
         try:
-            href = linkto(id)
+            href = linkto(link_id)
         except TypeError:
-            href = linkto % id
+            href = linkto % link_id
         href = str(href).replace(".aadata", "")
         return A(text, _href=href).xml()
 
@@ -418,7 +419,7 @@ def s3_mark_required(fields,
                         else:
                             continue
                     try:
-                        val, error = v("")
+                        error = v("")[1]
                     except TypeError:
                         # default validator takes no args
                         pass
@@ -686,7 +687,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         return ""
 
 # =============================================================================
-def s3_fullname_bulk(record_ids=[], truncate=True):
+def s3_fullname_bulk(record_ids=None, truncate=True):
     """
         Returns the full name for a set of Persons
         - currently unused
@@ -695,25 +696,30 @@ def s3_fullname_bulk(record_ids=[], truncate=True):
         @param truncate: truncate the name to max 24 characters
     """
 
-    db = current.db
-    ptable = db.pr_person
-    query = (ptable.id.belongs(record_ids))
-    rows = db(query).select(ptable.id,
-                            ptable.first_name,
-                            ptable.middle_name,
-                            ptable.last_name)
-
     represents = {}
-    for row in rows:
-        fname, mname, lname = "", "", ""
-        if row.first_name:
-            fname = row.first_name.strip()
-        if row.middle_name:
-            mname = row.middle_name.strip()
-        if row.last_name:
-            lname = row.last_name.strip()
-        represent = s3_format_fullname(fname, mname, lname, truncate)
-        represents[row.id] = represent
+
+    if record_ids:
+
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.id.belongs(record_ids))
+        rows = db(query).select(ptable.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                )
+
+        for row in rows:
+            fname, mname, lname = "", "", ""
+            if row.first_name:
+                fname = row.first_name.strip()
+            if row.middle_name:
+                mname = row.middle_name.strip()
+            if row.last_name:
+                lname = row.last_name.strip()
+            represent = s3_format_fullname(fname, mname, lname, truncate)
+            represents[row.id] = represent
+
     return represents
 
 # =============================================================================
@@ -777,12 +783,12 @@ def s3_URLise(text):
     return output
 
 # =============================================================================
-def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
+def s3_avatar_represent(user_id, tablename="auth_user", gravatar=False, **attr):
     """
         Represent a User as their profile picture or Gravatar
 
         @param tablename: either "auth_user" or "pr_person" depending on which
-                          table the 'id' refers to
+                          table the 'user_id' refers to
         @param attr: additional HTML attributes for the IMG(), such as _class
     """
 
@@ -796,38 +802,43 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     image = None
 
     if tablename == "auth_user":
-        user = db(table.id == id).select(table.email,
-                                         limitby=(0, 1),
-                                         cache=cache).first()
+        user = db(table.id == user_id).select(table.email,
+                                              cache = cache,
+                                              limitby = (0, 1),
+                                              ).first()
         if user:
             email = user.email.strip().lower()
         ltable = s3db.pr_person_user
         itable = s3db.pr_image
-        query = (ltable.user_id == id) & \
+        query = (ltable.user_id == user_id) & \
                 (ltable.pe_id == itable.pe_id) & \
                 (itable.profile == True)
         image = db(query).select(itable.image,
-                                 limitby=(0, 1)).first()
+                                 limitby = (0, 1),
+                                 ).first()
         if image:
             image = image.image
     elif tablename == "pr_person":
-        user = db(table.id == id).select(table.pe_id,
-                                         limitby=(0, 1),
-                                         cache=cache).first()
+        user = db(table.id == user_id).select(table.pe_id,
+                                              cache = cache,
+                                              limitby = (0, 1),
+                                              ).first()
         if user:
             ctable = s3db.pr_contact
             query = (ctable.pe_id == user.pe_id) & \
                     (ctable.contact_method == "EMAIL")
             email = db(query).select(ctable.value,
-                                     limitby=(0, 1),
-                                     cache=cache).first()
+                                     cache = cache,
+                                     limitby = (0, 1),
+                                     ).first()
             if email:
                 email = email.value
             itable = s3db.pr_image
             query = (itable.pe_id == user.pe_id) & \
                     (itable.profile == True)
             image = db(query).select(itable.image,
-                                     limitby=(0, 1)).first()
+                                     limitby = (0, 1),
+                                     ).first()
             if image:
                 image = image.image
 
@@ -841,8 +852,8 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
         if email:
             # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
             import hashlib
-            hash = hashlib.md5(email).hexdigest()
-            url = "//www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+            email_hash = hashlib.md5(email).hexdigest()
+            url = "//www.gravatar.com/avatar/%s?s=50&d=identicon" % email_hash
         else:
             url = "//www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
     else:
@@ -857,44 +868,47 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     return IMG(_src=url, **attr)
 
 # =============================================================================
-def s3_auth_user_represent(id, row=None):
+def s3_auth_user_represent(user_id, row=None):
     """
         Represent a user as their email address
     """
 
     if row:
         return row.email
-    elif not id:
+    elif not user_id:
         return current.messages["NONE"]
 
     db = current.db
     table = db.auth_user
-    user = db(table.id == id).select(table.email,
-                                     limitby=(0, 1),
-                                     cache=current.s3db.cache).first()
+    user = db(table.id == user_id).select(table.email,
+                                          cache = current.s3db.cache,
+                                          limitby = (0, 1),
+                                          ).first()
     try:
         return user.email
     except:
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-def s3_auth_user_represent_name(id, row=None):
+def s3_auth_user_represent_name(user_id, row=None):
     """
         Represent users by their names
     """
 
     if not row:
-        if not id:
+        if not user_id:
             return current.messages["NONE"]
         db = current.db
         table = db.auth_user
-        row = db(table.id == id).select(table.first_name,
-                                        table.last_name,
-                                        limitby=(0, 1)).first()
+        row = db(table.id == user_id).select(table.first_name,
+                                             table.last_name,
+                                             limitby = (0, 1),
+                                             ).first()
     try:
         return s3_format_fullname(row.first_name.strip(),
                                   None,
-                                  row.last_name.strip())
+                                  row.last_name.strip(),
+                                  )
     except:
         return current.messages.UNKNOWN_OPT
 
@@ -945,28 +959,25 @@ def s3_include_debug_css():
     """
 
     request = current.request
-    folder = request.folder
-    appname = request.application
 
     settings = current.deployment_settings
-    theme = settings.get_theme()
     location = current.response.s3.theme_location
+    theme = settings.get_theme()
 
-    css_cfg = "%s/modules/templates/%s%s/css.cfg" % (folder, location, theme)
-    try:
-        f = open(css_cfg, "r")
-    except:
-        raise HTTP(500, "Theme configuration file missing: modules/templates/%s%s/css.cfg" % (location, theme))
-    files = f.readlines()
-    files = files[:-1]
-    include = ""
-    for file in files:
-        if file[0] != "#":
-            include = '%s\n<link href="/%s/static/styles/%s" rel="stylesheet" type="text/css" />' \
-                % (include, appname, file[:-1])
-    f.close()
+    filename = "%s/modules/templates/%s%s/css.cfg" % (request.folder, location, theme)
+    if not os.path.isfile(filename):
+        raise HTTP(500, "Theme configuration file missing: modules/templates/%s%s/css.cfg" %
+                        (location, theme))
 
-    return XML(include)
+    link_template = '<link href="/%s/static/styles/%%s" rel="stylesheet" type="text/css" />' % \
+                    request.application
+    links = ""
+
+    with open(filename, "r") as css_cfg:
+        links = "\n".join(link_template % cssname.rstrip()
+                          for cssname in css_cfg if cssname[0] != "#")
+
+    return XML(links)
 
 # =============================================================================
 def s3_include_debug_js():
@@ -976,11 +987,8 @@ def s3_include_debug_js():
     """
 
     request = current.request
-    folder = request.folder
-    appname = request.application
-    theme = current.deployment_settings.get_theme()
 
-    scripts_dir = os.path.join(folder, "static", "scripts")
+    scripts_dir = os.path.join(request.folder, "static", "scripts")
     sys.path.append(os.path.join(scripts_dir, "tools"))
 
     import mergejsmf
@@ -992,14 +1000,13 @@ def s3_include_debug_js():
         "S3":     scripts_dir
     }
     configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir
-    (fs, files) = mergejsmf.getFiles(configDictCore, configFilename)
+    files = mergejsmf.getFiles(configDictCore, configFilename)[1]
 
-    include = ""
-    for file in files:
-        include = '%s\n<script src="/%s/static/scripts/%s" type="text/javascript"></script>' \
-            % (include, appname, file)
+    script_template = '<script src="/%s/static/scripts/%%s" type="text/javascript"></script>' % \
+                      request.application
 
-    return XML(include)
+    scripts = "\n".join(script_template % scriptname for scriptname in files)
+    return XML(scripts)
 
 # =============================================================================
 def s3_include_ext():
@@ -1356,8 +1363,6 @@ def s3_orderby_fields(table, orderby, expr=False):
     if not orderby:
         return
 
-    db = current.db
-
     adapter = S3DAL()
     COMMA = adapter.COMMA
     INVERT = adapter.INVERT
@@ -1495,7 +1500,6 @@ def search_vars_represent(search_vars):
         raise HTTP(500, "ERROR RETRIEVING THE SEARCH CRITERIA")
     else:
         s = "<p>"
-        pat = '_'
         for var in search_vars.iterkeys():
             if var == "criteria" :
                 c_dict = search_vars[var]
@@ -1509,8 +1513,8 @@ def search_vars_represent(search_vars):
                         st = st.replace("_advanced", "")
                         st = st.replace("_simple", "")
                         st = st.replace("text", "text matching")
-                        """st = st.replace(search_vars["function"], "")
-                        st = st.replace(search_vars["prefix"], "")"""
+                        #st = st.replace(search_vars["function"], "")
+                        #st = st.replace(search_vars["prefix"], "")
                         st = st.replace("_", " ")
                         s = "%s <b> %s </b>: %s <br />" % \
                             (s, st.capitalize(), str(c_dict[j]))
@@ -1684,7 +1688,6 @@ def s3_jaro_winkler_distance_row(row1, row2):
     """
 
     dw = 0
-    num_similar = 0
     if len(row1) != len(row2):
         return
     for x in range(0, len(row1)):
@@ -1761,8 +1764,8 @@ class Traceback(object):
         tryFile = path.replace("\\", "/")
 
         if os.path.isabs(tryFile) and os.path.isfile(tryFile):
-            (folder, filename) = os.path.split(tryFile)
-            (base, ext) = os.path.splitext(filename)
+            folder, filename = os.path.split(tryFile)
+            ext = os.path.splitext(filename)[1]
             app = current.request.args[0]
 
             editable = {"controllers": ".py", "models": ".py", "views": ".html"}
@@ -2019,7 +2022,7 @@ class S3TypeConverter(object):
             dt = None
             try:
                 # Try ISO Format (e.g. filter widgets)
-                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, ISOFORMAT)
+                (y, m, d, hh, mm, ss) = time.strptime(b, ISOFORMAT)[:6]
             except ValueError:
                 # Fall back to default format (deployment setting)
                 dt = b
@@ -2076,8 +2079,7 @@ class S3TypeConverter(object):
         if isinstance(b, datetime.time):
             return b
         elif isinstance(b, basestring):
-            validator = IS_TIME()
-            value, error = validator(v)
+            value, error = IS_TIME()(b)
             if error:
                 raise ValueError
             return value
@@ -2579,10 +2581,10 @@ class StringTemplateParser(object):
             # Returns: ["first_name", "last_name"]
     """
     def __init__(self):
-        self.keys = []
+        self._keys = []
 
     def __getitem__(self, key):
-        self.keys.append(key)
+        self._keys.append(key)
 
     @classmethod
     def keys(cls, template):
@@ -2591,7 +2593,7 @@ class StringTemplateParser(object):
             template % parser
         except TypeError:
             return None
-        return parser.keys
+        return parser._keys
 
 # =============================================================================
 class S3MarkupStripper(HTMLParser.HTMLParser):
@@ -2613,7 +2615,7 @@ def s3_strip_markup(text):
         stripper = S3MarkupStripper()
         stripper.feed(text)
         text = stripper.stripped()
-    except Exception, e:
+    except Exception:
         pass
     return text
 
