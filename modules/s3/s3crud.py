@@ -43,7 +43,8 @@ except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
-from gluon import *
+from gluon import current, redirect, HTTP, URL, \
+                  A, DIV, FORM, INPUT, TABLE, TD, TR, XML
 from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -320,7 +321,7 @@ class S3CRUD(S3Method):
                     from_table = table
                 try:
                     from_record = long(from_record)
-                except:
+                except ValueError:
                     r.error(404, current.ERROR.BAD_RECORD)
                 authorised = current.auth.s3_has_permission("read",
                                                     from_table._tablename,
@@ -461,7 +462,7 @@ class S3CRUD(S3Method):
             else:
                 try:
                     infile = open(infile, "rb")
-                except:
+                except IOError:
                     session.error = current.T("Cannot read from file: %(filename)s") % \
                                                 dict(filename=infile)
                     redirect(r.url(method="", representation="html"))
@@ -681,12 +682,12 @@ class S3CRUD(S3Method):
             if last_update:
                 try:
                     output["modified_on"] = last_update["modified_on"]
-                except:
+                except KeyError:
                     # Field not in table
                     pass
                 try:
                     output["modified_by"] = last_update["modified_by"]
-                except:
+                except KeyError:
                     # Field not in table, such as auth_user
                     pass
 
@@ -712,7 +713,7 @@ class S3CRUD(S3Method):
                 for field in fields:
                     try:
                         value = record[field]
-                    except:
+                    except KeyError:
                         # e.g. gis_location.wkt
                         value = None
                     if value is None or value == "" or value == []:
@@ -945,12 +946,12 @@ class S3CRUD(S3Method):
             if last_update:
                 try:
                     output["modified_on"] = last_update["modified_on"]
-                except:
+                except KeyError:
                     # Field not in table
                     pass
                 try:
                     output["modified_by"] = last_update["modified_by"]
-                except:
+                except KeyError:
                     # Field not in table, such as auth_user
                     pass
 
@@ -1451,18 +1452,20 @@ class S3CRUD(S3Method):
                         dt_sorting["bSortable_0"] = "true"
                         dt_sorting["iSortCol_0"] = "0"
 
-                    q, orderby, left = resource.datatable_filter(list_fields,
-                                                                 dt_sorting)
+                    orderby, left = resource.datatable_filter(list_fields,
+                                                              dt_sorting,
+                                                              )[1:3]
             else:
                 dt_pagination = "false"
 
             # Get the data table
-            dt, totalrows, ids = resource.datatable(fields=list_fields,
-                                                    start=start,
-                                                    limit=limit,
-                                                    left=left,
-                                                    orderby=orderby,
-                                                    distinct=distinct)
+            dt, totalrows = resource.datatable(fields = list_fields,
+                                               start = start,
+                                               limit = limit,
+                                               left = left,
+                                               orderby = orderby,
+                                               distinct = distinct,
+                                               )
             displayrows = totalrows
 
             if not dt.data:
@@ -1520,13 +1523,13 @@ class S3CRUD(S3Method):
 
             # Get a data table
             if totalrows != 0:
-                dt, displayrows, ids = resource.datatable(fields=list_fields,
-                                                          start=start,
-                                                          limit=limit,
-                                                          left=left,
-                                                          orderby=orderby,
-                                                          distinct=distinct,
-                                                          getids=False)
+                dt, displayrows = resource.datatable(fields = list_fields,
+                                                     start = start,
+                                                     limit = limit,
+                                                     left = left,
+                                                     orderby = orderby,
+                                                     distinct = distinct,
+                                                     )
             else:
                 dt, displayrows = None, 0
             if totalrows is None:
@@ -1660,45 +1663,28 @@ class S3CRUD(S3Method):
             if not orderby:
                 orderby = default_orderby
 
-            datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                       start=start,
-                                                       limit=initial_limit,
-                                                       orderby=orderby,
-                                                       list_id=list_id,
-                                                       layout=layout)
+            datalist, numrows = resource.datalist(fields = list_fields,
+                                                  start = start,
+                                                  limit = initial_limit,
+                                                  orderby = orderby,
+                                                  list_id = list_id,
+                                                  layout = layout,
+                                                  )
 
             if numrows == 0:
-                # Empty table or just no match?
-
-                #table = resource.table
-                #if "deleted" in table:
-                #    available_records = current.db(table.deleted != True)
-                #else:
-                #    available_records = current.db(table._id > 0)
-                #if available_records.select(table._id,
-                #                            limitby=(0, 1)).first():
-                #    empty = self.crud_string(resource.tablename,
-                #                             "msg_no_match")
-                #else:
-                #    empty = self.crud_string(resource.tablename,
-                #                             "msg_list_empty")
-
                 s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    #empty = ""
-            #else:
-            #    empty = None
 
             # Allow customization of the datalist Ajax-URL
             # Note: the Ajax-URL must use the .dl representation and
             # plain.html view for pagination to work properly!
             ajax_url = attr.get("list_ajaxurl", None)
             if not ajax_url:
-                vars = dict((k,v) for k, v in r.get_vars.iteritems()
-                                  if k not in ("start", "limit"))
-                ajax_url = r.url(representation="dl", vars=vars)
+                ajax_vars = dict((k,v) for k, v in r.get_vars.iteritems()
+                                       if k not in ("start", "limit"))
+                ajax_url = r.url(representation="dl", vars=ajax_vars)
 
             # Render the list (even if empty => Ajax-section is required
             # in any case to be able to Ajax-refresh e.g. after adding
@@ -1710,9 +1696,6 @@ class S3CRUD(S3Method):
                                pagesize = pagelength,
                                rowsize = rowsize,
                                ajaxurl = ajax_url)
-            #if empty:
-            #    # Insert empty message
-            #    dl.insert(0, DIV(empty, _class="empty"))
             data = dl
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
@@ -1843,8 +1826,9 @@ class S3CRUD(S3Method):
                     get_vars.update(iSortingCols="1",
                                     iSortCol_0=scol,
                                     sSortDir_0="asc")
-                    q, orderby, left = resource.datatable_filter(list_fields,
-                                                                 get_vars)
+                    orderby, left = resource.datatable_filter(list_fields,
+                                                              get_vars,
+                                                              )[1:3]
                     del get_vars["iSortingCols"]
                     del get_vars["iSortCol_0"]
                     del get_vars["sSortDir_0"]
@@ -1852,12 +1836,13 @@ class S3CRUD(S3Method):
                 dt_pagination = "false"
 
             # Get the data table
-            dt, totalrows, ids = resource.datatable(fields=list_fields,
-                                                    start=start,
-                                                    limit=limit,
-                                                    left=left,
-                                                    orderby=orderby,
-                                                    distinct=distinct)
+            dt, totalrows = resource.datatable(fields = list_fields,
+                                               start = start,
+                                               limit = limit,
+                                               left = left,
+                                               orderby = orderby,
+                                               distinct = distinct,
+                                               )
             displayrows = totalrows
 
             # No records?
@@ -1897,12 +1882,13 @@ class S3CRUD(S3Method):
 
             # Get a data table
             if totalrows != 0:
-                dt, displayrows, ids = resource.datatable(fields=list_fields,
-                                                          start=start,
-                                                          limit=limit,
-                                                          left=left,
-                                                          orderby=orderby,
-                                                          distinct=distinct)
+                dt, displayrows = resource.datatable(fields = list_fields,
+                                                     start = start,
+                                                     limit = limit,
+                                                     left = left,
+                                                     orderby = orderby,
+                                                     distinct = distinct,
+                                                     )
             else:
                 dt, displayrows = None, 0
             if totalrows is None:
@@ -2093,8 +2079,9 @@ class S3CRUD(S3Method):
             components = [alias] if alias else None
             try:
                 resource = current.s3db.resource(tablename,
-                                                 components=components)
-            except:
+                                                 components = components,
+                                                 )
+            except (AttributeError, SyntaxError):
                 r.error(404, current.ERROR.BAD_RESOURCE)
         if alias:
             if alias in resource.components:
@@ -2204,7 +2191,7 @@ class S3CRUD(S3Method):
                     # (unless it's already uploaded)
                     try:
                         fullname = field.retrieve(value, nameonly=True)[1]
-                    except Exception, e:
+                    except Exception:
                         skip_formatting = True
                     else:
                         import os
@@ -2740,20 +2727,20 @@ class S3CRUD(S3Method):
         return success
 
     # -------------------------------------------------------------------------
-    def import_csv(self, file, table=None):
+    def import_csv(self, stream, table=None):
         """
             Import CSV file into database
 
-            @param file: file handle
+            @param stream: file handle
             @param table: the table to import to
         """
 
         if table:
-            table.import_from_csv_file(file)
+            table.import_from_csv_file(stream)
         else:
             db = current.db
             # This is the preferred method as it updates reference fields
-            db.import_from_csv_file(file)
+            db.import_from_csv_file(stream)
             db.commit()
 
     # -------------------------------------------------------------------------
@@ -2897,9 +2884,7 @@ class S3CRUD(S3Method):
         return link
 
     # -------------------------------------------------------------------------
-    def _postprocess_embedded(self, form,
-                              component=None,
-                              key=None):
+    def _postprocess_embedded(self, form, component=None, key=None):
         """
             Post-processes a form with an S3EmbeddedComponentWidget and
             created/updates the component record.
@@ -2917,7 +2902,7 @@ class S3CRUD(S3Method):
                             s3db.get_config(tablename, key, None)
         try:
             selected = form.vars[key]
-        except:
+        except (AttributeError, KeyError):
             selected = None
 
         if request.env.request_method == "POST":

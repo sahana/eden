@@ -106,12 +106,13 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
     """
 
     #orderby = resource.table[orderby]
-    datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                               start=None,
-                                               limit=limit,
-                                               list_id=list_id,
-                                               orderby=orderby,
-                                               layout=layout)
+    datalist, numrows = resource.datalist(fields = list_fields,
+                                          start = None,
+                                          limit = limit,
+                                          list_id = list_id,
+                                          orderby = orderby,
+                                          layout = layout,
+                                          )
     if numrows == 0:
         # Empty table or just no match?
         from s3.s3crud import S3CRUD

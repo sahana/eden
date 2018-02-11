@@ -1119,7 +1119,7 @@ class S3XML(S3Codec):
                  table,
                  record,
                  alias=None,
-                 fields=[],
+                 fields=None,
                  url=None,
                  lazy=None,
                  llrepr=None,
@@ -1205,6 +1205,8 @@ class S3XML(S3Codec):
         _repr = self.represent
         to_json = json.dumps
 
+        if fields is None:
+            fields = set()
         for f in fields:
 
             if f == DELETED:

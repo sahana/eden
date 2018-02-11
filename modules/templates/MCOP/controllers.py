@@ -60,13 +60,13 @@ for(var i=0,len=layers.length;i<len;i++){
                        ]
         # Order with most recent Alert first
         orderby = "cms_post.date desc"
-        datalist, numrows, ids = resource.datalist(fields = list_fields,
-                                                   #start = None,
-                                                   limit = 5,
-                                                   list_id = list_id,
-                                                   orderby = orderby,
-                                                   layout = s3db.cms_post_list_layout
-                                                   )
+        datalist, numrows = resource.datalist(fields = list_fields,
+                                              #start = None,
+                                              limit = 5,
+                                              list_id = list_id,
+                                              orderby = orderby,
+                                              layout = s3db.cms_post_list_layout
+                                              )
         ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
@@ -86,13 +86,13 @@ for(var i=0,len=layers.length;i<len;i++){
                        ]
         # Order with most recent Incident first
         orderby = "event_incident.date desc"
-        datalist, numrows, ids = resource.datalist(fields = list_fields,
-                                                   #start = None,
-                                                   limit = 5,
-                                                   list_id = list_id,
-                                                   orderby = orderby,
-                                                   layout = s3db.event_incident_list_layout
-                                                   )
+        datalist, numrows = resource.datalist(fields = list_fields,
+                                              #start = None,
+                                              limit = 5,
+                                              list_id = list_id,
+                                              orderby = orderby,
+                                              layout = s3db.event_incident_list_layout
+                                              )
         ajax_url = URL(c="event", f="incident", args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
@@ -121,13 +121,13 @@ for(var i=0,len=layers.length;i<len;i++){
                         ]
         # Order with most urgent Task first
         orderby = "project_task.date_due asc"
-        datalist, numrows, ids = resource.datalist(fields = list_fields,
-                                                   #start = None,
-                                                   limit = 5,
-                                                   list_id = list_id,
-                                                   orderby = orderby,
-                                                   layout = s3db.project_task_list_layout
-                                                   )
+        datalist, numrows = resource.datalist(fields = list_fields,
+                                              #start = None,
+                                              limit = 5,
+                                              list_id = list_id,
+                                              orderby = orderby,
+                                              layout = s3db.project_task_list_layout
+                                              )
         ajax_url = URL(c="project", f="task", args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5

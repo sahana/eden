@@ -43,7 +43,7 @@ from itertools import chain
 
 try:
     from cStringIO import StringIO # Faster, where available
-except:
+except ImportError:
     from StringIO import StringIO
 
 try:
@@ -1201,11 +1201,7 @@ class S3Resource(object):
 
                 # Automatic cascade
                 for ref in references:
-                    try:
-                        tn, fn = ref.tablename, ref.name
-                    except:
-                        # old web2py < 2.0
-                        tn, fn = ref
+                    tn, fn = ref.tablename, ref.name
                     rtable = db[tn]
                     rfield = rtable[fn]
                     query = (rfield == row[pkey])
@@ -1329,7 +1325,7 @@ class S3Resource(object):
                   left=None,
                   orderby=None,
                   distinct=False,
-                  getids=False):
+                  ):
         """
             Generate a data table of this resource
 
@@ -1339,12 +1335,9 @@ class S3Resource(object):
             @param left: additional left joins for DB query
             @param orderby: orderby for DB query
             @param distinct: distinct-flag for DB query
-            @param getids: return the record IDs of all records matching the
-                           query (used in search to create a filter)
 
-            @return: tuple (S3DataTable, numrows, ids), where numrows represents
-                     the total number of rows in the table that match the query;
-                     ids is empty unless getids=True
+            @return: tuple (S3DataTable, numrows), where numrows represents
+                     the total number of rows in the table that match the query
         """
 
         # Choose fields
@@ -1373,7 +1366,7 @@ class S3Resource(object):
                            left = left,
                            distinct = distinct,
                            count = True,
-                           getids = getids,
+                           getids = False,
                            represent = True,
                            )
 
@@ -1398,7 +1391,7 @@ class S3Resource(object):
         rfields = data.rfields
         dt = S3DataTable(rfields, rows, orderby=orderby, empty=empty)
 
-        return dt, data.numrows, data.ids
+        return dt, data.numrows
 
     # -------------------------------------------------------------------------
     def datalist(self,
@@ -1408,7 +1401,6 @@ class S3Resource(object):
                  left=None,
                  orderby=None,
                  distinct=False,
-                 getids=False,
                  list_id=None,
                  layout=None):
         """
@@ -1420,14 +1412,11 @@ class S3Resource(object):
             @param left: additional left joins for DB query
             @param orderby: orderby for DB query
             @param distinct: distinct-flag for DB query
-            @param getids: return the record IDs of all records matching the
-                           query (used in search to create a filter)
             @param list_id: the list identifier
             @param layout: custom renderer function (see S3DataList.render)
 
             @return: tuple (S3DataList, numrows, ids), where numrows represents
-                     the total number of rows in the table that match the query;
-                     ids is empty unless getids=True
+                     the total number of rows in the table that match the query
         """
 
         # Choose fields
@@ -1451,7 +1440,7 @@ class S3Resource(object):
                            left = left,
                            distinct = distinct,
                            count = True,
-                           getids = getids,
+                           getids = False,
                            raw_data = True,
                            represent = True,
                            )
@@ -1468,7 +1457,7 @@ class S3Resource(object):
                         layout = layout,
                         )
 
-        return dl, numrows, data.ids
+        return dl, numrows
 
     # -------------------------------------------------------------------------
     def json(self,
@@ -1558,11 +1547,11 @@ class S3Resource(object):
                         # Filter out bulky Polygons
                         continue
                     else:
-                        format = current.auth.permission.format
-                        if format == "cap":
+                        fmt = current.auth.permission.format
+                        if fmt == "cap":
                             # Include WKT
                             pass
-                        elif format == "xml" and current.deployment_settings.get_gis_xml_wkt():
+                        elif fmt == "xml" and current.deployment_settings.get_gis_xml_wkt():
                             # Include WKT
                             pass
                         else:
@@ -1597,7 +1586,7 @@ class S3Resource(object):
             if not fields or f in fields:
                 qfields.append(f)
 
-        fields = list(set(filter(lambda f: hasattr(table, f), qfields)))
+        fields = list(set(fn for fn in qfields if hasattr(table, fn)))
 
         if self._rows is not None:
             self.clear()
@@ -1914,7 +1903,7 @@ class S3Resource(object):
                    fields=None,
                    dereference=True,
                    maxdepth=MAXDEPTH,
-                   mcomponents=[],
+                   mcomponents=DEFAULT,
                    rcomponents=None,
                    references=None,
                    mdata=False,
@@ -1972,6 +1961,9 @@ class S3Resource(object):
         args = Storage(args)
 
         xmlformat = S3XMLFormat(stylesheet) if stylesheet else None
+
+        if mcomponents is DEFAULT:
+            mcomponents = []
 
         # Export as element tree
         tree = self.export_tree(start = start,
@@ -2381,8 +2373,8 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def __export_resource(self,
                           record,
-                          rfields=[],
-                          dfields=[],
+                          rfields=None,
+                          dfields=None,
                           parent=None,
                           base_url=None,
                           reference_map=None,
@@ -2580,15 +2572,15 @@ class S3Resource(object):
                         crecord_url = None
 
                     # Export the component record
-                    celement, crmap = export(crecord,
-                                             rfields = crfields,
-                                             dfields = cdfields,
-                                             parent = element,
-                                             lazy = lazy,
-                                             url = crecord_url,
-                                             master = master,
-                                             location_data = location_data,
-                                             )
+                    crmap = export(crecord,
+                                   rfields = crfields,
+                                   dfields = cdfields,
+                                   parent = element,
+                                   lazy = lazy,
+                                   url = crecord_url,
+                                   master = master,
+                                   location_data = location_data,
+                                   )[1]
 
                     # Update "modified until" from component
                     if not self.muntil or \
@@ -2621,8 +2613,8 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def _export_record(self,
                        record,
-                       rfields=[],
-                       dfields=[],
+                       rfields=None,
+                       dfields=None,
                        parent=None,
                        export_map=None,
                        lazy=None,
@@ -2971,7 +2963,7 @@ class S3Resource(object):
                                 message=self.error, tree=tree)
 
     # -------------------------------------------------------------------------
-    def import_tree(self, id, tree,
+    def import_tree(self, record_id, tree,
                     job_id=None,
                     ignore_errors=False,
                     delete_job=False,
@@ -2984,7 +2976,7 @@ class S3Resource(object):
         """
             Import data from an S3XML element tree.
 
-            @param id: record ID or list of record IDs to update
+            @param record_id: record ID or list of record IDs to update
             @param tree: the element tree
             @param ignore_errors: continue at errors (=skip invalid elements)
 
@@ -3098,11 +3090,11 @@ class S3Resource(object):
 
             # Find matching elements, if a target record ID is given
             UID = xml.UID
-            if id and UID in table:
-                if not isinstance(id, (tuple, list)):
-                    query = (table._id == id)
+            if record_id and UID in table:
+                if not isinstance(record_id, (tuple, list)):
+                    query = (table._id == record_id)
                 else:
-                    query = (table._id.belongs(id))
+                    query = (table._id.belongs(record_id))
                 originals = db(query).select(table[UID])
                 uids = [row[UID] for row in originals]
                 matches = []
@@ -3662,11 +3654,11 @@ class S3Resource(object):
             if self.tablename == "gis_location":
                 settings = current.deployment_settings
                 if "wkt" not in skip:
-                    format = current.auth.permission.format
-                    if format == "cap":
+                    fmt = current.auth.permission.format
+                    if fmt == "cap":
                         # Include WKT
                         pass
-                    elif format == "xml" and settings.get_gis_xml_wkt():
+                    elif fmt == "xml" and settings.get_gis_xml_wkt():
                         # Include WKT
                         pass
                     else:
@@ -6457,7 +6449,7 @@ class S3ResourceData(object):
         colname = rfield.colname
 
         field_data = self.field_data
-        fvalues, frecords, joined, list_type, virtual, json_type = field_data[colname]
+        fvalues, frecords, joined, list_type = field_data[colname][:4]
 
         # Get the renderer
         renderer = rfield.represent

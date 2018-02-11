@@ -168,10 +168,11 @@ class custom_WACOP(S3CRUD):
         get_config = s3db.get_config # Customise these inside customise() functions as-required
         list_fields = get_config(tablename, "list_fields")
         orderby = get_config(tablename, "orderby")
-        dt, totalrows, ids = resource.datatable(fields = list_fields,
-                                                start = 0,
-                                                limit = 2 * displayLength,
-                                                orderby = orderby)
+        dt, totalrows = resource.datatable(fields = list_fields,
+                                           start = 0,
+                                           limit = 2 * displayLength,
+                                           orderby = orderby,
+                                           )
         displayrows = totalrows
 
         if dt.empty:
@@ -931,13 +932,14 @@ class custom_WACOP(S3CRUD):
         # list_fields defined in customise() to be DRY
         list_fields = s3db.get_config(tablename, "list_fields")
 
-        datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                   start=None,
-                                                   limit=5,
-                                                   list_id=list_id,
-                                                   # This is the default but needs specifying when talking direct to the back-end
-                                                   orderby="cms_post.date desc",
-                                                   layout=cms_post_list_layout)
+        datalist, numrows = resource.datalist(fields = list_fields,
+                                              start = None,
+                                              limit = 5,
+                                              list_id = list_id,
+                                              # This is the default but needs specifying when talking direct to the back-end
+                                              orderby = "cms_post.date desc",
+                                              layout = cms_post_list_layout,
+                                              )
 
         s3.dl_no_header = True
 
