@@ -39,21 +39,17 @@ import sys
 import types
 try:
     from cStringIO import StringIO    # Faster, where available
-except:
+except ImportError:
     from StringIO import StringIO
 
-from gluon import *
-# Here are dependencies listed for reference:
-#from gluon.globals import current
-#from gluon.html import URL
-#from gluon.http import HTTP, redirect
+from gluon import current, redirect, HTTP, URL
 from gluon.storage import Storage
 
 from s3datetime import s3_parse_datetime
 from s3resource import S3Resource
 from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
-REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
+REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")
 
 # =============================================================================
@@ -1542,14 +1538,14 @@ class S3Request(object):
         """
 
         stylesheet = None
-        format = self.representation
+        representation = self.representation
         if self.component:
             resourcename = self.component.name
         else:
             resourcename = self.name
 
         # Native S3XML?
-        if format == "xml":
+        if representation == "xml":
             return stylesheet
 
         # External stylesheet specified?
@@ -1572,7 +1568,7 @@ class S3Request(object):
         if method != "import":
             method = "export"
         filename = "%s.%s" % (method, extension)
-        stylesheet = os.path.join(folder, path, format, filename)
+        stylesheet = os.path.join(folder, path, representation, filename)
         if not os.path.exists(stylesheet):
             if not skip_error:
                 self.error(501, "%s: %s" % (current.ERROR.BAD_TEMPLATE,
@@ -2047,14 +2043,14 @@ class S3Method(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _remove_filters(vars):
+    def _remove_filters(get_vars):
         """
             Remove all filters from URL vars
 
-            @param vars: the URL vars as dict
+            @param get_vars: the URL vars as dict
         """
 
-        return Storage((k, v) for k, v in vars.iteritems()
+        return Storage((k, v) for k, v in get_vars.iteritems()
                               if not REGEX_FILTER.match(k))
 
     # -------------------------------------------------------------------------
@@ -2094,12 +2090,14 @@ def s3_request(*args, **kwargs):
     try:
         r = S3Request(*args, **kwargs)
     except (AttributeError, SyntaxError):
-        error = 400
-    except KeyError:
-        error = 404
-    if error:
         if kwargs.get("catch_errors") is False:
             raise
+        error = 400
+    except KeyError:
+        if kwargs.get("catch_errors") is False:
+            raise
+        error = 404
+    if error:
         message = sys.exc_info()[1]
         if hasattr(message, "message"):
             message = message.message
