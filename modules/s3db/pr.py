@@ -109,16 +109,18 @@ __all__ = (# PR Base Entities
 
 import json
 import os
-#import re
 
 from urllib import urlencode
 
-from gluon import *
+from gluon import current, redirect, HTTP, URL, \
+                  A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
+                  IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
+                  IS_INT_IN_RANGE, IS_MATCH
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
-from s3dal import Row
+from s3dal import Field, Row
 from s3layouts import S3PopupLink
 
 OU = 1 # role type which indicates hierarchy, see role_types
@@ -600,9 +602,10 @@ class PRPersonEntityModel(S3Model):
                                               limitby=(0, 1)).first()
         try:
             entity = current.s3db.pr_pentity_represent(role.pe_id)
-            return "%s: %s" % (entity, role.role)
         except:
             return current.messages.UNKNOWN_OPT
+        else:
+            return "%s: %s" % (entity, role.role)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1364,7 +1367,7 @@ class PRPersonModel(S3Model):
         # Optional extra data
         dob = data.get("date_of_birth")
         email = sms = None
-        id = {}
+        identities = {}
         for citem in item.components:
             if citem.tablename == "pr_contact":
                 data = citem.data
@@ -1379,7 +1382,7 @@ class PRPersonModel(S3Model):
                     id_type = data.get("type")
                     id_value = data.get("value")
                     if id_type and id_value:
-                        id[id_type] = id_value
+                        identities[id_type] = id_value
 
         s3db = current.s3db
         table = s3db.pr_contact
@@ -1405,7 +1408,7 @@ class PRPersonModel(S3Model):
             fields.append(stable.value)
             left.append(stable.on((stable.pe_id == ptable.pe_id) & \
                                   (stable.contact_method == "SMS")))
-        if id:
+        if identities:
             itable = s3db.pr_identity
             fields += [itable.type,
                        itable.value,
@@ -1437,7 +1440,7 @@ class PRPersonModel(S3Model):
             row_email = row[etable.value]
             if sms:
                 row_sms = row[stable.value]
-            if id:
+            if identities:
                 row_id_type = row[itable.type]
                 row_id_value = row[itable.value]
 
@@ -1480,8 +1483,8 @@ class PRPersonModel(S3Model):
             if sms and row_sms:
                 check += rank(sms.lower(), row_sms.lower(), +1, -1)
 
-            if id and row_id_type:
-                id_value = id.get(str(row_id_type), None)
+            if identities and row_id_type:
+                id_value = identities.get(str(row_id_type), None)
                 if id_value and row_id_value:
                     check += rank(id_value, row_id_value, +5, -2)
 
@@ -1652,7 +1655,8 @@ class PRPersonModel(S3Model):
                     fields.append("human_resource.organisation_id$name")
 
             name_format = settings.get_pr_name_format()
-            match = re.match("\s*?%\((?P<fname>.*?)\)s.*", name_format)
+            import re
+            match = re.match(r"\s*?%\((?P<fname>.*?)\)s.*", name_format)
             if match:
                 orderby = "pr_person.%s" % match.group("fname")
             else:
@@ -1694,8 +1698,8 @@ class PRPersonModel(S3Model):
                     if job_title:
                         item["job"] = job_title
                     if show_orgs:
-                         org = row.get("org_organisation.name", None)
-                         if org:
+                        org = row.get("org_organisation.name", None)
+                        if org:
                             item["org"] = org
 
                 iappend(item)
@@ -2975,11 +2979,11 @@ class PRGroupModel(S3Model):
         # Find the Group
         gtable = s3db.pr_group
         group = db(gtable.id == row.group_id).select(gtable.realm_entity,
-                                                     limitby=(0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
         try:
             return group.realm_entity
-        except:
+        except AttributeError:
             # => Set to default of None
             return None
 
@@ -3468,7 +3472,7 @@ class PRAddressModel(S3Model):
 
         try:
             record_id = form_vars["id"]
-        except:
+        except (TypeError, KeyError):
             # Nothing we can do
             return
 
@@ -3484,7 +3488,7 @@ class PRAddressModel(S3Model):
                                                 ).first()
         try:
             location_id = row.location_id
-        except:
+        except AttributeError:
             # Nothing we can do
             return
         pe_id = row.pe_id
@@ -3965,9 +3969,8 @@ class PRImageModel(S3Model):
         """
 
         form_vars = form.vars
-        id = form_vars.id
+        record_id = form_vars.id
         profile = form_vars.profile
-        url = form_vars.url
         newfilename = form_vars.image_newfilename
         if profile == "False":
             profile = False
@@ -3994,13 +3997,14 @@ class PRImageModel(S3Model):
             # Find the pe_id
             db = current.db
             table = db.pr_image
-            pe = db(table.id == id).select(table.pe_id,
-                                           limitby=(0, 1)).first()
+            pe = db(table.id == record_id).select(table.pe_id,
+                                                  limitby = (0, 1),
+                                                  ).first()
             if pe:
                 pe_id = pe.pe_id
                 # Set all others for this person as not the Profile picture
                 query  = (table.pe_id == pe_id) & \
-                         (table.id != id)
+                         (table.id != record_id)
                 db(query).update(profile = False)
 
     # -------------------------------------------------------------------------
@@ -4013,12 +4017,13 @@ class PRImageModel(S3Model):
         url = form_vars.url
 
         if not hasattr(image, "file"):
-            id = current.request.post_vars.id
-            if id:
+            record_id = current.request.post_vars.id
+            if record_id:
                 db = current.db
                 table = db.pr_image
-                record = db(table.id == id).select(table.image,
-                                                   limitby=(0, 1)).first()
+                record = db(table.id == record_id).select(table.image,
+                                                          limitby = (0, 1),
+                                                          ).first()
                 if record:
                     image = record.image
 
@@ -4240,8 +4245,10 @@ class PRPresenceModel(S3Model):
         shelter = form.vars.shelter_id
 
         if shelter and shelter_table is not None:
-            set = db(shelter_table.id == shelter)
-            row = set.select(shelter_table.location_id, limitby=(0, 1)).first()
+            dbset = db(shelter_table.id == shelter)
+            row = dbset.select(shelter_table.location_id,
+                               limitby = (0, 1),
+                               ).first()
             if row:
                 location = form.vars.location_id = row.location_id
             else:
@@ -4268,9 +4275,11 @@ class PRPresenceModel(S3Model):
                        table.shelter_id.default:
                         return
                 else:
-                    record = db(table.id == form.vars.id).select(table.location_id,
-                                                                 table.shelter_id,
-                                                                 limitby=(0, 1)).first()
+                    record = db(table.id == form.vars.id).select(
+                                    table.location_id,
+                                    table.shelter_id,
+                                    limitby = (0, 1),
+                                    ).first()
                     if record and \
                        record.location_id or record.shelter_id:
                         return
@@ -4280,8 +4289,7 @@ class PRPresenceModel(S3Model):
             return
 
         form.errors.location_id = \
-        form.errors.shelter_id = T("Either a shelter or a location must be specified")
-        return
+        form.errors.shelter_id = current.T("Either a shelter or a location must be specified")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4299,15 +4307,16 @@ class PRPresenceModel(S3Model):
         popts = current.s3db.pr_presence_opts
 
         if isinstance(form, (int, long, str)):
-            id = form
+            record_id = form
         elif hasattr(form, "vars"):
-            id = form.vars.id
+            record_id = form.vars.id
         else:
             # e.g. Row like for delete
-            id = form.id
+            record_id = form.id
 
-        presence = db(table.id == id).select(table.ALL,
-                                             limitby=(0, 1)).first()
+        presence = db(table.id == record_id).select(table.ALL,
+                                                    limitby = (0, 1),
+                                                    ).first()
         if not presence:
             return
         else:
@@ -4331,7 +4340,7 @@ class PRPresenceModel(S3Model):
 
             if condition in popts.TRANSITIONAL_PRESENCE:
                 if presence.closed:
-                    db(table.id == id).update(closed=False)
+                    db(table.id == record_id).update(closed=False)
 
             elif condition in popts.PERSISTANT_PRESENCE:
                 if not presence.closed:
@@ -4342,14 +4351,14 @@ class PRPresenceModel(S3Model):
                     query = this_entity & later & \
                             (is_present | (is_absent & same_place))
                     if db(query).count():
-                        db(table.id == id).update(closed=True)
+                        db(table.id == record_id).update(closed=True)
 
             elif condition in popts.ABSENCE:
                 query = this_entity & earlier & is_present & same_place
                 db(query).update(closed=True)
 
                 if not presence.closed:
-                    db(table.id == id).update(closed=True)
+                    db(table.id == record_id).update(closed=True)
 
         if not presence.closed:
 
@@ -4376,7 +4385,7 @@ class PRPresenceModel(S3Model):
                     db(table.id == presence.id).update(closed=False)
 
         pentity = db(db.pr_pentity.pe_id == pe_id).select(db.pr_pentity.instance_type,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
         if pentity and pentity.instance_type == "pr_person":
             query = this_entity & is_missing & (table.closed == False)
@@ -4384,8 +4393,6 @@ class PRPresenceModel(S3Model):
                 db(db.pr_person.pe_id == pe_id).update(missing = True)
             else:
                 db(db.pr_person.pe_id == pe_id).update(missing = False)
-
-        return
 
 # =============================================================================
 class PRAvailabilityModel(S3Model):
@@ -4786,18 +4793,18 @@ class PRDescriptionModel(S3Model):
         }
 
         # This set is suitable for use in the US
-        pr_ethnicity_opts = [
-            "American Indian",
-            "Alaskan",
-            "Asian",
-            "African American",
-            "Hispanic or Latino",
-            "Native Hawaiian",
-            "Pacific Islander",
-            "Two or more",
-            "Unspecified",
-            "White"
-        ]
+        #pr_ethnicity_opts = [
+        #    "American Indian",
+        #    "Alaskan",
+        #    "Asian",
+        #    "African American",
+        #    "Hispanic or Latino",
+        #    "Native Hawaiian",
+        #    "Pacific Islander",
+        #    "Two or more",
+        #    "Unspecified",
+        #    "White"
+        #]
 
         tablename = "pr_physical_description"
         define_table(tablename,
@@ -4963,18 +4970,17 @@ class PRDescriptionModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        pe_table = s3db.pr_pentity
         ntable = db.pr_note
         ptable = s3db.pr_person
 
         if isinstance(form, (int, long, str)):
-            _id = form
+            record_id = form
         elif hasattr(form, "vars"):
-            _id = form.vars.id
+            record_id = form.vars.id
         else:
-            _id = form.id
+            record_id = form.id
 
-        note = ntable[_id]
+        note = ntable[record_id]
         if not note:
             return
 
@@ -4998,7 +5004,7 @@ class PRDescriptionModel(S3Model):
         if note.deleted:
             try:
                 location_id = form.location_id
-            except:
+            except AttributeError:
                 pass
             else:
                 ttable = s3db.sit_presence
@@ -5766,9 +5772,9 @@ class S3ImageLibraryModel(S3Model):
             return
         db = current.db
         table = db.pr_image_library
-        set = db(table.original_name == original_image_name)
-        set.delete_uploaded_files()
-        set.delete()
+        dbset = db(table.original_name == original_image_name)
+        dbset.delete_uploaded_files()
+        dbset.delete()
 
 # =============================================================================
 class S3RoleDelegationModel(S3Model):
@@ -6066,8 +6072,6 @@ def pr_get_entities(pe_ids=None,
     db = current.db
     s3db = current.s3db
 
-    DEFAULT = current.T("None (no such record)")
-
     pe_table = s3db.pr_pentity
 
     if pe_ids is None:
@@ -6216,7 +6220,7 @@ class pr_RoleRepresent(S3Represent):
         return "%s: %s" % (entity, row.role)
 
     # ---------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Lookup all rows referenced by values.
 
@@ -6263,6 +6267,7 @@ class pr_PersonEntityRepresent(S3Represent):
         self.show_label = show_label
         self.default_label = default_label
         self.show_type = show_type
+        self.training_event_represent = None
 
         super(pr_PersonEntityRepresent, self).__init__(lookup="pr_pentity",
                                                        key="pe_id",
@@ -6314,7 +6319,7 @@ class pr_PersonEntityRepresent(S3Represent):
                                          .replace("%5Bid%5D", k))
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup function
 
@@ -6364,17 +6369,17 @@ class pr_PersonEntityRepresent(S3Represent):
                 self.training_event_represent = training_event_represent
             else:
                 if instance_type in instance_fields:
-                    fields = [table[f]
-                              for f in instance_fields[instance_type]
-                              if f in table.fields]
+                    qfields = [table[f]
+                               for f in instance_fields[instance_type]
+                               if f in table.fields]
                 elif "name" in table.fields:
-                    fields = [table["name"]]
+                    qfields = [table["name"]]
                 else:
                     continue
-                fields.insert(0, table[keyname])
+                qfields.insert(0, table[keyname])
 
                 query = (table[keyname].belongs(types[instance_type].keys()))
-                rows = db(query).select(*fields)
+                rows = db(query).select(*qfields)
             self.queries += 1
 
             sdata = types[instance_type]
@@ -6501,7 +6506,7 @@ class pr_GroupRepresent(S3Represent):
         self.org_groups = {}
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -6579,52 +6584,57 @@ class pr_GroupRepresent(S3Represent):
         return representation
 
 # =============================================================================
-def pr_person_phone_represent(id, show_link=True):
+def pr_person_phone_represent(person_id, show_link=True):
     """
         Represent a Person with their phone number
 
         @param show_link: whether to make the output into a hyperlink
     """
 
-    if not id:
+    if not person_id:
         return current.messages["NONE"]
 
     s3db = current.s3db
     ptable = s3db.pr_person
     ctable = s3db.pr_contact
-    query = (ptable.id == id)
+    query = (ptable.id == person_id)
     left = ctable.on((ctable.pe_id == ptable.pe_id) & \
                      (ctable.contact_method == "SMS"))
     row = current.db(query).select(ptable.first_name,
                                    ptable.middle_name,
                                    ptable.last_name,
                                    ctable.value,
-                                   left=left,
-                                   limitby=(0, 1)).first()
+                                   left = left,
+                                   limitby = (0, 1),
+                                   ).first()
 
     try:
-        person = row["pr_person"]
-    except:
+        person = row.pr_person
+    except AttributeError:
         return current.messages.UNKNOWN_OPT
 
-    repr = s3_fullname(person)
+    repr_str = s3_fullname(person)
     if row.pr_contact.value:
-        repr = "%s %s" % (repr, s3_phone_represent(row.pr_contact.value))
+        repr_str = "%s %s" % (repr_str,
+                              s3_phone_represent(row.pr_contact.value),
+                              )
     if show_link:
         request = current.request
         group = request.get_vars.get("group", None)
         c = request.controller
-        if group == "staff" or \
-           c == "hrm":
+        if group == "staff" or c == "hrm":
             controller = "hrm"
-        elif group == "volunteer" or \
-             c == "vol":
+        elif group == "volunteer" or c == "vol":
             controller = "vol"
         else:
             controller = "pr"
-        repr = A(repr,
-                 _href = URL(c=controller, f="person", args=[id, "contact"]))
-    return repr
+        repr_str = A(repr_str,
+                     _href = URL(c = controller,
+                                 f = "person",
+                                 args = [person_id, "contact"],
+                                 ),
+                     )
+    return repr_str
 
 # =============================================================================
 class pr_ContactRepresent(S3Represent):
@@ -6693,10 +6703,7 @@ class pr_ContactRepresent(S3Represent):
         return s3_str(value)
 
 # =============================================================================
-def pr_image_library_represent(image_name,
-                               format = None,
-                               size = (),
-                               ):
+def pr_image_library_represent(image_name, format=None, size=None):
     """
         Get the image that matches the required image type
 
@@ -6754,7 +6761,7 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
                        )
 
 # =============================================================================
-def pr_rheader(r, tabs=[]):
+def pr_rheader(r, tabs=None):
     """
         Person Registry resource headers
         - used in PR, HRM, DVI, MPR, MSG, VOL
@@ -6886,7 +6893,8 @@ class pr_AssignMethod(S3Method):
         """
             @param component: the Component in which to create records
             @param next_tab: the component/method to redirect to after assigning
-            @param types: a list of types to pick from: Users (Staff/Vols/Members to come as-required)
+            @param types: a list of types to pick from: Users
+                          (Staff/Vols/Members to come as-required)
         """
 
         self.component = component
@@ -6896,6 +6904,7 @@ class pr_AssignMethod(S3Method):
             self.next_tab = component
         #self.types = types
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
             Apply method.
@@ -6915,8 +6924,7 @@ class pr_AssignMethod(S3Method):
         if not authorised:
             r.unauthorised()
 
-        settings = current.deployment_settings
-
+        #settings = current.deployment_settings
         #types = self.types
         #if not types:
         #    if settings.has_module("vol"):
@@ -7263,7 +7271,7 @@ def pr_compose():
 class pr_Contacts(S3Method):
     """ Custom Method to edit person contacts """
 
-    """ Priority Order of Contact Methods """
+    # Priority Order of Contact Methods
     PRIORITY = {"SMS": 1,
                 "EMAIL": 2,
                 "WORK_PHONE": 3,
@@ -7636,236 +7644,6 @@ class pr_Contacts(S3Method):
                             ))
 
         return form
-
-# =============================================================================
-def pr_contacts(r, **attr):
-    """
-        Custom Method to provide the details for the Person's Contacts Tab:
-        - provides a single view on:
-            Addresses (pr_address)
-            Contacts (pr_contact)
-            Emergency Contacts
-
-        @todo: deprecated, replaced by pr_Contacts, retained as reference
-               (until address-support re-implemented in pr_Contacts)
-    """
-
-    from itertools import groupby
-
-    if r.http != "GET":
-        r.error(405, current.ERROR.BAD_METHOD)
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    response = current.response
-    s3 = response.s3
-    has_permission = current.auth.s3_has_permission
-
-    person = r.record
-    # Addresses
-    # - removed since can't get Google Maps displaying in Location Selector when loaded async
-    # - even when loaded into page before async load of map
-    # atable = s3db.pr_address
-    # query = (atable.pe_id == person.pe_id)
-    # addresses = db(query).select(atable.id,
-                                 # atable.type,
-                                 # atable.building_name,
-                                 # atable.address,
-                                 # atable.L3,
-                                 # atable.postcode,
-                                 # atable.L0,
-                                 # orderby=atable.type)
-
-    # address_groups = {}
-    # for key, group in groupby(addresses, lambda a: a.type):
-        # address_groups[key] = list(group)
-
-    # address_wrapper = DIV(H2(T("Addresses")),
-                          # DIV(A(T("Add"), _class="action-btn", _id="address-add"),
-                              # DIV(_id="address-add_throbber",
-                                  # _class="throbber hide"),
-                              # _class="margin"))
-
-    # items = address_groups.items()
-    # opts = s3db.pr_address_type_opts
-    # for address_type, details in items:
-        # address_wrapper.append(H3(opts[address_type]))
-        # for detail in details:
-            # text = ",".join((detail.building_name or "",
-                             # detail.address or "",
-                             # detail.L3 or "",
-                             # detail.postcode or "",
-                             # detail.L0 or "",
-                            # ))
-            # text = re.sub(",+", ",", text)
-            # if text[0] == ",":
-                # text = text[1:]
-            # address_wrapper.append(P(
-                # SPAN(text),
-                # A(T("Edit"), _class="editBtn action-btn fright"),
-                # _id="address-%s" % detail.id,
-                # _class="address",
-                # ))
-
-    # Contacts
-
-    ctable = s3db.pr_contact
-    query = (ctable.pe_id == person.pe_id)
-    resource = s3db.resource("pr_contact")
-    resource.add_filter(query)
-    # Public or Private?
-    access = s3.pr_contacts
-    if access:
-        resource.add_filter(FS("contact.access") == access)
-    fields = ["id",
-              "contact_description",
-              "value",
-              "contact_method",
-              ]
-    contacts = resource.select(fields)["rows"]
-
-    contact_groups = {}
-    for key, group in groupby(contacts, lambda c: c["pr_contact.contact_method"]):
-        contact_groups[key] = list(group)
-
-    contacts_wrapper = DIV(H2(T("Contacts")))
-
-    person_update_permission = has_permission("update",
-                                              "pr_person",
-                                              record_id = person.id)
-
-    if person_update_permission and has_permission("create", ctable):
-        add_btn = DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
-                      DIV(_id="contact-add_throbber",
-                          _class="throbber hide"),
-                      _class="margin")
-        contacts_wrapper.append(add_btn)
-
-    items = contact_groups.items()
-    def mysort(key):
-        """ Sort Contact Types by Priority"""
-        keys = {"SMS": 1,
-                "EMAIL": 2,
-                "WORK_PHONE": 3,
-                "HOME_PHONE": 4,
-                "SKYPE": 5,
-                "RADIO": 6,
-                "TWITTER": 7,
-                "FACEBOOK": 8,
-                "FAX": 9,
-                "OTHER": 10,
-                "IRC": 11,
-                "GITHUB": 12,
-                "LINKEDIN": 13,
-                "BLOG": 14,
-                }
-        return keys[key[0]]
-    items.sort(key=mysort)
-    opts = current.msg.CONTACT_OPTS
-
-    def action_buttons(table, contact_id):
-        if has_permission("update", ctable, record_id=contact_id):
-            edit_btn = A(T("Edit"), _class="editBtn action-btn fright")
-        else:
-            edit_btn = DIV()
-        if has_permission("delete", ctable, record_id=contact_id):
-            delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
-        else:
-            delete_btn = DIV()
-        return (edit_btn, delete_btn)
-
-    for contact_type, details in items:
-        contacts_wrapper.append(H3(opts[contact_type]))
-        for detail in details:
-            contact_id = detail["pr_contact.id"]
-            value = detail["pr_contact.value"]
-            description = detail["pr_contact.contact_description"] or ""
-            if description:
-                description = "%s, " % description
-            (edit_btn, delete_btn) = action_buttons(ctable, contact_id)
-
-            contacts_wrapper.append(P(SPAN(description, value),
-                                      edit_btn,
-                                      delete_btn,
-                                      _id="contact-%s" % contact_id,
-                                      _class="contact",
-                                      ))
-
-    # Emergency Contacts
-    show_emergency_contacts = current.deployment_settings.get_pr_show_emergency_contacts()
-    if not show_emergency_contacts:
-        emergency_wrapper = ""
-    else:
-        etable = s3db.pr_contact_emergency
-        query = (etable.pe_id == person.pe_id) & \
-                (etable.deleted == False)
-        resource = s3db.resource("pr_contact_emergency")
-        resource.add_filter(query)
-        fields = ["id",
-                  "name",
-                  "relationship",
-                  "address",
-                  "phone",
-                  ]
-
-        rows = resource.select(fields).rows
-
-        emergency_wrapper = DIV(H2(T("Emergency Contacts")))
-
-        if person_update_permission and has_permission("create", etable):
-            add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
-                          DIV(_id="emergency-add_throbber",
-                              _class="throbber hide"),
-                          _class="margin")
-            emergency_wrapper.append(add_btn)
-
-        readable_fields = [f for f in fields if etable[f].readable and f != "id"]
-        for row in rows:
-            data = [row["pr_contact_emergency.%s" % f] or ""
-                    for f in readable_fields]
-            record_id = row["pr_contact_emergency.id"]
-            (edit_btn, delete_btn) = action_buttons(etable, record_id)
-            emergency_wrapper.append(P(SPAN(", ".join(data)),
-                                       edit_btn,
-                                       delete_btn,
-                                       _id="emergency-%s" % record_id,
-                                       _class="emergency",
-                                       ))
-
-    # Overall content
-    content = DIV(#address_wrapper,
-                  contacts_wrapper,
-                  emergency_wrapper,
-                  _class="contacts-wrapper",
-                  )
-
-    # Add the javascript
-    if s3.debug:
-        s3.scripts.append(URL(c="static", f="scripts",
-                              args=["S3", "s3.contacts.js"]))
-    else:
-        s3.scripts.append(URL(c="static", f="scripts",
-                              args=["S3", "s3.contacts.min.js"]))
-
-    s3.js_global += ["S3.pr_contacts_controller='%s'" % current.request.controller,
-                     "S3.pr_contacts_person_id=%s" % person.id,
-                     ]
-    if access:
-        s3.js_global.append("S3.pr_contacts_access=%s" % access)
-
-    # Custom View
-    response.view = "pr/contacts.html"
-
-    # RHeader for consistency
-    rheader = attr.get("rheader", None)
-    if callable(rheader):
-        rheader = rheader(r)
-
-    return dict(content = content,
-                rheader = rheader,
-                title = T("Contacts"),
-                )
 
 # =============================================================================
 # Hierarchy Manipulation
@@ -8881,7 +8659,7 @@ def pr_rebuild_path(pe_id, clear=False):
             pr_role_rebuild_path(role, clear=clear)
 
 # =============================================================================
-def pr_role_rebuild_path(role_id, skip=[], clear=False):
+def pr_role_rebuild_path(role_id, skip=None, clear=False):
     """
         Rebuild the ancestor path of a role within the OU hierarchy
 
@@ -8889,6 +8667,9 @@ def pr_role_rebuild_path(role_id, skip=[], clear=False):
         @param skip: list of role IDs to skip during recursion
         @param clear: clear paths in descendant roles (triggers lazy rebuild)
     """
+
+    if skip is None:
+        skip = set()
 
     db = current.db
     s3db = current.s3db
@@ -8908,7 +8689,7 @@ def pr_role_rebuild_path(role_id, skip=[], clear=False):
 
     if role_id in skip:
         return role.path
-    skip = skip + [role_id]
+    skip.add(role_id)
 
     if role.role_type != OU:
         path = None
@@ -8967,16 +8748,12 @@ def pr_image_modify(image_file,
     # Import the specialist libraries
     try:
         from PIL import Image
-        from PIL import ImageOps
-        from PIL import ImageStat
         PILImported = True
-    except(ImportError):
+    except ImportError:
         try:
             import Image
-            import ImageOps
-            import ImageStat
             PILImported = True
-        except(ImportError):
+        except ImportError:
             PILImported = False
     if PILImported:
         from tempfile import TemporaryFile
@@ -9003,6 +8780,7 @@ def pr_image_modify(image_file,
             #pip uninstall pillow
             #apt-get install libjpeg-dev
             #pip install pillow
+            import sys
             msg = sys.exc_info()[1]
             current.log.error(msg)
             current.session.error = msg
@@ -9054,7 +8832,7 @@ def pr_import_prep(data):
     update_super = s3db.update_super
     table = s3db.org_organisation
 
-    resource, tree = data
+    tree = data[1]
 
     # Memberships
     elements = tree.getroot().xpath("/s3xml//resource[@name='pr_contact']/data[@field='pe_id']")
@@ -9660,7 +9438,8 @@ class pr_PersonSearchAutocomplete(S3Method):
 
             # Sort results alphabetically (according to name format)
             name_format = settings.get_pr_name_format()
-            match = re.match("\s*?%\((?P<fname>.*?)\)s.*", name_format)
+            import re
+            match = re.match(r"\s*?%\((?P<fname>.*?)\)s.*", name_format)
             if match:
                 orderby = "pr_person.%s" % match.group("fname")
             else:
@@ -9701,8 +9480,8 @@ class pr_PersonSearchAutocomplete(S3Method):
                     if job_title:
                         item["job"] = job_title
                     if show_orgs:
-                         org = row.get("org_organisation.name", None)
-                         if org:
+                        org = row.get("org_organisation.name", None)
+                        if org:
                             item["org"] = org
                 iappend(item)
             output = items

@@ -9281,40 +9281,6 @@ def s3_richtext_widget(field, value):
                     requires=field.requires)
 
 # =============================================================================
-def set_match_strings(matchDict, value):
-    """
-        Helper method for site_search_ac and org_search_ac
-        Find which field the search term matched & where
-
-        @param matchDict: usually the record
-        @param value: the search term
-    """
-
-    for key in matchDict:
-        v = matchDict[key]
-        if not isinstance(v, str):
-            continue
-        l = len(value)
-        if v[:l].lower() == value:
-            # Match needs to start from beginning
-            matchDict["match_type"] = key
-            matchDict["match_string"] = v[:l] # Maintain original case
-            next_string = v[l:]
-            if next_string:
-                matchDict["next_string"] = next_string
-            break
-        elif key == "addr" and value in v.lower():
-            # Match can start after the beginning (to allow for house number)
-            matchDict["match_type"] = key
-            pre_string, next_string = v.lower().split(value, 1)
-            if pre_string:
-                matchDict["pre_string"] = v[:len(pre_string)] # Maintain original case
-            if next_string:
-                matchDict["next_string"] = v[(len(pre_string) + l):] # Maintain original case
-            matchDict["match_string"] = v[len(pre_string):][:l] # Maintain original case
-            break
-
-# =============================================================================
 def search_ac(r, **attr):
     """
         JSON search method for S3AutocompleteWidget
