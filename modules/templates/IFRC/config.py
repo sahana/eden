@@ -1815,7 +1815,7 @@ def config(settings):
             Set the Date of the Response when the Answers are added
         """
 
-        record_id = form.vars.get("id")
+        #record_id = form.vars.get("id")
 
         # Retrieve the tablename set in prep
         dtablename = current.response.s3.dc_dtablename
@@ -2436,7 +2436,6 @@ def config(settings):
                 _title="%s|%s" % (MEMBER,
                                   current.messages.AUTOCOMPLETE_HELP))
 
-        from s3 import IS_ONE_OF
         s3db = current.s3db
         atable = s3db.deploy_assignment
         atable.human_resource_id.label = MEMBER
@@ -3101,8 +3100,6 @@ def config(settings):
     def rdrt_member_profile_header(r):
         """ Custom profile header to allow update of RDRT roster status """
 
-        import json
-
         record = r.record
         if not record:
             return ""
@@ -3145,7 +3142,7 @@ def config(settings):
                               _id = "rdrt-organisation",
                               _title = EDIT,
                               )
-            org_opts = ofield.requires.options()
+            #org_opts = ofield.requires.options()
             #org_opts = {key: value for (key, value) in org_opts}
             org_script = '''$.rdrtOrg('%(url)s','%(submit)s')''' % \
                 {"url": URL(c="deploy", f="human_resource",
@@ -3423,7 +3420,7 @@ def config(settings):
                 hrm_status_opts = s3db.hrm_status_opts
                 hrm_status_opts[3] = T("End Service")
                 table.status.represent = lambda opt: \
-                                         hrm_status_opts.get(opt, UNKNOWN_OPT),
+                                         hrm_status_opts.get(opt, current.messages.UNKNOWN_OPT),
                 from gluon.validators import IS_IN_SET
                 table.status.requires = IS_IN_SET(hrm_status_opts,
                                                   zero=None)
@@ -3628,7 +3625,7 @@ def config(settings):
             if controller == "vol":
                 if arcs:
                     # ARCS have a custom Volunteer form
-                    from gluon import IS_EMPTY_OR
+                    #from gluon import IS_EMPTY_OR
                     #from s3 import S3AddPersonWidget, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
                     from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
@@ -4827,7 +4824,7 @@ def config(settings):
                     T = current.T
                     if OM:
                         # Dashboard for Office Manager
-                        from dateutil.relativedelta import relativedelta
+                        #from dateutil.relativedelta import relativedelta
                         from s3 import S3DateTime, s3_auth_user_represent_name, s3_fieldmethod
 
                         etable = s3db.hrm_training_event
@@ -7082,7 +7079,7 @@ def config(settings):
             if script not in s3.scripts:
                 s3.scripts.append(script)
             if record and record.followup:
-                s3.jquery_ready.append('''$.showHouseholdComponents(true)''');
+                s3.jquery_ready.append('''$.showHouseholdComponents(true)''')
         return
 
     # -------------------------------------------------------------------------
