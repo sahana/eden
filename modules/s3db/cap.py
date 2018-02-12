@@ -341,7 +341,7 @@ class S3CAPModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         set_method = self.set_method
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         tablename = "cap_alert"
         define_table(tablename,
@@ -1698,31 +1698,28 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def cap_template_represent(id, row=None):
+    def cap_template_represent(alert_id, row=None):
         """
             Represent an alert template concisely
         """
 
         if row:
-            id = row.id
-        elif not id:
+            alert_id = row.id
+        elif not alert_id:
             return current.messages["NONE"]
         else:
             db = current.db
             table = db.cap_alert
-            row = db(table.id == id).select(table.is_template,
-                                            table.template_title,
-                                            # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                            limitby=(0, 1)).first()
+            row = db(table.id == alert_id).select(table.is_template,
+                                                  table.template_title,
+                                                  limitby=(0, 1),
+                                                  ).first()
 
-        try:
-            # @ToDo: Should get headline from "info"?
-            if row.is_template:
-                return row.template_title
-            else:
-                return s3db.cap_alert_represent(id)
-        except:
-            return current.messages.UNKNOWN_OPT
+        # @ToDo: Should get headline from "info"?
+        if row.is_template:
+            return row.template_title
+        else:
+            return current.s3db.cap_alert_represent(alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1955,7 +1952,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         # i.e. we allow editors to be self approver
         if alert_id:
             db = current.db
-            approved_on = record["approved_on"]
             table = db.cap_alert
             query = table.id == alert_id
             utcnow = current.request.utcnow
@@ -2195,12 +2191,12 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                               limitby=(0, 1)).first()
                         if not row.external:
                             import_location = True
-    
+
             if import_location:
                 # SAME tag refers to some location_id in CAP
                 ttable = s3db.gis_location_tag
                 gtable = s3db.gis_location
-    
+
                 # It is possible for there to be two polygons for the same SAME
                 # code since polygon change over time, even if the code remains
                 # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
@@ -2265,7 +2261,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                 import uuid
                 import cStringIO
                 metadata, encoded_file = encoded_file.split(",")
-                filename, datatype, enctype = metadata.split(";")
+                #filename, datatype, enctype = metadata.split(";")
+                filename, datatype = metadata.split(";")[:2]
                 f = Storage()
                 f.filename = uuid.uuid4().hex + filename
                 f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
@@ -2277,9 +2274,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
                 # extract mime_type
                 if image is not None:
-                    data, mime_type = datatype.split(":")
+                    #data, mime_type = datatype.split(":")
                     form_vars.size = file_size
-                    form_vars.mime_type = mime_type
+                    form_vars.mime_type = datatype.split(":")[1]
 
         elif isinstance(image, str):
             # Image = String => Update not a create, so file not in form
@@ -2360,7 +2357,7 @@ class S3CAPHistoryModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Alert History Table
@@ -3431,7 +3428,6 @@ def cap_rheader(r):
                         if not current.request.get_vars.get("_next") and \
                            current.deployment_settings.get_cap_authorisation() and \
                            record.approved_by is None:
-                            auth = current.auth
                             # Show these buttons only if there is atleast one area segment
                             area_table = s3db.cap_area
                             area_row = db(area_table.alert_id == alert_id).\
@@ -3585,7 +3581,6 @@ def cap_rheader(r):
 
                 if cap_alert_is_template(record.alert_id):
                     rheader_tabs = s3_rheader_tabs(r, tabs)
-                    table = r.table
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Template")),
                                            TD(A(s3db.cap_template_represent(record.alert_id),
                                                 _href=URL(c="cap", f="template",
@@ -3604,7 +3599,6 @@ def cap_rheader(r):
                 else:
                     tabs.insert(1, (T("Areas"), "area"))
                     rheader_tabs = s3_rheader_tabs(r, tabs)
-                    table = r.table
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
                                            TD(A(s3db.cap_alert_represent(record.alert_id),
@@ -3635,9 +3629,9 @@ def cap_history_rheader(r):
             s3db = current.s3db
             if r.tablename == "cap_alert_history":
                 alert_id = record.id
-                itable = s3db.cap_info_history
-                row = db(itable.alert_history_id == alert_id).select(itable.id,
-                                                                     limitby=(0, 1)).first()
+                #itable = s3db.cap_info_history
+                #row = db(itable.alert_history_id == alert_id).select(itable.id,
+                #                                                     limitby=(0, 1)).first()
 
                 tabs = [(T("Alert Details"), None),
                         (T("Information"), "info_history"),
@@ -3758,7 +3752,7 @@ def cap_gis_location_xml_post_render(element, record):
 
     try:
         from lxml import etree
-    except:
+    except ImportError:
         # This won't fail, since we're in the middle of processing xml.
         return
 
@@ -3771,9 +3765,9 @@ def cap_gis_location_xml_post_render(element, record):
     ATTRIBUTE = s3xml.ATTRIBUTE
     NAME = ATTRIBUTE["name"]
     FIELD = ATTRIBUTE["field"]
-    VALUE = ATTRIBUTE["value"]
+    #VALUE = ATTRIBUTE["value"]
 
-    loc_tablename = "gis_location"
+    #loc_tablename = "gis_location"
     tag_tablename = "gis_location_tag"
     tag_fieldname = "tag"
     val_fieldname = "value"
@@ -4078,7 +4072,7 @@ def add_area_from_template(area_id, alert_id):
     set_record_owner = current.auth.s3_set_record_owner
     onaccept = s3db.onaccept
     atable = s3db.cap_area
-    itable = s3db.cap_info
+    #itable = s3db.cap_info
     ltable = s3db.cap_area_location
     ttable = s3db.cap_area_tag
 
@@ -4119,7 +4113,7 @@ def add_area_from_template(area_id, alert_id):
                  }
         for field in tfieldnames:
             tdata[field] = trow[field]
-        tid = ttable.insert(**tdata)
+        ttable.insert(**tdata)
 
     return aid
 
@@ -4213,15 +4207,12 @@ class CAPImportFeed(S3Method):
                     base64string = base64.b64encode("%s:%s" % (username, password))
                     request.add_header("Authorization", "Basic %s" % base64string)
                 try:
-                    file = urllib2.urlopen(request).read()
-                except urllib2.URLError:
-                    response.error = str(sys.exc_info()[1])
-                    return output
-                except urllib2.HTTPError:
+                    stream = urllib2.urlopen(request).read()
+                except urllib2.URLError: # also catches urllib2.HTTPError
                     response.error = str(sys.exc_info()[1])
                     return output
 
-                File = StringIO(file)
+                File = StringIO(stream)
                 stylesheet = os.path.join(r.folder, "static", "formats",
                                           "cap", "import.xsl")
                 resource = current.s3db.resource("cap_alert")
@@ -4559,7 +4550,7 @@ def clone(r, record=None, **attr):
     location_table = s3db.cap_area_location
     tag_table = s3db.cap_area_tag
     resource_table = s3db.cap_resource
-    unwanted_fields = s3fields.s3_all_meta_field_names()
+    unwanted_fields = s3_all_meta_field_names()
     unwanted_fields.extend(["id", "doc_id"])
     if record:
         unwanted_fields = ["id", "alert_id", "info_id", "is_template", "doc_id"]
@@ -4898,7 +4889,6 @@ class cap_AreaRepresent(S3Represent):
             @param values: the cap_area IDs
         """
 
-        db = current.db
         s3db = current.s3db
         artable = s3db.cap_area
 
