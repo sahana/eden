@@ -9611,7 +9611,7 @@ def hrm_human_resource_filters(resource_type=None,
                           "person_id$middle_name",
                           "person_id$last_name",
                           "person_id$email.value",
-                          "organisation_id",
+                          #"organisation_id",
                           ]
 
     use_code = settings.get_hrm_use_code()

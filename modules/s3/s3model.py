@@ -415,8 +415,8 @@ class S3Model(object):
                 return aliased
 
         aliased = table.with_alias(alias)
-        if not hasattr(aliased, "_id"):
-            # Older PyDAL not copying _id attribute
+        if aliased._id.table != aliased:
+            # Older PyDAL not setting _id attribute correctly
             aliased._id = aliased[table._id.name]
 
         return aliased

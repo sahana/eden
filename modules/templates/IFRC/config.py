@@ -3844,7 +3844,7 @@ def config(settings):
                     filter_widgets = [S3TextFilter(["person_id$first_name",
                                                     "person_id$middle_name",
                                                     "person_id$last_name",
-                                                    "organisation_id",
+                                                    #"organisation_id",
                                                     ],
                                                    label = T("Search"),
                                                    ),
