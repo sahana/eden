@@ -4768,6 +4768,11 @@ def config(settings):
             attr["csv_template"] = "hide"
         else:
             auth = current.auth
+
+            s3db.set_method("hrm", "training_event",
+                            method = "notify",
+                            action = hrm_training_event_notify)
+
             if not auth.s3_has_role("ADMIN"):
                 OM = auth.s3_has_role("EVENT_OFFICE_MANAGER")
                 if OM or auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER")):
@@ -4777,10 +4782,6 @@ def config(settings):
                     from s3 import FS
 
                     db = current.db
-
-                    s3db.set_method("hrm", "training_event",
-                                    method = "notify",
-                                    action = hrm_training_event_notify)
 
                     organisation_id = auth.user.organisation_id
 
