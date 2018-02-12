@@ -35,7 +35,6 @@ __all__ = ("S3Assess24HModel",
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.tools import callback
 from ..s3 import *
 
 # @ToDo: Shouldn't have T at module level
@@ -88,8 +87,7 @@ class S3Assess24HModel(S3Model):
                           self.pr_person_id("contact_id",
                             comment = None,
                             label = ("Name of contact person in the community"),
-                            requires = IS_ADD_PERSON_WIDGET2(),
-                            widget = S3AddPersonWidget2(),
+                            widget = S3AddPersonWidget(),
                             ),
                           Field("injured", "integer",
                                 label = T("# Injured"),
@@ -202,7 +200,7 @@ class S3AssessBuildingModel(S3Model):
             2 : T("Brick"),
             3 : T("Wood Frame"),
             4 : T("Metal Stud"),
-            4 : T("Other"),
+            5 : T("Other"),
             }
 
         assess_damage_opts = {
@@ -804,15 +802,15 @@ class S3AssessBuildingModel(S3Model):
             Update the overall status from the Gutting/Mold status
         """
 
-        vars = form.vars
-        status = vars.status and int(vars.status) or None
+        formvars = form.vars
+        status = formvars.status and int(formvars.status) or None
         if status < 3:
-            status_gutting = vars.status_gutting and int(vars.status_gutting) or None
-            status_mold = vars.status_mold and int(vars.status_mold) or None
+            status_gutting = formvars.status_gutting and int(formvars.status_gutting) or None
+            status_mold = formvars.status_mold and int(formvars.status_mold) or None
             if status_gutting in (3, 4) or \
                status_mold in (3, 4):
 
-                vars.status = 3
+                formvars.status = 3
 
         return
 
@@ -994,7 +992,7 @@ class S3AssessBuildingModel(S3Model):
                     )
 
         WORK_ORDER = current.T("Work Order")
-        from s3.s3export import S3Exporter
+        from s3 import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r,
                         method = "read",
@@ -1110,11 +1108,11 @@ class S3AssessNeedsModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        if s3.bulk:
-            # Don't default the Team leader name for Bulk Imports
-            default_person = None
-        else:
-            default_person = current.auth.s3_logged_in_person()
+        #if s3.bulk:
+        #    # Don't default the Team leader name for Bulk Imports
+        #    default_person = None
+        #else:
+        #    default_person = current.auth.s3_logged_in_person()
 
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -1163,8 +1161,7 @@ class S3AssessNeedsModel(S3Model):
                      #self.pr_person_id("contact_id",
                      #  comment = None,
                      #  label = ("Name of contact person in the community"),
-                     #  requires = IS_ADD_PERSON_WIDGET2(),
-                     #  widget = S3AddPersonWidget2(),
+                     #  widget = S3AddPersonWidget(),
                      #  ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1247,7 +1244,7 @@ def assess_multi_type_represent(ids, opts):
 
     ids = [ids] if type(ids) is not list else ids
 
-    strings = [str(opts.get(id)) for id in ids]
+    strings = [s3_str(opts.get(type_id)) for type_id in ids]
 
     return ", ".join(strings)
 

@@ -2338,20 +2338,27 @@ def config(settings):
                         msg_record_deleted = T("Area deleted"),
                         msg_list_empty = T("No Areas currently registered"))
 
-                from s3 import IS_ADD_PERSON_WIDGET2, IS_LOCATION, \
-                               S3AddPersonWidget2, S3LocationSelector, S3MultiSelectWidget, S3StringWidget, \
-                               S3SQLCustomForm, S3SQLInlineComponent
+                from s3 import IS_LOCATION, \
+                               S3AddPersonWidget, \
+                               S3LocationSelector, \
+                               S3MultiSelectWidget, \
+                               S3SQLCustomForm, \
+                               S3SQLInlineComponent, \
+                               S3StringWidget
+
                 table.name.widget = S3StringWidget(placeholder=T("Text"))
                 table.comments.widget = S3StringWidget(placeholder=T("Description"), textarea=True)
                 table.poi_type_id.widget = S3MultiSelectWidget(multiple=False)
+
                 field = table.organisation_id
                 field.readable = field.writable = True
                 field.widget = S3MultiSelectWidget(multiple=False)
+
                 field = table.person_id
                 field.readable = field.writable = True
                 field.label = T("Contact Person")
-                field.requires = IS_ADD_PERSON_WIDGET2(allow_empty=True)
-                field.widget = S3AddPersonWidget2(controller="pr")
+                field.widget = S3AddPersonWidget(controller="pr")
+
                 field = s3db.gis_poi_group.group_id
                 user = current.auth.user
                 field.default = user and user.org_group_id

@@ -337,9 +337,8 @@ class S3IRSModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_INC_REPORT = T("Create Incident Report")
         crud_strings[tablename] = Storage(
-            label_create = ADD_INC_REPORT,
+            label_create = T("Create Incident Report"),
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
@@ -400,19 +399,19 @@ class S3IRSModel(S3Model):
                                  "verified",
                                  "message",
                                  ],
-                 report_options = Storage(rows = report_fields,
-                                          cols = report_fields,
-                                          fact = [(T("Number of Incidents"), "count(id)"),
-                                                  (T("Total Affected"), "sum(affected)"),
-                                                  (T("Total Dead"), "sum(dead)"),
-                                                  (T("Total Injured"), "sum(injured)"),
-                                                  ],
-                                          defaults = dict(rows = "location_id$%s" % levels[0], # Highest-level of hierarchy
-                                                          cols = "category",
-                                                          fact = "count(id)",
-                                                          totals = True,
-                                                          )
-                                          ),
+                 report_options = {"rows": report_fields,
+                                   "cols": report_fields,
+                                   "fact": [(T("Number of Incidents"), "count(id)"),
+                                            (T("Total Affected"), "sum(affected)"),
+                                            (T("Total Dead"), "sum(dead)"),
+                                            (T("Total Injured"), "sum(injured)"),
+                                            ],
+                                   "defaults": {"rows": "location_id$%s" % levels[0], # Highest-level of hierarchy
+                                                "cols": "category",
+                                                "fact": "count(id)",
+                                                "totals": True,
+                                                },
+                                   },
                  super_entity = ("sit_situation", "doc_entity"),
                  )
 
@@ -456,7 +455,7 @@ class S3IRSModel(S3Model):
                                   "key": "person_id",
                                   "actuate": "link",
                                   #"actuate": "embed",
-                                  #"widget": S3AddPersonWidget2(),
+                                  #"widget": S3AddPersonWidget(),
                                   "autodelete": False,
                                  },
                       )
@@ -468,7 +467,8 @@ class S3IRSModel(S3Model):
                                                               self.irs_ireport_represent)),
                                      represent = self.irs_ireport_represent,
                                      label = T("Incident"),
-                                     ondelete = "CASCADE")
+                                     ondelete = "CASCADE",
+                                     )
 
         # Custom Methods
         set_method("irs", "ireport",
@@ -506,9 +506,9 @@ class S3IRSModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return dict(irs_ireport_id = ireport_id,
-                    irs_incident_type_opts = irs_incident_type_opts,
-                    )
+        return {"irs_ireport_id": ireport_id,
+                "irs_incident_type_opts": irs_incident_type_opts,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -519,7 +519,7 @@ class S3IRSModel(S3Model):
         """
         ireport_id = S3ReusableField("ireport_id", "integer",
                                      readable=False, writable=False)
-        return Storage(irs_ireport_id = ireport_id)
+        return {"irs_ireport_id": ireport_id}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -532,33 +532,31 @@ class S3IRSModel(S3Model):
         """
 
         db = current.db
-        table = db.irs_icategory
 
-        category, error = IS_NOT_ONE_OF(db, "irs_icategory.code")(form.vars.code)
+        error = IS_NOT_ONE_OF(db, "irs_icategory.code")(form.vars.code)[1]
         if error:
             form.errors.code = error
 
-        return False
-
     # -------------------------------------------------------------------------
     @staticmethod
-    def irs_ireport_represent(id, row=None):
+    def irs_ireport_represent(ireport_id, row=None):
         """
             Represent an Incident Report via it's name
         """
 
         if row:
             return row.name
-        elif not id:
+        elif not ireport_id:
             return current.messages["NONE"]
 
         db = current.db
         table = db.irs_ireport
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
+        row = db(table.id == ireport_id).select(table.name,
+                                                limitby = (0, 1),
+                                                ).first()
         try:
-            return r.name
-        except:
+            return row.name
+        except AttributeError:
             return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
@@ -580,9 +578,9 @@ class S3IRSModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        vars = form.vars
-        ireport = vars.id
-        category = vars.category
+        formvars = form.vars
+        ireport = formvars.id
+        category = formvars.category
         if category == "1100":
             # Fire
             types = ["VUCI", "ABSC"]
@@ -604,9 +602,9 @@ class S3IRSModel(S3Model):
         vtable = s3db.vehicle_vehicle
         ftable = s3db.fire_station
         fvtable = s3db.fire_station_vehicle
-        for type in types:
+        for vehicle_type in types:
             query = (atable.type == s3db.asset_types["VEHICLE"]) & \
-                    (vtable.type == type) & \
+                    (vtable.type == vehicle_type) & \
                     (vtable.asset_id == atable.id) & \
                     (atable.deleted == False) & \
                     ((table.id == None) | \
@@ -614,8 +612,9 @@ class S3IRSModel(S3Model):
                      (table.deleted == True))
             left = table.on(atable.id == table.asset_id)
             vehicle = db(query).select(atable.id,
-                                       left=left,
-                                       limitby=(0, 1)).first()
+                                       left = left,
+                                       limitby = (0, 1),
+                                       ).first()
             if vehicle:
                 vehicle = vehicle.id
                 query = (vtable.asset_id == vehicle) & \
@@ -623,12 +622,14 @@ class S3IRSModel(S3Model):
                         (ftable.id == fvtable.station_id) & \
                         (stable.id == ftable.site_id)
                 site = db(query).select(stable.id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1),
+                                        ).first()
                 if site:
                     site = site.id
-                table.insert(ireport_id=ireport,
-                             asset_id=vehicle,
-                             site_id=site)
+                table.insert(ireport_id = ireport,
+                             asset_id = vehicle,
+                             site_id = site,
+                             )
                 if settings.has_module("hrm"):
                     # Assign 1st 5 human resources on-shift
                     # @ToDo: We shouldn't assign people to vehicles automatically - this is done as people are ready
@@ -643,22 +644,25 @@ class S3IRSModel(S3Model):
                              (table.deleted == True))
                     left = table.on(htable.id == table.human_resource_id)
                     people = db(query).select(htable.id,
-                                              left=left,
-                                              limitby=(0, 5))
+                                              left = left,
+                                              limitby = (0, 5),
+                                              )
                     # @ToDo: Find Ranking person to be incident commander
                     leader = people.first()
                     if leader:
                         leader = leader.id
                     for person in people:
                         if person.id == leader.id:
-                            table.insert(ireport_id=ireport,
-                                         asset_id=vehicle,
-                                         human_resource_id=person.id,
-                                         incident_commander=True)
+                            table.insert(ireport_id = ireport,
+                                         asset_id = vehicle,
+                                         human_resource_id = person.id,
+                                         incident_commander = True,
+                                         )
                         else:
-                            table.insert(ireport_id=ireport,
-                                         asset_id=vehicle,
-                                         human_resource_id=person.id)
+                            table.insert(ireport_id = ireport,
+                                         asset_id = vehicle,
+                                         human_resource_id = person.id,
+                                         )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -675,41 +679,35 @@ class S3IRSModel(S3Model):
             msg = current.msg
 
             record = r.record
-            id = record.id
+            record_id = record.id
 
             contact = ""
             if record.contact:
-                contact = "\n%s: %s" (T("Contact"),
-                                      record.contact)
+                contact = "\n%s: %s" % (T("Contact"), record.contact)
             message = ""
             if record.message:
                 message = "\n%s" % record.message
-            text = "SI#%s\n%s%s%s" % (id,
-                                   record.name,
-                                   contact,
-                                   message)
+            text = "SI#%s\n%s%s%s" % (record_id, record.name, contact, message)
             text += "\nSend help to see how to respond!"
 
             # Encode the message as an OpenGeoSMS
             message = msg.prepare_opengeosms(record.location_id,
-                                             code="ST",
-                                             map="google",
-                                             text=text)
+                                             code = "ST",
+                                             map = "google",
+                                             text = text,
+                                             )
 
             # URL to redirect to after message sent
-            url = URL(c="irs",
-                      f="ireport",
-                      args=r.id)
+            url = URL(c="irs", f="ireport", args=r.id)
 
             # Create the form
-            opts = dict(
-                    type="SMS",
+            opts = {"type": "SMS",
                     # @ToDo: deployment_setting
-                    subject = T("Deployment Request"),
-                    message = message,
-                    url = url,
-                    #formid = r.id
-                )
+                    "subject": T("Deployment Request"),
+                    "message": message,
+                    "url": url,
+                    #"formid": r.id
+                    }
             # Pre-populate the recipients list if we can
             # @ToDo: Check that we have valid contact details
             #        - slower, but useful to fail early if we need to
@@ -722,12 +720,13 @@ class S3IRSModel(S3Model):
                 table = s3db.irs_ireport_human_resource
             htable = s3db.hrm_human_resource
             ptable = s3db.pr_person
-            query = (table.ireport_id == id) & \
+            query = (table.ireport_id == record_id) & \
                     (table.deleted == False) & \
                     (table.human_resource_id == htable.id) & \
                     (htable.person_id == ptable.id)
             recipients = current.db(query).select(table.incident_commander,
-                                                  ptable.pe_id)
+                                                  ptable.pe_id,
+                                                  )
             if not recipients:
                 # Provide an Autocomplete the select the person to send the notice to
                 opts["recipient_type"] = "pr_person"
@@ -782,7 +781,6 @@ class S3IRSModel(S3Model):
             s3 = response.s3
 
             itable = s3db.doc_image
-            dtable = s3db.doc_document
 
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
@@ -831,7 +829,8 @@ class S3IRSModel(S3Model):
                 query = (itable.deleted == False) & \
                         (itable.doc_id == row.doc_id)
                 image = db(query).select(itable.url,
-                                         limitby=(0, 1)).first()
+                                         limitby = (0, 1),
+                                         ).first()
                 if image:
                     image = image.url or ""
                 # URL
@@ -845,7 +844,7 @@ class S3IRSModel(S3Model):
                                "link": link or "",
                                # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
                                #"color" : "blue',
-                            })
+                               })
             data["events"] = events
             data = json.dumps(data, separators=SEPARATORS)
 
@@ -862,7 +861,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             # Create the DIV
             item = DIV(_id="s3timeline", _class="s3-timeline")
 
-            output = dict(item = item)
+            output = {"item": item}
 
             # Maintain RHeader for consistency
             if attr.get("rheader"):
@@ -928,47 +927,45 @@ S3.timeline.now="''', now.isoformat(), '''"
                           P("%s URL: http://ushahidi.my.domain/api?task=incidents&by=all&resp=xml&limit=1000" % \
                                 T("Example")))
 
-            output = dict(title=title,
-                          form=form,
-                          rheader=rheader)
+            output = {"title": title,
+                      "form": form,
+                      "rheader": rheader,
+                      }
 
             if form.accepts(request.vars, session):
 
-                # "Exploit" the de-duplicator hook to count import items
-                import_count = [0]
-                def count_items(job, import_count=import_count):
-                    if job.tablename == "irs_ireport":
-                        import_count[0] += 1
-                current.s3db.configure("irs_report", deduplicate=count_items)
-
-                vars = form.vars
-                ushahidi_url = vars.url
+                formvars = form.vars
+                ushahidi_url = formvars.url
 
                 import os
-                stylesheet = os.path.join(request.folder, "static", "formats",
-                                          "ushahidi", "import.xsl")
+                stylesheet = os.path.join(request.folder,
+                                          "static",
+                                          "formats",
+                                          "ushahidi",
+                                          "import.xsl",
+                                          )
 
                 if os.path.exists(stylesheet) and ushahidi_url:
-                    ignore_errors = vars.get("ignore_errors", None)
+                    ignore_errors = formvars.get("ignore_errors")
+                    resource = r.resource
                     try:
-                        success = r.resource.import_xml(ushahidi_url,
-                                                        stylesheet=stylesheet,
-                                                        ignore_errors=ignore_errors)
+                        success = resource.import_xml(ushahidi_url,
+                                                      stylesheet = stylesheet,
+                                                      ignore_errors = ignore_errors,
+                                                      )
                     except:
                         import sys
-                        e = sys.exc_info()[1]
-                        response.error = e
+                        response.error = sys.exc_info()[1]
                     else:
                         if success:
-                            count = import_count[0]
+                            count = resource.import_count
                             if count:
-                                response.confirmation = "%s %s" % \
-                                    (import_count[0],
-                                     T("reports successfully imported."))
+                                response.confirmation = "%(number)s reports successfully imported." % \
+                                                        {"number": count}
                             else:
                                 response.information = T("No reports available.")
                         else:
-                            response.error = self.error
+                            response.error = resource.error
 
 
             response.view = "create.html"
@@ -1064,7 +1061,7 @@ class S3IRSResponseModel(S3Model):
                               ])
 
         if not settings.has_module("vehicle"):
-            return Storage()
+            return {}
 
         # ---------------------------------------------------------------------
         # Vehicles assigned to an Incident
@@ -1141,8 +1138,7 @@ class S3IRSResponseModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
         #
-        return Storage(
-                )
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1186,7 +1182,7 @@ class S3IRSResponseModel(S3Model):
             return 0
 
 # =============================================================================
-def irs_rheader(r, tabs=[]):
+def irs_rheader(r, tabs=None):
     """ Resource component page header """
 
     if r.representation == "html":
@@ -1195,7 +1191,7 @@ def irs_rheader(r, tabs=[]):
             return None
 
         T = current.T
-        s3db = current.s3db
+
         settings = current.deployment_settings
         hrm_label = T("Responder(s)")
 

@@ -37,8 +37,6 @@ __all__ = ("S3DeploymentOrganisationModel",
            "deploy_response_select_mission",
            )
 
-import json
-
 from gluon import *
 from gluon.tools import callback
 
@@ -600,7 +598,7 @@ class S3DeploymentModel(S3Model):
             # Nothing we can do
             return
 
-        year, location = record.name.split(" ", 1)
+        location = record.name.split(" ", 1)[1]
         if " " in location:
             location, event_type = location.split(" ", 1)
         else:
@@ -1067,7 +1065,7 @@ class S3DeploymentAlertModel(S3Model):
 
         alert_id = r.id
         if r.representation != "html" or not alert_id or r.component:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.ERROR.BADMETHOD)
 
         auth = current.auth
 
@@ -1143,18 +1141,18 @@ class S3DeploymentAlertModel(S3Model):
         elif contact_method == 9:
             # Send both
             # Create separate alert for this
-            id = table.insert(body = message,
-                              contact_method = 2,
-                              mission_id = mission_id,
-                              created_by = record.created_by,
-                              created_on = record.created_on,
-                              )
-            new_alert = dict(id=id)
+            new_alert_id = table.insert(body = message,
+                                        contact_method = 2,
+                                        mission_id = mission_id,
+                                        created_by = record.created_by,
+                                        created_on = record.created_on,
+                                        )
+            new_alert = dict(id=new_alert_id)
             s3db.update_super(table, new_alert)
 
             # Add Recipients
             for row in recipients:
-                ltable.insert(alert_id = id,
+                ltable.insert(alert_id = new_alert_id,
                               human_resource_id = row.human_resource_id,
                               )
 
@@ -1170,7 +1168,7 @@ class S3DeploymentAlertModel(S3Model):
                                   )
 
             # Update the Alert to show it's been Sent
-            db(table.id == id).update(message_id=message_id)
+            db(table.id == new_alert_id).update(message_id=message_id)
 
         if contact_method in (1, 9):
             # Send Email
@@ -1301,7 +1299,7 @@ class S3DeploymentAlertModel(S3Model):
             db(dtable.id.belongs(attachments)).update(doc_id=doc_id)
 
 # =============================================================================
-def deploy_rheader(r, tabs=[], profile=False):
+def deploy_rheader(r, tabs=None, profile=False):
     """ Deployment Resource Headers """
 
     if r.representation != "html":
@@ -1636,13 +1634,13 @@ class deploy_Inbox(S3Method):
             limit = 4 * display_length
         else:
             limit = None
-        filter, orderby, left = resource.datatable_filter(list_fields,
-                                                          get_vars,
-                                                          )
+        dtfilter, orderby, left = resource.datatable_filter(list_fields,
+                                                            get_vars,
+                                                            )
         if not orderby:
             # Most recent messages on top
             orderby = "msg_email.date desc"
-        resource.add_filter(filter)
+        resource.add_filter(dtfilter)
 
         # Extract the data
         data = resource.select(list_fields,
@@ -1705,7 +1703,7 @@ class deploy_Inbox(S3Method):
 
         elif r.representation == "aadata":
             # Ajax refresh
-            echo = int(get_vars.draw) if "draw" in get_vars else None
+            draw = int(get_vars.draw) if "draw" in get_vars else None
 
             response = current.response
             response.headers["Content-Type"] = "application/json"
@@ -1713,7 +1711,7 @@ class deploy_Inbox(S3Method):
             return dt.json(totalrows,
                            filteredrows,
                            dt_id,
-                           echo,
+                           draw,
                            dt_bulk_actions = dt_bulk_actions,
                            )
 
@@ -1984,13 +1982,13 @@ def deploy_apply(r, **attr):
         elif r.representation == "aadata":
             # Ajax refresh
             if "draw" in get_vars:
-                echo = int(get_vars.draw)
+                draw = int(get_vars.draw)
             else:
-                echo = None
+                draw = None
             items = dt.json(totalrows,
                             filteredrows,
                             dt_id,
-                            echo,
+                            draw,
                             dt_bulk_actions = dt_bulk_actions,
                             )
             response.headers["Content-Type"] = "application/json"
@@ -2081,7 +2079,6 @@ def deploy_alert_select_recipients(r, **attr):
 
     get_vars = r.get_vars or {}
     representation = r.representation
-    settings = current.deployment_settings
     resource = s3db.resource("hrm_human_resource",
                              filter = member_query,
                              vars = r.get_vars,
@@ -2152,8 +2149,8 @@ def deploy_alert_select_recipients(r, **attr):
                       "sSortDir_0": "desc",
                       }
         get_vars.update(dt_sorting)
-    filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
-    resource.add_filter(filter)
+    dtfilter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+    resource.add_filter(dtfilter)
     resource.add_filter(s3.filter)
     data = resource.select(list_fields,
                            start = 0,
@@ -2243,13 +2240,13 @@ def deploy_alert_select_recipients(r, **attr):
     elif representation == "aadata":
         # Ajax refresh
         if "draw" in get_vars:
-            echo = int(get_vars.draw)
+            draw = int(get_vars.draw)
         else:
-            echo = None
+            draw = None
         items = dt.json(totalrows,
                         filteredrows,
                         dt_id,
-                        echo,
+                        draw,
                         dt_bulk_actions = dt_bulk_actions,
                         )
         response.headers["Content-Type"] = "application/json"
@@ -2330,7 +2327,6 @@ def deploy_response_select_mission(r, **attr):
         current.session.confirmation = T("Response linked to Mission")
         redirect(URL(c="deploy", f="email_inbox"))
 
-    settings = current.deployment_settings
     resource = s3db.resource("deploy_mission",
                              filter = mission_query,
                              vars = get_vars,
@@ -2357,11 +2353,11 @@ def deploy_response_select_mission(r, **attr):
         limit = 4 * display_length
     else:
         limit = None
-    filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+    dtfilter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     if not orderby:
         # Most recent missions on top
         orderby = "deploy_mission.created_on desc"
-    resource.add_filter(filter)
+    resource.add_filter(dtfilter)
     data = resource.select(list_fields,
                            start = 0,
                            limit = limit,
@@ -2461,7 +2457,7 @@ def deploy_response_select_mission(r, **attr):
                              )
             row = ""
         else:
-            id = "deploy_response_human_resource_id__row"
+            row_id = "deploy_response_human_resource_id__row"
             # @ToDo: deployment_setting for 'Member' label
             title = T("Select Member")
             label = LABEL("%s:" % title)
@@ -2487,7 +2483,7 @@ def deploy_response_select_mission(r, **attr):
                                               ),
                           )
             # @ToDo: Handle non-callable formstyles
-            row = s3.crud.formstyle(id, label, widget, comment)
+            row = s3.crud.formstyle(row_id, label, widget, comment)
             if isinstance(row, tuple):
                 row = TAG[""](row[0], row[1])
 
@@ -2537,14 +2533,13 @@ def deploy_response_select_mission(r, **attr):
     elif r.representation == "aadata":
         # Ajax refresh
         if "draw" in get_vars:
-            echo = int(get_vars.draw)
+            draw = int(get_vars.draw)
         else:
-            echo = None
+            draw = None
         items = dt.json(totalrows,
                         filteredrows,
                         dt_id,
-                        echo,
-                        dt_bulk_actions = dt_bulk_actions,
+                        draw,
                         )
         response.headers["Content-Type"] = "application/json"
         return items
@@ -2966,7 +2961,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                  _href = "#",
                                  data = {"toggle": "dropdown"},
                                  ),
-                               doc_list,
+                               docs,
                                _class = "btn-group attachments dropdown pull-right",
                                )
                 else:

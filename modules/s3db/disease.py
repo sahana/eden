@@ -308,6 +308,7 @@ class CaseTrackingModel(S3Model):
                            ),
                      person_id(empty = False,
                                ondelete = "CASCADE",
+                               widget = S3AddPersonWidget(controller="pr"),
                                ),
                      self.disease_disease_id(),
                      #s3_date(), # date registered == created_on?
@@ -448,19 +449,6 @@ class CaseTrackingModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
-
-        # Reusable Field
-        represent = S3Represent(lookup=tablename, fields=["case_id"])
-        status_id = S3ReusableField("status_id", "reference %s" % tablename,
-                                    label = T("Case"),
-                                    represent = represent,
-                                    requires = IS_ONE_OF(db, "disease_case.id",
-                                                         represent,
-                                                         ),
-                                    comment = S3PopupLink(f = "case",
-                                                          tooltip = T("Add a new case"),
-                                                          ),
-                                    )
 
         # Components
         add_components(tablename,
@@ -618,7 +606,7 @@ class CaseTrackingModel(S3Model):
         try:
             case_id = formvars.id
             person_id = formvars.person_id
-        except AttributeError, e:
+        except AttributeError:
             return
 
         if "disease_id" not in formvars:
@@ -737,7 +725,7 @@ class disease_CaseRepresent(S3Represent):
         super(disease_CaseRepresent, self).__init__(lookup = "disease_case")
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -931,8 +919,8 @@ class ContactTracingModel(S3Model):
         define_table(tablename,
                      case_id(),
                      tracing_id(),
-                     self.pr_person_id(requires = IS_ADD_PERSON_WIDGET2(),
-                                       widget = S3AddPersonWidget2(controller="pr"),
+                     self.pr_person_id(empty = False,
+                                       widget = S3AddPersonWidget(controller="pr"),
                                        ),
                      s3_datetime(),
                      #self.gis_location_id(),
@@ -1163,7 +1151,7 @@ class DiseaseStatsModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
+        NONE = current.messages["NONE"]
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -1487,14 +1475,14 @@ class DiseaseStatsModel(S3Model):
             from dateutil.parser import parse
 
         db = current.db
-        s3db = current.s3db
+        #s3db = current.s3db
         atable = db.disease_stats_aggregate
 
         if not all:
             # Read the database to get all the relevant records
             # @ToDo: Complete this
+            #dtable = s3db.disease_stats_data
             return
-            dtable = s3db.disease_stats_data
 
         # For each location/parameter pair, create a time-aggregate summing all
         # the data so far
@@ -1613,7 +1601,7 @@ class DiseaseStatsModel(S3Model):
             elif row.level == "L4":
                 L4_append(row.id)
 
-        async = current.s3task.async
+        run_async = current.s3task.async
         from gluon.serializers import json as jsons
         dates = jsons(dates)
         # Build the lowest level first
@@ -1622,10 +1610,10 @@ class DiseaseStatsModel(S3Model):
                 children = [c.id for c in all_children if c.parent == location_id]
                 children = json.dumps(children)
                 for parameter_id in parameters:
-                    async("disease_stats_update_location_aggregates",
-                          args = [location_id, children, parameter_id, dates],
-                          timeout = 1800 # 30m
-                          )
+                    run_async("disease_stats_update_location_aggregates",
+                              args = [location_id, children, parameter_id, dates],
+                              timeout = 1800 # 30m
+                              )
 
     # -------------------------------------------------------------------------
     @staticmethod

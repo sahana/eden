@@ -48,11 +48,6 @@ def case():
             field = r.component.table.tracing_id
             field.readable = field.writable = False
 
-        if r.interactive:
-            field = r.table.person_id
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
-
         return True
     s3.prep = prep
 

@@ -1999,7 +1999,7 @@ def config(settings):
         auth = current.auth
         db = current.db
         s3db = current.s3db
-        
+
 
         import time
         from gluon import URL
@@ -3348,8 +3348,10 @@ def config(settings):
                     from s3 import s3_fullname
                     return s3_fullname(current.auth.s3_logged_in_person())
                 settings.hrm.vol_service_record_manager = vol_service_record_manager
-                from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
-                table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                from s3 import S3AddPersonWidget, S3SQLCustomForm, S3SQLInlineComponent
+                table.person_id.widget = S3AddPersonWidget(controller = "vol",
+                                                           first_name_only = True,
+                                                           )
                 table.code.label = T("Appointment Number")
                 phtable = s3db.hrm_programme_hours
                 phtable.date.label = T("Direct Date")
@@ -3413,8 +3415,10 @@ def config(settings):
                 table.start_date.label = T("Appointment Date")
                 # All staff have open-ended contracts
                 table.end_date.readable = table.end_date.writable = False
-                from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
-                table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                from s3 import S3AddPersonWidget, S3SQLCustomForm, S3SQLInlineComponent
+                table.person_id.widget = S3AddPersonWidget(controller = "hrm",
+                                                           first_name_only = True,
+                                                           )
                 table.code.label = T("Appointment Number")
                 hrm_status_opts = s3db.hrm_status_opts
                 hrm_status_opts[3] = T("End Service")
@@ -3599,7 +3603,7 @@ def config(settings):
                     names = ", ".join(names)
                     return names
                 table.roles = s3_fieldmethod("roles", roles)
-                
+
                 list_fields = ["person_id",
                                (T("Roles"), "roles"),
                                (T("Email"), "email.value"),
@@ -3625,7 +3629,7 @@ def config(settings):
                 if arcs:
                     # ARCS have a custom Volunteer form
                     from gluon import IS_EMPTY_OR
-                    #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    #from s3 import S3AddPersonWidget, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
                     from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
                     # Go back to Create form after submission
@@ -3635,7 +3639,9 @@ def config(settings):
                     settings.pr.request_email = False
                     #settings.pr.request_year_of_birth = True
                     settings.pr.separate_name_fields = 2
-                    #table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                    #table.person_id.widget = S3AddPersonWidget(controller = "vol",
+                    #                                           first_name_only = True,
+                    #                                           )
                     table.code.label = T("Volunteer ID")
                     ptable = s3db.pr_person
                     ptable.first_name.label = T("Name")
@@ -4788,7 +4794,7 @@ def config(settings):
                     rows = db(query).select(mtable.user_id)
                     user_ids = [row.user_id for row in rows]
                     filter = FS("~.created_by").belongs(set(user_ids))
-                    
+
                     # & those from this region's countries? No!
                     #ltable = s3db.org_organisation_organisation
                     #root_orgs = db(ltable.parent_id == auth.user.organisation_id).select(ltable.organisation_id)
@@ -4946,7 +4952,7 @@ def config(settings):
                                                                     label = T("Programme"),
                                                                     multiple = False,
                                                                     ),
-                                                                
+
                                                     S3SQLInlineLink("project",
                                                                     field = "project_id",
                                                                     label = T("Project"),

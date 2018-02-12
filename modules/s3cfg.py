@@ -218,6 +218,7 @@ class S3Config(Storage):
                               "database": get_param("database", "sahana"),
                               "username": get_param("username", "sahana"),
                               "password": get_param("password", "password"),
+                              "pool_size": pool_size,
                               }
 
             parameters["type"] = db_type
@@ -891,27 +892,31 @@ class S3Config(Storage):
         return self.base.get("chat_server", False)
 
     def get_chatdb_string(self):
-        chat_server = self.base.get("chat_server", False)
-        db_get = self.database.get
 
-        if (chat_server["server_db_type"] == "mysql"):
-            db_string = "mysql://%s:%s@%s:%s/%s" % \
-            (chat_server["server_db_username"] if chat_server["server_db_username"] else db_get("username", "sahana"),
-                chat_server["server_db_password"] if chat_server["server_db_password"] else db_get("password", "password"),
-                chat_server["server_db_ip"] if chat_server["server_db_ip"] else db_get("host", "localhost"),
-                chat_server["server_db_port"] if chat_server["server_db_port"] else db_get("port", 3306),
-                chat_server["server_db"] if chat_server["server_db"] else db_get("database", "openfiredb"))
-        elif (chat_server["server_db_type"] == "postgres"):
-            db_string = "postgres://%s:%s@%s:%s/%s" % \
-            (chat_server["server_db_username"] if chat_server["server_db_username"] else db_get("username", "sahana"),
-                chat_server["server_db_password"] if chat_server["server_db_password"] else db_get("password", "password"),
-                chat_server["server_db_ip"] if chat_server["server_db_ip"] else db_get("host", "localhost"),
-                chat_server["server_db_port"] if chat_server["server_db_port"] else db_get("port", 5432),
-                chat_server["server_db"] if chat_server["server_db"] else db_get("database", "openfiredb"))
+        db_string = "%(type)s://%(user)s:%(pass)s@%(host)s:%(port)s/%(name)s"
+
+        chat_server = self.base.get("chat_server", False)
+        csget = chat_server.get
+        dbget = self.database.get
+
+        db_type = chat_server.get("server_db_type")
+        if db_type == "mysql":
+            default_port = 3306
+        elif db_type == "postgres":
+            default_port = 5432
         else:
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
-        return db_string
+
+        db_params = {
+            "type": db_type,
+            "user": csget("server_db_username") or dbget("username", "sahana"),
+            "pass": csget("server_db_password") or dbget("password", "password"),
+            "host": csget("server_db_ip") or dbget("host", "localhost"),
+            "port": csget("server_db_port") or dbget("port", default_port),
+            "name": csget("server_db") or dbget("database", "openfiredb"),
+        }
+        return db_string % db_params
 
     def get_base_session_db(self):
         """
@@ -1769,7 +1774,7 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # UI Settings
     #
-
+    @classmethod
     def _get_formstyle(cls, setting):
         """ Helper function to identify a formstyle """
 
@@ -2131,16 +2136,12 @@ class S3Config(Storage):
         """
             Time in milliseconds after the last keystroke in an AC field
             to start the search
-
-            @todo: currently only applied in S3AddPersonWidget2
         """
         return self.__lazy("ui", "autocomplete_delay", 800)
 
     def get_ui_autocomplete_min_chars(self):
         """
             Minimum charcters in an AC field to start the search
-
-            @todo: currently only applied in S3AddPersonWidget2
         """
         return self.__lazy("ui", "autocomplete_min_chars", 2)
 
@@ -2227,7 +2228,6 @@ class S3Config(Storage):
             What Header should be shown in the Profile page
         """
 
-        # @ToDo: Be able to pass in r to help make the decision (r.tablename at least!)
         #profile_header = self.__lazy("ui", "profile_header", None)
         profile_header = self.ui.get("profile_header", None)
         if profile_header:
@@ -2237,11 +2237,11 @@ class S3Config(Storage):
             from gluon import DIV, H2, P
             try:
                 title = r.record.name
-            except:
+            except AttributeError:
                 title = r.record.id
             try:
                 comments = r.record.comments or ""
-            except:
+            except AttributeError:
                 comments = ""
             profile_header = DIV(H2(title),
                                  P(comments),
@@ -4009,16 +4009,17 @@ class S3Config(Storage):
                     # Convert Name to ID
                     table = current.s3db.org_organisation
                     org = current.db(table.name == default_organisation).select(table.id,
-                                                                                limitby=(0, 1)
+                                                                                limitby=(0, 1),
                                                                                 ).first()
                     try:
                         default_organisation = org.id
-                        # Cache
-                        current.session.s3.default_organisation_id = default_organisation
-                    except:
+                    except AttributeError:
                         # Prepop not done?
                         current.log.error("Default Organisation not found: %s" % default_organisation)
                         default_organisation = None
+                    else:
+                        # Cache
+                        current.session.s3.default_organisation_id = default_organisation
         return default_organisation
 
     def get_org_default_site(self):
@@ -4037,16 +4038,17 @@ class S3Config(Storage):
                     # Convert Name to ID
                     table = current.s3db.org_site
                     site = current.db(table.name == default_site).select(table.site_id,
-                                                                        limitby=(0, 1)
+                                                                        limitby=(0, 1),
                                                                         ).first()
                     try:
                         default_site = site.site_id
-                        # Cache
-                        current.session.s3.default_site_id = default_site
-                    except:
+                    except AttributeError:
                         # Prepop not done?
                         current.log.error("Default Site not found: %s" % default_site)
                         default_site = None
+                    else:
+                        # Cache
+                        current.session.s3.default_site_id = default_site
         return default_site
 
     def get_org_sector(self):
@@ -4923,9 +4925,9 @@ class S3Config(Storage):
         """
         return self.req.get("items_ask_purpose", True)
 
-    def get_req_req_crud_strings(self, type = None):
+    def get_req_req_crud_strings(self, req_type=None):
         return self.req.get("req_crud_strings") and \
-               self.req.req_crud_strings.get(type)
+               self.req.req_crud_strings.get(req_type)
 
     def get_req_use_req_number(self):
         return self.req.get("use_req_number", True)
