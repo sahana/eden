@@ -2530,6 +2530,7 @@ class S3ImportItem(object):
             # Create a pseudo-form for callbacks
             form = Storage()
             form.method = method
+            form.table = table
             form.vars = self.data
             prefix, name = tablename.split("_", 1)
             if self.id:

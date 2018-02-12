@@ -11,6 +11,7 @@
          Organisation....................pr_contact.pe_id
          Content-Type....................msg_rss_channel.content_type
          Type............................msg_rss_channel.type
+         Enabled.........................msg_rss_channel.enabled (defaults to True)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -28,12 +29,43 @@
     <xsl:template match="row">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="URL" select="col[@field='URL']/text()"/>
+        <xsl:variable name="Enabled" select="col[@field='Enabled']/text()"/>
 
         <resource name="msg_rss_channel">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="url"><xsl:value-of select="$URL"/></data>
             <data field="content_type"><xsl:value-of select="col[@field='Content-Type']"/></data>
             <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
+            <xsl:choose>
+                <xsl:when test="$Enabled='Y'">
+                    <data field="enabled" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='YES'">
+                    <data field="enabled" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='T'">
+                    <data field="enabled" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='TRUE'">
+                    <data field="enabled" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='N'">
+                    <data field="enabled" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='NO'">
+                    <data field="enabled" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='F'">
+                    <data field="enabled" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Enabled='FALSE'">
+                    <data field="enabled" value="false">False</data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Default to explicit True to have onaccept enable the channel -->
+                    <data field="enabled" value="true">True</data>
+                </xsl:otherwise>
+            </xsl:choose>
         </resource>
 
         <xsl:if test="$OrgName!=''">

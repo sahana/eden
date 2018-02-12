@@ -218,9 +218,6 @@
                 <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
             <xsl:choose>
-                <xsl:when test="$Exercise=''">
-                    <!-- Use System Default -->
-                </xsl:when>
                 <xsl:when test="$Exercise='Y'">
                     <data field="exercise" value="true">True</data>
                 </xsl:when>
@@ -245,11 +242,11 @@
                 <xsl:when test="$Exercise='FALSE'">
                     <data field="exercise" value="false">False</data>
                 </xsl:when>
+                <xsl:otherwise>
+                    <!-- Use System Default -->
+                </xsl:otherwise>
             </xsl:choose>
             <xsl:choose>
-                <xsl:when test="$Closed=''">
-                    <!-- Use System Default -->
-                </xsl:when>
                 <xsl:when test="$Closed='Y'">
                     <data field="closed" value="true">True</data>
                 </xsl:when>
@@ -274,6 +271,9 @@
                 <xsl:when test="$Closed='FALSE'">
                     <data field="closed" value="false">False</data>
                 </xsl:when>
+                <xsl:otherwise>
+                    <!-- Use System Default -->
+                </xsl:otherwise>
             </xsl:choose>
 
             <!-- Link to Event Type -->

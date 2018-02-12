@@ -306,21 +306,22 @@ class S3ChannelModel(S3Model):
             Process the Enabled Flag
         """
 
+        form_vars = form.vars
         if form.record:
             # Update form
             # Process if changed
-            if form.record.enabled and not form.vars.enabled:
+            if form.record.enabled and not form_vars.enabled:
                 current.s3db.msg_channel_disable(form.table._tablename,
-                                                 form.vars.channel_id)
-            elif form.vars.enabled and not form.record.enabled:
+                                                 form_vars.channel_id)
+            elif form_vars.enabled and not form.record.enabled:
                 current.s3db.msg_channel_enable(form.table._tablename,
-                                                form.vars.channel_id)
+                                                form_vars.channel_id)
         else:
             # Create form
             # Process only if enabled
-            if form.vars.enabled:
+            if form_vars.enabled:
                 current.s3db.msg_channel_enable(form.table._tablename,
-                                                form.vars.channel_id)
+                                                form_vars.channel_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
