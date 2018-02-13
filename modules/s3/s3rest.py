@@ -697,8 +697,10 @@ class S3Request(object):
             output["r"] = self
 
         # Redirection
+        # NB must re-read self.http/method here in case the have
+        # been changed during prep, method handling or postp
         if self.next is not None and \
-           (http != "GET" or self.method == "clear"):
+           (self.http != "GET" or self.method == "clear"):
             if isinstance(output, dict):
                 form = output.get("form")
                 if form:

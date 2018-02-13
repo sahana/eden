@@ -336,8 +336,8 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return dict(doc_document_id = document_id,
-                    )
+        return {"doc_document_id": document_id,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -346,23 +346,23 @@ class S3DocumentLibrary(S3Model):
         document_id = S3ReusableField("document_id", "integer",
                                       readable=False, writable=False)
 
-        return dict(doc_document_id = document_id,
-                    )
+        return {"doc_document_id": document_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def doc_file_represent(file):
+    def doc_file_represent(filename):
         """ File representation """
 
-        if file:
+        if filename:
             try:
-                # Read the filename from the file
-                filename = current.db.doc_document.file.retrieve(file)[0]
+                # Read the orginal filename from the filename
+                orig_name = current.db.doc_document.file.retrieve(filename)[0]
             except IOError:
                 return current.T("File not found")
             else:
-                return A(filename,
-                         _href=URL(c="default", f="download", args=[file]))
+                return A(orig_name,
+                         _href=URL(c="default", f="download", args=[filename]))
         else:
             return current.messages["NONE"]
 
@@ -373,10 +373,10 @@ class S3DocumentLibrary(S3Model):
 
         data = item.data
         query = None
-        file = data.get("file")
-        if file:
+        filename = data.get("file")
+        if filename:
             table = item.table
-            query = (table.file == file)
+            query = (table.file == filename)
         else:
             url = data.get("url")
             if url:
@@ -411,7 +411,8 @@ class S3DocumentLibrary(S3Model):
                 import base64
                 import uuid
                 metadata, encoded_file = encoded_file.split(",")
-                filename, datatype, enctype = metadata.split(";")
+                #filename, datatype, enctype = metadata.split(";")
+                filename = metadata.split(";", 1)[0]
                 f = Storage()
                 f.filename = uuid.uuid4().hex + filename
                 import cStringIO
@@ -484,13 +485,14 @@ class S3DocumentLibrary(S3Model):
 
         table = current.db.doc_document
 
-        document = json.dumps(dict(filename=doc,
-                                   name=table.file.retrieve(doc)[0],
-                                   id=form_vars.id,
-                                   ))
+        document = json.dumps({"filename": doc,
+                               "name": table.file.retrieve(doc)[0],
+                               "id": form_vars.id,
+                               })
 
         current.s3task.async("document_create_index",
-                             args = [document])
+                             args = [document],
+                             )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -504,12 +506,13 @@ class S3DocumentLibrary(S3Model):
         record = db(table.id == row.id).select(table.file,
                                                limitby=(0, 1)).first()
 
-        document = json.dumps(dict(filename=record.file,
-                                   id=row.id,
-                                   ))
+        document = json.dumps({"filename": record.file,
+                               "id": row.id,
+                               })
 
         current.s3task.async("document_delete_index",
-                             args = [document])
+                             args = [document],
+                             )
 
 # =============================================================================
 def doc_image_represent(filename):
@@ -569,21 +572,19 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     title = record["doc_document.name"]
-    file = raw["doc_document.file"] or ""
+    filename = raw["doc_document.file"] or ""
     url = raw["doc_document.url"] or ""
-    date = record["doc_document.date"]
     comments = raw["doc_document.comments"] or ""
 
-    if file:
+    if filename:
         try:
-            doc_name = current.s3db.doc_document.file.retrieve(file)[0]
+            orig_name = current.s3db.doc_document.file.retrieve(filename)[0]
         except (IOError, TypeError):
-            doc_name = current.messages["NONE"]
-        doc_url = URL(c="default", f="download",
-                      args=[file])
+            orig_name = current.messages["NONE"]
+        doc_url = URL(c="default", f="download", args=[filename])
         body = P(ICON("attachment"),
                  " ",
-                 SPAN(A(doc_name,
+                 SPAN(A(orig_name,
                         _href=doc_url,
                         )
                       ),
@@ -716,8 +717,8 @@ class S3CKEditorModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(doc_filetype = self.doc_filetype,
-                    )
+        return {"doc_filetype": self.doc_filetype,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

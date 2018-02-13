@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, SPAN, URL
+from gluon import current, A, SPAN, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
@@ -196,7 +196,7 @@ def config(settings):
             Profile Header for Shelter Profile page
         """
 
-        from gluon.html import DIV, H2, H3, P, TABLE, TR, TD, A, XML, URL, HR
+        from gluon.html import DIV, H2, H3, P, TABLE, TR, TD, XML, HR
 
         db = current.db
         s3db = current.s3db
@@ -296,9 +296,6 @@ def config(settings):
                          TD(families),
                          )
 
-        # TODO: restructure output to make it more comprehensible
-        # Transitory housing unit is called "PX" at BFV Mannheim
-        # @todo: generalize, lookup transitory unit name(s) from db
         TOTAL = TR(TD(T("Population BEA")),
                    TD(total),
                    _class="dbstats-total",
@@ -729,7 +726,7 @@ def config(settings):
                                                      ).first()
                     try:
                         layer_id = layer.layer_id
-                    except:
+                    except AttributeError:
                         # No suitable prepop found
                         pass
                     else:
@@ -789,8 +786,8 @@ def config(settings):
 
             # Custom view for shelter inspection
             if r.method == "inspection":
-               from s3 import S3CustomController
-               S3CustomController._view("DRK", "shelter_inspection.html")
+                from s3 import S3CustomController
+                S3CustomController._view("DRK", "shelter_inspection.html")
 
             return output
         s3.postp = custom_postp
@@ -867,7 +864,6 @@ def config(settings):
                 f.writable = False
 
                 # Go back to the list of residents after assigning
-                from gluon import URL
                 current.s3db.configure("cr_shelter_registration",
                                        create_next = URL(c="dvr", f="person"),
                                        update_next = URL(c="dvr", f="person"),
@@ -916,7 +912,6 @@ def config(settings):
     def customise_dvr_home():
         """ Redirect dvr/index to dvr/person?closed=0 """
 
-        from gluon import URL
         from s3 import s3_redirect_default
 
         s3_redirect_default(URL(f="person", vars={"closed": "0"}))
@@ -1104,6 +1099,7 @@ def config(settings):
             if controller == "security":
                 # Restricted view for Security staff
                 if r.component:
+                    from gluon import redirect
                     redirect(r.url(method=""))
 
                 # Autocomplete using alternative search method
@@ -1139,7 +1135,7 @@ def config(settings):
                                                                  ).first()
                 try:
                     note_type_id = note_type.id
-                except:
+                except AttributeError:
                     current.log.error("Prepop not done - deny access to dvr_note component")
                     note_type_id = None
                     atable = s3db.dvr_note
@@ -1180,7 +1176,7 @@ def config(settings):
 
                 # Profile page (currently unused)
                 if r.method == "profile":
-                    from gluon.html import DIV, H2, P, TABLE, TR, TD, A
+                    from gluon.html import DIV, H2, TABLE, TR, TD
                     from s3 import s3_fullname
                     person_id = r.id
                     record = r.record
@@ -1191,7 +1187,7 @@ def config(settings):
                                                                        ).first()
                     try:
                         nationality = details.nationality
-                    except:
+                    except AttributeError:
                         nationality = None
                     rtable = s3db.cr_shelter_registration
                     reg = db(rtable.person_id == person_id).select(rtable.shelter_unit_id,
@@ -1199,7 +1195,7 @@ def config(settings):
                                                                    ).first()
                     try:
                         shelter_unit_id = reg.shelter_unit_id
-                    except:
+                    except AttributeError:
                         shelter_unit_id = None
                     profile_header = DIV(H2(s3_fullname(record)),
                                          TABLE(TR(TD(T("ID")),
@@ -1401,7 +1397,7 @@ def config(settings):
                                 try:
                                     if status.is_closed:
                                         cancel = True
-                                except:
+                                except AttributeError:
                                     pass
 
                         if cancel:
@@ -1750,7 +1746,6 @@ def config(settings):
 
             if QUARTIERMANAGER:
                 # Add Action Button to assign Housing Unit to the Resident
-                from gluon import URL
                 s3.actions = [dict(label=s3_str(T("Assign Shelter")),
                                     _class="action-btn",
                                     url=URL(c="cr",
@@ -1902,7 +1897,7 @@ def config(settings):
                 try:
                     if status.is_closed:
                         cancel = True
-                except:
+                except AttributeError:
                     current.log.error("Status %s not found" % status_id)
                     return
 
@@ -1956,50 +1951,6 @@ def config(settings):
                     field.writable = False
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
-
-    # -------------------------------------------------------------------------
-    def dvr_note_onaccept(form):
-        """
-            Set owned_by_group
-        """
-
-        db = current.db
-        s3db = current.s3db
-        form_vars = form.vars
-        table = s3db.dvr_note_type
-        types = db(table.name.belongs(("Medical", "Security"))).select(table.id,
-                                                                       table.name).as_dict(key="name")
-        try:
-            MEDICAL = types["Medical"]["id"]
-        except:
-            current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note_type")
-            return
-        SECURITY = types["Security"]["id"]
-        note_type_id = form_vars.note_type_id
-        if note_type_id == str(MEDICAL):
-            table = s3db.dvr_note
-            gtable = db.auth_group
-            role = db(gtable.uuid == "MEDICAL").select(gtable.id,
-                                                       limitby=(0, 1)
-                                                       ).first()
-            try:
-                group_id = role.id
-            except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
-                return
-            db(table.id == form_vars.id).update(owned_by_group=group_id)
-        elif note_type_id == str(SECURITY):
-            table = s3db.dvr_note
-            gtable = db.auth_group
-            role = db(gtable.uuid == "SECURITY").select(gtable.id,
-                                                        limitby=(0, 1)
-                                                        ).first()
-            try:
-                group_id = role.id
-            except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
-                return
-            db(table.id == form_vars.id).update(owned_by_group=group_id)
 
     # -------------------------------------------------------------------------
     def customise_dvr_note_resource(r, tablename):
@@ -2401,139 +2352,6 @@ def config(settings):
     settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
-    def case_event_create_onaccept(form):
-        """
-            Custom onaccept-method for case events
-                - cascade FOOD events to other members of the same case group
-
-            @todo: currently unused => remove?
-
-            @param form: the Form
-        """
-
-        # Get form.vars.id
-        formvars = form.vars
-        try:
-            record_id = formvars.id
-        except AttributeError:
-            record_id = None
-        if not record_id:
-            return
-
-        # Prevent recursion
-        try:
-            if formvars._cascade:
-                return
-        except AttributeError:
-            pass
-
-        db = current.db
-        s3db = current.s3db
-
-        # Get the person ID and event type code and interval
-        ttable = s3db.dvr_case_event_type
-        etable = s3db.dvr_case_event
-        query = (etable.id == record_id) & \
-                (ttable.id == etable.type_id)
-        row = db(query).select(etable.person_id,
-                               etable.type_id,
-                               etable.date,
-                               ttable.code,
-                               ttable.min_interval,
-                               limitby = (0, 1),
-                               ).first()
-        if not row:
-            return
-
-        # Extract the event attributes
-        event = row.dvr_case_event
-        person_id = event.person_id
-        event_type_id = event.type_id
-        event_date = event.date
-
-        # Extract the event type attributes
-        event_type = row.dvr_case_event_type
-        event_code = event_type.code
-        interval = event_type.min_interval
-
-        if event_code == "FOOD":
-
-            gtable = s3db.pr_group
-            mtable = s3db.pr_group_membership
-            ctable = s3db.dvr_case
-            stable = s3db.dvr_case_status
-
-            # Get all case groups this person belongs to
-            query = ((mtable.person_id == person_id) & \
-                    (mtable.deleted != True) & \
-                    (gtable.id == mtable.group_id) & \
-                    (gtable.group_type == 7))
-            rows = db(query).select(gtable.id)
-            group_ids = set(row.id for row in rows)
-
-            # Find all other members of these case groups, and
-            # the last FOOD event registration date/time for each
-            members = {}
-            if group_ids:
-                left = [ctable.on(ctable.person_id == mtable.person_id),
-                        stable.on(stable.id == ctable.status_id),
-                        etable.on((etable.person_id == mtable.person_id) & \
-                                  (etable.type_id == event_type_id) & \
-                                  (etable.deleted != True)),
-                        ]
-                query = (mtable.person_id != person_id) & \
-                        (mtable.group_id.belongs(group_ids)) & \
-                        (mtable.deleted != True) & \
-                        (ctable.archived != True) & \
-                        (ctable.deleted != True) & \
-                        (stable.is_closed != True)
-                latest = etable.date.max()
-                case_id = ctable._id.min()
-                rows = db(query).select(mtable.person_id,
-                                        case_id,
-                                        latest,
-                                        left = left,
-                                        groupby = mtable.person_id,
-                                        )
-                for row in rows:
-                    person = row[mtable.person_id]
-                    if person not in members:
-                        members[person] = (row[case_id], row[latest])
-
-            # For each case group member, replicate the event
-            now = current.request.utcnow
-            for member, details in members.items():
-
-                case_id, latest = details
-
-                # Check minimum waiting interval
-                passed = True
-                if interval and latest:
-                    earliest = latest + datetime.timedelta(hours=interval)
-                    if earliest > now:
-                        passed = False
-                if not passed:
-                    continue
-
-                # Replicate the event for this member
-                data = {"person_id": member,
-                        "case_id": case_id,
-                        "type_id": event_type_id,
-                        "date": event_date,
-                        }
-                event_id = etable.insert(**data)
-                if event_id:
-                    # Set record owner
-                    auth = current.auth
-                    auth.s3_set_record_owner(etable, event_id)
-                    auth.s3_make_session_owner(etable, event_id)
-                    # Execute onaccept
-                    # => set _cascade flag to prevent recursion
-                    data["id"] = event_id
-                    data["_cascade"] = True
-                    s3db.onaccept(etable, data, method="create")
-
-    # -------------------------------------------------------------------------
     def customise_dvr_case_event_resource(r, tablename):
 
         s3db = current.s3db
@@ -2551,6 +2369,7 @@ def config(settings):
         #                         )
 
     settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
+
     # -------------------------------------------------------------------------
     def case_event_report_default_filters(event_code=None):
         """
@@ -3289,7 +3108,7 @@ def drk_absence(row):
     return result
 
 # =============================================================================
-def drk_dvr_rheader(r, tabs=[]):
+def drk_dvr_rheader(r, tabs=None):
     """ DVR custom resource headers """
 
     if r.representation != "html":
@@ -3298,8 +3117,7 @@ def drk_dvr_rheader(r, tabs=[]):
 
     from s3 import s3_rheader_resource, \
                    S3ResourceHeader, \
-                   s3_fullname, \
-                   s3_yes_no_represent
+                   s3_fullname
 
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
@@ -3371,7 +3189,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case_status = lambda row: case["dvr_case.status_id"]
                     household_size = lambda row: case["dvr_case.household_size"]
                     last_seen_on = lambda row: case["dvr_case.last_seen_on"]
-                    name = lambda row: s3_fullname(row)
+                    name = s3_fullname
                     shelter = lambda row: case["cr_shelter_registration.shelter_unit_id"]
                     transferable = lambda row: case["dvr_case.transferable"]
                 else:
@@ -3403,7 +3221,6 @@ def drk_dvr_rheader(r, tabs=[]):
                                 )
 
                 # Add profile picture
-                from gluon import A, URL
                 from s3 import s3_avatar_represent
                 record_id = record.id
                 rheader.insert(0, A(s3_avatar_represent(record_id,
@@ -3438,7 +3255,7 @@ def drk_dvr_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def drk_org_rheader(r, tabs=[]):
+def drk_org_rheader(r, tabs=None):
     """ ORG custom resource headers """
 
     if r.representation != "html":
@@ -3477,7 +3294,7 @@ def drk_org_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def drk_cr_rheader(r, tabs=[]):
+def drk_cr_rheader(r, tabs=None):
     """ CR custom resource headers """
 
     if r.representation != "html":
@@ -3573,7 +3390,7 @@ class DRKCreateSiteActivityReport(S3Method):
                       ]
 
         # Form buttons
-        from gluon import INPUT, A, SQLFORM
+        from gluon import INPUT, SQLFORM
         submit_btn = INPUT(_class = "tiny primary button",
                            _name = "submit",
                            _type = "submit",

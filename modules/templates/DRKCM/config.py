@@ -7,7 +7,7 @@ from collections import OrderedDict
 from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
 from gluon.storage import Storage
 
-from s3 import FS, IS_ONE_OF, S3DateTime, S3Method, s3_str, s3_unicode
+from s3 import FS, IS_ONE_OF
 from s3dal import original_tablename
 
 def config(settings):
@@ -409,7 +409,7 @@ def config(settings):
                                                 ).first()
         try:
             location_id = row.location_id
-        except:
+        except AttributeError:
             # Nothing we can do
             return
 
@@ -547,7 +547,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
-        db = current.db
         s3 = current.response.s3
 
         auth = current.auth
@@ -570,8 +569,6 @@ def config(settings):
                 crud_strings["title_list"] = T("Invalid Cases")
 
             if r.controller == "dvr":
-
-                from gluon import Field
 
                 resource = r.resource
                 configure = resource.configure
@@ -1229,50 +1226,6 @@ def config(settings):
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 
     # -------------------------------------------------------------------------
-    def dvr_note_onaccept(form):
-        """
-            Set owned_by_group
-        """
-
-        db = current.db
-        s3db = current.s3db
-        form_vars = form.vars
-        table = s3db.dvr_note_type
-        types = db(table.name.belongs(("Medical", "Security"))).select(table.id,
-                                                                       table.name).as_dict(key="name")
-        try:
-            MEDICAL = types["Medical"]["id"]
-        except:
-            current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note_type")
-            return
-        SECURITY = types["Security"]["id"]
-        note_type_id = form_vars.note_type_id
-        if note_type_id == str(MEDICAL):
-            table = s3db.dvr_note
-            gtable = db.auth_group
-            role = db(gtable.uuid == "MEDICAL").select(gtable.id,
-                                                       limitby=(0, 1)
-                                                       ).first()
-            try:
-                group_id = role.id
-            except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
-                return
-            db(table.id == form_vars.id).update(owned_by_group=group_id)
-        elif note_type_id == str(SECURITY):
-            table = s3db.dvr_note
-            gtable = db.auth_group
-            role = db(gtable.uuid == "SECURITY").select(gtable.id,
-                                                        limitby=(0, 1)
-                                                        ).first()
-            try:
-                group_id = role.id
-            except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
-                return
-            db(table.id == form_vars.id).update(owned_by_group=group_id)
-
-    # -------------------------------------------------------------------------
     def customise_dvr_note_resource(r, tablename):
 
         auth = current.auth
@@ -1350,7 +1303,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
-        db = current.db
         auth = current.auth
         s3db = current.s3db
 
@@ -1391,12 +1343,7 @@ def config(settings):
 
             from gluon.sqlhtml import OptionsWidget
             from s3 import S3SQLCustomForm, \
-                           S3SQLInlineLink, \
-                           S3SQLInlineComponent, \
-                           S3TextFilter, \
-                           S3OptionsFilter, \
-                           S3DateFilter, \
-                           s3_get_filter_opts
+                           S3SQLInlineComponent
 
             table = s3db.dvr_case_activity
 
@@ -1640,7 +1587,6 @@ def config(settings):
 
                 from s3 import S3TextFilter, \
                                S3OptionsFilter, \
-                               S3DateFilter, \
                                s3_get_filter_opts
 
                 db = current.db
@@ -2412,7 +2358,7 @@ def config(settings):
         s3db = current.s3db
 
         # Configure custom form for tasks
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm("name",
                                     "status",
                                     "priority",
@@ -2632,7 +2578,7 @@ def config(settings):
 
 
 # =============================================================================
-def drk_cr_rheader(r, tabs=[]):
+def drk_cr_rheader(r, tabs=None):
     """ CR custom resource headers """
 
     if r.representation != "html":
@@ -2674,7 +2620,7 @@ def drk_cr_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def drk_dvr_rheader(r, tabs=[]):
+def drk_dvr_rheader(r, tabs=None):
     """ DVR custom resource headers """
 
     if r.representation != "html":
@@ -2683,8 +2629,7 @@ def drk_dvr_rheader(r, tabs=[]):
 
     from s3 import s3_rheader_resource, \
                    S3ResourceHeader, \
-                   s3_fullname, \
-                   s3_yes_no_represent
+                   s3_fullname
 
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
@@ -2745,7 +2690,7 @@ def drk_dvr_rheader(r, tabs=[]):
                 if case:
                     # Extract case data
                     case = case[0]
-                    name = lambda row: s3_fullname(row)
+                    name = s3_fullname
                     case_status = lambda row: case["dvr_case.status_id"]
                     archived = case["_row"]["dvr_case.archived"]
                     household_size = lambda row: case["dvr_case.household_size"]
@@ -2815,7 +2760,7 @@ def drk_dvr_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def drk_org_rheader(r, tabs=[]):
+def drk_org_rheader(r, tabs=None):
     """ ORG custom resource headers """
 
     if r.representation != "html":

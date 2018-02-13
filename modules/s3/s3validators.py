@@ -67,16 +67,14 @@ __all__ = ("single_phone_number_pattern",
 import datetime
 import json
 import re
-#import time
 
-from gluon import *
-#from gluon import current
-#from gluon.validators import IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
+                  IS_MATCH, IS_NOT_IN_DB
 from gluon.storage import Storage
 from gluon.validators import Validator
 
 from s3datetime import S3DateTime
-from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
+from s3utils import s3_orderby_fields, s3_str, s3_unicode
 
 DEFAULT = lambda: None
 JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
@@ -103,10 +101,10 @@ def options_sorter(x, y):
 # (Current use is in importing OSM files, so isn't interactive.)
 # @ToDo: Code that should only have a single # should use
 # s3_single_phone_requires. Check what messaging assumes.
-phone_number_pattern = "\+?\s*[\s\-\.\(\)\d]+(?:(?: x| ext)\s?\d{1,5})?"
+phone_number_pattern = r"\+?\s*[\s\-\.\(\)\d]+(?:(?: x| ext)\s?\d{1,5})?"
 single_phone_number_pattern = "%s$" % phone_number_pattern
-multi_phone_number_pattern = "%s(\s*(,|/|;)\s*%s)*$" % (phone_number_pattern,
-                                                        phone_number_pattern)
+multi_phone_number_pattern = r"%s(\s*(,|/|;)\s*%s)*$" % (phone_number_pattern,
+                                                         phone_number_pattern)
 
 s3_single_phone_requires = IS_MATCH(single_phone_number_pattern)
 s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
@@ -215,49 +213,55 @@ class IS_LAT(Validator):
     def __call__(self, value):
         try:
             value = float(value)
+        except ValueError:
+            # DMS format
+            pass
+        else:
             if self.minimum <= value <= self.maximum:
                 return (value, None)
             else:
                 return (value, self.error_message)
-        except:
-            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
-            if not pattern.match(value):
-                return (value, self.error_message)
-            else:
-                val = []
-                val.append(value)
-                sep = []
-                count = 0
-                for i in val[0]:
-                    try:
-                        int(i)
-                        count += 1
-                    except:
-                        sep.append(count)
-                        count += 1
-                sec = ""
-                posn = sep[1]
-                while posn != (count-1):
-                    sec = sec + val[0][posn+1]#to join the numbers for seconds
-                    posn += 1
-                posn2 = sep[0]
-                mins = ""
-                while posn2 != (sep[1]-1):
-                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
-                    posn2 += 1
-                deg = ""
-                posn3 = 0
-                while posn3 != (sep[0]):
-                    deg = deg + val[0][posn3] # to join the numbers for degree
-                    posn3 += 1
-                e = int(sec)/60 #formula to get back decimal degree
-                f = int(mins) + e #formula
-                g = int(f) / 60 #formula
-                value = int(deg) + g
-                return (value, None)
+
+        pattern = re.compile(r"^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
+        if not pattern.match(value):
+            return (value, self.error_message)
+        else:
+            val = []
+            val.append(value)
+            sep = []
+            count = 0
+            for i in val[0]:
+                try:
+                    int(i)
+                except ValueError:
+                    sep.append(count)
+                count += 1
+            sec = ""
+            posn = sep[1]
+            while posn != (count-1):
+                # join the numbers for seconds
+                sec = sec + val[0][posn+1]
+                posn += 1
+            posn2 = sep[0]
+            mins = ""
+            while posn2 != (sep[1]-1):
+                # join the numbers for minutes
+                mins = mins + val[0][posn2+1]
+                posn2 += 1
+            deg = ""
+            posn3 = 0
+            while posn3 != (sep[0]):
+                # join the numbers for degree
+                deg = deg + val[0][posn3]
+                posn3 += 1
+            e = int(sec) / 60 # formula to get back decimal degree
+            f = int(mins) + e # formula
+            g = int(f) / 60 # formula
+            value = int(deg) + g
+            return (value, None)
 
 # =============================================================================
-class IS_LON(Validator):
+class IS_LON(IS_LAT):
     """
         example:
 
@@ -271,59 +275,10 @@ class IS_LON(Validator):
                  error_message = "Longitude/Easting should be between -180 & 180!"
                  ):
 
+        super(IS_LON, self).__init__(error_message=error_message)
+
         self.minimum = -180
         self.maximum = 180
-        self.error_message = error_message
-        # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = True
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-        try:
-            value = float(value)
-            if self.minimum <= value <= self.maximum:
-                return (value, None)
-            else:
-                return (value, self.error_message)
-        except:
-            pattern = re.compile("^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
-            if not pattern.match(value):
-                return (value, self.error_message)
-            else:
-                val = []
-                val.append(value)
-                sep = []
-                count = 0
-                for i in val[0]:
-                    try:
-                        int(i)
-                        count += 1
-                    except:
-                        sep.append(count)
-                        count += 1
-                sec = ""
-                posn = sep[1]
-                while posn != (count-1):
-                    # join the numbers for seconds
-                    sec = sec + val[0][posn+1]
-                    posn += 1
-                posn2 = sep[0]
-                mins = ""
-                while posn2 != (sep[1]-1):
-                    # join the numbers for minutes
-                    mins = mins + val[0][posn2+1]
-                    posn2 += 1
-                deg = ""
-                posn3 = 0
-                while posn3 != (sep[0]):
-                    # join the numbers for degree
-                    deg = deg + val[0][posn3]
-                    posn3 += 1
-                e = int(sec) / 60 #formula to get back decimal degree
-                f = int(mins) + e #formula
-                g = int(f) / 60 #formula
-                value = int(deg) + g
-                return (value, None)
 
 # =============================================================================
 class IS_LAT_LON(Validator):
@@ -439,7 +394,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
             return ""
         try:
             intnumber = int(number)
-        except:
+        except ValueError:
             intnumber = number
 
         settings = current.deployment_settings
@@ -567,8 +522,8 @@ class IS_HTML_COLOUR(IS_MATCH):
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$", error_message)
 
 # =============================================================================
-regex1 = re.compile("[\w_]+\.[\w_]+")
-regex2 = re.compile("%\((?P<name>[^\)]+)\)s")
+regex1 = re.compile(r"[\w_]+\.[\w_]+")
+regex2 = re.compile(r"%\((?P<name>[^\)]+)\)s")
 
 class IS_ONE_OF_EMPTY(Validator):
     """
@@ -720,9 +675,9 @@ class IS_ONE_OF_EMPTY(Validator):
         self.instance_types = instance_types
 
     # -------------------------------------------------------------------------
-    def set_self_id(self, id):
+    def set_self_id(self, record_id):
         if self._and:
-            self._and.record_id = id
+            self._and.record_id = record_id
 
     # -------------------------------------------------------------------------
     def set_filter(self,
@@ -808,24 +763,25 @@ class IS_ONE_OF_EMPTY(Validator):
                 if hasattr(label, "bulk"):
                     # S3Represent => use bulk option
                     d = label.bulk(None,
-                                   rows=records,
-                                   list_type=False,
-                                   show_link=False)
+                                   rows = records,
+                                   list_type = False,
+                                   show_link = False,
+                                   )
                     labels = [d.get(r[self.kfield], d[None]) for r in records]
                 else:
-                    # Standard representation function
-                    labels = map(label, records)
+                    # Other representation function
+                    labels = [label(r) for r in records]
             except TypeError:
                 if isinstance(label, str):
-                    labels = map(lambda r: label % dict(r), records)
+                    labels = [label % dict(r) for r in records]
                 elif isinstance(label, (list, tuple)):
-                    labels = map(lambda r: \
-                                 " ".join([r[l] for l in label if l in r]),
-                                 records)
+                    labels = [" ".join([r[l] for l in label if l in r])
+                              for r in records
+                              ]
                 elif "name" in table:
-                    labels = map(lambda r: r.name, records)
+                    labels = [r.name for r in records]
                 else:
-                    labels = map(lambda r: r[self.kfield], records)
+                    labels = [r[self.kfield] for r in records]
             self.labels = labels
 
             if labels and self.sort:
@@ -1968,7 +1924,7 @@ class IS_PROCESSED_IMAGE(Validator):
             return (value, None)
 
         r = current.request
-        vars = r.post_vars
+        post_vars = r.post_vars
 
         if r.env.request_method == "GET":
             return (value, None)
@@ -1976,19 +1932,19 @@ class IS_PROCESSED_IMAGE(Validator):
         # If there's a newly uploaded file, accept it. It'll be processed in
         # the update form.
         # NOTE: A FieldStorage with data evaluates as False (odd!)
-        file = vars.get(self.field_name)
-        if file not in ("", None):
-            return (file, None)
+        uploaded_image = post_vars.get(self.field_name)
+        if uploaded_image not in ("", None):
+            return (uploaded_image, None)
 
-        encoded_file = vars.get("imagecrop-data")
-        file = self.file_cb()
+        cropped_image = post_vars.get("imagecrop-data")
+        uploaded_image = self.file_cb()
 
-        if not (encoded_file or file):
+        if not (cropped_image or uploaded_image):
             return value, current.T(self.error_message)
 
         # Decode the base64-encoded image from the client side image crop
         # process if, that worked.
-        if encoded_file:
+        if cropped_image:
             import base64
             import uuid
             try:
@@ -1996,26 +1952,27 @@ class IS_PROCESSED_IMAGE(Validator):
             except ImportError:
                 from StringIO import StringIO
 
-            metadata, encoded_file = encoded_file.split(",")
-            filename, datatype, enctype = metadata.split(";")
+            metadata, cropped_image = cropped_image.split(",")
+            #filename, datatype, enctype = metadata.split(";")
+            filename = metadata.split(";", 1)[0]
 
             f = Storage()
             f.filename = uuid.uuid4().hex + filename
 
-            f.file = StringIO(base64.decodestring(encoded_file))
+            f.file = StringIO(base64.decodestring(cropped_image))
 
             return (f, None)
 
         # Crop the image, if we've got the crop points.
-        points = vars.get("imagecrop-points")
-        if points and file:
+        points = post_vars.get("imagecrop-points")
+        if points and uploaded_image:
             import os
             points = map(float, points.split(","))
 
             if not self.upload_path:
-                path = os.path.join(r.folder, "uploads", "images", file)
+                path = os.path.join(r.folder, "uploads", "images", uploaded_image)
             else:
-                path = os.path.join(self.upload_path, file)
+                path = os.path.join(self.upload_path, uploaded_image)
 
             current.s3task.async("crop_image",
                 args=[path] + points + [self.image_bounds[0]])
@@ -2756,8 +2713,8 @@ class IS_PHONE_NUMBER(Validator):
                     error_message = current.T("Enter phone number in international format like +46783754957")
 
                 # Require E.123 international format
-                number = "".join(re.findall("[\d+]+", number))
-                match = re.match("(\+)([1-9]\d+)$", number)
+                number = "".join(re.findall(r"[\d+]+", number))
+                match = re.match(r"(\+)([1-9]\d+)$", number)
                 #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
 
                 if match:
