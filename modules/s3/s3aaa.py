@@ -9347,6 +9347,10 @@ class S3EntityRoleManager(S3Method):
 class S3OrgRoleManager(S3EntityRoleManager):
 
     def __init__(self, *args, **kwargs):
+        """
+            Constructor
+        """
+
         super(S3OrgRoleManager, self).__init__(*args, **kwargs)
 
         # dictionary {id: name, ...} of user accounts
@@ -9373,9 +9377,15 @@ class S3OrgRoleManager(S3EntityRoleManager):
             @return: dictionary containing the ID and name of the entity
         """
 
-        entity = dict(id=int(self.request.record.pe_id))
-        entity["name"] = current.s3db.pr_get_entities(pe_ids=[entity["id"]],
-                                                      types=self.ENTITY_TYPES)[entity["id"]]
+        entity_id = int(self.request.record.pe_id)
+
+        entity = {"id": entity_id,
+                  "name": current.s3db.pr_get_entities(
+                                          pe_ids = [entity_id],
+                                          types = self.ENTITY_TYPES,
+                                          )[entity_id],
+                  }
+
         return entity
 
     # -------------------------------------------------------------------------
@@ -9403,7 +9413,7 @@ class S3OrgRoleManager(S3EntityRoleManager):
         return self.user
 
     # -------------------------------------------------------------------------
-    def get_assigned_roles(self):
+    def get_assigned_roles(self, entity_id=None, user_id=None):
         """
             Override to get assigned roles for this entity
 
@@ -9411,6 +9421,7 @@ class S3OrgRoleManager(S3EntityRoleManager):
         """
 
         assigned_roles = super(S3OrgRoleManager, self).get_assigned_roles
+
         return assigned_roles(entity_id=self.entity["id"])
 
     # -------------------------------------------------------------------------
@@ -9428,27 +9439,34 @@ class S3OrgRoleManager(S3EntityRoleManager):
 
         if not self.user:
             assigned_roles = self.assigned_roles
-            realm_users = Storage([(k, v)
-                                    for k, v in self.realm_users.items()
-                                    if k not in assigned_roles])
 
-            nonrealm_users = Storage([(k, v)
-                                       for k, v in self.objects.items()
-                                       if k not in assigned_roles and \
-                                          k not in self.realm_users])
+            realm_users = dict((k, v)
+                               for k, v in self.realm_users.items()
+                               if k not in assigned_roles)
+
+            other_users = dict((k, v)
+                               for k, v in self.objects.items()
+                               if k not in assigned_roles and \
+                                  k not in self.realm_users)
 
             options = [("", ""),
                        (T("Users in my Organizations"), realm_users),
-                       (T("Other Users"), nonrealm_users)]
+                       (T("Other Users"), other_users),
+                       ]
+
+            widget = lambda field, value: \
+                            S3GroupedOptionsWidget.widget(field,
+                                                          value,
+                                                          options=options,
+                                                          )
 
             object_field = Field("foreign_object",
-                                 T("User"),
-                                 requires=IS_IN_SET(self.objects),
-                                 widget=lambda field, value:
-                                     S3GroupedOptionsWidget.widget(field,
-                                                                 value,
-                                                                 options=options))
+                                 label = T("User"),
+                                 requires = IS_IN_SET(self.objects),
+                                 widget = widget,
+                                 )
             fields.insert(0, object_field)
+
         return fields
 
 # =============================================================================
@@ -9525,15 +9543,16 @@ class S3PersonRoleManager(S3EntityRoleManager):
         return self.entity
 
     # -------------------------------------------------------------------------
-    def get_assigned_roles(self):
+    def get_assigned_roles(self, entity_id=None, user_id=None):
         """
             @todo: description?
 
             @return: dictionary of assigned roles with entity pe_id as the keys
         """
 
-        user_id = self.user["id"]
-        return super(S3PersonRoleManager, self).get_assigned_roles(user_id=user_id)
+        assigned_roles = super(S3OrgRoleManager, self).get_assigned_roles
+
+        return assigned_roles(user_id=self.user["id"])
 
     # -------------------------------------------------------------------------
     def get_form_fields(self):
