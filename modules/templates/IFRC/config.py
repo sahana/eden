@@ -2049,6 +2049,15 @@ def config(settings):
                 htable.on(htable.person_id == ptable.id),
                 ctable.on((ctable.pe_id == ptable.pe_id) & (ctable.contact_method=="EMAIL") & (ctable.deleted == False)),
                 ]
+        # Exclude participants that we have already notified
+        rtable = s3db.dc_response
+        query = (rtable.target_id == target_id) & \
+                (rtable.template_id == template_id) & \
+                (rtable.deleted == False)
+        notified = db(query).select(rtable.person_id)
+        exclude = [n.person_id for n in notified]
+        if exclude:
+            query &= (~ptable.id.belongs(exclude))
         persons = db(query).select(ptable.id,
                                    ptable.pe_id,
                                    ptable.first_name,
@@ -2093,10 +2102,10 @@ def config(settings):
 
         # Send localised email to each person
         # @ToDo: Group by Language?
+        errors = []
         s3 = current.response.s3
         s3.bulk = True # Don't send a Welcome Message for new users as we send our own message instead
         send_email = current.msg.send_by_pe_id
-        rtable = s3db.dc_response
         rtable.date.default = None # Set the date when we answer
         rinsert = rtable.insert
         uinsert = utable.insert
@@ -2105,6 +2114,7 @@ def config(settings):
         update_super = s3db.update_super
         for p in persons:
             person = p["pr_person"]
+            person_id = person.id
             user_id = p.get("auth_user.id")
             if user_id:
                 NEW_USER = False
@@ -2121,22 +2131,34 @@ def config(settings):
                 reset_password_key = str(int(time.time())) + "-" + web2py_uuid() # format from auth.email_reset_password()
                 # Fallback language based on Target
                 lang = default_language
-                user = Storage(first_name = person.first_name,
-                               last_name = person.last_name,
+                first_name = person.first_name
+                last_name = person.last_name
+                user = Storage(first_name = first_name,
+                               last_name = last_name,
                                language = lang,
                                email = email,
                                organisation_id = hr.organisation_id,
                                site_id = hr.site_id,
                                reset_password_key = reset_password_key,
                                )
-                user_id = uinsert(**user)
+                try:
+                    user_id = uinsert(**user)
+                except IntegrityError, e:
+                    # So far this has always been: duplicate key value violates unique constraint "auth_user_email_key"
+                    # Log error
+                    errors.append({person_id: {error: e,
+                                               first_name: first_name,
+                                               last_name: last_name,
+                                               })
+                    # Continue to notify the rest of the participants
+                    continue
                 user.id = user_id
                 approve_user(user)
 
             # Create response (so that User only needs oacl UPDATE not uacl READ|CREATE
             record = dict(target_id = target_id,
                           template_id = template_id,
-                          person_id = person.id,
+                          person_id = person_id,
                           owned_by_user = user_id,
                           )
             response_id = rinsert(**record)
@@ -2205,6 +2227,8 @@ def config(settings):
         session_s3.language = ui_language
         T.force(ui_language)
 
+        return errors
+
     # -------------------------------------------------------------------------
     def dc_target_onapprove(row):
         """
@@ -2222,9 +2246,26 @@ def config(settings):
                                                                           limitby = (0, 1),
                                                                           ).first()
 
-        hrm_notify_participants(training_event.training_event_id)
+        errors = hrm_notify_participants(training_event.training_event_id)
 
-        current.response.confirmation = current.T("Notifications sent!")
+        if errors:
+            from gluon import A, URL
+            bad = ""
+            for e in errors:
+                error = errors[e]
+                new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
+                                                     error["last_name"]),
+                                          _href=URL(c="hrm", f="person", args=e)),
+                                        error["error"])
+                if bad:
+                    bad = "%s, %s" % (bad, new_error)
+                else:
+                    bad = new_error
+            current.response.warning = "%s: %s" % (current.T("Notifications sent, but these participants couldn't be notified"),
+                                                   bad
+                                                   )
+        else:
+            current.response.confirmation = current.T("Notifications sent!")
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -4722,14 +4763,32 @@ def config(settings):
             - exclude Observers
         """
 
+        from gluon import redirect, A, URL
+
         training_event_id = r.id
 
-        hrm_notify_participants(training_event_id)
+        errors = hrm_notify_participants(training_event_id)
 
-        # Notify the user of success & redirect to main event page
-        current.session.confirmation = current.T("Notifications sent!")
+        if errors:
+            bad = ""
+            for e in errors:
+                error = errors[e]
+                new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
+                                                     error["last_name"]),
+                                          _href=URL(c="hrm", f="person", args=e)),
+                                        error["error"])
+                if bad:
+                    bad = "%s, %s" % (bad, new_error)
+                else:
+                    bad = new_error
+            current.session.warning = "%s: %s" % (current.T("Notifications sent, but these participants couldn't be notified"),
+                                                  bad
+                                                  )
+        else:
+            # Notify the user of success
+            current.session.confirmation = current.T("Notifications sent!")
 
-        from gluon import redirect, URL
+        # Redirect to main event page
         redirect(URL(args=[training_event_id]))
 
     # -------------------------------------------------------------------------
