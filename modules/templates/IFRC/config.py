@@ -2149,7 +2149,7 @@ def config(settings):
                     errors.append({person_id: {error: e,
                                                first_name: first_name,
                                                last_name: last_name,
-                                               })
+                                               }})
                     # Continue to notify the rest of the participants
                     continue
                 user.id = user_id
