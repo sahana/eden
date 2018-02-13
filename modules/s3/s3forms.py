@@ -2279,7 +2279,7 @@ class S3SQLVerticalSubFormLayout(S3SQLSubFormLayout):
         headers = super(S3SQLVerticalSubFormLayout, self).headers
 
         header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr');
+        element = header_row.element('tr')
         if hasattr(element, "remove_class"):
             element.remove_class("static")
         return header_row
@@ -3906,8 +3906,10 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 if fname in component.fields:
                     lookup_field = fname
                     break
+            from s3fields import S3Represent
             represent = S3Represent(lookup = component.tablename,
-                                    field = lookup_field)
+                                    fields = [lookup_field],
+                                    )
 
         # Represent all values
         if isinstance(value, (list, tuple, set)):
@@ -4310,7 +4312,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     # e.g. Project Community Activity Types filtered by Sector of parent Project
                     lookupkey = opt_filter.get("lookupkey", None)
                     if not lookupkey:
-                        raise
+                        raise SyntaxError("lookupkey is required")
                     if resource._rows:
                         _id = resource._rows[0][lookupkey]
                         _resource = s3db.resource(lookuptable, id=_id)
@@ -4620,7 +4622,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             elif header is False:
                 header = '''header:false'''
             else:
-                header = '''header:"%s"''' % self.header
+                header = '''header:"%s"''' % header
             script = '''$('#%s').multiselect({selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
                 (field_name,
                  T("# selected"),
