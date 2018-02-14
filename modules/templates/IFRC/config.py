@@ -2120,7 +2120,7 @@ def config(settings):
         #        from MySQLdb import IntegrityError
         #    except ImportError:
         #        from gluon.contrib.pymysql import IntegrityError
-        errors = []
+        errors = {}
         success = 0
         s3 = current.response.s3
         s3.bulk = True # Don't send a Welcome Message for new users as we send our own message instead
@@ -2154,10 +2154,10 @@ def config(settings):
                                                           ).first()
                 if exists:
                     # Log error
-                    errors.append({person_id: {#"error": "Cannot create User as there is already a User Account with this email address",
-                                               "first_name": first_name,
-                                               "last_name": last_name,
-                                               }})
+                    errors[person_id] = {#"error": "Cannot create User as there is already a User Account with this email address",
+                                         "first_name": first_name,
+                                         "last_name": last_name,
+                                         }
                     # Continue to notify the rest of the participants
                     continue
 
