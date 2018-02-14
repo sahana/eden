@@ -1644,6 +1644,8 @@ def config(settings):
                         #(T("Attachments"), "document"),
                         )
 
+                from gluon import A, URL
+
                 db = current.db
 
                 def contacts(record):
@@ -1673,7 +1675,6 @@ def config(settings):
                         return email or other
                     else:
                         # @ToDo: Provide an Edit button
-                        from gluon import A
                         return A(T("Add"))
 
                 etable = s3db.hrm_training_event
@@ -1683,6 +1684,7 @@ def config(settings):
                         (ltable.target_id == ttable.id) & \
                         (ltable.training_event_id == etable.id)
                 training_event = db(query).select(ttable.date,
+                                                  etable.id,
                                                   etable.name,
                                                   etable.start_date,
                                                   etable.location_id,
@@ -1691,7 +1693,9 @@ def config(settings):
 
                 def event_name(record):
                     try:
-                        return training_event["hrm_training_event"].name
+                        return A(training_event["hrm_training_event"].name,
+                                 _href=URL(c="hrm", f="training_event", args=training_event["hrm_training_event"].id),
+                                 )
                     except:
                         return current.messages["NONE"]
 
