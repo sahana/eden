@@ -4793,15 +4793,15 @@ def config(settings):
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
-                                                   bad
-                                                   )
+            current.session.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
+                                                  bad
+                                                  )
         elif success:
             from s3 import s3_str
-            current.response.confirmation = s3_str(current.T("%i Notifications sent!")) % success
+            current.session.confirmation = s3_str(current.T("%i Notifications sent!")) % success
 
         else:
-            current.response.information = current.T("No Notifications needed sending!")
+            current.session.information = current.T("No Notifications needed sending!")
 
         # Redirect to main event page
         redirect(URL(args=[training_event_id]))
