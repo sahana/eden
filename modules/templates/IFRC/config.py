@@ -2106,6 +2106,20 @@ def config(settings):
 
         # Send localised email to each person
         # @ToDo: Group by Language?
+        #db_type = settings.get_database_type()
+        #if db_type == "postgres":
+        #    try:
+        #        from psycopg2 import IntegrityError
+        #    except ImportError
+        #        from gluon.contrib.pg8000 import IntegrityError
+        #elif db_type == "sqlite":
+        #    from sqlite3 import IntegrityError
+        #else:
+        #    # MySQL
+        #    try:
+        #        from MySQLdb import IntegrityError
+        #    except ImportError:
+        #        from gluon.contrib.pymysql import IntegrityError
         errors = []
         success = 0
         s3 = current.response.s3
@@ -2132,12 +2146,25 @@ def config(settings):
                 if not email:
                     # Cannot create User account for this person
                     continue
+                first_name = person.first_name
+                last_name = person.last_name
+                # Check if there is already a User Account with this email
+                exists = db(utable.email == email).select(utable.id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+                if exists:
+                    # Log error
+                    errors.append({person_id: {#"error": "Cannot create User as there is already a User Account with this email address",
+                                               "first_name": first_name,
+                                               "last_name": last_name,
+                                               }})
+                    # Continue to notify the rest of the participants
+                    continue
+
                 hr = p.get("hrm_human_resource")
                 reset_password_key = str(int(time.time())) + "-" + web2py_uuid() # format from auth.email_reset_password()
                 # Fallback language based on Target
                 lang = default_language
-                first_name = person.first_name
-                last_name = person.last_name
                 user = Storage(first_name = first_name,
                                last_name = last_name,
                                language = lang,
@@ -2146,17 +2173,20 @@ def config(settings):
                                site_id = hr.site_id,
                                reset_password_key = reset_password_key,
                                )
-                try:
-                    user_id = uinsert(**user)
-                except IntegrityError, e:
-                    # So far this has always been: duplicate key value violates unique constraint "auth_user_email_key"
-                    # Log error
-                    errors.append({person_id: {"error": e,
-                                               "first_name": first_name,
-                                               "last_name": last_name,
-                                               }})
-                    # Continue to notify the rest of the participants
-                    continue
+                # Commit, because we may need to revert
+                #db.commit()
+                #try:
+                user_id = uinsert(**user)
+                #except IntegrityError, e:
+                #    # So far this has always been: IntegrityError: duplicate key value violates unique constraint "auth_user_email_key"
+                #    db.rollback()
+                #    # Log error
+                #    errors.append({person_id: {"error": e,
+                #                               "first_name": first_name,
+                #                               "last_name": last_name,
+                #                               }})
+                #    # Continue to notify the rest of the participants
+                #    continue
                 user.id = user_id
                 approve_user(user)
 
@@ -2260,15 +2290,18 @@ def config(settings):
             bad = ""
             for e in errors:
                 error = errors[e]
-                new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
-                                                     error["last_name"]),
-                                          _href=URL(c="hrm", f="person", args=e)),
-                                        error["error"])
+                #new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
+                #                                     error["last_name"]),
+                #                          _href=URL(c="hrm", f="person", args=e)),
+                #                        error["error"])
+                new_error = A("%s %s" % (error["first_name"],
+                                         error["last_name"]),
+                              _href=URL(c="hrm", f="person", args=e))
                 if bad:
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
+            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
                                                    bad
                                                    )
         elif success:
@@ -4785,15 +4818,18 @@ def config(settings):
             bad = ""
             for e in errors:
                 error = errors[e]
-                new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
-                                                     error["last_name"]),
-                                          _href=URL(c="hrm", f="person", args=e)),
-                                        error["error"])
+                #new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
+                #                                     error["last_name"]),
+                #                          _href=URL(c="hrm", f="person", args=e)),
+                #                        error["error"])
+                new_error = A("%s %s" % (error["first_name"],
+                                         error["last_name"]),
+                              _href=URL(c="hrm", f="person", args=e))
                 if bad:
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.session.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
+            current.session.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
                                                   bad
                                                   )
         elif success:
