@@ -2055,10 +2055,10 @@ def config(settings):
                 ]
         # Exclude participants that we have already notified
         rtable = s3db.dc_response
-        query = (rtable.target_id == target_id) & \
-                (rtable.template_id == template_id) & \
-                (rtable.deleted == False)
-        notified = db(query).select(rtable.person_id)
+        nquery = (rtable.target_id == target_id) & \
+                 (rtable.template_id == template_id) & \
+                 (rtable.deleted == False)
+        notified = db(nquery).select(rtable.person_id)
         exclude = [n.person_id for n in notified]
         if exclude:
             query &= (~ptable.id.belongs(exclude))
