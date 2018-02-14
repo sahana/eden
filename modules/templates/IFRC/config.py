@@ -2103,6 +2103,7 @@ def config(settings):
         # Send localised email to each person
         # @ToDo: Group by Language?
         errors = []
+        success = 0
         s3 = current.response.s3
         s3.bulk = True # Don't send a Welcome Message for new users as we send our own message instead
         send_email = current.msg.send_by_pe_id
@@ -2146,9 +2147,9 @@ def config(settings):
                 except IntegrityError, e:
                     # So far this has always been: duplicate key value violates unique constraint "auth_user_email_key"
                     # Log error
-                    errors.append({person_id: {error: e,
-                                               first_name: first_name,
-                                               last_name: last_name,
+                    errors.append({person_id: {"error": e,
+                                               "first_name": first_name,
+                                               "last_name": last_name,
                                                }})
                     # Continue to notify the rest of the participants
                     continue
@@ -2220,6 +2221,7 @@ def config(settings):
                        subject = translation["s"],
                        message = message,
                        )
+            success += 1
 
         s3.bulk = False
 
@@ -2227,7 +2229,7 @@ def config(settings):
         session_s3.language = ui_language
         T.force(ui_language)
 
-        return errors
+        return success, errors
 
     # -------------------------------------------------------------------------
     def dc_target_onapprove(row):
@@ -2246,10 +2248,11 @@ def config(settings):
                                                                           limitby = (0, 1),
                                                                           ).first()
 
-        errors = hrm_notify_participants(training_event.training_event_id)
+        success, errors = hrm_notify_participants(training_event.training_event_id)
 
         if errors:
             from gluon import A, URL
+            from s3 import s3_str
             bad = ""
             for e in errors:
                 error = errors[e]
@@ -2261,11 +2264,15 @@ def config(settings):
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.response.warning = "%s: %s" % (current.T("Notifications sent, but these participants couldn't be notified"),
+            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
                                                    bad
                                                    )
+        elif success:
+            from s3 import s3_str
+            current.response.confirmation = s3_str(current.T("%i Notifications sent!")) % success
+
         else:
-            current.response.confirmation = current.T("Notifications sent!")
+            current.response.information = current.T("No Notifications needed sending!")
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -4767,9 +4774,10 @@ def config(settings):
 
         training_event_id = r.id
 
-        errors = hrm_notify_participants(training_event_id)
+        success, errors = hrm_notify_participants(training_event_id)
 
         if errors:
+            from s3 import s3_str
             bad = ""
             for e in errors:
                 error = errors[e]
@@ -4781,12 +4789,15 @@ def config(settings):
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.session.warning = "%s: %s" % (current.T("Notifications sent, but these participants couldn't be notified"),
-                                                  bad
-                                                  )
+            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified")) % success,
+                                                   bad
+                                                   )
+        elif success:
+            from s3 import s3_str
+            current.response.confirmation = s3_str(current.T("%i Notifications sent!")) % success
+
         else:
-            # Notify the user of success
-            current.session.confirmation = current.T("Notifications sent!")
+            current.response.information = current.T("No Notifications needed sending!")
 
         # Redirect to main event page
         redirect(URL(args=[training_event_id]))
