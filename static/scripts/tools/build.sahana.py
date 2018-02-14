@@ -447,7 +447,6 @@ def dojs(dogis = False, warnings = True):
                      "gis.latlon",
                      "gis.loader",
                      "gis.pois",
-                     "locationselector.widget",
                      "msg",
                      "popup",
                      "register_validation",

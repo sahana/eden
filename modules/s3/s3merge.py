@@ -732,6 +732,7 @@ class S3Merge(S3Method):
             if isinstance(field.widget, S3LocationSelectorWidget):
                 # Workaround - location selector does not support
                 # renaming of the fields => switch to dropdown
+                # @todo: obsolete?
                 level = None
                 if value:
                     try:

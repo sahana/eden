@@ -61,7 +61,6 @@ __all__ = ("S3ACLWidget",
            "S3PhoneWidget",
            "S3Selector",
            "S3LocationSelector",
-           "S3LocationSelectorWidget",
            "S3MultiSelectWidget",
            "S3OrganisationAutocompleteWidget",
            "S3OrganisationHierarchyWidget",
@@ -107,7 +106,7 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
-from s3datetime import S3DateTime
+from s3datetime import S3Calendar, S3DateTime
 from s3utils import *
 from s3validators import *
 
@@ -456,7 +455,6 @@ class S3AddPersonWidget(FormWidget):
 
         s3db = current.s3db
         T = current.T
-        s3 = current.response.s3
 
         # Attributes for the main input
         default = dict(_type = "text",
@@ -1222,7 +1220,6 @@ class S3AddPersonWidget(FormWidget):
         """
 
         T = current.T
-        settings = current.deployment_settings
 
         error_message = T("Please enter a valid email address")
 
@@ -1272,7 +1269,6 @@ class S3AddPersonWidget(FormWidget):
         """
 
         s3db = current.s3db
-        s3 = current.response.s3
 
         # Validate the person fields
         ptable = s3db.pr_person
@@ -1535,12 +1531,12 @@ class S3BooleanWidget(BooleanWidget):
         Standard Boolean widget, with an option to hide/reveal fields conditionally.
     """
 
-    def __init__(self,
-                 fields = [],
-                 click_to_show = True
-                ):
+    def __init__(self, fields=None, click_to_show=True):
 
-        self.fields = fields
+        if fields is None:
+            self.fields = ()
+        else:
+            self.fields = fields
         self.click_to_show = click_to_show
 
     def __call__(self, field, value, **attributes):
@@ -2010,7 +2006,6 @@ class S3CalendarWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
-        jquery_ready = s3.jquery_ready
 
         datepicker_l10n = None
         timepicker_l10n = None
@@ -2916,7 +2911,7 @@ class S3EmbeddedComponentWidget(FormWidget):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def link_filter(table, expression):
+    def link_filter_query(table, expression):
         """
             Parse a link filter expression and convert it into an
             S3ResourceQuery that can be added to the search_ac resource.
@@ -3228,7 +3223,7 @@ class S3GroupedOptionsWidget(FormWidget):
                 for key in help_field.keys():
                     helptext[s3_unicode(key)] = help_field[key]
             else:
-                ktablename, pkey, multiple = s3_get_foreign_key(field)
+                ktablename, pkey = s3_get_foreign_key(field)[:2]
                 if ktablename is not None:
                     ktable = current.s3db[ktablename]
                     if hasattr(ktable, help_field):
@@ -3262,7 +3257,6 @@ class S3GroupedOptionsWidget(FormWidget):
             size = 0
 
         size = self.size
-        cols = self.cols
 
         close_group = self._close_group
 
@@ -3439,10 +3433,10 @@ class S3RadioOptionsWidget(FormWidget):
         """
 
         key, label, value, tooltip = item
-        id = "%s%s" % (fieldname, key)
+        item_id = "%s%s" % (fieldname, key)
         attr = {"_type": "radio",
                 "_name": fieldname,
-                "_id": id,
+                "_id": item_id,
                 "_class": "s3-radioopts-option",
                 "_value": key,
                 }
@@ -3451,9 +3445,7 @@ class S3RadioOptionsWidget(FormWidget):
         if tooltip:
             attr["_title"] = tooltip
         return DIV(INPUT(**attr),
-                   LABEL(label,
-                         _for=id,
-                         ),
+                   LABEL(label, _for=item_id),
                    )
 
     # -------------------------------------------------------------------------
@@ -3503,7 +3495,7 @@ class S3RadioOptionsWidget(FormWidget):
                 for key in help_field.keys():
                     helptext[s3_unicode(key)] = help_field[key]
             else:
-                ktablename, pkey, multiple = s3_get_foreign_key(field)
+                ktablename, pkey = s3_get_foreign_key(field)[:2]
                 if ktablename is not None:
                     ktable = current.s3db[ktablename]
                     if hasattr(ktable, help_field):
@@ -3868,7 +3860,7 @@ class S3KeyValueWidget(ListWidget):
         self.value_label = value_label or T("Value")
 
     def __call__(self, field, value, **attributes):
-        T = current.T
+
         s3 = current.response.s3
 
         _id = "%s_%s" % (field._tablename, field.name)
@@ -3931,7 +3923,7 @@ class S3LatLonWidget(DoubleWidget):
         self.disabled = disabled
         self.switch = switch
 
-    def widget(self, field=None, value=None):
+    def widget(self, field, value, **attributes):
 
         T = current.T
         s3 = current.response.s3
@@ -4140,7 +4132,7 @@ class S3LocationDropdownWidget(FormWidget):
         attr_dropdown["requires"] = requires
 
         attr_dropdown["represent"] = \
-            lambda id: locations["id"]["name"] or UNKNOWN_OPT
+            lambda id: locations["id"]["name"] or current.messages.UNKNOWN_OPT
 
         return TAG[""](SELECT(*opts, **attr_dropdown),
                        requires=field.requires
@@ -4180,7 +4172,7 @@ class S3LocationLatLonWidget(FormWidget):
             try:
                 lat = record.lat
                 lon = record.lon
-            except:
+            except AttributeError:
                 lat = None
                 lon = None
         else:
@@ -4193,7 +4185,7 @@ class S3LocationLatLonWidget(FormWidget):
 
         comment = ""
         selector = str(field).replace(".", "_")
-        id = "%s_lat" % selector
+        row_id = "%s_lat" % selector
         label = T("Latitude")
         widget = S3LatLonWidget("lat").widget(field, lat)
         label = "%s:" % label
@@ -4201,21 +4193,21 @@ class S3LocationLatLonWidget(FormWidget):
             label = DIV(label,
                         SPAN(" *", _class="req"))
 
-        row = formstyle(id, label, widget, comment)
+        row = formstyle(row_id, label, widget, comment)
         if isinstance(row, tuple):
             for r in row:
                 rows.append(r)
         else:
             rows.append(row)
 
-        id = "%s_lon" % selector
+        row_id = "%s_lon" % selector
         label = T("Longitude")
         widget = S3LatLonWidget("lon", switch=True).widget(field, lon)
         label = "%s:" % label
         if not empty:
             label = DIV(label,
                         SPAN(" *", _class="req"))
-        row = formstyle(id, label, widget, comment)
+        row = formstyle(row_id, label, widget, comment)
         if isinstance(row, tuple):
             for r in row:
                 rows.append(r)
@@ -4225,847 +4217,6 @@ class S3LocationLatLonWidget(FormWidget):
         return TAG[""](INPUT(**attr),
                        *rows,
                        requires = requires
-                       )
-
-# =============================================================================
-class S3LocationSelectorWidget(FormWidget):
-    """
-        Renders a gis_location Foreign Key to allow inline display/editing of linked fields.
-
-        Designed for use for Resources which require a Specific Location, such as Sites, Persons, Assets, Incidents, etc
-        Not currently suitable for Resources which require a Hierarchical Location, such as Projects, Assessments, Plans, etc
-        - S3LocationAutocompleteWidget is more appropriate for these.
-
-        Can also be used to transparently wrap simple sites (such as project_site) using the IS_SITE_SELECTOR() validator
-
-        It uses s3.locationselector.widget.js to do all client-side functionality.
-        It requires the IS_LOCATION_SELECTOR() validator to process Location details upon form submission.
-
-        Create form
-            Active Tab: 'Create Location'
-                Country Dropdown (to set the Number & Labels of Hierarchy)
-                Building Name (deployment_setting to hide)
-                Street Address (Line1/Line2?)
-                    @ToDo: Trigger a geocoder lookup onblur
-                Postcode
-                @ToDo: Mode Strict:
-                    Lx as dropdowns. Default label is 'Select previous to populate this dropdown' (Fixme!)
-                Mode not Strict (default):
-                    L2-L5 as Autocompletes which create missing locations automatically
-                    @ToDo: Lx as Dropdown (where the 'Edit Lx' is set)
-                Map:
-                    @ToDo: Inline or Popup? (Deployment Option?)
-                    Set Map Viewport to default on best currently selected Hierarchy
-                        @ToDo: L1+
-                Lat Lon
-            Inactive Tab: 'Select Existing Location'
-                Needs 2 modes:
-                    Specific Locations only - for Sites/Incidents
-                    @ToDo: Hierarchies ok (can specify which) - for Projects/Documents
-                @ToDo: Hierarchical Filters above the Search Box
-                    Search is filtered to values shown
-                    Filters default to any hierarchy selected on the Create tab?
-                Button to explicitly say 'Select this Location' which sets all the fields (inc hidden ID) & the UUID var
-                    Tabs then change to View/Edit
-
-        Update form
-            Update form has uuid set server-side & hence S3.gis.uuid set client-side
-            Assume location is shared by other resources
-                Active Tab: 'View Location Details' (Fields are read-only)
-                Inactive Tab: 'Edit Location Details' (Fields are writable)
-                @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create Location'
-
-        @see: http://eden.sahanafoundation.org/wiki/BluePrintGISLocationSelector
-
-        @ToDo: Support multiple in a page:
-               http://eden.sahanafoundation.org/ticket/1223
-    """
-
-    def __init__(self,
-                 catalog_layers=False,
-                 hide_address=False,
-                 site_type=None,
-                 polygon=False):
-
-        self.catalog_layers = catalog_layers
-        self.hide_address = hide_address
-        self.site_type = site_type
-        self.polygon = polygon
-
-    def __call__(self, field, value, **attributes):
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        gis = current.gis
-
-        auth = current.auth
-        settings = current.deployment_settings
-        response = current.response
-        s3 = current.response.s3
-        location_selector_loaded = s3.gis.location_selector_loaded
-        # @ToDo: Don't insert JS snippets when location_selector already loaded
-
-        request = current.request
-        appname = request.application
-
-        locations = s3db.gis_location
-        ctable = s3db.gis_config
-
-        requires = field.requires
-
-        # Main Input
-        if value == "dummy":
-            # If validation fails, we may get here with no location, but with
-            # "dummy" left in the value.
-            value = None
-        defaults = dict(_type = "text",
-                        value = (value is not None and str(value)) or "")
-        attr = StringWidget._attributes(field, defaults, **attributes)
-        if request.controller == "appadmin":
-            # Don't use this widget in appadmin
-            return TAG[""](INPUT(**attr),
-                           requires=IS_EMPTY_OR(IS_LOCATION()),
-                           )
-
-        # Hide the real field
-        attr["_class"] = "hide"
-
-        # Is this a Site?
-        site = ""
-        if self.site_type:
-            # We are acting on a site_id not location_id
-            # Store the real variables
-            #site_value = value
-            #site_field = field
-            # Ensure that we have a name for the Location visible
-            settings.gis.building_name = True
-            # Set the variables to what they would be for a Location
-            stable = s3db[self.site_type]
-            field = stable.location_id
-            if value:
-                query = (stable.id == value)
-                record = db(query).select(stable.location_id,
-                                          limitby=(0, 1)).first()
-                if record:
-                    value = record.location_id
-                    defaults = dict(_type = "text",
-                                    value = str(value))
-                else:
-                    raise HTTP(404)
-        else:
-            # Check for being a location_id on a site type
-            # If so, then the JS defaults the Building Name to Site Name
-            tablename = field.tablename
-            if tablename in auth.org_site_types:
-                site = tablename
-
-        # Full list of countries (by ID)
-        countries = gis.get_countries()
-
-        # Countries we should select from
-        _countries = settings.get_gis_countries()
-        if _countries:
-            __countries = gis.get_countries(key_type="code")
-            countrynames = []
-            append = countrynames.append
-            for k, v in __countries.iteritems():
-                if k in _countries:
-                    append(v)
-            for k, v in countries.iteritems():
-                if v not in countrynames:
-                    del countries[k]
-
-        # Read Options
-        config = gis.get_config()
-        default_L0 = Storage()
-        country_snippet = ""
-        if value:
-            default_L0.id = gis.get_parent_country(value)
-        elif config.default_location_id:
-            # Populate defaults with IDs & Names of ancestors at each level
-            defaults = gis.get_parent_per_level(defaults,
-                                                config.default_location_id,
-                                                feature=None,
-                                                ids=True,
-                                                names=True)
-            query = (locations.id == config.default_location_id)
-            default_location = db(query).select(locations.level,
-                                                locations.name).first()
-            if default_location.level:
-                # Add this one to the defaults too
-                defaults[default_location.level] = Storage(name=default_location.name,
-                                                           id=config.default_location_id)
-            if "L0" in defaults:
-                default_L0 = defaults["L0"]
-                if default_L0:
-                    id = default_L0.id
-                    if id not in countries:
-                        # Add the default country to the list of possibles
-                        countries[id] = defaults["L0"].name
-                country_snippet = '''S3.gis.country="%s"\n''' % \
-                    gis.get_default_country(key_type="code")
-        elif len(_countries) == 1:
-            default_L0.id = countries.keys()[0]
-            country_snippet = '''S3.gis.country="%s"\n''' % _countries[0]
-        elif len(countries) == 1:
-            default_L0.id = countries.keys()[0]
-
-        # Should we use a Map-based selector?
-        map_selector = settings.get_gis_map_selector()
-        if map_selector:
-            no_map = ""
-        else:
-            no_map = '''S3.gis.no_map = true;\n'''
-        # Should we display LatLon boxes?
-        latlon_selector = settings.get_gis_latlon_selector()
-        # Should we display Postcode box?
-        postcode_selector = settings.get_gis_postcode_selector()
-        # Show we display Polygons?
-        polygon = self.polygon
-        # Navigate Away Confirm?
-        if settings.get_ui_navigate_away_confirm():
-            navigate_away_confirm = '''
-S3.navigate_away_confirm=true'''
-        else:
-            navigate_away_confirm = ""
-
-        # Which tab should the widget open to by default?
-        # @ToDo: Act on this server-side instead of client-side
-        if s3.gis.tab:
-            tab = '''
-S3.gis.tab="%s"''' % s3.gis.tab
-        else:
-            # Default to Create
-            tab = ""
-
-        # Which Levels do we have in our hierarchy & what are their initial Labels?
-        # If we have a default country or one from the value then we can lookup
-        # the labels we should use for that location
-        country = None
-        if default_L0:
-            country = default_L0.id
-        location_hierarchy = gis.get_location_hierarchy(location=country)
-        # This is all levels to start, but L0 will be dropped later.
-        levels = gis.hierarchy_level_keys
-
-        map_popup = ""
-        if value:
-            # Read current record
-            if auth.s3_has_permission("update", locations, record_id=value):
-                # Update mode
-                # - we assume this location could be shared by other resources
-                create = "hide"   # Hide sections which are meant for create forms
-                update = ""
-                query = (locations.id == value)
-                this_location = db(query).select(locations.uuid,
-                                                 locations.name,
-                                                 locations.level,
-                                                 locations.inherited,
-                                                 locations.lat,
-                                                 locations.lon,
-                                                 locations.addr_street,
-                                                 locations.addr_postcode,
-                                                 locations.parent,
-                                                 locations.path,
-                                                 locations.wkt,
-                                                 limitby=(0, 1)).first()
-                if this_location:
-                    uid = this_location.uuid
-                    level = this_location.level
-                    defaults[level] = Storage()
-                    defaults[level].id = value
-                    if this_location.inherited:
-                        lat = None
-                        lon = None
-                        wkt = None
-                    else:
-                        lat = this_location.lat
-                        lon = this_location.lon
-                        wkt = this_location.wkt
-                    addr_street = this_location.addr_street or ""
-                    #addr_street_encoded = ""
-                    #if addr_street:
-                    #    addr_street_encoded = addr_street.replace("\r\n",
-                    #                                              "%0d").replace("\r",
-                    #                                                             "%0d").replace("\n",
-                    #                                                                            "%0d")
-                    postcode = this_location.addr_postcode
-                    parent = this_location.parent
-                    path = this_location.path
-
-                    # Populate defaults with IDs & Names of ancestors at each level
-                    defaults = gis.get_parent_per_level(defaults,
-                                                        value,
-                                                        feature=this_location,
-                                                        ids=True,
-                                                        names=True)
-                    # If we have a non-specific location then not all keys will be populated.
-                    # Populate these now:
-                    for l in levels:
-                        try:
-                            defaults[l]
-                        except:
-                            defaults[l] = None
-
-                    if level and not level == "XX":
-                        # If within the locations hierarchy then don't populate the visible name box
-                        represent = ""
-                    else:
-                        represent = this_location.name
-
-                    if map_selector:
-                        zoom = config.zoom
-                        if zoom == None:
-                            zoom = 1
-                        if lat is None or lon is None:
-                            map_lat = config.lat
-                            map_lon = config.lon
-                        else:
-                            map_lat = lat
-                            map_lon = lon
-
-                        query = (locations.id == value)
-                        row = db(query).select(locations.wkt,
-                                               limitby=(0, 1)).first()
-                        if row:
-                            features = [row.wkt]
-                        else:
-                            features = []
-                        map_popup = gis.show_map(lat = map_lat,
-                                                 lon = map_lon,
-                                                 # Same as a single zoom on a cluster
-                                                 zoom = zoom + 2,
-                                                 features = features,
-                                                 catalogue_layers = self.catalog_layers,
-                                                 add_feature = True,
-                                                 add_feature_active = not polygon,
-                                                 add_polygon = polygon,
-                                                 add_polygon_active = polygon,
-                                                 toolbar = True,
-                                                 nav = False,
-                                                 area = False,
-                                                 save = False,
-                                                 collapsed = True,
-                                                 search = True,
-                                                 window = True,
-                                                 window_hide = True,
-                                                 zoomWheelEnabled = False,
-                                                 )
-                else:
-                    # Bad location_id
-                    response.error = T("Invalid Location!")
-                    value = None
-
-            elif auth.s3_has_permission("read", locations, record_id=value):
-                # Read mode
-                # @ToDo
-                return ""
-            else:
-                # No Permission to read location, so don't render a row
-                return ""
-
-        if not value:
-            # No default value
-            # Check that we're allowed to create records
-            if auth.s3_has_permission("update", locations):
-                # Create mode
-                create = ""
-                update = "hide"   # Hide sections which are meant for update forms
-                uuid = ""
-                represent = ""
-                level = None
-                lat = None
-                lon = None
-                wkt = None
-                addr_street = ""
-                #addr_street_encoded = ""
-                postcode = ""
-                if map_selector:
-                    map_popup = gis.show_map(add_feature = True,
-                                             add_feature_active = not polygon,
-                                             add_polygon = polygon,
-                                             add_polygon_active = polygon,
-                                             catalogue_layers = self.catalog_layers,
-                                             toolbar = True,
-                                             nav = False,
-                                             area = False,
-                                             save = False,
-                                             collapsed = True,
-                                             search = True,
-                                             window = True,
-                                             window_hide = True,
-                                             zoomWheelEnabled = False,
-                                             )
-            else:
-                # No Permission to create a location, so don't render a row
-                return ""
-
-        # JS snippets of config
-        # (we only include items with data)
-        s3_gis_lat_lon = ""
-
-        # Components to inject into Form
-        divider = TR(TD(_class="subheading"),
-                     _class="box_bottom locselect")
-        expand_button = DIV(_id="gis_location_expand", _class="expand")
-        label_row = TR(TD(expand_button, B("%s:" % field.label)),
-                       _id="gis_location_label_row",
-                       _class="box_top")
-
-        # Tabs to select between the modes
-        # @ToDo: Move Location tab
-        view_button = A(T("View Location Details"),
-                        _style="cursor:pointer; cursor:hand",
-                        _id="gis_location_view-btn")
-
-        edit_button = A(T("Edit Location Details"),
-                        _style="cursor:pointer; cursor:hand",
-                        _id="gis_location_edit-btn")
-
-        add_button = A(T("Create Location"),
-                       _style="cursor:pointer; cursor:hand",
-                       _id="gis_location_add-btn")
-
-        search_button = A(T("Select Existing Location"),
-                          _style="cursor:pointer; cursor:hand",
-                          _id="gis_location_search-btn")
-
-        tabs = DIV(SPAN(add_button, _id="gis_loc_add_tab",
-                        _class="tab_here %s" % create),
-                   SPAN(search_button, _id="gis_loc_search_tab",
-                        _class="tab_last %s" % create),
-                   SPAN(view_button, _id="gis_loc_view_tab",
-                        _class="tab_here %s" % update),
-                   SPAN(edit_button, _id="gis_loc_edit_tab",
-                        _class="tab_last %s" % update),
-                   _class="tabs")
-
-        tab_rows = TR(TD(tabs), TD(),
-                      _id="gis_location_tabs_row",
-                      _class="locselect box_middle")
-
-        # L0 selector
-        SELECT_COUNTRY = T("Choose Country")
-        level = "L0"
-        L0_rows = ""
-        if len(countries) == 1:
-            # Hard-coded country
-            id = countries.items()[0][0]
-            L0_rows = INPUT(value = id,
-                            _id="gis_location_%s" % level,
-                            _name="gis_location_%s" % level,
-                            _class="hide box_middle")
-        else:
-            if default_L0:
-                attr_dropdown = OptionsWidget._attributes(field,
-                                                          dict(_type = "int",
-                                                               value = default_L0.id),
-                                                          **attributes)
-            else:
-                attr_dropdown = OptionsWidget._attributes(field,
-                                                          dict(_type = "int",
-                                                               value = ""),
-                                                          **attributes)
-            attr_dropdown["requires"] = \
-                IS_EMPTY_OR(IS_IN_SET(countries,
-                                      zero = SELECT_COUNTRY))
-            attr_dropdown["represent"] = \
-                lambda id: gis.get_country(id) or UNKNOWN_OPT
-            opts = [OPTION(SELECT_COUNTRY, _value="")]
-            if countries:
-                for (id, name) in countries.iteritems():
-                    opts.append(OPTION(name, _value=id))
-            attr_dropdown["_id"] = "gis_location_%s" % level
-            ## Old: Need to blank the name to prevent it from appearing in form.vars & requiring validation
-            #attr_dropdown["_name"] = ""
-            attr_dropdown["_name"] = "gis_location_%s" % level
-            if value:
-                # Update form => read-only
-                attr_dropdown["_disabled"] = "disabled"
-                try:
-                    attr_dropdown["value"] = defaults[level].id
-                except:
-                    pass
-            widget = SELECT(*opts, **attr_dropdown)
-            label = LABEL("%s:" % location_hierarchy[level])
-            L0_rows = DIV(TR(TD(label), TD(),
-                             _class="locselect box_middle",
-                             _id="gis_location_%s_label__row" % level),
-                          TR(TD(widget), TD(),
-                             _class="locselect box_middle",
-                             _id="gis_location_%s__row" % level))
-        row = TR(INPUT(_id="gis_location_%s_search" % level,
-                       _disabled="disabled"), TD(),
-                 _class="hide locselect box_middle",
-                 _id="gis_location_%s_search__row" % level)
-        L0_rows.append(row)
-
-        if self.site_type:
-            NAME_LABEL = T("Site Name")
-        else:
-            NAME_LABEL = T("Building Name")
-        STREET_LABEL = T("Street Address")
-        if postcode_selector:
-            POSTCODE_LABEL = settings.get_ui_label_postcode()
-        LAT_LABEL = T("Latitude")
-        LON_LABEL = T("Longitude")
-        AUTOCOMPLETE_HELP = current.messages.AUTOCOMPLETE_HELP
-        NEW_HELP = T("If not found, you can have a new location created.")
-        def ac_help_widget(level):
-            try:
-                label = location_hierarchy[level]
-            except:
-                label = level
-            return DIV(_class="tooltip",
-                       _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
-
-        hidden = ""
-        Lx_rows = DIV()
-        if value:
-            # Display Read-only Fields
-            name_widget = INPUT(value=represent,
-                                _id="gis_location_name",
-                                _name="gis_location_name",
-                                _disabled="disabled")
-            street_widget = TEXTAREA(value=addr_street,
-                                     _id="gis_location_street",
-                                     _class="text",
-                                     _name="gis_location_street",
-                                     _disabled="disabled")
-            if postcode_selector:
-                postcode_widget = INPUT(value=postcode,
-                                        _id="gis_location_postcode",
-                                        _name="gis_location_postcode",
-                                        _disabled="disabled")
-
-            lat_widget = S3LatLonWidget("lat", disabled=True).widget(value=lat)
-            lon_widget = S3LatLonWidget("lon",
-                                        switch=True,
-                                        disabled=True).widget(value=lon)
-
-            for level in levels:
-                if level == "L0":
-                    # L0 has been handled as special case earlier
-                    continue
-                elif level not in location_hierarchy:
-                    # Skip levels not in hierarchy
-                    continue
-                if defaults[level]:
-                    id = defaults[level].id
-                    name = defaults[level].name
-                else:
-                    # Hide empty levels
-                    hidden = "hide"
-                    id = ""
-                    name = ""
-                try:
-                    label = LABEL("%s:" % location_hierarchy[level])
-                except:
-                    label = LABEL("%s:" % level)
-                row = TR(TD(label), TD(),
-                         _id="gis_location_%s_label__row" % level,
-                         _class="%s locselect box_middle" % hidden)
-                Lx_rows.append(row)
-                widget = DIV(INPUT(value=id,
-                                   _id="gis_location_%s" % level,
-                                   _name="gis_location_%s" % level,
-                                   _class="hide"),
-                             INPUT(value=name,
-                                   _id="gis_location_%s_ac" % level,
-                                   _disabled="disabled"),
-                             DIV(_id="gis_location_%s_throbber" % level,
-                                 _class="throbber hide"))
-                row = TR(TD(widget), TD(),
-                         _id="gis_location_%s__row" % level,
-                         _class="%s locselect box_middle" % hidden)
-                Lx_rows.append(row)
-
-        else:
-            name_widget = INPUT(_id="gis_location_name",
-                                _name="gis_location_name")
-            street_widget = TEXTAREA(_id="gis_location_street",
-                                     _class="text comments",
-                                     _name="gis_location_street")
-            if postcode_selector:
-                postcode_widget = INPUT(_id="gis_location_postcode",
-                                        _name="gis_location_postcode")
-            lat_widget = S3LatLonWidget("lat").widget()
-            lon_widget = S3LatLonWidget("lon", switch=True).widget()
-
-            for level in levels:
-                hidden = ""
-                if level == "L0":
-                    # L0 has been handled as special case earlier
-                    continue
-                elif level not in location_hierarchy:
-                    # Hide unused levels
-                    # (these can then be enabled for other regions)
-                    hidden = "hide"
-                try:
-                    label = LABEL("%s:" % location_hierarchy[level])
-                except:
-                    label = LABEL("%s:" % level)
-                row = TR(TD(label), TD(),
-                         _class="%s locselect box_middle" % hidden,
-                         _id="gis_location_%s_label__row" % level)
-                Lx_rows.append(row)
-                if level in defaults and defaults[level]:
-                    default = defaults[level]
-                    default_id = default.id
-                    default_name = default.name
-                else:
-                    default_id = ""
-                    default_name = ""
-                widget = DIV(INPUT(value=default_id,
-                                   _id="gis_location_%s" % level,
-                                   _name="gis_location_%s" % level,
-                                   _class="hide"),
-                                INPUT(value=default_name,
-                                      _id="gis_location_%s_ac" % level,
-                                      _class="%s" % hidden),
-                                DIV(_id="gis_location_%s_throbber" % level,
-                                    _class="throbber hide"))
-                row = TR(TD(widget),
-                         TD(ac_help_widget(level)),
-                         _class="%s locselect box_middle" % hidden,
-                         _id="gis_location_%s__row" % level)
-                Lx_rows.append(row)
-                row = TR(INPUT(_id="gis_location_%s_search" % level,
-                               _disabled="disabled"), TD(),
-                         _class="hide locselect box_middle",
-                         _id="gis_location_%s_search__row" % level)
-                Lx_rows.append(row)
-
-        hide_address = self.hide_address
-        if settings.get_gis_building_name():
-            hidden = ""
-            if hide_address:
-                hidden = "hide"
-            elif value and not represent:
-                hidden = "hide"
-            name_rows = DIV(TR(LABEL("%s:" % NAME_LABEL), TD(),
-                               _id="gis_location_name_label__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(name_widget, TD(),
-                               _id="gis_location_name__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(INPUT(_id="gis_location_name_search",
-                                     _disabled="disabled"), TD(),
-                               _id="gis_location_name_search__row",
-                               _class="hide locselect box_middle"))
-        else:
-            name_rows = ""
-
-        hidden = ""
-        if hide_address:
-            hidden = "hide"
-        elif value and not addr_street:
-            hidden = "hide"
-        street_rows = DIV(TR(LABEL("%s:" % STREET_LABEL), TD(),
-                             _id="gis_location_street_label__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(street_widget, TD(),
-                             _id="gis_location_street__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(INPUT(_id="gis_location_street_search",
-                                   _disabled="disabled"), TD(),
-                             _id="gis_location_street_search__row",
-                             _class="hide locselect box_middle"))
-        if config.geocoder:
-            geocoder = '''
-S3.gis.geocoder=true'''
-        else:
-            geocoder = ""
-
-        hidden = ""
-        if hide_address:
-            hidden = "hide"
-        elif value and not postcode:
-            hidden = "hide"
-        if postcode_selector:
-            postcode_rows = DIV(TR(LABEL("%s:" % POSTCODE_LABEL), TD(),
-                                   _id="gis_location_postcode_label__row",
-                                   _class="%s locselect box_middle" % hidden),
-                                TR(postcode_widget, TD(),
-                                   _id="gis_location_postcode__row",
-                                   _class="%s locselect box_middle" % hidden),
-                                TR(INPUT(_id="gis_location_postcode_search",
-                                         _disabled="disabled"), TD(),
-                                   _id="gis_location_postcode_search__row",
-                                   _class="hide locselect box_middle"))
-        else:
-            postcode_rows = DIV()
-
-        hidden = ""
-        no_latlon = ""
-        if not latlon_selector:
-            hidden = "hide"
-            no_latlon = '''S3.gis.no_latlon=true\n'''
-        elif value and lat is None:
-            hidden = "hide"
-        latlon_help = locations.lat.comment
-        converter_button = locations.lon.comment
-        converter_button = ""
-        latlon_rows = DIV(TR(LABEL("%s:" % LAT_LABEL), TD(),
-                             _id="gis_location_lat_label__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(TD(lat_widget), TD(latlon_help),
-                             _id="gis_location_lat__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(INPUT(_id="gis_location_lat_search",
-                                   _disabled="disabled"), TD(),
-                             _id="gis_location_lat_search__row",
-                             _class="hide locselect box_middle"),
-                          TR(LABEL("%s:" % LON_LABEL), TD(),
-                             _id="gis_location_lon_label__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(TD(lon_widget), TD(converter_button),
-                             _id="gis_location_lon__row",
-                             _class="%s locselect box_middle" % hidden),
-                          TR(INPUT(_id="gis_location_lon_search",
-                                   _disabled="disabled"), TD(),
-                             _id="gis_location_lon_search__row",
-                             _class="hide locselect box_middle"))
-
-        # Map Selector
-        PLACE_ON_MAP = T("Place on Map")
-        VIEW_ON_MAP = T("View on Map")
-        if map_selector:
-            if value:
-                map_button = A(VIEW_ON_MAP,
-                               _style="cursor:pointer; cursor:hand",
-                               _id="gis_location_map-btn",
-                               _class="action-btn")
-            else:
-                map_button = A(PLACE_ON_MAP,
-                               _style="cursor:pointer; cursor:hand",
-                               _id="gis_location_map-btn",
-                               _class="action-btn")
-            if geocoder:
-                if value:
-                    _class = "action-btn hide"
-                else:
-                    _class = "action-btn"
-                geocoder_button = A(T("Geocode"),
-                                    _style="cursor:pointer; cursor:hand",
-                                    _id="gis_location_geocoder-btn",
-                                    _class=_class)
-            else:
-                geocoder_button = ""
-            map_button_row = TR(TD(geocoder_button, map_button),
-                                _id="gis_location_map_button_row",
-                                _class="locselect box_middle")
-        else:
-            map_button_row = ""
-
-        # Search
-        widget = DIV(INPUT(_id="gis_location_search_ac"),
-                           DIV(_id="gis_location_search_throbber",
-                               _class="throbber hide"),
-                           _id="gis_location_search_div")
-
-        label = LABEL("%s:" % AUTOCOMPLETE_HELP)
-
-        select_button = A(T("Select This Location"),
-                          _style="cursor:pointer; cursor:hand",
-                          _id="gis_location_search_select-btn",
-                          _class="hide action-btn")
-
-        search_rows = DIV(TR(label, TD(),
-                             _id="gis_location_search_label__row",
-                             _class="hide locselect box_middle"),
-                          TR(TD(widget),
-                             TD(select_button),
-                             _id="gis_location_search__row",
-                             _class="hide locselect box_middle"))
-        # @ToDo: Hierarchical Filter
-        Lx_search_rows = ""
-
-        # Error Messages
-        NAME_REQUIRED = T("Name field is required!")
-        COUNTRY_REQUIRED = T("Country is required!")
-
-        # Settings to be read by static/scripts/S3/s3.locationselector.widget.js
-        # Note: Currently we're limited to a single location selector per page
-        js_location_selector = '''
-%s%s%s%s%s%s
-S3.gis.location_id='%s'
-S3.gis.site='%s'
-i18n.gis_place_on_map='%s'
-i18n.gis_view_on_map='%s'
-i18n.gis_name_required='%s'
-i18n.gis_country_required="%s"''' % (country_snippet,
-                                     geocoder,
-                                     navigate_away_confirm,
-                                     no_latlon,
-                                     no_map,
-                                     tab,
-                                     attr["_id"],    # Name of the real location or site field
-                                     site,
-                                     PLACE_ON_MAP,
-                                     VIEW_ON_MAP,
-                                     NAME_REQUIRED,
-                                     COUNTRY_REQUIRED
-                                     )
-
-        s3.js_global.append(js_location_selector)
-        if s3.debug:
-            script = "s3.locationselector.widget.js"
-        else:
-            script = "s3.locationselector.widget.min.js"
-
-        s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
-
-        if self.polygon:
-            hidden = ""
-            if value:
-                # Display read-only view
-                wkt_widget = TEXTAREA(value = wkt,
-                                      _class="wkt-input",
-                                      _id="gis_location_wkt",
-                                      _name="gis_location_wkt",
-                                      _disabled="disabled")
-                if not wkt:
-                    hidden = "hide"
-            else:
-                wkt_widget = TEXTAREA(_class="wkt-input",
-                                      _id="gis_location_wkt",
-                                      _name="gis_location_wkt")
-            wkt_input_row = TAG[""](
-                                TR(TD(LABEL(T("Polygon"))),
-                                   TD(),
-                                   _id="gis_location_wkt_label__row",
-                                   _class="box_middle %s" % hidden),
-                                TR(
-                                   TD(wkt_widget),
-                                   TD(),
-                                   _id="gis_location_wkt__row",
-                                   _class="box_middle %s" % hidden)
-                                )
-        else:
-            wkt_input_row = ""
-
-        # Ensure that we don't insert duplicate scripts on validation errors
-        s3.gis.location_selector_loaded = True
-
-        # The overall layout of the components
-        return TAG[""](TR(INPUT(**attr)),  # Real input, which is hidden
-                       label_row,
-                       tab_rows,
-                       Lx_search_rows,
-                       search_rows,
-                       L0_rows,
-                       name_rows,
-                       street_rows,
-                       postcode_rows,
-                       Lx_rows,
-                       wkt_input_row,
-                       map_button_row,
-                       latlon_rows,
-                       divider,
-                       TR(map_popup, TD(), _class="box_middle"),
-                       requires=requires
                        )
 
 # =============================================================================
@@ -5144,7 +4295,7 @@ class S3Selector(FormWidget):
         return s3_unicode(value)
 
     # -------------------------------------------------------------------------
-    def validate(self, value):
+    def validate(self, value, requires=None):
         """
             Parse and validate the input value, but don't create or update
             any records. This will be called by S3CRUD.validate to validate
@@ -5153,6 +4304,7 @@ class S3Selector(FormWidget):
             To be implemented in subclass.
 
             @param value: the value from the form
+            @param requires: the field validator
             @returns: tuple (values, error) with values being the parsed
                       value dict, and error any validation errors
         """
@@ -6762,7 +5914,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = value.get("lat")
         lon = value.get("lon")
         wkt = value.get("wkt")
-        radius = value.get("radius")
+        #radius = value.get("radius")
         address = value.get("address")
         postcode = value.get("postcode")
 
@@ -7109,7 +6261,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 if current.response.s3.debug:
                     raise
                 else:
-                    error = "onvalidation failed: %s (%s)" % (onvalidation, sys.exc_info[1])
+                    error = "onvalidation failed: %s (%s)" % (
+                                onvalidation, sys.exc_info()[1])
                     current.log.error(error)
             if form.errors:
                 errors = form.errors
@@ -7842,7 +6995,13 @@ class S3OrganisationAutocompleteWidget(FormWidget):
                     value = auth.user.organisation_id
             return value
 
+        settings = current.deployment_settings
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
+
         return S3GenericAutocompleteTemplate(self.post_process,
+                                             delay,
+                                             min_length,
                                              field,
                                              value,
                                              attributes,
@@ -8244,11 +7403,12 @@ class S3SliderWidget(FormWidget):
         validator = field.requires
         field = str(field)
         fieldname = field.replace(".", "_")
-        input = INPUT(_name = field.split(".")[1],
-                      _disabled = True,
-                      _id = fieldname,
-                      _style = "border:0",
-                      _value = value)
+        input_field = INPUT(_name = field.split(".")[1],
+                            _disabled = True,
+                            _id = fieldname,
+                            _style = "border:0",
+                            _value = value,
+                            )
         slider = DIV(_id="%s_slider" % fieldname, **attributes)
 
         s3 = current.response.s3
@@ -8286,7 +7446,7 @@ class S3SliderWidget(FormWidget):
                                                           value)
         s3.jquery_ready.append(script)
 
-        return TAG[""](input, slider)
+        return TAG[""](input_field, slider)
 
 # =============================================================================
 class S3StringWidget(StringWidget):
@@ -8413,7 +7573,7 @@ class S3TimeIntervalWidget(FormWidget):
 
         try:
             val = int(value)
-        except:
+        except ValueError:
             val = 0
 
         if val == 0:
@@ -8759,7 +7919,7 @@ def s3_richtext_widget(field, value):
     """
 
     s3 = current.response.s3
-    id = "%s_%s" % (field._tablename, field.name)
+    widget_id = "%s_%s" % (field._tablename, field.name)
 
     # Load the scripts
     sappend = s3.scripts.append
@@ -8783,11 +7943,11 @@ def s3_richtext_widget(field, value):
             % url
     s3.js_global.append(js)
 
-    js = '''$('#%s').ckeditor(ck_config)''' % id
+    js = '''$('#%s').ckeditor(ck_config)''' % widget_id
     s3.jquery_ready.append(js)
 
     return TEXTAREA(_name=field.name,
-                    _id=id,
+                    _id=widget_id,
                     _class="richtext %s" % (field.type),
                     value=value,
                     requires=field.requires)
@@ -8815,7 +7975,6 @@ def search_ac(r, **attr):
     fieldname = str.lower(fieldname)
     filter = _vars.get("filter", "~")
 
-    s3db = current.s3db
     resource = r.resource
     table = resource.table
 
@@ -8856,7 +8015,9 @@ def search_ac(r, **attr):
         raise HTTP(400, body=output)
 
     if "link" in _vars:
-        link_filter = S3EmbeddedComponentWidget.link_filter(table, _vars.link)
+        link_filter = S3EmbeddedComponentWidget.link_filter_query(table,
+                                                                  _vars.link,
+                                                                  )
         if link_filter:
             query &= link_filter
 
@@ -9162,7 +8323,7 @@ class S3QuestionWidget(FormWidget):
         s3.jquery_ready.append(script)
 
         # Get the layout for visible components
-        visible_components = self._layout(components)
+        visible_components = self._layout(components, formstyle=formstyle)
 
         return TAG[""](real_input,
                        visible_components)

@@ -7191,6 +7191,8 @@ def addFeatures(features):
     """
         Add Simple Features to the Draft layer
         - used by S3LocationSelectorWidget
+
+        @todo: obsolete?
     """
 
     simplify = GIS.simplify
