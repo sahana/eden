@@ -723,27 +723,13 @@ class S3Merge(S3Method):
         elif ftype == "upload":
             inp = None
             #if field.widget:
-                #inp = field.widget(field, value,
-                                   #download_url=download_url, **attr)
+            #    inp = field.widget(field, value,
+            #                       download_url=download_url, **attr)
             #else:
-                #inp = widgets.upload.widget(field, value,
-                                            #download_url=download_url, **attr)
+            #    inp = widgets.upload.widget(field, value,
+            #                                download_url=download_url, **attr)
         elif field.widget:
-            if isinstance(field.widget, S3LocationSelectorWidget):
-                # Workaround - location selector does not support
-                # renaming of the fields => switch to dropdown
-                # @todo: obsolete?
-                level = None
-                if value:
-                    try:
-                        level = s3db.gis_location[value].level
-                    except:
-                        pass
-                widget = S3LocationDropdownWidget(level, value)
-                field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "gis_location.id"))
-                inp = widget(field, value, **attr)
-            else:
-                inp = field.widget(field, value, **attr)
+            inp = field.widget(field, value, **attr)
         elif ftype == "boolean":
             inp = widgets.boolean.widget(field, value, **attr)
         elif widgets.options.has_options(field):
