@@ -726,11 +726,18 @@ class S3VolunteerAwardModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def vol_award_file_represent(filename):
-        """ File representation """
+        """
+            File representation
+
+            @param filename: the stored file name (field value)
+
+            @return: a link to download the file
+        """
 
         if filename:
             try:
-                # Read the original filename from the filename
+                # Check whether file exists and extract the original
+                # file name from the stored file name
                 origname = current.db.vol_volunteer_award.file.retrieve(filename)[0]
             except IOError:
                 return current.T("File not found")

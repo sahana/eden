@@ -352,16 +352,23 @@ class S3DocumentLibrary(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def doc_file_represent(filename):
-        """ File representation """
+        """
+            File representation
+
+            @param filename: the stored file name (field value)
+
+            @return: a link to download the file
+        """
 
         if filename:
             try:
-                # Read the orginal filename from the filename
-                orig_name = current.db.doc_document.file.retrieve(filename)[0]
+                # Check whether file exists and extract the original
+                # file name from the stored file name
+                origname = current.db.doc_document.file.retrieve(filename)[0]
             except IOError:
                 return current.T("File not found")
             else:
-                return A(orig_name,
+                return A(origname,
                          _href=URL(c="default", f="download", args=[filename]))
         else:
             return current.messages["NONE"]
@@ -578,13 +585,15 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
 
     if filename:
         try:
-            orig_name = current.s3db.doc_document.file.retrieve(filename)[0]
+            # Check whether file exists and extract the original
+            # file name from the stored file name
+            origname = current.s3db.doc_document.file.retrieve(filename)[0]
         except (IOError, TypeError):
-            orig_name = current.messages["NONE"]
+            origname = current.messages["NONE"]
         doc_url = URL(c="default", f="download", args=[filename])
         body = P(ICON("attachment"),
                  " ",
-                 SPAN(A(orig_name,
+                 SPAN(A(origname,
                         _href=doc_url,
                         )
                       ),
