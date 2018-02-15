@@ -243,6 +243,7 @@ class S3NavigationItem(object):
         self.link = link                # Item shall be linked
         self.mandatory = mandatory      # Item is always active
         self.ltr = ltr                  # Item is always rendered LTR
+        self.authorized = None          # True|False after authorization
 
         # Role restriction
         self.restrict = restrict
@@ -382,7 +383,6 @@ class S3NavigationItem(object):
         c = self.get("controller")
         if c:
             return current.deployment_settings.has_module(c)
-        return True
 
         # Fall back to current.request
         if request is None:
@@ -716,9 +716,9 @@ class S3NavigationItem(object):
         # set for this item! (beware ambiguity then, though)
         if "viewing" in rvars:
             try:
-                tn, record_id = rvars["viewing"].split(".")
+                tn = rvars["viewing"].split(".", 1)[0]
                 controller, function = tn.split("_", 1)
-            except:
+            except (AttributeError, ValueError):
                 pass
 
         # Controller
@@ -1347,16 +1347,17 @@ def s3_rheader_resource(r):
 
     """
 
-    _vars = r.get_vars
+    get_vars = r.get_vars
 
-    if "viewing" in _vars:
+    if "viewing" in get_vars:
         try:
-            tablename, record_id = _vars.viewing.rsplit(".", 1)
-            db = current.db
-            record = db[tablename][record_id]
-        except:
+            tablename, record_id = get_vars.viewing.rsplit(".", 1)
+        except AttributeError:
             tablename = r.tablename
             record = r.record
+        else:
+            db = current.db
+            record = db[tablename][record_id]
     else:
         tablename = r.tablename
         record = r.record
@@ -1632,7 +1633,7 @@ class S3ComponentTab(object):
         if "viewing" in get_vars:
             try:
                 tablename = get_vars["viewing"].split(".", 1)[0]
-            except:
+            except AttributeError:
                 pass
 
         resource = r.resource
@@ -1722,8 +1723,8 @@ class S3ScriptItem(S3NavigationItem):
             @param script: script to inject into jquery_ready when rendered
         """
 
+        super(S3ScriptItem, self).__init__(attributes)
         self.script = script
-        return super(S3ScriptItem, self).__init__(attributes)
 
     # -------------------------------------------------------------------------
     def xml(self):
