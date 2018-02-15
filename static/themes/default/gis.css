@@ -33,7 +33,10 @@ form .map_loader {
 .x-form-item-label {
     margin: 0 0 0 4px;
 }
-
+/* Workaround for Chrome browser not utilising full screen width */
+body.x-window-maximized-ct {
+    width: 100%;
+}
 /* Override widgets.css */
 .form-container form tr.x-toolbar-left-row td {
     padding: 0;
