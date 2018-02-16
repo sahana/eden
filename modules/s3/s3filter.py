@@ -52,21 +52,21 @@ import re
 
 from collections import OrderedDict
 
-from gluon import *
+from gluon import current, URL, A, DIV, FORM, INPUT, LABEL, OPTION, SELECT, \
+                  SPAN, TABLE, TAG, TBODY, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, \
+                  IS_INT_IN_RANGE, IS_IN_SET
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3dal import Field
 from s3datetime import s3_decode_iso_datetime, S3DateTime
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3rest import S3Method
 from s3timeplot import S3TimeSeries
 from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
-from s3validators import *
-from s3widgets import ICON, \
-                      S3CalendarWidget, \
-                      S3GroupedOptionsWidget, \
-                      S3MultiSelectWidget, \
-                      S3HierarchyWidget
+from s3validators import IS_UTC_DATE
+from s3widgets import ICON, S3CalendarWidget, S3GroupedOptionsWidget, \
+                      S3MultiSelectWidget, S3HierarchyWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -281,8 +281,7 @@ class S3FilterWidget(object):
         variables = ["%s__%s" % (selector, op) for op in cls.alternatives]
         slen = len(selector) + 2
 
-        operators = [k[slen:] for k, v in get_vars.iteritems()
-                                  if k in variables]
+        operators = [k[slen:] for k in get_vars if k in variables]
         if not operators:
             return None
         elif len(operators) == 1:
@@ -496,12 +495,12 @@ class S3RangeFilter(S3FilterWidget):
                          for v in variables]
 
         elements = []
-        id = self.attr["_id"]
+        widget_id = self.attr["_id"]
 
         for o, v in zip(operators, variables):
             elements.append(
                 INPUT(_type="hidden",
-                      _id="%s-%s-data" % (id, o),
+                      _id="%s-%s-data" % (widget_id, o),
                       _class="filter-widget-data %s-data" % self._class,
                       _value=v))
 
@@ -515,11 +514,11 @@ class S3RangeFilter(S3FilterWidget):
             @param resource: the S3Resource
         """
 
-        min, max = self._options(resource)
+        minimum, maximum = self._options(resource)
 
         attr = self._attr(resource)
-        options = {attr["_id"]: {"min": min,
-                                 "max": max,
+        options = {attr["_id"]: {"min": minimum,
+                                 "max": maximum,
                                  }}
         return options
 
@@ -796,11 +795,11 @@ class S3DateFilter(S3RangeFilter):
             auto_range = current.deployment_settings.get_search_dates_auto_range()
 
         if auto_range:
-            min, max, ts = self._options(resource)
+            minimum, maximum, ts = self._options(resource)
 
             attr = self._attr(resource)
-            options = {attr["_id"]: {"min": min,
-                                     "max": max,
+            options = {attr["_id"]: {"min": minimum,
+                                     "max": maximum,
                                      "ts": ts,
                                      }}
         else:
@@ -1149,6 +1148,8 @@ class S3SliderFilter(S3RangeFilter):
         @keyword label: label for the widget
         @keyword comment: comment for the widget
         @keyword hidden: render widget initially hidden (="advanced" option)
+
+        FIXME broken (multiple issues)
     """
 
     _class = "slider-filter"
@@ -1465,7 +1466,7 @@ class S3LocationFilter(S3FilterWidget):
     def ajax_options(self, resource):
 
         attr = self._attr(resource)
-        ftype, levels, noopt = self._options(resource, inject_hierarchy=False)
+        levels, noopt = self._options(resource, inject_hierarchy=False)[1:3]
 
         opts = {}
         base_id = attr["_id"]
@@ -2024,16 +2025,16 @@ class S3MapFilter(S3FilterWidget):
         _id = attr_get("_id")
 
         # Hidden INPUT to store the WKT
-        input = INPUT(_type="hidden",
-                      _class=_class,
-                      _id = _id,
-                      )
+        hidden_input = INPUT(_type="hidden",
+                             _class=_class,
+                             _id = _id,
+                             )
 
         # Populate with the value, if given
         if values not in (None, []):
             if type(values) is list:
                 values = values[0]
-            input["_value"] = values
+            hidden_input["_value"] = values
 
         # Map Widget
         map_id = "%s-map" % _id
@@ -2052,7 +2053,7 @@ class S3MapFilter(S3FilterWidget):
                                          ).first()
         try:
             layer_id = layer.layer_id
-        except:
+        except AttributeError:
             # No prepop done?
             layer_id = None
             layer_name = resource.tablename
@@ -2084,7 +2085,7 @@ class S3MapFilter(S3FilterWidget):
                                     add_polygon = True,
                                     )
 
-        return TAG[""](input,
+        return TAG[""](hidden_input,
                        button,
                        _map,
                        )
@@ -2534,7 +2535,7 @@ class S3OptionsFilter(S3FilterWidget):
 
             # Get the fields referenced by the string template
             fieldnames = [k_id]
-            fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
+            fieldnames += re.findall(r"%\(([a-zA-Z0-9_]*)\)s", represent)
             represent_fields = [ktable[fieldname] for fieldname in fieldnames]
 
             # Get the referenced records
@@ -3741,7 +3742,7 @@ class S3FilterString(object):
                 list_type = rfield.ftype[:5] == "list:"
                 renderer = rfield.represent
                 if not callable(renderer):
-                    renderer = lambda v: s3_unicode(v)
+                    renderer = s3_unicode
                 if hasattr(renderer, "linkto"):
                     #linkto = renderer.linkto
                     renderer.linkto = None
@@ -3889,12 +3890,12 @@ class S3FilterString(object):
             inversion, vtemplate, otemplate = otemplates[op]
             if invert:
                 inversion, vtemplate, otemplate = otemplates[inversion]
-            return otemplate % dict(label=rfield.label,
-                                    values=render_values(vtemplate, values))
+            return otemplate % {"label": rfield.label,
+                                "values":render_values(vtemplate, values),
+                                }
         else:
             # Fallback to simple representation
-            # FIXME: resource not defined here!
-            return query.represent(resource)
+            return query.represent(rfield.resource)
 
 # =============================================================================
 def s3_get_filter_opts(tablename,

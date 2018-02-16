@@ -1201,7 +1201,7 @@ class S3ContentUserModel(S3Model):
         return {}
 
 # =============================================================================
-def cms_rheader(r, tabs=[]):
+def cms_rheader(r, tabs=None):
     """ CMS Resource Headers """
 
     if r.representation != "html":
