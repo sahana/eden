@@ -699,7 +699,7 @@ def results(r, **attr):
         rows.append(row)
     output = TABLE(THEAD(header), rows,
                    _class="delphi_wide")
-    output = DIV(H4("Array F: # times that solution in column is preferred over it's partner in row"),
+    output = DIV(H4(T("Array F: # times that solution in column is preferred over it's partner in row")),
                  output)
     grids.append(output)
     grids.append(NBSP())
@@ -770,7 +770,7 @@ def results(r, **attr):
         rows.append(row)
     output = TABLE(THEAD(header), rows,
                    _class="delphi_wide")
-    output = DIV(H4("Array P: proportion of times that solution in column is preferred over it's partner in row, assuming that pairs not ranked start at the level of indifference (0.5)"),
+    output = DIV(H4(T("Array P: proportion of times that solution in column is preferred over it's partner in row, assuming that pairs not ranked start at the level of indifference (0.5)")),
                  output)
     grids.append(output)
     grids.append(NBSP())
@@ -816,7 +816,7 @@ def results(r, **attr):
 
     output = TABLE(THEAD(header), rows, footer, footer2,
                    _class="delphi_wide")
-    output = DIV(H4("Array X: unit normal deviate"),
+    output = DIV(H4(T("Array X: unit normal deviate")),
                  output)
     grids.append(output)
     grids.append(NBSP())
@@ -839,7 +839,7 @@ def results(r, **attr):
         rows.append(row)
     output = TABLE(THEAD(header), rows,
                    _class="delphi_wide")
-    output = DIV(H4("Array P2: proportion of times that solution in column is preferred over it's partner in row, assuming that non-votes move towards indifference"),
+    output = DIV(H4(T("Array P2: proportion of times that solution in column is preferred over it's partner in row, assuming that non-votes move towards indifference")),
                  output)
     grids.append(output)
     grids.append(NBSP())
@@ -885,7 +885,7 @@ def results(r, **attr):
 
     output = TABLE(THEAD(header), rows, footer, footer2,
                    _class="delphi_wide")
-    output = DIV(H4("Array U: unit normal deviate of the uncertainty value (assuming that all unvoted items return the probability towards indifference"),
+    output = DIV(H4(T("Array U: unit normal deviate of the uncertainty value (assuming that all unvoted items return the probability towards indifference)")),
                  output)
     grids.append(output)
 

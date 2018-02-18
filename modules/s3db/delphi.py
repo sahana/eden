@@ -227,7 +227,8 @@ class S3DelphiModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      *s3_meta_fields(),
-                     on_define = lambda table: [table.modified_on.set_attributes(label = T("Last Modification")),
+                     on_define = lambda table: [table.created_by.set_attributes(label = T("Created By")),
+                                                table.modified_on.set_attributes(label = T("Last Modification")),
                                                 ]
                      )
 
