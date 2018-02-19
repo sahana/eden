@@ -70,7 +70,10 @@ class CRShelterModel(S3Model):
         s3 = current.response.s3
 
         settings = current.deployment_settings
+
         messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
 
         add_components = self.add_components
         configure = self.configure
@@ -405,8 +408,7 @@ class CRShelterModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                            (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),

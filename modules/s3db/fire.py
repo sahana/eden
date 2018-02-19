@@ -159,6 +159,10 @@ class S3FireStationModel(S3Model):
         T = current.T
         db = current.db
 
+        messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
+
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
@@ -226,8 +230,7 @@ class S3FireStationModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),

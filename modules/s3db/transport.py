@@ -457,9 +457,8 @@ class S3TransportModel(S3Model):
                            ),
                      Field("roll_on_off", "boolean",
                            default = False,
-                           represent = lambda opt: \
-                                     (opt and [T("Yes")] or [T("No")])[0],
                            label = T("Roll On Roll Off Berth"),
+                           represent = s3_yes_no_represent,
                            ),
                      Field("cargo_pier_depth", "double",
                            label = T("Cargo Pier Depth"),
@@ -484,8 +483,7 @@ class S3TransportModel(S3Model):
                      Field("dry_dock", "boolean",
                            default = False,
                            label = T("Dry Dock"),
-                           represent = lambda opt: \
-                                     (opt and [T("Yes")] or [T("No")])[0],
+                           represent = s3_yes_no_represent,
                            ),
                      Field("vessel_max_length", "double",
                            label = T("Vessel Max Length"),

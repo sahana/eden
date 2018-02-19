@@ -109,6 +109,7 @@ class S3SupplyModel(S3Model):
         float_represent = IS_FLOAT_AMOUNT.represent
 
         NONE = current.messages["NONE"]
+        YES = T("Yes")
 
         format = auth.permission.format
         if format == "html":
@@ -398,8 +399,7 @@ $.filterOptionsS3({
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
-                           represent = lambda opt: \
-                                       (opt and [T("Yes")] or [NONE])[0],
+                           represent = lambda opt: YES if opt else NONE,
                            ),
                      Field("model", length=128,
                            label = T("Model/Type"),

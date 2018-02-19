@@ -39,6 +39,7 @@ s3.download_url = "%s/default/download" % s3.base_url
 #messages["BREADCRUMB"] = ">> "
 messages["UNKNOWN_OPT"] = "Unknown"
 messages["NONE"] = "-"
+messages["OBSOLETE"] = "Obsolete"
 messages["READ"] = settings.get_ui_label_read()
 messages["UPDATE"] = settings.get_ui_label_update()
 messages["DELETE"] = "Delete"

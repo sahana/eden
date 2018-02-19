@@ -61,6 +61,7 @@ class HospitalDataModel(S3Model):
 
         messages = current.messages
         NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_components = self.add_components
@@ -236,8 +237,7 @@ class HospitalDataModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or [NONE])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),

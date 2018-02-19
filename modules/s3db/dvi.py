@@ -56,7 +56,11 @@ class S3DVIModel(S3Model):
         location_id = self.gis_location_id
 
         messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+
+        YES = T("yes")
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -182,8 +186,7 @@ class S3DVIModel(S3Model):
                      location_id(),
                      Field("obsolete", "boolean",
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                             (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            default = False,
                            readable = False,
                            writable = False,
@@ -223,7 +226,7 @@ class S3DVIModel(S3Model):
         # ---------------------------------------------------------------------
         # Body
         #
-        bool_repr = lambda opt: (opt and [T("yes")] or [""])[0]
+        bool_repr = lambda opt: YES if opt else ""
         tablename = "dvi_body"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),

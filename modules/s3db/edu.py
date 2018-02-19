@@ -48,8 +48,11 @@ class S3SchoolModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+
         messages = current.messages
         NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
+
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -197,8 +200,7 @@ class S3SchoolModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or NONE)[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),

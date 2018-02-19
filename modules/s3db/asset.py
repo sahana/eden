@@ -109,6 +109,7 @@ class S3AssetModel(S3Model):
         messages = current.messages
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        YES = T("Yes")
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
@@ -181,8 +182,7 @@ class S3AssetModel(S3Model):
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
-                           represent = lambda opt: \
-                                       (opt and [T("Yes")] or [NONE])[0],
+                           represent = lambda opt: YES if opt else NONE,
                            # @ToDo: deployment_setting
                            readable = False,
                            writable = False,

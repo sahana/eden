@@ -3104,7 +3104,10 @@ class S3SiteModel(S3Model):
 
         T = current.T
         auth = current.auth
+
         messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
 
         add_components = self.add_components
         set_method = self.set_method
@@ -3144,9 +3147,7 @@ class S3SiteModel(S3Model):
                           Field("obsolete", "boolean",
                                 default = False,
                                 label = T("Obsolete"),
-                                represent = lambda opt: \
-                                          (opt and [T("Obsolete")] or
-                                          [messages["NONE"]])[0],
+                                represent = lambda opt: OBSOLETE if opt else NONE,
                                 readable = False,
                                 writable = False,
                                 ),
@@ -3827,7 +3828,9 @@ class S3FacilityModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages["NONE"]
+        messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
 
         hierarchical_facility_types = settings.get_org_facility_types_hierarchical()
 
@@ -3987,8 +3990,7 @@ class S3FacilityModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),
@@ -4554,7 +4556,11 @@ class S3OfficeModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+
         messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
+
         settings = current.deployment_settings
         add_components = self.add_components
         configure = self.configure
@@ -4707,8 +4713,7 @@ class S3OfficeModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                     (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                           represent = lambda opt: OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),
