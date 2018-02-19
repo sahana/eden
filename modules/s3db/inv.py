@@ -266,7 +266,7 @@ class S3WarehouseModel(S3Model):
                            default = False,
                            label = T("Obsolete"),
                            represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or NONE)[0],
+                                       (opt and [T("Obsolete")] or [NONE])[0],
                            readable = False,
                            writable = False,
                            ),
