@@ -73,10 +73,6 @@ class HospitalDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Hospitals
         #
-
-        # Use government-assigned UUIDs instead of internal UUIDs
-        HMS_HOSPITAL_USE_GOVUUID = True
-
         hms_facility_type_opts = {
             1: T("Hospital"),
             2: T("Field Hospital"),
@@ -218,19 +214,19 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("doctors", "integer",
                            label = T("Number of doctors"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(0, 9999)),
                            ),
                      Field("nurses", "integer",
                            label = T("Number of nurses"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(0, 9999)),
                            ),
                      Field("non_medical_staff", "integer",
                            label = T("Number of non-medical staff"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(0, 9999)),
                            ),
@@ -274,7 +270,6 @@ class HospitalDataModel(S3Model):
                              ),
                 S3OptionsFilter("facility_type",
                                 label = T("Type"),
-                                represent = "%(name)s",
                                 #hidden=True,
                                 ),
                 S3LocationFilter("location_id",
@@ -477,26 +472,14 @@ class HospitalDataModel(S3Model):
             4: T("Closed")
         } #: Morgue Status Options
 
-        def hms_facility_damage_multirepresent(opt):
+        def hms_facility_damage_multirepresent(value):
             """ Multi Represent """
-            set = hms_facility_damage_opts
-            if isinstance(opt, (list, tuple)):
-                opts = opt
-                try:
-                    vals = [str(set.get(o)) for o in opts]
-                except:
-                    return None
-            elif isinstance(opt, int):
-                opts = [opt]
-                vals = str(set.get(opt))
-            else:
+            if not value:
                 return NONE
-
-            if len(opts) > 1:
-                vals = ", ".join(vals)
-            else:
-                vals = len(vals) and vals[0] or ""
-            return vals
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            labels = (hms_facility_damage_opts.get(v) for v in value if v)
+            return ", ".join(s3_str(l) for l in labels if l is not None)
 
         tablename = "hms_status"
         define_table(tablename,
@@ -641,7 +624,7 @@ class HospitalDataModel(S3Model):
                            ),
                      Field("morgue_units", "integer",
                            label = T("Morgue Units Available"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                            ),
 
@@ -773,19 +756,19 @@ class HospitalDataModel(S3Model):
                      Field("beds_baseline", "integer",
                            default = 0,
                            label = T("Baseline Number of Beds"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                            ),
                      Field("beds_available", "integer",
                            default = 0,
                            label = T("Available Beds"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                            ),
                      Field("beds_add24", "integer",
                            default = 0,
                            label = T("Additional Beds / 24hrs"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                            ),
                      s3_comments(),
@@ -1057,50 +1040,49 @@ class CholeraTreatmentCapabilityModel(S3Model):
                      self.hms_hospital_id(ondelete = "CASCADE"),
                      Field("ctc", "boolean", default=False,
                            label = T("Cholera-Treatment-Center"),
-                           represent = lambda opt: \
-                                       opt and T("yes") or T("no"),
+                           represent = s3_yes_no_represent,
                            ),
                      Field("number_of_patients", "integer",
                            default = 0,
                            label = T("Current number of patients"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
                            ),
                      Field("cases_24", "integer",
                            default = 0,
                            label = T("New cases in the past 24h"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
                            ),
                      Field("deaths_24", "integer",
                            default = 0,
                            label = T("Deaths in the past 24h"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
                            ),
                      #Field("staff_total", "integer", default = 0),
                      Field("icaths_available", "integer",
                            default = 0,
                            label = T("Infusion catheters available"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("icaths_needed_24", "integer",
                            default = 0,
                            label = T("Infusion catheters needed per 24h"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("infusions_available", "integer",
                            default = 0,
                            label = T("Infusions available"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("infusions_needed_24", "integer",
                            default = 0,
                            label = T("Infusions needed per 24h"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      #Field("infset_available", "integer", default = 0),
@@ -1108,13 +1090,13 @@ class CholeraTreatmentCapabilityModel(S3Model):
                      Field("antibiotics_available", "integer",
                            default = 0,
                            label = T("Antibiotics available"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("antibiotics_needed_24", "integer",
                            default = 0,
                            label = T("Antibiotics needed per 24h"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("problem_types", "list:integer",
@@ -1283,7 +1265,7 @@ class HospitalActivityReportModel(S3Model):
             hospital.update_record(modified_on=timestmp)
 
 # =============================================================================
-def hms_hospital_rheader(r, tabs=[]):
+def hms_hospital_rheader(r, tabs=None):
     """ Page header for component resources """
 
     rheader = None
@@ -1332,7 +1314,6 @@ def hms_hospital_rheader(r, tabs=[]):
 
             hospital = record
 
-            table = s3db.hms_hospital
             ltable = s3db.gis_location
             stable = s3db.hms_status
 
