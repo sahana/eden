@@ -1518,10 +1518,9 @@
                 function() {
                     // This inline-component is valid
                     if (pendingValidations[ns]) {
-                        // Resolve the pendingValidations promise
+                        // Resolve + remove the validation promise
+                        // (subsequent changes will create a new one)
                         pendingValidations[ns].resolve();
-                        // Remove it from pendingValidations
-                        // (will be re-added if changed again)
                         delete pendingValidations[ns];
                     }
                     // Remove validateInline handler
@@ -1531,11 +1530,11 @@
                 function() {
                     // This inline-component is not valid
                     if (pendingValidations[ns]) {
-                        // Reject the validation promise
+                        // Reject the validation promise, and create a
+                        // new one; leave the validateInline handler in
+                        // place so this component is re-validated when
+                        // Submit is clicked again
                         pendingValidations[ns].reject();
-                        // Create a new validation promise
-                        // (we retain the validateInline handler,
-                        //  so this is processed again the next time Submit is clicked)
                         pendingValidations[ns] = $.Deferred();
                     }
                 });
@@ -1700,7 +1699,7 @@
                 self = this;
 
             // Button events
-            el.delegate('.read-row', 'click' + ns, function(e) {
+            el.on('click' + ns, '.read-row', function(e) {
                 // Click into read-row opens the row for edit
                 // (unless the click-target is a link anchor)
                 var target = e.target;
@@ -1711,37 +1710,37 @@
                     self._editRow(rowindex);
                     return false;
                 }
-            }).delegate('.inline-add', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-add', function() {
                 self._addRow();
                 return false;
-            }).delegate('.inline-dsc', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-dsc', function() {
                 self._resetAddRow();
                 return false;
-            }).delegate('.inline-cnc', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-cnc', function() {
                 var names = $(this).attr('id').split('-');
                 names.pop();
                 var formname = names.pop(),
                     rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._cancelEdit(rowindex);
                 return false;
-            }).delegate('.inline-rdy', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-rdy', function() {
                 var names = $(this).attr('id').split('-');
                 names.pop();
                 var formname = names.pop(),
                     rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._updateRow(rowindex);
                 return false;
-            }).delegate('.inline-edt', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-edt', function() {
                 var names = $(this).attr('id').split('-'),
                     rowindex = names.pop();
                 self._editRow(rowindex);
                 return false;
-            }).delegate('.inline-rmv', 'click' + ns, function() {
+            }).on('click' + ns, '.inline-rmv', function() {
                 var names = $(this).attr('id').split('-'),
                     rowindex = names.pop();
                 self._removeRow(rowindex);
                 return false;
-            }).delegate('.error', 'click' + ns, function() {
+            }).on('click' + ns, '.error', function() {
                 $(this).fadeOut('medium', function() { $(this).remove(); });
                 return false;
             });
@@ -1758,43 +1757,43 @@
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
                 // Event to be triggered to force recollection of data (used by LocationSelector when modifying Point/Polygon on map)
-                $this.find('div.map_wrapper').bind('change' + ns, function() {
+                $this.find('div.map_wrapper').on('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit();
                 });
 
-                $this.find(textInputs).bind('input' + ns, function() {
+                $this.find(textInputs).on('input' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit();
                 });
-                $this.find(fileInputs).bind('change' + ns, function() {
+                $this.find(fileInputs).on('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit();
                 });
-                $this.find(dateInputs).bind('change' + ns, function() {
+                $this.find(dateInputs).on('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit();
                 });
-                $this.find(otherInputs).bind('focusin' + ns, function() {
+                $this.find(otherInputs).on('focusin' + ns, function() {
                     $(this).one('change' + ns, function() {
                         self._markChanged(this);
                         self._catchSubmit();
                     }).one('focusout', function() {
-                        $(this).unbind('change' + ns);
+                        $(this).off('change' + ns);
                     });
                 });
-                $this.find(multiSelects).bind('multiselectopen' + ns, function() {
-                    $(this).unbind('change' + ns)
+                $this.find(multiSelects).on('multiselectopen' + ns, function() {
+                    $(this).off('change' + ns)
                            .one('change' + ns, function() {
                         self._markChanged(this);
                         self._catchSubmit();
                     });
                 });
-                $this.find(hierarchyInputs).bind('change' + ns, function() {
+                $this.find(hierarchyInputs).on('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit();
                 });
-                $this.find(inputs).bind('keypress' + ns, function(e) {
+                $this.find(inputs).on('keypress' + ns, function(e) {
                     if (e.which == 13) {
                         e.preventDefault();
                         return false;
@@ -1804,7 +1803,7 @@
             });
 
             el.find('.add-row').each(function() {
-                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                $(this).find(inputs).on('keyup' + ns, function(e) {
                     switch (e.which) {
                         case 13: // Enter
                             self._addRow();
@@ -1816,7 +1815,7 @@
             });
 
             el.find('.edit-row').each(function() {
-                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                $(this).find(inputs).on('keyup' + ns, function(e) {
                     var rowIndex = $(this).closest('.edit-row').data('rowindex');
                     switch (e.which) {
                         case 13: // Enter
@@ -1840,17 +1839,17 @@
                 }
                 // Delegate click-event, so that it also applies for
                 // dynamically inserted checkboxes
-                el.delegate(':checkbox', 'click' + ns, {widget: this}, this._checkboxOnClick);
+                el.on('click' + ns, ':checkbox', {widget: this}, this._checkboxOnClick);
             }
 
             // Event Management for S3SQLInlineComponentMultiSelectWidget
             if (el.hasClass('inline-multiselect')) {
                 el.find('.inline-multiselect-widget')
-                  .bind('change' + ns, {widget: this}, this._multiselectOnChange);
+                  .on('change' + ns, {widget: this}, this._multiselectOnChange);
             }
 
             // Explicit open-action to reveal the add-row
-            el.find('.inline-open-add').bind('click' + ns, function(e) {
+            el.find('.inline-open-add').on('click' + ns, function(e) {
                 e.preventDefault();
                 $('#add-row-' + self.formname).removeClass('hide').show();
                 $(this).hide();
@@ -1869,24 +1868,22 @@
 
             // Remove inline-multiselect-widget event handlers
             if (el.hasClass('inline-multiselect')) {
-                el.find('.inline-multiselect-widget')
-                  .unbind(ns);
+                el.find('.inline-multiselect-widget').off(ns);
             }
 
             // Remove inline-locationselector-widget event handlers
-            el.find('.inline-locationselector-widget')
-              .unbind(ns);
+            el.find('.inline-locationselector-widget').off(ns);
 
             // Remove all form event handlers
             el.find('.add-row,.edit-row').each(function() {
-                $(this).find('input,textarea,select').unbind(ns);
+                $(this).find('input,textarea,select').off(ns);
             });
 
             // Remove open-action event handler
-            el.find('.inline-open-add').unbind(ns);
+            el.find('.inline-open-add').off(ns);
 
             // Remove all delegations
-            el.undelegate(ns);
+            el.off(ns);
 
             return true;
         }
