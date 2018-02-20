@@ -1625,7 +1625,6 @@ def config(settings):
         rheader_fields = []
 
         if record:
-            T = current.T
 
             if tablename == "dc_template":
 
@@ -1896,7 +1895,7 @@ def config(settings):
 
                     current.s3db.configure("dc_response",
                                            insertable = False,
-                                           list_fields = [(current.T("Event"), "target_id$training_event__link.training_event_id"),
+                                           list_fields = [(T("Event"), "target_id$training_event__link.training_event_id"),
                                                           "date",
                                                           "person_id",
                                                           ],
@@ -1904,6 +1903,22 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and r.component_name == "answer":
+                script = '''$('#component').prepend('<div>%s<br>%s</div>')''' % \
+                    (T("The questionnaire is available in all SEA languages, please change the language to your need on the upper-right corner of your screen."),
+                     T("Do this before filling in the data."))
+                s3.jquery_ready.append(script)
+
+            return output
+        s3.postp = custom_postp
 
         attr["rheader"] = dc_rheader
 
@@ -1999,7 +2014,6 @@ def config(settings):
             - exclude Observers
         """
 
-        T = current.T
         auth = current.auth
         db = current.db
         s3db = current.s3db
@@ -2301,15 +2315,15 @@ def config(settings):
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.response.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
+            current.response.warning = "%s: %s" % (s3_str(T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
                                                    bad
                                                    )
         elif success:
             from s3 import s3_str
-            current.response.confirmation = s3_str(current.T("%i Notifications sent!")) % success
+            current.response.confirmation = s3_str(T("%i Notifications sent!")) % success
 
         else:
-            current.response.information = current.T("No Notifications needed sending!")
+            current.response.information = T("No Notifications needed sending!")
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -2339,7 +2353,7 @@ def config(settings):
         # Expose the Language Option
         f = table.language
         f.readable = f.writable = True
-        f.label = current.T("Default Language")
+        f.label = T("Default Language")
         f.requires.other._select = OrderedDict([("en-gb", "English"),
                                                 ("my", "Burmese"),
                                                 ("id", "Indonesian"),
@@ -3421,7 +3435,6 @@ def config(settings):
         root_org = current.auth.root_org_name()
         controller = r.controller
         if controller == "vol":
-            T = current.T
             if root_org == IRCS:
                 s3db = current.s3db
                 table = s3db.hrm_human_resource
@@ -3491,7 +3504,6 @@ def config(settings):
 
         elif controller == "hrm":
             if root_org == IRCS:
-                T = current.T
                 s3db = current.s3db
                 table = s3db.hrm_human_resource
                 table.start_date.label = T("Appointment Date")
@@ -3544,7 +3556,6 @@ def config(settings):
 
         from s3 import FS
 
-        T = current.T
         db = current.db
         s3db = current.s3db
         auth = current.auth
@@ -4829,15 +4840,15 @@ def config(settings):
                     bad = "%s, %s" % (bad, new_error)
                 else:
                     bad = new_error
-            current.session.warning = "%s: %s" % (s3_str(current.T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
+            current.session.warning = "%s: %s" % (s3_str(T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
                                                   bad
                                                   )
         elif success:
             from s3 import s3_str
-            current.session.confirmation = s3_str(current.T("%i Notifications sent!")) % success
+            current.session.confirmation = s3_str(T("%i Notifications sent!")) % success
 
         else:
-            current.session.information = current.T("No Notifications needed sending!")
+            current.session.information = T("No Notifications needed sending!")
 
         # Redirect to main event page
         redirect(URL(args=[training_event_id]))
@@ -4923,7 +4934,6 @@ def config(settings):
             if root_org == NRCS and r.component_name == "participant":
                 # Don't allow creating of Persons here
                 from gluon import DIV
-                T = current.T
                 s3db.hrm_training.person_id.comment = \
                     DIV(_class="tooltip",
                         _title="%s|%s" % (T("Participant"),
@@ -4931,7 +4941,6 @@ def config(settings):
 
             elif EVENTS:
                 if not r.component:
-                    T = current.T
                     if OM:
                         # Dashboard for Office Manager
                         #from dateutil.relativedelta import relativedelta
@@ -5099,7 +5108,7 @@ def config(settings):
                     s3db.hrm_training.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
                     s3db.configure("hrm_training",
                                    list_fields = ["person_id",
-                                                  (current.T("Job Title"), "job_title"),                    # Field.Method
+                                                  (T("Job Title"), "job_title"),                    # Field.Method
                                                   (settings.get_hrm_organisation_label(), "organisation"),  # Field.Method
                                                   ],
                                    )
@@ -5298,8 +5307,6 @@ def config(settings):
             Simplified variant of the original function in s3db/member.py,
             with just "paid"/"unpaid"/"exempted" as possible values
         """
-
-        T = current.T
 
         if hasattr(row, "member_membership"):
             row = row.member_membership
@@ -5972,7 +5979,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_availability_resource(r, tablename):
 
-        T = current.T
         s3db = current.s3db
 
         # Construct slot options
@@ -6168,8 +6174,6 @@ def config(settings):
     def vnrc_cv_form(r):
 
         from s3 import S3FixedOptionsWidget, S3SQLCustomForm
-
-        T = current.T
 
         ptewidget = S3FixedOptionsWidget(("Primary",
                                           "Intermediate",

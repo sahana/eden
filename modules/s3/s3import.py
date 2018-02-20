@@ -4339,6 +4339,15 @@ class S3BulkImporter(object):
         table = s3db[tablename]
         idfield = table[idfield]
         base_query = (table.deleted != True)
+        fieldnames = [table._id.name,
+                      imagefield
+                      ]
+        # https://github.com/web2py/web2py/blob/master/gluon/sqlhtml.py#L1947
+        for field in table:
+            if field.name not in fieldnames and field.writable is False \
+                and field.update is None and field.compute is None:
+                fieldnames.append(field.name)
+        fields = [table[f] for f in fieldnames]
 
         # Get callbacks
         get_config = s3db.get_config
@@ -4367,10 +4376,8 @@ class S3BulkImporter(object):
                 image_source = StringIO(openFile.read())
                 # Get the id of the resource
                 query = base_query & (idfield == row["id"])
-                record = db(query).select(table._id,
-                                          table[imagefield],
-                                          limitby = (0, 1),
-                                          ).first()
+                record = db(query).select(limitby = (0, 1),
+                                          *fields).first()
                 try:
                     record_id = record.id
                 except AttributeError:
