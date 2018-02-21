@@ -6008,7 +6008,10 @@ class org_SiteCheckInMethod(S3Method):
                   ]
 
         query = (FS("pe_label") == label)
-        presource = s3db.resource("pr_person", filter=query)
+        presource = s3db.resource("pr_person",
+                                  components=[],
+                                  filter = query,
+                                  )
         rows = presource.select(fields,
                                 start = 0,
                                 limit = 1,

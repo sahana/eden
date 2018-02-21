@@ -524,7 +524,7 @@ class SecuritySeizedItemsModel(S3Model):
                                         label = T("Search"),
                                        ),
                           S3OptionsFilter("item_type_id",
-                                          options = s3_get_filter_opts(
+                                          options = lambda: s3_get_filter_opts(
                                               "security_seized_item_type"),
                                           ),
                           S3OptionsFilter("status",
@@ -533,7 +533,7 @@ class SecuritySeizedItemsModel(S3Model):
                                           default = "DEP",
                                           ),
                           S3OptionsFilter("depository_id",
-                                          options = s3_get_filter_opts(
+                                          options = lambda: s3_get_filter_opts(
                                               "security_seized_item_depository"),
                                           ),
                           S3DateFilter("date",

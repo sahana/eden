@@ -2607,9 +2607,10 @@ def config(settings):
                                         label = T("Search"),
                                        ),
                           S3OptionsFilter("site_facility_type.facility_type_id",
-                                          options = s3_get_filter_opts("org_facility_type",
-                                                                       translate = True,
-                                                                       ),
+                                          options = lambda: s3_get_filter_opts(
+                                                              "org_facility_type",
+                                                              translate = True,
+                                                              ),
                                           ),
                           S3OptionsFilter("organisation_id",
                                           ),
@@ -2798,7 +2799,7 @@ def config(settings):
                                             comment = T("Search by owner ID, name or comments"),
                                            ),
                               S3OptionsFilter("item_type_id",
-                                              options = s3_get_filter_opts(
+                                              options = lambda: s3_get_filter_opts(
                                                   "security_seized_item_type",
                                                   translate = True,
                                                   ),
@@ -2809,7 +2810,7 @@ def config(settings):
                                               default = "DEP",
                                               ),
                               S3OptionsFilter("depository_id",
-                                              options = s3_get_filter_opts(
+                                              options = lambda: s3_get_filter_opts(
                                                   "security_seized_item_depository",
                                                   ),
                                               ),

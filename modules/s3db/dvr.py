@@ -7202,7 +7202,10 @@ class DVRRegisterCaseEvent(S3Method):
                     (FS("dvr_case.id") != None) & \
                     (FS("dvr_case.archived") != True) & \
                     (FS("dvr_case.status_id$is_closed") != True)
-            presource = s3db.resource("pr_person", filter=query)
+            presource = s3db.resource("pr_person",
+                                      components = ["dvr_case"],
+                                      filter = query,
+                                      )
             rows = presource.select(fields,
                                     start = 0,
                                     limit = 1,
@@ -7302,7 +7305,10 @@ class DVRRegisterCaseEvent(S3Method):
                      (FS("dvr_case.archived") != True) & \
                      (FS("dvr_case.status_id$is_closed") != True)
 
-            presource = s3db.resource("pr_person", filter=query)
+            presource = s3db.resource("pr_person",
+                                      components = ["dvr_case"],
+                                      filter = query,
+                                      )
             rows = presource.select(fields,
                                     start = 0,
                                     limit = 2,
