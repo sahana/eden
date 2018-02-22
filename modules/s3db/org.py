@@ -269,8 +269,11 @@ class S3OrganisationModel(S3Model):
                                                       filterby="parent",
                                                       filter_opts=(None,),
                                                       orderby="org_region.name"))
+                # IFRC: Only show the Regions, not the Zones
+                opts_filter = ("parent", (None,))
             else:
                 hierarchy = None
+                opts_filter = (None, None)
 
             # CRUD strings
             crud_strings[tablename] = Storage(
@@ -293,9 +296,8 @@ class S3OrganisationModel(S3Model):
                             IS_ONE_OF(db, "org_region.id",
                                       region_represent,
                                       sort=True,
-                                      # IFRC: Only show the Regions, not the Zones
-                                      not_filterby="parent",
-                                      not_filter_opts=(None,)
+                                      not_filterby=opts_filter[0],
+                                      not_filter_opts=opts_filter[1],
                                       )),
                 sortby = "name",
                 comment = S3PopupLink(c = "org",

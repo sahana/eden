@@ -54,13 +54,13 @@ from s3dal import Row
 from s3layouts import S3PopupLink
 
 # @ToDo: Put the most common patterns at the top to optimise
-um_patterns = ["\sper\s?(.*)$",                         # CHOCOLATE, per 100g
-               #"\((.*)\)$",                            # OUTWARD REGISTER for shipping (50 sheets)
-               "([0-9]+\s?(gramm?e?s?|L|g|kg))$",       # Navarin de mouton 285 grammes
-               ",\s(kit|pair|btl|bottle|tab|vial)\.?$", # STAMP, IFRC, Englishlue, btl.
-               "\s(bottle)\.?$",                        # MINERAL WATER, 1.5L bottle
-               ",\s((bag|box|kit) of .*)\.?$",          # (bag, diplomatic) LEAD SEAL, bag of 100
-               ]
+um_patterns = (r"\sper\s?(.*)$",                         # CHOCOLATE, per 100g
+               #r"\((.*)\)$",                            # OUTWARD REGISTER for shipping (50 sheets)
+               r"([0-9]+\s?(gramm?e?s?|L|g|kg))$",       # Navarin de mouton 285 grammes
+               r",\s(kit|pair|btl|bottle|tab|vial)\.?$", # STAMP, IFRC, Englishlue, btl.
+               r"\s(bottle)\.?$",                        # MINERAL WATER, 1.5L bottle
+               r",\s((bag|box|kit) of .*)\.?$",          # (bag, diplomatic) LEAD SEAL, bag of 100
+               )
 
 # =============================================================================
 class S3SupplyModel(S3Model):
@@ -111,8 +111,8 @@ class S3SupplyModel(S3Model):
         NONE = current.messages["NONE"]
         YES = T("Yes")
 
-        format = auth.permission.format
-        if format == "html":
+        reqformat = auth.permission.format
+        if reqformat == "html":
             i18n = {"in_inv": T("in Stock"),
                     "no_packs": T("No Packs for Item"),
                     }
@@ -464,6 +464,7 @@ $.filterOptionsS3({
         supply_item_represent = supply_ItemRepresent(show_link=True)
 
         # Reusable Field
+        supply_item_tootip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
         supply_item_id = S3ReusableField("item_id",
             "reference %s" % tablename, # 'item_id' for backwards-compatibility
             label = T("Item"),
@@ -478,7 +479,7 @@ $.filterOptionsS3({
                                 f = "item",
                                 label = ADD_ITEM,
                                 title = T("Item"),
-                                tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
+                                tooltip = supply_item_tootip,
                                 ),
             )
 
@@ -807,7 +808,17 @@ $.filterOptionsS3({
                                                    )
                                          ),
                            ),
-                     supply_item_id("alt_item_id", notnull=True),
+                     supply_item_id("alt_item_id",
+                                    notnull=True,
+                                    comment = S3PopupLink(c = "supply",
+                                                          f = "item",
+                                                          label = ADD_ITEM,
+                                                          title = T("Item"),
+                                                          tooltip = supply_item_tootip,
+                                                          vars = {"child": "alt_item_id"
+                                                                  },
+                                                          ),
+                                    ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -966,29 +977,31 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_represent(id):
+    def item_represent(record_id):
         """
             Represent an item entity in option fields or list views
             - unused, we use VirtualField instead
             @ToDo: Migrate to S3Represent
         """
 
-        if not id:
+        if not record_id:
             return current.messages["NONE"]
 
         db = current.db
 
-        if isinstance(id, Row) and "instance_type" in id:
+        if isinstance(record_id, Row) and "instance_type" in record_id:
             # Do not repeat the lookup if already done by IS_ONE_OF
-            item = id
+            item = record_id
             instance_type = item.instance_type
         else:
             item_table = db.supply_item_entity
-            item = db(item_table._id == id).select(item_table.instance_type,
-                                                   limitby=(0, 1)).first()
+            item = db(item_table._id == record_id).select(
+                                            item_table.instance_type,
+                                            limitby = (0, 1),
+                                            ).first()
             try:
                 instance_type = item.instance_type
-            except:
+            except AttributeError:
                 return current.messages.UNKNOWN_OPT
 
         T = current.T
@@ -998,7 +1011,7 @@ $.filterOptionsS3({
             s3db = current.s3db
             itable = s3db[instance_type]
             rtable = s3db.inv_recv
-            query = (itable.item_entity_id == id) & \
+            query = (itable.item_entity_id == record_id) & \
                     (rtable.id == itable.recv_id)
             eta = db(query).select(rtable.eta,
                                    limitby=(0, 1)).first().eta
@@ -1152,9 +1165,9 @@ $.filterOptionsS3({
 
         db = current.db
 
-        vars = form.vars
-        item_id = vars.id
-        catalog_id = vars.catalog_id
+        formvars = form.vars
+        item_id = formvars.id
+        catalog_id = formvars.catalog_id
         catalog_item_id = None
 
         citable = db.supply_catalog_item
@@ -1165,7 +1178,7 @@ $.filterOptionsS3({
         # Create supply_catalog_item
             catalog_item_id = \
                 citable.insert(catalog_id = catalog_id,
-                               item_category_id = vars.item_category_id,
+                               item_category_id = formvars.item_category_id,
                                item_id = item_id
                                )
         # Update if the catalog/category has changed - if there is only supply_catalog_item
@@ -1174,13 +1187,13 @@ $.filterOptionsS3({
             catalog_item_id = \
                 db(citable.id == catalog_item_id
                    ).update(catalog_id = catalog_id,
-                            item_category_id = vars.item_category_id,
+                            item_category_id = formvars.item_category_id,
                             item_id = item_id
                             )
         #current.auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
 
         # Update UM
-        um = vars.um or db.supply_item.um.default
+        um = formvars.um or db.supply_item.um.default
         table = db.supply_item_pack
         # Try to update the existing record
         query = (table.item_id == item_id) & \
@@ -1192,7 +1205,7 @@ $.filterOptionsS3({
                          name = um,
                          quantity = 1)
 
-        if vars.kit:
+        if formvars.kit:
             # Go to that tab afterwards
             url = URL(args=["[id]", "kit_item"])
             current.s3db.configure("supply_item",
@@ -1306,8 +1319,7 @@ class S3SupplyDistributionModel(S3Model):
                      Field("value", "integer",
                            label = T("Quantity"),
                            requires = IS_INT_IN_RANGE(0, None),
-                           represent = lambda v: \
-                                       IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            ),
                      s3_date("date",
                              #empty = False,
@@ -1625,7 +1637,7 @@ class S3SupplyDistributionModel(S3Model):
             location_id = record.location_id
             start_date = record.date
             end_date = record.end_date
-        except:
+        except AttributeError:
             # Exit Gracefully
             current.log.warning("Cannot find Distribution: %s" % record_id)
             return
@@ -1646,7 +1658,7 @@ class S3SupplyDistributionModel(S3Model):
             a_location_id = activity.location_id
             a_start_date = activity.date
             a_end_date = activity.end_date
-        except:
+        except AttributeError:
             # Exit Gracefully
             current.log.warning("Cannot find Activity: %s" % activity_id)
             return
@@ -1700,12 +1712,6 @@ class S3SupplyDistributionDVRActivityModel(S3Model):
 
     def model(self):
 
-        T = current.T
-        db = current.db
-        s3 = current.response.s3
-
-        define_table = self.define_table
-
         # ---------------------------------------------------------------------
         # Supply Distributions <=> Case Activity Link Table
         #
@@ -1755,7 +1761,7 @@ class supply_ItemRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
+    def custom_lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for item rows, does a
             left join with the brand. Parameters
@@ -1779,9 +1785,9 @@ class supply_ItemRepresent(S3Represent):
             query = (itable.id.belongs(values))
             limitby = (0, qty)
 
-        rows = db(query).select(*self.fields,
-                                left=left,
-                                limitby=limitby)
+        rows = db(query).select(left = left,
+                                limitby = limitby,
+                                *self.fields)
         self.queries += 1
         return rows
 
@@ -1817,7 +1823,7 @@ class supply_ItemPackRepresent(S3Represent):
     """ Representation of Supply Item Packs """
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for item_pack rows, does a left join with
             the item.
@@ -1912,7 +1918,7 @@ class supply_ItemCategoryRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
+    def custom_lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for item category rows, does a
             left join with the parent category. Parameters
@@ -1941,9 +1947,9 @@ class supply_ItemCategoryRepresent(S3Represent):
             query = (table.id.belongs(values))
             limitby = (0, qty)
 
-        rows = db(query).select(*self.fields,
-                                left=left,
-                                limitby=limitby)
+        rows = db(query).select(left = left,
+                                limitby = limitby,
+                                *self.fields)
         self.queries += 1
         return rows
 
@@ -2374,7 +2380,6 @@ def supply_item_entity_status(row):
     else:
         return None
 
-    db = current.db
     s3db = current.s3db
     etable = s3db.supply_item_entity
 
@@ -2746,7 +2751,15 @@ $('#organisation_dropdown').change(function(){
     return output
 
 # -----------------------------------------------------------------------------
-def supply_get_shipping_code(type, site_id, field):
+def supply_get_shipping_code(doctype, site_id, field):
+    """
+        Get a reference number for a shipping document
+
+        @param doctype: short name for the document type (e.g. WB, GRN)
+        @param site_id: the sending/receiving site
+        @param field: the field where the reference numbers are stored
+                      (to look up the previous number for incrementing)
+    """
 
     db = current.db
     if site_id:
@@ -2758,9 +2771,9 @@ def supply_get_shipping_code(type, site_id, field):
             scode = site.code
         else:
             scode = "###"
-        code = "%s-%s-" % (type, scode)
+        code = "%s-%s-" % (doctype, scode)
     else:
-        code = "%s-###-" % (type)
+        code = "%s-###-" % (doctype)
     number = 0
     if field:
         query = (field.like("%s%%" % code))
