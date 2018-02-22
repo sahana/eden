@@ -77,6 +77,22 @@ def group_person_status():
 def region():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        if r.representation == "popup":
+
+            if settings.get_org_regions_hierarchical():
+
+                table = r.table
+
+                # Zone is required when creating new regions from popup
+                field = table.parent
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    field.requires = requires.other
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
