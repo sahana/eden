@@ -1,6 +1,0 @@
-First Name,Last Name,Email,Password,Role,Organisation,Office,Type,Job Title,Photo
-Admin,User,admin@example.com,testing,ADMIN,National Disaster Operation Center,,,,
-Jose,Soares,jose.soares@oxfam.org.tl,eden,USER/org_organisation.name=Oxfam,Oxfam,Oxfam Dili,Staff,Coordinator,http://tldrmp.aidiq.com/eden/static/prepop/scream.jpg
-Adriana,Macedo,adriana.macedo@redcross.tl,eden,USER/org_organisation.name=Timor-Leste Red Cross Society,Timor-Leste Red Cross Society,,,,http://tldrmp.aidiq.com/eden/static/prepop/Alexandra.jpg
-Liliana,Otilia,liliana.otilia@mss.gov.tl,eden,USER/org_organisation.name=National Disaster Operation Center,National Disaster Operation Center,,,,http://tldrmp.aidiq.com/eden/static/prepop/Boho.jpg
-Eduardo,dos Santos,eduardo.dossantos@tl.mercycorps.org,eden,USER/org_organisation.name=Mercy Corps,Mercy Corps,,,,http://tldrmp.aidiq.com/eden/static/prepop/businessman.jpg

@@ -1,40 +1,40 @@
 # -*- coding: utf-8 -*-
 
 """
-Setup Tool
+    Setup Tool:
+        Assists with Installation of a Deployment
+        tbc: Assists with Configuration of a Deployment
 """
 
 module = request.controller
-resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
+# -----------------------------------------------------------------------------
 def index():
     """ Show the index """
 
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def deployment():
 
-    from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-
-    #s3db.configure("setup_deployment", onvalidation=validate_deployment)
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
     crud_form = S3SQLCustomForm("name",
-                                "distro",
+                                "repo_url",
+                                "country",
+                                "template",
                                 "remote_user",
+                                "private_key",
                                 "secret_key",
                                 "access_key",
-                                "private_key",
                                 "webserver_type",
                                 "db_type",
                                 "db_password",
                                 "db_type",
                                 "db_password",
-                                "repo_url",
-                                "template",
                                 S3SQLInlineComponent("server",
                                                      label = T("Server Role"),
                                                      fields = ["role", "host_ip", "hostname"],
@@ -49,7 +49,9 @@ def deployment():
                                                      ),
                                 )
 
-    s3db.configure("setup_deployment", crud_form=crud_form)
+    s3db.configure("setup_deployment",
+                   crud_form = crud_form,
+                   )
 
     def prep(r):
         if r.method in ("create", None):
@@ -74,18 +76,20 @@ def deployment():
                         ((sctable.status != "COMPLETED") & \
                         (sctable.status  != "FAILED"))
 
-                rows = db(query).select(itable.scheduler_id,
-                                        join = itable.on(itable.scheduler_id == sctable.id)
-                                        )
+                exists = db(query).select(itable.scheduler_id,
+                                          join = itable.on(itable.scheduler_id == sctable.id),
+                                          limitby = (0, 1)
+                                          ).first()
 
-                if rows:
+                if exists:
                     # Disable creation of new instances
                     s3db.configure("setup_instance",
                                    insertable = False
                                    )
+
                 elif r.component.name == "instance":
                     if r.method in (None, "create"):
-                        # Remove deployed instances from drop down
+                        # Remove already-deployed instances from dropdown
                         itable = db.setup_instance
                         sctable = db.scheduler_task
                         query = (itable.deployment_id == r.id) & \
@@ -94,14 +98,15 @@ def deployment():
                         rows = db(query).select(itable.type,
                                                 join = itable.on(itable.scheduler_id == sctable.id)
                                                 )
-                        types = {1: "prod", 2: "test", 3: "demo", 4: "dev"}
+                        types = {1: "prod",
+                                 2: "test",
+                                 3: "demo",
+                                 }
                         for row in rows:
                             del types[row.type]
 
                         itable.type.requires = IS_IN_SET(types)
-
         return True
-
     s3.prep = prep
 
     def postp(r, output):
@@ -151,13 +156,11 @@ def deployment():
                                "label": "Upgrade Eden"
                                },
                               ]
-
         return output
-
-
     s3.postp = postp
 
-    return s3_rest_controller(rheader=s3db.setup_rheader)
+    return s3_rest_controller(rheader = s3db.setup_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def management():
@@ -173,7 +176,7 @@ def management():
     exists = s3db.setup_management_exists(_type, _id, deployment_id)
 
     if exists:
-        current.session.error = T("A management task is running for the instance")
+        session.error = T("A management task is running for the instance")
         redirect(URL(c="setup", f="deployment", args=[deployment_id, "instance"]))
 
     # Check if instance was successfully deployed
@@ -183,7 +186,8 @@ def management():
             (itable.id == _id)
     success = db(query).select(itable.id,
                                join=ttable.on(ttable.id == itable.scheduler_id),
-                               limitby=(0, 1)).first()
+                               limitby = (0, 1)
+                               ).first()
 
     if success:
         # add the task to scheduler
@@ -192,14 +196,15 @@ def management():
                                      timeout = 3600,
                                      repeats = 1,
                                      )
-        current.session.flash = T("Task queued in scheduler")
+        session.confirmation = T("Task queued in scheduler")
         redirect(URL(c="setup", f="deployment", args=[deployment_id, "instance"]))
     else:
-        current.session.error = T("The instance was not successfully deployed")
+        session.error = T("The instance was not successfully deployed")
         redirect(URL(c="setup", f="deployment", args=[deployment_id, "instance"]))
 
 # -----------------------------------------------------------------------------
 def prepop_setting():
+
     if request.ajax:
         template = request.post_vars.get("template")
         return json.dumps(s3db.setup_get_prepop_options(template))
@@ -224,8 +229,18 @@ def refresh():
 
 # -----------------------------------------------------------------------------
 def upgrade_status():
+
     if request.ajax:
-        _id = request.post_vars.get("id")
-        status = s3db.setup_upgrade_status(_id)
-        if status:
-            return json.dumps(status)
+        record_id = request.post_vars.get("id")
+        utable = s3db.setup_upgrade
+        stable = s3db.scheduler_task
+        query = (utable.deployment_id == record_id)
+
+        row = current.db(query).select(stable.status,
+                                       join = utable.on(stable.id == utable.scheduler)
+                                       ).last()
+
+        if row.status == "COMPLETED":
+            return json.dumps(current.T("Upgrade Completed! Refreshing the page in 5 seconds"))
+
+# END =========================================================================

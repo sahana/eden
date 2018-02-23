@@ -1,0 +1,3 @@
+UUID,Name,Region Country,Default Country,Default L1,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker,WMS Browser
+SITE_DEFAULT,Default,,US,Washington,9,47.709,-122.5252,900913,42,51,-134,-114,True,marker_red,http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+,US,US,US,,9,47.709,-122.5252,900913,-20,90,-180,-50,True,,

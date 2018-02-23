@@ -1,0 +1,11 @@
+UUID,Country,L1,L2,L3,L4,L5,Edit L1
+SITE_DEFAULT,,Admin 1,Admin 2,Admin 3,Admin 4,Admin 5,
+,AM,Province (Admin 1),Community (Admin 2),Settlement (Admin 3),,,
+,AZ,Economic Region (Admin 1),District (Rayon) (Admin 2),,,,
+,GE,Region / Republic (Admin 1),District (Admin 2),,,,
+,KG,Oblast / State City (Admin 1),District (Rayon) / Oblast City (Admin 2),Town / Village Group (Admin 3),Village (Admin 4),,
+,KZ,Province (Admin 1),District (Admin 2),,,,
+,TJ,Province (Admin 1),District (Admin 2),Jamoat (Admin 3),Village (Admin 4),,
+,TM,Province (Admin 1),District (Admin 2),,,,
+,UA,Province (Admin 1),District (Admin 2),,,,
+,UZ,Province (Admin 1),District (Admin 2),,,,

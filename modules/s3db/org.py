@@ -415,8 +415,7 @@ class S3OrganisationModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Logo"),
                                                            T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400"))),
-                           uploadfolder = os.path.join(
-                                            current.request.folder, "uploads"),
+                           uploadfolder = os.path.join(current.request.folder, "uploads"),
                            ),
                      s3_comments(),
                      #document_id(), # Better to have multiple Documents on a Tab

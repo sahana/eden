@@ -1,0 +1,7 @@
+Template,Section,Posn,Method,Rules
+Bangladesh EDN,Background Information,1,1,"[[{'heading': 'Emergency Damage & Needs Assessment Form'}], ['EDN-2'], ['EDN-7']]"
+Bangladesh EDN,Part1 Observations,2,1,"[[{'heading': 'Observations'}], ['EDN-8'], ['EDN-9'], [{'heading': 'd) Number of houses damaged:'}], ['EDN-10-'], ['EDN-11'], ['EDN-12'], ['EDN-13'], ['EDN-14'], ['EDN-15'], ['EDN-16'], ['EDN-17']]"
+Bangladesh EDN,Part2 Damage,3,1,"[[{'heading': 'Damage to infrastructure and key installations'}], ['EDN-18'], ['EDN-19'], ['EDN-20'], ['EDN-21'], ['EDN-22'], ['EDN-23']]"
+Bangladesh EDN,Part3 Livelihood,4,1,"[[{'heading': 'Livelihood'}], ['EDN-24']]"
+Bangladesh EDN,Part4 Watsan,5,1,"[[{'heading': 'Health and WatSan'}], ['EDN-25'], [{'heading': 'Number of cases & source of information'}], ['EDN-26'], ['EDN-27'], ['EDN-28'], ['EDN-29'], ['EDN-30'], ['EDN-31'], ['EDN-32', 'EDN-33'], ['EDN-34', 'EDN-35'], ['EDN-36', 'EDN-37'], ['EDN-38'], ['EDN-39'], ['EDN-40'], ['EDN-41'], ['EDN-42'], ['EDN-43'], ['EDN-44'], ['EDN-45'], [{'heading': 'Sanitation'}], ['EDN-46'], ['EDN-47'], ['EDN-48'], [{'heading': 'Availability'}], ['EDN-49'], [{'heading': 'Impact'}], ['EDN-50'], [{'heading': 'Action'}], ['EDN-51'], ['EDN-52'], ['EDN-53'], [{'heading': 'Needs'}], ['EDN-54'], [{'heading': 'RECOMMENDATIONS FOR IMMEDIATE ACTION'}], ['EDN-55'], ['EDN-56'], ['EDN-57'], ['EDN-58'], ['EDN-59']]"
+Bangladesh EDN,Part5 Other,6,1,[]

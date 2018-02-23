@@ -1,0 +1,9 @@
+Template,Section,Posn,Method,Rules
+KAP Survey in Emergencies,Background Information,1,1,[]
+KAP Survey in Emergencies,Water,2,1,"[{'heading': 'Water'}, ['KAP-1', 'KAP-2', 'KAP-3', 'KAP-4'], ['KAP-5', 'KAP-6', 'KAP-7', 'KAP-8'], ['KAP-9', 'KAP-10', 'KAP-11', 'KAP-12'], ['KAP-13', 'KAP-14', 'KAP-15', 'KAP-16'], ['KAP-17', 'KAP-18', 'KAP-19', 'KAP-20'], ['KAP-21', 'KAP-22', 'KAP-23']]"
+KAP Survey in Emergencies,Sanitation,3,1,"[{'heading': 'Sanitation'}, [{'columns': [['KAP-24'], ['KAP-25', 'KAP-26']]}], ['KAP-27', 'KAP-28'], ['KAP-29', 'KAP-30', 'KAP-31'], [{'columns': [['KAP-32'], ['KAP-33', 'KAP-34']]}], ['KAP-35', 'KAP-36', 'KAP-37'], [{'columns': [['KAP-38'], ['KAP-39', 'KAP-40']]}], ['KAP-41']]"
+KAP Survey in Emergencies,Household Waste,4,1,"[{'heading': 'Household Waste'}, [{'columns': [['KAP-42'], ['KAP-43', 'KAP-44']]}], ['KAP-45', 'KAP-46']]"
+KAP Survey in Emergencies,Vector Control,5,1,"[{'heading': 'Vector Control'}, ['KAP-47', 'KAP-48', 'KAP-49'], ['KAP-50', 'KAP-51', 'KAP-52']]"
+KAP Survey in Emergencies,Handwashing,6,1,"[{'heading': 'Handwashing'}, ['KAP-53', 'KAP-54', 'KAP-55'], ['KAP-56', 'KAP-57', 'KAP-58']]"
+KAP Survey in Emergencies,"Knowledge, attitude and practice",7,1,"[{'heading': 'Knowledge, attitude and practice'}, ['KAP-59', 'KAP-60', 'KAP-61'], ['KAP-62', 'KAP-63', 'KAP-64']]"
+KAP Survey in Emergencies,Other,8,1,"[{'heading': 'Other'}, ['KAP-65'], ['KAP-66'], ['KAP-67'], ['KAP-68'], ['KAP-69'], ['KAP-70'], ['KAP-71'], ['KAP-72']]"

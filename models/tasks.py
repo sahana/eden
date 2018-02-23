@@ -447,24 +447,25 @@ if has_module("setup"):
 
     tasks["deploy"] = deploy
 
+    # -------------------------------------------------------------------------
     def setup_management(_type, instance_id, deployment_id, user_id=None):
         import ansible.runner
         s3db = current.s3db
         db = current.db
 
-        # get all servers associated
+        # Get all associated servers
         stable = s3db.setup_server
         servers = db(stable.deployment_id == deployment_id).select(stable.role,
                                                                    stable.host_ip,
-                                                                   orderby=stable.role
+                                                                   orderby = stable.role
                                                                    )
 
-        # get deployment
-
+        # Get deployment
         dtable = s3db.setup_deployment
         deployment = db(dtable.id == deployment_id).select(dtable.private_key,
                                                            dtable.remote_user,
-                                                           limitby=(0, 1)).first()
+                                                           limitby = (0, 1)
+                                                           ).first()
         private_key = os.path.join(current.request.folder, "uploads", deployment.private_key)
 
         hosts = [server.host_ip for server in servers]
@@ -475,7 +476,8 @@ if has_module("setup"):
 
         itable = s3db.setup_instance
         instance = db(itable.id == instance_id).select(itable.type,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1)
+                                                       ).first()
         instance_types = ["prod", "test", "demo"]
 
         if _type == "clean":
@@ -483,40 +485,40 @@ if has_module("setup"):
             host_ip = servers[0].host_ip
 
             arguments = [dict(module_name = "service",
-                              module_args={"name": "uwsgi",
-                                           "status": "stop",
-                                           },
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
+                              module_args = {"name": "uwsgi",
+                                             "status": "stop",
+                                             },
+                              remote_user = deployment.remote_user,
+                              private_key_file = private_key,
+                              pattern = host_ip,
+                              inventory = inventory,
+                              #sudo = True
                               ),
                           dict(module_name = "command",
-                              module_args="clean %s" % instance_types[instance.type - 1],
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
+                              module_args = "clean %s" % instance_types[instance.type - 1],
+                              remote_user = deployment.remote_user,
+                              private_key_file = private_key,
+                              pattern = host_ip,
+                              inventory = inventory,
+                              #sudo = True
                               ),
                           dict(module_name = "command",
-                              module_args="clean_eden %s" % instance_types[instance.type - 1],
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=servers[0].host_ip,
-                              inventory=inventory,
-                              sudo=True
+                              module_args = "clean_eden %s" % instance_types[instance.type - 1],
+                              remote_user = deployment.remote_user,
+                              private_key_file = private_key,
+                              pattern = servers[0].host_ip,
+                              inventory = inventory,
+                              #sudo = True
                               ),
                           dict(module_name = "service",
-                              module_args={"name": "uwsgi",
-                                           "status": "start",
-                                           },
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
+                              module_args = {"name": "uwsgi",
+                                             "status": "start",
+                                             },
+                              remote_user = deployment.remote_user,
+                              private_key_file = private_key,
+                              pattern = host_ip,
+                              inventory = inventory,
+                              #sudo = True
                               ),
                           ]
 
@@ -529,20 +531,20 @@ if has_module("setup"):
             for argument in arguments:
                 tasks.append(runner(**argument))
 
-            # run the tasks
+            # Run the tasks
             for task in tasks:
                 response = task.run()
                 if response["dark"]:
                     raise Exception("Error contacting the server")
 
         elif _type == "eden":
-            argument = dict(module_name="command",
-                            module_args="pull %s" % [instance_types[instance.type - 1]],
-                            remote_user=deployment.remote_user,
-                            private_key_file=private_key,
-                            pattern=servers[0].host_ip,
-                            inventory=inventory,
-                            sudo=True
+            argument = dict(module_name = "command",
+                            module_args = "pull %s" % [instance_types[instance.type - 1]],
+                            remote_user = deployment.remote_user,
+                            private_key_file = private_key,
+                            pattern = servers[0].host_ip,
+                            inventory = inventory,
+                            #sudo=True
                             )
 
             if len(servers) > 1:
@@ -555,7 +557,7 @@ if has_module("setup"):
 
     tasks["setup_management"] = setup_management
 
-# --------------------e--------------------------------------------------------
+# -----------------------------------------------------------------------------
 if has_module("stats"):
 
     def stats_demographic_update_aggregates(records=None, user_id=None):

@@ -1,0 +1,18 @@
+uid,role,controller,function,table,entity,uacl,oacl,Notes
+ANONYMOUS,Anonymous,project,,,,READ,,
+ANONYMOUS,Anonymous,project,project,,,READ|CREATE,READ|CREATE|UPDATE,
+ANONYMOUS,Anonymous,project,project,,any,READ|CREATE|UPDATE,,Allow new users to create projects for all lead organisations
+ANONYMOUS,Anonymous,,,project_project,,READ|CREATE,,Allow new users to create projects for all lead organisations - but restrict this permission for projects
+ANONYMOUS,Anonymous,project,framework,,,READ|CREATE,READ|CREATE|UPDATE,
+ANONYMOUS,Anonymous,gis,,,,READ,,
+ANONYMOUS,Anonymous,org,,,,READ,,
+ANONYMOUS,Anonymous,org,organisation,,,READ|CREATE|UPDATE,,Allow new users to create orgs during registration 
+ANONYMOUS,Anonymous,,,org_organisation,,READ|CREATE,,Allow new users to create orgs during registration 
+ANONYMOUS,Anonymous,,,org_organisation,any,READ|CREATE|UPDATE,,Allow new users to create projects for all lead organisations
+ANONYMOUS,Anonymous,pr,pentity,,,READ,,
+ANONYMOUS,Anonymous,pr,person_search,,,READ,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,project,project,,,READ|CREATE,READ|CREATE|UPDATE,
+AUTHENTICATED,Authenticated,pr,person,,,,READ|UPDATE,
+ORG_ADMIN,Organisation Admin,org,,,,READ|CREATE,READ|CREATE|UPDATE,
+ORG_ADMIN,Organisation Admin,admin,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE,
+ORG_ADMIN,Organisation Admin,project,project,,,READ|CREATE|UPDATE|REVIEW|APPROVE,READ|CREATE|UPDATE|REVIEW|APPROVE,

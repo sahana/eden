@@ -1,3 +1,0 @@
-UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker,WMS Browser
-SITE_DEFAULT,Default,,,4,41.60396949,56.88730859,900913,35,56,35,90,False,marker_red,http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
-,KG,KG,KG,6,41.0595,73.6085,900913,38,44,69,81,False,marker_red,

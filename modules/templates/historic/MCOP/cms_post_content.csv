@@ -1,0 +1,9 @@
+Module,Resource,Name,Body
+org,organisation,Stakeholders,"Government, Business, Community Based, Faith Based and Volunteer Organizations and Agencies in Puget Sounds"
+cms,post,News Feed,Updates on emergency response and disaster recovery
+org,resource,Resources,"Equipment, supplies, assets and people that are available to support emergency response and disaster recovery"
+project,task,Tasks,Who's doing What Where and When
+org,office,Facilities Summary Page Header,Stakeholder's facility locations
+pr,person,Contacts Directory, Contact Directory for Stakeholders
+gis,index, Map, Map of Puget Sound Maritime Common Operating Picture (MCOP) showing Events, Tasks, Resources, News and Facilities
+event,event, Events, Events in Puget Sound
