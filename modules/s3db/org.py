@@ -269,8 +269,11 @@ class S3OrganisationModel(S3Model):
                                                       filterby="parent",
                                                       filter_opts=(None,),
                                                       orderby="org_region.name"))
+                # IFRC: Only show the Regions, not the Zones
+                opts_filter = ("parent", (None,))
             else:
                 hierarchy = None
+                opts_filter = (None, None)
 
             # CRUD strings
             crud_strings[tablename] = Storage(
@@ -293,9 +296,8 @@ class S3OrganisationModel(S3Model):
                             IS_ONE_OF(db, "org_region.id",
                                       region_represent,
                                       sort=True,
-                                      # IFRC: Only show the Regions, not the Zones
-                                      not_filterby="parent",
-                                      not_filter_opts=(None,)
+                                      not_filterby=opts_filter[0],
+                                      not_filter_opts=opts_filter[1],
                                       )),
                 sortby = "name",
                 comment = S3PopupLink(c = "org",
@@ -6586,14 +6588,26 @@ def org_organisation_controller():
                            )
 
         elif r.interactive or r.representation == "aadata":
-            component = r.component
-            gis = current.gis
+
             otable = r.table
+
+            gis = current.gis
             otable.country.default = gis.get_default_country("code")
-            type_filter = r.get_vars.get("organisation_type.name", None)
+
+            f = r.function
+            if settings.get_org_regions() and f != "organisation":
+                # Non-default function name (e.g. project/partners)
+                # => use same function for options lookup after popup-create
+                popup_link = otable.region_id.comment
+                if popup_link and isinstance(popup_link, S3PopupLink):
+                    popup_link.vars["parent"] = f
 
             method = r.method
+            component = r.component
+
             use_branches = settings.get_org_branches()
+            type_filter = r.get_vars.get("organisation_type.name", None)
+
             if use_branches and not component and \
                not r.record and \
                r.method != "deduplicate" and \
