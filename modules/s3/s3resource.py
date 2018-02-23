@@ -5673,6 +5673,20 @@ class S3ResourceData(object):
                             colnames = [pkey],
                             compact = False,
                             )
+                # Add field methods (some do work from bare ids)
+                try:
+                    fields_lazy = [(f.name, f) for f in table._virtual_methods]
+                except (AttributeError, TypeError):
+                    # Incompatible PyDAL version
+                    pass
+                else:
+                    if fields_lazy:
+                        for row in rows:
+                            for f, v in fields_lazy:
+                                try:
+                                    row[f] = v.handler(v.f, row)
+                                except (AttributeError, KeyError):
+                                    pass
             else:
                 # Joins for master query
                 master_ijoins = ijoins.as_list(tablenames = master_tables,

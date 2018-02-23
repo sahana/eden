@@ -84,7 +84,6 @@ from collections import OrderedDict
 from gluon import *
 from gluon.storage import Storage
 
-from s3dal import Row
 from ..s3 import *
 from s3layouts import S3PopupLink
 
@@ -120,8 +119,6 @@ class S3ProjectModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-
-        NONE = current.messages["NONE"]
 
         settings = current.deployment_settings
         mode_3w = settings.get_project_mode_3w()
@@ -346,6 +343,15 @@ class S3ProjectModel(S3Model):
                                     comment = comment,
                                     ))
 
+        report_fact_fields = [(T("Number of Projects"), "count(id)"),
+                              "count(organisation_id)",
+                              "count(location.location_id)",
+                              ]
+        rappend = report_fact_fields.append
+        report_col_default = "location.location_id"
+        report_row_default = "organisation_id"
+        report_fact_default = "count(id)"
+
         list_fields = ["id"]
         lappend = list_fields.append
         if use_codes:
@@ -355,7 +361,7 @@ class S3ProjectModel(S3Model):
         if use_codes:
             cappend("code")
         lappend("organisation_id")
-        default_row = "organisation_id"
+
         crud_fields += ["description",
                         "status_id",
                         "start_date",
@@ -373,7 +379,9 @@ class S3ProjectModel(S3Model):
                                     translate = True,
                                     ))
             lappend((T("Sectors"), "sector_project.sector_id"))
-            default_row = "sector_project.sector_id"
+            rappend("count(sector_project.sector_id)")
+            report_row_default = "sector_project.sector_id"
+            report_fact_default = "count(organisation_id)"
         if mode_drr and settings.get_project_hazards():
             lappend((T("Hazards"), "hazard_project.hazard_id"))
             cappend(S3SQLInlineLink("hazard",
@@ -384,7 +392,9 @@ class S3ProjectModel(S3Model):
                                     translate = True,
                                     ))
             #lappend("drr.hfa")
-            default_row = "hazard_project.hazard_id"
+            rappend("count(hazard_project.hazard_id)")
+            report_row_default = "hazard_project.hazard_id"
+            report_fact_default = "count(organisation_id)"
         if settings.get_project_themes():
             cappend(S3SQLInlineLink("theme",
                                     label = T("Themes"),
@@ -407,8 +417,11 @@ class S3ProjectModel(S3Model):
 #})'''
                                     ))
             lappend((T("Themes"), "theme.name"))
+            rappend("count(theme.name)")
         if multi_orgs:
             lappend((T("Total Funding Amount"), "total_organisation_amount"))
+            rappend("sum(total_organisation_amount)")
+            rappend("avg(total_organisation_amount)")
         if budget_monitoring:
             # @ToDo: Add the defaulting from RMSAmericas/config.py
             #cappend(S3SQLInlineComponent("budget",
@@ -421,28 +434,31 @@ class S3ProjectModel(S3Model):
             #                                       ],
             #                             ))
             lappend((T("Total Budget"), "budget.total_budget"))
+            rappend("sum(budget.total_budget)")
+            rappend("avg(budget.total_budget)")
         elif multi_budgets:
             lappend((T("Total Annual Budget"), "total_annual_budget"))
+            rappend("sum(total_annual_budget)")
+            rappend("avg(total_annual_budget)")
         else:
             crud_fields += ["budget",
                             "currency",
                             ]
             lappend((T("Total Budget"), "budget"))
+            rappend("sum(budget)")
+            rappend("avg(budget)")
         crud_fields += ["human_resource_id",
                         "comments",
                         ]
         list_fields += ["start_date",
                         "end_date",
-                        "location.location_id",
                         ]
+        if not mode_3w:
+            lappend("location.location_id")
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
         report_fields = list_fields
-        report_col_default = "location.location_id"
-        report_fact_fields = [(field, "count") for field in report_fields]
-        report_fact_default = "count(organisation_id)"
-        #report_fact_default = "count(theme.name)"
 
         configure(tablename,
                   context = {"location": "location.location_id",
@@ -473,7 +489,7 @@ class S3ProjectModel(S3Model):
                     cols = report_fields,
                     fact = report_fact_fields,
                     defaults = Storage(
-                        rows = "hazard_id",
+                        rows = report_row_default,
                         cols = report_col_default,
                         fact = report_fact_default,
                         totals = True,
@@ -799,21 +815,21 @@ class S3ProjectModel(S3Model):
             # Create/update project_organisation record from the organisation_id
             # (Not in form.vars if added via component tab)
             form_vars = form.vars
-            id = form_vars.id
+            project_id = form_vars.id
             organisation_id = form_vars.organisation_id or \
                               current.request.post_vars.organisation_id
             if organisation_id:
                 lead_role = settings.get_project_organisation_lead_role()
 
                 otable = current.s3db.project_organisation
-                query = (otable.project_id == id) & \
+                query = (otable.project_id == project_id) & \
                         (otable.role == lead_role)
 
                 # Update the lead organisation
                 count = current.db(query).update(organisation_id = organisation_id)
                 if not count:
                     # If there is no record to update, then create a new one
-                    oid = otable.insert(project_id = id,
+                    oid = otable.insert(project_id = project_id,
                                         organisation_id = organisation_id,
                                         role = lead_role,
                                         )
@@ -861,29 +877,24 @@ class S3ProjectModel(S3Model):
            r.name == "project":
 
             T = current.T
-            db = current.db
-            s3db = current.s3db
-            response = current.response
-
-            ptable = s3db.project_project
-            ttable = s3db.project_theme
-            tptable = s3db.project_theme_project
-            ltable = s3db.gis_location
 
             # Search Widget
-            themes_dropdown = SELECT(_multiple=True,
-                                     _id="project_theme_id",
-                                     _style="height:80px")
+            themes_dropdown = SELECT(_multiple = True,
+                                     _id = "project_theme_id",
+                                     _style = "height:80px",
+                                     )
             append = themes_dropdown.append
-            table = current.s3db.project_theme
-            themes = current.db(table.deleted == False).select(table.id,
-                                                               table.name,
-                                                               orderby=table.name)
+
+            ttable = current.s3db.project_theme
+            themes = current.db(ttable.deleted == False).select(ttable.id,
+                                                                ttable.name,
+                                                                orderby = ttable.name,
+                                                                )
             for theme in themes:
                 append(OPTION(theme.name,
-                              _value=theme.id,
-                              _selected="selected"))
-
+                              _value = theme.id,
+                              #_selected = "selected",
+                              ))
             form = FORM(themes_dropdown)
 
             # Map
@@ -900,20 +911,20 @@ class S3ProjectModel(S3Model):
                      #"marker"   : None,
                      }
 
-            map = current.gis.show_map(collapsed = True,
-                                       feature_resources = [layer],
-                                       )
+            the_map = current.gis.show_map(collapsed = True,
+                                           feature_resources = [layer],
+                                           )
 
-            output = dict(title = T("Projects Map"),
-                          form = form,
-                          map = map,
-                          )
+            output = {"title": T("Projects Map"),
+                      "form": form,
+                      "map": the_map,
+                      }
 
             # Add Static JS
+            response = current.response
             response.s3.scripts.append(URL(c="static",
                                            f="scripts",
                                            args=["S3", "s3.project_map.js"]))
-
             response.view = "map.html"
             return output
         else:
@@ -1576,7 +1587,7 @@ class S3ProjectActivityModel(S3Model):
         try:
             project_id = activity.project_id
             location_id = activity.location_id
-        except:
+        except AttributeError:
             # Nothing we can do
             return
 
@@ -1630,7 +1641,7 @@ class S3ProjectActivityModel(S3Model):
                                    limitby=(0, 1)).first()
         try:
             return project.realm_entity
-        except:
+        except AttributeError:
             return None
 
 # =============================================================================
@@ -1654,6 +1665,8 @@ class S3ProjectActivityTypeModel(S3Model):
 
         T = current.T
         db = current.db
+
+        NONE = current.messages["NONE"]
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2074,6 +2087,8 @@ class S3ProjectBeneficiaryModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        NONE = current.messages["NONE"]
+
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -2173,7 +2188,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                          _title="%s|%s" % (T("Actual Number of Beneficiaries"),
                                                            T("The number of beneficiaries actually reached by this activity"))
                                                            ),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_INT_IN_RANGE(0, 99999999),
                            ),
                      Field("target_value", "integer",
@@ -2182,7 +2197,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                          _title="%s|%s" % (T("Targeted Number of Beneficiaries"),
                                                            T("The number of beneficiaries targeted by this activity"))
                                                            ),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      s3_date("date",
@@ -2420,7 +2435,7 @@ class S3ProjectBeneficiaryModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_beneficiary_represent(id, row=None):
+    def project_beneficiary_represent(record_id, row=None):
         """
             FK representation
             @ToDo: Bulk inc Translation
@@ -2428,21 +2443,23 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         if row:
             return row.type
-        if not id:
+        if not record_id:
             return current.messages["NONE"]
 
         db = current.db
         table = db.project_beneficiary
         ttable = db.project_beneficiary_type
-        query = (table.id == id) & \
+        query = (table.id == record_id) & \
                 (table.parameter_id == ttable.id)
-        r = db(query).select(table.value,
-                             ttable.name,
-                             limitby = (0, 1)).first()
+        record = db(query).select(table.value,
+                                  ttable.name,
+                                  limitby = (0, 1),
+                                  ).first()
         try:
-            return "%s %s" % (r["project_beneficiary.value"],
-                              r["project_beneficiary_type.name"])
-        except:
+            return "%s %s" % (record.project_beneficiary.value,
+                              record.project_beneficiary_type.name,
+                              )
+        except AttributeError:
             return current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
@@ -2715,8 +2732,7 @@ class S3ProjectCampaignModel(S3Model):
                      location_id(writable = False),
                      Field("value", "integer",
                            label = T("Number of Responses"),
-                           represent = lambda v: \
-                            IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_INT_IN_RANGE(0, 99999999),
                            ),
                      # @ToDo: Populate automatically from time Message is sent?
@@ -3113,6 +3129,8 @@ class S3ProjectIndicatorModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        NONE = current.messages["NONE"]
+
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -3202,12 +3220,12 @@ class S3ProjectIndicatorModel(S3Model):
                      #      ),
                      Field("target_value", "integer",
                            label = T("Target Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("value", "integer",
                            label = T("Actual Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      # Link to Source
@@ -3379,8 +3397,6 @@ class S3ProjectLocationModel(S3Model):
         mode_3w = settings.get_project_mode_3w()
 
         messages = current.messages
-        NONE = messages["NONE"]
-        COUNTRY = messages.COUNTRY
 
         add_components = self.add_components
         configure = self.configure
@@ -3646,7 +3662,6 @@ class S3ProjectLocationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        LIST_OF_CONTACTS = T("Community Contacts")
         crud_strings[tablename] = Storage(
             label_create = T("Add Contact"), # Better language for 'Select or Create'
             title_display = T("Contact Details"),
@@ -3725,13 +3740,15 @@ class S3ProjectLocationModel(S3Model):
     def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
-        project_location_id = S3ReusableField("dummy_id", "integer",
-                                              readable = False,
-                                              writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
 
-        return dict(project_location_id = lambda **attr: dummy("project_location_id"),
-                    project_location_represent = lambda v, row=None: "",
-                    )
+        return {"project_location_id": lambda **attr: \
+                                       dummy("project_location_id"),
+                "project_location_represent": lambda v, row=None: "",
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3741,18 +3758,18 @@ class S3ProjectLocationModel(S3Model):
         """
 
         form_vars = form.vars
-        id = form_vars.get("id")
+        record_id = form_vars.get("id")
         if form_vars.get("location_id") and form_vars.get("project_id"):
             name = current.s3db.project_location_represent(None, form_vars)
-        elif id:
-            name = current.s3db.project_location_represent(id)
+        elif record_id:
+            name = current.s3db.project_location_represent(record_id)
         else:
             return None
         if len(name) > 512:
             # Ensure we don't break limits of SQL field
             name = name[:509] + "..."
         db = current.db
-        db(db.project_location.id == id).update(name=name)
+        db(db.project_location.id == record_id).update(name=name)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3950,19 +3967,19 @@ class S3ProjectOrganisationModel(S3Model):
             & update the realm_entity.
         """
 
-        vars = form.vars
+        formvars = form.vars
 
-        if str(vars.role) == \
+        if str(formvars.role) == \
              str(current.deployment_settings.get_project_organisation_lead_role()):
 
             # Read the record
             # (safer than relying on vars which might be missing on component tabs)
             db = current.db
             ltable = db.project_organisation
-            record = db(ltable.id == vars.id).select(ltable.project_id,
-                                                     ltable.organisation_id,
-                                                     limitby=(0, 1)
-                                                     ).first()
+            record = db(ltable.id == formvars.id).select(ltable.project_id,
+                                                         ltable.organisation_id,
+                                                         limitby = (0, 1),
+                                                         ).first()
 
             # Set the Project's organisation_id to the new lead organisation
             organisation_id = record.organisation_id
@@ -4016,7 +4033,7 @@ class S3ProjectOrganisationModel(S3Model):
                                    limitby=(0, 1)).first()
         try:
             return project.realm_entity
-        except:
+        except AttributeError:
             return None
 
 # =============================================================================
@@ -4646,12 +4663,12 @@ class S3ProjectPlanningModel(S3Model):
                              ),
                      Field("target_value", "integer",
                            label = T("Target Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("value", "integer",
                            label = T("Actual Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("unit",
@@ -4909,12 +4926,12 @@ class S3ProjectPlanningModel(S3Model):
                              ),
                      Field("target_value", "integer",
                            label = T("Target Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("value", "integer",
                            label = T("Actual Value"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
                      Field("unit",
@@ -5775,7 +5792,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             project_id = record.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Goal record (no record for this ID), so cannot setup default weightings")
             return
 
@@ -5810,7 +5827,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             project_id = record.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Goal record (no record for this ID), so cannot update statuses or validate weighting")
             return
 
@@ -5872,7 +5889,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             goal_id = record.goal_id
-        except:
+        except AttributeError:
             error = "Cannot find Project Outcome record (no record for this ID), so cannot setup default weightings"
             current.log.error(error)
             current.session.error = error
@@ -5910,7 +5927,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             project_id = record.project_id
-        except:
+        except AttributeError:
             error = "Cannot find Project Outcome record (no record for this ID), so cannot update statuses or validate weighting"
             current.log.error(error)
             current.session.error = error
@@ -5974,7 +5991,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             outcome_id = record.outcome_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Output record (no record for this ID), so cannot setup default weightings")
             return
 
@@ -6043,7 +6060,7 @@ class S3ProjectPlanningModel(S3Model):
                                                ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project record (no record for this ID), so cannot update statuses")
         else:
             self.project_planning_status_update(project_id)
@@ -6087,7 +6104,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             output_id = record.output_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Indicator record (no record for this ID), so cannot setup default weightings")
             return
 
@@ -6172,7 +6189,7 @@ class S3ProjectPlanningModel(S3Model):
                                                ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project record (no record for this ID), so cannot update statuses")
         else:
             self.project_planning_status_update(project_id)
@@ -6198,7 +6215,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             indicator_id = record.indicator_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Indicator Data record (no record for this ID), so cannot update start_date or statuses")
             return
         start_date = record.start_date
@@ -6243,7 +6260,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             error = "Cannot find Project record (no record for this ID), so cannot update statuses"
             current.log.error(error)
             current.session.error = error
@@ -6313,7 +6330,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project record (no record for this ID), so cannot update statuses")
         else:
             self.project_planning_status_update(project_id)
@@ -6382,7 +6399,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             indicator_id = record.indicator_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Indicator Activity record (no record for this ID), so cannot setup default weightings")
             return
 
@@ -6452,7 +6469,7 @@ class S3ProjectPlanningModel(S3Model):
                                                    ).first()
             try:
                 project_id = row.project_id
-            except:
+            except AttributeError:
                 current.log.error("Cannot find Project record (no record for this ID), so cannot update statuses")
             else:
                 self.project_planning_status_update(project_id)
@@ -6511,7 +6528,7 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             indicator_activity_id = record.indicator_activity_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project Activity Data record (no record for this ID), so cannot update start_date or statuses")
             return
 
@@ -6559,7 +6576,7 @@ class S3ProjectPlanningModel(S3Model):
                                                            ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             error = "Cannot find Project record (no record for this ID), so cannot update statuses"
             current.log.error(error)
             current.session.error = error
@@ -6628,7 +6645,7 @@ class S3ProjectPlanningModel(S3Model):
                                                            ).first()
         try:
             project_id = row.project_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Project record (no record for this ID), so cannot update statuses")
         else:
             self.project_planning_status_update(project_id)
@@ -8910,7 +8927,7 @@ class project_IndicatorSummaryReport(S3Method):
         output_style.pattern.pattern = SOLID_PATTERN
         try:
             add_palette_colour = xlwt.add_palette_colour
-        except:
+        except AttributeError:
             # Debian 8 ok, Debian 7 not, nor is latest Win32 binary
             current.log.warning("Custom Excel Palette requires xlwt 0.7.5+, using approximate values")
             goal_style.pattern.pattern_fore_colour = 0x2c # pale_blue
@@ -9029,7 +9046,7 @@ class project_IndicatorSummaryReport(S3Method):
         # Export to File
         try:
             from cStringIO import StringIO    # Faster, where available
-        except:
+        except ImportError:
             from StringIO import StringIO
 
         output = StringIO()
@@ -10342,16 +10359,16 @@ class S3ProjectDRRPPModel(S3Model):
 
         db = current.db
         form_vars = form.vars
-        id = form_vars.id
+        record_id = form_vars.id
         project_id = form_vars.project_id
 
         dtable = db.project_drrpp
 
         if not project_id:
             # Most reliable way to get the project_id is to read the record
-            project_id = db(dtable.id == id).select(dtable.project_id,
-                                                    limitby=(0, 1)
-                                                    ).first().project_id
+            project_id = db(dtable.id == record_id).select(dtable.project_id,
+                                                           limitby = (0, 1),
+                                                           ).first().project_id
 
         table = db.project_project
         hr_id = db(table.id == project_id).select(table.human_resource_id,
@@ -10371,15 +10388,16 @@ class S3ProjectDRRPPModel(S3Model):
                                    ptable.middle_name,
                                    ptable.last_name,
                                    ctable.value,
-                                   left=left,
-                                   limitby=(0, 1)).first()
+                                   left = left,
+                                   limitby = (0, 1)).first()
             focal_person = s3_fullname(row[ptable])
             organisation_id = row[htable].organisation_id
             email = row[ctable].value
-            db(dtable.id == id).update(focal_person = focal_person,
-                                       organisation_id = organisation_id,
-                                       email = email,
-                                       )
+            db(dtable.id == record_id).update(
+                                        focal_person = focal_person,
+                                        organisation_id = organisation_id,
+                                        email = email,
+                                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -10387,7 +10405,7 @@ class S3ProjectDRRPPModel(S3Model):
         """ Option representation """
 
         if isinstance(opt, int):
-            opts = [opt]
+            opt = [opt]
         if isinstance(opt, (list, tuple)):
             if not opt or opt[0] is None:
                 return current.messages["NONE"]
@@ -11402,14 +11420,14 @@ class S3ProjectTaskModel(S3Model):
     def project_task_onvalidation(form):
         """ Task form validation """
 
-        vars = form.vars
-        if str(vars.status) == "3" and not vars.pe_id:
+        formvars = form.vars
+        if str(formvars.status) == "3" and not formvars.pe_id:
             form.errors.pe_id = \
                 current.T("Status 'assigned' requires the %(fieldname)s to not be blank") % \
                     dict(fieldname=current.db.project_task.pe_id.label)
-        elif vars.pe_id and str(vars.status) == "2":
+        elif formvars.pe_id and str(formvars.status) == "2":
             # Set the Status to 'Assigned' if left at default 'New'
-            vars.status = 3
+            formvars.status = 3
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -11422,7 +11440,7 @@ class S3ProjectTaskModel(S3Model):
         """
 
         db = current.db
-        s3db = current.s3db
+        #s3db = current.s3db
         #session = current.session
 
         task_id = form.vars.id
@@ -11439,38 +11457,41 @@ class S3ProjectTaskModel(S3Model):
         project_id = post_vars.get("project_id")
         if project_id:
             # Create Link to Project
-            link_id = ltp.insert(task_id = task_id,
-                                 project_id = project_id)
+            ltp.insert(task_id = task_id,
+                       project_id = project_id,
+                       )
 
         activity_id = post_vars.get("activity_id")
         if activity_id:
             # Create Link to Activity
             lta = db.project_task_activity
-            link_id = lta.insert(task_id = task_id,
-                                 activity_id = activity_id)
+            lta.insert(task_id = task_id,
+                       activity_id = activity_id,
+                       )
 
         milestone_id = post_vars.get("milestone_id")
         if milestone_id:
             # Create Link to Milestone
             ltable = db.project_task_milestone
-            link_id = ltable.insert(task_id = task_id,
-                                    milestone_id = milestone_id)
+            ltable.insert(task_id = task_id,
+                          milestone_id = milestone_id,
+                          )
 
         # Make sure the task is also linked to the project
         # when created under an activity
         row = db(ltp.task_id == task_id).select(ltp.project_id,
-                                                limitby=(0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
         if not row:
             lta = db.project_task_activity
             ta = db.project_activity
             query = (lta.task_id == task_id) & \
                     (lta.activity_id == ta.id)
-            row = db(query).select(ta.project_id,
-                                   limitby=(0, 1)).first()
+            row = db(query).select(ta.project_id, limitby=(0, 1)).first()
             if row and row.project_id:
                 ltp.insert(task_id = task_id,
-                           project_id = row.project_id)
+                           project_id = row.project_id,
+                           )
 
         # Notify Assignee
         task_notify(form)
@@ -11942,9 +11963,9 @@ class S3ProjectTaskIReportModel(S3Model):
             When a Task is linked to an IReport, then populate the location_id
         """
 
-        vars = form.vars
-        ireport_id = vars.ireport_id
-        task_id = vars.task_id
+        formvars = form.vars
+        ireport_id = formvars.ireport_id
+        task_id = formvars.task_id
 
         db = current.db
 
@@ -11971,13 +11992,13 @@ class S3ProjectTaskIReportModel(S3Model):
         db(query).update(location_id=location_id)
 
 # =============================================================================
-def multi_theme_percentage_represent(id):
+def multi_theme_percentage_represent(record_id):
     """
         Representation for Theme Percentages
         for multiple=True options
     """
 
-    if not id:
+    if not record_id:
         return current.messages["NONE"]
 
     s3db = current.s3db
@@ -11985,25 +12006,28 @@ def multi_theme_percentage_represent(id):
     ttable = s3db.project_theme
 
     def represent_row(row):
-        return "%s (%s%s)" % (row.project_theme.name,
+        return "%s (%s%%)" % (row.project_theme.name,
                               row.project_theme_percentage.percentage,
-                              "%")
+                              )
 
-    if isinstance(id, (list, tuple)):
-        query = (table.id.belongs(id)) & \
+    if isinstance(record_id, (list, tuple)):
+        query = (table.id.belongs(record_id)) & \
                 (ttable.id == table.theme_id)
         rows = current.db(query).select(table.percentage,
-                                        ttable.name)
-        repr = ", ".join(represent_row(row) for row in rows)
-        return repr
+                                        ttable.name,
+                                        )
+        reprstr = ", ".join(represent_row(row) for row in rows)
+        return reprstr
     else:
-        query = (table.id == id) & \
+        query = (table.id == record_id) & \
                 (ttable.id == table.theme_id)
         row = current.db(query).select(table.percentage,
-                                       ttable.name).first()
+                                       ttable.name,
+                                       limitby = (0, 1),
+                                       ).first()
         try:
             return represent_row(row)
-        except:
+        except AttributeError:
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -12257,7 +12281,7 @@ class project_TaskRepresent(S3Represent):
         self.project_first = project_first
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 
@@ -12347,14 +12371,15 @@ class project_ActivityRepresent(S3Represent):
             fields = ["name"]
 
         super(project_ActivityRepresent,
-              self).__init__(lookup="project_activity",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "project_activity",
+                             fields = fields,
+                             show_link = show_link,
+                             translate = translate,
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
+    def custom_lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for activity rows, does a
             left join with the parent project. Parameters
@@ -12453,8 +12478,12 @@ def project_activity_year_options():
     return years
 
 # =============================================================================
-class S3ProjectThemeVirtualFields:
-    """ Virtual fields for the project table """
+class S3ProjectThemeVirtualFields(object):
+    """
+        Virtual fields for the project table
+
+        @todo: unused, remove?
+    """
 
     def themes(self):
         """
@@ -12467,14 +12496,14 @@ class S3ProjectThemeVirtualFields:
             return ""
 
         s3db = current.s3db
-        ptable = s3db.project_project
         ttable = s3db.project_theme
         ltable = s3db.project_theme_percentage
         query = (ltable.deleted != True) & \
                 (ltable.project_id == project_id) & \
                 (ltable.theme_id == ttable.id)
         themes = current.db(query).select(ttable.name,
-                                          ltable.percentage)
+                                          ltable.percentage,
+                                          )
 
         if not themes:
             return current.messages["NONE"]
@@ -12514,11 +12543,11 @@ def project_time_day(row):
     if not thisdate:
         return current.messages["NONE"]
 
-    now = current.request.utcnow
-    week = datetime.timedelta(days=7)
+    #now = current.request.utcnow
+    #week = datetime.timedelta(days=7)
     #if thisdate < (now - week):
-        # Ignore data older than the last week
-        # - should already be filtered in controller anyway
+    #    # Ignore data older than the last week
+    #    # - should already be filtered in controller anyway
     #    return default
 
     return thisdate.date().strftime("%d %B %y")
@@ -12877,18 +12906,18 @@ class project_IndicatorActivityRepresent(S3Represent):
                  ):
 
         self.lookup_rows = self.custom_lookup_rows
-        fields = None
 
         super(project_IndicatorActivityRepresent,
-              self).__init__(lookup="project_indicator_activity",
-                             fields=fields,
-                             show_link=show_link,
-                             linkto=linkto,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "project_indicator_activity",
+                             fields = None,
+                             show_link = show_link,
+                             linkto = linkto,
+                             translate = translate,
+                             multiple = multiple,
+                             )
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
+    def custom_lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for indicator_activity rows, does a join with
             the activity. Parameters key and fields are not used, but are kept
@@ -13050,7 +13079,7 @@ def project_task_controller():
                 name = current.db(ptable.id == project).select(ptable.name,
                                                                limitby=(0, 1)
                                                                ).first().name
-            except:
+            except AttributeError:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
             query = (FS("task_id:project_task_project.project_id") == project) & \
@@ -13368,9 +13397,6 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     organisation = record["project_project.organisation_id"]
     organisation_id = raw["project_project.organisation_id"]
     location = record["project_location.location_id"]
-    location_id = raw["project_location.location_id"]
-
-    comments = raw["project_project.comments"]
 
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
     org_logo = raw["org_organisation.logo"]
@@ -13393,9 +13419,6 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     permit = current.auth.s3_has_permission
     table = current.db.project_project
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": list_id,
-                "record": record_id,
-                }
         edit_btn = A(ICON("edit"),
                      _href=URL(c="project", f="project",
                                args=[record_id, "update.popup"]
@@ -13478,9 +13501,6 @@ def project_activity_list_layout(list_id, item_id, resource, rfields, record,
     start_date = record["project_activity.date"]
 
     location = record["project_activity.location_id"]
-    location_id = raw["project_activity.location_id"]
-
-    comments = raw["project_activity.comments"]
 
     organisation_id = raw["project_activity_organisation.organisation_id"]
     if organisation_id:
@@ -13585,7 +13605,6 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     item_class = "thumbnail"
 
     author = record["project_task.modified_by"]
-    date = record["project_task.modified_on"]
 
     name = record["project_task.name"]
     assigned_to = record["project_task.pe_id"] or ""
@@ -13631,9 +13650,6 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                        )
 
     location = record["project_task.location_id"]
-    location_id = raw["project_task.location_id"]
-
-    comments = raw["project_task.comments"]
 
     org_logo = ""
     #org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
