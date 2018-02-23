@@ -6589,14 +6589,26 @@ def org_organisation_controller():
                            )
 
         elif r.interactive or r.representation == "aadata":
-            component = r.component
-            gis = current.gis
+
             otable = r.table
+
+            gis = current.gis
             otable.country.default = gis.get_default_country("code")
-            type_filter = r.get_vars.get("organisation_type.name", None)
+
+            f = r.function
+            if settings.get_org_regions() and f != "organisation":
+                # Non-default function name (e.g. project/partners)
+                # => use same function for options lookup after popup-create
+                popup_link = otable.region_id.comment
+                if popup_link and isinstance(popup_link, S3PopupLink):
+                    popup_link.vars["parent"] = f
 
             method = r.method
+            component = r.component
+
             use_branches = settings.get_org_branches()
+            type_filter = r.get_vars.get("organisation_type.name", None)
+
             if use_branches and not component and \
                not r.record and \
                r.method != "deduplicate" and \
