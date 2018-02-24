@@ -1389,25 +1389,23 @@ class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
         """ Test the IS_FLOAT_AMOUNT representation function """
 
         represent = IS_FLOAT_AMOUNT.represent
-        precision = 2
-        fixed = True
 
-        samples = ((None, ""),
-                   (0.0, "0,00"),
-                   (0.00325, "0,00"),
-                   (198.05, "198,05"),
-                   (1305.0, "1 305,00"),
-                   (123456789012.0, "123 456 789 012,00"),
-                   (0, "0,00"),
-                   (1305, "1 305,00"),
-                   (987654321098, "987 654 321 098,00"),
-                   (-0, "0,00"),
-                   (-1305, "-1 305,00"),
-                   (-123456789012345.0, "-123 456 789 012 345,00"),
+        samples = ((None, "", None, True),
+                   (0.0, "0", 0, True),
+                   (0.00325, "0,00", 2, True),
+                   (198.05, "198,05", 2, True),
+                   (1305.0, "1 305", 0, True),
+                   (123456789012.0, "123 456 789 012,000", 3, True),
+                   (0, "0", None, True),
+                   (1305, "1 305,00", 2, True),
+                   (987654321098, "987 654 321 098,00", 2, True),
+                   (-0, "0,00", 2, True),
+                   (-1305.730, "-1 305,73", None, True),
+                   (-123456789012345.0, "-123 456 789 012 345", 2, False),
                    )
 
         assertEqual = self.assertEqual
-        for number, expected in samples:
+        for number, expected, precision, fixed in samples:
             assertEqual(represent(number,
                                   precision = precision,
                                   fixed = fixed,

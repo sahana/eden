@@ -485,19 +485,21 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
         DECIMAL_SEPARATOR = current.deployment_settings.get_L10n_decimal_separator()
 
-        str_number = format(number, ".0%df" % precision)
+        if precision is not None:
+            str_number = format(number, ".0%df" % precision)
+        else:
+            # Default to any precision
+            str_number = format(number, "f").rstrip("0") \
+                                            .rstrip(DECIMAL_SEPARATOR)
 
         if "." in str_number:
             int_part, dec_part = str_number.split(".")
-            if precision is not None:
-                dec_part = dec_part[:precision]
         else:
             int_part, dec_part = str_number, ""
 
         if dec_part and int(dec_part) == 0 and not fixed:
+            # Omit decimal part if zero
             dec_part = ""
-        elif precision is not None:
-            dec_part = dec_part + ("0" * (precision - len(dec_part)))
 
         if dec_part:
             dec_part = DECIMAL_SEPARATOR + dec_part
