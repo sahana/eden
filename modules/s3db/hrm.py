@@ -2430,6 +2430,9 @@ class S3HRSkillModel(S3Model):
                            ),
                      Field("hours", "integer",
                            label = T("Hours"),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, None)
+                                        ),
                            ),
                      Field("pass_mark", "float",
                            default = 0.0,
@@ -2650,7 +2653,7 @@ class S3HRSkillModel(S3Model):
                      Field("hours", "integer",
                            label = T("Hours"),
                            requires = IS_EMPTY_OR(
-                                        IS_INT_IN_RANGE(1, 1000),
+                                        IS_INT_IN_RANGE(1, None),
                                         ),
                            ),
                      person_id(label = INSTRUCTOR,
@@ -2941,6 +2944,9 @@ class S3HRSkillModel(S3Model):
                                  ),
                      Field("hours", "integer",
                            label = T("Hours"),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, None)
+                                        ),
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
@@ -3162,6 +3168,9 @@ class S3HRSkillModel(S3Model):
                                      ),
                      Field("expiry", "integer",
                            label = T("Expiry (months)"),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(1, None)
+                                        ),
                            ),
                      *s3_meta_fields())
 

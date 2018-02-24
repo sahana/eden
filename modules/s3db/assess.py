@@ -388,7 +388,7 @@ class S3AssessBuildingModel(S3Model):
                                 label=T("# of Inhabitants")),
                           Field("year_built", "integer",
                                 requires = IS_EMPTY_OR(
-                                            IS_INT_IN_RANGE(1800, 2012)
+                                            IS_INT_IN_RANGE(1800, 2100)
                                             ),
                                 represent = lambda v: v or NONE,
                                 label=T("Year Built")),

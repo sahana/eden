@@ -2083,7 +2083,7 @@ class S3OrganisationResourceModel(S3Model):
                                      ),
                           Field("value", "integer",
                                 label = T("Quantity"),
-                                requires = IS_INT_IN_RANGE(0, 999999),
+                                requires = IS_INT_IN_RANGE(0, None),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -2935,11 +2935,11 @@ class S3OrganisationSummaryModel(S3Model):
                           self.org_organisation_id(ondelete="CASCADE"),
                           Field("national_staff", "integer", # national is a reserved word in Postgres
                                 label = T("# of National Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                                 ),
                           Field("international_staff", "integer",
                                 label = T("# of International Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                                 ),
                           *s3_meta_fields())
 
@@ -4941,11 +4941,11 @@ class S3OfficeSummaryModel(S3Model):
                                 ),
                           Field("national_staff", "integer", # national is a reserved word in Postgres
                                 label = T("# of National Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                                 ),
                           Field("international_staff", "integer",
                                 label = T("# of International Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                                 ),
                           *s3_meta_fields())
 

@@ -182,9 +182,15 @@ class S3TransportModel(S3Model):
                      # http://en.wikipedia.org/wiki/Runway#Declared_distances
                      Field("runway_length", "integer",
                            label = T("Runway Length (m)"),
+                           requires = IS_EMPTY_OR(
+                                          IS_INT_IN_RANGE(0, None)
+                                          ),
                            ),
                      Field("runway_width", "integer",
                            label = T("Runway Width (m)"),
+                           requires = IS_EMPTY_OR(
+                                          IS_INT_IN_RANGE(0, None)
+                                          ),
                            ),
                      Field("runway_surface",
                            default = "U",

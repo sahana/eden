@@ -2662,7 +2662,7 @@ class S3LayerEntityModel(S3Model):
                      # Optionally restrict to a specific Record
                      Field("record_id", "integer",
                            label = T("Record"),
-                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 999999999)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
                            ),
                      Field("aggregate", "boolean",
                            default = False,

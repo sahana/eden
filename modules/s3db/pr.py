@@ -4857,7 +4857,7 @@ class PRDescriptionModel(S3Model):
                            ),
                      Field("weight_kg", "integer",
                            label = T("Weight (kg)"),
-                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 500)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Weight"),
                                                            T("The weight in kg."))),
