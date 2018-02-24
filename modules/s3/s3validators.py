@@ -366,18 +366,22 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
     def __init__(self,
                  minimum=None,
                  maximum=None,
-                 error_message=None):
+                 error_message=None,
+                 ):
 
         IS_INT_IN_RANGE.__init__(self,
                                  minimum=minimum,
                                  maximum=maximum,
-                                 error_message=error_message)
+                                 error_message=error_message,
+                                 )
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
-        thousands_sep = ","
-        value = s3_str(value).replace(thousands_sep, "")
+        thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
+        if thousands_sep:
+            value = s3_str(value).replace(thousands_sep, "")
+
         return IS_INT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
@@ -442,19 +446,26 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
                  minimum=None,
                  maximum=None,
                  error_message=None,
-                 dot="."):
+                 dot=None,
+                 ):
+
+        if dot is None:
+            dot = current.deployment_settings.get_L10n_decimal_separator()
 
         IS_FLOAT_IN_RANGE.__init__(self,
                                    minimum=minimum,
                                    maximum=maximum,
                                    error_message=error_message,
-                                   dot=dot)
+                                   dot=dot,
+                                   )
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
-        thousands_sep = ","
-        value = s3_str(value).replace(thousands_sep, "")
+        thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
+        if thousands_sep:
+            value = s3_str(value).replace(thousands_sep, "")
+
         return IS_FLOAT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
