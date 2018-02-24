@@ -405,7 +405,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         else:
             sign = ""
 
-        str_number = unicode(intnumber)
+        str_number = str(intnumber)
 
         if str_number[0] == "-":
             str_number = str_number[1:]
@@ -474,7 +474,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
         DECIMAL_SEPARATOR = current.deployment_settings.get_L10n_decimal_separator()
 
-        str_number = unicode(number)
+        str_number = format(number, ".0%df" % precision)
 
         if "." in str_number:
             int_part, dec_part = str_number.split(".")

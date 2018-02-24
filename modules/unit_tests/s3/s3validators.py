@@ -1358,6 +1358,101 @@ class IS_DYNAMIC_FIELDTYPE_Test(unittest.TestCase):
         assertNotEqual(error, None)
 
 # =============================================================================
+class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        settings = current.deployment_settings
+
+        self.dot = settings.get_L10n_decimal_separator()
+        self.sep = settings.get_L10n_thousands_separator()
+        self.grp = settings.get_L10n_thousands_grouping()
+
+        settings.L10n.decimal_separator = ","
+        settings.L10n.thousands_separator = " "
+        settings.L10n.thousands_grouping = 3
+
+    def tearDown(self):
+
+        settings = current.deployment_settings
+
+        settings.L10n.decimal_separator = self.dot
+        settings.L10n.thousands_separator = self.sep
+        settings.L10n.thousands_grouping = self.grp
+
+    # -------------------------------------------------------------------------
+    def test_representation(self):
+
+        represent = IS_FLOAT_AMOUNT.represent
+        precision = 2
+        fixed = True
+
+        samples = ((None, ""),
+                   (0.0, "0,00"),
+                   (0.00325, "0,00"),
+                   (198.05, "198,05"),
+                   (1305.0, "1 305,00"),
+                   (123456789012.0, "123 456 789 012,00"),
+                   (0, "0,00"),
+                   (1305, "1 305,00"),
+                   (123456789012, "123 456 789 012,00"),
+                   (-0, "0,00"),
+                   (-1305, "-1 305,00"),
+                   (-123456789012345.0, "-123 456 789 012 345,00"),
+                   )
+
+        assertEqual = self.assertEqual
+        for number, expected in samples:
+            assertEqual(represent(number,
+                                  precision = precision,
+                                  fixed = fixed,
+                                  ),
+                        expected,
+                        )
+
+# =============================================================================
+class IS_INT_AMOUNT_Tests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        settings = current.deployment_settings
+
+        self.sep = settings.get_L10n_thousands_separator()
+        self.grp = settings.get_L10n_thousands_grouping()
+
+        settings.L10n.thousands_separator = ","
+        settings.L10n.thousands_grouping = 3
+
+    def tearDown(self):
+
+        settings = current.deployment_settings
+
+        settings.L10n.thousands_separator = self.sep
+        settings.L10n.thousands_grouping = self.grp
+
+    # -------------------------------------------------------------------------
+    def test_representation(self):
+
+        represent = IS_INT_AMOUNT.represent
+        precision = 2
+        fixed = True
+
+        samples = ((None, ""),
+                   (0, "0"),
+                   (-0, "0"),
+                   (-12555, "-12,555"),
+                   (1305, "1,305"),
+                   (1234567.89, "1,234,567"),
+                   (123456789012, "123,456,789,012"),
+                   (1234567890123456789L, "1,234,567,890,123,456,789"),
+                   )
+
+        for number, expected in samples:
+            self.assertEqual(represent(number), expected)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -1370,6 +1465,8 @@ if __name__ == "__main__":
         IS_JSONS3_Tests,
         IS_DYNAMIC_FIELDNAME_Test,
         IS_DYNAMIC_FIELDTYPE_Test,
+        IS_FLOAT_AMOUNT_Tests,
+        IS_INT_AMOUNT_Tests,
     )
 
 # END ========================================================================
