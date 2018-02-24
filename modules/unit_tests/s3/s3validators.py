@@ -1359,6 +1359,9 @@ class IS_DYNAMIC_FIELDTYPE_Test(unittest.TestCase):
 
 # =============================================================================
 class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
+    """
+        Tests for the IS_FLOAT_AMOUNT validator
+    """
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -1383,6 +1386,7 @@ class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def test_representation(self):
+        """ Test the IS_FLOAT_AMOUNT representation function """
 
         represent = IS_FLOAT_AMOUNT.represent
         precision = 2
@@ -1396,7 +1400,7 @@ class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
                    (123456789012.0, "123 456 789 012,00"),
                    (0, "0,00"),
                    (1305, "1 305,00"),
-                   (123456789012, "123 456 789 012,00"),
+                   (987654321098, "987 654 321 098,00"),
                    (-0, "0,00"),
                    (-1305, "-1 305,00"),
                    (-123456789012345.0, "-123 456 789 012 345,00"),
@@ -1411,8 +1415,28 @@ class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
                         expected,
                         )
 
+    # -------------------------------------------------------------------------
+    def test_validation(self):
+        """ Test the IS_FLOAT_AMOUNT validation function """
+
+        validate = IS_FLOAT_AMOUNT()
+
+        samples = (("123 456 789 012,00", 123456789012.0),
+                   ("0,00", 0.0),
+                   ("1 305,00", 1305.0),
+                   )
+
+        assertEqual = self.assertEqual
+        for inputstr, expected in samples:
+            value, error = validate(inputstr)
+            assertEqual(value, expected)
+            assertEqual(error, None)
+
 # =============================================================================
 class IS_INT_AMOUNT_Tests(unittest.TestCase):
+    """
+        Tests for the IS_INT_AMOUNT validator
+    """
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -1434,6 +1458,7 @@ class IS_INT_AMOUNT_Tests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def test_representation(self):
+        """ Test the IS_INT_AMOUNT representation function """
 
         represent = IS_INT_AMOUNT.represent
         precision = 2
@@ -1451,6 +1476,23 @@ class IS_INT_AMOUNT_Tests(unittest.TestCase):
 
         for number, expected in samples:
             self.assertEqual(represent(number), expected)
+
+    # -------------------------------------------------------------------------
+    def test_validation(self):
+        """ Test the IS_INT_AMOUNT validation function """
+
+        validate = IS_INT_AMOUNT()
+
+        samples = (("123,456,789,012", 123456789012L),
+                   ("0", 0),
+                   ("993667", 993667),
+                   )
+
+        assertEqual = self.assertEqual
+        for inputstr, expected in samples:
+            value, error = validate(inputstr)
+            assertEqual(value, expected)
+            assertEqual(error, None)
 
 # =============================================================================
 if __name__ == "__main__":
