@@ -19,16 +19,17 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         menu= [MM("Requests", c="req", f="req")(
+                MM("Approve", c="req", f="req"),
                 MM("Commitments", c="req", f="commit"),
                 ),
-               MM("Aid & Supplies", c="supply", f="item", m="summary")(
-                MM("Item Catalog", c="supply", f="catalog_item"),
+               MM("Supplies", c="req", f="commit")(
+                MM("Items", c="supply", f="item", m="summary"),
+                MM("Facilities", c="org", f="facility"),
                 MM("Assets", c="asset", f="asset"),
                 ),
-               MM("Sitreps", c="cms", f="blog/1"),
+               MM("Sitreps", c="cms", f="blog", m="1"),
+               MM("Organization", c="org", f="organisation"),
                MM("more", link=False)(
-                MM("Organizations", c="org", f="organisation"),
-                MM("Facilities", c="org", f="facility"),
                 MM("Documents", c="doc", f="document"),
                 MM("Events", c="event", f="event"),
                 ),

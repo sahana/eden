@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current
+from gluon import current, URL
 from gluon.storage import Storage
 
 def config(settings):
@@ -20,12 +20,18 @@ def config(settings):
     settings.base.system_name = T("Humanitarian Country Team (HCT) Relief and Rehabilitation System")
     settings.base.system_name_short = T("SHARE")
 
+    # UI Settings
+    settings.ui.menu_logo = URL(c = "static",
+                                f = "themes",
+                                args = ["SHARE", "sharemenulogo.png"],
+                                )
+
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
     settings.base.prepopulate += ("SHARE", "default/users", "SHARE/Demo")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "SAFIRE"
+    #settings.base.theme = "SHARE"
 
     # Authentication settings
     # Should users be allowed to register themselves?
