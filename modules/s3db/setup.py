@@ -423,7 +423,6 @@ class S3SetupModel(S3Model):
                                                "mobile",
                                                "skeleton",
                                                "skeletontheme",
-                                               "test",
                                                "__init__.py",
                                                "__init__.pyc",
                                                "000_config.py",
