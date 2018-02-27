@@ -29,9 +29,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 """
 __all__ = ("S3SetupModel",
-           "setup_create_yaml_file",
-           "setup_create_playbook",
-           "setup_get_prepop_options",
+           "setup_write_playbook",
+           "setup_get_playbook",
+           #"setup_get_prepop_options",
            "setup_log",
            "setup_rheader",
            "setup_management_exists",
@@ -43,6 +43,8 @@ __all__ = ("S3SetupModel",
 
 import json
 import os
+import random
+import string
 import time
 
 from ..s3 import *
@@ -51,14 +53,28 @@ from gluon import *
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
 
+WEB_SERVERS = {1: "apache",
+               2: "cherokee",
+               }
+
+DB_SERVERS = {1: "mysql",
+              2: "postgresql",
+              #3: "sqlite",
+              }
+
+INSTANCE_TYPES = {1: "prod",
+                  2: "test",
+                  3: "demo",
+                  }
+
 # =============================================================================
 class S3SetupModel(S3Model):
 
     names = ("setup_deployment",
              "setup_server",
              "setup_instance",
-             "setup_package",
-             "setup_upgrade"
+             #"setup_package",
+             #"setup_upgrade"
              )
 
     def model(self):
@@ -98,51 +114,44 @@ class S3SetupModel(S3Model):
                            ),
                      Field("country",
                            label = T("Country"),
-                           requires = IS_IN_SET(self.setup_get_countries(path),
-                                                zero = None,
-                                                ),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET_LAZY(lambda: self.setup_get_countries(path),
+                                                       zero = current.messages.SELECT_LOCATION,
+                                                       )),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Country"),
                                                            T("Selecting your country means that the appropriate locale settings can be applied. If you need to support multiple countries then you may need to create a custom template.")
                                                            )
                                          ),
                            ),
-                     # @ToDo: Allow Multiple
-                     # @ToDo: Read the list of templates from the custom repo URL!
                      Field("template", "list:string",
-                           default = "default",
+                           default = ["default"],
                            label = T("Template"),
-                           requires = IS_IN_SET(self.setup_get_templates(path),
-                                                multiple = True,
-                                                zero = None,
-                                                ),
+                           requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(path),
+                                                     multiple = True,
+                                                     zero = None,
+                                                     ),
                            ),
                      Field("webserver_type", "integer",
                            default = 2,
                            label = T("Web Server"),
-                           required = True,
-                           requires = IS_IN_SET({1: "apache",
-                                                 2: "cherokee",
-                                                 }),
+                           represent = S3Represent(options = WEB_SERVERS),
+                           requires = IS_IN_SET(WEB_SERVERS),
                            ),
                      Field("db_type", "integer",
                            default = 2,
                            label = T("Database"),
-                           required = True,
-                           requires = IS_IN_SET({1: "mysql",
-                                                 2: "postgresql",
-                                                 #3: "sqlite",
-                                                 }),
+                           represent = S3Represent(options = DB_SERVERS),
+                           requires = IS_IN_SET(DB_SERVERS),
                            ),
+                     # Set automatically
                      Field("db_password", "password",
-                           label = T("Database Password"),
-                           required = True,
                            readable = False,
+                           writable = False,
                            ),
                      Field("remote_user",
                            default = "admin",
                            label = T("Remote User"),
-                           required = True,
                            ),
                      Field("private_key", "upload",
                            label = T("Private Key"),
@@ -155,22 +164,22 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     Field("secret_key",
-                           label = T("AWS Secret Key"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("AWS Secret Key"),
-                                                           T("If you wish to add additional servers on AWS then you need this")
-                                                           )
-                                         ),
-                           ),
-                     Field("access_key",
-                           label = T("AWS Access Key"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("AWS Access Key"),
-                                                           T("If you wish to add additional servers on AWS then you need this")
-                                                           )
-                                         ),
-                           ),
+                     #Field("secret_key",
+                     #      label = T("AWS Secret Key"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("AWS Secret Key"),
+                     #                                      T("If you wish to add additional servers on AWS then you need this")
+                     #                                      )
+                     #                    ),
+                     #      ),
+                     #Field("access_key",
+                     #      label = T("AWS Access Key"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("AWS Access Key"),
+                     #                                      T("If you wish to add additional servers on AWS then you need this")
+                     #                                      )
+                     #                    ),
+                     #      ),
                      Field("refresh_lock", "integer",
                            default = 0,
                            readable = False,
@@ -181,7 +190,7 @@ class S3SetupModel(S3Model):
                            writable = False,
                            ),
                      *s3_meta_fields()
-                    )
+                     )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -196,46 +205,57 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Deployment deleted"),
             msg_list_empty = T("No Deployments currently registered"))
 
-        #configure(tablename,
-        #          editable = False,
-        #          deletable = False,
-        #          insertable = True,
-        #          listadd = True
-        #          )
+        configure(tablename,
+                  #editable = False,
+                  listadd = False,
+                  create_onaccept = self.setup_deployment_create_onaccept,
+                  list_fields = ["name",
+                                 "country",
+                                 "template",
+                                 "webserver_type",
+                                 "db_type",
+                                 "remote_user",
+                                 ],
+                  )
 
         self.add_components(tablename,
                             setup_instance = "deployment_id",
                             setup_server = "deployment_id",
                             )
 
-        self.set_method("setup", "deployment",
-                        method = "upgrade",
-                        action = setup_UpgradeMethod,
-                        )
+        #self.set_method("setup", "deployment",
+        #                method = "upgrade",
+        #                action = setup_UpgradeMethod,
+        #                )
 
         # ---------------------------------------------------------------------
         # Servers
         #
+        SERVER_ROLES = {1: "all",
+                        2: "db",
+                        3: "webserver",
+                        4: "eden",
+                        }
+
         tablename = "setup_server"
         define_table(tablename,
                      Field("deployment_id", "reference setup_deployment"),
                      Field("role", "integer",
                            default = 1,
                            label = T("Role"),
-                           requires = IS_IN_SET({1: "all",
-                                                 2: "db",
-                                                 3: "webserver",
-                                                 4: "eden",
-                                                 }),
+                           represent = S3Represent(options = SERVER_ROLES),
+                           requires = IS_IN_SET(SERVER_ROLES),
                            ),
                      Field("host_ip", unique = True,
+                           default = "127.0.0.1",
                            label = T("IP Address"),
                            requires = IS_IPV4(),
                            ),
-                     Field("hostname",
-                           label = T("Hostname"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
+                     #Field("hostname",
+                     #      label = T("Hostname"),
+                     #      requires = IS_NOT_EMPTY(),
+                     #      ),
+                     *s3_meta_fields()
                      )
 
         # CRUD Strings
@@ -259,29 +279,29 @@ class S3SetupModel(S3Model):
                      Field("deployment_id", "reference setup_deployment"),
                      Field("type", "integer",
                            default = 1,
-                           requires = IS_IN_SET({1: "prod",
-                                                 2: "test",
-                                                 3: "demo",
-                                                 })
+                           label = T("Type"),
+                           represent = S3Represent(options = INSTANCE_TYPES),
+                           requires = IS_IN_SET(INSTANCE_TYPES)
                            ),
+                     # @ToDo: Add support for SSL Certificates
                      Field("url",
+                           label = T("URL"),
                            requires = IS_URL(),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("URL"),
+                                                           T("The Public URL which will be used to access the instance")
+                                                           )
+                                         ),
                            ),
-                     Field("prepop_options",
-                           label = "Prepop Options",
-                           requires = IS_IN_SET([], multiple=True),
-                           ),
-                     Field("scheduler_id", "reference scheduler_task",
-                           readable = False,
+                     #Field("prepop_options",
+                     #      label = T("Prepop Options"),
+                     #      requires = IS_IN_SET([], multiple=True),
+                     #      ),
+                     Field("task_id", "reference scheduler_task",
                            writable = False,
                            ),
+                     *s3_meta_fields()
                      )
-
-        configure(tablename,
-                  deletable = False,
-                  editable = False,
-                  onaccept = self.setup_instance_onaccept,
-                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -296,124 +316,79 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Instance deleted"),
             msg_list_empty = T("No Instances currently registered"))
 
+        self.set_method("setup", "instance",
+                        method = "deploy",
+                        action = self.setup_instance_deploy,
+                        )
+
         # ---------------------------------------------------------------------
         # Packages
         #
-        tablename = "setup_package"
-        define_table(tablename,
-                     Field("deployment_id", "reference setup_deployment"),
-                     Field("name",
-                           label = T("Package Name"),
-                           ),
-                     Field("cv",
-                           label = T("Current Version"),
-                           ),
-                     Field("av",
-                           label = T("Available Version"),
-                           ),
-                     Field("type",
-                           label = T("Type of Package"),
-                           requires = IS_IN_SET(["os", "pip", "git"]),
-                           ),
-                    )
+        #tablename = "setup_package"
+        #define_table(tablename,
+        #             Field("deployment_id", "reference setup_deployment"),
+        #             Field("name",
+        #                   label = T("Package Name"),
+        #                   ),
+        #             Field("cv",
+        #                   label = T("Current Version"),
+        #                   ),
+        #             Field("av",
+        #                   label = T("Available Version"),
+        #                   ),
+        #             Field("type",
+        #                   label = T("Type of Package"),
+        #                   requires = IS_IN_SET(["os", "pip", "git"]),
+        #                   ),
+        #             *s3_meta_fields()
+        #             )
 
         # ---------------------------------------------------------------------
         # Upgrades
         #
-        tablename = "setup_upgrade"
-        define_table(tablename,
-                     Field("deployment_id", "reference setup_deployment"),
-                     Field("scheduler",
-                           "reference scheduler_task"
-                          ),
-                     )
+        #tablename = "setup_upgrade"
+        #define_table(tablename,
+        #             Field("deployment_id", "reference setup_deployment"),
+        #             Field("task_id", "reference scheduler_task"),
+        #             *s3_meta_fields()
+        #             )
 
         return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_instance_onaccept(form):
+    def setup_deployment_create_onaccept(form):
+        """
+            New deployments:
+                Assign a random DB password
+                Configure localhost to have all tiers (for 1st deployment)
+        """
 
         db = current.db
         s3db = current.s3db
-        form_vars = form.vars
+        table = s3db.setup_deployment
 
-        # Get deployment id
-        itable = s3db.setup_instance
-        instance = db(itable.id == form_vars.id).select(itable.deployment_id,
-                                                        limitby = (0, 1)
-                                                        ).first()
-        deployment_id = instance.deployment_id
+        deployment_id = form.vars.id
 
-        stable = s3db.setup_server
-        query = (stable.deployment_id == deployment_id)
-        rows = db(query).select(stable.role,
-                                stable.host_ip,
-                                stable.hostname,
-                                orderby = stable.role
-                                )
+        # Assign a random DB password
+        chars = string.ascii_letters + string.digits + string.punctuation
+        password = "".join(random.choice(chars) for _ in range(12))
+        db(table.id == deployment_id).update(db_password = password)
 
-        hosts = []
-        for row in rows:
-            hosts.append((row.role, row.host_ip))
-            if row.role == 1 or row.role == 4:
-                hostname = row.hostname
+        if db(table.deleted == False).count() < 2: 
+            # Configure localhost to have all tiers (localhost & all tiers are defaults)
+            server_id = s3db.setup_server.insert(deployment_id = deployment_id)
 
-        dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.db_password,
-                                                           dtable.webserver_type,
-                                                           dtable.db_type,
-                                                           dtable.template,
-                                                           dtable.private_key,
-                                                           dtable.remote_user,
-                                                           limitby=(0, 1)
-                                                           ).first()
-
-        prepop_options = str(",".join(form_vars.prepop_options))
-
-        instance_type = int(form_vars.type)
-        if instance_type == 2:
-            demo_type = "na"
-        elif instance_type == 1 or instance_type == 3:
-            # find dtype
-            sctable = s3db.scheduler_task
-            query = (itable.deployment_id == deployment_id) & \
-                    (sctable.status == "COMPLETED")
-            existing_instances = db(query).select(itable.type,
-                                                  join = sctable.on(itable.scheduler_id == sctable.id)
-                                                  )
-
-            if existing_instances:
-                demo_type = "afterprod"
-            else:
-                demo_type = "beforeprod"
-
-        webservers = ("apache", "cherokee")
-        dbs = ("mysql", "postgresql")
-        prepop = ("prod", "test", "demo")
-        scheduler_id = setup_create_yaml_file(hosts,
-                                              deployment.db_password,
-                                              webservers[deployment.webserver_type - 1],
-                                              dbs[deployment.db_type - 1],
-                                              prepop[instance_type - 1],
-                                              prepop_options,
-                                              False,
-                                              hostname,
-                                              deployment.template,
-                                              form_vars.url,
-                                              deployment.private_key,
-                                              deployment.remote_user,
-                                              demo_type,
-                                              )
-        # add scheduler fk in current record
-        record = db(itable.id == form_vars.id).select().first()
-        record.update_record(scheduler_id=scheduler_id)
+        # Configure a Production instance (needs Public URL so has to be done Inline)
+        #instance_id = s3db.setup_instance.insert()
 
     # -------------------------------------------------------------------------
     @staticmethod
     def setup_get_countries(path):
         """
             Return a List of Countries for which we have Locale settings defined
+
+            @ToDo: Read the list of templates from the custom repo URL!
         """
 
         p = os.path
@@ -422,7 +397,9 @@ class S3SetupModel(S3Model):
         join = p.join
 
         path = join(path, "locations")
-        countries = [basename(c) for c in os.listdir(path) if isdir(join(path, c))]
+        available_countries = [basename(c) for c in os.listdir(path) if isdir(join(path, c))]
+        all_countries = current.gis.get_countries(key_type="code")
+        countries = OrderedDict([(c, all_countries[c]) for c in all_countries if c in available_countries])
 
         return countries
 
@@ -431,10 +408,16 @@ class S3SetupModel(S3Model):
     def setup_get_templates(path):
         """
             Return a List of Templates for the user to select between
+
+            @ToDo: Read the list of templates from the custom repo URL!
         """
 
-        basename = os.path.basename
-        templates = [basename(t) for t in os.listdir(path) \
+        p = os.path
+        basename = p.basename
+        join = p.join
+        isdir = p.isdir
+        listdir = os.listdir
+        templates = [basename(t) for t in listdir(path) \
                         if basename(t) not in ("historic",
                                                "locations",
                                                "mobile",
@@ -446,31 +429,137 @@ class S3SetupModel(S3Model):
                                                "000_config.py",
                                                )
                      ]
+        subtemplates = []
+        sappend = subtemplates.append
+        for i in range(0, len(templates)):
+            template = templates[i]
+            tpath = join(path, template)
+            for d in listdir(tpath):
+                if isdir(join(tpath, d)):
+                    for f in listdir(join(tpath, d)):
+                        if f == "config.py":
+                            sappend("%s.%s" % (template, d))
+                            continue
 
+        templates += subtemplates
+        templates.sort()
         return templates
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_instance_deploy(r, **attr):
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get Instance details
+        instance_id = r.id
+        itable = s3db.setup_instance
+        instance = db(itable.id == instance_id).select(itable.deployment_id,
+                                                       itable.type,
+                                                       itable.url,
+                                                       limitby = (0, 1)
+                                                       ).first()
+
+        sitename = instance.url
+        if "://" in sitename:
+            sitename = sitename.split("://", 1)[1]
+
+        deployment_id = instance.deployment_id
+
+        # Get Server(s) details
+        stable = s3db.setup_server
+        query = (stable.deployment_id == deployment_id)
+        rows = db(query).select(stable.role,
+                                stable.host_ip,
+                                #stable.hostname,
+                                orderby = stable.role
+                                )
+
+        hosts = []
+        for row in rows:
+            hosts.append((row.role, row.host_ip))
+            #if row.role == 1 or row.role == 4:
+            #    hostname = row.hostname
+
+        # Get Deployment details
+        dtable = s3db.setup_deployment
+        deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
+                                                           dtable.db_type,
+                                                           dtable.db_password,
+                                                           dtable.template,
+                                                           dtable.private_key,
+                                                           dtable.remote_user,
+                                                           limitby=(0, 1)
+                                                           ).first()
+
+        #prepop_options = str(",".join(form_vars.prepop_options))
+
+        #instance_type = instance.type
+        #if instance_type == 2:
+        #    demo_type = "na"
+        #elif instance_type == 1 or instance_type == 3:
+        #    # Find dtype (currently unused?)
+        #    sctable = s3db.scheduler_task
+        #    query = (itable.deployment_id == deployment_id) & \
+        #            (sctable.status == "COMPLETED")
+        #    existing_instances = db(query).select(itable.type,
+        #                                          join = sctable.on(itable.task_id == sctable.id)
+        #                                          )
+        #    if existing_instances:
+        #        demo_type = "afterprod"
+        #    else:
+        #        demo_type = "beforeprod"
+
+        # Write Playbook
+        task_id = setup_write_playbook(hosts,
+                                       deployment.db_password,
+                                       WEB_SERVERS[deployment.webserver_type],
+                                       DB_SERVERS[deployment.db_type],
+                                       INSTANCE_TYPES[instance.type],
+                                       #prepop_options,
+                                       #hostname,
+                                       deployment.template,
+                                       sitename,
+                                       deployment.private_key,
+                                       deployment.remote_user,
+                                       #demo_type,
+                                       )
+
+        # Link scheduled task to current record
+        # = allows us to monitor deployment progress
+        db(itable.id == instance_id).update(task_id = task_id)
+
 # -----------------------------------------------------------------------------
-def setup_create_yaml_file(hosts,
-                           password,
-                           web_server,
-                           database_type,
-                           prepop,
-                           prepop_options,
-                           local = False,
-                           hostname = None,
-                           template = "default",
-                           sitename = None,
-                           private_key = None,
-                           remote_user = None,
-                           demo_type = None,
-                           ):
+def setup_write_playbook(hosts,
+                         password,
+                         web_server,
+                         database_type,
+                         instance_type,
+                         #prepop_options,
+                         #hostname = None,
+                         template = "default",
+                         sitename = None,
+                         private_key = None,
+                         remote_user = None,
+                         #demo_type = None,
+                         ):
 
     try:
         import yaml
     except ImportError:
-        current.log.error("PyYAML module needed for Setup")
+        error = "PyYAML module needed for Setup"
+        current.log.error(error)
+        current.response.error = error
+        return
 
-    roles_path = "../private/playbook/roles/"
+    folder = current.request.folder
+
+    # @ToDo: Sync roles with eden_deploy/ansible
+    roles_path = "../../private/ansible/roles/"
+    yaml_path = os.path.join(folder, "uploads", "yaml")
+    if not os.path.isdir(yaml_path):
+        os.mkdir(yaml_path)
 
     if len(hosts) == 1:
         deployment = [
@@ -482,11 +571,11 @@ def setup_create_yaml_file(hosts,
                     "password": password,
                     "template": template,
                     "web_server": web_server,
-                    "type": prepop,
-                    "prepop_options": prepop_options,
+                    "type": instance_type,
+                    #"prepop_options": prepop_options,
                     "sitename": sitename,
-                    "hostname": hostname,
-                    "dtype": demo_type,
+                    #"hostname": hostname,
+                    #"dtype": demo_type,
                     "eden_ip": hosts[0][1],
                     "db_ip": hosts[0][1],
                     "db_type": database_type
@@ -507,9 +596,9 @@ def setup_create_yaml_file(hosts,
                 #"sudo": True,
                 "remote_user": remote_user,
                 "vars": {
-                    "dtype": demo_type,
+                    #"dtype": demo_type,
                     "password": password,
-                    "type": prepop
+                    "type": instance_type
                 },
                 "roles": [
                     "%s%s" % (roles_path, database_type),
@@ -520,15 +609,15 @@ def setup_create_yaml_file(hosts,
                 #"sudo": True,
                 "remote_user": remote_user,
                 "vars": {
-                    "dtype": demo_type,
+                    #"dtype": demo_type,
                     "db_ip": hosts[0][1],
                     "db_type": database_type,
-                    "hostname": hostname,
+                    #"hostname": hostname,
                     "password": password,
                     "prepop_options": prepop_options,
                     "sitename": sitename,
                     "template": template,
-                    "type": prepop,
+                    "type": instance_type,
                     "web_server": web_server,
                 },
                 "roles": [
@@ -543,7 +632,7 @@ def setup_create_yaml_file(hosts,
                 "remote_user": remote_user,
                 "vars": {
                     "eden_ip": hosts[2][1],
-                    "type": prepop
+                    "type": instance_type
                 },
                 "roles": [
                     "%s%s" % (roles_path, web_server),
@@ -551,29 +640,19 @@ def setup_create_yaml_file(hosts,
             }
         ]
 
-    if demo_type == "afterprod":
-        only_tags = ["demo"]
-    elif prepop == "test":
-        only_tags = ["test",]
-    else:
-        only_tags = ["all"]
-
-    directory = os.path.join(current.request.folder, "yaml")
     name = "deployment_%d" % int(time.time())
-    file_path = os.path.join(directory, "%s.yml" % name)
+    file_path = os.path.join(yaml_path, "%s.yml" % name)
 
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
     with open(file_path, "w") as yaml_file:
         yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
-    row = current.s3task.schedule_task(
+    task_id = current.s3task.schedule_task(
         name,
         vars = {
             "playbook": file_path,
-            "private_key": os.path.join(current.request.folder, "uploads", private_key),
-            "host": [host[1] for host in hosts],
-            "only_tags": only_tags,
+            "private_key": os.path.join(folder, "uploads", private_key),
+            "hosts": [host[1] for host in hosts],
+            "only_tags": [instance_type],
         },
         function_name = "deploy",
         repeats = 1,
@@ -581,10 +660,10 @@ def setup_create_yaml_file(hosts,
         sync_output = 300
     )
 
-    return row
+    return task_id
 
 # -----------------------------------------------------------------------------
-def setup_create_playbook(playbook, hosts, private_key, only_tags):
+def setup_get_playbook(playbook, hosts, private_key, only_tags):
 
     try:
         import ansible.playbook
@@ -616,19 +695,19 @@ def setup_create_playbook(playbook, hosts, private_key, only_tags):
     return pb
 
 # -----------------------------------------------------------------------------
-def setup_get_prepop_options(template):
-
-    module_name = "applications.eden_setup.modules.templates.%s.config" % template
-    __import__(module_name)
-    config = sys.modules[module_name]
-    prepopulate_options = config.settings.base.get("prepopulate_options")
-    if isinstance(prepopulate_options, dict):
-        if "mandatory" in prepopulate_options:
-            del prepopulate_options["mandatory"]
-        return prepopulate_options.keys()
-    else:
-        return ["mandatory"]
-
+#def setup_get_prepop_options(template):
+#
+#    module_name = "applications.eden_setup.modules.templates.%s.config" % template
+#    __import__(module_name)
+#    config = sys.modules[module_name]
+#    prepopulate_options = config.settings.base.get("prepopulate_options")
+#    if isinstance(prepopulate_options, dict):
+#        if "mandatory" in prepopulate_options:
+#            del prepopulate_options["mandatory"]
+#        return prepopulate_options.keys()
+#    else:
+#        return ["mandatory"]
+#
 # -----------------------------------------------------------------------------
 def setup_log(filename, category, data):
 
@@ -662,46 +741,46 @@ class CallbackModule(object):
         pass
 
     def on_failed(self, host, res, ignore_errors=False):
-        setup_log(self.filename, 'FAILED', res)
+        setup_log(self.filename, "FAILED", res)
 
     def on_ok(self, host, res):
-        setup_log(self.filename, 'OK', res)
+        setup_log(self.filename, "OK", res)
 
     def on_error(self, host, msg):
-        setup_log(self.filename, 'ERROR', msg)
+        setup_log(self.filename, "ERROR", msg)
 
     def on_skipped(self, host, item=None):
-        setup_log(self.filename, 'SKIPPED', '...')
+        setup_log(self.filename, "SKIPPED", "...")
 
     def on_unreachable(self, host, res):
-        setup_log(self.filename, 'UNREACHABLE', res)
+        setup_log(self.filename, "UNREACHABLE", res)
 
     def on_no_hosts(self):
         pass
 
     def on_async_poll(self, host, res, jid, clock):
-        setup_log(self.filename, 'DEBUG', host, res, jid, clock)
+        setup_log(self.filename, "DEBUG", host, res, jid, clock)
 
     def on_async_ok(self, host, res, jid):
-        setup_log(self.filename, 'DEBUG', host, res, jid)
+        setup_log(self.filename, "DEBUG", host, res, jid)
 
     def on_async_failed(self, host, res, jid):
-        setup_log(self.filename, 'ASYNC_FAILED', res)
+        setup_log(self.filename, "ASYNC_FAILED", res)
 
     def on_start(self):
-        setup_log(self.filename, 'DEBUG', 'on_start')
+        setup_log(self.filename, "DEBUG", "on_start")
 
     def on_notify(self, host, handler):
-        setup_log(self.filename, 'DEBUG', host)
+        setup_log(self.filename, "DEBUG", host)
 
     def on_no_hosts_matched(self):
-        setup_log(self.filename, 'DEBUG', 'no_hosts_matched')
+        setup_log(self.filename, "DEBUG", "no_hosts_matched")
 
     def on_no_hosts_remaining(self):
-        setup_log(self.filename, 'DEBUG', 'no_hosts_remaining')
+        setup_log(self.filename, "DEBUG", "no_hosts_remaining")
 
     def on_task_start(self, name, is_conditional):
-        setup_log(self.filename, 'DEBUG', 'Starting %s' % name)
+        setup_log(self.filename, "DEBUG", "Starting %s" % name)
 
     def on_vars_prompt(self, varname, private=True, prompt=None,
                                 encrypt=None, confirm=False, salt_size=None,
@@ -709,19 +788,19 @@ class CallbackModule(object):
         pass
 
     def on_setup(self):
-        setup_log(self.filename, 'DEBUG', 'on_setup')
+        setup_log(self.filename, "DEBUG", "on_setup")
 
     def on_import_for_host(self, host, imported_file):
-        setup_log(self.filename, 'IMPORTED', imported_file)
+        setup_log(self.filename, "IMPORTED", imported_file)
 
     def on_not_import_for_host(self, host, missing_file):
-        setup_log(self.filename, 'NOTIMPORTED', missing_file)
+        setup_log(self.filename, "NOTIMPORTED", missing_file)
 
     def on_play_start(self, pattern):
-        setup_log(self.filename, 'play_start', pattern)
+        setup_log(self.filename, "play_start", pattern)
 
     def on_stats(self, stats):
-        setup_log(self.filename, 'DEBUG', stats)
+        setup_log(self.filename, "DEBUG", stats)
 
 # -----------------------------------------------------------------------------
 def setup_rheader(r, tabs=None):
@@ -787,7 +866,7 @@ class setup_UpgradeMethod(S3Method):
         machines = db(query).select(#dtable.id.with_alias("deployment"),
                                     #dtable.type.with_alias("type"),
                                     dtable.id,
-                                    join = [stable.on(dtable.scheduler_id == stable.id),
+                                    join = [stable.on(dtable.task_id == stable.id),
                                             ],
                                     distinct = True
                                     )
@@ -975,8 +1054,7 @@ def setup_refresh(id):
             (stable.status == "COMPLETED")
     machines = db(query).select(dtable.id.with_alias("deployment"),
                                 dtable.type.with_alias("type"),
-                                join = [
-                                        stable.on(dtable.scheduler_id == stable.id)
+                                join = [stable.on(dtable.task_id == stable.id),
                                         ],
                                 distinct = True
                                 )
@@ -994,7 +1072,7 @@ def setup_refresh(id):
 
     # Set the refresh lock
     for machine in machines:
-        db(dtable.id == machine.deployment).update(refresh_lock=1)
+        db(dtable.id == machine.deployment).update(refresh_lock = 1)
 
     # Find new packages
 
@@ -1016,7 +1094,7 @@ def setup_refresh(id):
 
     # Call ansible runner
 
-    # get a list of current packages
+    # Get a list of current packages
     packages = db(ptable.deployment == record.id).select(ptable.name)
 
     old_set = set()

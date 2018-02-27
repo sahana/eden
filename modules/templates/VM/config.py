@@ -17,7 +17,8 @@ def config(settings):
     settings.base.system_name_short = T("Sahana VMS")
 
     # PrePopulate data
-    settings.base.prepopulate += ("VM", "default/users")
+    settings.base.prepopulate += ("VM",)
+    #settings.base.prepopulate_demo += ("VM/Demo",)
 
     # Authentication settings
     # Should users be allowed to register themselves?

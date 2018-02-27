@@ -18,7 +18,8 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate.append("NYC")
+    settings.base.prepopulate += ("NYC",)
+    #settings.base.prepopulate_demo += ("NYC\Demo",)
 
     settings.base.system_name = T("NYC Prepared")
     settings.base.system_name_short = T("NYC Prepared")

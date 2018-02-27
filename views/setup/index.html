@@ -1,10 +1,10 @@
 {{extend "layout.html"}}
-<div id="home">
-  <h2 align="center">{{=T("Setup")}}</h2>
-  <p style="text-align:center">
+<div id='home'>
+  <h2 align='center'>{{=T("Setup")}}</h2>
+  <p style='text-align:center'>
   {{=T("The setup tool helps you to install and configure instances of Sahana Eden")}}
   </p>
-  <div style="text-align: center">
-    <a href="{{=URL('deployment')}}" class="action-btn">{{=T("Deploy Eden")}}</a>
+  <div style='text-align: center'>
+    <a href='{{=URL(c="setup", f="deployment", args=["create"])}}' class='action-btn'>{{=T("Deploy Eden")}}</a>
   </div>
 </div>

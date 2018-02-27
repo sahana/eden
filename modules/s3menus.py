@@ -1872,6 +1872,23 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def setup():
+        """ Setup """
+
+        return M(c="setup")(
+                    M("Deployments", f="deployment")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Servers", f="server")(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Instances", f="instance")(
+                    #    M("Create", m="create"),
+                    #),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def stats():
         """ Statistics """
 

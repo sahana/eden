@@ -67,7 +67,9 @@ def mission():
                     htable = s3db.hrm_human_resource
                     query = (htable.id == member_id) & \
                             (htable.deleted != True)
-                    row = db(query).select(htable.id, limitby=(0, 1)).first()
+                    row = db(query).select(htable.id,
+                                           limitby = (0, 1)
+                                           ).first()
                     if row:
                         field = s3db.deploy_assignment.human_resource_id
                         field.default = row.id
@@ -99,11 +101,11 @@ def mission():
         if not r.component:
             # Override mission open actions to go to the profile page
             s3_action_buttons(r,
-                              deletable=True,
-                              editable=True,
-                              read_url=r.url(method="profile", id="[id]"),
-                              update_url=r.url(method="profile", id="[id]"),
-                              delete_url=r.url(method="delete", id="[id]"),
+                              deletable = True,
+                              editable = True,
+                              read_url = r.url(method="profile", id="[id]"),
+                              update_url = r.url(method="profile", id="[id]"),
+                              delete_url = r.url(method="delete", id="[id]"),
                               )
             # Override the missions list-button go to the summary page
             if isinstance(output, dict) and "buttons" in output:

@@ -15,6 +15,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Sahana Eden Deployment")
+    # @ToDo: Use theme from main App once-configured
     #settings.base.theme = "default"
 
     # -----------------------------------------------------------------------------

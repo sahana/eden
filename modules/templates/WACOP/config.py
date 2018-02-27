@@ -19,7 +19,8 @@ def config(settings):
     settings.base.system_name_short = T("Sahana")
 
     # Prepop default
-    settings.base.prepopulate += ("WACOP", "default/users", "WACOP/Demo")
+    settings.base.prepopulate += ("WACOP",)
+    settings.base.prepopulate_demo += ("WACOP/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "WACOP"

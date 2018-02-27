@@ -753,18 +753,21 @@ def email_channel():
             s3.actions += [dict(label=s3_str(T("Enable")),
                                 _class="action-btn",
                                 url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
+                                restrict = restrict_e,
+                                ),
                            dict(label=s3_str(T("Disable")),
                                 _class="action-btn",
                                 url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+                                restrict = restrict_d,
+                                ),
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
                 s3.actions += [dict(label=s3_str(T("Poll")),
                                     _class="action-btn",
                                     url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                                    restrict = restrict_d,
+                                    )
                                ]
         return output
     s3.postp = postp

@@ -431,9 +431,9 @@ if has_module("req"):
 # -----------------------------------------------------------------------------
 if has_module("setup"):
 
-    def deploy(playbook, private_key, host=["127.0.0.1"], only_tags="all", user_id=None):
+    def deploy(playbook, private_key, hosts=["127.0.0.1"], only_tags="all", user_id=None):
 
-        pb = s3db.setup_create_playbook(playbook, host, private_key, only_tags)
+        pb = s3db.setup_get_playbook(playbook, hosts, private_key, only_tags)
         pb.run()
 
         processed_hosts = sorted(pb.stats.processed.keys())
@@ -449,9 +449,8 @@ if has_module("setup"):
 
     # -------------------------------------------------------------------------
     def setup_management(_type, instance_id, deployment_id, user_id=None):
+    
         import ansible.runner
-        s3db = current.s3db
-        db = current.db
 
         # Get all associated servers
         stable = s3db.setup_server

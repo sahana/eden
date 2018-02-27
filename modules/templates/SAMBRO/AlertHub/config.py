@@ -43,5 +43,4 @@ def config(settings):
     # This may vary according to organisation implementing it
     settings.cap.form_bulletin = "form_ocd"
 
-
 # END =========================================================================

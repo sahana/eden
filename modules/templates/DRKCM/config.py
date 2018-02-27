@@ -21,7 +21,8 @@ def config(settings):
     settings.base.system_name_short = "RefuScope"
 
     # PrePopulate data
-    settings.base.prepopulate += ("DRKCM", "default/users", "DRKCM/Demo")
+    settings.base.prepopulate += ("DRKCM",)
+    settings.base.prepopulate_demo += ("DRKCM/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "DRK"

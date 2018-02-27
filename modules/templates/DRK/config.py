@@ -25,7 +25,8 @@ def config(settings):
     settings.base.system_name_short = "Village"
 
     # PrePopulate data
-    settings.base.prepopulate += ("DRK", "default/users", "DRK/Demo")
+    settings.base.prepopulate += ("DRK",)
+    settings.base.prepopulate_demo += ("DRK/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "DRK"

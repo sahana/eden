@@ -21,8 +21,8 @@ def config(settings):
     settings.base.system_name_short = T("SAFIRE")
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SAFIRE", "default/users", "SAFIRE/Demo")
+    settings.base.prepopulate += ("SAFIRE",)
+    settings.base.prepopulate_demo += ("SAFIRE/Demo",)
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SAFIRE"

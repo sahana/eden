@@ -12,8 +12,12 @@ else:
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
         pop_list = []
-    if not isinstance(pop_list, (list, tuple)):
-        pop_list = [pop_list]
+    else:
+        if not isinstance(pop_list, (list, tuple)):
+            pop_list = [pop_list]
+        demo_pop_list = settings.get_base_prepopulate_demo()
+        if demo_pop_list:
+            pop_list += demo_pop_list
 
 if len(pop_list) > 0:
 

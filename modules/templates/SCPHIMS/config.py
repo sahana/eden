@@ -18,8 +18,8 @@ def config(settings):
     settings.base.system_name_short = T("IMS")
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/Demo", "default/users")
+    settings.base.prepopulate += ("SCPHIMS",)
+    settings.base.prepopulate_demo += ("SCPHIMS/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SCPHIMS"

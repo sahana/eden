@@ -373,8 +373,9 @@ class S3OrganisationModel(S3Model):
                            label = T("Home Country"),
                            represent = self.gis_country_code_represent,
                            requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
-                                lambda: gis.get_countries(key_type="code"),
-                                                          zero=messages.SELECT_LOCATION)),
+                                        lambda: gis.get_countries(key_type="code"),
+                                        zero = messages.SELECT_LOCATION
+                                        )),
                            ),
                      # Simple free-text contact field, can be enabled
                      # in templates as needed
