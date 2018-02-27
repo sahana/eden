@@ -2166,8 +2166,9 @@ class S3HRSkillModel(S3Model):
                                    widget = widget
                                    )
 
-        multi_skill_represent = S3Represent(lookup=tablename,
-                                            multiple=True)
+        multi_skill_represent = S3Represent(lookup = tablename,
+                                            multiple = True,
+                                            )
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          label = T("Skills"),
                                          ondelete = "SET NULL",

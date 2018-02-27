@@ -42,6 +42,7 @@ __all__ = ("S3SupplyModel",
            "supply_ItemRepresent",
            #"supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
+           "supply_item_pack_quantities",
            )
 
 import re
@@ -2114,7 +2115,9 @@ def supply_item_rheader(r):
 
 # =============================================================================
 class SupplyItemPackQuantity(object):
-    """ Virtual Field for pack_quantity """
+    """
+        Field method for pack quantity of an item, used in req and inv
+    """
 
     def __init__(self, tablename):
         self.tablename = tablename
@@ -2135,6 +2138,22 @@ class SupplyItemPackQuantity(object):
             return item_pack_id.quantity
         else:
             return default
+
+# -----------------------------------------------------------------------------
+def supply_item_pack_quantities(pack_ids):
+    """
+        Helper function to look up the pack quantities for
+        multiple item_pack_ids in-bulk
+
+        @param pack_ids: iterable of item_pack_ids
+    """
+
+    table = current.s3db.supply_item_pack
+    query = table.id.belongs(set(pack_ids))
+    rows = current.db(query).select(table.id,
+                                    table.quantity,
+                                    )
+    return dict((row.id, row.quantity) for row in rows)
 
 # =============================================================================
 def supply_item_entity_category(row):
