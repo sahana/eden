@@ -1,0 +1,9 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+REQUESTER,Request Logger,User can create a request; search for and update a request; also added required supply items to a request,req,,,,CREATE|READ|UPDATE,,,,,
+APPROVER,Request Supervisor,User can search for and update a request to set the status to approved; delete a request,req,,,,READ|UPDATE|DELETE,,,,,
+SUPPLIER,Aid Supplier,Person affiliated with an Org or Independent with permissions to commit to requests and manage the logistics of suppling the aid,supply,,,,CREATE|READ|UPDATE|DELETE,,,,,
+SUPPLIER,Aid Supplier,User register to supply aid items should be able to view and commit to requests,req,,,,READ|UPDATE,,,,,
+ORG_ADMIN,Organisation Admin,"User able to edit the organization module; manage organization details, facilities, and sites",org,,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,"User able to edit supply module, define items, catalogs, categories",supply,,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,User register to supply aid items should be able to view and commit to requests,req,,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,User able to manage users,admin,user,,,CREATE|READ|UPDATE|DELETE,,,,,
