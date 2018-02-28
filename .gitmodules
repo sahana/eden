@@ -1,3 +1,3 @@
-[submodule "private/playbook"]
-	path = private/playbook
-	url = https://github.com/sahana/eden_playbook
+[submodule "private/eden_deploy"]
+	path = private/eden_deploy
+	url = git@github.com:sahana/eden_deploy

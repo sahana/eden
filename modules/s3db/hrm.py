@@ -4210,9 +4210,8 @@ class S3HRAppraisalModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_APPRAISAL = T("Add Appraisal")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_APPRAISAL,
+            label_create = T("Add Appraisal"),
             title_display = T("Appraisal Details"),
             title_list = T("Appraisals"),
             title_update = T("Edit Appraisal"),
