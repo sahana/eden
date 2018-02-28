@@ -554,11 +554,10 @@ def setup_write_playbook(hosts,
 
     folder = current.request.folder
 
-    # @ToDo: Sync roles with eden_deploy/ansible
-    roles_path = "../../private/ansible/roles/"
-    yaml_path = os.path.join(folder, "uploads", "yaml")
-    if not os.path.isdir(yaml_path):
-        os.mkdir(yaml_path)
+    roles_path = "../../private/eden_deploy/roles/" # relative to playbook_path
+    playbook_path = os.path.join(folder, "uploads", "playbook")
+    if not os.path.isdir(playbook_path):
+        os.mkdir(playbook_path)
 
     if len(hosts) == 1:
         deployment = [
@@ -640,7 +639,7 @@ def setup_write_playbook(hosts,
         ]
 
     name = "deployment_%d" % int(time.time())
-    file_path = os.path.join(yaml_path, "%s.yml" % name)
+    file_path = os.path.join(playbook_path, "%s.yml" % name)
 
     with open(file_path, "w") as yaml_file:
         yaml_file.write(yaml.dump(deployment, default_flow_style=False))
