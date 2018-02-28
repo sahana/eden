@@ -441,7 +441,7 @@ if has_module("req"):
 # -----------------------------------------------------------------------------
 if has_module("setup"):
 
-    def deploy(playbook, private_key, hosts=["127.0.0.1"], only_tags="all", user_id=None):
+    def deploy(playbook, hosts=["127.0.0.1"], only_tags="all", private_key=None, user_id=None):
         """
             Deploy a new Eden instance by running an Ansible Playbook
         """
