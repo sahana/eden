@@ -132,7 +132,7 @@ class RequestModel(S3Model):
 
         # Defaults for Requesting Site and Requester
         requester_is_author = settings.get_req_requester_is_author()
-        if requester_is_author and auth.s3_logged_in():
+        if requester_is_author and auth.s3_logged_in() and auth.user:
             site_default = auth.user.site_id
             requester_default = auth.s3_logged_in_person()
         else:

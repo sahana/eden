@@ -1598,23 +1598,20 @@ def commit_req():
 
         if commit_item_quantity:
             req_item_id = req_item.req_req_item.id
-            commit_item_id = citable.insert(commit_id = commit_id,
-                                            req_item_id = req_item_id,
-                                            item_pack_id = req_item.req_req_item.item_pack_id,
-                                            quantity = commit_item_quantity
-                                            )
 
-            # Update the req_item.commit_quantity & req.commit_status
-            s3base.s3_store_last_record_id("req_commit_item", commit_item_id)
-            form = Storage()
-            form.vars = Storage(
-                    req_item_id = req_item_id
-                )
-            s3db.req_commit_item_onaccept(form)
+            commit_item = {"commit_id": commit_id,
+                           "req_item_id": req_item_id,
+                           "item_pack_id": req_item.req_req_item.item_pack_id,
+                           "quantity": commit_item_quantity,
+                           }
+
+            commit_item_id = citable.insert(**commit_item)
+            commit_item["id"] = commit_item_id
+
+            s3db.onaccept("req_commit_item", commit_item)
 
     # Redirect to commit
-    redirect(URL(c="req", f="commit",
-                 args=[commit_id, "commit_item"]))
+    redirect(URL(c="req", f="commit", args=[commit_id, "commit_item"]))
 
 # =============================================================================
 def send_req():
