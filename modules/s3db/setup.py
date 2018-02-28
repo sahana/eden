@@ -209,6 +209,9 @@ class S3SetupModel(S3Model):
                   #editable = False,
                   listadd = False,
                   create_onaccept = self.setup_deployment_create_onaccept,
+                  create_next = URL(c="setup", f="deployment",
+                                    args = ["[id]", "instance"],
+                                    ),
                   list_fields = ["name",
                                  "country",
                                  "template",
@@ -287,6 +290,10 @@ class S3SetupModel(S3Model):
                      Field("url",
                            label = T("URL"),
                            requires = IS_URL(),
+                           represent = lambda opt: A(opt,
+                                                     _href = opt,
+                                                     _target="_blank",
+                                                     ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("URL"),
                                                            T("The Public URL which will be used to access the instance")
@@ -298,6 +305,12 @@ class S3SetupModel(S3Model):
                      #      requires = IS_IN_SET([], multiple=True),
                      #      ),
                      Field("task_id", "reference scheduler_task",
+                           label = T("Scheduled Task"),
+                           represent = lambda opt: \
+                            A(opt,
+                              _href = URL(c="appadmin", f="update",
+                                          args = ["db", "scheduler_task", opt]),
+                              ) if opt else current.messages["NONE"],
                            writable = False,
                            ),
                      *s3_meta_fields()
@@ -381,6 +394,8 @@ class S3SetupModel(S3Model):
 
         # Configure a Production instance (needs Public URL so has to be done Inline)
         #instance_id = s3db.setup_instance.insert()
+
+        current.session.information = current.T("Press 'Deploy' when you are ready")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -529,6 +544,11 @@ class S3SetupModel(S3Model):
         # = allows us to monitor deployment progress
         db(itable.id == instance_id).update(task_id = task_id)
 
+        current.session.confirmation = current.T("Deployment initiated")
+        redirect(URL(c="setup", f="deployment",
+                     args = [deployment_id, "instance"],
+                     ))
+
 # -----------------------------------------------------------------------------
 def setup_write_playbook(hosts,
                          password,
@@ -579,11 +599,11 @@ def setup_write_playbook(hosts,
                     "db_type": database_type
                 },
                 "roles": [
-                    "%s%s" % (roles_path, database_type),
                     "%scommon" % roles_path,
-                    "%suwsgi" % roles_path,
-                    "%sconfigure" % roles_path,
                     "%s%s" % (roles_path, web_server),
+                    "%suwsgi" % roles_path,
+                    "%s%s" % (roles_path, database_type),
+                    "%sconfigure" % roles_path,
                 ]
             }
         ]
@@ -644,24 +664,25 @@ def setup_write_playbook(hosts,
     with open(file_path, "w") as yaml_file:
         yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
-    task_id = current.s3task.schedule_task(
-        name,
-        vars = {
-            "playbook": file_path,
-            "private_key": os.path.join(folder, "uploads", private_key),
-            "hosts": [host[1] for host in hosts],
-            "only_tags": [instance_type],
-        },
-        function_name = "deploy",
-        repeats = 1,
-        timeout = 3600,
-        sync_output = 300
-    )
+    task_vars = {"playbook": file_path,
+                 "hosts": [host[1] for host in hosts],
+                 "only_tags": [instance_type],
+                 }
+    if private_key:
+        task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
+
+    task_id = current.s3task.schedule_task(name,
+                                           vars = task_vars,
+                                           function_name = "deploy",
+                                           repeats = 1,
+                                           timeout = 3600,
+                                           sync_output = 300
+                                           )
 
     return task_id
 
 # -----------------------------------------------------------------------------
-def setup_get_playbook(playbook, hosts, private_key, only_tags):
+def setup_get_playbook(playbook, hosts, only_tags, private_key=None):
 
     try:
         import ansible.playbook

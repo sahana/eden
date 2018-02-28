@@ -280,15 +280,17 @@ class S3Task(object):
 
         # Run the task asynchronously
         # @ToDo: Switch to API: self.scheduler.queue_task()
-        record = current.db.scheduler_task.insert(application_name="%s/default" % current.request.application,
-                                                  task_name=task,
-                                                  function_name=task,
-                                                  args=json.dumps(args),
-                                                  vars=json.dumps(vars),
-                                                  timeout=timeout)
+        task_id = current.db.scheduler_task.insert(application_name = "%s/default" % \
+                                                    current.request.application,
+                                                   task_name = task,
+                                                   function_name = task,
+                                                   args = json.dumps(args),
+                                                   vars = json.dumps(vars),
+                                                   timeout = timeout,
+                                                   )
 
-        # Return record so that status can be polled
-        return record
+        # Return task_id so that status can be polled
+        return task_id
 
     # -------------------------------------------------------------------------
     def schedule_task(self,
@@ -384,14 +386,14 @@ class S3Task(object):
 
         # Add to DB for pickup by Scheduler task
         # @ToDo: Switch to API: self.scheduler.queue_task()
-        db = current.db
-        record = db.scheduler_task.insert(application_name="%s/default" % current.request.application,
-                                          task_name=task,
-                                          function_name=function_name,
-                                          args=json.dumps(args),
-                                          vars=json.dumps(vars),
-                                          **kwargs)
-        return record
+        task_id = current.db.scheduler_task.insert(application_name = "%s/default" % \
+                                                    current.request.application,
+                                                   task_name = task,
+                                                   function_name = function_name,
+                                                   args = json.dumps(args),
+                                                   vars = json.dumps(vars),
+                                                   **kwargs)
+        return task_id
 
     # -------------------------------------------------------------------------
     def _duplicate_task_exists(self, task, args, vars):

@@ -105,6 +105,7 @@ def org_facility_geojson(user_id=None):
     if user_id:
         # Authenticate
         auth.s3_impersonate(user_id)
+
     # Run the Task & return the result
     s3db.org_facility_geojson()
 
@@ -162,6 +163,7 @@ if has_module("dc"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = s3db.dc_target_check(target_id)
         db.commit()
@@ -273,6 +275,7 @@ if has_module("hrm"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = s3db.hrm_training_event_survey(training_event_id)
         db.commit()
@@ -295,6 +298,7 @@ if has_module("msg"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = msg.process_outbox(contact_method)
         db.commit()
@@ -315,6 +319,7 @@ if has_module("msg"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = msg.twitter_search(search_id)
         db.commit()
@@ -334,6 +339,7 @@ if has_module("msg"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = msg.process_keygraph(search_id)
         db.commit()
@@ -348,6 +354,7 @@ if has_module("msg"):
         """
         if user_id:
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = msg.poll(tablename, channel_id)
         db.commit()
@@ -362,6 +369,7 @@ if has_module("msg"):
         """
         if user_id:
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = msg.parse(channel_id, function_name)
         db.commit()
@@ -406,6 +414,7 @@ if has_module("msg"):
         """
         if user_id:
             auth.s3_impersonate(user_id)
+
         notify = s3base.S3Notifications
         return notify.notify(resource_id)
 
@@ -421,6 +430,7 @@ if has_module("req"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = s3db.req_add_from_template(req_id)
         db.commit()
@@ -432,8 +442,14 @@ if has_module("req"):
 if has_module("setup"):
 
     def deploy(playbook, private_key, hosts=["127.0.0.1"], only_tags="all", user_id=None):
+        """
+            Deploy a new Eden instance by running an Ansible Playbook
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
 
-        pb = s3db.setup_get_playbook(playbook, hosts, private_key, only_tags)
+        pb = s3db.setup_get_playbook(playbook, hosts, only_tags, private_key)
         pb.run()
 
         processed_hosts = sorted(pb.stats.processed.keys())
@@ -449,6 +465,13 @@ if has_module("setup"):
 
     # -------------------------------------------------------------------------
     def setup_management(_type, instance_id, deployment_id, user_id=None):
+        """
+            Run a Management task on an existing Eden instance by running
+            Ansible commands
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
     
         import ansible.runner
 
@@ -571,6 +594,7 @@ if has_module("stats"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = s3db.stats_demographic_update_aggregates(records)
         db.commit()
@@ -599,6 +623,7 @@ if has_module("stats"):
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
+
         # Run the Task & return the result
         result = s3db.stats_demographic_update_location_aggregate(location_level,
                                                                   root_location_id,
@@ -628,6 +653,7 @@ if has_module("stats"):
             if user_id:
                 # Authenticate
                 auth.s3_impersonate(user_id)
+
             # Run the Task & return the result
             result = s3db.disease_stats_update_aggregates(records, all)
             db.commit()
@@ -654,6 +680,7 @@ if has_module("stats"):
             if user_id:
                 # Authenticate
                 auth.s3_impersonate(user_id)
+
             # Run the Task & return the result
             result = s3db.disease_stats_update_location_aggregates(location_id,
                                                                    children,
@@ -681,6 +708,7 @@ if has_module("stats"):
             if user_id:
                 # Authenticate
                 auth.s3_impersonate(user_id)
+
             # Run the Task & return the result
             result = s3db.vulnerability_update_aggregates(records)
             db.commit()
@@ -709,6 +737,7 @@ if has_module("stats"):
             if user_id:
                 # Authenticate
                 auth.s3_impersonate(user_id)
+
             # Run the Task & return the result
             result = s3db.vulnerability_update_location_aggregate(#location_level,
                                                                   root_location_id,
@@ -728,8 +757,9 @@ if has_module("sync"):
         """
             Run all tasks for a repository, to be called from scheduler
         """
-
-        auth.s3_impersonate(user_id)
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
 
         rtable = s3db.sync_repository
         query = (rtable.deleted != True) & \
@@ -770,7 +800,7 @@ current.s3task = s3task
 # Reusable field for scheduler task links
 scheduler_task_id = S3ReusableField("scheduler_task_id",
                                     "reference %s" % s3base.S3Task.TASK_TABLENAME,
-                                    ondelete="CASCADE")
+                                    ondelete = "CASCADE")
 s3.scheduler_task_id = scheduler_task_id
 
 # END =========================================================================
