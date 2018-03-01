@@ -52,7 +52,7 @@ tasks["maintenance"] = maintenance
 # GIS: always-enabled
 # -----------------------------------------------------------------------------
 def gis_download_kml(record_id, filename, session_id_name, session_id,
-                     user_id=None):
+                     user_id = None):
     """
         Download a KML file
             - will normally be done Asynchronously if there is a worker alive
@@ -441,7 +441,12 @@ if has_module("req"):
 # -----------------------------------------------------------------------------
 if has_module("setup"):
 
-    def deploy(playbook, hosts=["127.0.0.1"], only_tags="all", private_key=None, user_id=None):
+    def deploy(playbook,
+               hosts = ["127.0.0.1"],
+               tags = "all",
+               private_key = None,
+               user_id = None,
+               ):
         """
             Deploy a new Eden instance by running an Ansible Playbook
         """
@@ -449,140 +454,19 @@ if has_module("setup"):
             # Authenticate
             auth.s3_impersonate(user_id)
 
-        pb = s3db.setup_get_playbook(playbook, hosts, only_tags, private_key)
-        pb.run()
-
-        processed_hosts = sorted(pb.stats.processed.keys())
-
-        for h in processed_hosts:
-            t = pb.stats.summarize(h)
-            if t["failures"] > 0:
-                raise Exception("One of the tasks failed")
-            elif t["unreachable"] > 0:
-                raise Exception("Host unreachable")
+        # Run the Task & return the result
+        result = s3db.setup_run_playbook(playbook, hosts, tags, private_key)
+        #db.commit()
+        return result
 
     tasks["deploy"] = deploy
-
-    # -------------------------------------------------------------------------
-    def setup_management(_type, instance_id, deployment_id, user_id=None):
-        """
-            Run a Management task on an existing Eden instance by running
-            Ansible commands
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-    
-        import ansible.runner
-
-        # Get all associated servers
-        stable = s3db.setup_server
-        servers = db(stable.deployment_id == deployment_id).select(stable.role,
-                                                                   stable.host_ip,
-                                                                   orderby = stable.role
-                                                                   )
-
-        # Get deployment
-        dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.private_key,
-                                                           dtable.remote_user,
-                                                           limitby = (0, 1)
-                                                           ).first()
-        private_key = os.path.join(current.request.folder, "uploads", deployment.private_key)
-
-        hosts = [server.host_ip for server in servers]
-        inventory = ansible.inventory.Inventory(hosts)
-
-        tasks = []
-        runner = ansible.runner.Runner
-
-        itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(itable.type,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        instance_types = ["prod", "test", "demo"]
-
-        if _type == "clean":
-
-            host_ip = servers[0].host_ip
-
-            arguments = [dict(module_name = "service",
-                              module_args = {"name": "uwsgi",
-                                             "status": "stop",
-                                             },
-                              remote_user = deployment.remote_user,
-                              private_key_file = private_key,
-                              pattern = host_ip,
-                              inventory = inventory,
-                              #sudo = True
-                              ),
-                          dict(module_name = "command",
-                              module_args = "clean %s" % instance_types[instance.type - 1],
-                              remote_user = deployment.remote_user,
-                              private_key_file = private_key,
-                              pattern = host_ip,
-                              inventory = inventory,
-                              #sudo = True
-                              ),
-                          dict(module_name = "command",
-                              module_args = "clean_eden %s" % instance_types[instance.type - 1],
-                              remote_user = deployment.remote_user,
-                              private_key_file = private_key,
-                              pattern = servers[0].host_ip,
-                              inventory = inventory,
-                              #sudo = True
-                              ),
-                          dict(module_name = "service",
-                              module_args = {"name": "uwsgi",
-                                             "status": "start",
-                                             },
-                              remote_user = deployment.remote_user,
-                              private_key_file = private_key,
-                              pattern = host_ip,
-                              inventory = inventory,
-                              #sudo = True
-                              ),
-                          ]
-
-            if len(servers) > 1:
-                host_ip = servers[2].host_ip
-                arguments[0]["pattern"] = host_ip
-                arguments[2]["pattern"] = host_ip
-                arguments[3]["pattern"] = host_ip
-
-            for argument in arguments:
-                tasks.append(runner(**argument))
-
-            # Run the tasks
-            for task in tasks:
-                response = task.run()
-                if response["dark"]:
-                    raise Exception("Error contacting the server")
-
-        elif _type == "eden":
-            argument = dict(module_name = "command",
-                            module_args = "pull %s" % [instance_types[instance.type - 1]],
-                            remote_user = deployment.remote_user,
-                            private_key_file = private_key,
-                            pattern = servers[0].host_ip,
-                            inventory = inventory,
-                            #sudo=True
-                            )
-
-            if len(servers) > 1:
-                argument["pattern"] = servers[2].host_ip
-
-            task = runner(**argument)
-            response = task.run()
-            if response["dark"]:
-                raise Exception("Error contacting the server")
-
-    tasks["setup_management"] = setup_management
 
 # -----------------------------------------------------------------------------
 if has_module("stats"):
 
-    def stats_demographic_update_aggregates(records=None, user_id=None):
+    def stats_demographic_update_aggregates(records = None,
+                                            user_id = None,
+                                            ):
         """
             Update the stats_demographic_aggregate table for the given
             stats_demographic_data record(s)
@@ -608,7 +492,8 @@ if has_module("stats"):
                                                     parameter_id,
                                                     start_date,
                                                     end_date,
-                                                    user_id=None):
+                                                    user_id = None,
+                                                    ):
         """
             Update the stats_demographic_aggregate table for the given location and parameter
             - called from within stats_demographic_update_aggregates
@@ -641,7 +526,10 @@ if has_module("stats"):
     # --------------------e----------------------------------------------------
     if has_module("disease"):
 
-        def disease_stats_update_aggregates(records=None, all=False, user_id=None):
+        def disease_stats_update_aggregates(records = None,
+                                            all = False,
+                                            user_id = None,
+                                            ):
             """
                 Update the disease_stats_aggregate table for the given
                 disease_stats_data record(s)
@@ -666,7 +554,8 @@ if has_module("stats"):
                                                      children,
                                                      parameter_id,
                                                      dates,
-                                                     user_id=None):
+                                                     user_id = None,
+                                                     ):
             """
                 Update the disease_stats_aggregate table for the given location and parameter
                 - called from within disease_stats_update_aggregates
@@ -722,7 +611,8 @@ if has_module("stats"):
                                                     parameter_id,
                                                     start_date,
                                                     end_date,
-                                                    user_id=None):
+                                                    user_id = None,
+                                                    ):
             """
                 Update the vulnerability_aggregate table for the given location and parameter
                 - called from within vulnerability_update_aggregates
