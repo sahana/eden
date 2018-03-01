@@ -3105,8 +3105,8 @@ class CommitItemModel(S3Model):
     @staticmethod
     def commit_item_onaccept(form):
         """
-            TODO fix docstring
-            Update the Commit Status for the Request Item & Request
+            On-accept actions for committed items
+                - update the commit quantities and -status of the request
         """
 
         db = current.db
@@ -3137,7 +3137,10 @@ class CommitItemModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def commit_item_ondelete(row):
-        """ TODO docstring """
+        """
+            On-delete actions for committed items
+                - update the commit quantities and -status of the request
+        """
 
         db = current.db
         s3db = current.s3db
@@ -3407,8 +3410,8 @@ class CommitSkillModel(S3Model):
     @staticmethod
     def commit_skill_onaccept(form):
         """
-            TODO fix docstring
-            Update the Commit Status for the Request Item & Request
+            On-accept actions for committed skills
+                - update the commit quantities and -status of the request
         """
 
         db = current.db
@@ -3439,7 +3442,10 @@ class CommitSkillModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def commit_skill_ondelete(row):
-        """ TODO docstring """
+        """
+            On-delete actions for committed skills
+                - update the commit quantities and -status of the request
+        """
 
         db = current.db
         s3db = current.s3db
@@ -3529,7 +3535,9 @@ def req_update_status(req_id):
 # -------------------------------------------------------------------------
 def req_update_commit_quantities_and_status(req):
     """
-        TODO docstring
+        Update commit quantities and status of a request
+
+        @param req: the req_req record (Row)
     """
 
     db = current.db

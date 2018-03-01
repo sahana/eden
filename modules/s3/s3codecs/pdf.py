@@ -38,8 +38,9 @@ except:
 from copy import deepcopy
 import os
 
-from gluon import *
-from gluon import current
+from gluon import current, redirect, URL, \
+                  A, DIV, H1, H2, H3, H4, H5, H6, IMG, P, \
+                  TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
@@ -47,39 +48,18 @@ from gluon.languages import lazyT
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode
 
-# Import the specialist libraries
 try:
-    from PIL import Image
-    from PIL import ImageOps
-    from PIL import ImageStat
-    PILImported = True
-except ImportError:
-    try:
-        import Image
-        import ImageOps
-        import ImageStat
-        PILImported = True
-    except ImportError:
-        PILImported = False
-try:
-    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-    from reportlab.pdfbase import pdfmetrics
-
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.fonts import tt2ps
-    from reportlab.rl_config import canvas_basefontname as _baseFontName
-    from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, PageTemplate
-    from reportlab.platypus.frames import Frame
-    from reportlab.platypus import Spacer, PageBreak, FrameBreak, Paragraph
-    from reportlab.platypus import Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib.units import cm
     from reportlab.lib import colors
     from reportlab.lib.colors import Color, HexColor
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
-    from reportlab.platypus.flowables import Flowable
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfgen import canvas
+    from reportlab.platypus import BaseDocTemplate, PageBreak, PageTemplate, \
+                                   Paragraph, Spacer, Table
+    from reportlab.platypus.frames import Frame
     reportLabImported = True
 except ImportError:
     reportLabImported = False
@@ -95,13 +75,13 @@ try:
     biDiImported = True
 except ImportError:
     biDiImported = False
-    current.log.warning("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
+    current.log.warning("PDF Codec", "BiDirectional Support not available: Install Python-BiDi")
 
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
 
 # -----------------------------------------------------------------------------
-def set_fonts(self):
+def set_fonts(instance):
     """
         DRY Helper function for all classes which use PDF to set the appropriate Fonts
     """
@@ -124,15 +104,15 @@ def set_fonts(self):
         except:
             current.log.error("%s Font not found: Please install it to see the correct fonts in PDF exports" % font_set[0])
             # Use the default "Helvetica" and "Helvetica-Bold"
-            self.font_name = "Helvetica"
-            self.font_name_bold = "Helvetica-Bold"
+            instance.font_name = "Helvetica"
+            instance.font_name_bold = "Helvetica-Bold"
         else:
-            self.font_name = font_name
-            self.font_name_bold = font_name_bold
+            instance.font_name = font_name
+            instance.font_name_bold = font_name_bold
     else:
         # Use the default "Helvetica" and "Helvetica-Bold"
-        self.font_name = "Helvetica"
-        self.font_name_bold = "Helvetica-Bold"
+        instance.font_name = "Helvetica"
+        instance.font_name_bold = "Helvetica-Bold"
 
 # -----------------------------------------------------------------------------
 def biDiText(text):
@@ -179,11 +159,12 @@ class S3RL_PDF(S3Codec):
 
         # Error codes
         self.ERROR = Storage(
-            PIL_ERROR = "PIL (Python Image Library) not installed, images cannot be embedded in the PDF report",
             RL_ERROR = "Python needs the ReportLab module installed for PDF export"
         )
 
         # Fonts
+        self.font_name = None
+        self.font_name_bold = None
         set_fonts(self)
 
     # -------------------------------------------------------------------------
@@ -238,8 +219,6 @@ class S3RL_PDF(S3Codec):
                    http://www.blog.pythonlibrary.org/2013/08/12/reportlab-how-to-add-page-numbers/
         """
 
-        if not PILImported:
-            current.session.warning = self.ERROR.PIL_ERROR
         if not reportLabImported:
             current.session.error = self.ERROR.RL_ERROR
             redirect(URL(extension=""))
@@ -421,8 +400,8 @@ class S3RL_PDF(S3Codec):
 
         get_vars = Storage(current.request.get_vars)
         get_vars["iColumns"] = len(list_fields)
-        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
-        resource.add_filter(filter)
+        dtfilter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(dtfilter)
 
         result = resource.select(list_fields,
                                  left=left,
@@ -748,6 +727,8 @@ class S3PDFTable(object):
             self.paper_size = A4
 
         # Fonts
+        self.font_name = None
+        self.font_name_bold = None
         set_fonts(self)
 
         # Right-to-Left
@@ -807,7 +788,6 @@ class S3PDFTable(object):
         self.colWidths = []
         self.newColWidth = [] # @todo: remove this (but see presentation)
         self.rowHeights = []
-        self.style = None
         # Temp document to test the table size, default to A4 portrait
         # @todo: use custom template
         # @todo: set pagesize for pdf component not whole document
@@ -845,10 +825,10 @@ class S3PDFTable(object):
         endCol = len(self.labels) - 1
         rowCnt = len(data)
 
-        self.style = self.tableStyle(0, rowCnt, endCol)
+        style = self.tableStyle(0, rowCnt, endCol)
         tempTable = Table(data,
                           repeatRows=1,
-                          style=self.style,
+                          style=style,
                           hAlign="LEFT"
                           )
         self.data = data
@@ -935,29 +915,32 @@ class S3PDFTable(object):
         content = []
         currentPage = 0
         totalPagesAcross = len(self.newColWidth)
-        if self.autogrow == "H" or self.autogrow == "B":
+
+        autogrow = self.autogrow
+        if autogrow == "H" or autogrow == "B":
+
             printable_width = self.pdf.printable_width
-            # Expand the columns to use all the available space
+
             newColWidth = []
-            for cols in self.newColWidth:
-                col_width = 0
-                for col in cols:
-                    col_width += col
-                if col_width < printable_width:
-                    surplus = printable_width - col_width
-                    proportion = surplus / col_width
-                    newcols = []
-                    for col in cols:
-                        newcols.append(col + col * proportion)
-                    newColWidth.append(newcols)
+
+            for widths in self.newColWidth:
+                total_width = sum(widths)
+                if total_width and total_width < printable_width:
+                    # Expand the columns to use all the available space
+                    factor = 1 + (printable_width - total_width) / total_width
+                    newColWidth.append([width * factor for width in widths])
+                else:
+                    newColWidth.append(widths)
+
             self.newColWidth = newColWidth
+
         startRow = 0
         for page in self.pages:
             if page == []:
                 currentPage += 1
                 continue
             colWidths = self.newColWidth[currentPage % totalPagesAcross]
-            if self.autogrow == "V" or self.autogrow == "B":
+            if autogrow == "V" or autogrow == "B":
                 row_height = self.rowHeights[0][0]
                 rows = len(page)
                 if self.body_height > row_height * rows:
@@ -970,10 +953,10 @@ class S3PDFTable(object):
                         page = page + extra
             endCol = len(colWidths) - 1
             rowCnt = len(page)
-            self.style = self.tableStyle(startRow, rowCnt, endCol)
-            (page, self.style) = self.pdf.addCellStyling(page, self.style)
+            style = self.tableStyle(startRow, rowCnt, endCol)
+            (page, style) = self.pdf.addCellStyling(page, style)
             p = Table(page, repeatRows=1,
-                      style=self.style,
+                      style=style,
                       hAlign="LEFT",
                       colWidths=colWidths,
                       emptyTableAction="indicate"
@@ -1009,8 +992,7 @@ class S3PDFTable(object):
 
         availableMarginSpace = self.getAvailableMarginSpace()
         currentOverlap = tableWidth - self.tempDoc.printable_width
-        endCol = len(self.labels) - 1
-        rowCnt = len(self.data)
+
         # Check margins
         if currentOverlap < availableMarginSpace:
             _pdf = self.pdf
@@ -1252,8 +1234,8 @@ class S3html2pdf():
 
     def __init__(self,
                  pageWidth,
-                 exclude_class_list = [],
-                 styles = None):
+                 exclude_class_list=None,
+                 styles=None):
         """
             Constructor
 
@@ -1263,9 +1245,14 @@ class S3html2pdf():
         """
 
         # Fonts
+        self.font_name = None
+        self.font_name_bold = None
         set_fonts(self)
 
-        self.exclude_class_list = exclude_class_list
+        if exclude_class_list is None:
+            self.exclude_class_list = []
+        else:
+            self.exclude_class_list = exclude_class_list
 
         self.pageWidth = pageWidth
         self.fontsize = 10
@@ -1512,9 +1499,9 @@ class S3html2pdf():
                  ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                  ]
 
-        content, row_count = self.parse_table_components(html,
-                                                         style = style,
-                                                         )
+        content = self.parse_table_components(html,
+                                              style = style,
+                                              )[0]
 
         if content == []:
             return None
@@ -1530,7 +1517,7 @@ class S3html2pdf():
     def parse_table_components(self,
                                table,
                                content=None,
-                               row_count=None,
+                               row_count=0,
                                style=None):
         """
             Parses TABLE components
@@ -1544,9 +1531,6 @@ class S3html2pdf():
         if content is None:
             content = []
         cappend = content.append
-
-        if row_count is None:
-            row_count = 0
 
         rowspans = []
 
@@ -1564,7 +1548,7 @@ class S3html2pdf():
                 content, row_count = parse(component,
                                            content = content,
                                            row_count = row_count,
-                                           style=style,
+                                           style = style,
                                            )
 
             elif isinstance(component, TR):
