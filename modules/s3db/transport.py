@@ -836,7 +836,7 @@ class transport_BorderCrossingRepresent(S3Represent):
         return representation
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup
 

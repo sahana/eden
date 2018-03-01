@@ -238,7 +238,7 @@ class patient_PatientRepresent(S3Represent):
         Representation of Patient names by their full name
     """
 
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for Patient names
 

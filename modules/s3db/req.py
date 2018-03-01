@@ -43,6 +43,7 @@ __all__ = ("RequestModel",
            "req_rheader",
            "req_match",
            "req_add_from_template",
+           "req_RequesterRepresent",
            )
 
 from gluon import *
@@ -291,6 +292,7 @@ class RequestModel(S3Model):
                                     default = requester_default,
                                     empty = settings.get_req_requester_optional(),
                                     label = requester_label,
+                                    represent = req_RequesterRepresent(),
                                     #writable = False,
                                     comment = S3PopupLink(c = "pr",
                                                           f = "person",
@@ -2220,9 +2222,8 @@ class RequestSkillModel(S3Model):
     @staticmethod
     def req_skill_represent(record_id):
         """
-            Used in controllers/req.py commit()
+            Represent a skill request; currently unused
 
-            @todo: improve this docstring
             @ToDo: S3Represent
         """
 
@@ -4481,6 +4482,122 @@ class req_CheckMethod(S3Method):
         response.view = "list.html"
 
         return output
+
+# =============================================================================
+class req_RequesterRepresent(S3Represent):
+    """
+        Representation of the requester_id, incl. mobile phone number
+        and link to contacts tab of the person.
+    """
+
+    def __init__(self, show_link=True):
+        """
+            Constructor
+
+            @param show_link: render as link to the contact tab of
+                              the requester (in PR/HRM/VOL as appropriate)
+        """
+
+        super(req_RequesterRepresent, self).__init__(lookup = "pr_person",
+                                                     show_link = show_link,
+                                                     )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+
+        ptable = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (ptable.id == values[0])
+        else:
+            query = (ptable.id.belongs(values))
+
+        ctable = s3db.pr_contact
+        left = [ctable.on((ctable.pe_id == ptable.pe_id) & \
+                          (ctable.contact_method == "SMS")),
+                ]
+        fields = [ptable.id,
+                  ptable.first_name,
+                  ptable.middle_name,
+                  ptable.last_name,
+                  ctable.value,
+                  ]
+
+        if current.deployment_settings.has_module("hrm"):
+            htable = s3db.hrm_human_resource
+            left.append(htable.on(htable.person_id == ptable.id))
+            fields.append(htable.type)
+
+        rows = current.db(query).select(left = left,
+                                        limitby = (0, count),
+                                        *fields)
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if not hasattr(row, "pr_person"):
+            return s3_fullname(row)
+
+        person = row.pr_person
+        reprstr = s3_fullname(person)
+        if hasattr(row, "pr_contact"):
+            try:
+                contact = row.pr_contact.value
+            except AttributeError:
+                pass
+            else:
+                if contact:
+                    reprstr = "%s %s" % (s3_str(reprstr), s3_str(contact))
+
+        return reprstr
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        hr_type = None
+
+        if row and hasattr(row, "hrm_human_resource"):
+            try:
+                hr_type = row.hrm_human_resource.type
+            except AttributeError:
+                pass
+
+        if hr_type == 1:
+            controller = "hrm"
+        elif hr_type == 2:
+            controller = "vol"
+        else:
+            controller = "pr"
+
+        return A(v,
+                 _href=URL(c = controller,
+                           f = "person",
+                           args = [k, "contacts"],
+                           ),
+                 )
 
 # =============================================================================
 def req_job_reset(r, **attr):

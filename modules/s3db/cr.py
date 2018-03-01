@@ -2528,7 +2528,7 @@ class ShelterInspectionFlagRepresent(S3Represent):
         return "%(unit)s (%(date)s): %(flag)s" % details
 
     # ---------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Lookup all rows referenced by values.
 
@@ -2616,7 +2616,7 @@ class ShelterInspectionRepresent(S3Represent):
         return "%(date)s: %(unit)s" % details
 
     # ---------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Lookup all rows referenced by values.
 

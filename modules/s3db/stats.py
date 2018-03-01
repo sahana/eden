@@ -1693,7 +1693,7 @@ class stats_SourceRepresent(S3Represent):
         return labels
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
+    def custom_lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for site rows, does a
             left join with any instance_types found. Parameters

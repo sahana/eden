@@ -240,8 +240,6 @@ def req_controller(template = False):
                 if r.http == "POST":
                     del r.get_vars["req.site_id"]
 
-            table.requester_id.represent = requester_represent
-
             # Set Fields and Labels depending on type
             if req_type:
                 table.type.default = req_type
@@ -891,63 +889,6 @@ $.filterOptionsS3({
     return s3_rest_controller("req", "req",
                               rheader = s3db.req_rheader,
                               )
-
-# =============================================================================
-def requester_represent(id, show_link=True):
-    """
-        Represent a Requester as Name + Tel#
-
-        @ToDo: Migrate to S3Represent
-    """
-
-    if not id:
-        return current.messages["NONE"]
-
-    if settings.has_module("hrm"):
-        has_hrm = True
-    else:
-        has_hrm = False
-
-    ptable = s3db.pr_person
-    ctable = s3db.pr_contact
-
-    query = (ptable.id == id)
-    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
-                     (ctable.contact_method == "SMS"))
-    fields = [ptable.first_name,
-              ptable.middle_name,
-              ptable.last_name,
-              ctable.value,
-              ]
-    if has_hrm:
-        htable = s3db.hrm_human_resource
-        left = [left, htable.on(htable.person_id == ptable.id)]
-        fields.append(htable.type)
-    row = db(query).select(*fields,
-                           left=left,
-                           limitby=(0, 1)).first()
-
-    repr = s3_fullname(row.pr_person)
-    contact = row["pr_contact.value"]
-    if contact:
-        repr = "%s %s" % (repr, contact)
-    if show_link:
-        hr_type = row.get("hrm_human_resource.type")
-        if hr_type:
-            if hr_type == 1:
-                controller = "hrm"
-            else:
-                controller = "vol"
-        else:
-            controller = "pr"
-        request.extension = "html"
-        return A(repr,
-                 _href = URL(c = controller,
-                             f = "person",
-                             args = [id, "contacts"]
-                             )
-                 )
-    return repr
 
 # =============================================================================
 def req_item():

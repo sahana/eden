@@ -1685,7 +1685,7 @@ class budget_CostItemRepresent(S3Represent):
         }
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom rows lookup function
 
