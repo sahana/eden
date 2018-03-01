@@ -2880,7 +2880,7 @@ class CommitModel(S3Model):
             list_fields.append((T("Committed Items"), "commit_item.req_item_id$item_id"))
         if "People" in req_types:
             if settings.get_req_commit_people():
-                list_fields.append((T("Committed People"), "commit_person.person_id"))
+                list_fields.append((T("Committed People"), "commit_person.human_resource_id"))
             else:
                 list_fields.append((T("Committed Skills"), "commit_skill.skill_id"))
 
