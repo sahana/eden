@@ -497,7 +497,6 @@ class S3SetupModel(S3Model):
 
         folder = current.request.folder
 
-        roles_path = "../../private/eden_deploy/roles/" # relative to playbook_path
         playbook_path = os.path.join(folder, "uploads", "playbook")
         if not os.path.isdir(playbook_path):
             os.mkdir(playbook_path)
@@ -517,13 +516,12 @@ class S3SetupModel(S3Model):
                         "db_ip": hosts[0][1],
                         "db_type": database_type
                     },
-                    "roles": [
-                        "%scommon" % roles_path,
-                        "%s%s" % (roles_path, web_server),
-                        "%suwsgi" % roles_path,
-                        "%s%s" % (roles_path, database_type),
-                        "%sconfigure" % roles_path,
-                    ]
+                    "roles": ["common",
+                              web_server,
+                              "uwsgi",
+                              database_type,
+                              "configure",
+                              ]
                 }
             ]
         else:
@@ -535,9 +533,8 @@ class S3SetupModel(S3Model):
                         "password": password,
                         "type": instance_type
                     },
-                    "roles": [
-                        "%s%s" % (roles_path, database_type),
-                    ]
+                    "roles": [database_type,
+                              ]
                 },
                 {
                     "hosts": hosts[2][1],
@@ -551,11 +548,10 @@ class S3SetupModel(S3Model):
                         "type": instance_type,
                         "web_server": web_server,
                     },
-                    "roles": [
-                        "%scommon" % roles_path,
-                        "%suwsgi" % roles_path,
-                        "%sconfigure" % roles_path,
-                    ]
+                    "roles": ["common",
+                              "uwsgi",
+                              "configure",
+                              ]
                 },
                 {
                     "hosts": hosts[1][1],
@@ -564,9 +560,8 @@ class S3SetupModel(S3Model):
                         "eden_ip": hosts[2][1],
                         "type": instance_type
                     },
-                    "roles": [
-                        "%s%s" % (roles_path, web_server),
-                    ]
+                    "roles": [web_server,
+                              ]
                 }
             ]
 
@@ -636,7 +631,13 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
 
     # Load Playbook from file
     play_source = loader.load_from_file(playbook)
-    play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
+    play = Play().load(play_source[0], variable_manager=variable_manager, loader=loader)
+
+    # Copy the current working directory to revert back to later
+    cwd = os.getcwd()
+    # Change working directory
+    roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
+    os.chdir(roles_path)
 
     # Actually run it
     tqm = None
@@ -654,7 +655,10 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
         if tqm is not None:
             tqm.cleanup()
 
-    return result
+        # Change working directory back
+        os.chdir(cwd)
+
+        return result
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
