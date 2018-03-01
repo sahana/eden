@@ -29,16 +29,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 """
 __all__ = ("S3SetupModel",
-           "setup_write_playbook",
-           "setup_get_playbook",
-           #"setup_get_prepop_options",
-           "setup_log",
+           "setup_run_playbook",
            "setup_rheader",
-           "setup_management_exists",
-           "setup_UpgradeMethod",
-           "setup_refresh",
-           "setup_getupgrades",
-           "setup_host_validator",
            )
 
 import json
@@ -46,6 +38,8 @@ import os
 import random
 import string
 import time
+
+from collections import namedtuple
 
 from ..s3 import *
 from gluon import *
@@ -73,8 +67,6 @@ class S3SetupModel(S3Model):
     names = ("setup_deployment",
              "setup_server",
              "setup_instance",
-             #"setup_package",
-             #"setup_upgrade"
              )
 
     def model(self):
@@ -226,11 +218,6 @@ class S3SetupModel(S3Model):
                             setup_server = "deployment_id",
                             )
 
-        #self.set_method("setup", "deployment",
-        #                method = "upgrade",
-        #                action = setup_UpgradeMethod,
-        #                )
-
         # ---------------------------------------------------------------------
         # Servers
         #
@@ -300,10 +287,6 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     #Field("prepop_options",
-                     #      label = T("Prepop Options"),
-                     #      requires = IS_IN_SET([], multiple=True),
-                     #      ),
                      Field("task_id", "reference scheduler_task",
                            label = T("Scheduled Task"),
                            represent = lambda opt: \
@@ -333,38 +316,6 @@ class S3SetupModel(S3Model):
                         method = "deploy",
                         action = self.setup_instance_deploy,
                         )
-
-        # ---------------------------------------------------------------------
-        # Packages
-        #
-        #tablename = "setup_package"
-        #define_table(tablename,
-        #             Field("deployment_id", "reference setup_deployment"),
-        #             Field("name",
-        #                   label = T("Package Name"),
-        #                   ),
-        #             Field("cv",
-        #                   label = T("Current Version"),
-        #                   ),
-        #             Field("av",
-        #                   label = T("Available Version"),
-        #                   ),
-        #             Field("type",
-        #                   label = T("Type of Package"),
-        #                   requires = IS_IN_SET(["os", "pip", "git"]),
-        #                   ),
-        #             *s3_meta_fields()
-        #             )
-
-        # ---------------------------------------------------------------------
-        # Upgrades
-        #
-        #tablename = "setup_upgrade"
-        #define_table(tablename,
-        #             Field("deployment_id", "reference setup_deployment"),
-        #             Field("task_id", "reference scheduler_task"),
-        #             *s3_meta_fields()
-        #             )
 
         return {}
 
@@ -460,8 +411,7 @@ class S3SetupModel(S3Model):
         return templates
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_instance_deploy(r, **attr):
+    def setup_instance_deploy(self, r, **attr):
 
         db = current.db
         s3db = current.s3db
@@ -486,15 +436,11 @@ class S3SetupModel(S3Model):
         query = (stable.deployment_id == deployment_id)
         rows = db(query).select(stable.role,
                                 stable.host_ip,
-                                #stable.hostname,
-                                orderby = stable.role
                                 )
 
         hosts = []
         for row in rows:
             hosts.append((row.role, row.host_ip))
-            #if row.role == 1 or row.role == 4:
-            #    hostname = row.hostname
 
         # Get Deployment details
         dtable = s3db.setup_deployment
@@ -507,38 +453,17 @@ class S3SetupModel(S3Model):
                                                            limitby=(0, 1)
                                                            ).first()
 
-        #prepop_options = str(",".join(form_vars.prepop_options))
-
-        #instance_type = instance.type
-        #if instance_type == 2:
-        #    demo_type = "na"
-        #elif instance_type == 1 or instance_type == 3:
-        #    # Find dtype (currently unused?)
-        #    sctable = s3db.scheduler_task
-        #    query = (itable.deployment_id == deployment_id) & \
-        #            (sctable.status == "COMPLETED")
-        #    existing_instances = db(query).select(itable.type,
-        #                                          join = sctable.on(itable.task_id == sctable.id)
-        #                                          )
-        #    if existing_instances:
-        #        demo_type = "afterprod"
-        #    else:
-        #        demo_type = "beforeprod"
-
         # Write Playbook
-        task_id = setup_write_playbook(hosts,
-                                       deployment.db_password,
-                                       WEB_SERVERS[deployment.webserver_type],
-                                       DB_SERVERS[deployment.db_type],
-                                       INSTANCE_TYPES[instance.type],
-                                       #prepop_options,
-                                       #hostname,
-                                       deployment.template,
-                                       sitename,
-                                       deployment.private_key,
-                                       deployment.remote_user,
-                                       #demo_type,
-                                       )
+        task_id = self.setup_write_playbook(hosts,
+                                            deployment.db_password,
+                                            WEB_SERVERS[deployment.webserver_type],
+                                            DB_SERVERS[deployment.db_type],
+                                            INSTANCE_TYPES[instance.type],
+                                            deployment.template,
+                                            sitename,
+                                            deployment.private_key,
+                                            deployment.remote_user,
+                                            )
 
         # Link scheduled task to current record
         # = allows us to monitor deployment progress
@@ -549,279 +474,189 @@ class S3SetupModel(S3Model):
                      args = [deployment_id, "instance"],
                      ))
 
-# -----------------------------------------------------------------------------
-def setup_write_playbook(hosts,
-                         password,
-                         web_server,
-                         database_type,
-                         instance_type,
-                         #prepop_options,
-                         #hostname = None,
-                         template = "default",
-                         sitename = None,
-                         private_key = None,
-                         remote_user = None,
-                         #demo_type = None,
-                         ):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_write_playbook(hosts,
+                             password,
+                             web_server,
+                             database_type,
+                             instance_type,
+                             template = "default",
+                             sitename = None,
+                             private_key = None,
+                             remote_user = None,
+                             ):
 
-    try:
-        import yaml
-    except ImportError:
-        error = "PyYAML module needed for Setup"
-        current.log.error(error)
-        current.response.error = error
-        return
+        try:
+            import yaml
+        except ImportError:
+            error = "PyYAML module needed for Setup"
+            current.log.error(error)
+            current.response.error = error
+            return
 
-    folder = current.request.folder
+        folder = current.request.folder
 
-    roles_path = "../../private/eden_deploy/roles/" # relative to playbook_path
-    playbook_path = os.path.join(folder, "uploads", "playbook")
-    if not os.path.isdir(playbook_path):
-        os.mkdir(playbook_path)
+        roles_path = "../../private/eden_deploy/roles/" # relative to playbook_path
+        playbook_path = os.path.join(folder, "uploads", "playbook")
+        if not os.path.isdir(playbook_path):
+            os.mkdir(playbook_path)
 
-    if len(hosts) == 1:
-        deployment = [
-            {
-                "hosts": hosts[0][1],
-                #"sudo": True,
-                "remote_user": remote_user,
-                "vars": {
-                    "password": password,
-                    "template": template,
-                    "web_server": web_server,
-                    "type": instance_type,
-                    #"prepop_options": prepop_options,
-                    "sitename": sitename,
-                    #"hostname": hostname,
-                    #"dtype": demo_type,
-                    "eden_ip": hosts[0][1],
-                    "db_ip": hosts[0][1],
-                    "db_type": database_type
-                },
-                "roles": [
-                    "%scommon" % roles_path,
-                    "%s%s" % (roles_path, web_server),
-                    "%suwsgi" % roles_path,
-                    "%s%s" % (roles_path, database_type),
-                    "%sconfigure" % roles_path,
-                ]
-            }
-        ]
-    else:
-        deployment = [
-            {
-                "hosts": hosts[0][1],
-                #"sudo": True,
-                "remote_user": remote_user,
-                "vars": {
-                    #"dtype": demo_type,
-                    "password": password,
-                    "type": instance_type
-                },
-                "roles": [
-                    "%s%s" % (roles_path, database_type),
-                ]
-            },
-            {
-                "hosts": hosts[2][1],
-                #"sudo": True,
-                "remote_user": remote_user,
-                "vars": {
-                    #"dtype": demo_type,
-                    "db_ip": hosts[0][1],
-                    "db_type": database_type,
-                    #"hostname": hostname,
-                    "password": password,
-                    "prepop_options": prepop_options,
-                    "sitename": sitename,
-                    "template": template,
-                    "type": instance_type,
-                    "web_server": web_server,
-                },
-                "roles": [
-                    "%scommon" % roles_path,
-                    "%suwsgi" % roles_path,
-                    "%sconfigure" % roles_path,
-                ]
-            },
-            {
-                "hosts": hosts[1][1],
-                #"sudo": True,
-                "remote_user": remote_user,
-                "vars": {
-                    "eden_ip": hosts[2][1],
-                    "type": instance_type
-                },
-                "roles": [
-                    "%s%s" % (roles_path, web_server),
-                ]
-            }
-        ]
-
-    name = "deployment_%d" % int(time.time())
-    file_path = os.path.join(playbook_path, "%s.yml" % name)
-
-    with open(file_path, "w") as yaml_file:
-        yaml_file.write(yaml.dump(deployment, default_flow_style=False))
-
-    task_vars = {"playbook": file_path,
-                 "hosts": [host[1] for host in hosts],
-                 "only_tags": [instance_type],
-                 }
-    if private_key:
-        task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
-
-    task_id = current.s3task.schedule_task(name,
-                                           vars = task_vars,
-                                           function_name = "deploy",
-                                           repeats = 1,
-                                           timeout = 3600,
-                                           sync_output = 300
-                                           )
-
-    return task_id
-
-# -----------------------------------------------------------------------------
-def setup_get_playbook(playbook, hosts, only_tags, private_key=None):
-
-    try:
-        import ansible.playbook
-        import ansible.inventory
-        from ansible import callbacks
-    except ImportError:
-        current.log.error("ansible module needed for Setup")
-
-    inventory = ansible.inventory.Inventory(hosts)
-    #playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY)
-    stats = callbacks.AggregateStats()
-    # runner_cb = callbacks.PlaybookRunnerCallbacks(
-    #     stats, verbose=utils.VERBOSITY)
-
-    head, tail = os.path.split(playbook)
-    deployment_name = tail.rsplit(".")[0]
-
-    cb = CallbackModule(deployment_name)
-
-    pb = ansible.playbook.PlayBook(playbook = playbook,
-                                   inventory = inventory,
-                                   callbacks = cb,
-                                   runner_callbacks = cb,
-                                   stats = stats,
-                                   private_key_file = private_key,
-                                   only_tags = only_tags
-                                   )
-
-    return pb
-
-# -----------------------------------------------------------------------------
-#def setup_get_prepop_options(template):
-#
-#    module_name = "applications.eden_setup.modules.templates.%s.config" % template
-#    __import__(module_name)
-#    config = sys.modules[module_name]
-#    prepopulate_options = config.settings.base.get("prepopulate_options")
-#    if isinstance(prepopulate_options, dict):
-#        if "mandatory" in prepopulate_options:
-#            del prepopulate_options["mandatory"]
-#        return prepopulate_options.keys()
-#    else:
-#        return ["mandatory"]
-#
-# -----------------------------------------------------------------------------
-def setup_log(filename, category, data):
-
-    if type(data) == dict:
-        if "verbose_override" in data:
-            # avoid logging extraneous data from facts
-            data = "omitted"
+        if len(hosts) == 1:
+            deployment = [
+                {
+                    "hosts": hosts[0][1],
+                    "remote_user": remote_user,
+                    "vars": {
+                        "password": password,
+                        "template": template,
+                        "web_server": web_server,
+                        "type": instance_type,
+                        "sitename": sitename,
+                        "eden_ip": hosts[0][1],
+                        "db_ip": hosts[0][1],
+                        "db_type": database_type
+                    },
+                    "roles": [
+                        "%scommon" % roles_path,
+                        "%s%s" % (roles_path, web_server),
+                        "%suwsgi" % roles_path,
+                        "%s%s" % (roles_path, database_type),
+                        "%sconfigure" % roles_path,
+                    ]
+                }
+            ]
         else:
-            data = data.copy()
-            invocation = data.pop("invocation", None)
-            data = json.dumps(data)
-            if invocation is not None:
-                data = json.dumps(invocation) + " => %s " % data
+            deployment = [
+                {
+                    "hosts": hosts[0][1],
+                    "remote_user": remote_user,
+                    "vars": {
+                        "password": password,
+                        "type": instance_type
+                    },
+                    "roles": [
+                        "%s%s" % (roles_path, database_type),
+                    ]
+                },
+                {
+                    "hosts": hosts[2][1],
+                    "remote_user": remote_user,
+                    "vars": {
+                        "db_ip": hosts[0][1],
+                        "db_type": database_type,
+                        "password": password,
+                        "sitename": sitename,
+                        "template": template,
+                        "type": instance_type,
+                        "web_server": web_server,
+                    },
+                    "roles": [
+                        "%scommon" % roles_path,
+                        "%suwsgi" % roles_path,
+                        "%sconfigure" % roles_path,
+                    ]
+                },
+                {
+                    "hosts": hosts[1][1],
+                    "remote_user": remote_user,
+                    "vars": {
+                        "eden_ip": hosts[2][1],
+                        "type": instance_type
+                    },
+                    "roles": [
+                        "%s%s" % (roles_path, web_server),
+                    ]
+                }
+            ]
 
-    path = os.path.join(current.request.folder, "yaml", "%s.log" % filename)
-    now = time.strftime(TIME_FORMAT, time.localtime())
-    fd = open(path, "a")
-    fd.write(MSG_FORMAT % dict(now=now, category=category, data=data))
-    fd.close()
+        name = "deployment_%d" % int(time.time())
+        file_path = os.path.join(playbook_path, "%s.yml" % name)
 
-# -----------------------------------------------------------------------------
-class CallbackModule(object):
+        with open(file_path, "w") as yaml_file:
+            yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
+        task_vars = {"playbook": file_path,
+                     "hosts": [host[1] for host in hosts],
+                     "tags": [instance_type],
+                     }
+        if private_key:
+            task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
+
+        task_id = current.s3task.schedule_task(name,
+                                               vars = task_vars,
+                                               function_name = "deploy",
+                                               repeats = 1,
+                                               timeout = 3600,
+                                               sync_output = 300
+                                               )
+
+        return task_id
+
+# =============================================================================
+def setup_run_playbook(playbook, hosts, tags, private_key=None):
     """
-        Logs playbook results, per deployment in eden/yaml
+        Run an Ansible Playbook & return the result
+        - designed to be run from the 'deploy' Task
+
+        http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+
+        @ToDo: Make use of Tags (needed once adding Test/Demo sites)
     """
-    def __init__(self, filename):
-        self.filename = filename
 
-    def on_any(self, *args, **kwargs):
-        pass
+    try:
+        from ansible.parsing.dataloader import DataLoader
+        from ansible.vars.manager import VariableManager
+        from ansible.inventory.manager import InventoryManager
+        from ansible.playbook.play import Play
+        from ansible.executor.task_queue_manager import TaskQueueManager
+        #from ansible.plugins.callback import CallbackBase
+    except ImportError:
+        error = "ansible module needed for Setup"
+        current.log.error(error)
+        return error
 
-    def on_failed(self, host, res, ignore_errors=False):
-        setup_log(self.filename, "FAILED", res)
+    Options = namedtuple("Options", ["connection", "forks", "become", "become_method", "become_user", "check", "diff"])
 
-    def on_ok(self, host, res):
-        setup_log(self.filename, "OK", res)
+    # Initialize needed objects
+    loader = DataLoader()
+    options = Options(connection="local", forks=100, become=None,
+                      become_method=None, become_user=None, check=False,
+                      diff=False)
+    passwords = dict(#vault_pass = "secret",
+                     private_key_file = private_key, # @ToDo: Needs testing
+                     )
 
-    def on_error(self, host, msg):
-        setup_log(self.filename, "ERROR", msg)
+    # Instantiate our ResultCallback for handling results as they come in
+    #results_callback = ResultCallback()
 
-    def on_skipped(self, host, item=None):
-        setup_log(self.filename, "SKIPPED", "...")
+    # Create Inventory and pass to Var manager
+    inventory = InventoryManager(loader=loader, sources=hosts)
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
 
-    def on_unreachable(self, host, res):
-        setup_log(self.filename, "UNREACHABLE", res)
+    # Load Playbook from file
+    play_source = loader.load_from_file(playbook)
+    play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
 
-    def on_no_hosts(self):
-        pass
+    # Actually run it
+    tqm = None
+    result = None
+    try:
+        tqm = TaskQueueManager(inventory = inventory,
+                               variable_manager = variable_manager,
+                               loader = loader,
+                               options = options,
+                               passwords = passwords,
+                               #stdout_callback=results_callback,
+                               )
+        result = tqm.run(play)
+    finally:
+        if tqm is not None:
+            tqm.cleanup()
 
-    def on_async_poll(self, host, res, jid, clock):
-        setup_log(self.filename, "DEBUG", host, res, jid, clock)
+    return result
 
-    def on_async_ok(self, host, res, jid):
-        setup_log(self.filename, "DEBUG", host, res, jid)
-
-    def on_async_failed(self, host, res, jid):
-        setup_log(self.filename, "ASYNC_FAILED", res)
-
-    def on_start(self):
-        setup_log(self.filename, "DEBUG", "on_start")
-
-    def on_notify(self, host, handler):
-        setup_log(self.filename, "DEBUG", host)
-
-    def on_no_hosts_matched(self):
-        setup_log(self.filename, "DEBUG", "no_hosts_matched")
-
-    def on_no_hosts_remaining(self):
-        setup_log(self.filename, "DEBUG", "no_hosts_remaining")
-
-    def on_task_start(self, name, is_conditional):
-        setup_log(self.filename, "DEBUG", "Starting %s" % name)
-
-    def on_vars_prompt(self, varname, private=True, prompt=None,
-                                encrypt=None, confirm=False, salt_size=None,
-                                salt=None, default=None):
-        pass
-
-    def on_setup(self):
-        setup_log(self.filename, "DEBUG", "on_setup")
-
-    def on_import_for_host(self, host, imported_file):
-        setup_log(self.filename, "IMPORTED", imported_file)
-
-    def on_not_import_for_host(self, host, missing_file):
-        setup_log(self.filename, "NOTIMPORTED", missing_file)
-
-    def on_play_start(self, pattern):
-        setup_log(self.filename, "play_start", pattern)
-
-    def on_stats(self, stats):
-        setup_log(self.filename, "DEBUG", stats)
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 def setup_rheader(r, tabs=None):
     """ Resource component page header """
 
@@ -839,445 +674,5 @@ def setup_rheader(r, tabs=None):
         rheader = DIV(rheader_tabs)
 
         return rheader
-
-# -----------------------------------------------------------------------------
-def setup_management_exists(_type, _id, deployment_id):
-    """
-        Returns True/False depending on whether a management task
-        exists for an instance
-    """
-
-    ttable = current.s3db.scheduler_task
-    args = '["%s", "%s", "%s"]' % (_type, _id, deployment_id)
-    query = ((ttable.function_name == "setup_management") & \
-             (ttable.args == args) & \
-             (ttable.status.belongs(["RUNNING", "QUEUED", "ASSIGNED"])))
-    exists = current.db(query).select(ttable.id,
-                                      limitby = (0, 1)
-                                      ).first()
-
-    if exists:
-        return True
-
-    return False
-
-# -----------------------------------------------------------------------------
-class setup_UpgradeMethod(S3Method):
-
-    def apply_method(self, r, **attr):
-
-        try:
-            import yaml
-        except ImportError:
-            current.log.error("PyYAML module needed for Setup")
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-
-        record = r.record
-
-        dtable = s3db.setup_deploy
-        stable = s3db.scheduler_task
-
-        query = (dtable.host == record.host) & \
-                (stable.status == "COMPLETED")
-        machines = db(query).select(#dtable.id.with_alias("deployment"),
-                                    #dtable.type.with_alias("type"),
-                                    dtable.id,
-                                    join = [stable.on(dtable.task_id == stable.id),
-                                            ],
-                                    distinct = True
-                                    )
-
-        machine_ids = [machine.id for machine in machines]
-
-        validate = s3db.setup_host_validator(machine_ids)
-
-        if r.http == "GET":
-
-            if record.last_refreshed is None:
-                redirect(URL(c="setup", f="refresh", args=record.id))
-
-            response = current.response
-
-            # Data table
-            resource = s3db.resource("setup_package")
-
-            totalrows = resource.count()
-            list_fields = ["id",
-                           "name",
-                           "cv",
-                           "av",
-                           ]
-
-            ptable = s3db.setup_package
-            package_filter = (ptable.deployment_id == record.id) & \
-                             (ptable.cv != ptable.av)
-
-            resource.add_filter(package_filter)
-
-            data = resource.select(list_fields,
-                                   limit = totalrows,
-                                   )
-
-            dt = S3DataTable(data["rfields"], data["rows"])
-            dt_id = "datatable"
-
-            if validate is not None:
-                dt_bulk_actions = None
-                appname = current.request.application
-                response.s3.scripts.append("/%s/static/scripts/S3/s3.setup.js" % appname)
-            else:
-                dt_bulk_actions = [(T("Upgrade"), "upgrade")]
-
-            items = dt.html(totalrows,
-                            totalrows,
-                            dt_pagination = "false",
-                            dt_bulk_actions = dt_bulk_actions,
-                            )
-
-            output = dict(items=items)
-            response.view = "list.html"
-
-        elif r.http == "POST":
-
-            if validate is not None:
-                current.session.error = validate
-                redirect(URL(c="setup", f="%s_deploy" % record.type, args=[record.id, "upgrade"]))
-
-            post_vars =  r.post_vars
-
-            ptable = s3db.setup_package
-            selected = post_vars.selected
-            if selected:
-                selected = selected.split(",")
-            else:
-                selected = []
-
-            # query = ptable.id.belongs(selected)
-            # packages = db(query).select()
-
-            query = FS("id").belongs(selected)
-            presource = s3db.resource("setup_package", filter=query)
-            packages = presource.select(["name", "type"], as_rows=True)
-
-            system_packages = []
-            pip_packages = []
-            git_packages = []
-
-            for package in packages:
-                if package.type == "os":
-                    system_packages.append(package.name)
-                elif package.type == "pip":
-                    pip_packages.append(package.name)
-                elif package.type == "git":
-                    if package.name == "web2py":
-                        git_packages.append({name: package.name, chdir: "/home/%s" % record.type})
-
-
-            directory = os.path.join(current.request.folder, "yaml")
-            name = "upgrade_%d" % int(time.time())
-            file_path = os.path.join(directory, "%s.yml" % name)
-
-            roles_path = "../private/playbook/roles/"
-
-            upgrade = [
-                {
-                    "hosts": record.host,
-                    #"sudo": True,
-                    "vars": {
-                        "system_packages": system_packages,
-                        "pip_packages": pip_packages,
-                        "git_packages": git_packages,
-                    },
-                    "roles": [
-                        "%supgrades" % roles_path,
-                    ]
-                }
-            ]
-
-            if record.type == "remote":
-                upgrade[0]["remote_user"] = record.remote_user
-            else:
-                upgrade[0]["connection"] = "local"
-
-            if not os.path.isdir(directory):
-                os.mkdir(directory)
-
-            with open(file_path, "w") as yaml_file:
-                yaml_file.write(yaml.dump(upgrade, default_flow_style=False))
-
-            if record.private_key:
-                private_key = os.path.join(current.request.folder, "uploads", record.private_key)
-            else:
-                private_key = None
-
-            only_tags = ['all']
-
-            row = current.s3task.schedule_task(
-                name,
-                vars = {
-                    "playbook": file_path,
-                    "private_key": private_key,
-                    "host": [record.host],
-                    "only_tags": only_tags,
-                },
-                function_name = "deploy",
-                repeats = 1,
-                timeout = 3600,
-                sync_output = 300
-            )
-
-            # Add record to setup_upgrade
-            utable = s3db.setup_upgrade
-            utable.insert(deployment_id=record.id, scheduler=row.id)
-
-            current.session.flash = T("Upgrade Queued. Please wait while it is completed")
-            redirect(URL(c="setup", f="%s_deploy" % record.type, args=[record.id, "upgrade"]))
-
-        return output
-
-# -----------------------------------------------------------------------------
-def setup_refresh(id):
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-
-    dtable = s3db.setup_deploy
-    query = (dtable.id == id)
-
-    record = db(query).select(dtable.id,
-                              dtable.host,
-                              dtable.type,
-                              dtable.prepop,
-                              dtable.remote_user,
-                              dtable.private_key,
-                              limitby = (0, 1)
-                              ).first()
-
-    if not record:
-        return {"success": False,
-                "msg": T("Record Not Found"),
-                "f": "index",
-                "args": None
-                }
-
-    # Get machines with the same host as record
-    ptable = s3db.setup_package
-    stable = s3db.scheduler_task
-    utable = s3db.setup_upgrade
-
-    query = (dtable.host == record.host) & \
-            (stable.status == "COMPLETED")
-    machines = db(query).select(dtable.id.with_alias("deployment"),
-                                dtable.type.with_alias("type"),
-                                join = [stable.on(dtable.task_id == stable.id),
-                                        ],
-                                distinct = True
-                                )
-
-    # Check if machines have a refresh running
-    machine_ids = [machine.deployment for machine in machines]
-
-    validate = s3db.setup_host_validator(machine_ids)
-    if validate is not None:
-        return {"success": False,
-                "msg": validate,
-                "f": str("%s_deploy" % record.type),
-                "args": [record.id, "read"]
-                }
-
-    # Set the refresh lock
-    for machine in machines:
-        db(dtable.id == machine.deployment).update(refresh_lock = 1)
-
-    # Find new packages
-
-    if record.type == "local":
-        response = s3db.setup_getupgrades(record.host, record.prepop)
-    else:
-        response = s3db.setup_getupgrades(record.host,
-                                          record.prepop,
-                                          record.remote_user,
-                                          record.private_key,
-                                          )
-
-    if response["dark"]:
-        return {"success": False,
-                "msg": T("Error contacting the server"),
-                "f": str("%s_deploy" % record.type),
-                "args": [record.id, "upgrade"]
-                }
-
-    # Call ansible runner
-
-    # Get a list of current packages
-    packages = db(ptable.deployment == record.id).select(ptable.name)
-
-    old_set = set()
-    for package in packages:
-        old_set.add(package.name)
-
-    new_set = set()
-    fetched_packages = response["contacted"][record.host]["packages"]
-
-    for package in fetched_packages:
-        new_set.add(package["name"])
-
-    new_packages = new_set.difference(old_set)
-    upgrade_packages = new_set.intersection(old_set)
-    uptodate_packages = old_set.difference(new_set)
-
-    for package in fetched_packages:
-        if package["name"] in new_packages:
-            for machine in machines:
-                if package["name"] == "web2py" and machine.deployment != record.id:
-                    continue
-                ptable.insert(name = package["name"],
-                              cv = package["cv"],
-                              av = package["av"],
-                              type = package["type"],
-                              deployment = machine.deployment,
-                              )
-        elif package["name"] in upgrade_packages:
-            for machine in machines:
-                if package["name"] == "web2py" and machine.deployment != record.id:
-                    continue
-                query = (ptable.name == package["name"]) & \
-                        (ptable.deployment == machine.deployment)
-                db(query).update(av=package["av"])
-
-    for package in uptodate_packages:
-        for machine in machines:
-            if package == "web2py" and machine.deployment != record.id:
-                continue
-            query = (ptable.name == package) & \
-                    (ptable.deployment == machine.deployment)
-            row = db(query).select().first()
-            row.av = row.cv
-            row.update_record()
-
-    # Release the refresh lock
-    for machine in machines:
-        db(dtable.id == machine.deployment).update(refresh_lock=0)
-
-    # Update last refreshed
-    import datetime
-    record.update_record(last_refreshed=datetime.datetime.now())
-
-    return {"success": True,
-            "msg": T("Refreshed Packages"),
-            "f": str("%s_deploy" % record.type),
-            "args": [record.id, "upgrade"]
-            }
-
-# -----------------------------------------------------------------------------
-def setup_host_validator(machine_ids):
-    """
-        Helper Function that checks whether it's safe to allow
-        upgrade/deployment/refresh packages on given instances
-    """
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-
-    dtable = s3db.setup_deploy
-    ptable = s3db.setup_package
-    stable = s3db.scheduler_task
-    utable = s3db.setup_upgrade
-
-    if len(machine_ids) > 1:
-        multiple_machine_ids = True
-    else:
-        multiple_machine_ids = False
-
-    # Is there a Refresh in process?
-    if multiple_machine_ids:
-        query = (dtable.id.belongs(machine_ids)) & \
-                (dtable.refresh_lock != 0)
-    else:
-        query = (dtable.id == machine_ids[0]) & \
-                (dtable.refresh_lock != 0)
-
-    exists = db(query).select(dtable.id,
-                              limitby = (0, 1)
-                              ).first()
-
-    if exists:
-        return T("A refresh is in progress. Please wait for it to finish")
-
-    # or an Upgrade in process?
-    if multiple_machine_ids:
-        query = (utable.deployment.belongs(machine_ids)) & \
-                ((stable.status != "COMPLETED") & (stable.status != "FAILED"))
-    else:
-        query = (utable.deployment == machine_ids[0]) & \
-                ((stable.status != "COMPLETED") & (stable.status != "FAILED"))
-
-    exists = db(query).select(utable.deployment,
-                              join=stable.on(utable.scheduler == stable.id),
-                              limitby = (0, 1)
-                              ).first()
-
-    if exists:
-        return T("An upgrade is in progress. Please wait for it to finish")
-
-    # or even a Deployment in process?
-    if multiple_machine_ids:
-        query = (dtable.id.belongs(machine_ids)) & \
-                ((stable.status != "COMPLETED") & (stable.status != "FAILED"))
-    else:
-        query = (dtable.id == machine_ids[0]) & \
-                ((stable.status != "COMPLETED") & (stable.status != "FAILED"))
-
-    exists = db(query).select(dtable.id,
-                              join = stable.on(utable.scheduler == stable.id),
-                              limitby = (0, 1)
-                              ).first()
-
-    if exists:
-        return T("A deployment is in progress. Please wait for it to finish")
-
-# -----------------------------------------------------------------------------
-def setup_getupgrades(host, web2py_path, remote_user=None, private_key=None):
-
-    try:
-        import ansible.inventory
-        import ansible.runner
-    except ImportError:
-        current.log.error("ansible module needed for Setup")
-
-    module_path = os.path.join(current.request.folder, "private", "playbook", "library")
-    if private_key:
-        private_key = os.path.join(current.request.folder, "uploads", private_key)
-
-    inventory = ansible.inventory.Inventory([host])
-
-    if private_key and remote_user:
-        runner = ansible.runner.Runner(module_name = "upgrade",
-                                       module_path = module_path,
-                                       module_args = "web2py_path=/home/%s" % web2py_path,
-                                       remote_user = remote_user,
-                                       private_key_file = private_key,
-                                       pattern = host,
-                                       inventory = inventory,
-                                       #sudo = True,
-                                       )
-
-    else:
-        runner = ansible.runner.Runner(module_name = "upgrade",
-                                       module_path = module_path,
-                                       module_args = "web2py_path=/home/%s" % web2py_path,
-                                       pattern = host,
-                                       inventory = inventory,
-                                       #sudo = True,
-                                       )
-
-    response = runner.run()
-
-    return response
 
 # END =========================================================================
