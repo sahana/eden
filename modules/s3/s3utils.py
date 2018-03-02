@@ -49,7 +49,7 @@ from gluon.languages import lazyT
 from gluon.tools import addrow
 
 from s3dal import Expression, Field, Row, S3DAL
-from s3datetime import ISOFORMAT, s3_decode_iso_datetime
+from s3datetime import ISOFORMAT, s3_decode_iso_datetime, s3_relative_datetime
 
 URLSCHEMA = re.compile(r"((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        r"(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
@@ -1909,7 +1909,6 @@ class S3CustomController(object):
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")
         except IOError:
-            from gluon.http import HTTP
             raise HTTP(404, "Unable to open Custom View: %s" % view)
         return
 
@@ -2054,28 +2053,32 @@ class S3TypeConverter(object):
             #     is specified for the local time zone, unless a timezone is
             #     explicitly specified in the string (e.g. trailing Z in ISO)
             dt = None
-            try:
-                # Try ISO Format (e.g. filter widgets)
-                (y, m, d, hh, mm, ss) = time.strptime(b, ISOFORMAT)[:6]
-            except ValueError:
-                # Fall back to default format (deployment setting)
-                dt = b
-            else:
-                dt = datetime.datetime(y, m, d, hh, mm, ss)
-            # Validate and convert to UTC (assuming local timezone)
-            from s3validators import IS_UTC_DATETIME
-            dt, error = IS_UTC_DATETIME()(dt)
-            if error:
-                # dateutil as last resort
-                # NB: this can process ISOFORMAT with time zone specifier,
-                #     returning a timezone-aware datetime, which is then
-                #     properly converted by IS_UTC_DATETIME
+            if b and b.lstrip()[0] in "+-nN":
+                # Relative datetime expression?
+                dt = s3_relative_datetime(b)
+            if dt is None:
                 try:
-                    dt = s3_decode_iso_datetime(b)
-                except:
-                    raise ValueError
+                    # Try ISO Format (e.g. filter widgets)
+                    (y, m, d, hh, mm, ss) = time.strptime(b, ISOFORMAT)[:6]
+                except ValueError:
+                    # Fall back to default format (deployment setting)
+                    dt = b
                 else:
-                    dt, error = IS_UTC_DATETIME()(dt)
+                    dt = datetime.datetime(y, m, d, hh, mm, ss)
+                # Validate and convert to UTC (assuming local timezone)
+                from s3validators import IS_UTC_DATETIME
+                dt, error = IS_UTC_DATETIME()(dt)
+                if error:
+                    # dateutil as last resort
+                    # NB: this can process ISOFORMAT with time zone specifier,
+                    #     returning a timezone-aware datetime, which is then
+                    #     properly converted by IS_UTC_DATETIME
+                    try:
+                        dt = s3_decode_iso_datetime(b)
+                    except:
+                        raise ValueError
+                    else:
+                        dt, error = IS_UTC_DATETIME()(dt)
             return dt
         else:
             raise TypeError
@@ -2088,19 +2091,26 @@ class S3TypeConverter(object):
         if isinstance(b, datetime.date):
             return b
         elif isinstance(b, basestring):
-            from s3validators import IS_UTC_DATE
-            # Try ISO format first (e.g. S3DateFilter)
-            value, error = IS_UTC_DATE(format="%Y-%m-%d")(b)
-            if error:
-                # Try L10n format
-                value, error = IS_UTC_DATE()(b)
-            if error:
-                # Maybe specified as datetime-string?
-                # NB: converting from string (e.g. URL query) assumes
-                #     the string is specified for the local time zone,
-                #     specify an ISOFORMAT date/time with explicit time zone
-                #     (e.g. trailing Z) to override this assumption
-                value = cls._datetime(b).date()
+            value = None
+            if b and b.lstrip()[0] in "+-nN":
+                # Relative datime expression?
+                dt = s3_relative_datetime(b)
+                if dt:
+                    value = dt.date()
+            if value is None:
+                from s3validators import IS_UTC_DATE
+                # Try ISO format first (e.g. S3DateFilter)
+                value, error = IS_UTC_DATE(format="%Y-%m-%d")(b)
+                if error:
+                    # Try L10n format
+                    value, error = IS_UTC_DATE()(b)
+                if error:
+                    # Maybe specified as datetime-string?
+                    # NB: converting from string (e.g. URL query) assumes
+                    #     the string is specified for the local time zone,
+                    #     specify an ISOFORMAT date/time with explicit time zone
+                    #     (e.g. trailing Z) to override this assumption
+                    value = cls._datetime(b).date()
             return value
         else:
             raise TypeError

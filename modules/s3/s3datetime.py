@@ -40,6 +40,7 @@ __all__ = ("ISOFORMAT",
            "s3_encode_iso_datetime",
            "s3_utc",
            "s3_get_utc_offset",
+           "s3_relative_datetime",
            )
 
 import datetime
@@ -55,13 +56,15 @@ import math
 import re
 import time
 
-from gluon import *
+from gluon import current
 
 # =============================================================================
 # Constants
 #
 ISOFORMAT = "%Y-%m-%dT%H:%M:%S" #: ISO 8601 Combined Date+Time format
-OFFSET = re.compile("([+|-]{0,1})(\d{1,2}):(\d\d)")
+OFFSET = re.compile(r"([+|-]{0,1})(\d{1,2}):(\d\d)")
+RELATIVE = re.compile(r"([+-]{0,1})([0-9]*)([YMDhms])")
+SECONDS = {"D": 86400, "h": 3600, "m": 60, "s": 1}
 
 # =============================================================================
 class S3DateTime(object):
@@ -426,10 +429,8 @@ class S3Calendar(object):
                 dtfmt = "%Y-%m-%d" # ISO Date Format
 
         # Deal with T's
-        try:
-            dtfmt = str(dtfmt)
-        except (UnicodeDecodeError, UnicodeEncodeError):
-            dtfmt = s3_unicode(dtfmt).encode("utf-8")
+        from s3utils import s3_str
+        dtfmt = s3_str(dtfmt)
 
         return self.calendar._format(dt, dtfmt)
 
@@ -453,15 +454,13 @@ class S3Calendar(object):
                 dtfmt = ISOFORMAT # ISO Date/Time Format
 
         # Deal with T's
-        try:
-            dtfmt = str(dtfmt)
-        except (UnicodeDecodeError, UnicodeEncodeError):
-            dtfmt = s3_unicode(dtfmt).encode("utf-8")
+        from s3utils import s3_str
+        dtfmt = s3_str(dtfmt)
 
         # Remove microseconds
         # - for the case that the calendar falls back to .isoformat
         if isinstance(dt, datetime.datetime):
-           dt = dt.replace(microsecond=0)
+            dt = dt.replace(microsecond=0)
 
         return self.calendar._format(dt, dtfmt)
 
@@ -749,7 +748,7 @@ class S3PersianCalendar(S3Calendar):
             @param jd: the Julian day number
         """
 
-        jd = math.floor(jd) + 0.5;
+        jd = math.floor(jd) + 0.5
 
         depoch = jd - cls.to_jd(475, 1, 1)
 
@@ -1025,7 +1024,7 @@ class S3NepaliCalendar(S3Calendar):
             @param jd: the Julian day number
         """
 
-        gyear, gmonth, gday = cls._jd_to_gregorian(jd)
+        gyear = cls._jd_to_gregorian(jd)[0]
 
         gdoy = jd - cls._gregorian_to_jd(gyear, 1, 1) + 1
 
@@ -1086,7 +1085,7 @@ class S3NepaliCalendar(S3Calendar):
         if month == 9:
             gdoy += day - cdata[0]
             if gdoy <= 0:
-                gyear_ = guear + (1 if gyear < 0 else 0)
+                gyear_ = gyear + (1 if gyear < 0 else 0)
                 gleapyear = gyear_ % 4 == 0 and \
                             (gyear_ % 100 != 0 or gyear_ % 400 == 0)
                 gdoy += 366 if gleapyear else 365
@@ -1229,7 +1228,7 @@ class S3DateTimeParser(object):
         today = (now.year, now.month, now.day, 0, 0, 0)
 
         # Convert today into current calendar
-        cyear, cmonth, cday = calendar._cdate(today)[:3]
+        cyear, cmonth = calendar._cdate(today)[:2]
 
         # Year
         year = parse_result.get("year4")
@@ -1497,7 +1496,7 @@ def s3_parse_datetime(string, dtfmt=None):
     if dtfmt is None:
         dtfmt = ISOFORMAT
     try:
-        (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(string, dtfmt)
+        (y, m, d, hh, mm, ss) = time.strptime(string, dtfmt)[:6]
         dt = datetime.datetime(y, m, d, hh, mm, ss)
     except ValueError:
         dt = None
@@ -1536,18 +1535,21 @@ def s3_decode_iso_datetime(dtstr):
     """
 
     # Default seconds/microseconds=zero
-    DEFAULT = datetime.datetime.utcnow().replace(second=0,
-                                                 microsecond=0)
+    DEFAULT = datetime.datetime.utcnow().replace(second = 0,
+                                                 microsecond = 0,
+                                                 )
 
     dt = dateutil.parser.parse(dtstr, default=DEFAULT)
     if dt.tzinfo is None:
         try:
             dt = dateutil.parser.parse(dtstr + " +0000",
-                                       default=DEFAULT)
-        except:
+                                       default = DEFAULT,
+                                       )
+        except ValueError:
             # time part missing?
             dt = dateutil.parser.parse(dtstr + " 00:00:00 +0000",
-                                       default=DEFAULT)
+                                       default = DEFAULT,
+                                       )
     return dt
 
 #--------------------------------------------------------------------------
@@ -1620,5 +1622,60 @@ def s3_get_utc_offset():
 
     session.s3.utc_offset = offset
     return offset
+
+# =============================================================================
+# Utilities
+#
+def s3_relative_datetime(dtexpr):
+    """
+        Return an absolute datetime for a relative date/time expression;
+
+        @param dtexpr: the relative date/time expression,
+                       syntax: "[+|-][numeric][Y|M|D|h|m|s]",
+                       e.g. "+12M" = twelve months from now,
+                       additionally recognizes the string "NOW"
+
+        @return: datetime.datetime (UTC), or None if dtexpr is invalid
+    """
+
+    if dtexpr:
+        dtexpr = dtexpr.strip()
+        now = current.request.utcnow
+        if dtexpr.lower() == "now":
+            return now
+        elif dtexpr[0] not in "+-":
+            return None
+    else:
+        return None
+
+    from dateutil.relativedelta import relativedelta
+    timedelta = datetime.timedelta
+
+    f = 1
+    valid = False
+    then = now
+    for m in RELATIVE.finditer(dtexpr):
+
+        (sign, value, unit) = m.group(1,2,3)
+
+        try:
+            value = int(value)
+        except ValueError:
+            continue
+
+        if sign == "-":
+            f = -1
+        elif sign == "+":
+            f = 1
+
+        if unit == "Y":
+            then += relativedelta(years = f * value)
+        elif unit == "M":
+            then += relativedelta(months = f * value)
+        else:
+            then += timedelta(seconds = f * value * SECONDS[unit])
+        valid = True
+
+    return then if valid else None
 
 # END =========================================================================

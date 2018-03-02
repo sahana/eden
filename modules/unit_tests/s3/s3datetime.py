@@ -1783,6 +1783,31 @@ class S3DateTimeParserTests(unittest.TestCase):
                 assertEqual(result, timetuple)
 
 # =============================================================================
+class RelativeDateTimeTests(unittest.TestCase):
+
+    def test_relative_datetime(self):
+
+        from dateutil.relativedelta import relativedelta
+        now = current.request.utcnow
+
+        assertEqual = self.assertEqual
+
+        parse = s3_relative_datetime
+
+        assertEqual(parse("NOW"), now)
+        assertEqual(parse("-1D"), now - relativedelta(days=1))
+        assertEqual(parse("-5s"), now - relativedelta(seconds=5))
+        assertEqual(parse("+24h"), now + relativedelta(hours=24))
+        assertEqual(parse("+1Y3M"), now + relativedelta(months=15))
+        assertEqual(parse("-10m"), now - relativedelta(minutes=10))
+        assertEqual(parse("+1Y-12M"), now)
+
+        assertEqual(parse(None), None)
+        assertEqual(parse(""), None)
+        assertEqual(parse("invalid"), None)
+        assertEqual(parse("1997-11-03T19:55:07"), None)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -1794,6 +1819,7 @@ if __name__ == "__main__":
         S3PersianCalendarTests,
         S3NepaliCalendarTests,
         S3DateTimeParserTests,
+        RelativeDateTimeTests,
     )
 
 # END ========================================================================
