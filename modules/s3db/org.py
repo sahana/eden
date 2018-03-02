@@ -4128,7 +4128,7 @@ class S3FacilityModel(S3Model):
             filter_widgets.append(
                 S3OptionsFilter("reqs",
                                 label = T("Highest Priority Open Requests"),
-                                options = self.req_priority_opts,
+                                options = lambda: self.req_priority_opts,
                                 cols = 3,
                                 ))
 

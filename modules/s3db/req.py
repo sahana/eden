@@ -44,6 +44,7 @@ __all__ = ("RequestModel",
            "req_match",
            "req_add_from_template",
            "req_RequesterRepresent",
+           "req_ReqItemRepresent",
            )
 
 from gluon import *
@@ -1644,14 +1645,15 @@ class RequestItemModel(S3Model):
             msg_list_empty = T("No Items currently requested"))
 
         # Reusable Field
+        req_item_represent = req_ReqItemRepresent()
         req_item_id = S3ReusableField("req_item_id", "reference %s" % tablename,
                                       label = T("Request Item"),
                                       ondelete = "CASCADE",
-                                      represent = self.req_item_represent,
+                                      represent = req_item_represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "req_req_item.id",
-                                                              self.req_item_represent,
+                                                              req_item_represent,
                                                               orderby="req_req_item.id",
                                                               sort=True)),
                                       comment = DIV(_class="tooltip",
@@ -1738,7 +1740,7 @@ $.filterOptionsS3({
         # Pass names back to global scope (s3.*)
         #
         return {"req_item_id": req_item_id,
-                "req_item_represent": self.req_item_represent,
+                "req_item_represent": req_item_represent,
                 }
 
     # -------------------------------------------------------------------------
@@ -1842,34 +1844,6 @@ $.filterOptionsS3({
                 query = (rictable.req_id == req_id) & \
                         (rictable.item_category_id == item_category_id)
                 db(query).delete()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_item_represent(record_id, row=None):
-        """
-            Represent a Request Item
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            record_id = row.id
-        elif not record_id:
-            return current.messages["NONE"]
-
-        db = current.db
-        ritable = db.req_req_item
-        sitable = db.supply_item
-        query = (ritable.id == record_id) & \
-                (ritable.item_id == sitable.id)
-        record = db(query).select(sitable.name,
-                                  limitby = (0, 1),
-                                  ).first()
-        if record:
-            return record.name
-        else:
-            return None
 
     # ---------------------------------------------------------------------
     @classmethod
@@ -4541,6 +4515,7 @@ class req_RequesterRepresent(S3Represent):
         rows = current.db(query).select(left = left,
                                         limitby = (0, count),
                                         *fields)
+        self.queries += 1
         return rows
 
     # -------------------------------------------------------------------------
@@ -4598,6 +4573,58 @@ class req_RequesterRepresent(S3Represent):
                            args = [k, "contacts"],
                            ),
                  )
+
+# =============================================================================
+class req_ReqItemRepresent(S3Represent):
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(req_ReqItemRepresent, self).__init__(lookup = "req_req_item",
+                                                   )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        ritable = self.table
+        sitable = current.s3db.supply_item
+
+        count = len(values)
+        if count == 1:
+            query = (ritable.id == values[0])
+        else:
+            query = (ritable.id.belongs(values))
+
+        left = sitable.on(ritable.item_id == sitable.id)
+        rows = current.db(query).select(ritable.id,
+                                        sitable.name,
+                                        left = left,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if not hasattr(row, "supply_item"):
+            return str(row.id)
+
+        return row.supply_item.name
 
 # =============================================================================
 def req_job_reset(r, **attr):
