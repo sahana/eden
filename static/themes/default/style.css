@@ -175,6 +175,9 @@ select {
   display: inline-block;
   font-weight: normal;
 }
+.form-container form select {
+    padding-right: 1rem;
+}
 
 input[type="text"],
 input[type="password"],
@@ -601,7 +604,7 @@ div.tabs span.tab_other a:hover {
 }
 .dataTables_length select {
   height: auto;
-  padding: 2px;
+  padding: 0.1rem 1rem 0.1rem 0.1rem;
   font-size: 0.75rem;
 }
 
