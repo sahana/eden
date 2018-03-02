@@ -40,7 +40,8 @@ def human_resource():
     # Custom method for Service Record
     s3db.set_method("hrm", "human_resource",
                     method = "form",
-                    action = s3db.vol_service_record)
+                    action = s3db.vol_service_record,
+                    )
 
     return s3db.hrm_human_resource_controller()
 
@@ -169,8 +170,9 @@ def job_title():
             current.messages["NONE"] = ""
             table = s3db.hrm_job_title
             table.organisation_id.represent = \
-                s3db.org_OrganisationRepresent(acronym=False,
-                                               parent=False)
+                s3db.org_OrganisationRepresent(acronym = False,
+                                               parent = False,
+                                               )
             table.organisation_id.label = None
             table.type.label = None
             table.comments.label = None
@@ -322,7 +324,8 @@ def skill_competencies():
             (rtable.skill_type_id == table.skill_type_id)
     records = db(query).select(rtable.id,
                                rtable.name,
-                               orderby=~rtable.priority)
+                               orderby = ~rtable.priority,
+                               )
 
     response.headers["Content-Type"] = "application/json"
     return records.json()
@@ -340,7 +343,8 @@ def staff_org_site_json():
             (table.organisation_id == otable.id)
     records = db(query).select(table.site_id,
                                otable.id,
-                               otable.name)
+                               otable.name,
+                               )
 
     response.headers["Content-Type"] = "application/json"
     return records.json()
@@ -435,7 +439,8 @@ def facility():
     # Open record in this controller after creation
     s3db.configure("org_facility",
                    create_next = URL(c="vol", f="facility",
-                                     args = ["[id]", "read"]),
+                                     args = ["[id]", "read"],
+                                     ),
                    )
 
     return s3db.org_facility_controller()
