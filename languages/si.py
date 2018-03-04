@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 {
 'About': 'අප ගැන',
 'About us': 'අප ගැන',
@@ -66,3 +66,4 @@
 'Users': 'පරිශීලකයන්',
 'View the module-wise percentage of translated strings': 'පරිවර්ථනය කරන ලද නූල් වල මොඩියුලය ඥානවන්ත ප්රතිශතයක් බලන්න',
 }
+
