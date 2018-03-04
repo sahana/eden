@@ -1,0 +1,8 @@
+First Name,Last Name,Email,Password,Role,Organisation,Link
+UN,Requester,un_requester@example.com,eden,REQUESTER,United Nations Resident Coordinator Office,Staff
+HCT,Requester,hct_requester@example.com,eden,REQUESTER,Oxfam,Staff
+Other,Requester,other_requester@example.com,eden,REQUESTER,Sarvodaya Shramadana Society,Staff
+Request,Supervisor,approver@example.com,eden,APPROVER,Oxfam,Staff
+UN,Supplier,un_supplier@example.com,eden,SUPPLIER,United Nations Resident Coordinator Office,Staff
+Other,Supplier,other_supplier@example.com,eden,SUPPLIER,Oxfam,Staff
+Organization,Administrator,org_admin@example.com,eden,ORG_ADMIN,Oxfam,Staff
