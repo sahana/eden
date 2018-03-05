@@ -595,8 +595,6 @@ class RequestModel(S3Model):
 
         # Components
         add_components(tablename,
-                       # Documents
-                       req_document = "req_id",
                        # Requested Items
                        req_req_item = {"joinby": "req_id",
                                        "multiple": multiple_req_items,
