@@ -107,7 +107,7 @@
 'Add Skill': 'أضافة مهارة جديدة',
 'Add Skill Equivalence': 'أضف مهارة معادلة',
 'Add Solution': 'إضافة الحل',
-'Add Staff': 'أضف فريق عمل',
+'Add Staff': 'أضف موظفين',
 'Add staff members': 'أضف موظفين',
 'Add Survey Answer': 'أضف جواب حول الاستطلاع',
 'Add Survey Question': 'إضافة سؤال في الاستطلاع',
