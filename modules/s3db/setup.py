@@ -488,8 +488,10 @@ class S3SetupModel(S3Model):
                              ):
 
         try:
+            #import ruamel.yaml
             import yaml
         except ImportError:
+            #error = "ruamel.yaml module needed for Setup"
             error = "PyYAML module needed for Setup"
             current.log.error(error)
             current.response.error = error
@@ -497,6 +499,7 @@ class S3SetupModel(S3Model):
 
         folder = current.request.folder
 
+        roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
         playbook_path = os.path.join(folder, "uploads", "playbook")
         if not os.path.isdir(playbook_path):
             os.mkdir(playbook_path)
@@ -516,11 +519,16 @@ class S3SetupModel(S3Model):
                         "db_ip": hosts[0][1],
                         "db_type": database_type
                     },
-                    "roles": ["common",
-                              web_server,
-                              "uwsgi",
-                              database_type,
-                              "configure",
+                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/common' }" % roles_path, preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, web_server), preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/uwsgi' }" % roles_path, preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, database_type), preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/configure' }" % roles_path, preserve_quotes=True),
+                              { "role": "%s/common" % roles_path },
+                              { "role": "%s/%s" % (roles_path, web_server) },
+                              { "role": "%s/uwsgi" % roles_path },
+                              { "role": "%s/%s" % (roles_path, database_type) },
+                              { "role": "%s/configure" % roles_path },
                               ]
                 }
             ]
@@ -533,7 +541,8 @@ class S3SetupModel(S3Model):
                         "password": password,
                         "type": instance_type
                     },
-                    "roles": [database_type,
+                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, database_type), preserve_quotes=True),
+                              { "role": "%s/%s" % (roles_path, database_type) },
                               ]
                 },
                 {
@@ -548,9 +557,12 @@ class S3SetupModel(S3Model):
                         "type": instance_type,
                         "web_server": web_server,
                     },
-                    "roles": ["common",
-                              "uwsgi",
-                              "configure",
+                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/common' }" % roles_path, preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/uwsgi' }" % roles_path, preserve_quotes=True),
+                              #ruamel.yaml.round_trip_load("{ role: '%s/configure' }" % roles_path, preserve_quotes=True),
+                              { "role": "%s/common" % roles_path },
+                              { "role": "%s/uwsgi" % roles_path },
+                              { "role": "%s/configure" % roles_path },
                               ]
                 },
                 {
@@ -560,7 +572,8 @@ class S3SetupModel(S3Model):
                         "eden_ip": hosts[2][1],
                         "type": instance_type
                     },
-                    "roles": [web_server,
+                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, web_server), preserve_quotes=True),
+                              { "role": "%s/%s" % (roles_path, web_server) },
                               ]
                 }
             ]
@@ -569,6 +582,7 @@ class S3SetupModel(S3Model):
         file_path = os.path.join(playbook_path, "%s.yml" % name)
 
         with open(file_path, "w") as yaml_file:
+            #yaml_file.write(ruamel.yaml.round_trip_dump(deployment, default_flow_style=False))
             yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
         task_vars = {"playbook": file_path,
@@ -595,8 +609,6 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
         - designed to be run from the 'deploy' Task
 
         http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
-
-        @ToDo: Make use of Tags (needed once adding Test/Demo sites)
     """
 
     try:
@@ -607,23 +619,38 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
         from ansible.executor.task_queue_manager import TaskQueueManager
         #from ansible.plugins.callback import CallbackBase
     except ImportError:
+        # Could happen if PyYAML not installed (Ansible requires this even if we have to use ruamel.yaml ourselves)
         error = "ansible module needed for Setup"
         current.log.error(error)
         return error
 
-    Options = namedtuple("Options", ["connection", "forks", "become", "become_method", "become_user", "check", "diff"])
+    Options = namedtuple("Options", ["connection",
+                                     "forks",
+                                     "become",
+                                     "become_method",
+                                     "become_user",
+                                     "check",
+                                     "diff",
+                                     "tags",
+                                     ])
 
     # Initialize needed objects
     loader = DataLoader()
-    options = Options(connection="local", forks=100, become=None,
-                      become_method=None, become_user=None, check=False,
-                      diff=False)
+    options = Options(connection = "local",
+                      forks = 100,
+                      become = None,
+                      become_method = None,
+                      become_user = None,
+                      check = False,
+                      diff = False,
+                      tags = tags,
+                      )
     passwords = dict(#vault_pass = "secret",
                      private_key_file = private_key, # @ToDo: Needs testing
                      )
 
-    # Instantiate our ResultCallback for handling results as they come in
-    #results_callback = ResultCallback()
+    # Instantiate Logging for handling results as they come in
+    #results_callback = CallbackModule() # custom subclass of CallbackBase
 
     # Create Inventory and pass to Var manager
     inventory = InventoryManager(loader=loader, sources=hosts)
@@ -634,10 +661,10 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     play = Play().load(play_source[0], variable_manager=variable_manager, loader=loader)
 
     # Copy the current working directory to revert back to later
-    cwd = os.getcwd()
+    #cwd = os.getcwd()
     # Change working directory
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
-    os.chdir(roles_path)
+    #roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+    #os.chdir(roles_path)
 
     # Actually run it
     tqm = None
@@ -648,7 +675,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                                loader = loader,
                                options = options,
                                passwords = passwords,
-                               #stdout_callback=results_callback,
+                               #stdout_callback = results_callback,
                                )
         result = tqm.run(play)
     finally:
@@ -656,7 +683,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
             tqm.cleanup()
 
         # Change working directory back
-        os.chdir(cwd)
+        #os.chdir(cwd)
 
         return result
 
