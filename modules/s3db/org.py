@@ -7836,7 +7836,7 @@ class org_AssignMethod(S3Method):
         e.g. Organisation Group
     """
 
-    def __init__(self, component, types=None):
+    def __init__(self, component):
         """
             @param component: the Component in which to create records
         """
@@ -7851,18 +7851,14 @@ class org_AssignMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        component = self.component
-        components = r.resource.components
-        for c in components:
-            if c == component:
-                component = components[c]
-                break
         try:
-            if component.link:
-                component = component.link
-        except:
+            component = r.resource.components[self.component]
+        except KeyError:
             current.log.error("Invalid Component!")
             raise
+
+        if component.link:
+            component = component.link
 
         tablename = component.tablename
 

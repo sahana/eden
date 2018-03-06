@@ -1713,31 +1713,21 @@ class S3SQLField(S3SQLFormElement):
             return None, field.name, field
 
         else:
-            components = resource.components
-            subtables = {}
-            if components:
-                for alias, component in components.items():
-                    if component.multiple:
-                        continue
-                    if component._alias:
-                        tablename = component._alias
-                    else:
-                        tablename = component.tablename
-                    subtables[tablename] = alias
-
-            if tname in subtables:
-                # Field in a subtable (= single-record-component)
-
-                alias = subtables[tname]
-                name = "sub_%s_%s" % (alias, rfield.fname)
-
-                renamed_field = self._rename_field(field,
-                                                   name,
-                                                   label = label,
-                                                   widget = widget,
-                                                   )
-
-                return alias, field.name, renamed_field
+            for alias, component in resource.components.loaded:
+                if component.multiple:
+                    continue
+                if component._alias:
+                    tablename = component._alias
+                else:
+                    tablename = component.tablename
+                if tablename == tname:
+                    name = "sub_%s_%s" % (alias, rfield.fname)
+                    renamed_field = self._rename_field(field,
+                                                       name,
+                                                       label = label,
+                                                       widget = widget,
+                                                       )
+                    return alias, field.name, renamed_field
 
             raise SyntaxError("Invalid subtable: %s" % tname)
 
