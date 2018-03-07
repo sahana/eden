@@ -495,10 +495,11 @@ class S3SetupModel(S3Model):
 
         folder = current.request.folder
 
-        #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
         playbook_path = os.path.join(folder, "uploads", "playbook")
         if not os.path.isdir(playbook_path):
             os.mkdir(playbook_path)
+
+        roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
         if len(hosts) == 1:
             deployment = [
@@ -515,16 +516,11 @@ class S3SetupModel(S3Model):
                         "db_ip": hosts[0][1],
                         "db_type": database_type
                     },
-                    "roles": [#{ "role": "%s/common" % roles_path },
-                              #{ "role": "%s/%s" % (roles_path, web_server) },
-                              #{ "role": "%s/uwsgi" % roles_path },
-                              #{ "role": "%s/%s" % (roles_path, database_type) },
-                              #{ "role": "%s/configure" % roles_path },
-                              "common",
-                              web_server,
-                              "uwsgi",
-                              database_type,
-                              "configure",
+                    "roles": [{ "role": "%s/common" % roles_path },
+                              { "role": "%s/%s" % (roles_path, web_server) },
+                              { "role": "%s/uwsgi" % roles_path },
+                              { "role": "%s/%s" % (roles_path, database_type) },
+                              { "role": "%s/configure" % roles_path },
                               ]
                 }
             ]
@@ -537,8 +533,7 @@ class S3SetupModel(S3Model):
                         "password": password,
                         "type": instance_type
                     },
-                    "roles": [#{ "role": "%s/%s" % (roles_path, database_type) },
-                              database_type,
+                    "roles": [{ "role": "%s/%s" % (roles_path, database_type) },
                               ]
                 },
                 {
@@ -553,12 +548,9 @@ class S3SetupModel(S3Model):
                         "type": instance_type,
                         "web_server": web_server,
                     },
-                    "roles": [#{ "role": "%s/common" % roles_path },
-                              #{ "role": "%s/uwsgi" % roles_path },
-                              #{ "role": "%s/configure" % roles_path },
-                              "common",
-                              "uwsgi",
-                              "configure",
+                    "roles": [{ "role": "%s/common" % roles_path },
+                              { "role": "%s/uwsgi" % roles_path },
+                              { "role": "%s/configure" % roles_path },
                               ]
                 },
                 {
@@ -568,8 +560,7 @@ class S3SetupModel(S3Model):
                         "eden_ip": hosts[2][1],
                         "type": instance_type
                     },
-                    "roles": [#{ "role": "%s/%s" % (roles_path, web_server) },
-                              web_server,
+                    "roles": [{ "role": "%s/%s" % (roles_path, web_server) },
                               ]
                 }
             ]
@@ -646,36 +637,33 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     #results_callback = CallbackModule() # custom subclass of CallbackBase
 
     # Create Inventory and pass to Var manager
-    inventory = InventoryManager(loader=loader, sources=hosts)
+    inventory = InventoryManager(loader=loader, sources="inventory")
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
     # Run Playbook
-    stats = None
-    try:
-        pbex = PlaybookExecutor(playbooks = [playbook], 
-                                inventory = inventory, 
-                                variable_manager = variable_manager,
-                                loader = loader, 
-                                options = options, 
-                                passwords = {},
-                                )
-        pbex.run()
-    except:
-        raise Exception("Playbook run failed")
-    else:
-        stats = pbex._tqm._stats
-        hosts = sorted(stats.processed.keys())
-        for h in hosts:
-            t = stats.summarize(h)
-            if t["failures"] > 0:
-                raise Exception("One of the tasks failed")
-            elif t["unreachable"] > 0:
-                raise Exception("Host unreachable")
-    finally:
-        # Change working directory back
-        os.chdir(cwd)
+    pbex = PlaybookExecutor(playbooks = [playbook], 
+                            inventory = inventory, 
+                            variable_manager = variable_manager,
+                            loader = loader, 
+                            options = options, 
+                            passwords = {},
+                            )
+    pbex.run()
 
-        return stats
+    # Check for Failures
+    stats = pbex._tqm._stats
+    hosts = sorted(stats.processed.keys())
+    for h in hosts:
+        t = stats.summarize(h)
+        if t["failures"] > 0:
+            raise Exception("One of the tasks failed")
+        elif t["unreachable"] > 0:
+            raise Exception("Host unreachable")
+
+    # Change working directory back
+    os.chdir(cwd)
+
+    return stats
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
