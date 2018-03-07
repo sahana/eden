@@ -640,6 +640,11 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     # Create Inventory and pass to Var manager
     inventory = InventoryManager(loader=loader, sources="inventory")
     variable_manager = VariableManager(loader=loader, inventory=inventory)
+    # https://github.com/ansible/ansible/issues/21562
+    tmp_path = os.path.join("/", "tmp")
+    variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
+                                   "ansible_remote_tmp": tmp_path,
+                                   }
 
     # Run Playbook
     pbex = PlaybookExecutor(playbooks = [playbook], 
