@@ -630,6 +630,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                       check = False,
                       diff = False,
                       tags = tags,
+                      skip_tags = [], # Needs to be an iterable as hasattr(Storage()) is always True
                       private_key_file = private_key, # @ToDo: Needs testing
                       )
 
