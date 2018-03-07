@@ -39,8 +39,6 @@ import random
 import string
 import time
 
-from collections import namedtuple
-
 from ..s3 import *
 from gluon import *
 
@@ -488,10 +486,8 @@ class S3SetupModel(S3Model):
                              ):
 
         try:
-            #import ruamel.yaml
             import yaml
         except ImportError:
-            #error = "ruamel.yaml module needed for Setup"
             error = "PyYAML module needed for Setup"
             current.log.error(error)
             current.response.error = error
@@ -499,7 +495,7 @@ class S3SetupModel(S3Model):
 
         folder = current.request.folder
 
-        roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
+        #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
         playbook_path = os.path.join(folder, "uploads", "playbook")
         if not os.path.isdir(playbook_path):
             os.mkdir(playbook_path)
@@ -519,16 +515,16 @@ class S3SetupModel(S3Model):
                         "db_ip": hosts[0][1],
                         "db_type": database_type
                     },
-                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/common' }" % roles_path, preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, web_server), preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/uwsgi' }" % roles_path, preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, database_type), preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/configure' }" % roles_path, preserve_quotes=True),
-                              { "role": "%s/common" % roles_path },
-                              { "role": "%s/%s" % (roles_path, web_server) },
-                              { "role": "%s/uwsgi" % roles_path },
-                              { "role": "%s/%s" % (roles_path, database_type) },
-                              { "role": "%s/configure" % roles_path },
+                    "roles": [#{ "role": "%s/common" % roles_path },
+                              #{ "role": "%s/%s" % (roles_path, web_server) },
+                              #{ "role": "%s/uwsgi" % roles_path },
+                              #{ "role": "%s/%s" % (roles_path, database_type) },
+                              #{ "role": "%s/configure" % roles_path },
+                              "common",
+                              web_server,
+                              "uwsgi",
+                              database_type,
+                              "configure",
                               ]
                 }
             ]
@@ -541,8 +537,8 @@ class S3SetupModel(S3Model):
                         "password": password,
                         "type": instance_type
                     },
-                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, database_type), preserve_quotes=True),
-                              { "role": "%s/%s" % (roles_path, database_type) },
+                    "roles": [#{ "role": "%s/%s" % (roles_path, database_type) },
+                              database_type,
                               ]
                 },
                 {
@@ -557,12 +553,12 @@ class S3SetupModel(S3Model):
                         "type": instance_type,
                         "web_server": web_server,
                     },
-                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/common' }" % roles_path, preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/uwsgi' }" % roles_path, preserve_quotes=True),
-                              #ruamel.yaml.round_trip_load("{ role: '%s/configure' }" % roles_path, preserve_quotes=True),
-                              { "role": "%s/common" % roles_path },
-                              { "role": "%s/uwsgi" % roles_path },
-                              { "role": "%s/configure" % roles_path },
+                    "roles": [#{ "role": "%s/common" % roles_path },
+                              #{ "role": "%s/uwsgi" % roles_path },
+                              #{ "role": "%s/configure" % roles_path },
+                              "common",
+                              "uwsgi",
+                              "configure",
                               ]
                 },
                 {
@@ -572,8 +568,8 @@ class S3SetupModel(S3Model):
                         "eden_ip": hosts[2][1],
                         "type": instance_type
                     },
-                    "roles": [#ruamel.yaml.round_trip_load("{ role: '%s/%s' }" % (roles_path, web_server), preserve_quotes=True),
-                              { "role": "%s/%s" % (roles_path, web_server) },
+                    "roles": [#{ "role": "%s/%s" % (roles_path, web_server) },
+                              web_server,
                               ]
                 }
             ]
@@ -582,7 +578,6 @@ class S3SetupModel(S3Model):
         file_path = os.path.join(playbook_path, "%s.yml" % name)
 
         with open(file_path, "w") as yaml_file:
-            #yaml_file.write(ruamel.yaml.round_trip_dump(deployment, default_flow_style=False))
             yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
         task_vars = {"playbook": file_path,
@@ -609,34 +604,34 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
         - designed to be run from the 'deploy' Task
 
         http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+        https://serversforhackers.com/c/running-ansible-2-programmatically
     """
 
-    try:
-        from ansible.parsing.dataloader import DataLoader
-        from ansible.vars.manager import VariableManager
-        from ansible.inventory.manager import InventoryManager
-        from ansible.playbook.play import Play
-        from ansible.executor.task_queue_manager import TaskQueueManager
-        #from ansible.plugins.callback import CallbackBase
-    except ImportError:
-        # Could happen if PyYAML not installed (Ansible requires this even if we have to use ruamel.yaml ourselves)
-        error = "ansible module needed for Setup"
-        current.log.error(error)
-        return error
+    # No try/except here as we want ImportErrors to raise
+    from ansible.parsing.dataloader import DataLoader
+    from ansible.vars.manager import VariableManager
+    from ansible.inventory.manager import InventoryManager
+    from ansible.playbook.play import Play
+    from ansible.executor.playbook_executor import PlaybookExecutor
+    #from ansible.plugins.callback import CallbackBase
 
-    Options = namedtuple("Options", ["connection",
-                                     "forks",
-                                     "become",
-                                     "become_method",
-                                     "become_user",
-                                     "check",
-                                     "diff",
-                                     "tags",
-                                     ])
+    # Copy the current working directory to revert back to later
+    cwd = os.getcwd()
+
+    # Change working directory
+    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+    os.chdir(roles_path)
+
+    # Create inventory file
+    inventoryFile = open("inventory", "w")
+    for host in hosts:
+        inventoryFile.write("%s\n" % host)
+    inventoryFile.close()
 
     # Initialize needed objects
     loader = DataLoader()
-    options = Options(connection = "local",
+    options = Storage(connection = "local", # @ToDo: Will need changing when doing multi-host
+                      module_path = roles_path,
                       forks = 100,
                       become = None,
                       become_method = None,
@@ -644,10 +639,8 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                       check = False,
                       diff = False,
                       tags = tags,
+                      private_key_file = private_key, # @ToDo: Needs testing
                       )
-    passwords = dict(#vault_pass = "secret",
-                     private_key_file = private_key, # @ToDo: Needs testing
-                     )
 
     # Instantiate Logging for handling results as they come in
     #results_callback = CallbackModule() # custom subclass of CallbackBase
@@ -656,36 +649,32 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     inventory = InventoryManager(loader=loader, sources=hosts)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
-    # Load Playbook from file
-    play_source = loader.load_from_file(playbook)
-    play = Play().load(play_source[0], variable_manager=variable_manager, loader=loader)
-
-    # Copy the current working directory to revert back to later
-    #cwd = os.getcwd()
-    # Change working directory
-    #roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
-    #os.chdir(roles_path)
-
-    # Actually run it
-    tqm = None
-    result = None
+    # Run Playbook
     try:
-        tqm = TaskQueueManager(inventory = inventory,
-                               variable_manager = variable_manager,
-                               loader = loader,
-                               options = options,
-                               passwords = passwords,
-                               #stdout_callback = results_callback,
-                               )
-        result = tqm.run(play)
+        pbex = PlaybookExecutor(playbooks = [playbook], 
+                                inventory = inventory, 
+                                variable_manager = variable_manager,
+                                loader = loader, 
+                                options = options, 
+                                passwords = {},
+                                )
+        pbex.run()
+    except:
+        raise Exception("Playbook run failed")
+    else:
+        stats = pbex._tqm._stats
+        hosts = sorted(stats.processed.keys())
+        for h in hosts:
+            t = stats.summarize(h)
+            if t["failures"] > 0:
+                raise Exception("One of the tasks failed")
+            elif t["unreachable"] > 0:
+                raise Exception("Host unreachable")
     finally:
-        if tqm is not None:
-            tqm.cleanup()
-
         # Change working directory back
-        #os.chdir(cwd)
+        os.chdir(cwd)
 
-        return result
+        return stats
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
