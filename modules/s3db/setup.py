@@ -614,10 +614,10 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     os.chdir(roles_path)
 
     # Create inventory file
-    inventoryFile = open("inventory", "w")
-    for host in hosts:
-        inventoryFile.write("%s\n" % host)
-    inventoryFile.close()
+    #inventoryFile = open("inventory", "w")
+    #for host in hosts:
+    #    inventoryFile.write("%s\n" % host)
+    #inventoryFile.close()
 
     # Initialize needed objects
     loader = DataLoader()
@@ -638,7 +638,11 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     #results_callback = CallbackModule() # custom subclass of CallbackBase
 
     # Create Inventory and pass to Var manager
-    inventory = InventoryManager(loader=loader, sources="inventory")
+    if len(hosts) == 1:
+        sources = "%s," % hosts[0]
+    else:
+        sources = ",".join(hosts)
+    inventory = InventoryManager(loader=loader, sources=sources)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
     # https://github.com/ansible/ansible/issues/21562
     tmp_path = os.path.join("/", "tmp")
@@ -657,6 +661,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     pbex.run()
 
     # Check for Failures
+    result = {}
     stats = pbex._tqm._stats
     hosts = sorted(stats.processed.keys())
     for h in hosts:
@@ -665,11 +670,12 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
             raise Exception("One of the tasks failed")
         elif t["unreachable"] > 0:
             raise Exception("Host unreachable")
+        result[h] = t
 
     # Change working directory back
     os.chdir(cwd)
 
-    return stats
+    return result
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
