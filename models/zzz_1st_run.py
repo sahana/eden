@@ -121,7 +121,6 @@ if len(pop_list) > 0:
     #
     info("Setting Up Scheduler Tasks...")
 
-    has_module = settings.has_module
     if has_module("msg"):
 
         # Send Messages from Outbox
@@ -324,10 +323,15 @@ if len(pop_list) > 0:
     # Enable location tree updates
     gis.disable_update_location_tree = False
 
-    # Update Location Tree (disabled during prepop)
-    start = datetime.datetime.now()
-    gis.update_location_tree()
-    duration("Location Tree update completed", start)
+    try:
+        from shapely.wkt import loads as wkt_loads
+    except ImportError:
+        info("\Skipping GIS location tree update as Shapely not installed...")
+    else:
+        # Update Location Tree (disabled during prepop)
+        start = datetime.datetime.now()
+        gis.update_location_tree()
+        duration("Location Tree update completed", start)
 
     # Countries are only editable by MapAdmin
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
