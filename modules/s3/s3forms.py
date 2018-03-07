@@ -2346,17 +2346,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
         selector = self.selector
 
         # Check selector
-        if selector not in resource.components:
-            hook = current.s3db.get_component(resource.tablename, selector)
-            if hook:
-                resource._attach(selector, hook)
-            else:
-                raise SyntaxError("Undefined component: %s" % selector)
-        component = resource.components[selector]
+        try:
+            component = resource.components[selector]
+        except KeyError:
+            raise SyntaxError("Undefined component: %s" % selector)
 
         # Check permission
         permitted = current.auth.s3_has_permission("read",
-                                                   component.tablename)
+                                                   component.tablename,
+                                                   )
         if not permitted:
             return (None, None, None)
 
@@ -4321,23 +4319,12 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                         values = [_table[rkey]]
                     else:
                         found = False
-                        if lookuptable:
-                            # Need to load component
-                            hooks = s3db.get_components(_table)
-                            for alias in hooks:
-                                if hooks[alias].rkey == rkey:
-                                    found = True
-                                    _resource._attach(alias, hooks[alias])
-                                    _component = _resource.components[alias]
-                                    break
-                        else:
-                            # Components are already loaded
-                            components = _resource.components
-                            for c in components:
-                                if components[c].rkey == rkey:
-                                    found = True
-                                    _component = components[c]
-                                    break
+                        hooks = s3db.get_components(_table)
+                        for alias in hooks:
+                            if hooks[alias].rkey == rkey:
+                                found = True
+                                _component = _resource.components[alias]
+                                break
                         if found:
                             _rows = _component.select(["id"],
                                                       limit=None,

@@ -266,20 +266,10 @@ class S3Resource(object):
         self.parent = parent # the parent resource
         self.linked = linked # the linked resource
 
-        #self.components = Storage()
-        #self.links = Storage()
-
         self.components = S3Components(self, components)
         self.links = self.components.links
 
         if parent is None:
-            # This is the master resource - attach components
-
-            #attach = self._attach
-            #hooks = s3db.get_components(table, names=components)
-            #for component_alias in hooks:
-                #attach(component_alias, hooks[component_alias])
-
             # Build query
             self.build_query(id = id,
                              uid = uid,
@@ -327,130 +317,6 @@ class S3Resource(object):
         from s3crud import S3CRUD
         self.crud = S3CRUD()
         self.crud.resource = self
-
-    # -------------------------------------------------------------------------
-    def _attach(self, alias, hook):
-        """
-            Attach a component
-
-            @param alias: the alias
-            @param hook: the hook
-
-            TODO: deprecate
-        """
-
-        return self.components.get(alias)
-
-        #filterby = hook.filterby
-        #if alias is not None and filterby is not None:
-            #table_alias = "%s_%s_%s" % (hook.prefix,
-                                        #hook.alias,
-                                        #hook.name)
-            #table = current.s3db.get_aliased(hook.table, table_alias)
-            #hook.table = table
-        #else:
-            #table_alias = None
-            #table = hook.table
-
-        ## Instantiate component resource
-        #component = S3Resource(table,
-                               #parent = self,
-                               #alias = alias,
-                               #linktable = hook.linktable,
-                               #include_deleted = self.include_deleted,
-                               #approved = self._approved,
-                               #unapproved = self._unapproved,
-                               #)
-
-        #if table_alias:
-            #component.tablename = hook.tablename
-            #component._alias = table_alias
-
-        ## Copy hook properties to the component resource
-        #component.pkey = hook.pkey
-        #component.fkey = hook.fkey
-
-        #component.linktable = hook.linktable
-        #component.lkey = hook.lkey
-        #component.rkey = hook.rkey
-        #component.actuate = hook.actuate
-        #component.autodelete = hook.autodelete
-        #component.autocomplete = hook.autocomplete
-
-        ##component.alias = alias
-        #component.multiple = hook.multiple
-        #component.defaults = hook.defaults
-
-        ## Component filter
-        #if not filterby:
-            ## Can use filterby=False to enforce table aliasing yet
-            ## suppress component filtering, useful e.g. if the same
-            ## table is declared as component more than once for the
-            ## same master table (using different foreign keys)
-            #component.filter = None
-
-        #else:
-            ## Filter by multiple criteria
-            #query = None
-            #for k, v in filterby.items():
-                #if isinstance(v, FS):
-                    ## Match a field in the master table
-                    ## => identify the field
-                    #try:
-                        #rfield = v.resolve(self)
-                    #except (AttributeError, SyntaxError):
-                        #if current.response.s3.debug:
-                            #raise
-                        #else:
-                            #current.log.error(sys.exc_info()[1])
-                            #continue
-                    ## => must be a real field in the master table
-                    #field = rfield.field
-                    #if not field or field.table != self.table:
-                        #current.log.error("Component filter for %s<=%s: "
-                                          #"invalid lookup field '%s'" %
-                                          #(self.tablename, alias, v.name))
-                        #continue
-                    #subquery = (table[k] == field)
-                #else:
-                    #is_list = isinstance(v, (tuple, list))
-                    #if is_list and len(v) == 1:
-                        #filterfor = v[0]
-                        #is_list = False
-                    #else:
-                        #filterfor = v
-                    #if not is_list:
-                        #subquery = (table[k] == filterfor)
-                    #elif filterfor:
-                        #subquery = (table[k].belongs(set(filterfor)))
-                    #else:
-                        #continue
-                #if subquery:
-                    #if query is None:
-                        #query = subquery
-                    #else:
-                        #query &= subquery
-
-            #component.filter = query
-
-        ## Copy component properties to the link resource
-        #link = component.link
-        #if link is not None:
-
-            #link.pkey = component.pkey
-            #link.fkey = component.lkey
-
-            #link.multiple = component.multiple
-
-            #link.actuate = component.actuate
-            #link.autodelete = component.autodelete
-
-            ## Register the link table
-            #links = self.links
-            #links[link.name] = links[link.alias] = link
-
-        ## Register the component
-        #self.components[alias] = component
 
     # -------------------------------------------------------------------------
     # Query handling
@@ -1250,7 +1116,7 @@ class S3Resource(object):
                         callback(onreject, row, tablename=tablename)
 
                     # Park foreign keys
-                    fields = dict(deleted=True)
+                    fields = {"deleted": True}
                     if "deleted_fk" in table:
                         record = table[row[pkey]]
                         fk = {}
@@ -1747,12 +1613,17 @@ class S3Resource(object):
             if link in self.links:
                 c = self.links[link]
             else:
-                raise AttributeError("Undefined link %s" % link)
+                calias = current.s3db.get_alias(self.tablename, link)
+                if calias:
+                    c = self.components[calias].link
+                else:
+                    raise AttributeError("Undefined link %s" % link)
         else:
-            if component in self.components:
+            try:
                 c = self.components[component]
-            else:
+            except KeyError:
                 raise AttributeError("Undefined component %s" % component)
+
         rows = c._rows
         if rows is None:
             rows = c.load()
@@ -3135,9 +3006,10 @@ class S3Resource(object):
                                      last_sync=last_sync,
                                      onconflict=onconflict)
             add_item = import_job.add_item
+            exposed_aliases = self.components.exposed_aliases
             for element in elements:
-                success = add_item(element=element,
-                                   components=self.components.keys(),
+                success = add_item(element = element,
+                                   components = exposed_aliases,
                                    )
                 if not success:
                     self.error = import_job.error
@@ -3312,12 +3184,11 @@ class S3Resource(object):
         """
 
         if component is not None:
-            c = self.components.get(component)
-            if c:
-                tree = c.export_fields()
-                return tree
-            else:
-                raise AttributeError
+            try:
+                c = self.components[component]
+            except KeyError:
+                raise AttributeError("Undefined component %s" % component)
+            return c.export_fields(as_json=as_json)
         else:
             xml = current.xml
             tree = xml.get_fields(self.prefix, self.name)
@@ -3348,14 +3219,15 @@ class S3Resource(object):
         # Get the structure of the main resource
         root = etree.Element(xml.TAG.root)
         main = xml.get_struct(self.prefix, self.name,
-                              alias=self.alias,
-                              parent=root,
-                              meta=meta,
-                              options=options,
-                              references=references)
+                              alias = self.alias,
+                              parent = root,
+                              meta = meta,
+                              options = options,
+                              references = references,
+                              )
 
-        # Include the selected components
-        for component in self.components.values():
+        # Include the exposed components
+        for component in self.components.exposed.values():
             prefix = component.prefix
             name = component.name
             xml.get_struct(prefix, name,
@@ -3363,16 +3235,18 @@ class S3Resource(object):
                            parent = main,
                            meta = meta,
                            options = options,
-                           references = references)
+                           references = references,
+                           )
 
         # Transformation
         tree = etree.ElementTree(root)
         if stylesheet is not None:
-            args = dict(domain=xml.domain,
-                        base_url=current.response.s3.base_url,
-                        prefix=self.prefix,
-                        name=self.name,
-                        utcnow=s3_format_datetime())
+            args = {"domain": xml.domain,
+                    "base_url": current.response.s3.base_url,
+                    "prefix": self.prefix,
+                    "name": self.name,
+                    "utcnow": s3_format_datetime(),
+                    }
 
             tree = xml.transform(tree, stylesheet, **args)
             if tree is None:

@@ -4811,7 +4811,12 @@ class event_IncidentAssignMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        component = r.resource.components[self.component]
+        try:
+            component = r.resource.components[self.component]
+        except KeyError:
+            current.log.error("Invalid Component!")
+            raise
+
         if component.link:
             component = component.link
 

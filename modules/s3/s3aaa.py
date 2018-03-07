@@ -4881,31 +4881,41 @@ $.filterOptionsS3({
             record_id = record[pkey]
         else:
             record_id = record
-        data = Storage()
-        for key in fields:
-            if key in ownership_fields:
-                data[key] = fields[key]
-        if data:
-            s3db = current.s3db
-            db = current.db
 
-            # Update record
-            q = (table._id == record_id)
-            success = db(q).update(**data)
+        data = dict((key, fields[key]) for key in fields
+                                       if key in ownership_fields)
+        if not data:
+            return
+
+        db = current.db
+
+        # Update record
+        q = (table._id == record_id)
+        success = db(q).update(**data)
+
+        if success and update and REALM in data:
 
             # Update realm-components
             # Only goes down 1 level: doesn't do components of components
-            if success and update and REALM in data:
-                rc = s3db.get_config(table, "realm_components", ())
-                resource = s3db.resource(table, components=rc)
-                realm = {REALM:data[REALM]}
-                for component in resource.components.values():
+            s3db = current.s3db
+            realm_components = s3db.get_config(table, "realm_components")
+
+            if realm_components:
+                resource = s3db.resource(table,
+                                         components = realm_components,
+                                         )
+                components = resource.components
+                realm = {REALM: data[REALM]}
+                for alias in realm_components:
+                    component = components.get(alias)
+                    if not component:
+                        continue
                     ctable = component.table
                     if REALM not in ctable.fields:
                         continue
                     query = component.get_join() & q
                     rows = db(query).select(ctable._id)
-                    ids = list(set([row[ctable._id] for row in rows]))
+                    ids = set(row[ctable._id] for row in rows)
                     if ids:
                         ctablename = component.tablename
                         if ctable._tablename != ctablename:
@@ -4914,10 +4924,8 @@ $.filterOptionsS3({
                             ctable = db[ctablename]
                         db(ctable._id.belongs(ids)).update(**realm)
 
-            # Update super-entity
-            self.update_shared_fields(table, record, **data)
-        else:
-            return None
+        # Update super-entity
+        self.update_shared_fields(table, record, **data)
 
     # -------------------------------------------------------------------------
     def s3_set_record_owner(self,

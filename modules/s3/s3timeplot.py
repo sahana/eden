@@ -334,7 +334,7 @@ class S3TimePlot(S3Method):
     # -------------------------------------------------------------------------
     def get_target(self, r):
         """
-            Identify the target resource, attach component if necessary
+            Identify the target resource
 
             @param r: the S3Request
         """
@@ -347,13 +347,9 @@ class S3TimePlot(S3Method):
 
         # Identify target component
         if alias and alias not in (resource.alias, "~"):
-            if alias not in resource.components:
-                # Try attach
-                hook = current.s3db.get_component(resource.tablename, alias)
-                if hook:
-                    resource._attach(alias, hook)
-            if alias in resource.components:
-                resource = resource.components[alias]
+            component = resource.components.get(alias)
+            if component:
+                resource = component
 
         return resource
 
