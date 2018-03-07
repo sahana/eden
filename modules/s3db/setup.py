@@ -650,6 +650,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
     # Run Playbook
+    stats = None
     try:
         pbex = PlaybookExecutor(playbooks = [playbook], 
                                 inventory = inventory, 
