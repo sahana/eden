@@ -3845,11 +3845,6 @@ def config(settings):
                                                     },
                                         )
 
-                    # Attach component (we're past resource initialization)
-                    hook = s3db.get_component("hrm_human_resource", "vol_training")
-                    if hook:
-                        r.resource._attach("vol_training", hook)
-
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
                                                 S3SQLInlineComponent("programme_hours",
@@ -4148,10 +4143,8 @@ def config(settings):
                                                                          },
                                                             },
                                             )
-                        # Re-attach component (we're past resource initialization)
-                        hook = s3db.get_component("hrm_human_resource", "training")
-                        if hook:
-                            r.resource._attach("training", hook)
+                        # Reset the component (we're past resource initialization)
+                        r.resource.components.reset(("training",))
 
                 # Exclude None-values for training course pivot axis
                 s3db.configure(tablename,
@@ -6653,8 +6646,8 @@ def config(settings):
                                    )
 
                 elif controller == "member":
-                    crud_strings["pr_person"] = crud_strings["member_membership"]
                     mtable = s3db.member_membership
+                    crud_strings["pr_person"] = crud_strings["member_membership"]
                     f = mtable.leaving_reason
                     f.readable = f.writable = True
                     f = mtable.restart_date
@@ -6679,11 +6672,7 @@ def config(settings):
                     #                       )
                     f = s3db.pr_person_details.grandfather_name
                     f.readable = f.writable = True
-                    components = r.resource.components
-                    for c in components:
-                        if c == "membership":
-                            components[c].multiple = False
-                            break
+
                     s3db.add_components("pr_person",
                                         #hrm_training = {"name": "member_training",
                                         #                "joinby": "person_id",
@@ -6698,7 +6687,14 @@ def config(settings):
                                                           },
                                                       "multiple": False,
                                                       },
+                                        # Make single, so fields can be embedded:
+                                        member_membership = {"joinby": "person_id",
+                                                             "multiple": False,
+                                                             },
                                         )
+                    # Reset the component (we're past resource initialization)
+                    r.resource.components.reset(("membership",))
+
                     crud_form = S3SQLCustomForm("membership.organisation_id",
                                                 "membership.code",
                                                 (T("Name"), "first_name"),

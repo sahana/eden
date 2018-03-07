@@ -79,17 +79,15 @@ def deployment():
 
             elif r.method == "create":
                 # Include Production URL in main form
-                
+
                 # Redefine Component to make 1:1
                 s3db.add_components("setup_deployment",
                                     setup_instance = {"joinby": "deployment_id",
                                                       "multiple": False,
                                                       },
                                     )
-                # Attach components (we're past resource initialization)
-                hooks = s3db.get_components("setup_deployment", names=("instance",))
-                for component_alias in hooks:
-                    r.resource._attach(component_alias, hooks[component_alias])
+                # Reset the component (we're past resource initialization)
+                r.resource.components.reset(("instance",))
 
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
@@ -108,7 +106,7 @@ def deployment():
                 s3db.configure("setup_deployment",
                                crud_form = crud_form,
                                )
-            
+
         return True
     s3.prep = prep
 

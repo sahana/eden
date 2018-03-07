@@ -1713,7 +1713,7 @@ class S3SQLField(S3SQLFormElement):
             return None, field.name, field
 
         else:
-            for alias, component in resource.components.loaded:
+            for alias, component in resource.components.loaded.items():
                 if component.multiple:
                     continue
                 if component._alias:

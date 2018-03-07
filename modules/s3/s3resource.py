@@ -4590,11 +4590,12 @@ class S3Components(object):
         return self.exposed.items()
 
     # -------------------------------------------------------------------------
-    def __load(self, aliases):
+    def __load(self, aliases, force=False):
         """
             Instantiate component resources
 
             @param aliases: iterable of aliases of components to instantiate
+            @param force: forced reload of components
 
             @return: dict of loaded components {alias: resource}
         """
@@ -4610,7 +4611,11 @@ class S3Components(object):
         links = self.links
 
         if aliases:
-            new = [alias for alias in aliases if alias not in components]
+            if force:
+                # Forced reload
+                new = aliases
+            else:
+                new = [alias for alias in aliases if alias not in components]
         else:
             new = None
 
@@ -4737,12 +4742,14 @@ class S3Components(object):
         return components
 
     # -------------------------------------------------------------------------
-    def reset(self, expose=DEFAULT):
+    def reset(self, aliases=None, expose=DEFAULT):
         """
-            Remove all currently loaded components
+            Detach currently loaded components, e.g. to force a reload
 
+            @param aliases: aliases to remove, None for all
             @param expose: aliases of components to expose (default:
-                           keep previously exposed aliases)
+                           keep previously exposed aliases), None for
+                           all configured components
         """
 
         if expose is not DEFAULT:
@@ -4755,10 +4762,24 @@ class S3Components(object):
             else:
                 self.exposed_aliases = set(expose)
 
-        self._exposed = {}
-        self._components = {}
+        if aliases:
 
-        self.links = {}
+            loaded = self._components
+            links = self.links
+            exposed = self._exposed
+
+            for alias in aliases:
+                if alias in loaded:
+                    link = loaded[alias].link
+                    for lalias in links.keys():
+                        if links[lalias] is link:
+                            links.pop(lalias)
+                    exposed.pop(alias, None)
+                    loaded.pop(alias, None)
+        else:
+            self._components = {}
+            self.links = {}
+            self._exposed = {}
 
 # =============================================================================
 class S3AxisFilter(object):
