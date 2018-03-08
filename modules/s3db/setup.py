@@ -91,6 +91,16 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     Field("sender",
+                           label = T("Email Sender"),
+                           requires = IS_EMPTY_OR(
+                                        IS_EMAIL()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Email Sender"),
+                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
+                                                           )
+                                         ),
+                           ),
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
                            default = "https://github.com/sahana/eden",
@@ -121,16 +131,6 @@ class S3SetupModel(S3Model):
                                                      multiple = True,
                                                      zero = None,
                                                      ),
-                           ),
-                     Field("sender",
-                           label = T("Email Sender"),
-                           requires = IS_EMPTY_OR(
-                                        IS_EMAIL()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Email Sender"),
-                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
-                                                           )
-                                         ),
                            ),
                      Field("webserver_type", "integer",
                            default = 2,

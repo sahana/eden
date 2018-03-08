@@ -94,6 +94,7 @@ def deployment():
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
                                             (T("Public URL"), "instance.url"),
+                                            "sender",
                                             "repo_url",
                                             "country",
                                             "template",
