@@ -131,7 +131,7 @@ class S3SetupModel(S3Model):
                                                            T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
                                                            )
                                          ),
-                           )
+                           ),
                      Field("webserver_type", "integer",
                            default = 2,
                            label = T("Web Server"),
