@@ -131,7 +131,7 @@ class S3SetupModel(S3Model):
                                                            T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
                                                            )
                                          ),
-                           )
+                           ),
                      Field("webserver_type", "integer",
                            default = 2,
                            label = T("Web Server"),
@@ -347,7 +347,7 @@ class S3SetupModel(S3Model):
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
-        if db(table.deleted == False).count() < 2: 
+        if db(table.deleted == False).count() < 2:
             # Configure localhost to have all tiers (localhost & all tiers are defaults)
             server_id = s3db.setup_server.insert(deployment_id = deployment_id)
 
@@ -682,11 +682,11 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                                    }
 
     # Run Playbook
-    pbex = PlaybookExecutor(playbooks = [playbook], 
-                            inventory = inventory, 
+    pbex = PlaybookExecutor(playbooks = [playbook],
+                            inventory = inventory,
                             variable_manager = variable_manager,
-                            loader = loader, 
-                            options = options, 
+                            loader = loader,
+                            options = options,
                             passwords = {},
                             )
     pbex.run()
