@@ -2707,7 +2707,7 @@ class GIS(object):
                     alias, cfield = location_context.split(".", 1)
                     try:
                         component = resource.components[alias]
-                    except:
+                    except KeyError:
                         # Invalid alias
                         # Can't display this resource on the Map
                         return None
@@ -2717,8 +2717,6 @@ class GIS(object):
                             rfield.join[ctablename] & \
                             (ctable[cfield] == gtable.id)
                     #custom = True
-                    # Clear components again
-                    resource.components = Storage()
                 # @ToDo:
                 #elif "$" in location_context:
                 else:

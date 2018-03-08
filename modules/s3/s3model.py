@@ -993,7 +993,7 @@ class S3Model(object):
             @param names: component aliases to find (default: all configured
                           components for the master table)
 
-            @returns: a dict of {alias: hook}
+            @returns: tuple (table, {alias: hook, ...})
         """
 
         components = current.model.components

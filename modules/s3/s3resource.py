@@ -4951,11 +4951,10 @@ class S3ResourceFilter(object):
 
                 # @todo: Alternative concept (inconsistent?):
                 # Interpret all URL filters in the context of filter_component:
-                #if filter_component and \
-                #   filter_component in resource.components:
-                #    context = resource.components[filter_component]
-                #else:
-                #    context = resource
+                #if filter_component:
+                #    context = resource.components.get(filter_component)
+                #    if not context:
+                #        context = resource
                 #queries = S3URLQuery.parse(context, vars)
 
                 for alias in queries:
@@ -5542,8 +5541,22 @@ class S3ResourceFilter(object):
                         gtable = table
 
                     elif tablename == "gis_layer_shapefile":
-                        # @todo: this needs a join too, no?
-                        gtable = resource.components.items()[0][1].table
+                        # Find the layer_shapefile_%(layer_id)s component
+                        # (added dynamically in gis/layer_shapefile controller)
+                        gtable = None
+                        hooks = current.s3db.get_hooks("gis_layer_shapefile")[1]
+                        for alias in hooks:
+                            if alias[:19] == "gis_layer_shapefile":
+                                component = resource.components.get(alias)
+                                if component:
+                                    gtable = component.table
+                                    break
+                        # Join by layer_id
+                        if gtable:
+                            joins[str(gtable)] = \
+                                [gtable.on(gtable.layer_id == table._id)]
+                        else:
+                            continue
 
                     # Construct the bbox filter
                     bbox_filter = None

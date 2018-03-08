@@ -29,16 +29,16 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import *
-#from gluon.html import BUTTON
+from gluon import current, IS_NOT_IN_DB, \
+                  A, DIV, FORM, H3, INPUT, SPAN, SQLFORM, \
+                  TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
+from s3dal import Field
 from s3data import S3DataTable
 from s3query import FS
 from s3rest import S3Method
-from s3utils import s3_get_foreign_key, s3_represent_value, s3_unicode
-from s3validators import IS_ONE_OF
-from s3widgets import *
+from s3utils import s3_get_foreign_key, s3_represent_value, s3_str
 
 # =============================================================================
 class S3Merge(S3Method):
@@ -455,14 +455,14 @@ class S3Merge(S3Method):
                 try:
                     owidget = s3_represent_value(f, value=original[f])
                 except:
-                    owidget = s3_unicode(original[f])
+                    owidget = s3_str(original[f])
             if keep_d or not any((keep_o, keep_d)):
                 dwidget = self.widget(f, duplicate[f], _name=did, _id=did)
             else:
                 try:
                     dwidget = s3_represent_value(f, value=duplicate[f])
                 except:
-                    dwidget = s3_unicode(duplicate[f])
+                    dwidget = s3_str(duplicate[f])
 
             # Swap button
             if not any((keep_o, keep_d)):
@@ -597,7 +597,7 @@ class S3Merge(S3Method):
                 r.unauthorized()
             except KeyError:
                 r.error(404, current.ERROR.BAD_RECORD)
-            except:
+            except Exception:
                 import sys
                 r.error(424,
                         T("Could not merge records. (Internal Error: %s)") %
@@ -778,16 +778,16 @@ class S3RecordMerger(object):
         raise error(msg)
 
     # -------------------------------------------------------------------------
-    def update_record(self, table, id, row, data):
+    def update_record(self, table, record_id, row, data):
 
         form = Storage(vars = Storage([(f, row[f])
                               for f in table.fields if f in row]))
         form.vars.update(data)
         try:
             current.db(table._id==row[table._id]).update(**data)
-        except Exception, e:
+        except Exception:
             self.raise_error("Could not update %s.%s" %
-                            (table._tablename, id))
+                            (table._tablename, record_id))
         else:
             s3db = current.s3db
             s3db.update_super(table, form.vars)
@@ -796,18 +796,18 @@ class S3RecordMerger(object):
         return form.vars
 
     # -------------------------------------------------------------------------
-    def delete_record(self, table, id, replaced_by=None):
+    def delete_record(self, table, record_id, replaced_by=None):
 
         s3db = current.s3db
 
         if replaced_by is not None:
-            replaced_by = {str(id): replaced_by}
-        resource = s3db.resource(table, id=id)
+            replaced_by = {str(record_id): replaced_by}
+        resource = s3db.resource(table, id=record_id)
         success = resource.delete(replaced_by=replaced_by,
                                   cascade=True)
         if not success:
             self.raise_error("Could not delete %s.%s (%s)" %
-                            (resource.tablename, id, resource.error))
+                            (resource.tablename, record_id, resource.error))
         return success
 
     # -------------------------------------------------------------------------
@@ -952,8 +952,15 @@ class S3RecordMerger(object):
         #    than the one merge is being run from, those components may
         #    be treated as multiple instead!
         single = {}
-        for component in resource.components.values():
-            if not component.multiple:
+        hooks = s3db.get_hooks(table)[1]
+        if hooks:
+            for alias, hook in hooks.items():
+                if hook.multiple:
+                    continue
+                component = resource.components.get(alias)
+                if not component:
+                    # E.g. module disabled
+                    continue
                 ctablename = component.tablename
                 if ctablename in single:
                     single[ctablename].append(component)
@@ -1035,7 +1042,7 @@ class S3RecordMerger(object):
                             # No original => re-link the duplicate
                             dsub_id = dsub[ctable_id]
                             data = {lkey: original[pkey]}
-                            success = update_record(ctable, dsub_id, dsub, data)
+                            update_record(ctable, dsub_id, dsub, data)
 
                         elif component.linked is not None:
 
