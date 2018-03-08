@@ -501,16 +501,20 @@ class S3SetupModel(S3Model):
 
         roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
+        hostname = sitename.split(".", 1)[0]
+
         if len(hosts) == 1:
             deployment = [
                 {
                     "hosts": hosts[0][1],
+                    "connection": "local", # @ToDo: Don't assume this
                     "remote_user": remote_user,
                     "vars": {
                         "password": password,
                         "template": template,
                         "web_server": web_server,
                         "type": instance_type,
+                        "hostname": hostname,
                         "sitename": sitename,
                         "eden_ip": hosts[0][1],
                         "db_ip": hosts[0][1],
@@ -543,6 +547,7 @@ class S3SetupModel(S3Model):
                         "db_ip": hosts[0][1],
                         "db_type": database_type,
                         "password": password,
+                        "hostname": hostname,
                         "sitename": sitename,
                         "template": template,
                         "type": instance_type,
@@ -571,9 +576,13 @@ class S3SetupModel(S3Model):
         with open(file_path, "w") as yaml_file:
             yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
+        if instance_type == "prod":
+            only_tags = []
+        else:
+            only_tags = [instance_type]
         task_vars = {"playbook": file_path,
                      "hosts": [host[1] for host in hosts],
-                     "tags": [instance_type],
+                     "tags": only_tags,
                      }
         if private_key:
             task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
@@ -614,10 +623,10 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     os.chdir(roles_path)
 
     # Create inventory file
-    inventoryFile = open("inventory", "w")
-    for host in hosts:
-        inventoryFile.write("%s\n" % host)
-    inventoryFile.close()
+    #inventoryFile = open("inventory", "w")
+    #for host in hosts:
+    #    inventoryFile.write("%s\n" % host)
+    #inventoryFile.close()
 
     # Initialize needed objects
     loader = DataLoader()
@@ -638,8 +647,17 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     #results_callback = CallbackModule() # custom subclass of CallbackBase
 
     # Create Inventory and pass to Var manager
-    inventory = InventoryManager(loader=loader, sources="inventory")
+    if len(hosts) == 1:
+        sources = "%s," % hosts[0]
+    else:
+        sources = ",".join(hosts)
+    inventory = InventoryManager(loader=loader, sources=sources)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
+    # https://github.com/ansible/ansible/issues/21562
+    tmp_path = os.path.join("/", "tmp")
+    variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
+                                   "ansible_remote_tmp": tmp_path,
+                                   }
 
     # Run Playbook
     pbex = PlaybookExecutor(playbooks = [playbook], 
@@ -652,6 +670,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     pbex.run()
 
     # Check for Failures
+    result = {}
     stats = pbex._tqm._stats
     hosts = sorted(stats.processed.keys())
     for h in hosts:
@@ -660,11 +679,12 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
             raise Exception("One of the tasks failed")
         elif t["unreachable"] > 0:
             raise Exception("Host unreachable")
+        result[h] = t
 
     # Change working directory back
     os.chdir(cwd)
 
-    return stats
+    return result
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
