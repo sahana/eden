@@ -122,6 +122,16 @@ class S3SetupModel(S3Model):
                                                      zero = None,
                                                      ),
                            ),
+                     Field("sender",
+                           label = T("Email Sender"),
+                           requires = IS_EMPTY_OR(
+                                        IS_EMAIL()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Email Sender"),
+                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
+                                                           )
+                                         ),
+                           )
                      Field("webserver_type", "integer",
                            default = 2,
                            label = T("Web Server"),
@@ -425,7 +435,9 @@ class S3SetupModel(S3Model):
 
         sitename = instance.url
         if "://" in sitename:
-            sitename = sitename.split("://", 1)[1]
+            protocol, sitename = sitename.split("://", 1)
+        else:
+            protocol = "http"
 
         deployment_id = instance.deployment_id
 
@@ -446,6 +458,7 @@ class S3SetupModel(S3Model):
                                                            dtable.db_type,
                                                            dtable.db_password,
                                                            dtable.template,
+                                                           dtable.sender,
                                                            dtable.private_key,
                                                            dtable.remote_user,
                                                            limitby=(0, 1)
@@ -458,6 +471,8 @@ class S3SetupModel(S3Model):
                                             DB_SERVERS[deployment.db_type],
                                             INSTANCE_TYPES[instance.type],
                                             deployment.template,
+                                            deployment.sender,
+                                            protocol,
                                             sitename,
                                             deployment.private_key,
                                             deployment.remote_user,
@@ -480,6 +495,8 @@ class S3SetupModel(S3Model):
                              database_type,
                              instance_type,
                              template = "default",
+                             sender = None,
+                             protocol = "http",
                              sitename = None,
                              private_key = None,
                              remote_user = None,
@@ -512,10 +529,12 @@ class S3SetupModel(S3Model):
                     "vars": {
                         "password": password,
                         "template": template,
+                        "sender": sender,
                         "web_server": web_server,
                         "type": instance_type,
                         "hostname": hostname,
                         "sitename": sitename,
+                        "protocol": protocol,
                         "eden_ip": hosts[0][1],
                         "db_ip": hosts[0][1],
                         "db_type": database_type
@@ -549,7 +568,9 @@ class S3SetupModel(S3Model):
                         "password": password,
                         "hostname": hostname,
                         "sitename": sitename,
+                        "protocol": protocol,
                         "template": template,
+                        "sender": sender,
                         "type": instance_type,
                         "web_server": web_server,
                     },
@@ -562,6 +583,7 @@ class S3SetupModel(S3Model):
                     "hosts": hosts[1][1],
                     "remote_user": remote_user,
                     "vars": {
+                        "protocol": protocol,
                         "eden_ip": hosts[2][1],
                         "type": instance_type
                     },
