@@ -728,8 +728,8 @@ def config(settings):
 
                             # Process Data ----------------------------
                             "dvr_case.site_id",
-                            (T("Moving-in Date"), "dvr_case_details.on_site_from"),
-                            (T("Moving-out Date"), "dvr_case_details.on_site_until"),
+                            (T("Moving-in Date"), "case_details.on_site_from"),
+                            (T("Moving-out Date"), "case_details.on_site_until"),
                             S3SQLInlineComponent(
                                     "address",
                                     label = T("Current Address"),
@@ -752,7 +752,7 @@ def config(settings):
                                     multiple = False,
                                     name = "bamf",
                                     ),
-                            (T("Date of Entry"), "dvr_case_details.arrival_date"),
+                            (T("Date of Entry"), "case_details.arrival_date"),
                             S3SQLInlineComponent(
                                     "residence_status",
                                     fields = ["status_type_id",
