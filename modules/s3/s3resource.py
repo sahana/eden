@@ -4628,7 +4628,7 @@ class S3Components(object):
 
         if expose is not DEFAULT:
             if expose is None:
-                hooks = current.s3db.get_hooks(master.tablename)[1]
+                hooks = current.s3db.get_hooks(self.master.tablename)[1]
                 if hooks:
                     self.exposed_aliases = set(hooks.keys())
                 else:

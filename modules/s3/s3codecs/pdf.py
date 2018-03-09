@@ -306,9 +306,10 @@ class S3RL_PDF(S3Codec):
             # Enforce a particular component
             resource = current.s3db.resource(r.tablename,
                                              components = [pdf_componentname],
-                                             id = r.id)
-            if pdf_componentname in resource.components:
-                component = resource.components[pdf_componentname]
+                                             id = r.id,
+                                             )
+            component = resource.components.get(pdf_componentname)
+            if component:
                 body_flowable = self.get_resource_flowable(component, doc)
 
         elif r.component or attr.get("method", "list") != "read":

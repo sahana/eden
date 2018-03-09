@@ -294,10 +294,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
                                                   "label_create")
-                hook = r.resource.components[name]
-                fkey = "%s.%s" % (name, hook.fkey)
+                component = r.resource.components[name]
+                fkey = "%s.%s" % (name, component.fkey)
                 get_vars_copy = get_vars.copy()
-                get_vars_copy.update({fkey: r.record[hook.fkey]})
+                get_vars_copy.update({fkey: r.record[component.fkey]})
                 url = URL(prefix, name, args=["create"], vars=get_vars_copy)
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
