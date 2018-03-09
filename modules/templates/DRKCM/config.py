@@ -1934,6 +1934,8 @@ def config(settings):
 
         settings.base.bigtable = True
 
+        return attr
+
     settings.customise_dvr_response_action_controller = customise_dvr_response_action_controller
 
     # -------------------------------------------------------------------------
