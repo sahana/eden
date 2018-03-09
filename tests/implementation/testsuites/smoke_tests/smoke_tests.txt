@@ -8,7 +8,7 @@
 
 *** Settings ***
 Resource  ../../resources/main.txt
-Library  edentest_smoke.py  ${ROOT URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
+Library  edentest_smoke.py  ${BASE URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
 Library  DateTime
 Library  OperatingSystem
 
