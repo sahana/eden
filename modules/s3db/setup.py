@@ -65,16 +65,22 @@ class S3SetupModel(S3Model):
     names = ("setup_deployment",
              "setup_server",
              "setup_instance",
+             "setup_setting",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        configure = self.configure
-        path = os.path.join(current.request.folder, "modules", "templates")
+        set_method = self.set_method
+
+        folder = current.request.folder
+        path_join = os.path.join
+        template_path = path_join(folder, "modules", "templates")
 
         # ---------------------------------------------------------------------
         # Deployments
@@ -115,7 +121,7 @@ class S3SetupModel(S3Model):
                      Field("country",
                            label = T("Country"),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET_LAZY(lambda: self.setup_get_countries(path),
+                                        IS_IN_SET_LAZY(lambda: self.setup_get_countries(template_path),
                                                        zero = current.messages.SELECT_LOCATION,
                                                        )),
                            comment = DIV(_class="tooltip",
@@ -127,7 +133,7 @@ class S3SetupModel(S3Model):
                      Field("template", "list:string",
                            default = ["default"],
                            label = T("Template"),
-                           requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(path),
+                           requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(template_path),
                                                      multiple = True,
                                                      zero = None,
                                                      ),
@@ -157,7 +163,7 @@ class S3SetupModel(S3Model):
                            label = T("Private Key"),
                            length = current.MAX_FILENAME_LENGTH,
                            requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
-                           uploadfolder = os.path.join(current.request.folder, "uploads"),
+                           uploadfolder = path_join(folder, "uploads"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Private Key"),
                                                            T("if you wish to configure servers other than the one hosting the co-app then you need to provide a PEM-encoded SSH private key")
@@ -224,7 +230,22 @@ class S3SetupModel(S3Model):
         self.add_components(tablename,
                             setup_instance = "deployment_id",
                             setup_server = "deployment_id",
+                            setup_setting = "deployment_id",
                             )
+
+        represent = S3Represent(lookup=tablename)
+
+        deployment_id = S3ReusableField("deployment_id", "reference %s" % tablename,
+                                        label = T("Deployment"),
+                                        ondelete = "CASCADE",
+                                        represent = represent,
+                                        requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "setup_deployment.id",
+                                                              represent,
+                                                              sort=True
+                                                              )),
+                                        sortby = "name",
+                                        )
 
         # ---------------------------------------------------------------------
         # Servers
@@ -237,7 +258,7 @@ class S3SetupModel(S3Model):
 
         tablename = "setup_server"
         define_table(tablename,
-                     Field("deployment_id", "reference setup_deployment"),
+                     deployment_id(),
                      Field("role", "integer",
                            default = 1,
                            label = T("Role"),
@@ -274,7 +295,7 @@ class S3SetupModel(S3Model):
         #
         tablename = "setup_instance"
         define_table(tablename,
-                     Field("deployment_id", "reference setup_deployment"),
+                     deployment_id(),
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
@@ -320,10 +341,68 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Instance deleted"),
             msg_list_empty = T("No Instances currently registered"))
 
-        self.set_method("setup", "instance",
-                        method = "deploy",
-                        action = self.setup_instance_deploy,
-                        )
+        set_method("setup", "instance",
+                   method = "deploy",
+                   action = self.setup_instance_deploy,
+                   )
+
+        set_method("setup", "instance",
+                   method = "settings",
+                   action = self.setup_instance_settings,
+                   )
+
+        represent = S3Represent(lookup=tablename)
+
+        instance_id = S3ReusableField("instance_id", "reference %s" % tablename,
+                                      label = T("Instance"),
+                                      ondelete = "CASCADE",
+                                      represent = represent,
+                                      requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "setup_instance.id",
+                                                              represent,
+                                                              sort=True
+                                                              )),
+                                      sortby = "name",
+                                      )
+
+        # ---------------------------------------------------------------------
+        # Settings in models/000_config.py
+        #
+        tablename = "setup_setting"
+        define_table(tablename,
+                     deployment_id(),
+                     instance_id(),
+                     Field("setting",
+                           label = T("Setting"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("current_value",
+                           label = T("Current Value"),
+                           writable = False,
+                           ),
+                     Field("new_value",
+                           label = T("New Value"),
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Setting"),
+            title_display = T("Setting Details"),
+            title_list =  T("Settings"),
+            title_update = T("Edit Setting"),
+            label_list_button =  T("List Settings"),
+            label_delete_button = T("Delete Setting"),
+            msg_record_created = T("Setting added"),
+            msg_record_modified = T("Setting updated"),
+            msg_record_deleted = T("Setting deleted"),
+            msg_list_empty = T("No Settings currently registered"))
+
+        #set_method("setup", "setting",
+        #           method = "apply",
+        #           action = self.setup_setting_apply,
+        #           )
 
         return {}
 
@@ -420,6 +499,9 @@ class S3SetupModel(S3Model):
 
     # -------------------------------------------------------------------------
     def setup_instance_deploy(self, r, **attr):
+        """
+            Custom S3Method to Deploy an Instance
+        """
 
         db = current.db
         s3db = current.s3db
@@ -501,6 +583,10 @@ class S3SetupModel(S3Model):
                              private_key = None,
                              remote_user = None,
                              ):
+        """
+            Write an Ansible Playbook file
+            - & Schedule a Task to run it
+        """
 
         try:
             import yaml
@@ -619,6 +705,90 @@ class S3SetupModel(S3Model):
 
         return task_id
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_instance_settings_read(instance_id, deployment_id):
+        """
+            Read the Settings for an instance from models/000_config.py
+            - called onaccept from instance creation
+            - called by interactive method to read
+        """
+
+        from gluon.cfs import getcfs
+        from gluon.compileapp import build_environment
+        from gluon.restricted import restricted
+
+        # Read current settings from file
+        request = current.request
+        model = "%s/models/000_config.py" % request.folder
+        code = getcfs(model, model, None)
+        environment = build_environment(request, current.response, current.session)
+        environment["settings"] = Storage2()
+        restricted(code, environment, layer=model)
+        nested_settings = environment["settings"]
+
+        # Flatten settings
+        file_settings = {}
+        for section in nested_settings:
+            subsection = nested_settings[section]
+            for setting in subsection:
+                file_settings["%s.%s" % (section, setting)] = subsection[setting]
+
+        # Read current Database Settings
+        db = current.db
+        stable = current.s3db.setup_setting
+        id_field = stable.id
+        query = (stable.instance_id == instance_id) & \
+                (stable.deleted == False)
+        db_settings = db(query).select(id_field,
+                                       stable.setting,
+                                       #stable.current_value,
+                                       stable.new_value,
+                                       ).as_dict(key = "setting")
+        db_get = db_settings.get
+
+        # Ensure that database looks like file
+        checked_settings = []
+        cappend = checked_settings.append
+        for setting in file_settings:
+            s = db_get(setting)
+            if s:
+                # We update even if not changed so as to update modified_on
+                db(id_field == s["id"]).update(current_value = s["current_value"])
+            else:
+                stable.insert(deployment_id = deployment_id,
+                              instance_id = instance_id,
+                              setting = setting,
+                              current_value = file_settings[setting],
+                              )
+            cappend(setting)
+
+        # Handle db_settings not in file_settings
+        for setting in db_settings:
+            if setting in checked_settings:
+                continue
+            s = db_get(setting)
+            if s["new_value"] is not None:
+                db(id_field == s["id"]).update(current_value = None)
+            else:
+                db(id_field == s["id"]).update(deleted = True)
+
+    # -------------------------------------------------------------------------
+    def setup_instance_settings(self, r, **attr):
+        """
+            Custom interactive S3Method to Read the Settings for an instance
+            from models/000_config.py
+        """
+
+        deployment_id = r.record.deployment_id
+        self.setup_instance_settings_read(r.id, deployment_id)
+
+        current.session.confirmation = current.T("Settings Read")
+
+        redirect(URL(c="setup", f="deployment",
+                     args = [deployment_id, "setting"]),
+                     )
+
 # =============================================================================
 def setup_run_playbook(playbook, hosts, tags, private_key=None):
     """
@@ -719,6 +889,7 @@ def setup_rheader(r, tabs=None):
         tabs = [(T("Deployment Details"), None),
                 (T("Servers"), "server"),
                 (T("Instances"), "instance"),
+                (T("Settings"), "setting"),
                 ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -726,5 +897,23 @@ def setup_rheader(r, tabs=None):
         rheader = DIV(rheader_tabs)
 
         return rheader
+
+# =============================================================================
+class Storage2(Storage):
+    """
+        Read settings.x.y without needing to first create settings.x
+    """
+
+    def __getattr__(self, key):
+        value = dict.get(self, key)
+        if value is None:
+            self[key] = value = Storage2()
+        return value
+
+    def __call__(self):
+        """
+            settings.import_template()
+        """
+        return
 
 # END =========================================================================
