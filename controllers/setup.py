@@ -9,7 +9,9 @@
 module = request.controller
 
 if not settings.has_module(module):
-    raise HTTP(404, body="Module disabled: %s" % module)
+    # This is likely to happen after deployment from co-app
+    #raise HTTP(404, body="Module disabled: %s" % module)
+    redirect(URL(c="default", f="index"))
 
 # -----------------------------------------------------------------------------
 def index():
