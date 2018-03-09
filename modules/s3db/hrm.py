@@ -2559,7 +2559,8 @@ class S3HRSkillModel(S3Model):
                                   represent
                                   )),
             sortby = "name",
-            comment=S3PopupLink(f = "event_type",
+            comment=S3PopupLink(c = "hrm",
+                                f = "event_type",
                                 label = label_create,
                                 title = label_create,
                                 tooltip = T("Add a new event type to the catalog."),
