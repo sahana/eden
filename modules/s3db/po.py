@@ -38,6 +38,8 @@ __all__ = ("OutreachAreaModel",
 from ..s3 import *
 from s3layouts import S3PopupLink
 
+from gluon import IS_NOT_EMPTY, IS_INT_IN_RANGE
+
 # =============================================================================
 class OutreachAreaModel(S3Model):
     """ Model representing a mesh area for outreach work """
@@ -1022,7 +1024,7 @@ class po_HouseholdRepresent(S3Represent):
         return self.location_represent(row.location_id)
 
 # =============================================================================
-def po_rheader(r, tabs=[]):
+def po_rheader(r, tabs=None):
 
     if r.representation != "html":
         # RHeaders only used in interactive views
