@@ -3920,11 +3920,16 @@ class LazyComponentsTests(unittest.TestCase):
 
         db = current.db
 
-        # Remove the tables
-        db.lazy_component_1.drop()
-        db.lazy_component_2.drop()
-        db.lazy_component_3.drop()
-        db.lazy_master.drop()
+        # Remove the tables (if they have been created)
+        for tn in ("lazy_link_table_1",
+                   "lazy_link_table_2",
+                   "lazy_component_1",
+                   "lazy_component_2",
+                   "lazy_component_3",
+                   "lazy_master",
+                   ):
+            if hasattr(db, tn):
+                db[tn].drop()
 
     # -------------------------------------------------------------------------
     def testLazyComponentLoading(self):
