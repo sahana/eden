@@ -4643,17 +4643,18 @@ class S3Components(object):
             exposed = self._exposed
 
             for alias in aliases:
-                if alias in loaded:
-                    link = loaded[alias].link
-                    for lalias in links.keys():
-                        if links[lalias] is link:
-                            links.pop(lalias)
+                component = loaded.pop(alias, None)
+                if component:
+                    link = component.link
+                    for k, v in links.items():
+                        if v is link:
+                            links.pop(k)
                     exposed.pop(alias, None)
-                    loaded.pop(alias, None)
         else:
             self._components = {}
-            self.links = {}
             self._exposed = {}
+
+            self.links.clear()
 
 # =============================================================================
 class S3AxisFilter(object):

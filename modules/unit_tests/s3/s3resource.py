@@ -3875,20 +3875,44 @@ class LazyComponentsTests(unittest.TestCase):
 
         s3db = current.s3db
 
+        # The master table
         s3db.define_table("lazy_master",
                           *s3_meta_fields())
 
+        # A simple component
         s3db.define_table("lazy_component_1",
                           Field("lazy_master_id", s3db.lazy_master),
                           *s3_meta_fields())
 
+        # A link-table component
         s3db.define_table("lazy_component_2",
+                          *s3_meta_fields())
+        s3db.define_table("lazy_link_table_1",
                           Field("lazy_master_id", s3db.lazy_master),
+                          Field("lazy_component_id", s3db.lazy_component_2),
                           *s3_meta_fields())
 
+        # Another link table component
+        s3db.define_table("lazy_component_3",
+                          *s3_meta_fields())
+        s3db.define_table("lazy_link_table_2",
+                          Field("lazy_master_id", s3db.lazy_master),
+                          Field("lazy_component_id", s3db.lazy_component_2),
+                          *s3_meta_fields())
+
+        # Declare components
         s3db.add_components("lazy_master",
                             lazy_component_1 = "lazy_master_id",
-                            lazy_component_2 = "lazy_master_id",
+                            lazy_component_2 = {
+                                "link": "lazy_link_table_1",
+                                "joinby": "lazy_master_id",
+                                "key": "lazy_component_id",
+                                },
+                            lazy_component_3 = {
+                                "link": "lazy_link_table_2",
+                                "joinby": "lazy_master_id",
+                                "key": "lazy_component_id",
+                                },
                             )
 
     @classmethod
@@ -3896,8 +3920,10 @@ class LazyComponentsTests(unittest.TestCase):
 
         db = current.db
 
+        # Remove the tables
         db.lazy_component_1.drop()
         db.lazy_component_2.drop()
+        db.lazy_component_3.drop()
         db.lazy_master.drop()
 
     # -------------------------------------------------------------------------
@@ -3939,16 +3965,18 @@ class LazyComponentsTests(unittest.TestCase):
         # Verify that exposed_aliases defaults to all defined components
         resource = s3db.resource("lazy_master")
         components = resource.components
-        assertEqual(len(components.exposed_aliases), 2)
+        assertEqual(len(components.exposed_aliases), 3)
         assertIn("component_1", components.exposed_aliases)
         assertIn("component_2", components.exposed_aliases)
+        assertIn("component_3", components.exposed_aliases)
 
         # Verify that components=None falls back to default
         resource = s3db.resource("lazy_master", components=None)
         components = resource.components
-        assertEqual(len(components.exposed_aliases), 2)
+        assertEqual(len(components.exposed_aliases), 3)
         assertIn("component_1", components.exposed_aliases)
         assertIn("component_2", components.exposed_aliases)
+        assertIn("component_3", components.exposed_aliases)
 
         # Verify that exposed_aliases can be limited to particular components
         resource = s3db.resource("lazy_master", components=["component_1"])
@@ -3984,13 +4012,39 @@ class LazyComponentsTests(unittest.TestCase):
         component = components.get("component_2")
         assertNotEqual(component, None)
         assertIn("component_2", components.loaded)
-
-        # Verify that hidden component is not exposed
         assertNotIn("component_2", components.exposed)
 
         # Verify that undefined component gives None
         component = components.get("undefined")
         assertEqual(component, None)
+
+    # -------------------------------------------------------------------------
+    def testGetLinkTableComponent(self):
+        """ Test link table loading """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertIn = self.assertIn
+        assertNotIn = self.assertNotIn
+
+        resource = s3db.resource("lazy_master", components=["component_2"])
+        components = resource.components
+
+        # Verify that initially, no component is loaded
+        assertEqual(len(components.loaded.keys()), 0)
+        assertNotIn("component_2", components.loaded)
+        assertEqual(len(resource.links.keys()), 0)
+        assertNotIn("component_2__link", resource.links)
+        assertNotIn("link_table_1", resource.links)
+
+        # Verify that component can be loaded without being exposed
+        component = components.get("component_2")
+        assertNotEqual(component, None)
+        assertIn("component_2", components.loaded)
+        assertIn("component_2__link", resource.links)
+        assertIn("link_table_1", resource.links)
 
     # -------------------------------------------------------------------------
     def testKeyAccess(self):
@@ -4068,13 +4122,19 @@ class LazyComponentsTests(unittest.TestCase):
 
         components = resource.components
 
+        # Load a hidden component
         component = components["component_1"]
         assertNotEqual(component, None)
 
-        assertIn("component_2", components.exposed)
-        assertNotIn("component_1", components.exposed)
-        assertNotIn("undefined", components.exposed)
+        # Accessing exposed should auto-load all exposed components
+        exposed = components.exposed
 
+        # Verify only the exposed (+existing) components are in exposed
+        assertIn("component_2", exposed)
+        assertNotIn("component_1", exposed)
+        assertNotIn("undefined", exposed)
+
+        # Verify hidden component is still loaded
         assertIn("component_2", components.loaded)
         assertIn("component_1", components.loaded)
         assertNotIn("undefined", components.loaded)
@@ -4094,22 +4154,71 @@ class LazyComponentsTests(unittest.TestCase):
                                  )
         components = resource.components
 
+        # Load the components
         component = components["component_1"]
         assertNotEqual(component, None)
         component = components["component_2"]
         assertNotEqual(component, None)
 
+        # Verify that components are in loaded
         assertIn("component_2", components.loaded)
         assertIn("component_1", components.loaded)
 
+        # Selectively reset one of the components
+        # (include an undefined alias to check it doesn't crash it)
         components.reset(["component_1", "undefined"])
+
+        # Verify the removed component is gone, and the other one still there
         assertIn("component_2", components.loaded)
         assertNotIn("component_1", components.loaded)
 
+        # Reload the removed component and check it's there again
         component = components["component_1"]
         assertNotEqual(component, None)
         assertIn("component_1", components.loaded)
         assertIn("component_2", components.loaded)
+
+    # -------------------------------------------------------------------------
+    def testResetSelectiveLinkTable(self):
+        """ Test selective reset of components with link tables """
+
+        s3db = current.s3db
+
+        assertNotEqual = self.assertNotEqual
+        assertIn = self.assertIn
+        assertNotIn = self.assertNotIn
+
+        resource = s3db.resource("lazy_master",
+                                 components=["component_2", "component_3"],
+                                 )
+        components = resource.components
+
+        # Load the link table components
+        component = components["component_2"]
+        assertNotEqual(component, None)
+        component = components["component_3"]
+        assertNotEqual(component, None)
+
+        # Verify the link tables are registered
+        assertIn("component_2", components.loaded)
+        assertIn("component_2__link", resource.links)
+        assertIn("link_table_1", resource.links)
+        assertIn("component_3", components.loaded)
+        assertIn("component_3__link", resource.links)
+        assertIn("link_table_2", resource.links)
+
+        # Remove one of the components
+        components.reset(["component_2"])
+
+        # Verify that the link table of the removed components is gone
+        assertNotIn("component_2", components.loaded)
+        assertNotIn("component_2__link", resource.links)
+        assertNotIn("link_table_1", resource.links)
+
+        # Verify that the link table of the remaining component is still there
+        assertIn("component_3", components.loaded)
+        assertIn("component_3__link", resource.links)
+        assertIn("link_table_2", resource.links)
 
     # -------------------------------------------------------------------------
     def testResetAll(self):
@@ -4126,18 +4235,24 @@ class LazyComponentsTests(unittest.TestCase):
                                  )
         components = resource.components
 
+        # Load components
         component = components["component_1"]
         assertNotEqual(component, None)
         component = components["component_2"]
         assertNotEqual(component, None)
 
+        # Verify they are in loaded
         assertIn("component_2", components.loaded)
         assertIn("component_1", components.loaded)
 
+        # Reset all
         components.reset()
+
+        # Verify the loaded components are now gone
         assertNotIn("component_2", components.loaded)
         assertNotIn("component_1", components.loaded)
 
+        # Reload one of them, check the other one is still gone
         component = components["component_1"]
         assertNotEqual(component, None)
         assertIn("component_1", components.loaded)
@@ -4183,11 +4298,13 @@ class LazyComponentsTests(unittest.TestCase):
         assertIn("component_1", components.exposed_aliases)
         assertIn("component_2", components.exposed_aliases)
         exposed = components.exposed
-        assertEqual(len(exposed.keys()), 2)
-        assertIn("component_2", exposed)
-        assertIn("component_2", components.loaded)
+        assertEqual(len(exposed.keys()), 3)
         assertIn("component_1", exposed)
         assertIn("component_1", components.loaded)
+        assertIn("component_2", exposed)
+        assertIn("component_2", components.loaded)
+        assertIn("component_3", exposed)
+        assertIn("component_3", components.loaded)
 
         # Verify that expose can be reset to no components
         components.reset(expose=[])
@@ -4195,10 +4312,13 @@ class LazyComponentsTests(unittest.TestCase):
         assertNotIn("component_2", components.exposed_aliases)
         exposed = components.exposed
         assertEqual(len(exposed.keys()), 0)
-        assertNotIn("component_2", exposed)
-        assertNotIn("component_2", components.loaded)
         assertNotIn("component_1", exposed)
         assertNotIn("component_1", components.loaded)
+        assertNotIn("component_2", exposed)
+        assertNotIn("component_2", components.loaded)
+        assertNotIn("component_3", exposed)
+        assertNotIn("component_3", components.loaded)
+        assertEqual(len(resource.links.keys()), 0)
 
 # =============================================================================
 if __name__ == "__main__":
