@@ -553,6 +553,8 @@ def config(settings):
         auth = current.auth
         s3db = current.s3db
 
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -1556,6 +1558,8 @@ def config(settings):
 
         s3 = current.response.s3
 
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -1924,6 +1928,13 @@ def config(settings):
                            )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_response_action_controller(**attr):
+
+        settings.base.bigtable = True
+
+    settings.customise_dvr_response_action_controller = customise_dvr_response_action_controller
 
     # -------------------------------------------------------------------------
     def customise_dvr_service_contact_resource(r, tablename):
