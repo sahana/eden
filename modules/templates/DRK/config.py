@@ -1152,7 +1152,7 @@ def config(settings):
                                 "date_of_birth",
                                 #"gender",
                                 "person_details.nationality",
-                                "cr_shelter_registration.shelter_unit_id",
+                                "shelter_registration.shelter_unit_id",
                                 S3SQLInlineComponent(
                                         "case_note",
                                         fields = [(T("Date"), "date"),
@@ -1412,13 +1412,13 @@ def config(settings):
                             reg_check_in_date = None
                             reg_check_out_date = None
                         else:
-                            reg_shelter = "cr_shelter_registration.shelter_id"
+                            reg_shelter = "shelter_registration.shelter_id"
                             reg_status = (T("Presence"),
-                                          "cr_shelter_registration.registration_status",
+                                          "shelter_registration.registration_status",
                                           )
-                            reg_unit_id = "cr_shelter_registration.shelter_unit_id"
-                            reg_check_in_date = "cr_shelter_registration.check_in_date"
-                            reg_check_out_date = "cr_shelter_registration.check_out_date"
+                            reg_unit_id = "shelter_registration.shelter_unit_id"
+                            reg_check_in_date = "shelter_registration.check_in_date"
+                            reg_check_out_date = "shelter_registration.check_out_date"
 
                         # Custom CRUD form
                         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
@@ -1490,7 +1490,7 @@ def config(settings):
 
                                     # Shelter Data ----------------------------
                                     # Will always default & be hidden
-                                    #"cr_shelter_registration.site_id",
+                                    #"shelter_registration.site_id",
                                     reg_shelter,
                                     # @ ToDo: Automate this from the Case Status?
                                     reg_unit_id,
