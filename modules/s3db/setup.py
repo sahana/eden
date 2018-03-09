@@ -91,6 +91,16 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     Field("sender",
+                           label = T("Email Sender"),
+                           requires = IS_EMPTY_OR(
+                                        IS_EMAIL()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Email Sender"),
+                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
+                                                           )
+                                         ),
+                           ),
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
                            default = "https://github.com/sahana/eden",
@@ -121,16 +131,6 @@ class S3SetupModel(S3Model):
                                                      multiple = True,
                                                      zero = None,
                                                      ),
-                           ),
-                     Field("sender",
-                           label = T("Email Sender"),
-                           requires = IS_EMPTY_OR(
-                                        IS_EMAIL()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Email Sender"),
-                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
-                                                           )
-                                         ),
                            ),
                      Field("webserver_type", "integer",
                            default = 2,
@@ -347,7 +347,7 @@ class S3SetupModel(S3Model):
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
-        if db(table.deleted == False).count() < 2:
+        if db(table.deleted == False).count() < 2: 
             # Configure localhost to have all tiers (localhost & all tiers are defaults)
             server_id = s3db.setup_server.insert(deployment_id = deployment_id)
 
@@ -682,11 +682,11 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                                    }
 
     # Run Playbook
-    pbex = PlaybookExecutor(playbooks = [playbook],
-                            inventory = inventory,
+    pbex = PlaybookExecutor(playbooks = [playbook], 
+                            inventory = inventory, 
                             variable_manager = variable_manager,
-                            loader = loader,
-                            options = options,
+                            loader = loader, 
+                            options = options, 
                             passwords = {},
                             )
     pbex.run()
