@@ -5284,7 +5284,7 @@ class gis_LocationRepresent(S3Represent):
                     (table.language == current.session.s3.language)
             count = len(location_ids)
             if count == 1:
-                query &= (table.location_id == location_ids[0])
+                query &= (table.location_id == location_ids.pop())
             else:
                 query &= (table.location_id.belongs(location_ids))
             self.l10n = db(query).select(table.location_id,
