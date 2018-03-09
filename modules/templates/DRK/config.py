@@ -1152,7 +1152,7 @@ def config(settings):
                                 "date_of_birth",
                                 #"gender",
                                 "person_details.nationality",
-                                "cr_shelter_registration.shelter_unit_id",
+                                "shelter_registration.shelter_unit_id",
                                 S3SQLInlineComponent(
                                         "case_note",
                                         fields = [(T("Date"), "date"),
