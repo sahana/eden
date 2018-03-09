@@ -454,23 +454,23 @@ class S3LocationModel(S3Model):
 
         auth = current.auth
         form_vars = form.vars
-        id = form_vars.id
+        location_id = form_vars.id
 
         if form_vars.path and current.response.s3.bulk:
             # Don't import path from foreign sources as IDs won't match
             db = current.db
-            db(db.gis_location.id == id).update(path=None)
+            db(db.gis_location.id == location_id).update(path=None)
 
         if not auth.override and \
            not auth.rollback:
             # Update the Path (async if-possible)
             # (skip during prepop)
-            feature = json.dumps(dict(id=id,
-                                      level=form_vars.get("level", False),
-                                      ))
+            feature = json.dumps({"id": id,
+                                  "level": form_vars.get("level", False),
+                                  })
             current.s3task.async("gis_update_location_tree",
-                                 args=[feature])
-        return
+                                 args = [feature],
+                                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -510,7 +510,7 @@ class S3LocationModel(S3Model):
                 if parent:
                     Lx_ids = gis.get_parents(parent, ids_only=True)
                     if Lx_ids:
-                       Lx_ids.append(parent)
+                        Lx_ids.append(parent)
                     else:
                         Lx_ids = [parent]
                 else:
@@ -952,7 +952,7 @@ class S3LocationModel(S3Model):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            raise
+            r.error(400, "Missing query variable")
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
@@ -961,7 +961,7 @@ class S3LocationModel(S3Model):
         search_l10n = None
         translate = None
         name_alt = settings.get_L10n_name_alt_gis_location()
-        levels = _vars.get("levels", None)
+
         loc_select = _vars.get("loc_select", None)
         if loc_select:
             # S3LocationSelectorWidget
@@ -1387,7 +1387,6 @@ class S3LocationGroupModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
 
         location_id = self.gis_location_id
 
@@ -1598,11 +1597,9 @@ class S3LocationHierarchyModel(S3Model):
             level_names = [form_vars[key] if key in form_vars else None
                            for key in hierarchy_level_keys]
             # L0 is always missing because its label is hard-coded
-            gaps = filter(None, map(lambda n:
-                                        not level_names[n] and
-                                        level_names[n + 1] and
-                                        "L%d" % n,
-                                    range(1, gis.max_allowed_level_num)))
+
+            gaps = ["L%d" % n for n in range(1, gis.max_allowed_level_num)
+                              if not level_names[n] and level_names[n + 1]]
             if gaps:
                 hierarchy_gap = current.T("A strict location hierarchy cannot have gaps.")
                 for gap in gaps:
@@ -1636,7 +1633,6 @@ class S3GISConfigModel(S3Model):
         location_id = self.gis_location_id
 
         settings = current.deployment_settings
-        NONE = current.messages["NONE"]
 
         # Shortcuts
         add_components = self.add_components
@@ -2298,9 +2294,8 @@ class S3GISConfigModel(S3Model):
         """
 
         s3 = current.response.s3
-        if s3.gis.config and \
-           s3.gis.config.id == row.id:
-                s3.gis.config = None
+        if s3.gis.config and s3.gis.config.id == row.id:
+            s3.gis.config = None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2356,7 +2351,7 @@ class S3GISConfigModel(S3Model):
             import base64
             import uuid
             metadata, encoded_file = encoded_file.split(",")
-            filename, datatype, enctype = metadata.split(";")
+            filename = metadata.split(";")[0]
             f = Storage()
             f.filename = uuid.uuid4().hex + filename
             import cStringIO
@@ -2381,7 +2376,7 @@ class S3GISConfigModel(S3Model):
         except ImportError:
             try:
                 import Image
-            except:
+            except ImportError:
                 # Native Python version
                 native = True
                 import struct
@@ -2490,7 +2485,6 @@ class S3LayerEntityModel(S3Model):
         T = current.T
 
         # Shortcuts
-        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -3019,19 +3013,21 @@ class S3FeatureLayerModel(S3Model):
             is set as Default
         """
 
-        id = form.vars.id
-        vars = form.vars
-        c = vars.get("controller", None)
-        f = vars.get("function", None)
-        default = vars.get("style_default", None)
-        if default and c and f and id:
+        layer_id = form.vars.id
+        formvars = form.vars
+
+        c = formvars.get("controller")
+        f = formvars.get("function")
+        default = formvars.get("style_default")
+
+        if default and c and f and layer_id:
             # Ensure no other records for this controller/function are marked
             # as default
             db = current.db
             table = db.gis_layer_feature
             query = (table.controller == c) & \
                     (table.function == f) & \
-                    (table.id != id)
+                    (table.id != layer_id)
             db(query).update(style_default = False)
 
         # Normal Layer onaccept
@@ -3051,9 +3047,9 @@ class S3FeatureLayerModel(S3Model):
         function = data.function
         if function:
             query &= (table.function.lower() == function.lower())
-        filter = data.filter
-        if filter:
-            query &= (table.filter == filter)
+        layer_filter = data.filter
+        if layer_filter:
+            query &= (table.filter == layer_filter)
 
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
@@ -3091,12 +3087,11 @@ class S3MapModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
+
         request = current.request
         folder = request.folder
 
         layer_id = lambda: self.super_link("layer_id", "gis_layer_entity")
-        marker_id = self.gis_marker_id
         projection_id = self.gis_projection_id
 
         configure = self.configure
@@ -4085,19 +4080,23 @@ class S3MapModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_layer_geojson_file_represent(file):
+    def gis_layer_geojson_file_represent(filename):
         """ File representation """
 
-        if file:
+        if filename:
             try:
-                # Read the filename from the file
-                filename = current.db.gis_layer_geojson.file.retrieve(file)[0]
+                # Check whether file exists and extract the original
+                # file name from the stored file name
+                orig_filename = current.db.gis_layer_geojson.file.retrieve(filename)[0]
             except IOError:
                 return current.T("File not found")
             else:
-                return A(filename,
-                         _href=URL(c="static", f="cache",
-                                   args=["geojson", file]))
+                return A(orig_filename,
+                         _href = URL(c = "static",
+                                     f = "cache",
+                                     args = ["geojson", filename],
+                                     ),
+                         )
         else:
             return current.messages["NONE"]
 
@@ -4108,16 +4107,19 @@ class S3MapModel(S3Model):
             If we have a file, then set the URL to point to it
         """
 
-        id = form.vars.id
+        layer_id = form.vars.id
 
         table = current.s3db.gis_layer_geojson
-        record = current.db(table.id == id).select(table.id,
-                                                   table.file,
-                                                   limitby=(0, 1)).first()
+        record = current.db(table.id == layer_id).select(table.id,
+                                                         table.file,
+                                                         limitby = (0, 1),
+                                                         ).first()
         if record and record.file:
             # Use the filename to build the URL
-            record.update_record(url = URL(c="static", f="cache",
-                                           args=["geojson", record.file]),
+            record.update_record(url = URL(c = "static",
+                                           f = "cache",
+                                           args = ["geojson", record.file],
+                                           ),
                                  # Set refresh to 0 (static file)
                                  refresh = 0,
                                  )
@@ -4127,19 +4129,23 @@ class S3MapModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_layer_kml_file_represent(file):
+    def gis_layer_kml_file_represent(filename):
         """ File representation """
 
-        if file:
+        if filename:
             try:
-                # Read the filename from the file
-                filename = current.db.gis_layer_kml.file.retrieve(file)[0]
+                # Check whether file exists and extract the original
+                # file name from the stored file name
+                orig_filename = current.db.gis_layer_kml.file.retrieve(filename)[0]
             except IOError:
                 return current.T("File not found")
             else:
-                return A(filename,
-                         _href=URL(c="static", f="cache",
-                                   args=["kml", file]))
+                return A(orig_filename,
+                         _href = URL(c = "static",
+                                     f = "cache",
+                                     args = ["kml", filename],
+                                     ),
+                         )
         else:
             return current.messages["NONE"]
 
@@ -4150,16 +4156,19 @@ class S3MapModel(S3Model):
             If we have a file, then set the URL to point to it
         """
 
-        id = form.vars.id
+        layer_id = form.vars.id
 
         table = current.s3db.gis_layer_kml
-        record = current.db(table.id == id).select(table.id,
-                                                   table.file,
-                                                   limitby=(0, 1)).first()
+        record = current.db(table.id == layer_id).select(table.id,
+                                                         table.file,
+                                                         limitby = (0, 1),
+                                                         ).first()
         if record and record.file:
             # Use the filename to build the URL
-            record.update_record(url = URL(c="static", f="cache",
-                                           args=["kml", record.file]),
+            record.update_record(url = URL(c = "static",
+                                           f = "cache",
+                                           args = ["kml", record.file],
+                                           ),
                                  # Set refresh to 0 (static file)
                                  refresh = 0,
                                  )
@@ -4174,9 +4183,9 @@ class S3MapModel(S3Model):
             Convert the Uploaded Shapefile to GeoJSON for display on the map
         """
 
-        id = form.vars.id
+        shapefile_id = form.vars.id
         db = current.db
-        tablename = "gis_layer_shapefile_%s" % id
+        tablename = "gis_layer_shapefile_%s" % shapefile_id
         if tablename in db:
             # Table already defined, so can quit here
             return
@@ -4189,7 +4198,7 @@ class S3MapModel(S3Model):
             # Retrieve the file & projection
             table = db.gis_layer_shapefile
             ptable = db.gis_projection
-            query = (table.id == id) & \
+            query = (table.id == shapefile_id) & \
                     (ptable.id == table.projection_id)
             row = db(query).select(table.shape,
                                    ptable.epsg,
@@ -4197,7 +4206,7 @@ class S3MapModel(S3Model):
             try:
                 shapefile = table.shape.retrieve(row.gis_layer_shapefile.shape)
             except:
-                current.log.error("No Shapefile found in layer %s!" % id)
+                current.log.error("No Shapefile found in layer %s!" % shapefile_id)
                 return
             (fileName, fp) = shapefile
             layerName = fileName.rsplit(".", 1)[0] # strip the .zip extension
@@ -4225,12 +4234,12 @@ class S3MapModel(S3Model):
             for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
                 fileName = "%s.%s" % (layerName, ext)
                 try:
-                    file = myfile.read(fileName)
+                    infile = myfile.read(fileName)
                 except KeyError:
                     current.log.error("%s.zip doesn't contain a file %s" % (layerName, fileName))
                 else:
                     f = open(fileName, "wb")
-                    f.write(file)
+                    f.write(infile)
                     f.close()
             myfile.close()
             fp.close()
@@ -4293,7 +4302,7 @@ class S3MapModel(S3Model):
                 else:
                     try:
                         db.check_reserved_keyword(fname)
-                    except SyntaxError, e:
+                    except SyntaxError:
                         fname = "%s_orig" % fname
                 ftype = field_defn.GetType()
                 if ftype == OFTInteger:
@@ -4348,7 +4357,7 @@ class S3MapModel(S3Model):
                 f["wkt"] = wkt
                 if spatialdb:
                     f["the_geom"] = wkt
-                f["layer_id"] = id
+                f["layer_id"] = shapefile_id
                 append(f)
 
             # Close the shapefile
@@ -4360,8 +4369,9 @@ class S3MapModel(S3Model):
             # Convert table structure to JSON
             data = json.dumps(fields)
             # Update the record
-            db(table.id == id).update(gis_feature_type = geom_type,
-                                      data = data)
+            db(table.id == shapefile_id).update(gis_feature_type = geom_type,
+                                                data = data,
+                                                )
 
             # Create Database table to store these features in
             Fields = [Field("lat", "float"),
@@ -4725,7 +4735,7 @@ class S3PoIModel(S3Model):
                                                                 ).first()
         try:
             poi_type = poi_type.name
-        except:
+        except AttributeError:
             # Bail
             return
 
@@ -4745,11 +4755,11 @@ class S3PoIModel(S3Model):
         layer = db(query).select(table.layer_id,
                                  table.filter,
                                  limitby=(0, 1),
-                                 orderby = orderby
+                                 orderby = orderby,
                                  ).first()
         try:
             layer_id = layer.layer_id
-        except:
+        except AttributeError:
             # No layer to style
             current.log.warning("Couldn't find a layer to use for this PoI Style")
             return
@@ -5022,7 +5032,7 @@ def gis_layer_onaccept(form):
                           enabled = True)
 
 # =============================================================================
-def gis_hierarchy_editable(level, id):
+def gis_hierarchy_editable(level, location_id):
     """
         Returns the edit_<level> value from the parent country hierarchy.
 
@@ -5032,7 +5042,7 @@ def gis_hierarchy_editable(level, id):
                    the ancestor country location.
     """
 
-    country = current.gis.get_parent_country(id)
+    country = current.gis.get_parent_country(location_id)
 
     s3db = current.s3db
     table = s3db.gis_hierarchy
@@ -5052,8 +5062,8 @@ def gis_hierarchy_editable(level, id):
                                     cache=s3db.cache)
     if len(rows) > 1:
         # Remove the Site Default
-        filter = lambda row: row.uuid == "SITE_DEFAULT"
-        rows.exclude(filter)
+        excluded = lambda row: row.uuid == "SITE_DEFAULT"
+        rows.exclude(excluded)
     row = rows.first()
     editable = row[fieldname]
 
@@ -5092,16 +5102,16 @@ def gis_location_filter(r):
                 tag = db(query).select(ttable.value,
                                        limitby=(0, 1)).first()
                 code = tag.value
-            filter = (FS(selector) == code)
+            location_filter = (FS(selector) == code)
         elif resource.name == "project":
             # Go via project_location link table
             selector = "location.location_id$%s" % row.level
-            filter = (FS(selector) == row.name)
+            location_filter = (FS(selector) == row.name)
         else:
             # Normal case: resource with location_id
             selector = "%s.location_id$%s" % (resource.name, row.level)
-            filter = (FS(selector) == row.name)
-        resource.add_filter(filter)
+            location_filter = (FS(selector) == row.name)
+        resource.add_filter(location_filter)
 
 # =============================================================================
 class gis_LocationRepresent(S3Represent):
@@ -5176,11 +5186,11 @@ class gis_LocationRepresent(S3Represent):
         # truncate (floor) degrees and minutes
         degrees, minutes = (int(coord), int(minutes))
 
-        format = current.deployment_settings.get_L10n_lat_lon_format()
-        formatted = format.replace("%d", "%d" % degrees) \
-                          .replace("%m", "%d" % minutes) \
-                          .replace("%s", "%lf" % seconds) \
-                          .replace("%f", "%lf" % coord)
+        latlonformat = current.deployment_settings.get_L10n_lat_lon_format()
+        formatted = latlonformat.replace("%d", "%d" % degrees) \
+                                .replace("%m", "%d" % minutes) \
+                                .replace("%s", "%lf" % seconds) \
+                                .replace("%f", "%lf" % coord)
         return formatted
 
     # -------------------------------------------------------------------------
@@ -5274,7 +5284,7 @@ class gis_LocationRepresent(S3Represent):
                     (table.language == current.session.s3.language)
             count = len(location_ids)
             if count == 1:
-                query &= (table.location_id == row.id)
+                query &= (table.location_id == location_ids[0])
             else:
                 query &= (table.location_id.belongs(location_ids))
             self.l10n = db(query).select(table.location_id,
@@ -5408,7 +5418,6 @@ class gis_LocationRepresent(S3Represent):
             elif level in ("L1", "L2", "L3", "L4", "L5"):
                 # Lookup the hierarchy for labels
                 s3db = current.s3db
-                htable = s3db.gis_hierarchy
                 L0_name = row.L0
                 if L0_name:
                     if row.path:
@@ -5493,27 +5502,28 @@ class gis_LocationRepresent(S3Represent):
         return s3_str(represent)
 
 # =============================================================================
-def gis_layer_represent(id, row=None, show_link=True):
+def gis_layer_represent(layer_id, row=None, show_link=True):
     """ Represent a Layer  """
 
     if row:
         db = current.db
         s3db = current.s3db
         ltable = s3db.gis_layer_entity
-    elif not id:
+    elif not layer_id:
         return current.messages["NONE"]
     else:
         db = current.db
         s3db = current.s3db
         ltable = s3db.gis_layer_entity
-        row = db(ltable.layer_id == id).select(ltable.name,
-                                               ltable.layer_id,
-                                               ltable.instance_type,
-                                               limitby=(0, 1)).first()
+        row = db(ltable.layer_id == layer_id).select(ltable.name,
+                                                     ltable.layer_id,
+                                                     ltable.instance_type,
+                                                     limitby = (0, 1),
+                                                     ).first()
 
     try:
         instance_type = row.instance_type
-    except:
+    except AttributeError:
         return current.messages.UNKNOWN_OPT
 
     instance_type_nice = ltable.instance_type.represent(instance_type)
@@ -5525,16 +5535,18 @@ def gis_layer_represent(id, row=None, show_link=True):
         query = (table.layer_id == row.layer_id)
         try:
             id = db(query).select(table.id,
-                                  limitby=(0, 1)).first().id
-        except:
+                                  limitby = (0, 1),
+                                  ).first().id
+        except AttributeError:
             # Not found?
             return represent
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href=URL(c=c, f=f,
                                 args=[id],
-                                extension="" # removes the .aaData extension in paginated views!
-                                ))
+                                extension="", # removes the .aaData extension in paginated views!
+                                ),
+                      )
 
     return represent
 
@@ -5583,7 +5595,7 @@ def gis_marker_retrieve_file_properties(filename, path=None):
     return {"path": path, "filename": filename}
 
 # =============================================================================
-def gis_rheader(r, tabs=[]):
+def gis_rheader(r, tabs=None):
     """ GIS page headers """
 
     settings = current.deployment_settings
@@ -5652,9 +5664,10 @@ def gis_rheader(r, tabs=[]):
             if region_location_id:
                 location_represent = gis_LocationRepresent()(region_location_id)
                 if context:
-                    T("%(pe)s in %(location)s") % \
-                        dict(pe=context,
-                             location=location_represent)
+                    context = T("%(pe)s in %(location)s") % {
+                                    "pe": context,
+                                    "location": location_represent,
+                                    }
                 else:
                     context = location_represent
 
