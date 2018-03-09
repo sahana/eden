@@ -1955,20 +1955,29 @@ $.filterOptionsS3({
 
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
-
-        # Lookup Volume per item
-        table = current.s3db.supply_item
-        item = current.db(table.id == row.item_id).select(table.volume,
-                                                          limitby = (0, 1),
-                                                          ).first()
         try:
             quantity = row.quantity if not received else row.recv_quantity
         except AttributeError:
             # Not available
             return current.messages["NONE"]
 
+        # Lookup Volume per item
+        table = current.s3db.supply_item
+        try:
+            volume = current.db(table.id == row.item_id).select(
+                                                            table.volume,
+                                                            limitby = (0, 1),
+                                                            ).first().volume
+        except AttributeError:
+            # No (such) item
+            return current.messages["NONE"]
+
         # Return the total volume
-        return quantity * item.volume if quantity else 0
+        if quantity is not None and volume is not None:
+            return quantity * volume
+        else:
+            # Unknown
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1977,20 +1986,29 @@ $.filterOptionsS3({
 
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
-
-        # Lookup Weight per item
-        table = current.s3db.supply_item
-        item = current.db(table.id == row.item_id).select(table.weight,
-                                                          limitby = (0, 1),
-                                                          ).first()
         try:
             quantity = row.quantity if not received else row.recv_quantity
         except AttributeError:
             # Not available
             return current.messages["NONE"]
 
+        # Lookup Weight per item
+        table = current.s3db.supply_item
+        try:
+            weight = current.db(table.id == row.item_id).select(
+                                                            table.weight,
+                                                            limitby = (0, 1),
+                                                            ).first().weight
+        except AttributeError:
+            # No (such) item
+            return current.messages["NONE"]
+
         # Return the total weight
-        return quantity * item.weight if quantity else 0
+        if quantity is not None and weight is not None:
+            return quantity * weight
+        else:
+            # Unknown
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
