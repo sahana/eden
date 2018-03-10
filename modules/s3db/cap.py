@@ -48,7 +48,7 @@ __all__ = ("get_cap_options",
            )
 
 import datetime
-import json
+#import json
 import urllib2 # Needed for quoting & error handling on fetch
 
 from collections import OrderedDict
@@ -59,10 +59,12 @@ except:
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.tools import fetch
+#from gluon.tools import fetch
 
 from ..s3 import *
 from s3layouts import S3PopupLink
+
+OIDPATTERN = r"^[^,<&\s]+$"
 
 # =============================================================================
 def get_cap_options():
@@ -391,7 +393,7 @@ $.filterOptionsS3({
                      Field("identifier", unique=True, length=128,
                            default = self.generate_identifier,
                            label = T("Identifier"),
-                           requires = IS_MATCH('^[^,<&\s]+$',
+                           requires = IS_MATCH(OIDPATTERN,
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            # Dont Allow to change the identifier
                            writable = False,
@@ -420,7 +422,7 @@ $.filterOptionsS3({
                            default = self.generate_sender,
                            readable = False,
                            writable = False,
-                           requires = IS_MATCH('^[^,<&\s]+$',
+                           requires = IS_MATCH(OIDPATTERN,
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The identifier of the sender of the alert message"),
@@ -2370,7 +2372,7 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("identifier", unique=True, length=128,
                            label = T("Identifier"),
-                           requires = IS_MATCH('^[^,<&\s]+$',
+                           requires = IS_MATCH(OIDPATTERN,
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("A unique identifier of the alert message"),
@@ -2392,7 +2394,7 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("sender",
                            label = T("Sender"),
-                           requires = IS_MATCH('^[^,<&\s]+$',
+                           requires = IS_MATCH(OIDPATTERN,
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The identifier of the sender of the alert message"),
@@ -3111,7 +3113,7 @@ class S3CAPAlertingAuthorityModel(S3Model):
         define_table(tablename,
                      Field("oid", unique=True,
                            label = T("CAP OID"),
-                           requires = IS_MATCH('^[^,<&\s]+$',
+                           requires = IS_MATCH(OIDPATTERN,
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            ),
                      self.org_organisation_id(
@@ -3625,7 +3627,7 @@ def cap_history_rheader(r):
         record = r.record
         if record:
             T = current.T
-            db = current.db
+            #db = current.db
             s3db = current.s3db
             if r.tablename == "cap_alert_history":
                 alert_id = record.id

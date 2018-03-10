@@ -9558,7 +9558,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
             @return: dictionary of assigned roles with entity pe_id as the keys
         """
 
-        assigned_roles = super(S3OrgRoleManager, self).get_assigned_roles
+        assigned_roles = super(S3PersonRoleManager, self).get_assigned_roles
 
         return assigned_roles(user_id=self.user["id"])
 
@@ -9590,13 +9590,17 @@ class S3PersonRoleManager(S3EntityRoleManager):
                                     if entity_id not in self.assigned_roles])
                 filtered_options.append((nice_name(entity_type), entities))
 
+            widget = lambda field, value: \
+                     S3GroupedOptionsWidget.widget(field,
+                                                   value,
+                                                   options=filtered_options,
+                                                   )
+
             object_field = Field("foreign_object",
-                                 current.T("Entity"),
-                                 requires=IS_IN_SET(self.objects),
-                                 widget=lambda field, value:
-                                     S3GroupedOptionsWidget.widget(field,
-                                                                   value,
-                                                                   options=filtered_options))
+                                 label = current.T("Entity"),
+                                 requires = IS_IN_SET(self.objects),
+                                 widget = widget,
+                                 )
             fields.insert(0, object_field)
 
         return fields

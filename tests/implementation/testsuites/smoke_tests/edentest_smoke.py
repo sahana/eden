@@ -17,6 +17,10 @@ class edentest_smoke(object):
         if len(url) == 0:
             return 1
 
+        if url.find("/admin/user") != -1 and url.find("/disable") != -1:
+            # Bad idea to disable user accounts during smoke tests
+            return 1
+
         if not self.follow_external_links and url.find(self.base_url) == -1:
             return 1
 
