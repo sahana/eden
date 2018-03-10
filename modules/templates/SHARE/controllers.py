@@ -139,7 +139,7 @@ class index(S3CustomController):
                                           label=T("Type"),
                                           ),
                           S3OptionsFilter("req.site_id",
-                                          label=T("From Site"),
+                                          label=T("Site"),
                                           ),
                           S3DateFilter("req.date",
                                        label = "Date",
@@ -152,6 +152,24 @@ class index(S3CustomController):
                                    url=ajax_url,
                                    )
         output["req_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+
+        #----------------------
+        # Create request button
+        make_request_btn = A(T("Make a Request"),
+                         _href = URL(c="req",
+                                     f="req",
+                                     args="create",
+                                     ),
+                         _class = "action-btn button tiny",
+                         )
+
+#        system_roles = current.auth.get_system_roles()
+#        can_request = current.auth.s3_has_role("REQUESTER"): or (system_roles.ADMIN in current.session.s3.roles
+        #print (current.session.s3.roles)
+#        if can_request: 
+        output["make_request_btn"] = make_request_btn
+#        else:
+#            output["make_request_btn"] = ""
 
         # View title
         output["title"] = current.deployment_settings.get_system_name()
