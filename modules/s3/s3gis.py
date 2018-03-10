@@ -73,7 +73,7 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_include_underscore, s3_str, s3_unicode
+from s3utils import s3_include_ext, s3_include_underscore, s3_str
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -2568,7 +2568,7 @@ class GIS(object):
                                 if ftype == "integer":
                                     if isinstance(represent, lazyT):
                                         # Integer is just a lookup key
-                                        represent = s3_unicode(represent)
+                                        represent = s3_str(represent)
                                     else:
                                         # Attributes should be numbers not strings
                                         # (@ToDo: Add a JS i18n formatter for the tooltips)
@@ -2579,7 +2579,7 @@ class GIS(object):
                                     # (@ToDo: Add a JS i18n formatter for the tooltips)
                                     represent = row["_row"][fieldname]
                                 else:
-                                    represent = s3_unicode(represent)
+                                    represent = s3_str(represent)
                                 attribute[_attr[1]] = represent
                         attr[record_id] = attribute
 
@@ -2707,7 +2707,7 @@ class GIS(object):
                     alias, cfield = location_context.split(".", 1)
                     try:
                         component = resource.components[alias]
-                    except:
+                    except KeyError:
                         # Invalid alias
                         # Can't display this resource on the Map
                         return None
@@ -2717,8 +2717,6 @@ class GIS(object):
                             rfield.join[ctablename] & \
                             (ctable[cfield] == gtable.id)
                     #custom = True
-                    # Clear components again
-                    resource.components = Storage()
                 # @ToDo:
                 #elif "$" in location_context:
                 else:
@@ -5827,6 +5825,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         form_vars.wkt = shape.wkt
                 else:
                     # Assume WKT
+                    warning = None
                     from shapely.wkt import loads as wkt_loads
                     try:
                         shape = wkt_loads(wkt)
@@ -5839,11 +5838,21 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         except:
                             form.errors["wkt"] = current.messages.invalid_wkt
                             return
+                    else:
+                        if shape.wkt != form_vars.wkt: # If this is too heavy a check for some deployments, add a deployment_setting to disable the check & just do it silently
+                            # Use Shapely to clean up the defective WKT (e.g. trailing chars)
+                            warning = s3_str(current.T("Source WKT has been cleaned by Shapely"))
+                            form_vars.wkt = shape.wkt
 
                     if shape.has_z:
                         # Shapely export of WKT is 2D only
-                        form_vars.wkt = shape.wkt
-                        current.session.warning = current.T("Only 2D geometry stored as PostGIS cannot handle 3D geometries")
+                        if warning:
+                            warning = "%s, %s" % s3_str(current.T("Only 2D geometry stored as PostGIS cannot handle 3D geometries"))
+                        else:
+                            warning = s3_str(current.T("Only 2D geometry stored as PostGIS cannot handle 3D geometries"))
+
+                    if warning:
+                        current.session.warning = warning
 
                 gis_feature_type = shape.type
                 if gis_feature_type == "Point":
@@ -7753,7 +7762,7 @@ class Layer(object):
             self.__dict__.update(record)
             del record
             if current.deployment_settings.get_L10n_translate_gis_layer():
-                self.safe_name = re.sub('[\\"]', "", s3_unicode(current.T(self.name)))
+                self.safe_name = re.sub('[\\"]', "", s3_str(current.T(self.name)))
             else:
                 self.safe_name = re.sub('[\\"]', "", self.name)
 
@@ -7777,13 +7786,13 @@ class Layer(object):
 
         def setup_folder(self, output):
             if self.dir:
-                output["dir"] = s3_unicode(current.T(self.dir))
+                output["dir"] = s3_str(current.T(self.dir))
 
         def setup_folder_and_visibility(self, output):
             if not self.visible:
                 output["visibility"] = False
             if self.dir:
-                output["dir"] = s3_unicode(current.T(self.dir))
+                output["dir"] = s3_str(current.T(self.dir))
 
         def setup_folder_visibility_and_opacity(self, output):
             if not self.visible:
@@ -7791,7 +7800,7 @@ class Layer(object):
             if self.opacity != 1:
                 output["opacity"] = "%.1f" % self.opacity
             if self.dir:
-                output["dir"] = s3_unicode(current.T(self.dir))
+                output["dir"] = s3_str(current.T(self.dir))
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -7922,7 +7931,7 @@ class LayerEmpty(Layer):
         sublayers = self.sublayers
         if sublayers:
             sublayer = sublayers[0]
-            name = s3_unicode(current.T(sublayer.name))
+            name = s3_str(current.T(sublayer.name))
             name_safe = re.sub("'", "", name)
             ldict = dict(name = name_safe,
                          id = sublayer.layer_id)

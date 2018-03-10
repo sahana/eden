@@ -31,18 +31,14 @@ import json
 import sys
 import datetime
 
-try:
-    from cStringIO import StringIO # Faster, where available
-except:
-    from StringIO import StringIO
-
-from gluon import *
+from gluon import current, URL, DIV
 from gluon.storage import Storage
 
 from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
+from s3utils import s3_str
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -137,7 +133,7 @@ class S3Sync(S3Method):
             db = current.db
             rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(rtable.id,
-                                                 limitby=(0, 1),
+                                                 limitby = (0, 1),
                                                  ).first()
 
             # Check permissions
@@ -282,7 +278,7 @@ class S3Sync(S3Method):
         # @ToDo: Option to specify components?
         components = vars_get("components", None)
         if components and components.lower() == "none":
-            resource.components = Storage()
+            resource.components.reset(expose=[])
 
         try:
             result = connector.send(resource,
@@ -524,7 +520,9 @@ class S3Sync(S3Method):
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
         s3.synchronise_uuids = False
-        db(s3db.sync_repository.id == repository_id).update(last_connected = datetime.datetime.utcnow())
+        db(s3db.sync_repository.id == repository_id).update(
+                            last_connected = datetime.datetime.utcnow(),
+                            )
 
         return success
 
@@ -540,25 +538,25 @@ class S3Sync(S3Method):
         """
 
         s3db = current.s3db
-        _debug = current.log.debug
+        debug = current.log.debug
 
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s" % resource.tablename)
-        _debug("Repository: %s" % repository.name)
-        _debug("Conflicting item: %s" % item)
-        _debug("Method: %s" % item.method)
+        debug("Resolving conflict in %s" % resource.tablename)
+        debug("Repository: %s" % repository.name)
+        debug("Conflicting item: %s" % item)
+        debug("Method: %s" % item.method)
 
         if resolver:
-            _debug("Applying custom rule")
+            debug("Applying custom rule")
             resolver(item, repository, resource)
             if item.conflict:
-                _debug("Do not accept")
+                debug("Do not accept")
             else:
-                _debug("Accept per custom rule")
+                debug("Accept per custom rule")
         else:
-            _debug("Applying default rule")
+            debug("Applying default rule")
             ttable = s3db.sync_task
             policies = S3ImportItem.POLICY
             query = (ttable.repository_id == repository.id) & \
@@ -570,32 +568,31 @@ class S3Sync(S3Method):
                 conflict_policy = task.conflict_policy
                 if conflict_policy == policies.OTHER:
                     # Always accept
-                    _debug("Accept by default")
+                    debug("Accept by default")
                     item.conflict = False
                 elif conflict_policy == policies.NEWER:
                     # Accept if newer
                     xml = current.xml
                     if xml.MTIME in original and \
                        s3_utc(original[xml.MTIME]) <= item.mtime:
-                        _debug("Accept because newer")
+                        debug("Accept because newer")
                         item.conflict = False
                     else:
-                        _debug("Do not accept")
+                        debug("Do not accept")
                 elif conflict_policy == policies.MASTER:
                     # Accept if master
                     if current.xml.MCI in original and \
                        original.mci == 0 or item.mci == 1:
-                        _debug("Accept because master")
+                        debug("Accept because master")
                         item.conflict = False
                     else:
-                        _debug("Do not accept")
+                        debug("Do not accept")
                 else:
                     # Never accept
-                    _debug("Do not accept")
-                    pass
+                    debug("Do not accept")
             else:
                 # No rule - accept always
-                _debug("Accept because no rule found")
+                debug("Accept because no rule found")
                 item.conflict = False
 
     # -------------------------------------------------------------------------
@@ -657,14 +654,16 @@ class S3Sync(S3Method):
         query = (ftable.task_id == task_id) & \
                 (ftable.deleted != True)
         rows = db(query).select(ftable.tablename,
-                                ftable.filter_string)
+                                ftable.filter_string,
+                                )
 
         filters = {}
         for row in rows:
             tablename = row.tablename
             if tablename in filters:
                 filters[tablename] = "%s&%s" % (filters[tablename],
-                                                row.filter_string)
+                                                row.filter_string,
+                                                )
             else:
                 filters[tablename] = row.filter_string
 
@@ -707,7 +706,7 @@ class S3SyncLog(S3Method):
             @param attr: controller attributes for the request
         """
 
-        output = dict()
+        output = {}
 
         resource = r.resource
         if resource.tablename == self.TABLENAME:
@@ -729,15 +728,16 @@ class S3SyncLog(S3Method):
                 s3.filter = query
                 s3.prep = None
                 s3.postp = None
-                s3.actions = [
-                    dict(label=str(current.T("Details")),
-                         _class="action-btn",
-                         url=URL(c="sync", f="log",
-                                 args=["[id]"],
-                                 vars={"return":here}))
-                    ]
-                output = r(subtitle=None,
-                           rheader=self.rheader)
+                s3.actions = [{"label": s3_str(current.T("Details")),
+                               "_class": "action-btn",
+                               "url": URL(c = "sync",
+                                          f = "log",
+                                          args = ["[id]"],
+                                          vars = {"return":here},
+                                          )
+                               },
+                              ]
+                output = r(subtitle=None, rheader=self.rheader)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
 

@@ -837,31 +837,41 @@ class S3Hierarchy(object):
                         break
         else:
             resource = s3db.resource(tablename)
-            rfield = resource.resolve_selector(parent)
+            master = resource.tablename
 
-            if rfield.tname == resource.tablename:
+            rfield = resource.resolve_selector(parent)
+            ltname = rfield.tname
+
+            if ltname == master:
+                # Self-reference
                 fkey = rfield.field
                 self.__link = None
                 self.__lkey = None
                 self.__left = None
             else:
-                # Try to find the link table resource from parent selector
-                links = resource.links
+                # Link table
+
+                # Use the parent selector to find the link resource
                 alias = parent.split(".%s" % rfield.fname)[0]
-                link = links.get(alias)
-                if not link:
-                    # Fall back to table name of parent field
-                    alias = rfield.tname.split("_", 1)[1]
-                    link = links.get(alias)
-                if link:
-                    fkey = rfield.field
-                    self.__link = rfield.tname
-                    self.__lkey = link.fkey
-                    self.__left = rfield.left.get(rfield.tname)
+                calias = s3db.get_alias(master, alias)
+                if not calias:
+                    # Fall back to link table name
+                    alias = ltname.split("_", 1)[1]
+                    calias = s3db.get_alias(master, alias)
+
+                # Load the component and get the link parameters
+                if calias:
+                    component = resource.components.get(calias)
+                    link = component.link
+                    if link:
+                        fkey = rfield.field
+                        self.__link = ltname
+                        self.__lkey = link.fkey
+                        self.__left = rfield.left.get(ltname)
 
         if not fkey:
             # No parent field found
-            raise AttributeError
+            raise AttributeError("parent link not found")
 
         if pkey is None:
             ftype = str(fkey.type)

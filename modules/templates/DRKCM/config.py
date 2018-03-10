@@ -553,6 +553,8 @@ def config(settings):
         auth = current.auth
         s3db = current.s3db
 
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -728,8 +730,8 @@ def config(settings):
 
                             # Process Data ----------------------------
                             "dvr_case.site_id",
-                            (T("Moving-in Date"), "dvr_case_details.on_site_from"),
-                            (T("Moving-out Date"), "dvr_case_details.on_site_until"),
+                            (T("Moving-in Date"), "case_details.on_site_from"),
+                            (T("Moving-out Date"), "case_details.on_site_until"),
                             S3SQLInlineComponent(
                                     "address",
                                     label = T("Current Address"),
@@ -752,7 +754,7 @@ def config(settings):
                                     multiple = False,
                                     name = "bamf",
                                     ),
-                            (T("Date of Entry"), "dvr_case_details.arrival_date"),
+                            (T("Date of Entry"), "case_details.arrival_date"),
                             S3SQLInlineComponent(
                                     "residence_status",
                                     fields = ["status_type_id",
@@ -1556,6 +1558,8 @@ def config(settings):
 
         s3 = current.response.s3
 
+        settings.base.bigtable = True
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -1924,6 +1928,15 @@ def config(settings):
                            )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_response_action_controller(**attr):
+
+        settings.base.bigtable = True
+
+        return attr
+
+    settings.customise_dvr_response_action_controller = customise_dvr_response_action_controller
 
     # -------------------------------------------------------------------------
     def customise_dvr_service_contact_resource(r, tablename):

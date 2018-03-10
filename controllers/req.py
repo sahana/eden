@@ -1494,6 +1494,22 @@ def send_process():
 def commit_item():
     """ REST Controller """
 
+    def prep(r):
+
+        table = r.table
+
+        # Filter to item commits
+        field = table.commit_id
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "req_commit.id",
+                                               field.represent,
+                                               filterby = "type",
+                                               filter_opts = (1,),
+                                               orderby="req_commit.date",
+                                               sort=True,
+                                               ))
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # =============================================================================

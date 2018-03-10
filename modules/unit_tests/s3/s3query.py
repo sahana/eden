@@ -81,7 +81,10 @@ class FieldSelectorResolutionTests(unittest.TestCase):
 
         assertIn = self.assertIn
         assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
 
+        assertNotEqual(resource.components.get("parent"), None)
+        assertNotEqual(resource.components.get("child"), None)
         links = resource.links
 
         # Ambigious "link" entry retained for backwards-compatiblity

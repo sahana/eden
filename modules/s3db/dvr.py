@@ -7989,18 +7989,14 @@ class dvr_AssignMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        component = self.component
-        components = r.resource.components
-        for c in components:
-            if c == component:
-                component = components[c]
-                break
         try:
-            if component.link:
-                component = component.link
-        except:
+            component = r.resource.components[self.component]
+        except KeyError:
             current.log.error("Invalid Component!")
             raise
+
+        if component.link:
+            component = component.link
 
         tablename = component.tablename
 

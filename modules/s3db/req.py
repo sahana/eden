@@ -595,8 +595,6 @@ class RequestModel(S3Model):
 
         # Components
         add_components(tablename,
-                       # Documents
-                       req_document = "req_id",
                        # Requested Items
                        req_req_item = {"joinby": "req_id",
                                        "multiple": multiple_req_items,
@@ -2831,15 +2829,17 @@ class CommitModel(S3Model):
             msg_list_empty = T("No Commitments"))
 
         # Reusable Field
+        commit_represent = req_CommitRepresent()
         commit_id = S3ReusableField("commit_id", "reference %s" % tablename,
                                     label = T("Commitment"),
                                     ondelete = "CASCADE",
-                                    represent = self.commit_represent,
+                                    represent = commit_represent,
                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_commit.id",
-                                                              self.commit_represent,
+                                                              commit_represent,
                                                               orderby="req_commit.date",
-                                                              sort=True)),
+                                                              sort=True,
+                                                              )),
                                     sortby = "date",
                                     )
 
@@ -2901,37 +2901,6 @@ class CommitModel(S3Model):
         #
         return {"req_commit_id": commit_id,
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def commit_represent(commit_id, row=None):
-        """
-            Represent a Commit
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            table = current.db.req_commit
-        elif not commit_id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.req_commit
-            row = db(table.id == commit_id).select(table.type,
-                                                   table.date,
-                                                   table.organisation_id,
-                                                   table.site_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-        if row.type == 1:
-            # Items
-            return "%s - %s" % (table.site_id.represent(row.site_id),
-                                table.date.represent(row.date))
-        else:
-            return "%s - %s" % (table.organisation_id.represent(row.organisation_id),
-                                table.date.represent(row.date))
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4625,6 +4594,117 @@ class req_ReqItemRepresent(S3Represent):
             return str(row.id)
 
         return row.supply_item.name
+
+# =============================================================================
+class req_CommitRepresent(S3Represent):
+    """
+        Represent a commit
+    """
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(req_CommitRepresent, self).__init__(lookup = "req_commit",
+                                                  )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (table.id == values[0])
+        else:
+            query = (table.id.belongs(values))
+
+        rows = current.db(query).select(table.id,
+                                        table.type,
+                                        table.date,
+                                        table.organisation_id,
+                                        table.site_id,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+
+        # Collect site_ids/organisation_ids after commit type
+        organisation_ids = set()
+        site_ids = set()
+        for row in rows:
+            if row.type == 1:
+                site_ids.add(row.site_id)
+            else:
+                organisation_ids.add(row.organisation_id)
+
+        # Bulk-represent site_ids
+        if site_ids:
+            represent = table.site_id.represent
+            if represent and hasattr(represent, "bulk"):
+                represent.bulk(list(site_ids))
+
+        # Bulk-represent organisation_ids
+        if organisation_ids:
+            represent = table.organisation_id.represent
+            if represent and hasattr(represent, "bulk"):
+                represent.bulk(list(organisation_ids))
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        table = self.table
+
+        try:
+            commit_type = row.type
+        except AttributeError:
+            # Unknown commit type => assume "other"
+            commit_type = None
+
+        # Determine the committer field and id after commit type
+        if commit_type == 1:
+            field = table.site_id
+            committer_id = row.site_id
+        else:
+            field = table.organisation_id
+            committer_id = row.organisation_id
+
+        # Represent the committer (site or org)
+        if committer_id and field.represent:
+            committer = field.represent(committer_id)
+        else:
+            committer = None
+
+        # Represent the commit date
+        if row.date:
+            daterepr = table.date.represent(row.date)
+        else:
+            daterepr = T("undated")
+
+        # Combine committer/date as available
+        if committer:
+            if isinstance(committer, DIV):
+                reprstr = TAG[""](committer, " - ", daterepr)
+            else:
+                reprstr = "%s - %s" % (committer, daterepr)
+        else:
+            reprstr = daterepr
+
+        return reprstr
 
 # =============================================================================
 def req_job_reset(r, **attr):

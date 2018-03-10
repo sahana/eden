@@ -2083,10 +2083,11 @@ class S3CRUD(S3Method):
                                                  )
             except (AttributeError, SyntaxError):
                 r.error(404, current.ERROR.BAD_RESOURCE)
+
         if alias:
-            if alias in resource.components:
+            try:
                 component = resource.components[alias]
-            else:
+            except KeyError:
                 r.error(404, current.ERROR.BAD_RESOURCE)
         else:
             component = resource

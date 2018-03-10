@@ -852,19 +852,16 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def get_component(cls, table, name):
+    def get_component(cls, table, alias):
         """
-            Finds a component definition.
+            Get a component description for a component alias
 
-            @param table: the primary table or table name
-            @param name: the component name (without prefix)
+            @param table: the master table
+            @param alias: the component alias
+
+            @returns: the component description (Storage)
         """
-
-        components = cls.get_components(table, names=name)
-        if name in components:
-            return components[name]
-        else:
-            return None
+        return cls.parse_hook(table, alias)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -872,9 +869,131 @@ class S3Model(object):
         """
             Finds components of a table
 
+            FIXME rename names into aliases
+
             @param table: the table or table name
             @param names: a list of components names to limit the search to,
                           None for all available components
+
+            @returns: the component descriptions (Storage {alias: description})
+        """
+
+        table, hooks = cls.get_hooks(table, names=names)
+
+        # Build component-objects for each hook
+        components = Storage()
+        if table and hooks:
+            for alias in hooks:
+                component = cls.parse_hook(table, alias, hook=hooks[alias])
+                if component:
+                    components[alias] = component
+
+        return components
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse_hook(cls, table, alias, hook=None):
+        """
+            Parse a component configuration, loading all necessary table
+            models and applying defaults
+
+            @param table: the master table
+            @param alias: the component alias
+            @param hook: the component configuration (if already known)
+
+            @returns: the component description (Storage {key: value})
+        """
+
+        load = cls.table
+
+        if hook is None:
+            table, hooks = cls.get_hooks(table, names=[alias])
+            if hooks and alias in hooks:
+                hook = hooks[alias]
+            else:
+                return None
+
+        tn = hook.tablename
+        lt = hook.linktable
+
+        ctable = load(tn)
+        if ctable is None:
+            return None
+
+        if lt:
+            ltable = load(lt)
+            if ltable is None:
+                return None
+        else:
+            ltable = None
+
+        prefix, name = tn.split("_", 1)
+        component = Storage(defaults=hook.defaults,
+                            multiple=hook.multiple,
+                            tablename=tn,
+                            table=ctable,
+                            prefix=prefix,
+                            name=name,
+                            alias=alias,
+                            label=hook.label,
+                            plural=hook.plural,
+                            )
+
+        if hook.supertable is not None:
+            joinby = hook.supertable._id.name
+        else:
+            joinby = hook.fkey
+
+        if hook.pkey is None:
+            if hook.supertable is not None:
+                component.pkey = joinby
+            else:
+                component.pkey = table._id.name
+        else:
+            component.pkey = hook.pkey
+
+        if ltable is not None:
+
+            if hook.actuate:
+                component.actuate = hook.actuate
+            else:
+                component.actuate = "link"
+            component.linktable = ltable
+
+            if hook.fkey is None:
+                component.fkey = ctable._id.name
+            else:
+                component.fkey = hook.fkey
+
+            component.lkey = hook.lkey
+            component.rkey = hook.rkey
+            component.autocomplete = hook.autocomplete
+            component.autodelete = hook.autodelete
+
+        else:
+            component.linktable = None
+            component.fkey = hook.fkey
+            component.lkey = component.rkey = None
+            component.actuate = None
+            component.autocomplete = None
+            component.autodelete = None
+
+        if hook.filterby is not None:
+            component.filterby = hook.filterby
+
+        return component
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_hooks(cls, table, names=None):
+        """
+            Find applicable component configurations (hooks) for a table
+
+            @param table: the master table (or table name)
+            @param names: component aliases to find (default: all configured
+                          components for the master table)
+
+            @returns: tuple (table, {alias: hook, ...})
         """
 
         components = current.model.components
@@ -882,13 +1001,13 @@ class S3Model(object):
 
         # Get tablename and table
         if type(table) is Table:
-            tablename = table._tablename
+            tablename = original_tablename(table)
         else:
             tablename = table
             table = load(tablename)
             if table is None:
                 # Primary table not defined
-                return None
+                return None, None
 
         # Single alias?
         if isinstance(names, str):
@@ -896,14 +1015,15 @@ class S3Model(object):
         elif names is not None:
             names = set(names)
 
-        # Get hooks for direct components
         hooks = {}
-        get_hooks = cls.__get_hooks
+        get_hooks = cls.__filter_hooks
+        supertables = None
+
+        # Get hooks for direct components
         direct_components = components.get(tablename)
         if direct_components:
             names = get_hooks(hooks, direct_components, names=names)
 
-        supertables = None
         if names is None or names:
             # Add hooks for super-components
             supertables = cls.get_config(tablename, "super_entity")
@@ -947,82 +1067,32 @@ class S3Model(object):
                                           supertable = s,
                                           )
 
-        # Build component-objects for each hook
-        components = Storage()
+        return table, hooks
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def __filter_hooks(cls, components, hooks, names=None, supertable=None):
+        """
+            DRY Helper method to filter component hooks
+
+            @param components: components already found, dict {alias: component}
+            @param hooks: component hooks to filter, dict {alias: hook}
+            @param names: the names (=aliases) to include
+            @param supertable: the super-table name to set for the component
+
+            @returns: set of names that could not be found,
+                      or None if names was None
+        """
+
         for alias in hooks:
-
-            hook = hooks[alias]
-            tn = hook.tablename
-            lt = hook.linktable
-
-            ctable = load(tn)
-            if ctable is None:
+            if alias in components or \
+               names is not None and alias not in names:
                 continue
+            hook = hooks[alias]
+            hook["supertable"] = supertable
+            components[alias] = hook
 
-            if lt:
-                ltable = load(lt)
-                if ltable is None:
-                    continue
-            else:
-                ltable = None
-
-            prefix, name = tn.split("_", 1)
-            component = Storage(defaults=hook.defaults,
-                                multiple=hook.multiple,
-                                tablename=tn,
-                                table=ctable,
-                                prefix=prefix,
-                                name=name,
-                                alias=alias,
-                                label=hook.label,
-                                plural=hook.plural,
-                                )
-
-            if hook.supertable is not None:
-                joinby = hook.supertable._id.name
-            else:
-                joinby = hook.fkey
-
-            if hook.pkey is None:
-                if hook.supertable is not None:
-                    component.pkey = joinby
-                else:
-                    component.pkey = table._id.name
-            else:
-                component.pkey = hook.pkey
-
-            if ltable is not None:
-
-                if hook.actuate:
-                    component.actuate = hook.actuate
-                else:
-                    component.actuate = "link"
-                component.linktable = ltable
-
-                if hook.fkey is None:
-                    component.fkey = ctable._id.name
-                else:
-                    component.fkey = hook.fkey
-
-                component.lkey = hook.lkey
-                component.rkey = hook.rkey
-                component.autocomplete = hook.autocomplete
-                component.autodelete = hook.autodelete
-
-            else:
-                component.linktable = None
-                component.fkey = hook.fkey
-                component.lkey = component.rkey = None
-                component.actuate = None
-                component.autocomplete = None
-                component.autodelete = None
-
-            if hook.filterby is not None:
-                component.filterby = hook.filterby
-
-            components[alias] = component
-
-        return components
+        return set(names) - set(hooks) if names is not None else None
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1051,14 +1121,15 @@ class S3Model(object):
 
         # Get table hooks
         hooks = Storage()
-        get_hooks = cls.__get_hooks
+        filter_hooks = cls.__filter_hooks
         h = components.get(tablename, None)
         if h:
-            get_hooks(hooks, h)
+            filter_hooks(hooks, h)
         if len(hooks):
             return True
 
         # Check for super-components
+        # FIXME: add dynamic components for super-table?
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
             if not isinstance(supertables, (list, tuple)):
@@ -1070,37 +1141,12 @@ class S3Model(object):
                     continue
                 h = components.get(s._tablename, None)
                 if h:
-                    get_hooks(hooks, h, supertable=s)
+                    filter_hooks(hooks, h, supertable=s)
             if len(hooks):
                 return True
 
         # No components found
         return False
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def __get_hooks(cls, components, hooks, names=None, supertable=None):
-        """
-            DRY Helper method to filter component hooks
-
-            @param components: components already found, dict {alias: component}
-            @param hooks: component hooks to filter, dict {alias: hook}
-            @param names: the names (=aliases) to include
-            @param supertable: the super-table name to set for the component
-
-            @returns: set of names that could not be found,
-                      or None if names was None
-        """
-
-        for alias in hooks:
-            if alias in components or \
-               names is not None and alias not in names:
-                continue
-            hook = hooks[alias]
-            hook["supertable"] = supertable
-            components[alias] = hook
-
-        return set(names) - set(hooks) if names is not None else None
 
     # -------------------------------------------------------------------------
     @classmethod
