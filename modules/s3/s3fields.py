@@ -924,6 +924,21 @@ s3uuid = SQLCustomType(type = "string",
 # Representation of user roles (auth_group)
 auth_group_represent = S3Represent(lookup="auth_group", fields=["role"])
 
+ALL_META_FIELD_NAMES = ("uuid",
+                        "mci",
+                        "deleted",
+                        "deleted_fk",
+                        "deleted_rb",
+                        "created_on",
+                        "created_by",
+                        "modified_on",
+                        "modified_by",
+                        "approved_by",
+                        "owned_by_user",
+                        "owned_by_group",
+                        "realm_entity",
+                        )
+
 # -----------------------------------------------------------------------------
 class S3MetaFields(object):
     """ Class to standardize meta-fields """
@@ -1197,30 +1212,6 @@ class S3MetaFields(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def all_meta_field_names():
-        """
-            The names of all meta fields
-
-            @return: tuple of field names
-        """
-
-        return ("uuid",
-                "mci",
-                "deleted",
-                "deleted_fk",
-                "deleted_rb",
-                "created_on",
-                "created_by",
-                "modified_on",
-                "modified_by",
-                "approved_by",
-                "owned_by_user",
-                "owned_by_group",
-                "realm_entity",
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def _current_user():
         """
             Get the user ID of the currently logged-in user
@@ -1265,7 +1256,7 @@ def s3_all_meta_field_names():
         @return: tuple of field names
     """
 
-    return S3MetaFields.all_meta_field_names()
+    return ALL_META_FIELD_NAMES
 
 # =============================================================================
 # Reusable roles fields
