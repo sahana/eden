@@ -3154,7 +3154,7 @@ class S3SiteModel(S3Model):
                                 writable = False,
                                 ),
                           Field("comments", "text"),
-                          *s3_ownerstamp())
+                          *S3MetaFields.owner_meta_fields())
 
         # ---------------------------------------------------------------------
         settings = current.deployment_settings

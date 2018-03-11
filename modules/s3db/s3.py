@@ -57,7 +57,7 @@ class S3HierarchyModel(S3Model):
                                 default = False,
                                 ),
                           Field("hierarchy", "json"),
-                          *s3_timestamp())
+                          *S3MetaFields.timestamps())
 
         # ---------------------------------------------------------------------
         # Return global names to s3.*

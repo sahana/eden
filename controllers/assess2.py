@@ -1812,7 +1812,7 @@ define_table(tablename,
              Field("average_family_size", "double"),
              Field("effective_date", "datetime"),
              s3_comments(),
-             *(s3_timestamp() + s3_uid() + s3_deletion_status()))
+             *S3MetaFields.sync_meta_fields())
 
 # CRUD strings
 crud_strings[tablename] = Storage(

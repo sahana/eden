@@ -143,7 +143,7 @@ class S3ChannelModel(S3Model):
         define_table(tablename,
                      # @ToDo: Make it per-channel
                      #channel_id(),
-                     *s3_timestamp())
+                     *S3MetaFields.timestamps())
 
         # ---------------------------------------------------------------------
         # Channel Status

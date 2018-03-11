@@ -860,7 +860,7 @@ $.filterOptionsS3({
                                 default = 1.0,
                                 label = T("Quantity"),
                                 ),
-                          *s3_ownerstamp())
+                          *S3MetaFields.owner_meta_fields())
 
         # Reusable Field
         item_id = lambda: super_link("item_entity_id", "supply_item_entity",

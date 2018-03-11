@@ -911,8 +911,8 @@ class S3RepresentLazy(object):
             return
 
 # =============================================================================
-# Record identity meta-fields
-
+# Meta-fields
+#
 # Use URNs according to http://tools.ietf.org/html/rfc4122
 s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
@@ -921,197 +921,351 @@ s3uuid = SQLCustomType(type = "string",
                                     else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
 
-#if db and current.db._adapter.represent("X", s3uuid) != "'X'":
-#    # Old web2py DAL, must add quotes in encoder
-#    s3uuid = SQLCustomType(type = "string",
-#                           native = "VARCHAR(128)",
-#                           encoder = (lambda x: "'%s'" % (uuid4().urn
-#                                        if x == ""
-#                                        else str(x.encode("utf-8")).replace("'", "''"))),
-#                           decoder = (lambda x: x))
+# Representation of user roles (auth_group)
+auth_group_represent = S3Represent(lookup="auth_group", fields=["role"])
 
-# Universally unique identifier for a record
-s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
-                               length = 128,
-                               notnull = True,
-                               unique = True,
-                               readable = False,
-                               writable = False,
-                               default = "")
+# -----------------------------------------------------------------------------
+class S3MetaFields(object):
+    """ Class to standardize meta-fields """
 
-# Master-Copy-Index (for Sync)
-s3_meta_mci = S3ReusableField("mci", "integer",
-                              default = 0,
-                              readable = False,
-                              writable = False)
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def uuid():
+        """
+            Universally unique record identifier according to RFC4122, as URN
+            (e.g. "urn:uuid:fd8f97ab-1252-4d62-9982-8e3f3025307f"); uuids are
+            mandatory for synchronization (incl. EdenMobile)
+        """
 
-def s3_uid():
-    return (s3_meta_uuid(),
-            s3_meta_mci())
+        return Field("uuid", type=s3uuid,
+                     default = "",
+                     length = 128,
+                     notnull = True,
+                     unique = True,
+                     readable = False,
+                     writable = False,
+                     )
 
-# =============================================================================
-# Record "soft"-deletion meta-fields
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def mci():
+        """
+            Master-Copy-Index - whether this record has been created locally
+            or imported ("copied") from another source:
+                - mci=0 means "created here"
+                - mci>0 means "copied n times"
+        """
 
-# "Deleted"-flag
-s3_meta_deletion_status = S3ReusableField("deleted", "boolean",
-                                          default = False,
-                                          readable = False,
-                                          writable = False)
+        return Field("mci", "integer",
+                     default = 0,
+                     readable = False,
+                     writable = False,
+                     )
 
-# Parked foreign keys of a deleted record in JSON format
-# => to be restored upon "un"-delete
-s3_meta_deletion_fk = S3ReusableField("deleted_fk", #"text",
-                                      readable = False,
-                                      writable = False)
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deleted():
+        """
+            Deletion status (True=record is deleted)
+        """
 
-# ID of the record replacing this record
-# => for record merger (de-duplication)
-s3_meta_deletion_rb = S3ReusableField("deleted_rb", "integer",
-                                      readable = False,
-                                      writable = False)
+        return Field("deleted", "boolean",
+                     default = False,
+                     readable = False,
+                     writable = False,
+                     )
 
-def s3_deletion_status():
-    return (s3_meta_deletion_status(),
-            s3_meta_deletion_fk(),
-            s3_meta_deletion_rb())
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deleted_fk():
+        """
+            Foreign key values of this record before deletion (foreign keys
+            are set to None during deletion to derestrict constraints)
+        """
 
-# =============================================================================
-# Record timestamp meta-fields
+        return Field("deleted_fk", #"text",
+                     readable = False,
+                     writable = False,
+                     )
 
-s3_meta_created_on = S3ReusableField("created_on", "datetime",
-                                     readable = False,
-                                     writable = False,
-                                     default = datetime.datetime.utcnow,
-                                     )
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deleted_rb():
+        """
+            De-duplication: ID of the record that has replaced this record
+        """
 
-s3_meta_modified_on = S3ReusableField("modified_on", "datetime",
-                                      readable = False,
-                                      writable = False,
-                                      default = datetime.datetime.utcnow,
-                                      update = datetime.datetime.utcnow,
-                                      )
+        return Field("deleted_rb", "integer",
+                     readable = False,
+                     writable = False,
+                     )
 
-def s3_timestamp():
-    return (s3_meta_created_on(),
-            s3_meta_modified_on())
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def created_on():
+        """
+            Date/time when the record was created
+        """
 
-# =============================================================================
-# Record authorship meta-fields
-def s3_authorstamp():
-    """
-        Record ownership meta-fields
-    """
+        return Field("created_on", "datetime",
+                     readable = False,
+                     writable = False,
+                     default = datetime.datetime.utcnow,
+                     )
 
-    auth = current.auth
-    utable = auth.settings.table_user
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def modified_on():
+        """
+            Date/time when the record was last modified
+        """
 
-    if auth.is_logged_in():
-        # Not current.auth.user to support impersonation
-        current_user = current.session.auth.user.id
-    else:
-        current_user = None
+        return Field("modified_on", "datetime",
+                     readable = False,
+                     writable = False,
+                     default = datetime.datetime.utcnow,
+                     update = datetime.datetime.utcnow,
+                     )
 
-    if current.deployment_settings.get_ui_auth_user_represent() == "name":
-        represent = s3_auth_user_represent_name
-    else:
-        represent = s3_auth_user_represent
+    # -------------------------------------------------------------------------
+    @classmethod
+    def created_by(cls):
+        """
+            Auth_user ID of the user who created the record
+        """
 
-    # Author of a record
-    s3_meta_created_by = S3ReusableField("created_by", utable,
-                                         readable = False,
-                                         writable = False,
-                                         requires = None,
-                                         default = current_user,
-                                         represent = represent,
-                                         ondelete = "RESTRICT")
+        return Field("created_by", current.auth.settings.table_user,
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     default = cls._current_user(),
+                     represent = cls._represent_user(),
+                     ondelete = "RESTRICT",
+                     )
 
-    # Last author of a record
-    s3_meta_modified_by = S3ReusableField("modified_by", utable,
-                                          readable = False,
-                                          writable = False,
-                                          requires = None,
-                                          default = current_user,
-                                          update = current_user,
-                                          represent = represent,
-                                          ondelete = "RESTRICT")
+    # -------------------------------------------------------------------------
+    @classmethod
+    def modified_by(cls):
+        """
+            Auth_user ID of the last user who modified the record
+        """
 
-    return (s3_meta_created_by(),
-            s3_meta_modified_by())
+        current_user = cls._current_user()
+        return Field("modified_by", current.auth.settings.table_user,
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     default = current_user,
+                     update = current_user,
+                     represent = cls._represent_user(),
+                     ondelete = "RESTRICT",
+                     )
 
-# =============================================================================
-def s3_ownerstamp():
-    """
-        Record ownership meta-fields
-    """
+    # -------------------------------------------------------------------------
+    @classmethod
+    def approved_by(cls):
+        """
+            Auth_user ID of the user who has approved the record:
+                - None means unapproved
+                - 0 means auto-approved
+        """
 
-    auth = current.auth
-    utable = auth.settings.table_user
+        return Field("approved_by", "integer",
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     represent = cls._represent_user(),
+                     )
 
-    # Individual user who owns the record
-    s3_meta_owned_by_user = S3ReusableField("owned_by_user", utable,
-                                            readable = False,
-                                            writable = False,
-                                            requires = None,
-                                            # Not current.auth.user to support impersonation
-                                            default = current.session.auth.user.id
-                                                        if auth.is_logged_in()
-                                                        else None,
-                                            represent = lambda id: \
-                                                id and s3_auth_user_represent(id) or \
-                                                       current.messages.UNKNOWN_OPT,
-                                            ondelete="RESTRICT")
+    # -------------------------------------------------------------------------
+    @classmethod
+    def owned_by_user(cls):
+        """
+            Auth_user ID of the user owning the record
+        """
 
-    # Role of users who collectively own the record
-    s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
-                                             readable = False,
-                                             writable = False,
-                                             requires = None,
-                                             default = None,
-                                             represent = S3Represent(lookup="auth_group",
-                                                                     fields=["role"])
-                                             )
+        return Field("owned_by_user", current.auth.settings.table_user,
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     default = cls._current_user(),
+                     represent = cls._represent_user(),
+                     ondelete = "RESTRICT",
+                     )
 
-    # Person Entity controlling access to this record
-    s3_meta_realm_entity = S3ReusableField("realm_entity", "integer",
-                                           default = None,
-                                           readable = False,
-                                           writable = False,
-                                           requires = None,
-                                           # use a lambda here as we don't
-                                           # want the model to be loaded yet
-                                           represent = lambda val: \
-                                               current.s3db.pr_pentity_represent(val))
-    return (s3_meta_owned_by_user(),
-            s3_meta_owned_by_group(),
-            s3_meta_realm_entity())
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def owned_by_group():
+        """
+            Auth_group ID of the user role owning the record
+        """
 
-# =============================================================================
+        return Field("owned_by_group", "integer",
+                     default = None,
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     represent = auth_group_represent,
+                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def realm_entity():
+        """
+            PE ID of the entity managing the record
+        """
+
+        return Field("realm_entity", "integer",
+                     default = None,
+                     readable = False,
+                     writable = False,
+                     requires = None,
+                     # using a lambda here as we don't want the model
+                     # to be loaded yet:
+                     represent = lambda pe_id: \
+                                 current.s3db.pr_pentity_represent(pe_id),
+                     )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def all_meta_fields(cls):
+        """
+            Standard meta fields for all tables
+
+            @return: tuple of Fields
+        """
+
+        return (cls.uuid(),
+                cls.mci(),
+                cls.deleted(),
+                cls.deleted_fk(),
+                cls.deleted_rb(),
+                cls.created_on(),
+                cls.created_by(),
+                cls.modified_on(),
+                cls.modified_by(),
+                cls.approved_by(),
+                cls.owned_by_user(),
+                cls.owned_by_group(),
+                cls.realm_entity(),
+                )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def sync_meta_fields(cls):
+        """
+            Meta-fields required for sync
+
+            @return: tuple of Fields
+        """
+
+        return (cls.uuid(),
+                cls.mci(),
+                cls.deleted(),
+                cls.deleted_fk(),
+                cls.deleted_rb(),
+                cls.created_on(),
+                cls.modified_on(),
+                )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def owner_meta_fields(cls):
+        """
+            Record ownership meta-fields
+
+            @return: tuple of Fields
+        """
+
+        return (cls.owned_by_user(),
+                cls.owned_by_group(),
+                cls.realm_entity(),
+                )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def timestamps(cls):
+        """
+            Timestamp meta-fields
+
+            @return: tuple of Fields
+        """
+
+        return (cls.created_on(),
+                cls.modified_on(),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def all_meta_field_names():
+        """
+            The names of all meta fields
+
+            @return: tuple of field names
+        """
+
+        return ("uuid",
+                "mci",
+                "deleted",
+                "deleted_fk",
+                "deleted_rb",
+                "created_on",
+                "created_by",
+                "modified_on",
+                "modified_by",
+                "approved_by",
+                "owned_by_user",
+                "owned_by_group",
+                "realm_entity",
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _current_user():
+        """
+            Get the user ID of the currently logged-in user
+
+            @return: auth_user ID
+        """
+
+        if current.auth.is_logged_in():
+            # Not current.auth.user to support impersonation
+            return current.session.auth.user.id
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _represent_user():
+        """
+            Representation method for auth_user IDs
+
+            @return: representation function
+        """
+
+        if current.deployment_settings.get_ui_auth_user_represent() == "name":
+            return s3_auth_user_represent_name
+        else:
+            return s3_auth_user_represent
+
+# -----------------------------------------------------------------------------
 def s3_meta_fields():
     """
-        Normal meta-fields added to every table
+        Shortcut commonly used in table definitions: *s3_meta_fields()
+
+        @return: tuple of Field instances
     """
 
-    # Approver of a record
-    s3_meta_approved_by = S3ReusableField("approved_by", "integer",
-                                          readable = False,
-                                          writable = False,
-                                          requires = None,
-                                          represent = s3_auth_user_represent)
-
-    fields = (s3_meta_uuid(),
-              s3_meta_mci(),
-              s3_meta_deletion_status(),
-              s3_meta_deletion_fk(),
-              s3_meta_deletion_rb(),
-              s3_meta_created_on(),
-              s3_meta_modified_on(),
-              s3_meta_approved_by(),
-              )
-    fields = (fields + s3_authorstamp() + s3_ownerstamp())
-    return fields
+    return S3MetaFields.all_meta_fields()
 
 def s3_all_meta_field_names():
-    return [field.name for field in s3_meta_fields()]
+    """
+        Shortcut commonly used to include/exclude meta fields
+
+        @return: tuple of field names
+    """
+
+    return S3MetaFields.all_meta_field_names()
 
 # =============================================================================
 # Reusable roles fields
@@ -1125,23 +1279,24 @@ def s3_role_required():
     T = current.T
     gtable = current.auth.settings.table_group
     represent = S3Represent(lookup="auth_group", fields=["role"])
-    f = S3ReusableField("role_required", gtable,
-            sortby="role",
-            requires = IS_EMPTY_OR(
-                        IS_ONE_OF(current.db, "auth_group.id",
-                                  represent,
-                                  zero=T("Public"))),
-            #widget = S3AutocompleteWidget("admin",
-            #                              "group",
-            #                              fieldname="role"),
-            represent = represent,
-            label = T("Role Required"),
-            comment = DIV(_class="tooltip",
-                          _title="%s|%s" % (T("Role Required"),
-                                            T("If this record should be restricted then select which role is required to access the record here."))),
-            ondelete = "RESTRICT")
-    return f()
-
+    return FieldS3("role_required", gtable,
+                   sortby="role",
+                   requires = IS_EMPTY_OR(
+                                IS_ONE_OF(current.db, "auth_group.id",
+                                          represent,
+                                          zero=T("Public"))),
+                   #widget = S3AutocompleteWidget("admin",
+                   #                              "group",
+                   #                              fieldname="role"),
+                   represent = represent,
+                   label = T("Role Required"),
+                   comment = DIV(_class="tooltip",
+                                 _title="%s|%s" % (T("Role Required"),
+                                                   T("If this record should be restricted then select which role is required to access the record here."),
+                                                   ),
+                                 ),
+                   ondelete = "RESTRICT",
+                   )
 
 # -----------------------------------------------------------------------------
 def s3_roles_permitted(name="roles_permitted", **attr):
@@ -1170,9 +1325,7 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "ondelete" not in attr:
         attr["ondelete"] = "RESTRICT"
 
-    f = S3ReusableField(name, "list:reference auth_group",
-                        **attr)
-    return f()
+    return FieldS3(name, "list:reference auth_group", **attr)
 
 # =============================================================================
 def s3_comments(name="comments", **attr):
@@ -1197,9 +1350,7 @@ def s3_comments(name="comments", **attr):
             (T("Comments"),
              T("Please use this field to record any additional information, including a history of the record if it is updated.")))
 
-    f = S3ReusableField(name, "text",
-                        **attr)
-    return f()
+    return Field(name, "text", **attr)
 
 # =============================================================================
 def s3_currency(name="currency", **attr):
@@ -1222,9 +1373,7 @@ def s3_currency(name="currency", **attr):
     if "writable" not in attr:
         attr["writable"] = settings.get_fin_currency_writable()
 
-    f = S3ReusableField(name, length=3,
-                        **attr)
-    return f()
+    return Field(name, length=3, **attr)
 
 # =============================================================================
 def s3_language(name="language", **attr):
@@ -1265,9 +1414,7 @@ def s3_language(name="language", **attr):
     if "represent" not in attr:
         attr["represent"] = requires.represent
 
-    f = S3ReusableField(name, length=8,
-                        **attr)
-    return f()
+    return Field(name, length=8, **attr)
 
 # =============================================================================
 def s3_date(name="date", **attr):
@@ -1440,8 +1587,7 @@ def s3_date(name="date", **attr):
             # Default
             attributes["requires"] = IS_EMPTY_OR(requires)
 
-    f = S3ReusableField(name, "date", **attributes)
-    return f()
+    return Field(name, "date", **attributes)
 
 # =============================================================================
 def s3_datetime(name="date", **attr):
@@ -1596,7 +1742,6 @@ def s3_datetime(name="date", **attr):
         else:
             attributes["requires"] = IS_EMPTY_OR(requires)
 
-    f = S3ReusableField(name, "datetime", **attributes)
-    return f()
+    return Field(name, "datetime", **attributes)
 
 # END =========================================================================

@@ -60,7 +60,7 @@ from gluon.utils import web2py_uuid
 from s3dal import Row, Rows, Query, Table, Field, original_tablename
 from s3datetime import S3DateTime
 from s3error import S3PermissionError
-from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
+from s3fields import S3MetaFields, S3Represent, s3_comments
 from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
@@ -305,10 +305,13 @@ Thank you"""
                 Field("timestmp", "datetime",
                       default="",
                       readable=False, writable=False),
-                s3_comments(readable=False, writable=False)
+                s3_comments(readable=False, writable=False),
+                # Additional meta fields required for sync:
+                S3MetaFields.uuid(),
+                #S3MetaFields.mci(),
+                S3MetaFields.created_on(),
+                S3MetaFields.modified_on(),
                 ]
-            utable_fields += list(s3_uid())
-            utable_fields += list(s3_timestamp())
 
             userfield = settings.login_userfield
             if userfield != "email":
@@ -344,7 +347,10 @@ Thank you"""
                      Field("image", "upload",
                            length = current.MAX_FILENAME_LENGTH,
                            ),
-                     *(s3_uid()+s3_timestamp()))
+                     S3MetaFields.uuid(),
+                     S3MetaFields.created_on(),
+                     S3MetaFields.modified_on(),
+                     )
 
         # Group table (roles)
         gtable = settings.table_group
@@ -376,9 +382,15 @@ Thank you"""
                       label=messages.label_role),
                 Field("description", "text",
                       label=messages.label_description),
+                # Additional meta fields required for sync:
+                S3MetaFields.created_on(),
+                S3MetaFields.modified_on(),
+                S3MetaFields.deleted(),
+                #S3MetaFields.deleted_fk(),
+                #S3MetaFields.deleted_rb(),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_timestamp() + s3_deletion_status()))
+                )
             gtable = settings.table_group = db[gname]
 
         # Group membership table (user<->role)
@@ -398,7 +410,7 @@ Thank you"""
                 Field("pe_id", "integer"),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_uid() + s3_timestamp() + s3_deletion_status()))
+                *S3MetaFields.sync_meta_fields())
             settings.table_membership = db[settings.table_membership_name]
 
         # Define Eden permission table
@@ -457,7 +469,7 @@ Thank you"""
                       requires = IS_NOT_EMPTY()),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
-                *(s3_uid() + s3_timestamp() + s3_deletion_status()))
+                *S3MetaFields.sync_meta_fields())
             settings.table_event = db[settings.table_event_name]
 
     # -------------------------------------------------------------------------
@@ -5670,7 +5682,7 @@ class S3Permission(object):
                                   default=False),
                             migrate=migrate,
                             fake_migrate=fake_migrate,
-                            *(s3_uid()+s3_timestamp()+s3_deletion_status()))
+                            *S3MetaFields.sync_meta_fields())
             self.table = db[self.tablename]
 
     # -------------------------------------------------------------------------
