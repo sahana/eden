@@ -443,7 +443,7 @@ if has_module("setup"):
 
     def deploy(playbook,
                hosts = ["127.0.0.1"],
-               tags = "all",
+               tags = None,
                private_key = None,
                user_id = None,
                ):
