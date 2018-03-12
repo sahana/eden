@@ -186,15 +186,15 @@ class S3SetupModel(S3Model):
                      #                                      )
                      #                    ),
                      #      ),
-                     Field("refresh_lock", "integer",
-                           default = 0,
-                           readable = False,
-                           writable = False,
-                           ),
-                     Field("last_refreshed", "datetime",
-                           readable = False,
-                           writable = False,
-                           ),
+                     #Field("refresh_lock", "integer",
+                     #      default = 0,
+                     #      readable = False,
+                     #      writable = False,
+                     #      ),
+                     #Field("last_refreshed", "datetime",
+                     #      readable = False,
+                     #      writable = False,
+                     #      ),
                      *s3_meta_fields()
                      )
 
@@ -249,6 +249,9 @@ class S3SetupModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Servers
+        #
+        # @ToDo: Should be able to over-ride deployment-default remote_user &
+        #        private_key
         #
         SERVER_ROLES = {1: "all",
                         2: "db",
@@ -341,17 +344,19 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Instance deleted"),
             msg_list_empty = T("No Instances currently registered"))
 
-        set_method("setup", "instance",
+        set_method("setup", "deployment",
+                   component_name = "instance",
                    method = "deploy",
                    action = self.setup_instance_deploy,
                    )
 
-        set_method("setup", "instance",
+        set_method("setup", "deployment",
+                   component_name = "instance",
                    method = "settings",
                    action = self.setup_instance_settings,
                    )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, fields=["type"])
 
         instance_id = S3ReusableField("instance_id", "reference %s" % tablename,
                                       label = T("Instance"),
@@ -399,10 +404,11 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Setting deleted"),
             msg_list_empty = T("No Settings currently registered"))
 
-        #set_method("setup", "setting",
-        #           method = "apply",
-        #           action = self.setup_setting_apply,
-        #           )
+        set_method("setup", "deployment",
+                   component_name = "setting",
+                   method = "apply",
+                   action = self.setup_setting_apply,
+                   )
 
         return {}
 
@@ -607,9 +613,10 @@ class S3SetupModel(S3Model):
         hostname = sitename.split(".", 1)[0]
 
         if len(hosts) == 1:
+            host = hosts[0][1]
             deployment = [
                 {
-                    "hosts": hosts[0][1],
+                    "hosts": host,
                     "connection": "local", # @ToDo: Don't assume this
                     "remote_user": remote_user,
                     "vars": {
@@ -621,8 +628,8 @@ class S3SetupModel(S3Model):
                         "hostname": hostname,
                         "sitename": sitename,
                         "protocol": protocol,
-                        "eden_ip": hosts[0][1],
-                        "db_ip": hosts[0][1],
+                        "eden_ip": host,
+                        "db_ip": host,
                         "db_type": database_type
                     },
                     "roles": [{ "role": "%s/common" % roles_path },
@@ -684,14 +691,12 @@ class S3SetupModel(S3Model):
         with open(file_path, "w") as yaml_file:
             yaml_file.write(yaml.dump(deployment, default_flow_style=False))
 
-        if instance_type == "prod":
-            only_tags = []
-        else:
-            only_tags = [instance_type]
         task_vars = {"playbook": file_path,
                      "hosts": [host[1] for host in hosts],
-                     "tags": only_tags,
                      }
+        if instance_type != "prod":
+            # only_tags
+            task_vars["tags"] = [instance_type]
         if private_key:
             task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
 
@@ -789,11 +794,137 @@ class S3SetupModel(S3Model):
                      args = [deployment_id, "setting"]),
                      )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_setting_apply(r, **attr):
+        """
+            Custom interactive S3Method to Apply a Setting to an instance
+            via models/000_config.py
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        deployment_id = r.id
+        setting_id = r.component_id
+
+        stable = s3db.setup_setting
+        setting = db(stable.id == setting_id).select(stable.id,
+                                                     stable.instance_id,
+                                                     stable.setting,
+                                                     stable.new_value,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        new_value = setting.new_value
+
+        dtable = s3db.setup_deployment
+        itable = s3db.setup_instance
+        query = (itable.id == setting.instance_id) & \
+                (dtable.id == itable.deployment_id)
+        deployment = db(query).select(dtable.remote_user,
+                                      dtable.private_key,
+                                      itable.type,
+                                      limitby = (0, 1)
+                                      ).first()
+        remote_user = deployment["setup_deployment.remote_user"]
+        private_key = deployment["setup_deployment.private_key"]
+        instance_type = deployment["setup_instance.type"]
+
+        # Lookup Server IP
+        # @ToDo: Support multiple Eden servers used as Load-balancers
+        svtable = s3db.setup_server
+        query = (svtable.deployment_id == deployment_id) & \
+                (svtable.role.belongs((1, 4)))
+        server = db(query).select(svtable.host_ip,
+                                  limitby = (0, 1)
+                                  ).first()
+        host = server.host_ip
+
+        # Build Ansible Playbook to apply the setting
+        try:
+            import yaml
+        except ImportError:
+            error = "PyYAML module needed for Setup"
+            current.log.error(error)
+            current.response.error = error
+            return
+
+        folder = current.request.folder
+
+        playbook_path = os.path.join(folder, "uploads", "playbook")
+        if not os.path.isdir(playbook_path):
+            os.mkdir(playbook_path)
+
+        #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
+
+        the_setting = setting.setting
+        if new_value is True or new_value is False:
+            new_line = "settings.%s = %s" % (the_setting, new_value)
+        else:
+            # @ToDo: Handle lists/dicts (load into JSONS3?)
+            new_line = 'settings.%s = "%s"' % (the_setting, new_value)
+
+        playbook = [{"hosts": host,
+                     "connection": "local", # @ToDo: Don't assume this
+                     "remote_user": remote_user,
+                     "tasks": [{"name": "Edit 000_config.py",
+                                "lineinfile": {"dest": "/home/%s/applications/eden/models/000_config.py" % instance_type,
+                                               "regexp": "^settings.%s =" % the_setting,
+                                               "line": new_line,
+                                               "state": "present",
+                                               },
+                                },
+                               # @ToDo: handle case where WebServer is on a different host
+                               {"name": "Compile & Restart WebServer",
+                                #"command": "sudo -H -u web2py python web2py.py -S eden -M -R applications/eden/static/scripts/tools/compile.py",
+                                #"args": {"chdir": "/home/%s" % instance_type,
+                                #         },
+                                "command": "/usr/local/bin/compile",
+                                },
+                               ]
+                     },
+                    ]
+
+        name = "apply_%d" % int(time.time())
+        file_path = os.path.join(playbook_path, "%s.yml" % name)
+
+        with open(file_path, "w") as yaml_file:
+            yaml_file.write(yaml.dump(playbook, default_flow_style=False))
+
+        # Run the Playbook
+        task_vars = {"playbook": file_path,
+                     "hosts": [host],
+                     }
+        #if instance_type != "prod":
+        #    # only_tags
+        #    task_vars["tags"] = [instance_type]
+        if private_key:
+            task_vars["private_key"] = os.path.join(folder, "uploads", private_key)
+
+        current.s3task.async("deploy",
+                             vars = task_vars,
+                             timeout = 3600,
+                             )
+
+        # Update the DB to show that the setting has been applied
+        # @ToDo: Do this as a callback from the async task
+        setting.update_record(current_value = new_value,
+                              new_value = None,
+                              )
+
+        current.session.confirmation = current.T("Setting Applied")
+
+        redirect(URL(c="setup", f="deployment",
+                     args = [deployment_id, "setting"]),
+                     )
+
 # =============================================================================
-def setup_run_playbook(playbook, hosts, tags, private_key=None):
+def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     """
         Run an Ansible Playbook & return the result
-        - designed to be run from the 'deploy' Task
+        - designed to be run as a Scheduled Task
+            - 'deploy' a deployment
+            - 'apply' a setting
 
         http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
         https://serversforhackers.com/c/running-ansible-2-programmatically
@@ -814,12 +945,6 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
     roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
     os.chdir(roles_path)
 
-    # Create inventory file
-    #inventoryFile = open("inventory", "w")
-    #for host in hosts:
-    #    inventoryFile.write("%s\n" % host)
-    #inventoryFile.close()
-
     # Initialize needed objects
     loader = DataLoader()
     options = Storage(connection = "local", # @ToDo: Will need changing when doing multi-host
@@ -830,7 +955,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
                       become_user = None,
                       check = False,
                       diff = False,
-                      tags = tags,
+                      tags = tags or [],
                       skip_tags = [], # Needs to be an iterable as hasattr(Storage()) is always True
                       private_key_file = private_key, # @ToDo: Needs testing
                       )
@@ -840,6 +965,7 @@ def setup_run_playbook(playbook, hosts, tags, private_key=None):
 
     # Create Inventory and pass to Var manager
     if len(hosts) == 1:
+        # Ensure that we have a comma to tell Ansible that this is a list of hosts not a file to read from
         sources = "%s," % hosts[0]
     else:
         sources = ",".join(hosts)

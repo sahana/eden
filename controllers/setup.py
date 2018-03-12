@@ -114,7 +114,8 @@ def deployment():
     s3.prep = prep
 
     def postp(r, output):
-        if r.component is None:
+        component = r.component
+        if component is None:
             if r.id and r.method in (None, "read") and "item" in output:
                 # Get scheduler status for the last queued task
                 itable = db.setup_instance
@@ -138,25 +139,36 @@ def deployment():
                         item_append(TR(TD(LABEL("Output"), _class="w2p_fl")))
                         item_append(TR(TD(task.run_output)))
 
-        elif r.component.name == "instance":
-            if r.method in (None, "read"):
+        else:
+            cname = component.name
+            if cname == "instance" and r.method in (None, "read"):
                 # Normal Action Buttons
                 s3_action_buttons(r)
                 # Custom Action Buttons
                 table = r.component.table
-                query = (table.deployment_id == r.id) & \
+                deployment_id = r.id
+                query = (table.deployment_id == deployment_id) & \
                         (table.deleted == False)
                 rows = db(query).select(table.id,
                                         table.task_id,
                                         )
                 restrict_d = [str(row.id) for row in rows if row.task_id is None]
+                restrict_s = [str(row.id) for row in rows if row.task_id is not None]
                 s3.actions += [{"url": URL(c = module,
-                                           f = "instance",
-                                           args = ["[id]", "deploy"],
+                                           f = "deployment",
+                                           args = [deployment_id, "instance", "[id]", "deploy"],
                                            ),
                                 "_class": "action-btn",
                                 "label": s3_str(T("Deploy")),
                                 "restrict": restrict_d,
+                                },
+                               {"url": URL(c = module,
+                                           f = "deployment",
+                                           args = [deployment_id, "instance", "[id]", "settings"],
+                                           ),
+                                "_class": "action-btn",
+                                "label": s3_str(T("Read Settings")),
+                                "restrict": restrict_s,
                                 },
                                #{"url": URL(c = module,
                                #            f = "management",
@@ -179,6 +191,28 @@ def deployment():
                                # "label": s3_str(T("Upgrade")),
                                # },
                                ]
+
+            elif cname == "setting" and r.method in (None, "read"):
+                # Normal Action Buttons
+                s3_action_buttons(r)
+                # Custom Action Buttons
+                table = r.component.table
+                deployment_id = r.id
+                query = (table.deployment_id == deployment_id) & \
+                        (table.deleted == False)
+                rows = db(query).select(table.id,
+                                        table.new_value,
+                                        )
+                restrict_a = [str(row.id) for row in rows if row.new_value is not None]
+                s3.actions.append({"url": URL(c = module,
+                                              f = "deployment",
+                                              args = [deployment_id, "setting", "[id]", "apply"],
+                                              ),
+                                   "_class": "action-btn",
+                                   "label": s3_str(T("Apply")),
+                                   "restrict": restrict_a,
+                                   })
+
         return output
     s3.postp = postp
 
@@ -192,9 +226,15 @@ def server():
                               )
 
 # -----------------------------------------------------------------------------
-def instance():
+#def instance():
 
-    return s3_rest_controller(#rheader = s3db.setup_rheader,
-                              )
+#    return s3_rest_controller(#rheader = s3db.setup_rheader,
+#                              )
+
+# -----------------------------------------------------------------------------
+#def setting():
+
+#    return s3_rest_controller(#rheader = s3db.setup_rheader,
+#                              )
 
 # END =========================================================================
