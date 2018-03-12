@@ -429,6 +429,7 @@ class S3SetupModel(S3Model):
 
         # Assign a random DB password
         chars = string.ascii_letters + string.digits + string.punctuation
+        chars.remove('"') # Ensure that " isn't included otherwise we get a syntax error in 000_config.py
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
@@ -578,9 +579,9 @@ class S3SetupModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def setup_write_playbook(hosts,
-                             password,
+                             db_password,
                              web_server,
-                             database_type,
+                             db_type,
                              instance_type,
                              template = "default",
                              sender = None,
@@ -620,7 +621,7 @@ class S3SetupModel(S3Model):
                     "connection": "local", # @ToDo: Don't assume this
                     "remote_user": remote_user,
                     "vars": {
-                        "password": password,
+                        "password": db_password,
                         "template": template,
                         "sender": sender,
                         "web_server": web_server,
@@ -630,12 +631,12 @@ class S3SetupModel(S3Model):
                         "protocol": protocol,
                         "eden_ip": host,
                         "db_ip": host,
-                        "db_type": database_type
+                        "db_type": db_type
                     },
                     "roles": [{ "role": "%s/common" % roles_path },
                               { "role": "%s/%s" % (roles_path, web_server) },
                               { "role": "%s/uwsgi" % roles_path },
-                              { "role": "%s/%s" % (roles_path, database_type) },
+                              { "role": "%s/%s" % (roles_path, db_type) },
                               { "role": "%s/configure" % roles_path },
                               ]
                 }
@@ -646,10 +647,10 @@ class S3SetupModel(S3Model):
                     "hosts": hosts[0][1],
                     "remote_user": remote_user,
                     "vars": {
-                        "password": password,
+                        "password": db_password,
                         "type": instance_type
                     },
-                    "roles": [{ "role": "%s/%s" % (roles_path, database_type) },
+                    "roles": [{ "role": "%s/%s" % (roles_path, db_type) },
                               ]
                 },
                 {
@@ -657,8 +658,8 @@ class S3SetupModel(S3Model):
                     "remote_user": remote_user,
                     "vars": {
                         "db_ip": hosts[0][1],
-                        "db_type": database_type,
-                        "password": password,
+                        "db_type": db_type,
+                        "password": db_password,
                         "hostname": hostname,
                         "sitename": sitename,
                         "protocol": protocol,
