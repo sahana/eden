@@ -49,8 +49,8 @@ WEB_SERVERS = {#1: "apache",
                2: "cherokee",
                }
 
-DB_SERVERS = {1: "mysql",
-              #2: "postgresql",
+DB_SERVERS = {#1: "mysql",
+              2: "postgresql",
               ##3: "sqlite",
               }
 
