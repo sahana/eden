@@ -785,8 +785,8 @@ class S3SetupModel(S3Model):
             from models/000_config.py
         """
 
-        deployment_id = r.record.deployment_id
-        self.setup_instance_settings_read(r.id, deployment_id)
+        deployment_id = r.id
+        self.setup_instance_settings_read(r.component_id, deployment_id)
 
         current.session.confirmation = current.T("Settings Read")
 
