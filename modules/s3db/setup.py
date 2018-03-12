@@ -45,18 +45,18 @@ from gluon import *
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
 
-WEB_SERVERS = {1: "apache",
+WEB_SERVERS = {#1: "apache",
                2: "cherokee",
                }
 
 DB_SERVERS = {1: "mysql",
-              2: "postgresql",
-              #3: "sqlite",
+              #2: "postgresql",
+              ##3: "sqlite",
               }
 
 INSTANCE_TYPES = {1: "prod",
-                  2: "test",
-                  3: "demo",
+                  #2: "test",
+                  #3: "demo",
                   }
 
 # =============================================================================
@@ -143,12 +143,22 @@ class S3SetupModel(S3Model):
                            label = T("Web Server"),
                            represent = S3Represent(options = WEB_SERVERS),
                            requires = IS_IN_SET(WEB_SERVERS),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Web Server"),
+                                                           T("Currently only Cherokee is supported by this tool, although Apache should be possible with a little work.")
+                                                           )
+                                         ),
                            ),
                      Field("db_type", "integer",
                            default = 2,
                            label = T("Database"),
                            represent = S3Represent(options = DB_SERVERS),
                            requires = IS_IN_SET(DB_SERVERS),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Database"),
+                                                           T("Currently only PostgreSQL is supported by this tool, although MySQL should be possible with a little work.")
+                                                           )
+                                         ),
                            ),
                      # Set automatically
                      Field("db_password", "password",
@@ -267,11 +277,23 @@ class S3SetupModel(S3Model):
                            label = T("Role"),
                            represent = S3Represent(options = SERVER_ROLES),
                            requires = IS_IN_SET(SERVER_ROLES),
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Role"),
+                                                           T("Currently only 'all' is supported by this tool, although others should be possible with a little work.")
+                                                           )
+                                         ),
                            ),
                      Field("host_ip", unique = True,
                            default = "127.0.0.1",
                            label = T("IP Address"),
                            requires = IS_IPV4(),
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("IP Address"),
+                                                           T("Currently only 127.0.0.1 is supported by this tool, although others should be possible with a little work.")
+                                                           )
+                                         ),
                            ),
                      #Field("hostname",
                      #      label = T("Hostname"),
@@ -303,7 +325,12 @@ class S3SetupModel(S3Model):
                            default = 1,
                            label = T("Type"),
                            represent = S3Represent(options = INSTANCE_TYPES),
-                           requires = IS_IN_SET(INSTANCE_TYPES)
+                           requires = IS_IN_SET(INSTANCE_TYPES),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Type"),
+                                                           T("Currently only Production is supported by this tool, although Demo/Test should be possible with a little work.")
+                                                           )
+                                         ),
                            ),
                      # @ToDo: Add support for SSL Certificates
                      Field("url",
@@ -429,7 +456,8 @@ class S3SetupModel(S3Model):
 
         # Assign a random DB password
         chars = string.ascii_letters + string.digits + string.punctuation
-        chars.remove('"') # Ensure that " isn't included otherwise we get a syntax error in 000_config.py
+        # Ensure that " isn't included otherwise we get a syntax error in 000_config.py
+        chars = chars.replace('"', "")
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
