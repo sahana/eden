@@ -1031,9 +1031,11 @@ class S3XML(S3Codec):
                     # Encode in a way which we can decode in static/formats/geojson/export.xsl
                     # - double up all tokens to reduce chances of them being within represents
                     # NB Ensure we don't double-encode unicode!
-                    _attr = json.dumps(attrs, separators=(",,", "::"),
-                                       ensure_ascii=False)
-                    attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
+                    attr_ = json.dumps(attrs,
+                                       separators = (",,", "::"),
+                                       ensure_ascii = False,
+                                       )
+                    attr[ATTRIBUTE.attributes] = "{%s}" % s3_unicode(attr_).replace('"', "||")
 
             if tablename in markers:
                 _markers = markers[tablename]
