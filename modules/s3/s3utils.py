@@ -758,7 +758,7 @@ def s3_phone_represent(value):
 
     if not value:
         return current.messages["NONE"]
-    return "%s%s" % (unichr(8206), s3_unicode(value))
+    return ("%s%s" % (unichr(8206), s3_unicode(value))).encode("utf-8")
 
 # =============================================================================
 def s3_url_represent(url):
