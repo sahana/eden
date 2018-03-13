@@ -2943,11 +2943,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Link table handling
             link = component.link
             if link and options.get("link", True):
-                # data are for the link table
+                # Data are for the link table
                 actuate_link = False
                 component = link
             else:
-                # data are for the component
+                # Data are for the component
                 actuate_link = True
 
             # Table, tablename, prefix and name of the component
@@ -3091,11 +3091,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     else:
                         master = Storage({pkey: master_id})
 
-                    # Apply component defaults
-                    values = component.get_defaults(master,
-                                                    defaults = defaults,
-                                                    data = values,
-                                                    )
+                    if actuate_link:
+                        # Data are for component => apply component defaults
+                        values = component.get_defaults(master,
+                                                        defaults = defaults,
+                                                        data = values,
+                                                        )
 
                     if not actuate_link or not link:
                         # Add master record ID as linked directly
