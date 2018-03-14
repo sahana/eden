@@ -967,8 +967,6 @@ S3.openPopup = function(url, center) {
  *
  * @todo: fix updateAddResourceLink
  * @todo: move into separate file and load only when needed?
- * @todo: S3SQLInlineComponentCheckboxes not supported (but to be
- *        deprecated itself anyway, so just remove the case?)
  */
 
 (function() {
@@ -985,9 +983,7 @@ S3.openPopup = function(url, center) {
      * @param {string} setting.name - the field name
      * @param {string} setting.inlineType - the inline form type, 'link' (for S3SQLInlineLink),
      *                                      or 'sub' (for other S3SQLInlineComponent types)
-     * @param {string} setting.inlineRows - the inline form has multiple rows, default: true,
-     *                                      should be set to false for e.g.
-     *                                      S3SQLInlineComponentMultiSelectWidget
+     * @param {string} setting.inlineRows - the inline form has multiple rows, default: true
      */
     var getSelector = function(setting) {
 

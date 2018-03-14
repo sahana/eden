@@ -1540,153 +1540,6 @@
                 });
         },
 
-        /**
-         * S3SQLInlineComponentCheckbox: status update after form error
-         */
-        _updateCheckboxStatus: function() {
-
-            var el = $(this.element),
-                self = this,
-                checkbox,
-                fieldname,
-                value,
-                data,
-                row;
-
-            el.find(':checkbox').each(function() {
-
-                checkbox = $(this);
-
-                fieldname = checkbox.attr('id').split('-')[2];
-                value = checkbox.val();
-
-                // Read current data from real input
-                data = self._deserialize().data;
-
-                // Find the corresponding data item
-                for (var i=0, len=data.length; i < len; i++) {
-                    row = data[i];
-                    if (row.hasOwnProperty(fieldname) && row[fieldname].value == value) {
-                        // Modify checkbox state, as-required
-                        if (row._changed) {
-                            checkbox.prop('checked', true);
-                        } else if (row._delete) {
-                            checkbox.prop('checked', false);
-                        }
-                        break;
-                    }
-                }
-            });
-        },
-
-        /**
-         * S3SQLInlineComponentCheckbox: click-event handler
-         *
-         * @param {event} event - the click event
-         */
-        _checkboxOnClick: function(event) {
-
-            var self = event.data.widget,
-                checkbox = $(this);
-
-            var fieldname = checkbox.attr('id').split('-')[2],
-                value = checkbox.val(),
-                item = null,
-                row;
-
-            // Read current data from real input
-            var data = self._deserialize().data;
-
-            // Find the corresponding data item
-            for (var i=0, len=data.length; i < len; i++) {
-                row = data[i];
-                if (row.hasOwnProperty(fieldname) && row[fieldname].value == value) {
-                    item = row;
-                    break;
-                }
-            }
-
-            // Modify data
-            if (checkbox.prop('checked')) {
-                if (!item) {
-                    // Not yet found, so initialise
-                    var label = checkbox.next().html(); // May be fragile to different formstyles :/
-                    item = {};
-                    item[fieldname] = {'text': label, 'value': value};
-                    data.push(item);
-                }
-                item._changed = true;
-                // Remove delete-marker if re-selected
-                if (item.hasOwnProperty('_delete')) {
-                    delete item._delete;
-                }
-            } else if (item) {
-                item._delete = true;
-            }
-
-            // Write data back to real input
-            self._serialize();
-        },
-
-        /**
-         * S3SQLInlineComponentMultiSelectWidget: change-event handler
-         *
-         * @param {event} event - the change event
-         */
-        _multiselectOnChange: function(event) {
-
-            var self = event.data.widget,
-                multiselect = $(this);
-
-            var fieldname = multiselect.attr('id').split('-')[1],
-                values = multiselect.val(),
-                row,
-                item,
-                label,
-                value;
-
-            // Read current data from real input
-            var data = self._deserialize().data;
-
-            // Update current items
-            var current_items = [],
-                i,
-                len;
-            for (i=0, len=data.length; i < len; i++) {
-                row = data[i];
-                if (row.hasOwnProperty(fieldname)) {
-                    value = row[fieldname].value.toString();
-                    if ($.inArray(value, values) == -1) {
-                        // No longer selected => mark for delete
-                        row._delete = true;
-                    } else {
-                        // Remove delete-marker if re-selected
-                        if (row.hasOwnProperty('_delete')) {
-                            delete row._delete;
-                        }
-                    }
-                    current_items.push(value);
-                }
-            }
-
-            // Add new items
-            var new_items = $(values).not(current_items).get();
-            for (i=0, len=new_items.length; i < len; i++) {
-                value = new_items[i];
-                label = multiselect.find('option[value=' + value + ']').html();
-                item = {};
-                item[fieldname] = {'text': label, 'value': value};
-                item._changed = true;
-                if (item.hasOwnProperty('_delete')) {
-                    delete item._delete;
-                }
-                data.push(item);
-            }
-
-            // Write data back to real input
-            self._serialize();
-        },
-
         // Event Management ---------------------------------------------------
 
         /**
@@ -1830,24 +1683,6 @@
                 });
             });
 
-            // Event Management for S3SQLInlineComponentCheckbox
-            if (el.hasClass('inline-checkbox')) {
-                var error_wrapper = $(this.element).closest('form')
-                                                   .find('.error_wrapper');
-                if (error_wrapper.length) {
-                    this._updateCheckboxStatus();
-                }
-                // Delegate click-event, so that it also applies for
-                // dynamically inserted checkboxes
-                el.on('click' + ns, ':checkbox', {widget: this}, this._checkboxOnClick);
-            }
-
-            // Event Management for S3SQLInlineComponentMultiSelectWidget
-            if (el.hasClass('inline-multiselect')) {
-                el.find('.inline-multiselect-widget')
-                  .on('change' + ns, {widget: this}, this._multiselectOnChange);
-            }
-
             // Explicit open-action to reveal the add-row
             el.find('.inline-open-add').on('click' + ns, function(e) {
                 e.preventDefault();
@@ -1865,11 +1700,6 @@
 
             var el = $(this.element),
                 ns = this.eventNamespace;
-
-            // Remove inline-multiselect-widget event handlers
-            if (el.hasClass('inline-multiselect')) {
-                el.find('.inline-multiselect-widget').off(ns);
-            }
 
             // Remove inline-locationselector-widget event handlers
             el.find('.inline-locationselector-widget').off(ns);
