@@ -7731,40 +7731,61 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
-        from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponentCheckbox
 
-        s3db = current.s3db
 
-        s3db.project_location.location_id.widget = \
-            S3LocationSelector(show_postcode = False,
-                               show_latlon = False,
-                               show_map = False,
-                               )
+        if r.interactive:
 
-        crud_form = S3SQLCustomForm(
-            "project_id",
-            "location_id",
-            # @ToDo: Grouped Checkboxes
-            S3SQLInlineComponentCheckbox(
-                "activity_type",
-                label = T("Activity Types"),
-                field = "activity_type_id",
-                cols = 3,
-                # Filter Activity Type by Sector
-                filter = {"linktable": "project_activity_type_sector",
-                          "lkey": "activity_type_id",
-                          "rkey": "sector_id",
-                          "lookuptable": "project_project",
-                          "lookupkey": "project_id",
-                          },
-                translate = True,
-                ),
-            "comments",
-            )
+            from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineLink
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       )
+            s3db = current.s3db
+            s3db.project_location.location_id.widget = \
+                S3LocationSelector(show_postcode = False,
+                                   show_latlon = False,
+                                   show_map = False,
+                                   )
+
+            if r.tablename == "project_project" and r.id:
+                # On component tab
+                # => limit activity types by project sector
+                ltable = s3db.project_sector_project
+                query = (ltable.project_id == r.id) & \
+                        (ltable.deleted == False)
+                rows = current.db(query).select(ltable.sector_id)
+                sector_ids = set(row.sector_id for row in rows)
+                script = None
+            else:
+                # Primary form
+                # => start empty until project selected
+                sector_ids = set()
+                # => update selectable activity types by project sector
+                script = '''
+$.filterOptionsS3({
+ 'trigger':'project_id',
+ 'target':{'alias':'activity_type','name':'activity_type_id','inlineType':'link'},
+ 'lookupPrefix':'project',
+ 'lookupResource':'activity_type',
+ 'lookupKey':'activity_type_id:project_activity_type_sector.sector_id$project_sector_project.project_id',
+ 'showEmptyField':false,
+})'''
+
+            crud_form = S3SQLCustomForm(
+                "project_id",
+                "location_id",
+                S3SQLInlineLink(
+                    "activity_type",
+                    label = T("Activity Types"),
+                    field = "activity_type_id",
+                    cols = 3,
+                    filterby = "activity_type_sector.sector_id",
+                    options = sector_ids,
+                    script = script,
+                    ),
+                    "comments",
+                )
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           )
 
     settings.customise_project_location_resource = customise_project_location_resource
 
