@@ -201,12 +201,12 @@ class S3VolunteerActivityModel(S3Model):
                        )
 
         crud_form = S3SQLCustomForm("name",
-                                    S3SQLInlineComponentCheckbox("sector",
-                                                                 label = T("Sectors"),
-                                                                 field = "sector_id",
-                                                                 option_help = "comments",
-                                                                 cols = 4,
-                                                                 ),
+                                    S3SQLInlineLink("sector",
+                                                    label = T("Sectors"),
+                                                    field = "sector_id",
+                                                    help_field = "comments",
+                                                    cols = 4,
+                                                    ),
                                     "comments",
                                     )
 
@@ -289,13 +289,6 @@ class S3VolunteerActivityModel(S3Model):
 
         crud_form = S3SQLCustomForm("organisation_id",
                                     "sector_id",
-                                    # @ToDo: Filter list based on Sector
-                                    #S3SQLInlineComponentCheckbox("activity_type",
-                                    #                             label = T("Activity Types"),
-                                    #                             field = "activity_type_id",
-                                    #                             option_help = "comments",
-                                    #                             cols = 4,
-                                    #                             ),
                                     S3SQLInlineLink("activity_type",
                                                     label = T("Activity Types"),
                                                     field = "activity_type_id",
@@ -437,9 +430,6 @@ $.filterOptionsS3({
 
         # Components
         add_components(tablename,
-                       # Format for Filter/Report
-                       vol_activity_hours_activity_type = "activity_hours_id",
-                       # Format for S3SQLInlineComponentCheckbox
                        vol_activity_type = {"link": "vol_activity_hours_activity_type",
                                             "joinby": "activity_hours_id",
                                             "key": "activity_type_id",
@@ -447,27 +437,27 @@ $.filterOptionsS3({
                                             },
                        )
 
-        # Done in the controller in order to limit options
-        #crud_form = S3SQLCustomForm("activity_id",
-        #                            "person_id",
-        #                            "date",
-        #                            #"end_date",
-        #                            "job_title_id",
-        #                            "hours",
-        #                            # @ToDo: Filter to just those in the parent Activity
-        #                            S3SQLInlineComponentCheckbox("activity_type",
-        #                                                         label = T("Activity Types"),
-        #                                                         field = "activity_type_id",
-        #                                                         option_help = "comments",
-        #                                                         cols = 4,
-        #                                                         ),
-        #                            "comments",
-        #                            )
+        # CRUD form
+        crud_form = S3SQLCustomForm("activity_id",
+                                    "person_id",
+                                    "date",
+                                    #"end_date",
+                                    "job_title_id",
+                                    "hours",
+                                    S3SQLInlineLink(
+                                        "activity_type",
+                                        field = "activity_type_id",
+                                        label = T("Activity Types"),
+                                        help_field = "comments",
+                                        cols = "4",
+                                        ),
+                                    "comments",
+                                    )
 
         configure(tablename,
                   context = {"person": "person_id",
                              },
-                  #crud_form = crud_form,
+                  crud_form = crud_form,
                   extra_fields = ["date"],
                   filter_widgets = filter_widgets,
                   list_fields = ["activity_id",
