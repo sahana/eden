@@ -30,6 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 """
 __all__ = ("S3SetupModel",
            "setup_run_playbook",
+           "setup_instance_settings_read",
            "setup_rheader",
            )
 
@@ -608,6 +609,23 @@ class S3SetupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def setup_instance_settings(r, **attr):
+        """
+            Custom interactive S3Method to Read the Settings for an instance
+            from models/000_config.py
+        """
+
+        deployment_id = r.id
+        setup_instance_settings_read(r.component_id, deployment_id)
+
+        current.session.confirmation = current.T("Settings Read")
+
+        redirect(URL(c="setup", f="deployment",
+                     args = [deployment_id, "setting"]),
+                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def setup_write_playbook(hosts,
                              db_password,
                              web_server,
@@ -748,90 +766,6 @@ class S3SetupModel(S3Model):
                                                )
 
         return task_id
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_instance_settings_read(instance_id, deployment_id):
-        """
-            Read the Settings for an instance from models/000_config.py
-            - called onaccept from instance creation
-            - called by interactive method to read
-        """
-
-        from gluon.cfs import getcfs
-        from gluon.compileapp import build_environment
-        from gluon.restricted import restricted
-
-        # Read current settings from file
-        request = current.request
-        model = "%s/models/000_config.py" % request.folder
-        code = getcfs(model, model, None)
-        environment = build_environment(request, current.response, current.session)
-        environment["settings"] = Storage2()
-        restricted(code, environment, layer=model)
-        nested_settings = environment["settings"]
-
-        # Flatten settings
-        file_settings = {}
-        for section in nested_settings:
-            subsection = nested_settings[section]
-            for setting in subsection:
-                file_settings["%s.%s" % (section, setting)] = subsection[setting]
-
-        # Read current Database Settings
-        db = current.db
-        stable = current.s3db.setup_setting
-        id_field = stable.id
-        query = (stable.instance_id == instance_id) & \
-                (stable.deleted == False)
-        db_settings = db(query).select(id_field,
-                                       stable.setting,
-                                       #stable.current_value,
-                                       stable.new_value,
-                                       ).as_dict(key = "setting")
-        db_get = db_settings.get
-
-        # Ensure that database looks like file
-        checked_settings = []
-        cappend = checked_settings.append
-        for setting in file_settings:
-            s = db_get(setting)
-            if s:
-                # We update even if not changed so as to update modified_on
-                db(id_field == s["id"]).update(current_value = s["current_value"])
-            else:
-                stable.insert(deployment_id = deployment_id,
-                              instance_id = instance_id,
-                              setting = setting,
-                              current_value = file_settings[setting],
-                              )
-            cappend(setting)
-
-        # Handle db_settings not in file_settings
-        for setting in db_settings:
-            if setting in checked_settings:
-                continue
-            s = db_get(setting)
-            if s["new_value"] is not None:
-                db(id_field == s["id"]).update(current_value = None)
-            else:
-                db(id_field == s["id"]).update(deleted = True)
-
-    # -------------------------------------------------------------------------
-    def setup_instance_settings(self, r, **attr):
-        """
-            Custom interactive S3Method to Read the Settings for an instance
-            from models/000_config.py
-        """
-
-        deployment_id = r.id
-        self.setup_instance_settings_read(r.component_id, deployment_id)
-
-        current.session.confirmation = current.T("Settings Read")
-
-        redirect(URL(c="setup", f="deployment",
-                     args = [deployment_id, "setting"]),
-                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1042,6 +976,73 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     os.chdir(cwd)
 
     return result
+
+# =============================================================================
+def setup_instance_settings_read(instance_id, deployment_id):
+    """
+        Read the Settings for an instance from models/000_config.py
+        - called onaccept from instance creation
+        - called by interactive method to read
+    """
+
+    from gluon.cfs import getcfs
+    from gluon.compileapp import build_environment
+    from gluon.restricted import restricted
+
+    # Read current settings from file
+    request = current.request
+    model = "%s/models/000_config.py" % request.folder
+    code = getcfs(model, model, None)
+    environment = build_environment(request, current.response, current.session)
+    environment["settings"] = Storage2()
+    restricted(code, environment, layer=model)
+    nested_settings = environment["settings"]
+
+    # Flatten settings
+    file_settings = {}
+    for section in nested_settings:
+        subsection = nested_settings[section]
+        for setting in subsection:
+            file_settings["%s.%s" % (section, setting)] = subsection[setting]
+
+    # Read current Database Settings
+    db = current.db
+    stable = current.s3db.setup_setting
+    id_field = stable.id
+    query = (stable.instance_id == instance_id) & \
+            (stable.deleted == False)
+    db_settings = db(query).select(id_field,
+                                   stable.setting,
+                                   #stable.current_value,
+                                   stable.new_value,
+                                   ).as_dict(key = "setting")
+    db_get = db_settings.get
+
+    # Ensure that database looks like file
+    checked_settings = []
+    cappend = checked_settings.append
+    for setting in file_settings:
+        s = db_get(setting)
+        if s:
+            # We update even if not changed so as to update modified_on
+            db(id_field == s["id"]).update(current_value = s["current_value"])
+        else:
+            stable.insert(deployment_id = deployment_id,
+                          instance_id = instance_id,
+                          setting = setting,
+                          current_value = file_settings[setting],
+                          )
+        cappend(setting)
+
+    # Handle db_settings not in file_settings
+    for setting in db_settings:
+        if setting in checked_settings:
+            continue
+        s = db_get(setting)
+        if s["new_value"] is not None:
+            db(id_field == s["id"]).update(current_value = None)
+        else:
+            db(id_field == s["id"]).update(deleted = True)
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
