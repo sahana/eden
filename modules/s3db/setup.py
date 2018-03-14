@@ -55,8 +55,9 @@ DB_SERVERS = {#1: "mysql",
               }
 
 INSTANCE_TYPES = {1: "prod",
-                  #2: "test",
-                  #3: "demo",
+                  2: "setup",
+                  3: "test",
+                  4: "demo",
                   }
 
 # =============================================================================
@@ -641,6 +642,11 @@ class S3SetupModel(S3Model):
 
         hostname = sitename.split(".", 1)[0]
 
+        if instance_type == "setup"
+            appname = "eden_setup"
+        else:
+            appname = "eden"
+
         if len(hosts) == 1:
             host = hosts[0][1]
             deployment = [
@@ -654,6 +660,7 @@ class S3SetupModel(S3Model):
                         "sender": sender,
                         "web_server": web_server,
                         "type": instance_type,
+                        "appname": appname,
                         "hostname": hostname,
                         "sitename": sitename,
                         "protocol": protocol,
@@ -665,7 +672,7 @@ class S3SetupModel(S3Model):
                               { "role": "%s/%s" % (roles_path, web_server) },
                               { "role": "%s/uwsgi" % roles_path },
                               { "role": "%s/%s" % (roles_path, db_type) },
-                              { "role": "%s/configure" % roles_path },
+                              { "role": "%s/final" % roles_path },
                               ]
                 }
             ]
@@ -694,11 +701,12 @@ class S3SetupModel(S3Model):
                         "template": template,
                         "sender": sender,
                         "type": instance_type,
+                        "appname": appname,
                         "web_server": web_server,
                     },
                     "roles": [{ "role": "%s/common" % roles_path },
                               { "role": "%s/uwsgi" % roles_path },
-                              { "role": "%s/configure" % roles_path },
+                              { "role": "%s/final" % roles_path },
                               ]
                 },
                 {
@@ -707,7 +715,8 @@ class S3SetupModel(S3Model):
                     "vars": {
                         "protocol": protocol,
                         "eden_ip": hosts[2][1],
-                        "type": instance_type
+                        "type": instance_type,
+                        "appname": appname,
                     },
                     "roles": [{ "role": "%s/%s" % (roles_path, web_server) },
                               ]
