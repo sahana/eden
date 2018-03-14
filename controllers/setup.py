@@ -52,7 +52,7 @@ def index():
             # @ToDo: Support multi-host deployments
             s3db.setup_server.insert(deployment_id = deployment_id,
                                      )
-            task_id = current.task.async("dummy")
+            task_id = current.s3task.async("dummy")
             instance_id = s3db.setup_instance.insert(deployment_id = deployment_id,
                                                      url = settings.get_base_public_url(),
                                                      task_id = task_id,
