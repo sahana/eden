@@ -4,15 +4,12 @@
     Admin Controllers
 """
 
-module = request.controller
-resourcename = request.function
-
 # S3 framework functions
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules["admin"].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -37,7 +34,7 @@ def role():
     # ACLs as component of roles
     s3db.add_components("auth_group",
                         **{auth.permission.TABLENAME: "group_id"}
-                       )
+                        )
 
     def prep(r):
         if r.representation != "html":
@@ -413,7 +410,7 @@ def group():
         msg_list_empty = T("No Roles defined"))
 
     s3db.configure(tablename, main="role")
-    return s3_rest_controller("auth", resourcename)
+    return s3_rest_controller("auth", "group")
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -424,7 +421,6 @@ def organisation():
         @ToDo: Prevent multiple records for the same domain
     """
 
-    module = "auth"
     tablename = "auth_organisation"
     table = s3db[tablename]
 
@@ -441,8 +437,7 @@ def organisation():
         msg_list_empty = T("No Organization Domains currently registered")
     )
 
-    output = s3_rest_controller(module, resourcename)
-
+    output = s3_rest_controller("auth", "organisation")
     return output
 
 # -----------------------------------------------------------------------------
@@ -460,9 +455,6 @@ def acl():
         Preliminary controller for ACLs
         for testing purposes, not for production use!
     """
-
-    module = "s3"
-    name = "permission"
 
     table = auth.permission.table
     tablename = table._tablename
@@ -501,7 +493,7 @@ def acl():
         next = request.vars._next
         s3db.configure(tablename, delete_next=next)
 
-    output = s3_rest_controller(module, name)
+    output = s3_rest_controller("s3", "permission")
     return output
 
 # -----------------------------------------------------------------------------

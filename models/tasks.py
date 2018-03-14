@@ -4,11 +4,18 @@
 # Tasks to be callable async
 # =============================================================================
 
-tasks = {}
 has_module = settings.has_module
 
 # -----------------------------------------------------------------------------
-def maintenance(period="daily"):
+def dummy():
+    """
+        Dummy Task
+        - can be used to populate a table with a task_id
+    """
+    return
+
+# -----------------------------------------------------------------------------
+def maintenance(period = "daily"):
     """
         Run all maintenance tasks which should be done daily
         - these are read from the template
@@ -46,8 +53,6 @@ def maintenance(period="daily"):
 
     return result
 
-tasks["maintenance"] = maintenance
-
 # -----------------------------------------------------------------------------
 # GIS: always-enabled
 # -----------------------------------------------------------------------------
@@ -71,8 +76,6 @@ def gis_download_kml(record_id, filename, session_id_name, session_id,
     db.commit()
     return result
 
-tasks["gis_download_kml"] = gis_download_kml
-
 # -----------------------------------------------------------------------------
 def gis_update_location_tree(feature, user_id=None):
     """
@@ -91,8 +94,6 @@ def gis_update_location_tree(feature, user_id=None):
     db.commit()
     return path
 
-tasks["gis_update_location_tree"] = gis_update_location_tree
-
 # -----------------------------------------------------------------------------
 # Org: always-enabled
 # -----------------------------------------------------------------------------
@@ -109,8 +110,6 @@ def org_facility_geojson(user_id=None):
     # Run the Task & return the result
     s3db.org_facility_geojson()
 
-tasks["org_facility_geojson"] = org_facility_geojson
-
 # -----------------------------------------------------------------------------
 def org_site_check(site_id, user_id=None):
     """ Check the Status for Sites """
@@ -125,7 +124,14 @@ def org_site_check(site_id, user_id=None):
         customise(site_id)
         db.commit()
 
-tasks["org_site_check"] = org_site_check
+# -----------------------------------------------------------------------------
+tasks = {"dummy": dummy,
+         "maintenance": maintenance,
+         "gis_download_kml": gis_download_kml,
+         "gis_update_location_tree": gis_update_location_tree,
+         "org_facility_geojson": org_facility_geojson,
+         "org_site_check": org_site_check,
+         }
 
 # -----------------------------------------------------------------------------
 # Optional Modules

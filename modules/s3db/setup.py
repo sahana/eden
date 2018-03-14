@@ -464,7 +464,8 @@ class S3SetupModel(S3Model):
 
         if db(table.deleted == False).count() < 2:
             # Configure localhost to have all tiers (localhost & all tiers are defaults)
-            server_id = s3db.setup_server.insert(deployment_id = deployment_id)
+            s3db.setup_server.insert(deployment_id = deployment_id,
+                                     )
 
         # Configure a Production instance (needs Public URL so has to be done Inline)
         #instance_id = s3db.setup_instance.insert()
