@@ -3223,14 +3223,11 @@ class S3SiteModel(S3Model):
         # Components
         add_components(tablename,
                        # Facility Types
-                       # Format for S3SQLInlineComponentCheckbox
                        org_facility_type = {"link": "org_site_facility_type",
                                             "joinby": "site_id",
                                             "key": "facility_type_id",
                                             "actuate": "hide",
                                             },
-                       # Format for filter_widgets & imports
-                       org_site_facility_type = "site_id",
 
                        # Locations
                        org_site_location = ({"name": "location",

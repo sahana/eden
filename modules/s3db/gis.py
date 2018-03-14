@@ -465,7 +465,7 @@ class S3LocationModel(S3Model):
            not auth.rollback:
             # Update the Path (async if-possible)
             # (skip during prepop)
-            feature = json.dumps({"id": id,
+            feature = json.dumps({"id": location_id,
                                   "level": form_vars.get("level", False),
                                   })
             current.s3task.async("gis_update_location_tree",

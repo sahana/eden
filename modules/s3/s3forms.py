@@ -3605,8 +3605,8 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             filterby..........field selector..filter look-up options by this field
                                               (can be a field in the look-up table
                                               itself or in another table linked to it)
-            filteropts........value|list......filter for these values, or:
-            filterexpr........field selector..lookup the filter value from this
+            options...........value|list......filter for these values, or:
+            match.............field selector..lookup the filter value from this
                                               field (can be a field in the master
                                               table, or in linked table)
     """
