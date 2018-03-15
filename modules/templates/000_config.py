@@ -239,6 +239,7 @@ settings.import_template()
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs
 # Enable Additional Module(s)
+#from gluon.storage import Storage
 #settings.modules["delphi"] = Storage(
 #        name_nice = T("Delphi Decision Maker"),
 #        restricted = False,

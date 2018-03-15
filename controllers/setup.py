@@ -108,8 +108,9 @@ def deployment():
                                                 join = itable.on(itable.task_id == sctable.id)
                                                 )
                         types = {1: "prod",
-                                 2: "test",
-                                 3: "demo",
+                                 2: "setup",
+                                 3: "test",
+                                 4: "demo",
                                  }
                         for row in rows:
                             del types[row.type]

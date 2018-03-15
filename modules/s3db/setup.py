@@ -822,13 +822,11 @@ class S3SetupModel(S3Model):
             current.response.error = error
             return
 
-        folder = current.request.folder
+        folder = r.folder
 
         playbook_path = os.path.join(folder, "uploads", "playbook")
         if not os.path.isdir(playbook_path):
             os.mkdir(playbook_path)
-
-        #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
         the_setting = setting.setting
         if new_value is True or new_value is False:
@@ -837,11 +835,13 @@ class S3SetupModel(S3Model):
             # @ToDo: Handle lists/dicts (load into JSONS3?)
             new_line = 'settings.%s = "%s"' % (the_setting, new_value)
 
+        appname = r.application
+
         playbook = [{"hosts": host,
                      "connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
                      "tasks": [{"name": "Edit 000_config.py",
-                                "lineinfile": {"dest": "/home/%s/applications/eden/models/000_config.py" % instance_type,
+                                "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
                                                "regexp": "^settings.%s =" % the_setting,
                                                "line": new_line,
                                                "state": "present",
@@ -849,7 +849,7 @@ class S3SetupModel(S3Model):
                                 },
                                # @ToDo: handle case where WebServer is on a different host
                                {"name": "Compile & Restart WebServer",
-                                #"command": "sudo -H -u web2py python web2py.py -S eden -M -R applications/eden/static/scripts/tools/compile.py",
+                                #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                                 #"args": {"chdir": "/home/%s" % instance_type,
                                 #         },
                                 "command": "/usr/local/bin/compile",

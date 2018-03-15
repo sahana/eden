@@ -1781,7 +1781,7 @@ class S3LocationFilter(S3FilterWidget):
                 if translate:
                     fields.append("path")
 
-                resource2 = None
+                resource2 = s3db.resource("gis_location")
                 joined = False
                 rows = []
                 for f in values:
@@ -1792,8 +1792,6 @@ class S3LocationFilter(S3FilterWidget):
                     resource2.clear_query()
                     query = (gtable.level == level) & \
                             (gtable.name.belongs(v))
-                    if resource2 is None:
-                        resource2 = s3db.resource("gis_location")
                     resource2.add_filter(query)
                     # Filter out old Locations
                     # @ToDo: Allow override

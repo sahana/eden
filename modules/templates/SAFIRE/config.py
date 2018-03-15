@@ -39,10 +39,6 @@ def config(settings):
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 
-    # Restrict the Location Selector to just certain countries
-    # NB This can also be over-ridden for specific contexts later
-    # e.g. Activities filtered to those of parent Project
-    #settings.gis.countries = ("US",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -52,68 +48,11 @@ def config(settings):
     #settings.gis.print_button = True
 
     # L10n settings
-    # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
-    # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    #settings.L10n.languages = OrderedDict([
-    #    ("ar", "Arabic"),
-    #    ("bs", "Bosnian"),
-    #    #("dv", "Divehi"), # Maldives
-    #    ("en", "English"),
-    #    ("fr", "French"),
-    #    ("de", "German"),
-    #    ("el", "Greek"),
-    #    ("es", "Spanish"),
-    #    #("id", "Bahasa Indonesia"),
-    #    ("it", "Italian"),
-    #    ("ja", "Japanese"),
-    #    ("km", "Khmer"), # Cambodia
-    #    ("ko", "Korean"),
-    #    #("lo", "Lao"),
-    #    #("mg", "Malagasy"),
-    #    ("mn", "Mongolian"),
-    #    #("ms", "Malaysian"),
-    #    ("my", "Burmese"), # Myanmar
-    #    ("ne", "Nepali"),
-    #    ("prs", "Dari"), # Afghan Persian
-    #    ("ps", "Pashto"), # Afghanistan, Pakistan
-    #    ("pt", "Portuguese"),
-    #    ("pt-br", "Portuguese (Brazil)"),
-    #    ("ru", "Russian"),
-    #    ("tet", "Tetum"),
-    #    #("si", "Sinhala"), # Sri Lanka
-    #    #("ta", "Tamil"), # India, Sri Lanka
-    #    ("th", "Thai"),
-    #    ("tl", "Tagalog"), # Philippines
-    #    ("tr", "Turkish"),
-    #    ("ur", "Urdu"), # Pakistan
-    #    ("vi", "Vietnamese"),
-    #    ("zh-cn", "Chinese (Simplified)"), # Mainland China
-    #    ("zh-tw", "Chinese (Taiwan)"),
-    #])
-    # Default language for Language Toolbar (& GIS Locations in future)
-    #settings.L10n.default_language = "en"
-    # Uncomment to Hide the language toolbar
-    #settings.L10n.display_toolbar = False
-    # Default timezone for users
-    #settings.L10n.utc_offset = "+0100"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
     settings.L10n.thousands_separator = ","
-    # Uncomment this to Translate Layer Names
-    #settings.L10n.translate_gis_layer = True
-    # Uncomment this to Translate Location Names
-    #settings.L10n.translate_gis_location = True
-    # Uncomment this to Translate Organisation Names/Acronyms
-    #settings.L10n.translate_org_organisation = True
-    # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
-    #    "USD" : "United States Dollars",
-    #}
-    #settings.fin.currency_default = "USD"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
