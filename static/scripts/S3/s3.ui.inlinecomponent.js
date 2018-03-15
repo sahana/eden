@@ -407,17 +407,29 @@
                 // Catch submit event
                 form.off('submit' + ns).on('submit' + ns, function(event) {
 
+
                     // Stop immediate form submission
                     event.preventDefault();
 
-                    // Disable submit button (prevent repeated clicks)
-                    form.find('input[type="submit"]').prop('disabled', true);
-
                     // Trigger inline validation
-                    form.trigger('validateInline');
+                    if (!self.submitInProgress) {
 
-                    // Activate deferred submission
-                    self._deferredSubmit(form);
+                        // Disable submit button (prevent repeated clicks)
+                        form.find('input[type="submit"]').prop('disabled', true);
+
+                        // Remember that submit is in progress, so it's
+                        // not overtaken by a secondary submit-event from
+                        // another form widget
+                        self.submitInProgress = true;
+
+                        // Inform all inline forms that the form is about
+                        // to get submitted, so all pending rows must be
+                        // validated now
+                        form.trigger('validateInline');
+
+                        // Activate deferred submission
+                        self._deferredSubmit(form);
+                    }
                 });
             }
 
@@ -446,13 +458,16 @@
             }
 
             // Submit the form when all inline validations are done
-            var ns = this.eventNamespace + this.id;
+            var ns = this.eventNamespace + this.id,
+                self = this;
             $.when.apply(null, validations).then(
                 function() {
+                    self.submitInProgress = false;
                     form.off(ns).submit();
                 },
                 function() {
                     // Validation failed => re-enable submit button
+                    self.submitInProgress = false;
                     form.find('input[type="submit"]').prop('disabled', false);
                 });
         },
