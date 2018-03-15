@@ -424,15 +424,14 @@ class S3LocationModel(S3Model):
                         # *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict(
-                gis_location_id = location_id,
-                gis_country_id = country_id,
-                gis_country_requires = country_requires,
-                gis_country_code_represent = self.gis_country_code_represent,
-                gis_location_represent = gis_location_represent,
-                gis_location_onvalidation = self.gis_location_onvalidation,
-                gis_feature_type_opts = gis_feature_type_opts,
-                )
+        return {"gis_location_id": location_id,
+                "gis_country_id": country_id,
+                "gis_country_requires": country_requires,
+                "gis_country_code_represent": self.gis_country_code_represent,
+                "gis_location_represent": gis_location_represent,
+                "gis_location_onvalidation": self.gis_location_onvalidation,
+                "gis_feature_type_opts": gis_feature_type_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1347,8 +1346,8 @@ class S3LocationTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(gis_country_opts = self.gis_country_opts,
-                    )
+        return {"gis_country_opts": self.gis_country_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1515,8 +1514,8 @@ class S3LocationHierarchyModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
-                    )
+        return {"gis_hierarchy_form_setup": self.gis_hierarchy_form_setup,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2047,11 +2046,11 @@ class S3GISConfigModel(S3Model):
             # msg_list_empty = T("No Menu Entries currently defined"))
 
         # Pass names back to global scope (s3.*)
-        return dict(gis_config_form_setup = self.gis_config_form_setup,
-                    gis_config_id = config_id,
-                    gis_marker_id = marker_id,
-                    gis_projection_id = projection_id,
-                    )
+        return {"gis_config_form_setup": self.gis_config_form_setup,
+                "gis_config_id": config_id,
+                "gis_marker_id": marker_id,
+                "gis_projection_id": projection_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2745,11 +2744,11 @@ class S3LayerEntityModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict(gis_layer_types = layer_types,
-                    # Run from config() controller when saving state
-                    gis_layer_config_onaccept = self.gis_layer_config_onaccept,
-                    gis_style_postprocess = self.gis_style_postprocess,
-                    )
+        return {"gis_layer_types": layer_types,
+                # Run from config() controller when saving state
+                "gis_layer_config_onaccept": self.gis_layer_config_onaccept,
+                "gis_style_postprocess": self.gis_style_postprocess,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4513,8 +4512,8 @@ class S3GISThemeModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict(gis_layer_theme_id = layer_theme_id,
-                    )
+        return {"gis_layer_theme_id": layer_theme_id,
+                }
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -4701,8 +4700,8 @@ class S3PoIModel(S3Model):
                             )
 
         # Pass names back to global scope (s3.*)
-        return dict(gis_poi_id = poi_id,
-                    )
+        return {"gis_poi_id": poi_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

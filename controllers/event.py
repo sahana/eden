@@ -133,8 +133,19 @@ def incident():
                                    deletable = False,
                                    )
                     s3.crud.submit_button = T("Update")
-                elif cname in ("asset", "human_resource", "organisation", "site"):
 
+                elif cname == "sitrep":
+                    stable = s3db.event_sitrep
+                    stable.location_id.default = r.record.location_id
+                    stable.event_id.readable = stable.event_id.writable = False
+                    list_fields = s3db.get_config("event_sitrep", "list_fields")
+                    try:
+                        list_fields.remove("event_id")
+                    except ValueError:
+                        # Already removed
+                        pass
+
+                elif cname in ("asset", "human_resource", "organisation", "site"):
                     atable = s3db.table("budget_allocation")
                     if atable:
                         field = atable.budget_entity_id
@@ -158,7 +169,6 @@ def incident():
                                 f.widget = S3CalendarWidget(timepicker = True)
 
                 elif cname == "incident_asset":
-
                     atable = s3db.table("budget_allocation")
                     if atable:
                         field = atable.budget_entity_id

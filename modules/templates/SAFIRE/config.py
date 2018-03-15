@@ -258,6 +258,7 @@ def config(settings):
                         #(T("Equipment"), "asset"),
                         (T("Action Plan"), "plan"),
                         (T("Incident Reports"), "incident_report"),
+                        (T("Situation Reports"), "sitrep"),
                         ]
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
