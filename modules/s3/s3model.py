@@ -77,15 +77,16 @@ class S3Model(object):
         self.cache = (current.cache.ram, 60)
 
         self.context = None
-        self.classes = Storage()
+        self.classes = {}
 
         # Initialize current.model
         if not hasattr(current, "model"):
-            current.model = Storage(config = Storage(),
-                                    components = Storage(),
-                                    methods = Storage(),
-                                    cmethods = Storage(),
-                                    hierarchies = Storage())
+            current.model = {"config": {},
+                             "components": {},
+                             "methods": {},
+                             "cmethods": {},
+                             "hierarchies": {},
+                             }
 
         response = current.response
         if "s3" not in response:
@@ -118,7 +119,7 @@ class S3Model(object):
                 except Exception:
                     self.__unlock()
                     raise
-            if isinstance(env, (Storage, dict)):
+            if isinstance(env, dict):
                 response.s3.update(env)
             self.__loaded(True)
             self.__unlock()
@@ -215,45 +216,54 @@ class S3Model(object):
                 return models.__dict__[prefix].__dict__[name]
 
         db = current.db
-        found = None
+
+        # Table already defined?
         if hasattr(db, tablename):
             return ogetattr(db, tablename)
         elif ogetattr(db, "_lazy_tables") and \
              tablename in ogetattr(db, "_LAZY_TABLES"):
             return ogetattr(db, tablename)
-        else:
-            prefix, name = tablename.split("_", 1)
-            if prefix == DYNAMIC_PREFIX:
-                try:
-                    found = S3DynamicModel(tablename).table
-                except AttributeError:
-                    pass
-            elif hasattr(models, prefix):
-                module = models.__dict__[prefix]
-                loaded = False
+
+        found = None
+
+        prefix, name = tablename.split("_", 1)
+        if prefix == DYNAMIC_PREFIX:
+            try:
+                found = S3DynamicModel(tablename).table
+            except AttributeError:
+                pass
+
+        elif hasattr(models, prefix):
+            module = models.__dict__[prefix]
+
+            names = module.__all__
+            s3models = module.__dict__
+
+            if not db_only and tablename in names:
+                # A name defined at module level (e.g. a class)
+                s3db.classes[tablename] = (prefix, tablename)
+                found = s3models[tablename]
+            else:
+                # A name defined in an S3Model
                 generic = []
-                for n in module.__all__:
-                    model = module.__dict__[n]
+                loaded = False
+                for n in names:
+                    model = s3models[n]
                     if hasattr(model, "_s3model"):
-                        if loaded:
-                            continue
                         if hasattr(model, "names"):
                             if tablename in model.names:
                                 model(prefix)
                                 loaded = True
-                            else:
-                                continue
+                                break
                         else:
                             generic.append(n)
-                    else:
-                        if n == tablename:
-                            s3db.classes[tablename] = (prefix, n)
-                            found = model
-                            loaded = True
                 if not loaded:
-                    [module.__dict__[n](prefix) for n in generic]
+                    for n in generic:
+                        s3models[n](prefix)
+
         if found:
             return found
+
         if not db_only and tablename in s3:
             return s3[tablename]
         elif hasattr(db, tablename):
@@ -443,11 +453,11 @@ class S3Model(object):
             @param attr: dict of attributes to update
         """
 
-        config = current.model.config
+        config = current.model["config"]
 
         tn = tablename._tablename if type(tablename) is Table else tablename
         if tn not in config:
-            config[tn] = Storage()
+            config[tn] = {}
         config[tn].update(attr)
         return
 
@@ -461,7 +471,7 @@ class S3Model(object):
             @param key: the key (name) of the attribute
         """
 
-        config = current.model.config
+        config = current.model["config"]
 
         tn = tablename._tablename if type(tablename) is Table else tablename
         if tn in config:
@@ -479,7 +489,7 @@ class S3Model(object):
             @param keys: keys of attributes to remove (maybe multiple)
         """
 
-        config = current.model.config
+        config = current.model["config"]
 
         tn = tablename._tablename if type(tablename) is Table else tablename
         if tn in config:
@@ -578,11 +588,11 @@ class S3Model(object):
 
         if str(field.type) == "integer":
 
-            config = current.model.config
+            config = current.model["config"]
             tablename, fieldname = str(field).split(".")
 
             # 1st try this table's references
-            this_config = config[tablename]
+            this_config = config.get(tablename)
             if this_config:
                 references = this_config.get("references")
                 if references is not None and fieldname in references:
@@ -657,14 +667,14 @@ class S3Model(object):
             @param links: component link configurations
         """
 
-        components = current.model.components
+        components = current.model["components"]
         load_all_models = current.response.s3.load_all_models
 
         master = master._tablename if type(master) is Table else master
 
         hooks = components.get(master)
         if hooks is None:
-            hooks = Storage()
+            hooks = {}
         for tablename, ll in links.items():
 
             name = tablename.split("_", 1)[1]
@@ -751,20 +761,20 @@ class S3Model(object):
                 else:
                     continue
 
-                component = Storage(tablename=tablename,
-                                    pkey=pkey,
-                                    fkey=fkey,
-                                    linktable=linktable,
-                                    lkey=lkey,
-                                    rkey=rkey,
-                                    actuate=actuate,
-                                    autodelete=autodelete,
-                                    autocomplete=autocomplete,
-                                    defaults=defaults,
-                                    multiple=multiple,
-                                    filterby=filterby,
-                                    label=label,
-                                    plural=plural,
+                component = Storage(tablename = tablename,
+                                    pkey = pkey,
+                                    fkey = fkey,
+                                    linktable = linktable,
+                                    lkey = lkey,
+                                    rkey = rkey,
+                                    actuate = actuate,
+                                    autodelete = autodelete,
+                                    autocomplete = autocomplete,
+                                    defaults = defaults,
+                                    multiple = multiple,
+                                    filterby = filterby,
+                                    label = label,
+                                    plural = plural,
                                     )
                 hooks[alias] = component
 
@@ -868,8 +878,6 @@ class S3Model(object):
     def get_components(cls, table, names=None):
         """
             Finds components of a table
-
-            FIXME rename names into aliases
 
             @param table: the table or table name
             @param names: a list of components names to limit the search to,
@@ -996,7 +1004,7 @@ class S3Model(object):
             @returns: tuple (table, {alias: hook, ...})
         """
 
-        components = current.model.components
+        components = current.model["components"]
         load = cls.table
 
         # Get tablename and table
@@ -1103,7 +1111,7 @@ class S3Model(object):
             @param table: the table or table name
         """
 
-        components = current.model.components
+        components = current.model["components"]
         load = cls.table
 
         # Get tablename and table
@@ -1120,7 +1128,7 @@ class S3Model(object):
             cls.add_dynamic_components(tablename)
 
         # Get table hooks
-        hooks = Storage()
+        hooks = {}
         filter_hooks = cls.__filter_hooks
         h = components.get(tablename, None)
         if h:
@@ -1158,7 +1166,7 @@ class S3Model(object):
             @param link: the alias of the link table
         """
 
-        components = current.model.components
+        components = current.model["components"]
 
         table = cls.table(tablename)
         if not table:
@@ -1245,8 +1253,8 @@ class S3Model(object):
             @param action: function to invoke for this method
         """
 
-        methods = current.model.methods
-        cmethods = current.model.cmethods
+        methods = current.model["methods"]
+        cmethods = current.model["cmethods"]
 
         if not method:
             raise SyntaxError("No method specified")
@@ -1278,8 +1286,8 @@ class S3Model(object):
             @param method: name of the method
         """
 
-        methods = current.model.methods
-        cmethods = current.model.cmethods
+        methods = current.model["methods"]
+        cmethods = current.model["cmethods"]
 
         if not method:
             return None
@@ -1363,7 +1371,9 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def super_link(cls, name, supertable,
+    def super_link(cls,
+                   name,
+                   supertable,
                    label=None,
                    comment=None,
                    represent=None,
@@ -1383,7 +1393,8 @@ class S3Model(object):
                    default=DEFAULT,
                    ondelete="CASCADE",
                    readable=False,
-                   writable=False):
+                   writable=False,
+                   ):
         """
             Get a foreign key field for a super-entity
 
@@ -1396,43 +1407,53 @@ class S3Model(object):
 
         if isinstance(supertable, str):
             supertable = cls.table(supertable)
+
         if supertable is None:
             if name is not None:
-                return Field(name, "integer",
-                             readable=False,
-                             writable=False)
+                return Field(name,
+                             "integer",
+                             readable = False,
+                             writable = False,
+                             )
             else:
                 raise SyntaxError("Undefined super-entity")
-        else:
-            key = cls.super_key(supertable)
-            if name is not None and name != key:
-                raise SyntaxError("Primary key %s not found in %s" % \
-                                 (name, supertable._tablename))
-            requires = IS_ONE_OF(current.db,
-                                 "%s.%s" % (supertable._tablename, key),
-                                 represent,
-                                 orderby=orderby,
-                                 sort=sort,
-                                 groupby=groupby,
-                                 filterby=filterby,
-                                 filter_opts=filter_opts,
-                                 instance_types=instance_types,
-                                 realms=realms,
-                                 updateable=updateable,
-                                 not_filterby=not_filterby,
-                                 not_filter_opts=not_filter_opts,)
-            if empty:
-                requires = IS_EMPTY_OR(requires)
+
+        try:
+            key = supertable._id.name
+        except AttributeError:
+            raise SyntaxError("No id-type key found in %s" %
+                              supertable._tablename)
+
+        if name is not None and name != key:
+            raise SyntaxError("Primary key %s not found in %s" %
+                             (name, supertable._tablename))
+
+        requires = IS_ONE_OF(current.db,
+                             "%s.%s" % (supertable._tablename, key),
+                             represent,
+                             orderby = orderby,
+                             sort = sort,
+                             groupby = groupby,
+                             filterby = filterby,
+                             filter_opts = filter_opts,
+                             instance_types = instance_types,
+                             realms = realms,
+                             updateable = updateable,
+                             not_filterby = not_filterby,
+                             not_filter_opts = not_filter_opts,
+                             )
+        if empty:
+            requires = IS_EMPTY_OR(requires)
 
         # Add the script into the comment
         if script:
             if comment:
-                comment = TAG[""](comment,
-                                  S3ScriptItem(script=script))
+                comment = TAG[""](comment, S3ScriptItem(script=script))
             else:
                 comment = S3ScriptItem(script=script)
 
-        return Field(key, supertable,
+        return Field(key,
+                     supertable,
                      default = default,
                      requires = requires,
                      readable = readable,
@@ -1441,7 +1462,8 @@ class S3Model(object):
                      comment = comment,
                      represent = represent,
                      widget = widget,
-                     ondelete = ondelete)
+                     ondelete = ondelete,
+                     )
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1507,7 +1529,7 @@ class S3Model(object):
         if not _record:
             return False
 
-        super_keys = Storage()
+        super_keys = {}
         for tn, s, key, shared in updates:
             data = Storage([(fn, _record[shared[fn]]) for fn in shared])
             data.instance_type = tablename

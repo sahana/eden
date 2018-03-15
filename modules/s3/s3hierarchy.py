@@ -590,7 +590,7 @@ class S3Hierarchy(object):
 
         tablename = self.tablename
         if tablename :
-            hierarchies = current.model.hierarchies
+            hierarchies = current.model["hierarchies"]
             if tablename in hierarchies:
                 hierarchy = hierarchies[tablename]
                 self.__theset = hierarchy["nodes"]
@@ -728,7 +728,7 @@ class S3Hierarchy(object):
         if not config:
             return
 
-        hierarchies = current.model.hierarchies
+        hierarchies = current.model["hierarchies"]
         if tablename in hierarchies:
             hierarchy = hierarchies[tablename]
             flags = hierarchy["flags"]

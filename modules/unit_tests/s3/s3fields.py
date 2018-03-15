@@ -882,7 +882,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
 
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
         current.db.rollback()
         current.auth.override = False

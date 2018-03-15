@@ -162,7 +162,7 @@ class S3ReusableField(object):
         if not name:
             name = self.name
 
-        ia = Storage(self.attr)
+        ia = dict(self.attr)
 
         DEFAULT = "default"
         widgets = ia.pop("widgets", {})
@@ -170,7 +170,7 @@ class S3ReusableField(object):
         if attr:
             empty = attr.pop("empty", True)
             if not empty:
-                requires = ia.requires
+                requires = ia.get("requires")
                 if requires:
                     if not isinstance(requires, (list, tuple)):
                         requires = [requires]
@@ -178,7 +178,7 @@ class S3ReusableField(object):
                         r = requires[0]
                         if isinstance(r, IS_EMPTY_OR):
                             requires = r.other
-                            ia.update(requires=requires)
+                            ia["requires"] = requires
             widget = attr.pop("widget", DEFAULT)
             ia.update(**attr)
         else:
@@ -186,7 +186,7 @@ class S3ReusableField(object):
 
         if isinstance(widget, basestring):
             if widget == DEFAULT and "widget" in ia:
-                widget = ia.widget
+                widget = ia["widget"]
             else:
                 if not isinstance(widgets, dict):
                     widgets = {DEFAULT: widgets}
@@ -194,18 +194,19 @@ class S3ReusableField(object):
                     raise NameError("Undefined widget: %s" % widget)
                 else:
                     widget = widgets.get(widget)
-        ia.widget = widget
+        ia["widget"] = widget
 
-        if "script" in ia:
-            if ia.script:
-                if ia.comment:
-                    ia.comment = TAG[""](ia.comment,
-                                         S3ScriptItem(script=ia.script))
-                else:
-                    ia.comment = S3ScriptItem(script=ia.script)
-            del ia["script"]
+        script = ia.pop("script", None)
+        if script:
+            comment = ia.get("comment")
+            if comment:
+                ia["comment"] = TAG[""](comment,
+                                        S3ScriptItem(script=script),
+                                        )
+            else:
+                ia["comment"] = S3ScriptItem(script=script)
 
-        if ia.sortby is not None:
+        if ia.get("sortby") is not None:
             return FieldS3(name, self.__type, **ia)
         else:
             return Field(name, self.__type, **ia)

@@ -2709,7 +2709,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(component.filter, None)
 
         # Remove the component hook
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
@@ -2740,7 +2740,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(rfield.colname, "org_test_office.name")
 
         # Remove the component hook
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
@@ -2809,7 +2809,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
 
         # Remove the component hook
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
         auth.override = False
 
@@ -2860,7 +2860,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                     "org_test_office.name asc, org_office_type.name desc")
 
         # Remove the component hook
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
@@ -2923,7 +2923,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(result["org_office_type.name"], "FilteredComponentsTestType")
 
         # Remove the component hook
-        del current.model.components["org_organisation"]["test"]
+        del current.model["components"]["org_organisation"]["test"]
 
         current.db.rollback()
         auth.override = False
@@ -3228,7 +3228,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_master"]["component"]
+            del current.model["components"]["del_master"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveSetNull(self):
@@ -3287,7 +3287,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_master"]["component"]
+            del current.model["components"]["del_master"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveRestrict(self):
@@ -3346,7 +3346,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_master"]["component"]
+            del current.model["components"]["del_master"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveSuper(self):
@@ -3453,7 +3453,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_super"]["component"]
+            del current.model["components"]["del_super"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveSuperSetNull(self):
@@ -3522,7 +3522,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_super"]["component"]
+            del current.model["components"]["del_super"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveSuperRestrict(self):
@@ -3591,7 +3591,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         finally:
             component.drop()
-            del current.model.components["del_super"]["component"]
+            del current.model["components"]["del_super"]["component"]
 
     # -------------------------------------------------------------------------
     def testArchiveWithJoinedExtraFields(self):
