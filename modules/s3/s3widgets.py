@@ -2637,8 +2637,10 @@ class S3HoursWidget(FormWidget):
 
         hours = 0.0
 
-        if not value:
-            return hours, None
+        if value is None or value == "":
+            return None
+        elif not value:
+            return hours
 
         parts = self.PARTS.split(value)
         for part in parts:
