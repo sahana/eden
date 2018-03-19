@@ -847,7 +847,7 @@ class S3SetupModel(S3Model):
                                                "state": "present",
                                                },
                                 },
-                               # @ToDo: handle case where WebServer is on a different host
+                               # @ToDo: Handle case where need to restart multiple webservers
                                {"name": "Compile & Restart WebServer",
                                 #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                                 #"args": {"chdir": "/home/%s" % instance_type,
@@ -1001,8 +1001,14 @@ def setup_instance_settings_read(instance_id, deployment_id):
     # Flatten settings
     file_settings = {}
     for section in nested_settings:
+        if section == "database":
+            # Filter out DB settings as these need special handling
+            continue
         subsection = nested_settings[section]
         for setting in subsection:
+            if setting in ("hmac_key", "template"):
+                # Filter out settings which need special handling
+                continue
             file_settings["%s.%s" % (section, setting)] = subsection[setting]
 
     # Read current Database Settings
