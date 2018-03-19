@@ -661,10 +661,8 @@ class S3SetupModel(S3Model):
 
         hostname = sitename.split(".", 1)[0]
 
-        if instance_type == "setup":
-            appname = "eden_setup"
-        else:
-            appname = "eden"
+        # @ToDo: Allow this to be configurable
+        appname = "eden"
 
         if len(hosts) == 1:
             host = hosts[0][1]
