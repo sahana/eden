@@ -326,7 +326,7 @@ if len(pop_list) > 0:
     try:
         from shapely.wkt import loads as wkt_loads
     except ImportError:
-        info("\Skipping GIS location tree update as Shapely not installed...")
+        info("Skipping GIS location tree update as Shapely not installed...")
     else:
         # Update Location Tree (disabled during prepop)
         start = datetime.datetime.now()
