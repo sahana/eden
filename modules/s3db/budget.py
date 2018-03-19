@@ -331,12 +331,17 @@ class S3BudgetModel(S3Model):
                            ),
                      Field("salary", "integer", notnull=True,
                            label = T("Monthly Salary"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(),
+                                        IS_INT_IN_RANGE(0, None),
+                                        ],
                            ),
                      s3_currency(),
                      Field("travel", "integer",
                            default = 0,
                            label = T("Travel Cost"),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, None),
+                                        ),
                            ),
                      # Shouldn't be grade-dependent, but purely
                      # location-dependent

@@ -457,7 +457,7 @@ class S3AssetModel(S3Model):
                      Field("quantity", "integer", notnull=True,
                            default = 1,
                            label = T("Quantity"),
-                           requires = IS_INT_IN_RANGE(1, 1000),
+                           requires = IS_INT_IN_RANGE(1, None),
                            ),
                      Field("sn",
                            label = T("Serial Number"),

@@ -410,6 +410,9 @@ $.filterOptionsS3({
                      Field("year", "integer",
                            label = T("Year of Manufacture"),
                            represent = lambda v: v or NONE,
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(1900, current.request.now.year)
+                                        ),
                            ),
                      Field("weight", "double",
                            label = T("Weight (kg)"),

@@ -177,6 +177,9 @@ class S3SchoolModel(S3Model):
                      Field("capacity", "integer",
                            label = T("Capacity"),
                            represent = lambda v: v or NONE,
+                           requires = IS_EMPTY_OR(
+                                          IS_INT_IN_RANGE(0, None)
+                                          ),
                            ),
                      Field("contact",
                            label = T("Contact"),
