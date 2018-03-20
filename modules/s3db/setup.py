@@ -940,6 +940,7 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
         sources = "%s," % hosts[0]
     else:
         sources = ",".join(hosts)
+
     inventory = InventoryManager(loader=loader, sources=sources)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
     # https://github.com/ansible/ansible/issues/21562
