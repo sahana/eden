@@ -9,9 +9,7 @@
 module = request.controller
 
 if not settings.has_module(module):
-    # This is likely to happen after deployment from co-app
-    #raise HTTP(404, body="Module disabled: %s" % module)
-    redirect(URL(c="default", f="index"))
+    raise HTTP(404, body="Module disabled: %s" % module)
 
 if not s3_has_role("ADMIN"):
         auth.permission.fail()

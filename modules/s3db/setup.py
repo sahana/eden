@@ -545,7 +545,7 @@ class S3SetupModel(S3Model):
         s3db = current.s3db
 
         # Get Instance details
-        instance_id = r.id
+        instance_id = r.component_id
         itable = s3db.setup_instance
         instance = db(itable.id == instance_id).select(itable.deployment_id,
                                                        itable.type,
@@ -559,7 +559,7 @@ class S3SetupModel(S3Model):
         else:
             protocol = "http"
 
-        deployment_id = instance.deployment_id
+        deployment_id = r.id
 
         # Get Server(s) details
         stable = s3db.setup_server
