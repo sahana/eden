@@ -671,6 +671,7 @@ class S3SetupModel(S3Model):
                     "hosts": host,
                     "connection": "local", # @ToDo: Don't assume this
                     "remote_user": remote_user,
+                    "become_method": "sudo",
                     "vars": {
                         "password": db_password,
                         "template": template,
@@ -698,6 +699,7 @@ class S3SetupModel(S3Model):
                 {
                     "hosts": hosts[0][1],
                     "remote_user": remote_user,
+                    "become_method": "sudo",
                     "vars": {
                         "password": db_password,
                         "type": instance_type
@@ -708,6 +710,7 @@ class S3SetupModel(S3Model):
                 {
                     "hosts": hosts[2][1],
                     "remote_user": remote_user,
+                    "become_method": "sudo",
                     "vars": {
                         "db_ip": hosts[0][1],
                         "db_type": db_type,
@@ -729,6 +732,7 @@ class S3SetupModel(S3Model):
                 {
                     "hosts": hosts[1][1],
                     "remote_user": remote_user,
+                    "become_method": "sudo",
                     "vars": {
                         "protocol": protocol,
                         "eden_ip": hosts[2][1],
