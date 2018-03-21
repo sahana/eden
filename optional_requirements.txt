@@ -32,7 +32,7 @@ requests>=2.3.0
 # Warning: Setup unresolved dependency: ansible required for Setup Module
 ansible>=2.4.2
 # Warning: Setup unresolved dependency: PyYAML required for Setup Module
-PyYAML>=3.12
+PyYAML>=3.12 #yaml
 # Warning: Setup unresolved dependency: ruamel.yaml required for Setup Module
 #ruamel.yaml>=0.15.35
 # Warning: Setup unresolved dependency: arrow used for some HRM functionality (currently just by IFRC)

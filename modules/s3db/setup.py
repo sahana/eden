@@ -460,6 +460,8 @@ class S3SetupModel(S3Model):
         chars = string.ascii_letters + string.digits + string.punctuation
         # Ensure that " isn't included otherwise we get a syntax error in 000_config.py
         chars = chars.replace('"', "")
+        # Ensure that @ isn't included as Web2Py doesn't like this
+        chars = chars.replace("@", "")
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
