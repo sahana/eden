@@ -618,7 +618,8 @@ class S3SetupModel(S3Model):
         """
 
         deployment_id = r.id
-        current.s3task.async("setup_instance_settings_read", args=[r.component_id, deployment_id])
+        current.s3task.async("setup_instance_settings_read",
+                             args = [r.component_id, deployment_id])
 
         current.session.confirmation = current.T("Settings Read")
 
@@ -1037,12 +1038,11 @@ def setup_instance_settings_read(instance_id, deployment_id):
     checked_settings = []
     cappend = checked_settings.append
     from gluon.serializers import json as jsons # Need support for T()
-    json_dumps = jsons.dumps
     for setting in file_settings:
         current_value = file_settings[setting]
         if not isinstance(current_value, basestring):
             # NB Storage & OrderedDict will come out as dict
-            current_value = json_dumps(current_value)
+            current_value = jsons(current_value)
         s = db_get(setting)
         if s:
             # We update even if not changed so as to update modified_on
