@@ -109,11 +109,14 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     # @ToDo: Allow use of Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
                            default = "https://github.com/sahana/eden",
                            label = T("Eden Repository"),
                            requires = IS_URL(),
+                           readable = False,
+                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Eden Repository"),
                                                            T("If you wish to use your own Fork, then you can set this here")

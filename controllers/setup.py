@@ -132,7 +132,7 @@ def deployment():
                 crud_form = S3SQLCustomForm("name",
                                             (T("Public URL"), "instance.url"),
                                             "sender",
-                                            "repo_url",
+                                            #"repo_url",
                                             "country",
                                             "template",
                                             "webserver_type",
