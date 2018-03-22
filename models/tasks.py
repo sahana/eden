@@ -481,7 +481,7 @@ if has_module("setup"):
 
         # Run the Task & return the result
         result = s3db.setup_instance_settings_read(instance_id, deployment_id)
-        #db.commit()
+        db.commit()
         return result # Always None
 
     tasks["setup_instance_settings_read"] = setup_instance_settings_read
