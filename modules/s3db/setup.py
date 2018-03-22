@@ -618,7 +618,7 @@ class S3SetupModel(S3Model):
         """
 
         deployment_id = r.id
-        setup_instance_settings_read(r.component_id, deployment_id)
+        current.s3task.async("setup_instance_settings_read", args=[r.component_id, deployment_id])
 
         current.session.confirmation = current.T("Settings Read")
 
@@ -767,7 +767,7 @@ class S3SetupModel(S3Model):
 
         task_id = current.s3task.schedule_task(name,
                                                vars = task_vars,
-                                               function_name = "deploy",
+                                               function_name = "setup_run_playbook",
                                                repeats = 1,
                                                timeout = 3600,
                                                sync_output = 300
@@ -1036,7 +1036,8 @@ def setup_instance_settings_read(instance_id, deployment_id):
     # Ensure that database looks like file
     checked_settings = []
     cappend = checked_settings.append
-    json_dumps = json.dumps
+    from gluon.serializers import json as jsons # Need support for T()
+    json_dumps = jsons.dumps
     for setting in file_settings:
         current_value = file_settings[setting]
         if not isinstance(current_value, basestring):

@@ -447,14 +447,15 @@ if has_module("req"):
 # -----------------------------------------------------------------------------
 if has_module("setup"):
 
-    def deploy(playbook,
-               hosts = ["127.0.0.1"],
-               tags = None,
-               private_key = None,
-               user_id = None,
-               ):
+    def setup_run_playbook(playbook,
+                           hosts = ["127.0.0.1"],
+                           tags = None,
+                           private_key = None,
+                           user_id = None,
+                           ):
         """
-            Deploy a new Eden instance by running an Ansible Playbook
+            Run an Ansible Playbook
+            - to Deploy a new Eden instance
         """
         if user_id:
             # Authenticate
@@ -465,7 +466,25 @@ if has_module("setup"):
         #db.commit()
         return result
 
-    tasks["deploy"] = deploy
+    tasks["setup_run_playbook"] = setup_run_playbook
+
+    def setup_instance_settings_read(instance_id,
+                                     deployment_id,
+                                     user_id = None,
+                                     ):
+        """
+           Read the Settings for an instance from models/000_config.py
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        # Run the Task & return the result
+        result = s3db.setup_instance_settings_read(instance_id, deployment_id)
+        #db.commit()
+        return result # Always None
+
+    tasks["setup_instance_settings_read"] = setup_instance_settings_read
 
 # -----------------------------------------------------------------------------
 if has_module("stats"):
