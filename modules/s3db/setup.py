@@ -29,8 +29,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 """
 __all__ = ("S3SetupModel",
-           "setup_run_playbook",
            "setup_instance_settings_read",
+           "setup_run_playbook",
            "setup_rheader",
            )
 
@@ -774,8 +774,8 @@ class S3SetupModel(S3Model):
                                                vars = task_vars,
                                                function_name = "setup_run_playbook",
                                                repeats = 1,
-                                               timeout = 3600,
-                                               sync_output = 300
+                                               timeout = 4800,
+                                               #sync_output = 300
                                                )
 
         return task_id
@@ -1009,6 +1009,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
     model = "%s/models/000_config.py" % folder
     code = getcfs(model, model, None)
     request = Request({})
+    request.controller = dontrunany
     request.folder = folder
     response = Response()
     session = Session()
