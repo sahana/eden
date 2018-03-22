@@ -1053,6 +1053,13 @@ def config(settings):
             restricted = False,
             module_type = None  # No Menu
         )),
+        ("setup", Storage(
+            name_nice = T("Setup"),
+            #description = "WebSetup",
+            restricted = True,
+            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+             module_type = None  # No Menu
+        )),
         ("sync", Storage(
             name_nice = T("Synchronization"),
             #description = "Synchronization",
