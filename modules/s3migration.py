@@ -107,9 +107,6 @@ class S3Migration(object):
         import s3cfg
         settings = s3cfg.S3Config()
 
-        # Pass into template
-        current.deployment_settings = settings
-
         # Read settings
         folder = current.request.folder
         model = "%s/models/000_config.py" % folder
