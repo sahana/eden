@@ -112,7 +112,7 @@ class S3Migration(object):
         model = "%s/models/000_config.py" % folder
         code = getcfs(model, model, None)
         request = Request({})
-        request.controller = dontrunany
+        request.controller = "dontrunany"
         request.folder = folder
         response = Response()
         session = Session()

@@ -1009,7 +1009,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
     model = "%s/models/000_config.py" % folder
     code = getcfs(model, model, None)
     request = Request({})
-    request.controller = dontrunany
+    request.controller = "dontrunany"
     request.folder = folder
     response = Response()
     session = Session()
