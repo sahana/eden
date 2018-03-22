@@ -1020,7 +1020,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
                 continue
             file_settings["%s.%s" % (section, setting)] = subsection[setting]
 
-    # Read current Database Settings
+    # Read Settings currently in Database
     db = current.db
     stable = current.s3db.setup_setting
     id_field = stable.id
@@ -1036,16 +1036,21 @@ def setup_instance_settings_read(instance_id, deployment_id):
     # Ensure that database looks like file
     checked_settings = []
     cappend = checked_settings.append
+    json_dumps = json.dumps
     for setting in file_settings:
+        current_value = file_settings[setting]
+        if not instance(current_value, basestring):
+            # NB Storage & OrderedDict will come out as dict
+            current_value = json_dumps(current_value)
         s = db_get(setting)
         if s:
             # We update even if not changed so as to update modified_on
-            db(id_field == s["id"]).update(current_value = s["current_value"])
+            db(id_field == s["id"]).update(current_value = current_value)
         else:
             stable.insert(deployment_id = deployment_id,
                           instance_id = instance_id,
                           setting = setting,
-                          current_value = file_settings[setting],
+                          current_value = current_value,
                           )
         cappend(setting)
 
