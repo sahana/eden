@@ -40,6 +40,7 @@ from uuid import uuid4
 from gluon import current, DAL, Field
 from gluon.cfs import getcfs
 from gluon.compileapp import build_environment,compile_application,remove_compiled_application,run_models_in
+from gluon.globals import Request, Response, Session
 from gluon.restricted import restricted
 from gluon.storage import Storage
 
@@ -110,17 +111,21 @@ class S3Migration(object):
         current.deployment_settings = settings
 
         # Read settings
-        request = current.request
-        model = "%s/models/000_config.py" % request.folder
+        folder = current.request.folder
+        model = "%s/models/000_config.py" % folder
         code = getcfs(model, model, None)
-        response = current.response
+        request = Request({})
+        request.folder = folder
+        response = Response()
+        session = Session()
+        #session.connect(request, response)
 
         # Needed as some Templates look at this & we don't wish to crash:
         response.s3 = Storage()
         response.s3.gis = Storage()
 
         # Global variables for 000_config.py
-        environment = build_environment(request, response, current.session)
+        environment = build_environment(request, response, session, store_current=False)
         environment["settings"] = settings
         # Some (older) 000_config.py also use "deployment_settings":
         environment["deployment_settings"] = settings

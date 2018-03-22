@@ -618,8 +618,9 @@ class S3SetupModel(S3Model):
         """
 
         deployment_id = r.id
-        current.s3task.async("setup_instance_settings_read",
-                             args = [r.component_id, deployment_id])
+        #current.s3task.async("setup_instance_settings_read",
+        #                     args = [r.component_id, deployment_id])
+        setup_instance_settings_read(r.component_id, deployment_id)
 
         current.session.confirmation = current.T("Settings Read")
 
@@ -997,13 +998,19 @@ def setup_instance_settings_read(instance_id, deployment_id):
 
     from gluon.cfs import getcfs
     from gluon.compileapp import build_environment
+    from gluon.globals import Request, Response, Session
     from gluon.restricted import restricted
 
     # Read current settings from file
-    request = current.request
-    model = "%s/models/000_config.py" % request.folder
+    folder = current.request.folder
+    model = "%s/models/000_config.py" % folder
     code = getcfs(model, model, None)
-    environment = build_environment(request, current.response, current.session)
+    request = Request({})
+    request.folder = folder
+    response = Response()
+    session = Session()
+    #session.connect(request, response)
+    environment = build_environment(request, response, session, store_current=False)
     environment["settings"] = Storage2()
     restricted(code, environment, layer=model)
     nested_settings = environment["settings"]
