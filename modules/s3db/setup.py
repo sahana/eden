@@ -1039,7 +1039,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
     json_dumps = json.dumps
     for setting in file_settings:
         current_value = file_settings[setting]
-        if not instance(current_value, basestring):
+        if not isinstance(current_value, basestring):
             # NB Storage & OrderedDict will come out as dict
             current_value = json_dumps(current_value)
         s = db_get(setting)
