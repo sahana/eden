@@ -5,7 +5,13 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3anonymize.py
 #
+import os
 import unittest
+
+try:
+    from cStringIO import StringIO # Faster, where available
+except ImportError:
+    from StringIO import StringIO
 
 from s3.s3anonymize import S3Anonymize
 
@@ -23,6 +29,7 @@ class S3AnonymizeTests(unittest.TestCase):
 
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
+        itable = s3db.pr_image
 
         # Create a person record
         person = {"pe_label": "KBT012",
@@ -45,7 +52,20 @@ class S3AnonymizeTests(unittest.TestCase):
                    }
         self.contact_id = ctable.insert(**contact)
 
-        # TODO Add an image record
+        # Add an image record
+        stream = StringIO()
+        stream.write("TEST")
+        filename = itable.image.store(stream, "test.txt")
+        filepath = os.path.join(current.request.folder, "uploads", filename)
+        image = {"pe_id": person["pe_id"],
+                 "image": filename,
+                 "description": "Example description",
+                 }
+        self.image_id = itable.insert(**image)
+
+        self.assertTrue(os.path.exists(filepath))
+        self.image_path = filepath
+
 
     def tearDown(self):
 
@@ -57,7 +77,11 @@ class S3AnonymizeTests(unittest.TestCase):
         db(ctable.id == self.contact_id).delete()
         self.contact_id = None
 
-        # TODO delete image records
+        # Delete image record
+        itable = s3db.pr_image
+        db(itable.id == self.image_id).delete()
+        self.image_path = None
+        self.image_id = None
 
         # Delete the person record
         ptable = s3db.pr_person
@@ -85,6 +109,7 @@ class S3AnonymizeTests(unittest.TestCase):
 
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
+        itable = s3db.pr_image
 
         rules = {"cleanup": {#"pe_label": self.generate_label,
                              "first_name": ("set", "Anonymous"),
@@ -137,6 +162,20 @@ class S3AnonymizeTests(unittest.TestCase):
         assertEqual(row.value, "")
         assertEqual(row.comments, None)
 
+        # Verify the image record
+        query = (itable.id == self.image_id)
+        row = db(query).select(itable.deleted,
+                               itable.image,
+                               itable.description,
+                               limitby = (0, 1),
+                               ).first()
+        assertTrue(row.deleted)
+        assertEqual(row.image, None)
+        assertEqual(row.description, None)
+
+        # Verify that the image file has been deleted
+        assertFalse(os.path.exists(self.image_path))
+
     # -------------------------------------------------------------------------
     def testApplyFieldRules(self):
         """ Test correct application of field rules """
@@ -147,7 +186,7 @@ class S3AnonymizeTests(unittest.TestCase):
 
         rules = {"first_name": ("set", "Anonymous"),
                  "last_name": "remove",
-                 "comments": "remove"
+                 "comments": "remove",
                  }
 
         S3Anonymize.apply_field_rules(table, (self.person_id,), rules)

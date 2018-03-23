@@ -289,7 +289,7 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     Field("host_ip", unique = True,
+                     Field("host_ip", unique=True, length=24,
                            default = "127.0.0.1",
                            label = T("IP Address"),
                            requires = IS_IPV4(),
