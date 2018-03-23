@@ -129,7 +129,7 @@ def deployment():
                 #r.resource.components.reset(("instance",))
 
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm((T("Public URL"), "production.url"),
+                crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
                                             "production.sender",
                                             #"repo_url",
                                             "country",
