@@ -89,26 +89,6 @@ class S3SetupModel(S3Model):
         #
         tablename = "setup_deployment"
         define_table(tablename,
-                     Field("name",
-                           default = "default",
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Name"),
-                                                           T("The name by which you wish to refer to the deployment")
-                                                           )
-                                         ),
-                           ),
-                     Field("sender",
-                           label = T("Email Sender"),
-                           requires = IS_EMPTY_OR(
-                                        IS_EMAIL()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Email Sender"),
-                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
-                                                           )
-                                         ),
-                           ),
                      # @ToDo: Allow use of Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
@@ -233,7 +213,7 @@ class S3SetupModel(S3Model):
                   create_next = URL(c="setup", f="deployment",
                                     args = ["[id]", "instance"],
                                     ),
-                  list_fields = ["name",
+                  list_fields = ["production.url",
                                  "country",
                                  "template",
                                  "webserver_type",
@@ -243,12 +223,21 @@ class S3SetupModel(S3Model):
                   )
 
         self.add_components(tablename,
-                            setup_instance = "deployment_id",
+                            setup_instance = (# All instances:
+                                              "deployment_id",
+                                              # Production instance:
+                                              {"name": "production",
+                                               "joinby": "deployment_id",
+                                               "filterby": {
+                                                   "type": 1,
+                                                   },
+                                               },
+                                              ),
                             setup_server = "deployment_id",
                             setup_setting = "deployment_id",
                             )
 
-        represent = S3Represent(lookup=tablename)
+        represent = setup_DeploymentRepresent()
 
         deployment_id = S3ReusableField("deployment_id", "reference %s" % tablename,
                                         label = T("Deployment"),
@@ -348,6 +337,16 @@ class S3SetupModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("URL"),
                                                            T("The Public URL which will be used to access the instance")
+                                                           )
+                                         ),
+                           ),
+                     Field("sender",
+                           label = T("Email Sender"),
+                           requires = IS_EMPTY_OR(
+                                        IS_EMAIL()),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Email Sender"),
+                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
                                                            )
                                          ),
                            ),
@@ -557,6 +556,7 @@ class S3SetupModel(S3Model):
         instance = db(itable.id == instance_id).select(itable.deployment_id,
                                                        itable.type,
                                                        itable.url,
+                                                       itable.sender,
                                                        limitby = (0, 1)
                                                        ).first()
 
@@ -585,7 +585,6 @@ class S3SetupModel(S3Model):
                                                            dtable.db_type,
                                                            dtable.db_password,
                                                            dtable.template,
-                                                           dtable.sender,
                                                            dtable.private_key,
                                                            dtable.remote_user,
                                                            limitby=(0, 1)
@@ -598,7 +597,7 @@ class S3SetupModel(S3Model):
                                             DB_SERVERS[deployment.db_type],
                                             INSTANCE_TYPES[instance.type],
                                             deployment.template,
-                                            deployment.sender,
+                                            instance.sender,
                                             protocol,
                                             sitename,
                                             deployment.private_key,
@@ -1115,5 +1114,57 @@ class Storage2(Storage):
             settings.import_template()
         """
         return
+
+# =============================================================================
+class setup_DeploymentRepresent(S3Represent):
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(setup_DeploymentRepresent, self).__init__(lookup = "setup_deployment",
+                                                        )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        dtable = self.table
+        itable = current.s3db.setup_instance
+
+        count = len(values)
+        if count == 1:
+            query = (dtable.id == values[0])
+        else:
+            query = (dtable.id.belongs(values))
+
+        left = itable.on((itable.deployment_id == dtable.id) & (itable.type == 1))
+        rows = current.db(query).select(dtable.id,
+                                        itable.url,
+                                        left = left,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if not hasattr(row, "setup_instance"):
+            return str(row.id)
+
+        return row.setup_instance.url
 
 # END =========================================================================

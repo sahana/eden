@@ -40,8 +40,7 @@ def index():
                         break
                 if country:
                     templates.remove("locations.%s" % country)
-            deployment_id = s3db.setup_deployment.insert(sender = settings.get_mail_sender(),
-                                                         # @ToDo:
+            deployment_id = s3db.setup_deployment.insert(# @ToDo:
                                                          #repo_url = ,
                                                          country = country,
                                                          template = templates,
@@ -53,6 +52,7 @@ def index():
             task_id = current.s3task.async("dummy")
             instance_id = s3db.setup_instance.insert(deployment_id = deployment_id,
                                                      url = settings.get_base_public_url(),
+                                                     sender = settings.get_mail_sender(),
                                                      task_id = task_id,
                                                      )
             #s3task.async("setup_instance_settings_read", args=[instance_id, deployment_id])
@@ -117,21 +117,20 @@ def deployment():
                         itable.type.requires = IS_IN_SET(types)
 
             elif r.method == "create":
-                # Include Production URL in main form
+                # Include Production URL/Sender in main form
 
                 # Redefine Component to make 1:1
-                s3db.add_components("setup_deployment",
-                                    setup_instance = {"joinby": "deployment_id",
-                                                      "multiple": False,
-                                                      },
+                #s3db.add_components("setup_deployment",
+                #                    setup_instance = {"joinby": "deployment_id",
+                #                                      "multiple": False,
+                #                                      },
                                     )
                 # Reset the component (we're past resource initialization)
-                r.resource.components.reset(("instance",))
+                #r.resource.components.reset(("instance",))
 
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("name",
-                                            (T("Public URL"), "instance.url"),
-                                            "sender",
+                crud_form = S3SQLCustomForm((T("Public URL"), "production.url"),
+                                            "production.sender",
                                             #"repo_url",
                                             "country",
                                             "template",
