@@ -1406,7 +1406,7 @@ class S3ComponentTabs(object):
         if r.resource.get_config("dynamic_components"):
             self.dynamic_tabs(r.resource.tablename)
 
-        tabs = tuple(t for t in self.tabs if t.active(r))
+        tabs = [t for t in self.tabs if t.active(r)]
 
         mtab = False
         if r.component is None:

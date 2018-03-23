@@ -1401,7 +1401,7 @@ class S3Resource(object):
         load_uids = hasattr(table, UID)
 
         if not skip:
-            skip = tuple()
+            skip = ()
 
         if fields or skip:
             s3 = current.response.s3
