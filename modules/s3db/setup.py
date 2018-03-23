@@ -231,6 +231,7 @@ class S3SetupModel(S3Model):
                                                "filterby": {
                                                    "type": 1,
                                                    },
+                                               "multiple": False,
                                                },
                                               ),
                             setup_server = "deployment_id",

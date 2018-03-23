@@ -124,7 +124,7 @@ def deployment():
                 #                    setup_instance = {"joinby": "deployment_id",
                 #                                      "multiple": False,
                 #                                      },
-                                    )
+                #                    )
                 # Reset the component (we're past resource initialization)
                 #r.resource.components.reset(("instance",))
 
