@@ -68,8 +68,15 @@ class S3Anonymize(S3Method):
     @classmethod
     def cascade(cls, table, record_ids, rules):
         """
-            TODO docstring
-            TODO complete implementation
+            Apply cascade of rules to anonymize records
+
+            @param table: the Table
+            @param record_ids: a set of record IDs
+            @param rules: the rules for this Table
+
+            @raises Exception: if the cascade failed due to DB constraints
+                               or invalid rules; callers should roll back
+                               the transaction if an exception is raised
         """
 
         s3db = current.s3db
@@ -89,34 +96,39 @@ class S3Anonymize(S3Method):
 
             for tablename, rule in cascade:
 
-                # TODO move ids from key/match into subfunction
-                # TODO allow explicit lookup function
+                lookup = rule.get("lookup")
+                if lookup:
+                    # Explicit look-up function, call with master table+rows,
+                    # as well as the name of the related table; should return
+                    # a set/tuple/list of record ids in the related table
+                    ids = lookup(table, rows, tablename)
+                else:
+                    key = rule.get("key")
+                    if not key:
+                        continue
 
-                key = rule.get("key")
-                if not key:
-                    continue
+                    field = rule.get("match", pkey)
+                    match = set(row[field] for row in rows)
 
-                field = rule.get("match", pkey)
-                match = set(row[field] for row in rows)
+                    # Resolve key and construct query
+                    resource = s3db.resource(tablename, components=[])
+                    rq = FS(key).belongs(match)
+                    query = rq.query(resource)
 
-                # Resolve key and construct query
-                resource = s3db.resource(tablename, components=[])
-                rq = FS(key).belongs(match)
-                query = rq.query(resource)
+                    # Construct necessary joins
+                    joins = S3Joins(tablename)
+                    joins.extend(rq._joins(resource)[0])
+                    joins = joins.as_list()
 
-                # Construct necessary joins
-                joins = S3Joins(tablename)
-                joins.extend(rq._joins(resource)[0])
-                joins = joins.as_list()
-
-                # Extract the target table IDs
-                target_rows = db(query).select(resource._id,
-                                               join = joins,
-                                               )
-                ids = set(row[resource._id.name] for row in target_rows)
+                    # Extract the target table IDs
+                    target_rows = db(query).select(resource._id,
+                                                   join = joins,
+                                                   )
+                    ids = set(row[resource._id.name] for row in target_rows)
 
                 # Recurse into related table
-                cls.cascade(resource.table, ids, rule)
+                if ids:
+                    cls.cascade(resource.table, ids, rule)
 
         # Apply field rules
         field_rules = rules.get("cleanup")
@@ -124,8 +136,6 @@ class S3Anonymize(S3Method):
             cls.apply_field_rules(table, record_ids, field_rules)
 
         # Apply deletion rules
-        # TODO override auth to enforce deletion?
-        #      => not necessary for the purpose of anonymization
         if rules.get("delete"):
             resource = s3db.resource(table, id=list(record_ids))
             resource.delete(cascade=True)
@@ -140,7 +150,10 @@ class S3Anonymize(S3Method):
             @param record_ids: the record IDs
             @param rules: the rules
 
-            TODO check success
+            @raises Exception: if the field rules could not be applied
+                               due to DB constraints or invalid rules;
+                               callers should roll back the transaction
+                               if an exception is raised
         """
 
         fields = [table[fn] for fn in rules if fn in table.fields]
@@ -150,6 +163,12 @@ class S3Anonymize(S3Method):
         # Select the records
         query = table._id.belongs(record_ids)
         rows = current.db(query).select(*fields)
+
+        pkey = table._id.name
+
+        s3db = current.s3db
+        update_super = s3db.update_super
+        onaccept = s3db.onaccept
 
         for row in rows:
             data = {}
@@ -185,7 +204,13 @@ class S3Anonymize(S3Method):
                         data[fieldname] = value
 
             if data:
-                row.update_record(**data)
-                # TODO update_super, onaccept
+                success = row.update_record(**data)
+                if not success:
+                    raise ValueError("Could not clean %s record" % table)
+
+                update_super(table, row)
+
+                data[pkey] = row[pkey]
+                onaccept(table, data, method="update")
 
 # END =========================================================================
