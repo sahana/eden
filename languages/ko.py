@@ -3001,7 +3001,7 @@
 'Search Budgets': '검색 예산',
 'Search Bundles': '번들 검색',
 'Search Camp Services': '캠프 서비스 검색',
-'Search Camp Types': ' 유형 검색',
+'Search Camp Types': '캠프 유형 검색',
 'Search Camps': '검색 camps',
 'Search Catalog Items': '카탈로그 항목 검색',
 'Search Catalogs': '카탈로그 검색',
