@@ -52,7 +52,7 @@
 '%(system_name)s - Verify Email': '%(system_name)s - 확인 할 메일',
 '%s rows deleted': '% s 행 삭제',
 '%s rows updated': '% s 행 업데이트',
-'& then click on the map below to adjust the Lat/Lon fields': & Lat/Lon 필드를 조정하려면 아래 지도를 누르십시오',
+'& then click on the map below to adjust the Lat/Lon fields': '& Lat/Lon 필드를 조정하려면 아래 지도를 누르십시오',
 '* Required Fields': '* 필수 필드',
 '0-15 minutes': '0-15 분',
 '1 Assessment': '1 평가',
