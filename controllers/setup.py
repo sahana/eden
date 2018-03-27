@@ -97,8 +97,10 @@ def deployment():
 
                 elif r.component.name == "instance":
                     if r.method in (None, "create"):
-                        # Remove already-deployed instances from dropdown
                         itable = db.setup_instance
+                        # Additional instances off by default
+                        itable.start.default = False
+                        # Remove already-deployed instances from dropdown
                         sctable = db.scheduler_task
                         query = (itable.deployment_id == r.id) & \
                                 (sctable.status == "COMPLETED")
@@ -152,28 +154,29 @@ def deployment():
     def postp(r, output):
         component = r.component
         if component is None:
-            if r.id and r.method in (None, "read") and "item" in output:
-                # Get scheduler status for the last queued task
-                itable = db.setup_instance
-                sctable = db.scheduler_task
+            #if r.id and r.method in (None, "read") and "item" in output:
+            #    # Get scheduler status for the last queued task
+            #    itable = db.setup_instance
+            #    sctable = db.scheduler_task
 
-                query = (db.setup_instance.deployment_id == r.id)
-                row = db(query).select(sctable.id,
-                                       sctable.status,
-                                       join = itable.on(itable.task_id == sctable.id),
-                                       orderby = itable.task_id
-                                       ).last()
-                if row:
-                    item_append = output["item"][0].append
-                    item_append(TR(TD(LABEL("Status"), _class="w2p_fl")))
-                    item_append(TR(TD(row.status)))
-                    if row.status == "FAILED":
-                        resource = s3db.resource("scheduler_run")
-                        task = db(resource.table.task_id == row.id).select().first()
-                        item_append(TR(TD(LABEL("Traceback"), _class="w2p_fl")))
-                        item_append(TR(TD(task.traceback)))
-                        item_append(TR(TD(LABEL("Output"), _class="w2p_fl")))
-                        item_append(TR(TD(task.run_output)))
+            #    query = (db.setup_instance.deployment_id == r.id)
+            #    row = db(query).select(sctable.id,
+            #                           sctable.status,
+            #                           join = itable.on(itable.task_id == sctable.id),
+            #                           orderby = itable.task_id
+            #                           ).last()
+            #    if row:
+            #        item_append = output["item"][0].append
+            #        item_append(TR(TD(LABEL("Status"), _class="w2p_fl")))
+            #        item_append(TR(TD(row.status)))
+            #        if row.status == "FAILED":
+            #            resource = s3db.resource("scheduler_run")
+            #            task = db(resource.table.task_id == row.id).select().first()
+            #            item_append(TR(TD(LABEL("Traceback"), _class="w2p_fl")))
+            #            item_append(TR(TD(task.traceback)))
+            #            item_append(TR(TD(LABEL("Output"), _class="w2p_fl")))
+            #            item_append(TR(TD(task.run_output)))
+            pass
 
         else:
             cname = component.name
@@ -181,7 +184,7 @@ def deployment():
                 # Normal Action Buttons
                 s3_action_buttons(r)
                 # Custom Action Buttons
-                table = r.component.table
+                table = component.table
                 deployment_id = r.id
                 query = (table.deployment_id == deployment_id) & \
                         (table.deleted == False)
@@ -204,6 +207,22 @@ def deployment():
                                            ),
                                 "_class": "action-btn",
                                 "label": s3_str(T("Read Settings")),
+                                "restrict": restrict_s,
+                                },
+                               {"url": URL(c = module,
+                                           f = "deployment",
+                                           args = [deployment_id, "instance", "[id]", "start"],
+                                           ),
+                                "_class": "action-btn",
+                                "label": s3_str(T("Start")),
+                                "restrict": restrict_s,
+                                },
+                               {"url": URL(c = module,
+                                           f = "deployment",
+                                           args = [deployment_id, "instance", "[id]", "stop"],
+                                           ),
+                                "_class": "action-btn",
+                                "label": s3_str(T("Stop")),
                                 "restrict": restrict_s,
                                 },
                                #{"url": URL(c = module,
@@ -232,7 +251,7 @@ def deployment():
                 # Normal Action Buttons
                 s3_action_buttons(r)
                 # Custom Action Buttons
-                table = r.component.table
+                table = component.table
                 deployment_id = r.id
                 query = (table.deployment_id == deployment_id) & \
                         (table.deleted == False)

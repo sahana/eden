@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Sahana Eden Menu Structure and Layout
 
@@ -446,6 +447,13 @@ class S3OptionsMenu(object):
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
         return M(restrict=[ADMIN])(
+                    M("Setup", c="setup", f="deployment")(
+                        #M("Create", m="create"),
+                        #M("Servers", f="server")(
+                        #),
+                        #M("Instances", f="instance")(
+                        #),
+                    ),
                     M("Settings", c="admin", f="setting")(
                         settings_messaging,
                     ),
@@ -1871,21 +1879,10 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def setup():
+    def setup(self):
         """ Setup """
 
-        return M(c="setup")(
-                    M("Deployments", f="deployment")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Servers", f="server")(
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Instances", f="instance")(
-                    #    M("Create", m="create"),
-                    #),
-                )
+        return self.admin()
 
     # -------------------------------------------------------------------------
     @staticmethod
