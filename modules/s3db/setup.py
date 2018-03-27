@@ -877,10 +877,13 @@ class S3SetupModel(S3Model):
                                          )
 
         # Run the Playbook
-        current.s3task.async("setup_run_playbook",
-                             vars = task_vars,
-                             timeout = 3600,
-                             )
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = 1,
+                                     timeout = 4800,
+                                     #sync_output = 300
+                                     )
 
         # Update the DB to show that the setting has been applied
         # @ToDo: Do this as a callback from the async task
@@ -1173,10 +1176,13 @@ def setup_instance_method(instance_id, method="start"):
                                      )
 
     # Run the Playbook
-    current.s3task.async("setup_run_playbook",
-                         vars = task_vars,
-                         timeout = 3600,
-                         )
+    current.s3task.schedule_task(name,
+                                 vars = task_vars,
+                                 function_name = "setup_run_playbook",
+                                 repeats = 1,
+                                 timeout = 4800,
+                                 #sync_output = 300
+                                 )
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
