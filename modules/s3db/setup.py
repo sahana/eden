@@ -771,7 +771,7 @@ class S3SetupModel(S3Model):
         current.session.confirmation = current.T("Instance Started")
 
         redirect(URL(c="setup", f="deployment",
-                     args = [deployment_id, "instance"]),
+                     args = [r.id, "instance"]),
                      )
 
     # -------------------------------------------------------------------------
@@ -786,7 +786,7 @@ class S3SetupModel(S3Model):
         current.session.confirmation = current.T("Instance Stopped")
 
         redirect(URL(c="setup", f="deployment",
-                     args = [deployment_id, "instance"]),
+                     args = [r.id, "instance"]),
                      )
 
     # -------------------------------------------------------------------------
