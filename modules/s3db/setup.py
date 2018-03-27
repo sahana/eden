@@ -1148,6 +1148,8 @@ def setup_instance_method(instance_id, method="start"):
                                                        ).first()
 
     # Build Playbook data structure
+    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+
     playbook = [{"hosts": host,
                  "connection": "local", # @ToDo: Don't assume this
                  "remote_user": deployment.remote_user,
