@@ -351,8 +351,9 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     # @ToDo: Action post-deployment changes
                      Field("start", "boolean",
-                           default = True,
+                           default = True, # default = False in Controller for additional instances
                            label = T("Start at Boot"),
                            represent = s3_yes_no_represent,
                            ),
