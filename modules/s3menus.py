@@ -273,6 +273,7 @@ class S3MainMenu(object):
         if has_role("ADMIN"):
             translate = settings.has_module("translate")
             menu_admin = MM(name_nice, c="admin", **attr)(
+                                MM("Setup", c="setup"),
                                 MM("Settings", f="setting"),
                                 MM("Users", f="user"),
                                 MM("Person Registry", c="pr"),

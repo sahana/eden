@@ -354,7 +354,7 @@ class S3SetupModel(S3Model):
                      Field("start", "boolean",
                            default = True,
                            label = T("Start at Boot"),
-                           requires = s3_yes_no_represent,
+                           represent = s3_yes_no_represent,
                            ),
                      Field("task_id", "reference scheduler_task",
                            label = T("Scheduled Task"),
