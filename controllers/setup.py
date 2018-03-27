@@ -77,24 +77,24 @@ def deployment():
                 #               )
 
                 # Check if no scheduler task is pending
-                itable = s3db.setup_instance
-                sctable = db.scheduler_task
-                query = (itable.deployment_id == r.id) & \
-                        ((sctable.status != "COMPLETED") & \
-                        (sctable.status  != "FAILED")) & \
-                        (itable.task_id == sctable.id)
+                #itable = s3db.setup_instance
+                #sctable = db.scheduler_task
+                #query = (itable.deployment_id == r.id) & \
+                #        ((sctable.status != "COMPLETED") & \
+                #        (sctable.status  != "FAILED")) & \
+                #        (itable.task_id == sctable.id)
 
-                exists = db(query).select(itable.task_id,
-                                          limitby = (0, 1)
-                                          ).first()
+                #exists = db(query).select(itable.task_id,
+                #                          limitby = (0, 1)
+                #                          ).first()
 
-                if exists:
-                    # Disable creation of new instances
-                    s3db.configure("setup_instance",
-                                   insertable = False
-                                   )
+                #if exists:
+                #    # Disable creation of new instances
+                #    s3db.configure("setup_instance",
+                #                   insertable = False
+                #                   )
 
-                elif r.component.name == "instance":
+                if r.component.name == "instance":
                     if r.method in (None, "create"):
                         itable = db.setup_instance
                         # Additional instances off by default

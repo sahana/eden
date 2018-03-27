@@ -1156,7 +1156,7 @@ def setup_instance_method(instance_id, method="start"):
                  "become_method": "sudo",
                  "become_user": "root",
                  "vars": {"web_server": WEB_SERVERS[deployment.webserver_type],
-                          "type": instance.type,
+                          "type": INSTANCE_TYPES[instance.type],
                           },
                  "roles": [{ "role": "%s/%s" % (roles_path, method) },
                            ]
