@@ -629,7 +629,7 @@ class S3SetupModel(S3Model):
         template = deployment.template
         sender = instance.sender
         start = instance.start
-        remote_user = deployment.remote_user,
+        remote_user = deployment.remote_user
 
         if len(hosts) == 1:
             # All-in-one deployment
