@@ -55,7 +55,6 @@ def index():
                                                      sender = settings.get_mail_sender(),
                                                      task_id = task_id,
                                                      )
-            #s3task.async("setup_instance_settings_read", args=[instance_id, deployment_id])
             s3db.setup_instance_settings_read(instance_id, deployment_id)
 
             # Redirect to the list of deployments

@@ -750,8 +750,7 @@ class S3SetupModel(S3Model):
         """
 
         deployment_id = r.id
-        #current.s3task.async("setup_instance_settings_read",
-        #                     args = [r.component_id, deployment_id])
+
         setup_instance_settings_read(r.component_id, deployment_id)
 
         current.session.confirmation = current.T("Settings Read")
@@ -1169,7 +1168,7 @@ def setup_instance_method(instance_id, method="start"):
                                      playbook,
                                      [host],
                                      tags = None,
-                                     private_key = private_key,
+                                     private_key = deployment.private_key,
                                      )
 
     # Run the Playbook
