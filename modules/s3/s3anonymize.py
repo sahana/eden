@@ -27,10 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import json
+
 from gluon import current
 
+from s3dal import original_tablename
 from s3rest import S3Method
 from s3query import FS, S3Joins
+from s3validators import JSONERRORS
 
 __all__ = ("S3Anonymize",
            )
@@ -57,13 +61,13 @@ class S3Anonymize(S3Method):
         if not record_id:
             r.error(400, "No target record specified")
         if not self.permitted(table, record_id):
-            r.error(403, "Operation not permitted")
+            r.unauthorized()
 
         if r.representation == "json":
             if r.http == "GET":
                 output = self.options(table, record_id)
             elif r.http == "POST":
-                output = self.anonymize(table, record_id)
+                output = self.anonymize(r, table, record_id)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         else:
@@ -76,14 +80,83 @@ class S3Anonymize(S3Method):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def anonymize(cls, table, record_id):
+    def anonymize(cls, r, table, record_id):
         """
-            TODO implement
+            Handle POST (anonymize-request), i.e. anonymize the target record
+
+            @param r: the S3Request
+            @param table: the target Table
+            @param record_id: the target record ID
+
+            @returns: JSON message
         """
 
-        # return JSON message
+        # Read+parse body JSON
+        s = r.body
+        s.seek(0)
+        try:
+            options = json.load(s)
+        except JSONERRORS:
+            options = None
+        if not isinstance(options, dict):
+            r.error(400, "Invalid request options")
 
-        pass
+        # TODO Verify action key against session
+
+        # Get the available rules from settings
+        rules = current.s3db.get_config(table, "anonymize")
+        if isinstance(rules, (tuple, list)):
+            names = set(rule.get("name") for rule in rules)
+            names.discard(None)
+        else:
+            # Single rule
+            rules["name"] = "default"
+            names = (rules["name"],)
+            rules = [rules]
+
+        # Get selected rules from options
+        selected = options.get("apply")
+        if not isinstance(selected, list):
+            r.error(400, "Invalid request options")
+
+        # Validate selected rules
+        for name in selected:
+            if name not in names:
+                r.error(400, "Invalid rule: %s" % name)
+
+        # Merge selected rules
+        cleanup = {}
+        cascade = []
+        for rule in rules:
+            name = rule.get("name")
+            if not name or name not in selected:
+                continue
+            field_rules = rule.get("cleanup")
+            if field_rules:
+                cleanup.update(field_rules)
+            cascade_rules = rule.get("cascade")
+            if cascade_rules:
+                cascade.extend(cascade_rules)
+
+        # Apply selected rules
+        if cleanup or cascade:
+            rules = {"cleanup": cleanup, "cascade": cascade}
+
+            # NB will raise (+roll back) if configuration is invalid
+            cls.cascade(table, (record_id,), rules)
+
+            # Audit anonymize
+            prefix, name = original_tablename(table).split("_", 1)
+            current.audit("anonymize", prefix, name,
+                          record = record_id,
+                          representation = "html",
+                          )
+
+            output = current.xml.json_message(updated=record_id)
+        else:
+            output = current.xml.json_message(msg="No applicable rules found")
+
+        return output
 
     # -------------------------------------------------------------------------
     @classmethod
