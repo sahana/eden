@@ -40,29 +40,106 @@ class S3Anonymize(S3Method):
     """ REST Method to Anonymize Person Records """
 
     def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+
+            @return: output data (JSON)
+        """
 
         output = {}
 
+        table, record_id = self.get_target_id()
+        if not table:
+            r.error(405, "Anonymizing not configured for resource")
+        if not record_id:
+            r.error(400, "No target record specified")
+        if not self.permitted(table, record_id):
+            r.error(403, "Operation not permitted")
+
         if r.representation == "json":
             if r.http == "GET":
-                pass
+                output = self.options(table, record_id)
             elif r.http == "POST":
-                pass
+                output = self.anonymize(table, record_id)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
 
+        # Set Content Type
+        current.response.headers["Content-Type"] = "application/json"
+
         return output
 
     # -------------------------------------------------------------------------
     @classmethod
-    def anonymize(cls, tablename, record_id, rules=None):
+    def anonymize(cls, table, record_id):
         """
             TODO implement
         """
 
+        # return JSON message
+
         pass
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def options(cls, table, record_id):
+        """
+            TODO implement
+        """
+
+        # return JSON options
+
+        pass
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def action_button(cls, table, record_id):
+        """
+            TODO implement
+        """
+
+        # Generate action-button, inject JS
+
+        # Store button UID in session?
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def get_target_id(self):
+        """
+            Determine the target table and record ID
+
+            @return: tuple (table, record_id)
+        """
+
+        resource = self.resource
+
+        rules = resource.get_config("anonymize")
+        if not rules:
+            return None, None
+
+        return resource.table, self.record_id
+
+    # -------------------------------------------------------------------------
+    def permitted(self, table, record_id):
+        """
+            Check permissions to anonymize the target record
+
+            @param table: the target Table
+            @param record_id: the target record ID
+
+            @return: True|False
+        """
+
+        has_permission = current.auth.s3_has_permission
+
+        return has_permission("update", table, record_id=record_id) and \
+               has_permission("delete", table, record_id=record_id)
 
     # -------------------------------------------------------------------------
     @classmethod
