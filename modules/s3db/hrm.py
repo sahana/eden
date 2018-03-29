@@ -753,7 +753,7 @@ class S3HRModel(S3Model):
                                                   },
                            )
 
-        if group == "volunteer":
+        if group in ("volunteer", None):
             add_components(tablename,
                            # Programmes
                            hrm_programme_hours = {"link": "pr_person",
@@ -814,7 +814,45 @@ class S3HRModel(S3Model):
         if teams:
             report_fields.append((T(teams), "group_membership.group_id"))
 
-        if group == "volunteer":
+        if mix_staff:
+            crud_fields.insert(1, "site_id")
+            crud_fields.insert(2, "type")
+            posn = 4
+            if use_code:
+                posn += 1
+            crud_fields.insert(posn, "job_title_id")
+            if settings.get_hrm_staff_departments() or \
+               settings.get_hrm_vol_departments():
+                crud_fields.insert(posn, "department_id")
+            vol_experience = settings.get_hrm_vol_experience()
+            if vol_experience in ("programme", "both"):
+                crud_fields.insert(posn, S3SQLInlineComponent("programme_hours",
+                                                              label = "",
+                                                              fields = ["programme_id",
+                                                                        ],
+                                                              link = False,
+                                                              multiple = False,
+                                                              ))
+            elif vol_experience == "activity":
+                report_fields.append("person_id$activity_hours.activity_hours_activity_type.activity_type_id")
+            crud_fields.append("details.volunteer_type")
+            if settings.get_hrm_vol_availability_tab() is False and \
+               settings.get_pr_person_availability_options() is not None:
+                crud_fields.append("person_availability.options")
+            crud_fields.append("details.card")
+            vol_active = settings.get_hrm_vol_active()
+            if vol_active and not callable(vol_active):
+                # Set manually
+                crud_fields.append("details.active")
+            report_fields.extend(("site_id",
+                                  "department_id",
+                                  "job_title_id",
+                                  (T("Age Group"), "person_id$age_group"),
+                                  "person_id$education.level",
+                                  ))
+            # Needed for Age Group VirtualField to avoid extra DB calls
+            report_fields_extra = ["person_id$date_of_birth"]
+        elif group == "volunteer":
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "person_id$address.location_id" # When not using S3Track()
             if settings.get_hrm_vol_roles():
@@ -859,9 +897,6 @@ class S3HRModel(S3Model):
             #location_context = "site_id$location_id" # When not using S3Track()
             crud_fields.insert(1, "site_id")
             posn = 3
-            if mix_staff:
-                crud_fields.insert(2, "type")
-                posn += 1
             if use_code:
                 posn += 1
             crud_fields.insert(posn, "job_title_id")
@@ -4707,6 +4742,7 @@ class S3HRProgrammeModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           represent = lambda name: T(name),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(64),
                                        ],
@@ -4745,7 +4781,7 @@ class S3HRProgrammeModel(S3Model):
         else:
             filter_opts = (None,)
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
             label = T("Program"),
             ondelete = "SET NULL",
@@ -7194,7 +7230,7 @@ def hrm_group_controller():
                                    )
 
 # =============================================================================
-def hrm_human_resource_controller(extra_filter=None):
+def hrm_human_resource_controller(extra_filter = None):
     """
         Human Resources Controller, defined in the model for use from
         multiple controllers for unified menus
@@ -7440,8 +7476,8 @@ def hrm_human_resource_controller(extra_filter=None):
                     T("Staff & Volunteers")
 
             # Filter Widgets
-            filter_widgets = hrm_human_resource_filters(resource_type="both",
-                                                        hrm_type_opts=s3db.hrm_type_opts)
+            filter_widgets = hrm_human_resource_filters(resource_type = "both",
+                                                        hrm_type_opts = s3db.hrm_type_opts)
 
             # List Fields
             list_fields = ["id",
@@ -9619,9 +9655,9 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def hrm_human_resource_filters(resource_type=None,
-                               module=None,
-                               hrm_type_opts=None):
+def hrm_human_resource_filters(resource_type = None,
+                               module = None,
+                               hrm_type_opts = None):
     """
         Get filter widgets for human resources
 
@@ -9710,7 +9746,7 @@ def hrm_human_resource_filters(resource_type=None,
                                    ))
 
     # Active / Activity / Programme filters (volunteer only)
-    if module == "vol" or resource_type == "volunteer":
+    if module == "vol" or resource_type in ("both", "volunteer"):
         vol_active = settings.get_hrm_vol_active()
         if vol_active:
             # Active filter

@@ -3419,7 +3419,7 @@ Thank you"""
                         f = table.site_id
                         f.readable = f.writable = False
                     # Use default form (legacy)
-                    s3db.clear_config("hrm_human_resource", "crud_form")
+                    #s3db.clear_config("hrm_human_resource", "crud_form")
 
             elif not component_name:
                 s3db.configure("pr_person",
