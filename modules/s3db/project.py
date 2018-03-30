@@ -8775,9 +8775,7 @@ class project_IndicatorSummaryReport(S3Method):
         try:
             import xlwt
         except ImportError:
-            error = S3XLS.ERROR.XLWT_ERROR
-            current.log.error(error)
-            r.error(503, error)
+            r.error(503, S3XLS.ERROR.XLWT_ERROR)
 
         T = current.T
 

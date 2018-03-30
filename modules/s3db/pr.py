@@ -465,9 +465,7 @@ class PRPersonEntityModel(S3Model):
         value = get_vars.term or get_vars.value or get_vars.q or None
 
         if not value:
-            output = current.xml.json_message(False, 400,
-                                              "No search term specified")
-            raise HTTP(400, body=output)
+            r.error(400, "No search term specified")
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
@@ -1527,8 +1525,7 @@ class PRPersonModel(S3Model):
         value = get_vars.term or get_vars.value or get_vars.q or None
 
         if not value:
-            output = current.xml.json_message(False, 400, "No value provided!")
-            raise HTTP(400, body=output)
+            r.error(400, "No value provided!")
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
@@ -3190,10 +3187,10 @@ class PRForumModel(S3Model):
 
         forum_id = r.id
         if not forum_id:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         user = current.auth.user
         if not user:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         s3db = current.s3db
@@ -3241,10 +3238,10 @@ class PRForumModel(S3Model):
 
         forum_id = r.id
         if not forum_id:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         user = current.auth.user
         if not user:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         s3db = current.s3db
         ptable = s3db.pr_person
@@ -3284,10 +3281,10 @@ class PRForumModel(S3Model):
 
         forum_id = r.id
         if not forum_id:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         user = current.auth.user
         if not user:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         s3db = current.s3db

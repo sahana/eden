@@ -3566,7 +3566,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            raise HTTP(501, "bad method")
+            r.error(501, "bad method")
 # =============================================================================
 def inv_tabs(r):
     """

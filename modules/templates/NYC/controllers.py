@@ -705,7 +705,7 @@ class PersonalDashboard(S3Method):
                 current.response.title = T("Personal Dashboard")
             return output
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod

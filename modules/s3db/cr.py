@@ -2429,7 +2429,7 @@ def cr_notification_dispatcher(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.messages.BADMETHOD)
+        r.error(501, current.messages.BADMETHOD)
 
 # =============================================================================
 class cr_AssignUnit(S3CRUD):
@@ -2449,7 +2449,7 @@ class cr_AssignUnit(S3CRUD):
         try:
             person_id = int(r.get_vars["person_id"])
         except:
-            raise HTTP(400, current.messages.BAD_REQUEST)
+            r.error(400, current.messages.BAD_REQUEST)
 
         self.settings = current.response.s3.crud
         sqlform = self._config("crud_form")

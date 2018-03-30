@@ -1132,8 +1132,7 @@ class S3HRModel(S3Model):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            output = current.xml.json_message(False, 400, "No value provided!")
-            raise HTTP(400, body=output)
+            r.error(400, "No value provided!")
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
@@ -1223,8 +1222,7 @@ class S3HRModel(S3Model):
 
         hrm_id = r.id
         if not hrm_id:
-            output = current.xml.json_message(False, 400, "No id provided!")
-            raise HTTP(400, body=output)
+            r.error(400, "No id provided!")
 
         db = current.db
         s3db = current.s3db
@@ -8679,7 +8677,7 @@ class hrm_CV(S3Method):
             return output
 
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class hrm_Record(S3Method):
@@ -8725,10 +8723,10 @@ class hrm_Record(S3Method):
         """
 
         if r.name != "person" or not r.id or r.component:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         representation = r.representation
         if representation not in ("html", "aadata"):
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         r.customise_resource("hrm_human_resource")
 

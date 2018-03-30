@@ -1065,7 +1065,7 @@ class S3DeploymentAlertModel(S3Model):
 
         alert_id = r.id
         if r.representation != "html" or not alert_id or r.component:
-            raise HTTP(501, current.ERROR.BADMETHOD)
+            r.error(501, current.ERROR.BADMETHOD)
 
         auth = current.auth
 

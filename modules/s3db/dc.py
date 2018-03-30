@@ -754,6 +754,10 @@ class DataCollectionModel(S3Model):
             msg_record_deleted = T("Data Collection Target deleted"),
             msg_list_empty = T("No Data Collection Targets currently registered"))
 
+        self.set_method("dc", "target",
+                        method = "results",
+                        action = dc_TargetReport())
+
         target_id = S3ReusableField("target_id", "reference %s" % tablename,
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "dc_target.id")

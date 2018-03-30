@@ -78,7 +78,7 @@ class custom_WACOP(S3CRUD):
         if r.representation == "html":
             return self._html(r, **attr)
 
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def _html(self, r, **attr):
@@ -2544,7 +2544,7 @@ def group_Notify(r, **attr):
 
     forum_id = r.id
     if not forum_id or r.http != "POST":
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     tablename = "pr_forum"
     controller, function = tablename.split("_", 1)

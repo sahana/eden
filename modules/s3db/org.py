@@ -1067,9 +1067,7 @@ class S3OrganisationModel(S3Model):
         value = s3_unicode(value).lower().strip()
 
         if not value:
-            output = current.xml.json_message(False, 400,
-                            "Missing option! Require value")
-            raise HTTP(400, body=output)
+            r.error(400, "Missing option! Require value")
 
         response = current.response
         resource = r.resource
@@ -3428,8 +3426,7 @@ class S3SiteModel(S3Model):
 
         site_id = r.id
         if not site_id:
-            output = current.xml.json_message(False, 400, "No id provided!")
-            raise HTTP(400, body=output)
+            r.error(400, "No id provided!")
 
         db = current.db
         s3db = current.s3db
@@ -3479,9 +3476,7 @@ class S3SiteModel(S3Model):
         value = s3_unicode(value).lower().strip()
 
         if not value:
-            output = current.xml.json_message(False, 400,
-                            "Missing option! Require value")
-            raise HTTP(400, body=output)
+            r.error(400, "Missing option! Require value")
 
         # Construct query
         query = (FS("name").lower().like(value + "%"))

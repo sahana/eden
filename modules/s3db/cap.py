@@ -4247,7 +4247,7 @@ class CAPImportFeed(S3Method):
             return output
 
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # -----------------------------------------------------------------------------
 class cap_AssignArea(S3Method):
