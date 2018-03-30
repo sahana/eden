@@ -1422,6 +1422,31 @@ class IS_FLOAT_AMOUNT_Tests(unittest.TestCase):
         samples = (("123 456 789 012,00", 123456789012.0),
                    ("0,00", 0.0),
                    ("1 305,00", 1305.0),
+                   (12.345, 12.345),
+                   )
+
+        assertEqual = self.assertEqual
+        for inputstr, expected in samples:
+            value, error = validate(inputstr)
+            assertEqual(value, expected)
+            assertEqual(error, None)
+
+    # -------------------------------------------------------------------------
+    def test_ambiguous_validation(self):
+        """ Test the ambiguous validation """
+
+        settings = current.deployment_settings
+
+        settings.L10n.decimal_separator = ","
+        settings.L10n.thousands_separator = "."
+        settings.L10n.thousands_grouping = 3
+
+        validate = IS_FLOAT_AMOUNT()
+
+        samples = (("123.456.789.012,00", 123456789012.0),
+                   ("0,00", 0.0),
+                   (u"1,305.234", 1.305234),
+                   (12.345, 12.345),
                    )
 
         assertEqual = self.assertEqual
