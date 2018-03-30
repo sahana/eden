@@ -928,7 +928,7 @@ class S3ProjectModel(S3Model):
             response.view = "map.html"
             return output
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1053,7 +1053,7 @@ class S3ProjectModel(S3Model):
             return output
 
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3ProjectActivityModel(S3Model):
@@ -6810,7 +6810,7 @@ class project_SummaryReport(S3Method):
             elif representation == "pdf":
                 output = self.pdf(r, **attr)
                 return output
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def _extract(self, r, **attr):
@@ -8016,7 +8016,7 @@ class project_SummaryReport(S3Method):
             -the actual report
         """
 
-        from ..s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
+        from s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
 
         T = current.T
         db = current.db
@@ -8397,7 +8397,7 @@ class project_IndicatorSummaryReport(S3Method):
             elif r.representation == "xls":
                 output = self.xls(r, **attr)
                 return output
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def _extract(self, r, **attr):
@@ -8770,14 +8770,14 @@ class project_IndicatorSummaryReport(S3Method):
             XLS Representation
         """
 
-        from ..s3.s3codecs import S3XLS
+        from s3.s3codecs import S3XLS
 
         try:
             import xlwt
         except ImportError:
             error = S3XLS.ERROR.XLWT_ERROR
             current.log.error(error)
-            raise HTTP(503, body=error)
+            r.error(503, error)
 
         T = current.T
 
@@ -9436,7 +9436,7 @@ def project_ProgressReport(r, **attr):
         return output
 
     else:
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 #def project_BudgetProgressReport(r, **attr):
@@ -9472,7 +9472,7 @@ def project_ProgressReport(r, **attr):
 #        return output
 #
 #    else:
-#        raise HTTP(405, current.ERROR.BAD_METHOD)
+#        r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 #def project_IndicatorProgressReport(r, **attr):
@@ -9508,7 +9508,7 @@ def project_ProgressReport(r, **attr):
 #        return output
 #
 #    else:
-#        raise HTTP(405, current.ERROR.BAD_METHOD)
+#        r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3ProjectProgrammeModel(S3Model):
@@ -11647,7 +11647,7 @@ class S3ProjectTaskModel(S3Model):
 
         task_id = r.id
         if not task_id or len(r.args) < 3:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         s3db = current.s3db
@@ -11697,7 +11697,7 @@ class S3ProjectTaskModel(S3Model):
 
         task_id = r.id
         if not task_id or len(r.args) < 3:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         s3db = current.s3db
@@ -11774,7 +11774,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -13915,7 +13915,7 @@ class project_Details(S3Method):
             return output
 
         else:
-            raise HTTP(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================
 

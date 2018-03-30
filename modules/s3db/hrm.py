@@ -4742,7 +4742,7 @@ class S3HRProgrammeModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
-                           represent = lambda name: T(name),
+                           represent = T,
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(64),
                                        ],
