@@ -668,7 +668,14 @@ var S3EnableNavigateAwayConfirm = function() {
             S3.showAlert(i18n.ajax_500, 'error');
         } else {
             // Other error or server unreachable
-            S3.showAlert(i18n.ajax_dwn, 'error');
+            var responseJSON = jqXHR.responseJSON;
+            if (responseJSON && responseJSON.message) {
+                // A json_message with a specific error text
+                S3.showAlert(responseJSON.message, 'error');
+            } else {
+                // HTTP status code only
+                S3.showAlert(i18n.ajax_dwn, 'error');
+            }
         }
 
         // Apply the caller's error callback

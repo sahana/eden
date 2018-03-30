@@ -505,6 +505,41 @@ def config(settings):
                 if field.name != "shelter_unit_id" or not is_staff:
                     field.writable = False
 
+        if r.controller == "dvr" and \
+           r.name == "person" and not r.component:
+
+            # Configure anonymize-method
+            # TODO make standard via setting
+            from s3.s3anonymize import S3Anonymize
+            s3db.set_method("pr", "person",
+                            method = "anonymize",
+                            action = S3Anonymize,
+                            )
+
+            # Configure anonymize-rules
+            # TODO elaborate
+            rules = [{"name": "default",
+                      "title": "Names",
+                      "fields": {"first_name": ("set", "-"),
+                                 "last_name": ("set", "-"),
+                                 }
+                      },
+                      {"name": "contacts",
+                       "title": "Contact Details",
+                       "cascade": [("pr_contact", {"key": "pe_id",
+                                                   "match": "pe_id",
+                                                   "fields": {"value": ("set", ""),
+                                                              "comments": "remove",
+                                                              },
+                                                   "delete": True,
+                                                   }),
+                                   ],
+                       },
+                     ]
+            s3db.configure("pr_person",
+                           anonymize = rules,
+                           )
+
         # Configure components to inherit realm_entity
         # from the person record
         s3db.configure("pr_person",
@@ -903,6 +938,33 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.controller == "dvr" and \
+               not r.component and r.record and \
+               r.method in (None, "update", "read") and \
+               isinstance(output, dict):
+
+                # Add anonymize-button
+                if "buttons" not in output:
+                    buttons = output["buttons"] = {}
+                else:
+                    buttons = output["buttons"]
+
+                from s3.s3anonymize import S3AnonymizeWidget
+                buttons["delete_btn"] = S3AnonymizeWidget.widget(
+                                            r,
+                                            _class="action-btn anonymize-btn",
+                                            )
+
+            return output
+        s3.postp = custom_postp
 
         # Custom rheader tabs
         if current.request.controller == "dvr":

@@ -277,6 +277,25 @@ ul.s3-inline-link {
     vertical-align: super;
 }
 
+/* AnonymizeWidget */
+form.anonymize-form,
+.anonymize-success {
+    padding: 1rem;
+}
+.anonymize-select,
+.anonymize-confirm {
+    margin-left: 1rem;
+}
+.anonymize-buttons {
+    margin-top: 1rem;
+}
+.anonymize-btn {
+    background-color: $alert-color;
+    &:hover {
+        background-color: $alert-button-bg-hover;
+    }
+}
+
 /* Data lists */
 .card_1_line {
     margin-bottom: 0;

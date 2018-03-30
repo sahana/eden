@@ -1308,15 +1308,42 @@ ul.s3-inline-link {
   vertical-align: super;
 }
 
-/* Data lists */
+/* AnonymizeWidget */
 /* line 281, ../scss/custom/_widgets.scss */
+form.anonymize-form,
+.anonymize-success {
+  padding: 1rem;
+}
+
+/* line 285, ../scss/custom/_widgets.scss */
+.anonymize-select,
+.anonymize-confirm {
+  margin-left: 1rem;
+}
+
+/* line 289, ../scss/custom/_widgets.scss */
+.anonymize-buttons {
+  margin-top: 1rem;
+}
+
+/* line 292, ../scss/custom/_widgets.scss */
+.anonymize-btn {
+  background-color: #D92C20;
+}
+/* line 294, ../scss/custom/_widgets.scss */
+.anonymize-btn:hover {
+  background-color: #ae231a;
+}
+
+/* Data lists */
+/* line 300, ../scss/custom/_widgets.scss */
 .card_1_line {
   margin-bottom: 0;
   overflow: hidden;
   height: auto;
 }
 
-/* line 286, ../scss/custom/_widgets.scss */
+/* line 305, ../scss/custom/_widgets.scss */
 .card_1_line, .card_manylines {
   color: #666;
   font-size: 0.7rem;

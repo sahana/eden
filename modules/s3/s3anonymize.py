@@ -27,16 +27,20 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+# TODO add to __init__ for s3
+
 import json
 
-from gluon import current
+from gluon import current, A, BUTTON, DIV, FORM, INPUT, LABEL, P
 
 from s3dal import original_tablename
 from s3rest import S3Method
 from s3query import FS, S3Joins
 from s3validators import JSONERRORS
+from s3utils import s3_str
 
 __all__ = ("S3Anonymize",
+           "S3AnonymizeWidget",
            )
 
 # =============================================================================
@@ -64,9 +68,7 @@ class S3Anonymize(S3Method):
             r.unauthorized()
 
         if r.representation == "json":
-            if r.http == "GET":
-                output = self.options(table, record_id)
-            elif r.http == "POST":
+            if r.http == "POST":
                 output = self.anonymize(r, table, record_id)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
@@ -131,7 +133,7 @@ class S3Anonymize(S3Method):
             name = rule.get("name")
             if not name or name not in selected:
                 continue
-            field_rules = rule.get("cleanup")
+            field_rules = rule.get("fields")
             if field_rules:
                 cleanup.update(field_rules)
             cascade_rules = rule.get("cascade")
@@ -140,7 +142,7 @@ class S3Anonymize(S3Method):
 
         # Apply selected rules
         if cleanup or cascade:
-            rules = {"cleanup": cleanup, "cascade": cascade}
+            rules = {"fields": cleanup, "cascade": cascade}
 
             # NB will raise (+roll back) if configuration is invalid
             cls.cascade(table, (record_id,), rules)
@@ -159,30 +161,6 @@ class S3Anonymize(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def options(cls, table, record_id):
-        """
-            TODO implement
-        """
-
-        # return JSON options
-
-        pass
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def action_button(cls, table, record_id):
-        """
-            TODO implement
-        """
-
-        # Generate action-button, inject JS
-
-        # Store button UID in session?
-
-        pass
-
-    # -------------------------------------------------------------------------
     def get_target_id(self):
         """
             Determine the target table and record ID
@@ -199,7 +177,8 @@ class S3Anonymize(S3Method):
         return resource.table, self.record_id
 
     # -------------------------------------------------------------------------
-    def permitted(self, table, record_id):
+    @staticmethod
+    def permitted(table, record_id):
         """
             Check permissions to anonymize the target record
 
@@ -281,7 +260,7 @@ class S3Anonymize(S3Method):
                     cls.cascade(resource.table, ids, rule)
 
         # Apply field rules
-        field_rules = rules.get("cleanup")
+        field_rules = rules.get("fields")
         if field_rules:
             cls.apply_field_rules(table, record_ids, field_rules)
 
@@ -362,5 +341,197 @@ class S3Anonymize(S3Method):
 
                 data[pkey] = row[pkey]
                 onaccept(table, data, method="update")
+
+# =============================================================================
+class S3AnonymizeWidget(object):
+    """ GUI widget for S3Anonymize """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def widget(cls, r, _class="action-lnk"):
+        """
+            Render an action item (link or button) to anonymize the
+            target record of an S3Request, which can be embedded in
+            the record view
+
+            @param r: the S3Request
+            @param _class: HTML class for the action item
+
+            @returns: the action item (a HTML helper instance), or an empty
+                      string if no anonymize-rules are configured for the
+                      target table, no target record was specified or the
+                      user is not permitted to anonymize it
+        """
+
+        T = current.T
+
+        default = ""
+
+        # Determine target table
+        if r.component:
+            resource = r.component
+            if resource.link and not r.actuate_link():
+                resource = resource.link
+        else:
+            resource = r.resource
+        table = resource.table
+
+        # Determine target record
+        record_id = S3Anonymize._record_id(r)
+        if not record_id:
+            return default
+
+        # Check if target is configured for anonymize
+        rules = resource.get_config("anonymize")
+        if not rules:
+            return default
+        if not isinstance(rules, (tuple, list)):
+            # Single rule
+            rules["name"] = "default"
+            rules = [rules]
+
+        # Check permissions to anonymize
+        if not S3Anonymize.permitted(table, record_id):
+            return default
+
+
+        # Determine widget ID
+        widget_id = "%s-%s-anonymize" % (table, record_id)
+
+        # Inject script
+        script_options = {"ajaxURL": r.url(method = "anonymize",
+                                           representation = "json",
+                                           ),
+                          }
+        cls.inject_script(widget_id, script_options)
+
+        # Action button
+        action_button = A(T("Anonymize"), _class="anonymize-btn")
+        if _class:
+            action_button.add_class(_class)
+
+        # Dialog
+        # TODO store+add action key (XSS protection)
+        INFO = T("The following information will be deleted from the record")
+        CONFIRM = T("Are you sure you want to delete the selected details?")
+        SUCCESS = T("Action successful - please wait...")
+        dialog = DIV(FORM(P("%s:" % INFO),
+                          cls.selector(rules),
+                          P(CONFIRM),
+                          DIV(INPUT(value = "anonymize_confirm",
+                                    _name = "anonymize_confirm",
+                                    _type = "checkbox",
+                                    ),
+                              LABEL(T("Yes, delete the selected details")),
+                              _class = "anonymize-confirm",
+                              ),
+                          cls.buttons(),
+                          _class = "anonymize-form",
+                          ),
+                     DIV(P(SUCCESS),
+                         _class = "hide anonymize-success",
+                         ),
+                     _class = "anonymize-dialog hide",
+                     _title = T("Anonymize"),
+                     )
+
+        # Assemble widget
+        widget = DIV(action_button,
+                     dialog,
+                     _class="s3-anonymize",
+                     _id = widget_id,
+                     )
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def selector(rules):
+        """
+            TODO docstring
+        """
+
+        T = current.T
+
+        selector = DIV(_class="anonymize-select")
+
+        for rule in rules:
+
+            name = rule.get("name")
+            if not name:
+                continue
+
+            title = T(rule.get("title", name))
+
+            selector.append(DIV(INPUT(value = "on",
+                                      _name = s3_str(name),
+                                      _type = "checkbox",
+                                      _class = "anonymize-rule",
+                                      ),
+                                LABEL(title),
+                                _class = "anonymize-option",
+                                ))
+
+        return selector
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def buttons():
+        """
+            TODO docstring
+        """
+
+        T = current.T
+
+        return DIV(BUTTON(T("Submit"),
+                          _class = "small alert button anonymize-submit",
+                          _disabled = "disabled",
+                          _type = "button",
+                          ),
+                   A(T("Cancel"),
+                     _class = "cancel-form-btn action-lnk anonymize-cancel",
+                     _href = "javascript:void(0)",
+                     ),
+                   _class = "anonymize-buttons",
+                   )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(widget_id, options):
+        """
+            Inject the necessary JavaScript for the UI dialog
+
+            @param widget_id: the widget ID
+            @param options: JSON-serializable dict of widget options
+        """
+
+        request = current.request
+        s3 = current.response.s3
+
+        # Static script
+        # TODO minify-configuration for s3.ui.anonymize.js
+        #if s3.debug:
+        script = "/%s/static/scripts/S3/s3.ui.anonymize.js" % \
+                 request.application
+        #else:
+            #script = "/%s/static/scripts/S3/s3.ui.anonymize.min.js" % \
+                     #request.application
+        scripts = s3.scripts
+        if script not in scripts:
+            scripts.append(script)
+
+        # Widget options
+        opts = {}
+        if options:
+            opts.update(options)
+
+        # Widget instantiation
+        script = '''$('#%(widget_id)s').anonymize(%(options)s)''' % \
+                 {"widget_id": widget_id,
+                  "options": json.dumps(opts),
+                  }
+        jquery_ready = s3.jquery_ready
+        if script not in jquery_ready:
+            jquery_ready.append(script)
 
 # END =========================================================================
