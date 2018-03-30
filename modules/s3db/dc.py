@@ -484,7 +484,7 @@ class DataCollectionTemplateModel(S3Model):
             mobile_form = False # For SCPHIMS at least
             mobile_data = False
         else:
-            raise
+            raise TypeError
 
         # Create the Dynamic Table
         table_id = s3db.s3_table.insert(title = title,
@@ -1038,8 +1038,8 @@ class DataCollectionModel(S3Model):
                 if len_grid == 2:
                     # Grid Pseudo-Question
                     if not code:
-                        current.log.error("Code required for Grid Questions") # @ToDo: Make mandatory in onvalidation
-                        raise
+                        # @ToDo: Make mandatory in onvalidation
+                        raise ValueError("Code required for Grid Questions")
                     rows = [s3_str(T(v)) for v in grid[0]]
                     cols = [s3_str(T(v)) for v in grid[1]]
                     fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
@@ -1309,7 +1309,7 @@ class dc_TargetReport(S3Method):
             #elif representation == "pdf":
             #    output = self.pdf(r, title, **attr)
             #    return output
-        raise HTTP(405, current.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def _extract(self, r, **attr):
@@ -1397,7 +1397,7 @@ class dc_TargetReport(S3Method):
         table = r.table
         date_represent = table.date.represent
 
-        target_title = table.template_id.represent(r.record.template_id)
+        #target_title = table.template_id.represent(r.record.template_id)
 
         data = self._extract(r, **attr)
 
@@ -1443,7 +1443,11 @@ class dc_TargetReport(S3Method):
         report_title = s3_str(title)
         filename = "%s_%s.pdf" % (report_title, s3_str(target_title))
 
-        data = self._extract(r, **attr)
+        # @ToDo
+        #data = self._extract(r, **attr)
+
+        # @ToDo
+        header = DIV()
 
         body = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
@@ -1721,16 +1725,16 @@ def dc_target_check(target_id):
     event = survey["hrm_training_event"]
     event_date = event.start_date
     location_id = event.location_id
-    url = "%s%s" % (current.deployment_settings.get_base_public_url(),
-                    URL(c="dc", f="target", args=[target_id, "review"]),
-                    )
+    #url = "%s%s" % (current.deployment_settings.get_base_public_url(),
+    #                URL(c="dc", f="target", args=[target_id, "review"]),
+    #                )
     subject = T("Post-Event Survey hasn't been Approved/Rejected")
     message = T("The post-Event Survey for %(event_name)s on %(date)s in %(location)s has not been Approved or Rejected") % \
-            dict(date = "%(date)s", # Localise per-language
-                 event_name = event.name,
-                 location = "%(location)s", # Localise per-language
-                 #url = url,
-                 )
+                {"date": "%(date)s", # Localise per-language
+                 "event_name": event.name,
+                 "location": "%(location)s", # Localise per-language
+                 #"url": url,
+                 }
 
     # Send Localised Mail(s)
     send_email = current.msg.send_by_pe_id
