@@ -349,6 +349,27 @@
         },
 
         /**
+         * Completion of an Lx dropdown has been selected
+         * - DRY helper
+         *
+         * @param {bool} refresh - whether this is called before user input
+         *                         (in which case we want to prevent geocoding)
+         */
+        _lxSelectFinal: function(refresh) {
+            if (!refresh) {
+                // Update the data dict
+                // - also writes data dict back to real input
+                this._collectData();
+            } else {
+                // Write data dict back to real input
+                this._serialize();
+            }
+
+            // Zoom the map to the appropriate bounds
+            this._zoomMap();
+        },
+
+        /**
          * An Lx dropdown has been selected
          * - either manually or through an initial value
          *
@@ -360,9 +381,8 @@
         _lxSelect: function(level, id, refresh) {
 
             var selector = '#' + this.fieldname,
-                opts = this.options;
-
-            var dropdown = $(selector + '_L' + level);
+                opts = this.options,
+                dropdown = $(selector + '_L' + level);
 
             if (id) {
                 // Set this dropdown to this value
@@ -380,7 +400,7 @@
             // Update hierarchy labels
             if (level === 0) {
 
-                var labels = this._readLabels(id),
+                var labelled = this._readLabels(id),
                     defaultLabels = hierarchyLabels['d'],
                     levels = ['1', '2', '3', '4', '5'],
                     label,
@@ -389,40 +409,44 @@
                     s,
                     l;
 
-                for (i=0; i < 5; i++) {
+                labelled.then(
+                    function(labels) {
+                        for (i=0; i < 5; i++) {
 
-                    l = levels[i];
+                            l = levels[i];
 
-                    // Use default labels as fallback if no specific label
-                    label = labels[l] || defaultLabels[l];
+                            // Use default labels as fallback if no specific label
+                            label = labels[l] || defaultLabels[l];
 
-                    s = selector + '_L' + l;
-                    dropdown = $(s);
+                            s = selector + '_L' + l;
+                            dropdown = $(s);
 
-                    // Mark required?
-                    // @ToDo: Client-side s3_mark_required function
-                    if (opts.showLabels) {
-                        if (dropdown.hasClass('required')) {
-                            labelHTML = '<div>' + label + ':<span class="req"> *</span></div>';
-                        } else {
-                            labelHTML = label + ':';
+                            // Mark required?
+                            // @ToDo: Client-side s3_mark_required function
+                            if (opts.showLabels) {
+                                if (dropdown.hasClass('required')) {
+                                    labelHTML = '<div>' + label + ':<span class="req"> *</span></div>';
+                                } else {
+                                    labelHTML = label + ':';
+                                }
+                            } else {
+                                labelHTML = '';
+                            }
+
+                            // Update the label
+                            $(s + '__row label').html(labelHTML);
+                            // Tuple themes
+                            $(s + '__row1 label').html(labelHTML);
+                            // Update the placeholder-option in the selector
+                            $(s + ' option[value=""]').html(i18n.select + ' ' + label);
+
+                            // Refresh MultiSelect after label change
+                            if (dropdown.hasClass('multiselect') && dropdown.multiselect('instance')) {
+                                dropdown.multiselect('refresh');
+                            }
                         }
-                    } else {
-                        labelHTML = '';
                     }
-
-                    // Update the label
-                    $(s + '__row label').html(labelHTML);
-                    // Tuple themes
-                    $(s + '__row1 label').html(labelHTML);
-                    // Update the placeholder-option in the selector
-                    $(s + ' option[value=""]').html(i18n.select + ' ' + label);
-
-                    // Refresh MultiSelect after label change
-                    if (dropdown.hasClass('multiselect') && dropdown.multiselect('instance')) {
-                        dropdown.multiselect('refresh');
-                    }
-                }
+                );
             }
 
             // Hide all lower levels & remove their values
@@ -457,18 +481,23 @@
                     if (this.useGeocoder && !refresh) {
                         this._geocodeDecision();
                     }
+                    // Call DRY Helper
+                    this._lxSelectFinal(refresh);
                 } else {
                     // Do we need to read hierarchy?
                     var locations,
                         location,
-                        locationID;
+                        locationID,
+                        read = false,
+                        that = this;
                     if ($(selector + '_L' + level + ' option[value="' + id + '"]').hasClass('missing')) {
                         // An individual location with a Missing Level: we already have the data
                         location = hierarchyLocations[id];
                         location.i = id;
                         locations = [location];
                     } else {
-                        var read = true;
+                        locations = [];
+                        read = true;
                         for (locationID in hierarchyLocations) {
                             if (hierarchyLocations[locationID].f == id) {
                                 // We have a child, so assume we have all
@@ -476,106 +505,105 @@
                                 break;
                             }
                         }
-                        if (read) {
-                            // AJAX Read extra hierarchy options
-                            this._readHierarchy(id, next, missing);
-                        }
-
-                        locations = [];
-                        for (locationID in hierarchyLocations) {
-                            location = hierarchyLocations[locationID];
-
-                            //if (location.l == next && location.f == id) {
-                            if (location.f == id) {
-                                // Add the ID inside
-                                location.i = locationID;
-                                locations.push(location);
-                            }
-                        }
                     }
 
-                    // Populate the next dropdown
-                    var numLocations = locations.length,
-                        selected,
-                        option;
+                    var reading = this._readHierarchy(read, id, next, missing);
 
-                    if (numLocations) {
+                    reading.then(
+                        function() {
+                            if (locations.length == 0) {
+                                for (locationID in hierarchyLocations) {
+                                    location = hierarchyLocations[locationID];
 
-                        // Sort location alphabetically
-                        locations.sort(function(a, b) {
-                            return a.n.localeCompare(b.n);
-                        });
-
-                        var dropdownSelector = selector + '_L' + next;
-                        var select = $(dropdownSelector),
-                            placeholder = $(dropdownSelector + ' option[value=""]').html();
-
-                        // Remove previous options (except placeholder)
-                        $(dropdownSelector + ' option').remove('[value != ""]');
-
-                        // Populate dropdown
-                        locationID = null;
-                        for (i=0; i < numLocations; i++) {
-                            location = locations[i];
-                            locationID = location.i;
-                            if (id == locationID) {
-                                selected = ' selected="selected"';
-                            } else {
-                                selected = '';
+                                    //if (location.l == next && location.f == id) {
+                                    if (location.f == id) {
+                                        // Add the ID inside
+                                        location.i = locationID;
+                                        locations.push(location);
+                                    }
+                                }
                             }
-                            if (location.l == next) {
-                                // A normal level
-                                missing = '';
-                            } else {
-                                // A link for an individual location with a Missing Level
-                                missing = ' class="missing"';
+                            
+                            // Populate the next dropdown
+                            var numLocations = locations.length,
+                                selected,
+                                option;
+
+                            if (numLocations) {
+
+                                // Sort location alphabetically
+                                locations.sort(function(a, b) {
+                                    return a.n.localeCompare(b.n);
+                                });
+
+                                var dropdownSelector = selector + '_L' + next,
+                                    select = $(dropdownSelector),
+                                    placeholder = $(dropdownSelector + ' option[value=""]').html();
+
+                                // Remove previous options (except placeholder)
+                                $(dropdownSelector + ' option').remove('[value != ""]');
+
+                                // Populate dropdown
+                                locationID = null;
+                                for (i=0; i < numLocations; i++) {
+                                    location = locations[i];
+                                    locationID = location.i;
+                                    if (id == locationID) {
+                                        selected = ' selected="selected"';
+                                    } else {
+                                        selected = '';
+                                    }
+                                    if (location.l == next) {
+                                        // A normal level
+                                        missing = '';
+                                    } else {
+                                        // A link for an individual location with a Missing Level
+                                        missing = ' class="missing"';
+                                    }
+                                    option = '<option value="' + locationID + '"' + selected + missing + '>' + location.n + '</option>';
+                                    select.append(option);
+                                }
+
+                                // Show dropdown
+                                dropdown_row.removeClass('hide').show();
+                                $(selector + '_L' + next + '__row1').removeClass('hide').show(); // Tuple themes
+
+                                // Instantiate (or refresh) multiselect
+                                if (select.hasClass('multiselect')) {
+                                    var multiSelectOptions = {
+                                        header: '',
+                                        height: 300,
+                                        minWidth: 0,
+                                        selectedList: 1,
+                                        noneSelectedText: placeholder,
+                                        multiple: false
+                                    };
+                                    if (select.hasClass('search')) {
+                                        select.multiselect(multiSelectOptions)
+                                              .multiselectfilter({label: '', placeholder: i18n.search});
+                                        // Show headers
+                                        $('.ui-multiselect-header').show();
+                                    } else {
+                                        multiSelectOptions.header = false;
+                                        select.multiselect(multiSelectOptions);
+                                    }
+                                }
+
+                                // Auto-select single option?
+                                if (numLocations == 1 && locationID) {
+                                    // Only 1 option so select this one
+                                    that._lxSelect(next, locationID, refresh);
+                                }
                             }
-                            option = '<option value="' + locationID + '"' + selected + missing + '>' + location.n + '</option>';
-                            select.append(option);
+                            // Call DRY Helper
+                            that._lxSelectFinal(refresh);
                         }
-
-                        // Show dropdown
-                        dropdown_row.removeClass('hide').show();
-                        $(selector + '_L' + next + '__row1').removeClass('hide').show(); // Tuple themes
-
-                        // Instantiate (or refresh) multiselect
-                        if (select.hasClass('multiselect')) {
-                            var multiSelectOptions = {
-                                header: '',
-                                height: 300,
-                                minWidth: 0,
-                                selectedList: 1,
-                                noneSelectedText: placeholder,
-                                multiple: false
-                            };
-                            if (select.hasClass('search')) {
-                                select.multiselect(multiSelectOptions)
-                                      .multiselectfilter({label: '', placeholder: i18n.search});
-                                // Show headers
-                                $('.ui-multiselect-header').show();
-                            } else {
-                                multiSelectOptions.header = false;
-                                select.multiselect(multiSelectOptions);
-                            }
-                        }
-
-                        // Auto-select single option?
-                        if (numLocations == 1 && locationID) {
-                            // Only 1 option so select this one
-                            this._lxSelect(next, locationID, refresh);
-                        }
-                    }
+                    );
                 }
-            }
-            // Update the data dict
-            if (!refresh) {
-                this._collectData();
             } else {
-                this._serialize();
+                // Call DRY Helper
+                this._lxSelectFinal(refresh);
             }
-
-            // Zoom the map to the appropriate bounds
-            this._zoomMap();
         },
 
         /**
@@ -654,6 +682,7 @@
                     }
                 }
             }
+            // Write data dict back to real input
             this._serialize();
         },
 
@@ -711,7 +740,7 @@
         },
 
         /**
-         * Get the hierarchy labels for a country (Ajax as needed)
+         * Get the hierarchy labels for a country (Asynchronously, Ajax when needed)
          *
          * @param {number} id - the location id of the country
          * @returns {object} - the labels by hierarchy level
@@ -722,6 +751,8 @@
                 id = 'd';
             }
 
+            var dfd = $.Deferred();
+
             // Read from client-side cache
             var labels = hierarchyLabels[id];
             if (labels == undefined) {
@@ -729,7 +760,6 @@
                 // Get the hierarchy labels from server
                 var url = S3.Ap.concat('/gis/hdata/' + id);
                 $.ajaxS3({
-                    async: false,
                     url: url,
                     dataType: 'script',
                     success: function(data) {
@@ -744,6 +774,7 @@
                             // Clear the memory
                             n = null;
                         } catch(e) {}
+                        dfd.resolve(labels);
                     },
                     error: function(request, status, error) {
                         var msg;
@@ -754,83 +785,99 @@
                         }
                         s3_debug(msg);
                         //S3.showAlert(msg, 'error');
+                        dfd.reject();
                     }
                 });
+            } else {
+                dfd.resolve(labels);
             }
-            return labels;
+            return dfd.promise();
         },
 
         /**
          * Load child location data from server to populate a dropdown
          *
+         * @param {number} read - whether to do a read or just return right away
          * @param {number} parent - the parent location id
          * @param {number} level - the hierarchy level (1..5)
          * @param {boolean} missing - whether this is looking up after a missinglevel
          */
-        _readHierarchy: function(parent, level, missing) {
+        _readHierarchy: function(read, parent, level, missing) {
 
-            var selector = '#' + this.fieldname;
+            var dfd = $.Deferred();
 
-            // Hide dropdown
-            var dropdown = $(selector + '_L' + level),
-                multiselect = false;
-            dropdown.hide();
-            if (dropdown.hasClass('multiselect')) {
-                // Also hide MultiSelect button
-                multiselect = true;
-                var button = $(selector + '_L' + level + '__row button').hide();
-            }
+            if (read) {
+                var selector = '#' + this.fieldname;
 
-            // Show Throbber
-            var throbber = $(selector + '_L' + level + '__throbber').removeClass('hide').show();
-
-            // Download Location Data
-            if (missing) {
-                var url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
-            } else {
-                var url = S3.Ap.concat('/gis/ldata/' + parent);
-            }
-            $.ajaxS3({
-                async: false,
-                url: url,
-                dataType: 'script',
-                success: function(data) {
-
-                    // Copy the elements across
-                    for (var prop in n) {
-                        hierarchyLocations[prop] = n[prop];
-                    }
-                    // Clear the memory
-                    n = null;
-
-                    throbber.hide();
-                    if (multiselect) {
-                        button.removeClass('hide').show();
-                    } else {
-                        dropdown.removeClass('hide').show();
-                    }
-                },
-
-                error: function(request, status, error) {
-                    var msg;
-                    if (error == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = request.responseText;
-                    }
-                    s3_debug(msg);
-                    S3.showAlert(msg, 'error');
-
-                    // Revert state of widget to allow user to retry
-                    // without reloading page
-                    throbber.hide();
-                    if (multiselect) {
-                        button.removeClass('hide').show();
-                    } else {
-                        dropdown.removeClass('hide').show();
-                    }
+                // Hide dropdown
+                var dropdown = $(selector + '_L' + level),
+                    multiselect = false;
+                dropdown.hide();
+                if (dropdown.hasClass('multiselect')) {
+                    // Also hide MultiSelect button
+                    multiselect = true;
+                    var button = $(selector + '_L' + level + '__row button').hide();
                 }
-            });
+
+                // Show Throbber
+                var throbber = $(selector + '_L' + level + '__throbber').removeClass('hide').show();
+
+                // Download Location Data
+                if (missing) {
+                    var url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
+                } else {
+                    var url = S3.Ap.concat('/gis/ldata/' + parent);
+                }
+                $.ajaxS3({
+                    //async: false,
+                    url: url,
+                    dataType: 'script',
+                    success: function(data) {
+
+                        // Copy the elements across
+                        for (var prop in n) {
+                            hierarchyLocations[prop] = n[prop];
+                        }
+                        // Clear the memory
+                        n = null;
+
+                        throbber.hide();
+                        if (multiselect) {
+                            button.removeClass('hide').show();
+                        } else {
+                            dropdown.removeClass('hide').show();
+                        }
+
+                        dfd.resolve();
+                    },
+
+                    error: function(request, status, error) {
+                        var msg;
+                        if (error == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = request.responseText;
+                        }
+                        s3_debug(msg);
+                        S3.showAlert(msg, 'error');
+
+                        // Revert state of widget to allow user to retry
+                        // without reloading page
+                        throbber.hide();
+                        if (multiselect) {
+                            button.removeClass('hide').show();
+                        } else {
+                            dropdown.removeClass('hide').show();
+                        }
+
+                        dfd.reject();
+                    }
+                });
+            } else {
+                // No need to read, can Resolve right away
+                dfd.resolve();
+            }
+            return dfd.promise();
         },
 
         /**
@@ -1079,6 +1126,7 @@
                 data.wkt = null;
                 this.input.data('manually_geocoded', true);
             }
+            // Write data dict back to real input
             this._serialize();
 
             // Remove all map features, add the new point + recenter/zoom map

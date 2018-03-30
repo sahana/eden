@@ -5264,7 +5264,7 @@ def event_notification_dispatcher(r, **attr):
         return output
 
     else:
-        r.error(501, current.messages.BADMETHOD)
+        r.error(405, current.messages.BAD_METHOD)
 
 # =============================================================================
 def event_event_list_layout(list_id, item_id, resource, rfields, record,

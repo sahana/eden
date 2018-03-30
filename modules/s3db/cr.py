@@ -2429,7 +2429,7 @@ def cr_notification_dispatcher(r, **attr):
         return output
 
     else:
-        r.error(501, current.messages.BADMETHOD)
+        r.error(405, current.messages.BAD_METHOD)
 
 # =============================================================================
 class cr_AssignUnit(S3CRUD):
