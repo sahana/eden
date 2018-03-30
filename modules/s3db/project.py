@@ -10647,7 +10647,11 @@ class S3ProjectTaskModel(S3Model):
                      Field("time_estimated", "double",
                            label = "%s (%s)" % (T("Time Estimate"),
                                                 T("hours")),
-                           represent = lambda v: v or "",
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_EMPTY_OR(
+                                        IS_FLOAT_AMOUNT(0, None)
+                                        ),
                            readable = staff,
                            writable = staff,
                            ),
@@ -11211,8 +11215,8 @@ class S3ProjectTaskModel(S3Model):
                      Field("hours", "double",
                            label = T("Effort (Hours)"),
                            requires = IS_EMPTY_OR(
-                                       IS_FLOAT_IN_RANGE(0.0, None)),
-                           represent = lambda hours: "%.2f" % hours if hours else NONE,
+                                       IS_FLOAT_AMOUNT(minimum=0.0)),
+                           represent = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2),
                            widget = S3HoursWidget(precision = 2,
                                                   ),
                            ),

@@ -1581,7 +1581,7 @@ class RequestItemModel(S3Model):
                            label = T("Quantity"),
                            represent=lambda v: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_FLOAT_IN_RANGE(minimum=1),
+                           requires = IS_FLOAT_AMOUNT(minimum=1.0),
                            ),
                      Field("pack_value", "double",
                            label = T("Estimated Value per Pack"),
@@ -1596,7 +1596,7 @@ class RequestItemModel(S3Model):
                            default = 0,
                            label = T("Quantity Committed"),
                            represent = self.req_qnty_commit_represent,
-                           requires = IS_FLOAT_IN_RANGE(0, None),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
                            readable = use_commit,
                            writable = use_commit and quantities_writable,
                            ),
@@ -1609,7 +1609,7 @@ class RequestItemModel(S3Model):
                            label = T("Quantity in Transit"),
                            represent = self.req_qnty_transit_represent,
                            default = 0,
-                           requires = IS_FLOAT_IN_RANGE(0, None),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
                            readable = show_qty_transit,
                            writable = show_qty_transit and quantities_writable,
                            ),
@@ -1617,7 +1617,7 @@ class RequestItemModel(S3Model):
                            label = T("Quantity Fulfilled"),
                            represent = self.req_qnty_fulfil_represent,
                            default = 0,
-                           requires = IS_FLOAT_IN_RANGE(0, None),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
                            writable = quantities_writable,
                            ),
                      Field.Method("pack_quantity",
@@ -2416,15 +2416,14 @@ class RequestSummaryModel(S3Model):
         # -----------------------------------------------------------------
         # Summary of Needs for a Project
         #
-        represent_amount = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2)
-
         tablename = "req_project_needs"
         define_table(tablename,
                      self.project_project_id(),
                      Field("funding", "double",
                            label = T("Funds needed"),
-                           represent = represent_amount,
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(minimum=0)),
+                           represent = lambda v: \
+                                        IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            comment = T("The total amount of funding required for this project"),
                            ),
                      Field("funding_details", "text",

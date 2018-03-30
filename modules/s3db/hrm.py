@@ -122,6 +122,8 @@ class S3HRModel(S3Model):
 
         organisation_id = self.org_organisation_id
 
+        float_represent = IS_FLOAT_AMOUNT.represent
+
         root_org = auth.root_org()
         if is_admin:
             filter_opts = ()
@@ -1610,8 +1612,10 @@ class S3HRSalaryModel(S3Model):
                              set_max = "#hrm_salary_start_date",
                              ),
                      Field("monthly_amount", "double",
+                           represent = lambda v: \
+                                        float_represent(v, precision=2),
                            requires = IS_EMPTY_OR(
-                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
                            default = 0.0,
                            ),
@@ -2470,8 +2474,10 @@ class S3HRSkillModel(S3Model):
                      Field("pass_mark", "float",
                            default = 0.0,
                            label = T("Pass Mark"),
+                           represent = lambda v: \
+                                        float_represent(v, precision=2),
                            requires = IS_EMPTY_OR(
-                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
                            readable = course_pass_marks,
                            writable = course_pass_marks,
@@ -2997,8 +3003,10 @@ class S3HRSkillModel(S3Model):
                      Field("grade_details", "float",
                            default = 0.0,
                            label = T("Grade Details"),
+                           represent = lambda v: \
+                                        float_represent(v, precision=2),
                            requires = IS_EMPTY_OR(
-                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
                            readable = course_pass_marks,
                            writable = course_pass_marks,

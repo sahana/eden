@@ -462,7 +462,7 @@ class S3InventoryModel(S3Model):
                                 label = T("Quantity"),
                                 represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                requires = IS_FLOAT_IN_RANGE(0, None),
+                                requires = IS_FLOAT_AMOUNT(minimum=0.0),
                                 writable = False,
                                 ),
                           Field("bin", length=16,
@@ -1606,7 +1606,7 @@ class S3InventoryTrackingModel(S3Model):
                            label = T("Quantity"),
                            represent = lambda v, row=None: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_FLOAT_IN_RANGE(minimum=1),
+                           requires = IS_FLOAT_AMOUNT(minimum=1.0),
                            ),
                      s3_date(comment = DIV(_class="tooltip",
                                            _title="%s|%s" % \
@@ -4484,12 +4484,14 @@ class S3InventoryAdjustModel(S3Model):
                      Field("old_quantity", "double", notnull=True,
                            default = 0,
                            label = T("Original Quantity"),
+                           represent = lambda v: \
+                                       IS_FLOAT_AMOUNT.represent(v, precision=2),
                            writable = False,
                            ),
                      Field("new_quantity", "double",
                            label = T("Revised Quantity"),
                            represent = self.qnty_adj_repr,
-                           requires = IS_NOT_EMPTY(),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
                            ),
                      Field("reason", "integer",
                            default = 1,
@@ -4588,10 +4590,11 @@ class S3InventoryAdjustModel(S3Model):
             Make unadjusted quantities show up in bold
         """
 
+        represent = IS_FLOAT_AMOUNT.represent(value, precision=2)
         if value is None:
-            return B(value)
+            return B(represent)
         else:
-            return value
+            return represent
 
     # ---------------------------------------------------------------------
     @staticmethod

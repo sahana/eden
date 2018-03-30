@@ -184,7 +184,9 @@ class WorkJobModel(S3Model):
                      s3_datetime("start_date"),
                      Field("duration", "double",
                            label = T("Hours Planned"),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0, None)),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("workers_min", "integer",
                            default = 1,
