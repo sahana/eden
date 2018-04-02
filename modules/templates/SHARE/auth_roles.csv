@@ -1,6 +1,7 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,Users without login to view homepage with request list and map,req,req,,,READ,,,,,
 ANONYMOUS,Anonymous,Users without login to view public sitreps,cms,,,,READ,,,,,
+REQUESTER,Request Logger,User can create a request; search for and update a request; also added required supply items to a request,req,,,,CREATE|READ|UPDATE,,,,,
 REQUESTER,Request Logger,User can create a request; search for and update a request; also added required supply items to a request,req,req,,,CREATE|READ|UPDATE,,,,,
 APPROVER,Request Supervisor,User can search for and update a request to set the status to approved; delete a request,req,,,,READ|UPDATE|DELETE,,,,,
 SUPPLIER,Aid Supplier,Person affiliated with an Org or Independent with permissions to commit to requests and manage the logistics of suppling the aid,supply,,,,CREATE|READ|UPDATE|DELETE,,,,,
