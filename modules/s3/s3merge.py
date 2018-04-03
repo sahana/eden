@@ -442,8 +442,8 @@ class S3Merge(S3Method):
 
         trs = []
         init_requires = self.init_requires
-        count = 1
-        fieldsNum = len(formfields)
+        index = 1
+        num_fields = len(formfields)
         
         for f in formfields:
 
@@ -453,14 +453,14 @@ class S3Merge(S3Method):
             sid = "swap_%s" % f.name
             init_requires(f, original[f], duplicate[f])
             if keep_o or not any((keep_o, keep_d)):
-                owidget = self.widget(f, original[f], _name=oid, _id=oid, _tabindex=count)
+                owidget = self.widget(f, original[f], _name=oid, _id=oid, _tabindex=index)
             else:
                 try:
                     owidget = s3_represent_value(f, value=original[f])
                 except:
                     owidget = s3_unicode(original[f])
             if keep_d or not any((keep_o, keep_d)):
-                dwidget = self.widget(f, duplicate[f], _name=did, _id=did, _tabindex=count+fieldsNum)
+                dwidget = self.widget(f, duplicate[f], _name=did, _id=did)
             else:
                 try:
                     dwidget = s3_represent_value(f, value=duplicate[f])
@@ -472,7 +472,8 @@ class S3Merge(S3Method):
                 swap = INPUT(_value="<-->",
                              _class="swap-button",
                              _id=sid,
-                             _type="button")
+                             _type="button",
+                             _tabindex = index+num_fields)
             else:
                 swap = DIV(_class="swap-button")
 
@@ -490,7 +491,7 @@ class S3Merge(S3Method):
                           TD(swap),
                           TD(dwidget, _class="mwidget")))
             
-            count = count+1
+            index = index + 1
         # Show created_on/created_by for each record
         if "created_on" in table:
             original_date = original.created_on
