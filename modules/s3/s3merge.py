@@ -442,6 +442,9 @@ class S3Merge(S3Method):
 
         trs = []
         init_requires = self.init_requires
+        index = 1
+        num_fields = len(formfields)
+        
         for f in formfields:
 
             # Render the widgets
@@ -450,7 +453,7 @@ class S3Merge(S3Method):
             sid = "swap_%s" % f.name
             init_requires(f, original[f], duplicate[f])
             if keep_o or not any((keep_o, keep_d)):
-                owidget = self.widget(f, original[f], _name=oid, _id=oid)
+                owidget = self.widget(f, original[f], _name=oid, _id=oid, _tabindex=index)
             else:
                 try:
                     owidget = s3_represent_value(f, value=original[f])
@@ -469,7 +472,8 @@ class S3Merge(S3Method):
                 swap = INPUT(_value="<-->",
                              _class="swap-button",
                              _id=sid,
-                             _type="button")
+                             _type="button",
+                             _tabindex = index+num_fields)
             else:
                 swap = DIV(_class="swap-button")
 
@@ -486,7 +490,8 @@ class S3Merge(S3Method):
             trs.append(TR(TD(owidget, _class="mwidget"),
                           TD(swap),
                           TD(dwidget, _class="mwidget")))
-
+            
+            index = index + 1
         # Show created_on/created_by for each record
         if "created_on" in table:
             original_date = original.created_on
