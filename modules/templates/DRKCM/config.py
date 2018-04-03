@@ -2856,6 +2856,63 @@ def drk_org_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
+def drk_anonymous_address(record_id, field, value):
+    """
+        Helper to anonymize a pr_address location; removes street and
+        postcode details, but retains Lx ancestry for statistics
+
+        @param record_id: the pr_address record ID
+        @param field: the location_id Field
+        @param value: the location_id
+
+        @return: the location_id
+    """
+
+    s3db = current.s3db
+    db = current.db
+
+    # Get the location
+    if value:
+        ltable = s3db.gis_location
+        row = db(ltable.id == value).select(ltable.id,
+                                            ltable.level,
+                                            limitby = (0, 1),
+                                            ).first()
+        if not row.level:
+            # Specific location => remove address details
+            data = {"addr_street": None,
+                    "addr_postcode": None,
+                    "gis_feature_type": 0,
+                    "lat": None,
+                    "lon": None,
+                    "wkt": None,
+                    }
+            if "the_geom" in ltable.fields:
+                data["the_geom"] = None
+            row.update_record(**data)
+
+    return value
+
+# -----------------------------------------------------------------------------
+def drk_obscure_dob(record_id, field, value):
+    """
+        Helper to obscure a date of birth; maps to the first day of
+        the quarter, thus retaining the approximate age for statistics
+
+        @param record_id: the pr_address record ID
+        @param field: the location_id Field
+        @param value: the location_id
+
+        @return: the new date
+    """
+
+    if value:
+        month = int((value.month - 1) / 3) * 3 + 1
+        value = value.replace(month=month, day=1)
+
+    return value
+
+# -----------------------------------------------------------------------------
 def drk_person_anonymize():
     """ Rules to anonymize a case file """
 
@@ -2863,14 +2920,6 @@ def drk_person_anonymize():
 
     # Helper to produce an anonymous ID (pe_label)
     anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
-
-    # Helper to obscure exact date_of_birth while retaining
-    # the approximate age for future statistics
-    def obscure_dob(record_id, field, value):
-        if value:
-            month = int((value.month - 1) / 3) * 3 + 1
-            value = value.replace(month=month, day=1)
-        return value
 
     # General rule for attachments
     documents = ("doc_document", {"key": "doc_id",
@@ -2906,7 +2955,7 @@ def drk_person_anonymize():
               "fields": {"first_name": ("set", ANONYMOUS),
                          "last_name": ("set", ANONYMOUS),
                          "pe_label": anonymous_id,
-                         "date_of_birth": obscure_dob,
+                         "date_of_birth": drk_obscure_dob,
                          "comments": "remove",
                          },
               "cascade": [("dvr_case", {"key": "person_id",
@@ -2931,7 +2980,12 @@ def drk_person_anonymize():
                                                                },
                                                     "delete": True,
                                                     }),
-                          # TODO pr_address
+                          ("pr_address", {"key": "pe_id",
+                                          "match": "pe_id",
+                                          "fields": {"location_id": drk_anonymous_address,
+                                                     "comments": "remove",
+                                                     },
+                                          }),
                           ("pr_person_tag", {"key": "person_id",
                                              "match": "id",
                                              "fields": {"value": ("set", ANONYMOUS),
