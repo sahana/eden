@@ -509,13 +509,12 @@ class S3AnonymizeWidget(object):
         s3 = current.response.s3
 
         # Static script
-        # TODO minify-configuration for s3.ui.anonymize.js
-        #if s3.debug:
-        script = "/%s/static/scripts/S3/s3.ui.anonymize.js" % \
-                 request.application
-        #else:
-            #script = "/%s/static/scripts/S3/s3.ui.anonymize.min.js" % \
-                     #request.application
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.anonymize.js" % \
+                     request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.anonymize.min.js" % \
+                     request.application
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)

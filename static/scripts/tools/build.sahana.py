@@ -454,6 +454,7 @@ def dojs(dogis = False, warnings = True):
                      "sync",
                      "timeline",
                      "ui.addperson",
+                     "ui.anonymize",
                      "ui.contacts",
                      "ui.dashboard",
                      "ui.embeddedcomponent",
