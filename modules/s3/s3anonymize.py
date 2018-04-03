@@ -27,8 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-# TODO add to __init__ for s3
-
 import json
 import uuid
 
@@ -332,7 +330,7 @@ class S3Anonymize(S3Method):
 
                 elif callable(rule):
                     # Callable rule to procude a new value
-                    data[fieldname] = rule(field, row[field])
+                    data[fieldname] = rule(row[pkey], field, row[field])
 
                 elif type(rule) is tuple:
                     method, value = rule
@@ -481,7 +479,11 @@ class S3AnonymizeWidget(object):
     @staticmethod
     def selector(rules):
         """
-            TODO docstring
+            Generate the rule selector for anonymize-form
+
+            @param rules: the list of configured rules
+
+            @return: the selector (DIV)
         """
 
         T = current.T
@@ -511,7 +513,9 @@ class S3AnonymizeWidget(object):
     @staticmethod
     def buttons():
         """
-            TODO docstring
+            Generate the submit/cancel buttons for the anonymize-form
+
+            @return: the buttons row (DIV)
         """
 
         T = current.T

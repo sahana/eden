@@ -510,7 +510,7 @@ def config(settings):
 
             # Configure anonymize-method
             # TODO make standard via setting
-            from s3.s3anonymize import S3Anonymize
+            from s3 import S3Anonymize
             s3db.set_method("pr", "person",
                             method = "anonymize",
                             action = S3Anonymize,
@@ -938,7 +938,7 @@ def config(settings):
                 else:
                     buttons = output["buttons"]
 
-                from s3.s3anonymize import S3AnonymizeWidget
+                from s3 import S3AnonymizeWidget
                 buttons["delete_btn"] = S3AnonymizeWidget.widget(
                                             r,
                                             _class="action-btn anonymize-btn",
@@ -2861,6 +2861,17 @@ def drk_person_anonymize():
 
     ANONYMOUS = "-"
 
+    # Helper to produce an anonymous ID (pe_label)
+    anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
+
+    # Helper to obscure exact date_of_birth while retaining
+    # the approximate age for future statistics
+    def obscure_dob(record_id, field, value):
+        if value:
+            month = int((value.month - 1) / 3) * 3 + 1
+            value = value.replace(month=month, day=1)
+        return value
+
     # General rule for attachments
     documents = ("doc_document", {"key": "doc_id",
                                   "match": "doc_id",
@@ -2894,8 +2905,8 @@ def drk_person_anonymize():
               "title": "Names, IDs, Reference Numbers, Contact Information, Addresses",
               "fields": {"first_name": ("set", ANONYMOUS),
                          "last_name": ("set", ANONYMOUS),
-                         # TODO pe_id
-                         # TODO date_of_birth
+                         "pe_label": anonymous_id,
+                         "date_of_birth": obscure_dob,
                          "comments": "remove",
                          },
               "cascade": [("dvr_case", {"key": "person_id",

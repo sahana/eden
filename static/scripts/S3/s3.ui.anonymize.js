@@ -20,12 +20,11 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} ajaxURL - the URL to send the anonymize-request to
          */
         options: {
 
-            // ajaxURL
-
+            ajaxURL: null
         },
 
         /**
@@ -73,7 +72,7 @@
         },
 
         /**
-         * TODO docstring
+         * Show the UI dialog to select rules and submit the request
          */
         _showDialog: function() {
 
@@ -149,7 +148,12 @@
         },
 
         /**
-         * TODO docstring
+         * Send anonymize-request (Ajax)
+         *
+         * @param {jQuery} container - the container node
+         *
+         * @returns {promise} - a promise that is resolved when
+         *                      the anonymize-request was successful
          */
         _anonymize: function(container) {
 
