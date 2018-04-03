@@ -182,8 +182,12 @@
                 return dfd.resolve(false);
             }
 
-            // TODO send key
-            var data = JSON.stringify({'apply': selected}),
+            // Request data including action-key
+            var key = container.find('input[name="action-key"]').first().val(),
+                data = JSON.stringify({
+                    'apply': selected,
+                    'key': key,
+                }),
                 url = this.options.ajaxURL;
 
             $.ajaxS3({
