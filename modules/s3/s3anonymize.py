@@ -27,9 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-# TODO add to __init__ for s3
-
 import json
+import uuid
 
 from gluon import current, A, BUTTON, DIV, FORM, INPUT, LABEL, P
 
@@ -103,7 +102,14 @@ class S3Anonymize(S3Method):
         if not isinstance(options, dict):
             r.error(400, "Invalid request options")
 
-        # TODO Verify action key against session
+        # Verify submitted action key against session (CSRF protection)
+        widget_id = "%s-%s-anonymize" % (table, record_id)
+        session_s3 = current.session.s3
+        keys = session_s3.anonymize
+        if keys is None or \
+           widget_id not in keys or \
+           options.get("key") != keys[widget_id]:
+            r.error(400, "Invalid action key (form reopened in another tab?)")
 
         # Get the available rules from settings
         rules = current.s3db.get_config(table, "anonymize")
@@ -324,7 +330,7 @@ class S3Anonymize(S3Method):
 
                 elif callable(rule):
                     # Callable rule to procude a new value
-                    data[fieldname] = rule(field, row[field])
+                    data[fieldname] = rule(row[pkey], field, row[field])
 
                 elif type(rule) is tuple:
                     method, value = rule
@@ -410,24 +416,28 @@ class S3AnonymizeWidget(object):
         if _class:
             action_button.add_class(_class)
 
-        # Dialog
-        # TODO store+add action key (XSS protection)
+        # Dialog and Form
         INFO = T("The following information will be deleted from the record")
         CONFIRM = T("Are you sure you want to delete the selected details?")
         SUCCESS = T("Action successful - please wait...")
-        dialog = DIV(FORM(P("%s:" % INFO),
-                          cls.selector(rules),
-                          P(CONFIRM),
-                          DIV(INPUT(value = "anonymize_confirm",
-                                    _name = "anonymize_confirm",
-                                    _type = "checkbox",
-                                    ),
-                              LABEL(T("Yes, delete the selected details")),
-                              _class = "anonymize-confirm",
+
+        form = FORM(P("%s:" % INFO),
+                    cls.selector(rules),
+                    P(CONFIRM),
+                    DIV(INPUT(value = "anonymize_confirm",
+                              _name = "anonymize_confirm",
+                              _type = "checkbox",
                               ),
-                          cls.buttons(),
-                          _class = "anonymize-form",
+                    LABEL(T("Yes, delete the selected details")),
+                          _class = "anonymize-confirm",
                           ),
+                    cls.buttons(),
+                    _class = "anonymize-form",
+                    # Store action key in form
+                    hidden = {"action-key": cls.action_key(widget_id)},
+                    )
+
+        dialog = DIV(form,
                      DIV(P(SUCCESS),
                          _class = "hide anonymize-success",
                          ),
@@ -446,9 +456,34 @@ class S3AnonymizeWidget(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def action_key(widget_id):
+        """
+            Generate a unique STP token for the widget (CSRF protection) and
+            store it in session
+
+            @param widget_id: the widget ID (which includes the target
+                              table name and record ID)
+            @return: a unique identifier (as string)
+        """
+
+        session_s3 = current.session.s3
+
+        keys = session_s3.anonymize
+        if keys is None:
+            session_s3.anonymize = keys = {}
+        key = keys[widget_id] = str(uuid.uuid4())
+
+        return key
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def selector(rules):
         """
-            TODO docstring
+            Generate the rule selector for anonymize-form
+
+            @param rules: the list of configured rules
+
+            @return: the selector (DIV)
         """
 
         T = current.T
@@ -478,7 +513,9 @@ class S3AnonymizeWidget(object):
     @staticmethod
     def buttons():
         """
-            TODO docstring
+            Generate the submit/cancel buttons for the anonymize-form
+
+            @return: the buttons row (DIV)
         """
 
         T = current.T
@@ -509,13 +546,12 @@ class S3AnonymizeWidget(object):
         s3 = current.response.s3
 
         # Static script
-        # TODO minify-configuration for s3.ui.anonymize.js
-        #if s3.debug:
-        script = "/%s/static/scripts/S3/s3.ui.anonymize.js" % \
-                 request.application
-        #else:
-            #script = "/%s/static/scripts/S3/s3.ui.anonymize.min.js" % \
-                     #request.application
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.anonymize.js" % \
+                     request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.anonymize.min.js" % \
+                     request.application
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)

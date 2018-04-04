@@ -1335,15 +1335,20 @@ form.anonymize-form,
   background-color: #ae231a;
 }
 
+/* line 298, ../scss/custom/_widgets.scss */
+.s3-anonymize {
+  display: inline-block;
+}
+
 /* Data lists */
-/* line 300, ../scss/custom/_widgets.scss */
+/* line 303, ../scss/custom/_widgets.scss */
 .card_1_line {
   margin-bottom: 0;
   overflow: hidden;
   height: auto;
 }
 
-/* line 305, ../scss/custom/_widgets.scss */
+/* line 308, ../scss/custom/_widgets.scss */
 .card_1_line, .card_manylines {
   color: #666;
   font-size: 0.7rem;

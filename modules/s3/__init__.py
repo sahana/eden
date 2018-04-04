@@ -138,4 +138,7 @@ from s3navigation import *
 from s3xforms import *
 from s3mobile import *
 
+# Anonymize
+from s3anonymize import *
+
 # END =========================================================================
