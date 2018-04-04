@@ -103,6 +103,8 @@ class DVRCaseModel(S3Model):
         define_table = self.define_table
         person_id = self.pr_person_id
 
+        float_represent = IS_FLOAT_AMOUNT.represent
+
         beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
         manage_transferability = settings.get_dvr_manage_transferability()
 
@@ -2896,7 +2898,11 @@ class DVRCaseEffortModel(S3Model):
                          comment = None,
                          ),
                      Field("hours", "double",
-                           requires = IS_FLOAT_IN_RANGE(0.0, None),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(minimum=0.0),
+                           widget = S3HoursWidget(precision = 2,
+                                                  ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -3770,15 +3776,21 @@ class DVRCaseEconomyInformationModel(S3Model):
                              ),
                      Field("monthly_costs", "double",
                            label = T("Monthly Costs"),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("average_weekly_income", "double",
                            label = T("Average Weekly Income"),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("monthly_income", "double",
                            label = T("Average Monthly Income"),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      s3_currency(),
                      s3_comments(),
@@ -4058,10 +4070,10 @@ class DVRCaseAllowanceModel(S3Model):
                                  3: T("refused"),
                                  4: T("missed"),
                                  }
-        amount_represent = lambda v: IS_FLOAT_AMOUNT.represent(v,
-                                                               precision = 2,
-                                                               fixed = True,
-                                                               )
+        amount_represent = lambda v: float_represent(v,
+                                                     precision = 2,
+                                                     fixed = True,
+                                                     )
 
         tablename = "dvr_allowance"
         define_table(tablename,

@@ -418,31 +418,31 @@ $.filterOptionsS3({
                            label = T("Weight (kg)"),
                            represent = lambda v: \
                                        float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("length", "double",
                            label = T("Length (m)"),
                            represent = lambda v: \
                                        float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("width", "double",
                            label = T("Width (m)"),
                            represent = lambda v: \
                                        float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("height", "double",
                            label = T("Height (m)"),
                            represent = lambda v: \
                                        float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("volume", "double",
                            label = T("Volume (m3)"),
                            represent = lambda v: \
                                        float_represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      # These comments do *not* pull through to an Inventory's Items or a Request's Items
                      s3_comments(),

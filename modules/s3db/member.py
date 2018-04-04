@@ -192,7 +192,7 @@ class S3MembersModel(S3Model):
                             represent = lambda v: \
                                 IS_FLOAT_AMOUNT.represent(v, precision=2),
                             requires = IS_EMPTY_OR(
-                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
                             ),
                       s3_date("membership_paid",

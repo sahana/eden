@@ -139,16 +139,23 @@ class S3BudgetModel(S3Model):
                      Field("total_onetime_costs", "double",
                            default = 0.0,
                            label = T("Total One-time Costs"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
                            writable = False,
                            ),
                      Field("total_recurring_costs", "double",
                            default = 0.0,
                            label = T("Total Recurring Costs"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
                            writable = False,
                            ),
                      Field("total_budget", "double",
                            default = 0.0,
                            label = T("Total Budget"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      s3_currency(required = True),
                      Field("monitoring_frequency", "integer",
@@ -219,22 +226,30 @@ class S3BudgetModel(S3Model):
                      Field("shipping", "double", notnull=True,
                            default = 15.0,
                            label = T("Shipping cost"),
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("logistics", "double", notnull=True,
                            default = 0.0,
                            label = T("Procurement & Logistics cost"),
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("admin", "double", notnull=True,
                            default = 0.0,
                            label = T("Administrative support cost"),
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      Field("indirect", "double", notnull=True,
                            default = 7.0,
                            label = T("Indirect support cost HQ"),
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           requires = IS_FLOAT_AMOUNT(0, 100),
                            ),
                      *s3_meta_fields())
 
