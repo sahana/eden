@@ -68,7 +68,6 @@ from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.tools import callback
 
 from ..s3 import *
 from s3layouts import S3PopupLink
@@ -102,8 +101,6 @@ class DVRCaseModel(S3Model):
         configure = self.configure
         define_table = self.define_table
         person_id = self.pr_person_id
-
-        float_represent = IS_FLOAT_AMOUNT.represent
 
         beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
         manage_transferability = settings.get_dvr_manage_transferability()
@@ -2869,7 +2866,6 @@ class DVRCaseEffortModel(S3Model):
 
         T = current.T
 
-        db = current.db
         s3 = current.response.s3
 
         define_table = self.define_table
@@ -2899,7 +2895,9 @@ class DVRCaseEffortModel(S3Model):
                          ),
                      Field("hours", "double",
                            represent = lambda v: \
-                                       float_represent(v, precision=2),
+                                       IS_FLOAT_AMOUNT.represent(v,
+                                                                 precision = 2,
+                                                                 ),
                            requires = IS_FLOAT_AMOUNT(minimum=0.0),
                            widget = S3HoursWidget(precision = 2,
                                                   ),
@@ -3670,6 +3668,9 @@ class DVRCaseEconomyInformationModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
+        float_represent = lambda v: \
+                          IS_FLOAT_AMOUNT.represent(v, precision=2)
+
         # ---------------------------------------------------------------------
         # Housing Types
         #
@@ -3776,20 +3777,17 @@ class DVRCaseEconomyInformationModel(S3Model):
                              ),
                      Field("monthly_costs", "double",
                            label = T("Monthly Costs"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("average_weekly_income", "double",
                            label = T("Average Weekly Income"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      Field("monthly_income", "double",
                            label = T("Average Monthly Income"),
-                           represent = lambda v: \
-                                       float_represent(v, precision=2),
+                           represent = float_represent,
                            requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            ),
                      s3_currency(),
@@ -4054,7 +4052,6 @@ class DVRCaseAllowanceModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
 
         crud_strings = current.response.s3.crud_strings
 
@@ -4070,10 +4067,10 @@ class DVRCaseAllowanceModel(S3Model):
                                  3: T("refused"),
                                  4: T("missed"),
                                  }
-        amount_represent = lambda v: float_represent(v,
-                                                     precision = 2,
-                                                     fixed = True,
-                                                     )
+        amount_represent = lambda v: IS_FLOAT_AMOUNT.represent(v,
+                                                               precision = 2,
+                                                               fixed = True,
+                                                               )
 
         tablename = "dvr_allowance"
         define_table(tablename,
@@ -4100,6 +4097,7 @@ class DVRCaseAllowanceModel(S3Model):
                                  ),
                      Field("amount", "double",
                            label = T("Amount"),
+                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
                            represent = amount_represent,
                            ),
                      s3_currency(),
@@ -4633,7 +4631,7 @@ class DVRCaseEventModel(S3Model):
                 return
 
             case_id = row.case_id
-            person_id == row.person_id
+            person_id = row.person_id
             type_id = row.type_id
 
         if not person_id:
@@ -4727,8 +4725,6 @@ class DVRCaseEventModel(S3Model):
                         # => create a new one unless there is an undated one
                         if undated:
                             update = undated
-                        else:
-                            create = True
                     else:
                         # Last appointment before today is still open
                         # => update it
@@ -5042,7 +5038,6 @@ class DVRActivityFundingModel(S3Model):
 
         T = current.T
 
-        db = current.db
         s3 = current.response.s3
 
         define_table = self.define_table
@@ -5107,7 +5102,6 @@ class DVRServiceContactModel(S3Model):
 
         db = current.db
         s3 = current.response.s3
-        settings = current.deployment_settings
 
         crud_strings = s3.crud_strings
 
@@ -5244,7 +5238,6 @@ class DVRSiteActivityModel(S3Model):
 
         T = current.T
 
-        db = current.db
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -5256,7 +5249,6 @@ class DVRSiteActivityModel(S3Model):
         SITE = settings.get_org_site_label()
         site_represent = self.org_SiteRepresent(show_link=False)
 
-        default_organisation = settings.get_org_default_organisation()
         default_site = settings.get_org_default_site()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
 
@@ -5877,8 +5869,10 @@ class DVRManageAppointments(S3Method):
                               "sSortDir_0": "asc",
                               }
                 get_vars.update(dt_sorting)
-            filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
-            resource.add_filter(filter)
+            dtfilter, orderby, left = resource.datatable_filter(list_fields,
+                                                                get_vars,
+                                                                )
+            resource.add_filter(dtfilter)
             data = resource.select(list_fields,
                                    start = 0,
                                    limit = limit,
@@ -6311,14 +6305,10 @@ class DVRRegisterCaseEvent(S3Method):
 
         T = current.T
 
-        s3db = current.s3db
         response = current.response
         settings = current.deployment_settings
 
-        s3 = response.s3
-
         output = {}
-        error = None
 
         http = r.http
         request_vars = r.get_vars
@@ -6608,7 +6598,7 @@ class DVRRegisterCaseEvent(S3Method):
                                               type_id = type_id,
                                               )
             if type_id in blocked:
-                msg, earliest = blocked[type_id]
+                msg = blocked[type_id][0]
                 form.errors["event"] = current.response.error = msg
 
     # -------------------------------------------------------------------------
@@ -8114,17 +8104,17 @@ class dvr_AssignMethod(S3Method):
                 limit = 4 * display_length
             else:
                 limit = None
-            filter, orderby, left = resource.datatable_filter(list_fields,
-                                                              get_vars)
-            resource.add_filter(filter)
+            dtfilter, orderby, left = resource.datatable_filter(list_fields,
+                                                                get_vars,
+                                                                )
+            resource.add_filter(dtfilter)
 
             # Hide people already in the link table
             query = (table[fkey] == record_id) & \
                     (table.deleted != True)
             rows = db(query).select(table.case_id)
             already = [row.case_id for row in rows]
-            filter = (~db.dvr_case.id.belongs(already))
-            resource.add_filter(filter)
+            resource.add_filter((~db.dvr_case.id.belongs(already)))
 
             dt_id = "datatable"
 
@@ -8440,7 +8430,7 @@ def dvr_update_last_seen(person_id):
                      )
 
 # =============================================================================
-def dvr_rheader(r, tabs=[]):
+def dvr_rheader(r, tabs=None):
     """ DVR module resource headers """
 
     if r.representation != "html":
@@ -8479,7 +8469,7 @@ def dvr_rheader(r, tabs=[]):
                 case = case[0]
                 case_number = lambda row: case["dvr_case.reference"]
                 case_type = lambda row: case["dvr_case.case_type_id"]
-                name = lambda row: s3_fullname(row)
+                name = s3_fullname
             else:
                 # Target record exists, but doesn't match filters
                 return None

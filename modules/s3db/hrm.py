@@ -122,8 +122,6 @@ class S3HRModel(S3Model):
 
         organisation_id = self.org_organisation_id
 
-        float_represent = IS_FLOAT_AMOUNT.represent
-
         root_org = auth.root_org()
         if is_admin:
             filter_opts = ()
@@ -1613,7 +1611,9 @@ class S3HRSalaryModel(S3Model):
                              ),
                      Field("monthly_amount", "double",
                            represent = lambda v: \
-                                        float_represent(v, precision=2),
+                                       IS_FLOAT_AMOUNT.represent(v,
+                                                                 precision = 2,
+                                                                 ),
                            requires = IS_EMPTY_OR(
                                         IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
@@ -2065,7 +2065,7 @@ class S3HRSkillModel(S3Model):
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
 
-        s3_string_represent = lambda s: s if s else NONE
+        float_represent = IS_FLOAT_AMOUNT.represent
 
         add_components = self.add_components
         configure = self.configure
@@ -2475,7 +2475,7 @@ class S3HRSkillModel(S3Model):
                            default = 0.0,
                            label = T("Pass Mark"),
                            represent = lambda v: \
-                                        float_represent(v, precision=2),
+                                       float_represent(v, precision=2),
                            requires = IS_EMPTY_OR(
                                         IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),
@@ -2703,7 +2703,7 @@ class S3HRSkillModel(S3Model):
                      Field("instructor",
                            label = ext_instructor_label,
                            comment = ext_instructor_tooltip,
-                           represent = s3_string_represent,
+                           represent = lambda s: s if s else NONE,
                            readable = ext_instructor,
                            writable = ext_instructor,
                            ),
@@ -3004,7 +3004,7 @@ class S3HRSkillModel(S3Model):
                            default = 0.0,
                            label = T("Grade Details"),
                            represent = lambda v: \
-                                        float_represent(v, precision=2),
+                                       float_represent(v, precision=2),
                            requires = IS_EMPTY_OR(
                                         IS_FLOAT_AMOUNT(minimum=0.0)
                                         ),

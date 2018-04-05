@@ -990,8 +990,8 @@ class S3ProjectModel(S3Model):
         query = (ltable.id.belongs(countries))
         locations = db(query).select(ltable.id,
                                      ltable.wkt)
-        for location in locations:
-            pass
+        #for location in locations:
+        #    pass
 
         # Convert to GeoJSON
         output = json.dumps({})
@@ -10647,7 +10647,7 @@ class S3ProjectTaskModel(S3Model):
                      Field("time_estimated", "double",
                            label = "%s (%s)" % (T("Time Estimate"),
                                                 T("hours")),
-                           represent = lambda v: \
+                           represent = lambda v: NONE if not v else \
                                 IS_FLOAT_AMOUNT.represent(v, precision=2),
                            requires = IS_EMPTY_OR(
                                         IS_FLOAT_AMOUNT(0, None)
@@ -10658,6 +10658,11 @@ class S3ProjectTaskModel(S3Model):
                      Field("time_actual", "double",
                            label = "%s (%s)" % (T("Time Taken"),
                                                 T("hours")),
+                           represent = lambda v: NONE if not v else \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_EMPTY_OR(
+                                        IS_FLOAT_AMOUNT(0, None)
+                                        ),
                            readable = staff,
                            # This comes from the Time component
                            writable = False,
@@ -11214,9 +11219,11 @@ class S3ProjectTaskModel(S3Model):
                                  ),
                      Field("hours", "double",
                            label = T("Effort (Hours)"),
+                           represent = lambda v: NONE if not v else \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
                            requires = IS_EMPTY_OR(
-                                       IS_FLOAT_AMOUNT(minimum=0.0)),
-                           represent = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                        IS_FLOAT_AMOUNT(0, None)
+                                        ),
                            widget = S3HoursWidget(precision = 2,
                                                   ),
                            ),
@@ -13118,7 +13125,7 @@ def project_task_controller():
                     # Hide fields which don't make sense in a Create form
                     s3db.req_create_form_mods()
             elif r.component_name == "human_resource":
-                 r.component.table.type.default = 2
+                r.component.table.type.default = 2
         else:
             if not auth.s3_has_role("STAFF"):
                 # Hide fields to avoid confusion (both of inputters & recipients)

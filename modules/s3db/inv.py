@@ -4590,11 +4590,11 @@ class S3InventoryAdjustModel(S3Model):
             Make unadjusted quantities show up in bold
         """
 
-        represent = IS_FLOAT_AMOUNT.represent(value, precision=2)
         if value is None:
-            return B(represent)
+            # We want the word "None" here, not just a bold dash
+            return B(T("None"))
         else:
-            return represent
+            IS_FLOAT_AMOUNT.represent(value, precision=2)
 
     # ---------------------------------------------------------------------
     @staticmethod
