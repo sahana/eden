@@ -1737,6 +1737,7 @@ def config(settings):
             elif tablename == "dc_target":
 
                 tabs = ((T("Basic Details"), None),
+                        (T("Report"), "results"),
                         (T("Responses"), "response"),
                         )
 

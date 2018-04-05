@@ -41,6 +41,9 @@ from gluon.languages import read_dict, write_dict
 from ..s3 import *
 from s3layouts import S3PopupLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class DataCollectionTemplateModel(S3Model):
     """
@@ -1298,15 +1301,15 @@ class dc_TargetReport(S3Method):
             representation = r.representation
             label = current.deployment_settings.get_dc_response_label()
             if label == "Assessment":
-                title = T("Assessment Report")
+                title = current.T("Assessment Report")
             elif label == "Survey":
-                title = T("Survey Report")
+                title = current.T("Survey Report")
             elif label == "Evaluation":
-                title = T("Evaluation Report")
+                title = current.T("Evaluation Report")
             elif label == "Event":
-                title = T("Event Report")
+                title = current.T("Event Report")
             else:
-                title = T("Target Report")
+                title = current.T("Target Report")
             if representation == "html":
                 output = self.html(r, title, **attr)
                 return output
@@ -1335,7 +1338,8 @@ class dc_TargetReport(S3Method):
         query = (qtable.template_id == template_id) & \
                 (qtable.deleted == False) & \
                 (ftable.id == qtable.field_id)
-        questions = db(query).select(qtable.name,
+        questions = db(query).select(qtable.id,
+                                     qtable.name,
                                      #qtable.field_type,
                                      qtable.options,
                                      qtable.posn,
@@ -1371,20 +1375,20 @@ class dc_TargetReport(S3Method):
                 fields[fieldname].append(answer[fieldname])
 
         # List of Questions
-        # For each Question:
-        # - if options then graph
-        # - otherwise display the full text
+        ID = "dc_question.id"
         NAME = "dc_question.name"
         OPTIONS = "dc_question.options"
         for question in questions:
+            question.id = question[ID]
             question.name = question[NAME]
             answers = fields[question[FIELD_NAME]]
             options = question[OPTIONS]
             if options:
-                options = {s3_str(opt): 0 for opt in options}
+                options = [s3_str(opt) for opt in options]
+                unsorted_options = {opt: 0 for opt in options}
                 for answer in answers:
-                    options[answer] += 1
-                question.options = options
+                    unsorted_options[answer] += 1
+                question.options = [(opt, unsorted_options[opt]) for opt in options]
             else:
                 question.options = None
                 question.answers = answers
@@ -1401,16 +1405,31 @@ class dc_TargetReport(S3Method):
         table = r.table
         date_represent = table.date.represent
 
+        response = current.response
+        s3 = response.s3
+        jqready_append = s3.jquery_ready.append
+
         #target_title = table.template_id.represent(r.record.template_id)
 
         data = self._extract(r, **attr)
 
         table = TABLE()
+        json_dumps = json.dumps
         for question in data:
             table.append(TR(TH(question.name)))
             if question.options:
-                # @ToDo: Graph
-                pass
+                # Graph
+                svg_id = "svg_%s" % question.id
+                table.append(TR(TD(TAG["SVG"](_id=svg_id))))
+                data = []
+                data_append = data.append
+                for opt in question.options:
+                    data_append({"o": opt[0],
+                                 "v": opt[1],
+                                 })
+                script = '''S3.dc_results('%s','%s')''' % \
+                    ("#%s" % svg_id, json_dumps(data, separators=SEPARATORS))
+                jqready_append(script)
             else:
                 # Enumerate Answers
                 for answer in question.answers:
@@ -1425,7 +1444,16 @@ class dc_TargetReport(S3Method):
                   "title": title,
                   }
 
-        current.response.view = "simple.html"
+        appname = r.application
+        s3.stylesheets.append("S3/dc_results.css")
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            scripts_append("/%s/static/scripts/d3/d3.js" % appname)
+            scripts_append("/%s/static/scripts/S3/s3.dc_results.js" % appname)
+        else:
+            scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
+            scripts_append("/%s/static/scripts/S3/s3.dc_results.min.js" % appname)
+        response.view = "simple.html"
         return output
 
     # -------------------------------------------------------------------------
@@ -1646,6 +1674,7 @@ def dc_rheader(r, tabs=None):
                 RESPONSES = T("Responses")
 
             tabs = ((T("Basic Details"), None),
+                    (T("Report"), "results/"),
                     (RESPONSES, "response"),
                     )
 
