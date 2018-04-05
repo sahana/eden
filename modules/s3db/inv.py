@@ -4594,7 +4594,7 @@ class S3InventoryAdjustModel(S3Model):
             # We want the word "None" here, not just a bold dash
             return B(T("None"))
         else:
-            IS_FLOAT_AMOUNT.represent(value, precision=2)
+            return IS_FLOAT_AMOUNT.represent(value, precision=2)
 
     # ---------------------------------------------------------------------
     @staticmethod
