@@ -177,6 +177,25 @@ if has_module("dc"):
 
     tasks["dc_target_check"] = dc_target_check
 
+    # -------------------------------------------------------------------------
+    def dc_target_report(target_id, user_id=None):
+        """
+            Notify that Survey Report is ready
+
+            @param target_id: Target record_id
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        # Run the Task & return the result
+        result = s3db.dc_target_report(target_id)
+        #db.commit()
+        return result
+
+    tasks["dc_target_report"] = dc_target_report
+
 # -----------------------------------------------------------------------------
 if has_module("doc"):
 
