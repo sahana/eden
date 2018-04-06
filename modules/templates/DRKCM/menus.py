@@ -287,7 +287,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
-                        M("Need Types", f="need"),
+                        #M("Need Types", f="need"),
                         M("Intervention Types", f="response_type", m="hierarchy"),
                         M("Appointment Types", f="case_appointment_type"),
                         M("Residence Status Types", f="residence_status_type"),
