@@ -2887,9 +2887,12 @@ def drk_anonymous_address(record_id, field, value):
                     "lon": None,
                     "wkt": None,
                     }
-            if "the_geom" in ltable.fields:
-                data["the_geom"] = None
+            # Doesn't work - PyDAL doesn't detect the None value:
+            #if "the_geom" in ltable.fields:
+            #    data["the_geom"] = None
             row.update_record(**data)
+            if "the_geom" in ltable.fields:
+                db.executesql("UPDATE gis_location SET the_geom=NULL WHERE id=%s" % row.id)
 
     return value
 
