@@ -230,7 +230,7 @@ REGISTRATION,Case Registration,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE
 REGISTRATION,Case Registration,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
 REGISTRATION,Case Registration,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
 REGISTRATION,Case Registration,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
-REGISTRATION,Case Registration,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+REGISTRATION,Case Registration,,,,pr_person,CREATE|READ|UPDATE,,,,,
 REGISTRATION,Case Registration,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
 REGISTRATION,Case Registration,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
 REGISTRATION,Case Registration,,,,project_project,NONE,,,,,
