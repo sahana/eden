@@ -63,7 +63,7 @@
          */
         _create: function() {
 
-            var el = $(this.element);
+            //var el = $(this.element);
 
             this.id = locationselectorID;
             locationselectorID += 1;
@@ -140,8 +140,8 @@
                 // Get all L0 locations from global cache
                 for (locationID in hierarchyLocations) {
                     location = hierarchyLocations[locationID];
-                    if (location['l'] === 0) {
-                        location['i'] = locationID;
+                    if (location.l === 0) {
+                        location.i = locationID;
                         locations.push(location);
                     }
                 }
@@ -154,8 +154,8 @@
                     option;
                 for (var i=0, len=locations.length; i < len; i++) {
                     location = locations[i];
-                    locationID = location['i'];
-                    option = '<option value="' + locationID + '">' + location['n'] + '</option>';
+                    locationID = location.i;
+                    option = '<option value="' + locationID + '">' + location.n + '</option>';
                     dropdown.append(option);
                 }
                 // Show the L0 row
@@ -382,7 +382,9 @@
 
             var selector = '#' + this.fieldname,
                 opts = this.options,
-                dropdown = $(selector + '_L' + level);
+                dropdown = $(selector + '_L' + level),
+                s,
+                l;
 
             if (id) {
                 // Set this dropdown to this value
@@ -401,13 +403,11 @@
             if (level === 0) {
 
                 var labelled = this._readLabels(id),
-                    defaultLabels = hierarchyLabels['d'],
+                    defaultLabels = hierarchyLabels.d,
                     levels = ['1', '2', '3', '4', '5'],
                     label,
                     labelHTML,
-                    i,
-                    s,
-                    l;
+                    i;
 
                 labelled.then(
                     function(labels) {
@@ -523,7 +523,7 @@
                                     }
                                 }
                             }
-                            
+
                             // Populate the next dropdown
                             var numLocations = locations.length,
                                 selected,
@@ -630,9 +630,9 @@
                 var lat = data.lat,
                     lon = data.lon,
                     wkt = data.wkt;
-                if ('radius' in data) {
-                    var radius = data.radius;
-                }
+                //if ('radius' in data) {
+                //    var radius = data.radius;
+                //}
                 if (!address && !postcode && !lat && !lon && !wkt) {
                     // No specific data, so point directly to the Lowest-set Lx
                     data.id = parent;
@@ -731,7 +731,7 @@
                 }
             }
             // No Lx set at all, so return the lowest-level un-selectable Lx if-any
-            var defaultLocation = hierarchyLocations['d'];
+            var defaultLocation = hierarchyLocations.d;
             if (defaultLocation) {
                 return defaultLocation.i;
             }
@@ -758,11 +758,12 @@
             if (labels == undefined) {
 
                 // Get the hierarchy labels from server
-                var url = S3.Ap.concat('/gis/hdata/' + id);
+                var url = S3.Ap.concat('/gis/hdata/' + id),
+                    n;
                 $.ajaxS3({
                     url: url,
                     dataType: 'script',
-                    success: function(data) {
+                    success: function( /* data */ ) {
                         // Copy the elements across
                         labels = {};
                         try {
@@ -783,8 +784,10 @@
                         } else {
                             msg = request.responseText;
                         }
-                        s3_debug(msg);
-                        //S3.showAlert(msg, 'error');
+                        if (msg) {
+                            s3_debug(msg);
+                            //S3.showAlert(msg, 'error');
+                        }
                         dfd.reject();
                     }
                 });
@@ -823,16 +826,18 @@
                 var throbber = $(selector + '_L' + level + '__throbber').removeClass('hide').show();
 
                 // Download Location Data
+                var url,
+                    n;
                 if (missing) {
-                    var url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
+                    url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
                 } else {
-                    var url = S3.Ap.concat('/gis/ldata/' + parent);
+                    url = S3.Ap.concat('/gis/ldata/' + parent);
                 }
                 $.ajaxS3({
                     //async: false,
                     url: url,
                     dataType: 'script',
-                    success: function(data) {
+                    success: function( /* data */ ) {
 
                         // Copy the elements across
                         for (var prop in n) {
@@ -852,14 +857,17 @@
                     },
 
                     error: function(request, status, error) {
+
                         var msg;
                         if (error == 'UNAUTHORIZED') {
                             msg = i18n.gis_requires_login;
                         } else {
                             msg = request.responseText;
                         }
-                        s3_debug(msg);
-                        S3.showAlert(msg, 'error');
+                        if (msg) {
+                            s3_debug(msg);
+                            S3.showAlert(msg, 'error');
+                        }
 
                         // Revert state of widget to allow user to retry
                         // without reloading page
@@ -1184,7 +1192,7 @@
             // Check if Maps JS is Loaded
             $.when(this._jsLoaded()).then(
 
-                function(status) {
+                function( /* status */ ) {
                     // Maps JS is loaded
                     var gis = S3.gis,
                         map_id = 'location_selector_' + fieldname,
@@ -1732,7 +1740,7 @@
               selector + '_latlon_toggle').unbind(ns);
 
             this.input.next('.error_wrapper').unbind(ns);
-            this.input.closest('form').unbind(ns + self.id);
+            this.input.closest('form').unbind(ns + this.id);
 
             return true;
         }
@@ -1768,7 +1776,7 @@
          */
         _create: function() {
 
-            var el = $(this.element);
+            //var el = $(this.element);
 
             this.id = latloninputID;
             latloninputID += 1;
@@ -1887,13 +1895,14 @@
                 return {d: '', m: '', s: ''};
             }
             var d = Math.abs(value),
-                m = (d - parseInt(d, 10)) * 60;
+                m = (d - parseInt(d, 10)) * 60,
+                s;
             // Stop integer values of m from being approximated
             if (Math.abs(m - Math.round(m)) < 1e-10) {
                 m = Math.round(m);
                 s = 0;
             } else {
-                var s = (m - parseInt(m, 10)) * 60;
+                s = (m - parseInt(m, 10)) * 60;
                 // Stop integer values of s from being approximated
                 if (Math.abs(s - Math.round(s)) < 1e-10) {
                     s = Math.round(s);

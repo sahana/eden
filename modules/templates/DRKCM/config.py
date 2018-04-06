@@ -1366,7 +1366,7 @@ def config(settings):
                     "status_id",
                     "priority",
                     "sector_id",
-                    "case_activity_need.need_id",
+                    #"case_activity_need.need_id",
                     "response_action.response_type_id",
                     )
             report_options = {
@@ -1462,14 +1462,14 @@ def config(settings):
             field.comment = None
 
             # Inline-needs
-            ntable = current.s3db.dvr_case_activity_need
-
-            field = ntable.human_resource_id
-            field.default = human_resource_id
-            field.widget = field.comment = None
-
-            field = ntable.need_id
-            field.comment = None
+            #ntable = current.s3db.dvr_case_activity_need
+            #
+            #field = ntable.human_resource_id
+            #field.default = human_resource_id
+            #field.widget = field.comment = None
+            #
+            #field = ntable.need_id
+            #field.comment = None
 
             # Inline-responses
             rtable = s3db.dvr_response_action
@@ -1499,17 +1499,17 @@ def config(settings):
                             "priority",
                             "human_resource_id",
 
-                            S3SQLInlineComponent("case_activity_need",
-                                                 label = T("Needs Assessment"),
-                                                 fields = [
-                                                     "date",
-                                                     "need_id",
-                                                     (T("Details"), "comments"),
-                                                     "human_resource_id",
-                                                     ],
-                                                 layout = S3SQLVerticalSubFormLayout,
-                                                 explicit_add = T("Add Need"),
-                                                 ),
+                            #S3SQLInlineComponent("case_activity_need",
+                            #                     label = T("Needs Assessment"),
+                            #                     fields = [
+                            #                         "date",
+                            #                         "need_id",
+                            #                         (T("Details"), "comments"),
+                            #                         "human_resource_id",
+                            #                         ],
+                            #                     layout = S3SQLVerticalSubFormLayout,
+                            #                     explicit_add = T("Add Need"),
+                            #                     ),
 
                             S3SQLInlineComponent("response_action",
                                                  label = T("Actions"),
@@ -1674,12 +1674,12 @@ def config(settings):
                                                                          translate = True,
                                                                          ),
                                     ),
-                    S3OptionsFilter("case_activity_need.need_id",
-                                    options = lambda: s3_get_filter_opts("dvr_need",
-                                                                         translate = True,
-                                                                         ),
-                                    hidden = True,
-                                    ),
+                    #S3OptionsFilter("case_activity_need.need_id",
+                    #                options = lambda: s3_get_filter_opts("dvr_need",
+                    #                                                     translate = True,
+                    #                                                     ),
+                    #                hidden = True,
+                    #                ),
                     S3OptionsFilter("person_id$person_details.nationality",
                                     label = T("Client Nationality"),
                                     hidden = True,
@@ -1902,7 +1902,7 @@ def config(settings):
                     "case_activity_id$person_id$person_details.nationality",
                     "case_activity_id$person_id$person_details.marital_status",
                     "case_activity_id$sector_id",
-                    "case_activity_id$case_activity_need.need_id",
+                    #"case_activity_id$case_activity_need.need_id",
                     "response_type_id",
                     )
             report_options = {
@@ -1910,7 +1910,7 @@ def config(settings):
                 "cols": axes,
                 "fact": facts,
                 "defaults": {"rows": "response_type_id",
-                             "cols": "case_activity_id$case_activity_need.need_id",
+                             "cols": "case_activity_id$sector_id",
                              "fact": "count(id)",
                              "totals": True,
                              },

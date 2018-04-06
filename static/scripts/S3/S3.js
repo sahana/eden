@@ -405,19 +405,20 @@ S3.showHidden = function(controlField, affectedFields, tablename) {
         tablename = tablename + '_';
     }
     controlField = $('#' + tablename + controlField);
-    var fieldname,
-        selector;
     controlField.change(function() {
+        var fieldname,
+            selector,
+            i;
         if (controlField.prop('checked')) {
             // Show
-            for (var i = 0; i < affectedFields.length; i++) {
+            for (i = 0; i < affectedFields.length; i++) {
                 fieldname = affectedFields[i];
                 selector = '#' + tablename + fieldname;
                 $(selector + '__row, ' + selector + '__subheading, ' + selector + '__subheading1, ' + selector + '__subheading2').show();
             }
         } else {
             // Hide
-            for (var i = 0; i < affectedFields.length; i++) {
+            for (i = 0; i < affectedFields.length; i++) {
                 fieldname = affectedFields[i];
                 selector = '#' + tablename + fieldname;
                 $(selector + '__row, ' + selector + '__subheading, ' + selector + '__subheading1, ' + selector + '__subheading2').hide();
@@ -631,11 +632,19 @@ var S3EnableNavigateAwayConfirm = function() {
             return;
         }
 
-        if (textStatus == 'abort') {
+        var readyState = jqXHR.readyState,
+            httpStatus = jqXHR.status,
+            navigateAway = !httpStatus && readyState === 0;
 
-            // Request aborted...don't show nasty messages
+        if (textStatus == 'abort' || navigateAway) {
+
+            // Request aborted, or navigating away...don't show nasty messages
             self.tryCount = 0;
             self.xhr = null;
+
+            if (navigateAway) {
+                return;
+            }
 
         } else if (textStatus == 'timeout') {
 
@@ -663,7 +672,7 @@ var S3EnableNavigateAwayConfirm = function() {
             message = i18n.ajax_wht + ' ' + tryCount + ' ' + i18n.ajax_gvn;
             S3.showAlert(message, 'error');
 
-        } else if (jqXHR.status == 500) {
+        } else if (httpStatus == 500) {
             // Internal server error
             S3.showAlert(i18n.ajax_500, 'error');
         } else {
@@ -678,7 +687,7 @@ var S3EnableNavigateAwayConfirm = function() {
             }
         }
 
-        // Apply the caller's error callback
+        // Apply the caller's error callback (except when navigating away)
         var errorCallback = self.errorCallback;
         if (errorCallback) {
             errorCallback.apply(this, arguments);
@@ -963,7 +972,9 @@ S3.openPopup = function(url, center) {
                 ',top=' + (screen.height - 480)/2;
         }
         S3.popupWin = window.open(url, 'popupWin', params);
-    } else S3.popupWin.focus();
+    } else {
+        S3.popupWin.focus();
+    }
 };
 
 // ============================================================================
