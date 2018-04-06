@@ -2011,21 +2011,22 @@ def config(settings):
     settings.customise_dc_target_controller = customise_dc_target_controller
 
     # -------------------------------------------------------------------------
-    def hrm_notify_participants(training_event_id):
+    def hrm_notify_participants(training_event_id, redirect=True):
         """
-            Notify Participants to fill out the Survey
+            * Notify Participants to fill out the Survey
             - exclude Observers
+            * Update Date of Survey
+            * Schedule Task to send Report of results
         """
-
-        auth = current.auth
-        db = current.db
-        s3db = current.s3db
-
 
         import time
         from gluon import URL
         from gluon.utils import web2py_uuid
         from s3 import s3_fullname, s3_str, S3DateTime
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
 
         # Read the Event Details
         etable = s3db.hrm_training_event
@@ -2051,7 +2052,10 @@ def config(settings):
         target_id = target.id
         template_id = target.template_id
         default_language = target.language
-        target.update_record(date = current.request.utcnow)
+
+        # Update Survey Date
+        now = current.request.utcnow
+        target.update_record(date = now)
 
         # Build list of people to notify
         # - including their language
@@ -2094,7 +2098,8 @@ def config(settings):
                                    )
 
         # Build localised mail for each language
-        session_s3 = current.session.s3
+        session = current.session
+        session_s3 = session.s3
         ui_language = session_s3.language
         subject = "Placeholder Subject"
         line1 = "You are receiving this email as a participant of %(event_name)s held in %(location)s on %(date)s."
@@ -2139,7 +2144,8 @@ def config(settings):
         #        from gluon.contrib.pymysql import IntegrityError
         errors = {}
         success = 0
-        s3 = current.response.s3
+        response = current.response
+        s3 = response.s3
         s3.bulk = True # Don't send a Welcome Message for new users as we send our own message instead
         send_email = current.msg.send_by_pe_id
         rtable.date.default = None # Set the date when we answer
@@ -2280,14 +2286,73 @@ def config(settings):
         session_s3.language = ui_language
         T.force(ui_language)
 
-        return success, errors
+        # Communicate success / errors
+        if errors:
+            from gluon import A
+            bad = ""
+            for e in errors:
+                error = errors[e]
+                new_error = A("%s %s" % (error["first_name"],
+                                         error["last_name"]),
+                              _href=URL(c="hrm", f="person", args=e))
+                if bad:
+                    bad = "%s, %s" % (bad, new_error)
+                else:
+                    bad = new_error
+            warning = "%s: %s" % (s3_str(T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
+                                  bad)
+            if redirect:
+                session.warning = warning
+            else:
+                response.warning = warning
+        elif success:
+            if redirect:
+                session.confirmation = s3_str(T("%i Notifications sent!")) % success
+            else:
+                response.confirmation = s3_str(T("%i Notifications sent!")) % success
+        else:
+            if redirect:
+                session.information = T("No Notifications needed sending!")
+            else:
+                response.information = T("No Notifications needed sending!")
+
+        if success:
+            # Schedule Report
+            import json
+            from dateutil.relativedelta import relativedelta
+            ttable = s3db.scheduler_task
+            schedule_task = current.s3task.schedule_task
+            task_name = "dc_target_report"
+
+            # 1 month reminder
+            start_time = now + relativedelta(months = 1)
+            args = [target_id]
+            query = (ttable.task_name == task_name) & \
+                    (ttable.args == json.dumps(args))
+            exists = db(query).select(ttable.id,
+                                      ttable.start_time,
+                                      limitby = (0, 1)
+                                      ).first()
+            if exists:
+                if exists.start_time != start_time:
+                    exists.update_record(start_time = start_time)
+            else:
+                schedule_task(task_name,
+                              args = args,
+                              start_time = start_time,
+                              #period = 300,  # seconds
+                              timeout = 300, # seconds
+                              repeats = 1    # run once
+                              )
 
     # -------------------------------------------------------------------------
     def dc_target_onapprove(row):
         """
             Only used by Bangkok CCST currently
 
-            Send Notifications (& Update Date)
+            Send Notifications, inc:
+            * Update Survey Date
+            * Schedule Report
 
             @ToDo: Don't do this automatically for auto-approved manual surveys?
         """
@@ -2299,34 +2364,7 @@ def config(settings):
                                                                           limitby = (0, 1),
                                                                           ).first()
 
-        success, errors = hrm_notify_participants(training_event.training_event_id)
-
-        if errors:
-            from gluon import A, URL
-            from s3 import s3_str
-            bad = ""
-            for e in errors:
-                error = errors[e]
-                #new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
-                #                                     error["last_name"]),
-                #                          _href=URL(c="hrm", f="person", args=e)),
-                #                        error["error"])
-                new_error = A("%s %s" % (error["first_name"],
-                                         error["last_name"]),
-                              _href=URL(c="hrm", f="person", args=e))
-                if bad:
-                    bad = "%s, %s" % (bad, new_error)
-                else:
-                    bad = new_error
-            current.response.warning = "%s: %s" % (s3_str(T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
-                                                   bad
-                                                   )
-        elif success:
-            from s3 import s3_str
-            current.response.confirmation = s3_str(T("%i Notifications sent!")) % success
-
-        else:
-            current.response.information = T("No Notifications needed sending!")
+        hrm_notify_participants(training_event.training_event_id, redirect=False)
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -4814,37 +4852,11 @@ def config(settings):
             - exclude Observers
         """
 
-        from gluon import redirect, A, URL
+        from gluon import redirect, URL
 
         training_event_id = r.id
 
-        success, errors = hrm_notify_participants(training_event_id)
-
-        if errors:
-            from s3 import s3_str
-            bad = ""
-            for e in errors:
-                error = errors[e]
-                #new_error = "%s: %s" % (A("%s %s" % (error["first_name"],
-                #                                     error["last_name"]),
-                #                          _href=URL(c="hrm", f="person", args=e)),
-                #                        error["error"])
-                new_error = A("%s %s" % (error["first_name"],
-                                         error["last_name"]),
-                              _href=URL(c="hrm", f="person", args=e))
-                if bad:
-                    bad = "%s, %s" % (bad, new_error)
-                else:
-                    bad = new_error
-            current.session.warning = "%s: %s" % (s3_str(T("%i Notifications sent, but these participants couldn't be notified as User Accounts already exist with these email addresses")) % success,
-                                                  bad
-                                                  )
-        elif success:
-            from s3 import s3_str
-            current.session.confirmation = s3_str(T("%i Notifications sent!")) % success
-
-        else:
-            current.session.information = T("No Notifications needed sending!")
+        hrm_notify_participants(training_event_id, redirect=True)
 
         # Redirect to main event page
         redirect(URL(args=[training_event_id]))
