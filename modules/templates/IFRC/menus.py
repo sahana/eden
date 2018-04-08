@@ -195,7 +195,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("deploy", name="RDRT", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
-                MM("InBox", c="deploy", f="email_inbox", check=rdrt_admin)
+                MM("InBox", c="deploy", f="email_inbox", check=rdrt_admin),
                 MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
