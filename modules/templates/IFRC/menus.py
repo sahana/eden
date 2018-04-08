@@ -109,7 +109,7 @@ class S3MainMenu(default.S3MainMenu):
                    root_org is None and has_role(ADMIN)
 
         def rdrt_admin(item):
-            return has_role(RDRT_ADMIN)
+            return has_role("RDRT_ADMIN")
 
         #def vol(item):
         #    return root_org != HNRC or \
