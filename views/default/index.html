@@ -27,11 +27,15 @@
    {{=manage_facility_box}}
    {{=org_box}}
   </div>
-  <div class='hide-for-small medium-12 large-pull-6 large-5 columns' id='homepage-menus'>
-   {{try:}}{{=sit_menu}}{{except:}}{{pass}}
-   {{try:}}{{=org_menu}}{{except:}}{{pass}}
-   {{try:}}{{=res_menu}}{{except:}}{{pass}}
-   {{try:}}{{=aid_menu}}{{except:}}{{pass}}
+  <div class='hide-for-small medium-12 large-pull-6 large-6 columns' id='homepage-menus'>
+   <div class="row">
+    <div class="medium-centered medium-11 columns">
+     {{try:}}{{=sit_menu}}{{except:}}{{pass}}
+     {{try:}}{{=org_menu}}{{except:}}{{pass}}
+     {{try:}}{{=res_menu}}{{except:}}{{pass}}
+     {{try:}}{{=aid_menu}}{{except:}}{{pass}}
+    </div>
+   </div>
   </div>
  </div>
 </div>

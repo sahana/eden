@@ -430,7 +430,7 @@ class S3HomepageMenuLayout(S3NavigationItem):
                 title = H3(item.label) if item.label else ""
                 menu = DIV(title,
                            DIV(TAG[""](components),
-                               _class = "icon-bar five-up",
+                               _class = "icon-bar four-up",
                                ),
                            _id = item.attr._id,
                            _class = item.attr._class,
@@ -449,8 +449,7 @@ class S3HomepageMenuLayout(S3NavigationItem):
 
                 icon = item.opts.icon
                 if icon:
-                    return A(ICON(icon),
-                             LABEL(item.label),
+                    return A(LABEL(ICON(icon), item.label),
                              _class = _class,
                              _href = item.url(),
                              _id = _id,
