@@ -127,6 +127,7 @@ class S3Parser(object):
                     )
 
         # Can we identify the Member?
+        hr_id = None
         person_id = S3Parsing().lookup_person(message.from_address)
         if person_id:
             # Sender identified => look up HR records
@@ -140,7 +141,6 @@ class S3Parser(object):
                                                        orderby=~htable.modified_on,
                                                        left=left,
                                                        )
-            hr_id = None
             if len(rows) == 1:
                 # Single profile
                 hr_id = rows[0][htable.id]

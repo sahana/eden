@@ -108,6 +108,9 @@ class S3MainMenu(default.S3MainMenu):
             return root_org == NZRC or \
                    root_org is None and has_role(ADMIN)
 
+        def rdrt_admin(item):
+            return has_role("RDRT_ADMIN")
+
         #def vol(item):
         #    return root_org != HNRC or \
         #           has_role(ORG_ADMIN)
@@ -192,6 +195,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("deploy", name="RDRT", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
+                MM("InBox", c="deploy", f="email_inbox", check=rdrt_admin),
                 MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
