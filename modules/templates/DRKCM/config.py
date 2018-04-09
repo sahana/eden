@@ -271,6 +271,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Organisations Module Settings
     #
+    settings.org.sector = True
     settings.org.branches = True
     settings.org.offices_tab = False
 
@@ -1407,6 +1408,36 @@ def config(settings):
             # Customise sector
             field = table.sector_id
             field.comment = None
+            root_org = auth.root_org()
+            if root_org and not auth.s3_has_roles("ADMIN", "ORG_GROUP_ADMIN"):
+
+                # Look up the sectors of the root org
+                db = current.db
+                ltable = s3db.org_sector_organisation
+                query = (ltable.organisation_id == root_org) & \
+                        (ltable.deleted == False)
+                rows = db(query).select(ltable.sector_id)
+                sector_ids = set(row.sector_id for row in rows)
+
+                # Include the sector_id of the current record (if any)
+                record = None
+                component = r.component
+                if not component:
+                    if r.tablename == "dvr_case_activity":
+                        record = r.record
+                elif component.tablename == "dvr_case_activity" and r.component_id:
+                    query = table.id == r.component_id
+                    record = db(query).select(table.sector_id,
+                                              limitby = (0, 1),
+                                              ).first()
+                if record and record.sector_id:
+                    sector_ids.add(record.sector_id)
+
+                # Limit the sector selection
+                subset = db(s3db.org_sector.id.belongs(sector_ids))
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
+                                                       field.represent,
+                                                       ))
 
             # Show subject field
             field = table.subject
