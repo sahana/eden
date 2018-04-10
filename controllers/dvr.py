@@ -763,6 +763,12 @@ def referral_type():
 # =============================================================================
 # Responses
 #
+def response_theme():
+    """ Response Themes: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def response_type():
     """ Response Types: RESTful CRUD Controller """
 

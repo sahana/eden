@@ -1392,6 +1392,7 @@ class DVRResponseModel(S3Model):
 
     names = ("dvr_response_action",
              "dvr_response_status",
+             "dvr_response_theme",
              "dvr_response_type",
              "dvr_response_type_case_activity",
              )
@@ -1412,6 +1413,61 @@ class DVRResponseModel(S3Model):
         hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
 
         NONE = current.messages["NONE"]
+
+        # ---------------------------------------------------------------------
+        # Response Themes
+        #
+        tablename = "dvr_response_theme"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     self.org_organisation_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
+                  )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Response Theme"),
+            title_display = T("Response Theme Details"),
+            title_list = T("Response Themes"),
+            title_update = T("Edit Response Theme"),
+            label_list_button = T("List Response Themes"),
+            label_delete_button = T("Delete Response Theme"),
+            msg_record_created = T("Response Theme created"),
+            msg_record_modified = T("Response Theme updated"),
+            msg_record_deleted = T("Response Theme deleted"),
+            msg_list_empty = T("No Response Themes currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup = tablename,
+                                multiple = True,
+                                translate = True,
+                                )
+        response_theme_ids = S3ReusableField(
+                                "response_theme_ids",
+                                "list:reference %s" % tablename,
+                                label = T("Themes"),
+                                ondelete = "RESTRICT",
+                                represent = represent,
+                                requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db,
+                                                    "%s.id" % tablename,
+                                                    represent,
+                                                    multiple = True,
+                                                    )),
+                                sortby = "name",
+                                widget = S3MultiSelectWidget(header = False,
+                                                             ),
+                                )
 
         # ---------------------------------------------------------------------
         # Response Types
@@ -1464,22 +1520,23 @@ class DVRResponseModel(S3Model):
             msg_record_created = T("Response Type created"),
             msg_record_modified = T("Response Type updated"),
             msg_record_deleted = T("Response Type deleted"),
-            msg_list_empty = T("No Response Types currently registered"),
+            msg_list_empty = T("No Response Types currently defined"),
         )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
-        response_type_id = S3ReusableField("response_type_id",
-                                           "reference %s" % tablename,
-                                           label = T("Response Type"),
-                                           represent = represent,
-                                           requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "%s.id" % tablename,
-                                                                  represent,
-                                                                  )),
-                                           sortby = "name",
-                                           widget = widget,
-                                           )
+        response_type_id = S3ReusableField(
+                                "response_type_id",
+                                "reference %s" % tablename,
+                                label = T("Response Type"),
+                                represent = represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                      represent,
+                                                      )),
+                                sortby = "name",
+                                widget = widget,
+                                )
 
         # ---------------------------------------------------------------------
         # Response action status
@@ -1525,23 +1582,24 @@ class DVRResponseModel(S3Model):
             msg_record_created = T("Response Status created"),
             msg_record_modified = T("Response Status updated"),
             msg_record_deleted = T("Response Status deleted"),
-            msg_list_empty = T("No Response Statuses currently registered"),
+            msg_list_empty = T("No Response Statuses currently defined"),
         )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
-        response_status_id = S3ReusableField("status_id",
-                                             "reference %s" % tablename,
-                                             label = T("Status"),
-                                             represent = represent,
-                                             requires = IS_ONE_OF(db, "%s.id" % tablename,
-                                                                  represent,
-                                                                  orderby = "workflow_position",
-                                                                  sort = False,
-                                                                  zero = None,
-                                                                  ),
-                                             sortby = "workflow_position",
-                                             )
+        response_status_id = S3ReusableField(
+                                "status_id",
+                                "reference %s" % tablename,
+                                label = T("Status"),
+                                represent = represent,
+                                requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                     represent,
+                                                     orderby = "workflow_position",
+                                                     sort = False,
+                                                     zero = None,
+                                                     ),
+                                sortby = "workflow_position",
+                                )
 
         # ---------------------------------------------------------------------
         # Responses
@@ -1560,6 +1618,7 @@ class DVRResponseModel(S3Model):
                          ondelete = "CASCADE",
                          writable = False,
                          ),
+                     response_theme_ids(),
                      response_type_id(
                          empty = False,
                          label = T("Action Type"),
@@ -5758,7 +5817,10 @@ class dvr_CaseActivityRepresent(S3Represent):
             @param row: the row with this key
         """
 
-        beneficiary = row.pr_person
+        try:
+            beneficiary = row.pr_person
+        except AttributeError:
+            return v
 
         url = URL(c = "dvr",
                   f = "person",

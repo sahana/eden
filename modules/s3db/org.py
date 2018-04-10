@@ -665,6 +665,8 @@ class S3OrganisationModel(S3Model):
                        hrm_human_resource = "organisation_id",
                        # Members
                        member_membership = "organisation_id",
+                       # DVR response themes
+                       dvr_response_theme = "organisation_id",
                        # Evacuees
                        evr_case = "organisation_id",
                        # Locations served
@@ -8317,7 +8319,7 @@ class org_CapacityReport(S3Method):
         # Create the file
         try:
             from cStringIO import StringIO    # Faster, where available
-        except:
+        except ImportError:
             from StringIO import StringIO
 
         output = StringIO()
@@ -8568,20 +8570,22 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.db.org_resource
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": list_id,
-                "record": record_id,
-                }
+        link_vars = {"refresh": list_id,
+                     "record": record_id,
+                     }
         f = current.request.function
         if f == "organisation" and organisation_id:
-            vars["(organisation)"] = organisation_id
+            link_vars["(organisation)"] = organisation_id
         elif f == "location" and location_id:
-            vars["(location)"] = location_id
+            link_vars["(location)"] = location_id
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="org", f="resource",
-                               args=[record_id, "update.popup"],
-                               vars=vars),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_resource.title_update,
+                     _href = URL(c = "org",
+                                 f = "resource",
+                                 args = [record_id, "update.popup"],
+                                 vars = link_vars,
+                                 ),
+                     _class = "s3_modal",
+                     _title = current.response.s3.crud_strings.org_resource.title_update,
                      )
     else:
         edit_btn = ""
