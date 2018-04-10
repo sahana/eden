@@ -1,2 +1,3 @@
 Name,Avatar,Location,Rich Text,Replies,Comments
-Sitreps,,,T,T,post situational reports
+Sitreps,Y,Y,T,T,post situational reports
+News,Y,T,T,F,news feeds (e.g social media channels)

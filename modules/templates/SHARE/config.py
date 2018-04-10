@@ -136,6 +136,11 @@ def config(settings):
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # -------------------------------------------------------------------------
+    # Messaging
+    # Parser
+    settings.msg.parser = "SAFIRE"
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -304,5 +309,35 @@ def config(settings):
         #    module_type = None,
         #)),
     ])
+
+    # -------------------------------------------------------------------------
+    def customise_msg_twitter_channel_resource(r, tablename):
+
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept
+            s3db.msg_channel_onaccept(form)
+            _id = form.vars.id
+            db = current.db
+            table = db.msg_twitter_channel
+            channel_id = db(table.id == _id).select(table.channel_id,
+                                                    limitby=(0, 1)).first().channel_id
+            # Link to Parser
+            table = s3db.msg_parser
+            _id = table.insert(channel_id=channel_id, function_name="parse_tweet", enabled=True)
+            s3db.msg_parser_enable(_id)
+
+            async = current.s3task.async
+            # Poll
+            async("msg_poll", args=["msg_twitter_channel", channel_id])
+
+            # Parse
+            async("msg_parse", args=[channel_id, "parse_tweet"])
+
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+
+    settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
 
 # END =========================================================================

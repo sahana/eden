@@ -142,7 +142,7 @@ class index(S3CustomController):
                                           label=T("Site"),
                                           ),
                           S3DateFilter("req.date",
-                                       label = "Date",
+                                       label = T("Date"),
                                        hide_time=True,
                                        ),
                           ]
