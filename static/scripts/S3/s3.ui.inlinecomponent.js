@@ -851,6 +851,40 @@
         },
 
         /**
+         * Make sure a SELECT element contains a certain option, so that
+         * select.val(option) will succeed.
+         *
+         * Solves the situation where an inline record has the option
+         * selected, but the corresponding option-element is added only
+         * later by a script, e.g. filterOptionsS3 (which would then
+         * replace the dummy option element added here, while retaining
+         * the selection).
+         *
+         * @param {jQuery} select - the SELECT element
+         * @param {string|Array} option - the option (Array for multiple)
+         */
+        _ensureSelectable: function(select, option) {
+
+            var checkOpts;
+            if (option) {
+                if (option.constructor === Array) {
+                    checkOpts = option;
+                } else {
+                    checkOpts = [option];
+                }
+            } else {
+                checkOpts = [];
+            }
+
+            checkOpts.forEach(function(optValue) {
+                var optElement = select.find('option[value="' + optValue + '"]');
+                if (!optElement.length) {
+                    select.append('<option value="' + optValue + '">-</option>');
+                }
+            });
+        },
+
+        /**
          * Edit a row
          *
          * @param {string|number} rowindex - the row index
@@ -896,14 +930,8 @@
 
                 // If the element is a select then we may need to add the option we're choosing
                 var select = $('select' + element);
-                if (select.length !== 0) {
-                    var option = $('select' + element + ' option[value="' + value + '"]');
-                    if (option.length === 0) {
-                        // This option does not exist in the select, so add it
-                        // because otherwise val() won't work. Maybe the option
-                        // gets added later by a script (e.g. S3OptionsFilter)
-                        select.append('<option value="' + value + '">-</option>');
-                    }
+                if (select.length) {
+                    this._ensureSelectable(select, value);
                 }
 
                 input = $(element);

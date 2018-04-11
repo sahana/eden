@@ -1369,6 +1369,12 @@ select.multiselect-filter-widget {
     padding-right: 4px;
 }
 
+.s3-options-filter-anyall label {
+    display: inline;
+    margin-right: 0.7rem;
+    font-size: 0.7rem;
+}
+
 /* End */
 
 .widget-org-hierarchy-menu {

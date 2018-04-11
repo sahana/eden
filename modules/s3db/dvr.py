@@ -1452,18 +1452,23 @@ class DVRResponseModel(S3Model):
                                 multiple = True,
                                 translate = True,
                                 )
+        requires = IS_ONE_OF(db, "%s.id" % tablename,
+                             represent,
+                             multiple = True,
+                             )
+        if settings.get_dvr_response_themes_org_specific():
+            root_org = current.auth.root_org()
+            if root_org:
+                requires.set_filter(filterby = "organisation_id",
+                                    filter_opts = (root_org,),
+                                    )
         response_theme_ids = S3ReusableField(
                                 "response_theme_ids",
                                 "list:reference %s" % tablename,
                                 label = T("Themes"),
                                 ondelete = "RESTRICT",
                                 represent = represent,
-                                requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db,
-                                                    "%s.id" % tablename,
-                                                    represent,
-                                                    multiple = True,
-                                                    )),
+                                requires = IS_EMPTY_OR(requires),
                                 sortby = "name",
                                 widget = S3MultiSelectWidget(header = False,
                                                              ),
@@ -1610,6 +1615,9 @@ class DVRResponseModel(S3Model):
         else:
             CASE = T("Case")
 
+        use_response_types = settings.get_dvr_response_types()
+        use_response_themes = settings.get_dvr_response_themes()
+
         tablename = "dvr_response_action"
         define_table(tablename,
                      self.dvr_case_activity_id(
@@ -1618,11 +1626,17 @@ class DVRResponseModel(S3Model):
                          ondelete = "CASCADE",
                          writable = False,
                          ),
-                     response_theme_ids(),
+                     response_theme_ids(
+                         ondelete = "RESTRICT",
+                         readable = use_response_themes,
+                         writable = use_response_themes,
+                         ),
                      response_type_id(
-                         empty = False,
+                         empty = not use_response_types,
                          label = T("Action Type"),
                          ondelete = "RESTRICT",
+                         readable = use_response_types,
+                         writable = use_response_types,
                          ),
                      s3_date("date_due",
                              label = T("Date Due"),
@@ -1646,7 +1660,6 @@ class DVRResponseModel(S3Model):
 
         # List_fields
         list_fields = ["case_activity_id",
-                       "response_type_id",
                        "comments",
                        "human_resource_id",
                        "date_due",
@@ -1654,19 +1667,28 @@ class DVRResponseModel(S3Model):
                        "hours",
                        "status_id",
                        ]
+        if use_response_types:
+            list_fields[1:1] = ["response_type_id"]
+        if use_response_themes:
+            list_fields[1:1] = ["response_theme_ids"]
 
         # Filter widgets
-        if hierarchical_response_types:
-            response_type_filter = S3HierarchyFilter("response_type_id",
-                                                     lookup = "dvr_response_type",
-                                                     hidden = True,
-                                                     )
+        if use_response_types:
+            if hierarchical_response_types:
+                response_type_filter = S3HierarchyFilter(
+                                            "response_type_id",
+                                            lookup = "dvr_response_type",
+                                            hidden = True,
+                                            )
+            else:
+                response_type_filter = S3OptionsFilter(
+                                            "response_type_id",
+                                            options = lambda: \
+                                                      s3_get_filter_opts("dvr_response_type"),
+                                            hidden = True,
+                                            )
         else:
-            response_type_filter = S3OptionsFilter("response_type_id",
-                                                   options = lambda: \
-                                                       s3_get_filter_opts("dvr_response_type"),
-                                                   hidden = True,
-                                                   )
+            response_type_filter = None
 
         filter_widgets = [S3TextFilter(["case_activity_id$person_id$pe_label",
                                         "case_activity_id$person_id$first_name",
@@ -1687,8 +1709,11 @@ class DVRResponseModel(S3Model):
                           ]
 
         # CRUD Form
+        type_field = "response_type_id" if use_response_types else None
+        theme_field = "response_theme_ids" if use_response_themes else None
         crud_form = S3SQLCustomForm("case_activity_id",
-                                    "response_type_id",
+                                    theme_field,
+                                    type_field,
                                     "comments",
                                     "human_resource_id",
                                     "date_due",

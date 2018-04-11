@@ -2173,40 +2173,43 @@ class S3OptionsFilter(S3FilterWidget):
         if len(options) > 1 and ftype[:4] == "list":
             operator = opts_get("operator", None)
             if operator:
-                self.operator = operator
+                # Fixed operator
                 any_all = ""
             else:
-                operator = self.operator
+                # User choice (initially set to "all")
                 any_all = True
+                operator = "contains"
 
             if operator == "anyof":
                 filter_type = "any"
             else:
                 filter_type = "all"
-                if operator == "belongs":
-                    operator = "contains"
+            self.operator = operator
 
             if any_all:
                 # Provide a form to prompt the user to choose
                 T = current.T
-                any_all = DIV(T("Filter type"),
-                              INPUT(_name="%s_filter" % name,
-                                    _id="%s_filter_any" % name,
-                                    _type="radio",
-                                    _value="any",
-                                    value=filter_type),
-                              LABEL(T("Any"),
-                                    _for="%s_filter_any" % name),
-                              INPUT(_name="%s_filter" % name,
-                                    _id="%s_filter_all" % name,
-                                    _type="radio",
-                                    _value="all",
-                                    value=filter_type),
-                              LABEL(T("All"),
-                                    _for="%s_filter_all" % name),
+                any_all = DIV(LABEL("%s:" % T("Match")),
+                              LABEL(INPUT(_name = "%s_filter" % name,
+                                          _id = "%s_filter_any" % name,
+                                          _type = "radio",
+                                          _value = "any",
+                                          value = filter_type,
+                                          ),
+                                    T("Any##filter_options"),
+                                    _for = "%s_filter_any" % name,
+                                    ),
+                              LABEL(INPUT(_name = "%s_filter" % name,
+                                          _id = "%s_filter_all" % name,
+                                          _type = "radio",
+                                          _value = "all",
+                                          value = filter_type,
+                                          ),
+                                    T("All##filter_options"),
+                                    _for = "%s_filter_all" % name,
+                                    ),
                               _class="s3-options-filter-anyall",
                               )
-
         else:
             any_all = ""
 

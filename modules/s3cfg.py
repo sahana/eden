@@ -3180,11 +3180,29 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_response_actions", False)
 
+    def get_dvr_response_types(self):
+        """
+            Use response type categories
+        """
+        return self.dvr.get("response_types", True)
+
     def get_dvr_response_types_hierarchical(self):
         """
             Response types are hierarchical
         """
         return self.dvr.get("response_types_hierarchical", False)
+
+    def get_dvr_response_themes(self):
+        """
+            Use themes for response actions
+        """
+        return self.dvr.get("response_themes", False)
+
+    def get_dvr_response_themes_org_specific(self):
+        """
+            Response themes are org-specific
+        """
+        return self.dvr.get("response_themes_org_specific", True)
 
     # -------------------------------------------------------------------------
     # Education

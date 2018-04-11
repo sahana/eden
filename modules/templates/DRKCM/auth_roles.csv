@@ -22,6 +22,7 @@ AUTHENTICATED,Authenticated,,,,dvr_residence_permit_type,READ,,,,,All users can 
 AUTHENTICATED,Authenticated,,,,dvr_residence_status_type,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,dvr_response_status,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,dvr_response_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,dvr_response_theme,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,dvr_service_contact_type,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,,,All users can read taxonomies
 AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,All users can read taxonomies
@@ -119,6 +120,7 @@ ORG_ADMIN,Organisation Admin,,vol,person,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,vol,,,READ,,,,,
 ORG_ADMIN,Organisation Admin,,,,cr_shelter,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,dvr_response_theme,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,
@@ -172,6 +174,7 @@ ORG_GROUP_ADMIN,Organisation Group Admin,,,,dvr_need,CREATE|READ|UPDATE|DELETE,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,dvr_residence_status_type,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,dvr_residence_permit_type,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,dvr_response_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,dvr_response_theme,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,hrm_job_title,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility,READ,,,,,
 ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,

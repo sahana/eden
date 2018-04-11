@@ -410,15 +410,20 @@ S3.search = {};
             $this = $(this);
             id = $this.attr('id');
             urlVar = $('#' + id + '-data').val();
-            operator = $("input:radio[name='" + id + "_filter']:checked").val();
 
-            var contains = /__contains$/;
-            var anyof = /__anyof$/;
-            if (operator == 'any' && urlVar.match(contains)) {
-                urlVar = urlVar.replace(contains, '__anyof');
-            } else if (operator == 'all' && urlVar.match(anyof)) {
-                urlVar = urlVar.replace(anyof, '__contains');
+            // Adjust urlVar for user-selected operator
+            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+            switch(operator) {
+                case 'any':
+                    urlVar = urlVar.replace(/__contains$|__belongs$/, '__anyof');
+                    break;
+                case 'all':
+                    urlVar = urlVar.replace(/__anyof$|__belongs$/, '__contains');
+                    break;
+                default:
+                    break;
             }
+
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
                 value = '';
@@ -2096,6 +2101,9 @@ S3.search = {};
             $(this).closest('form').trigger('optionChanged');
         });
         $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter').on('change.autosubmit', function () {
+            $(this).closest('form').trigger('optionChanged');
+        });
+        $('.s3-options-filter-anyall input[type="radio"]').on('change.autosubmit', function() {
             $(this).closest('form').trigger('optionChanged');
         });
         $('.hierarchy-filter').on('select.s3hierarchy', function() {

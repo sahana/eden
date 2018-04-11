@@ -304,6 +304,12 @@ def config(settings):
 
     # Manage individual response actions in case activities
     settings.dvr.manage_response_actions = True
+    # Use response themes
+    settings.dvr.response_themes = True
+    # Response themes are org-specific
+    settings.dvr.response_themes_org_specific = True
+    # Use response types
+    settings.dvr.response_types = False
     # Response types hierarchical
     settings.dvr.response_types_hierarchical = True
 
@@ -1545,7 +1551,8 @@ def config(settings):
                             S3SQLInlineComponent("response_action",
                                                  label = T("Actions"),
                                                  fields = [
-                                                     "response_type_id",
+                                                     "response_theme_ids",
+                                                     #"response_type_id",
                                                      "date_due",
                                                      "comments",
                                                      "human_resource_id",
@@ -1972,18 +1979,26 @@ def config(settings):
                                 label = T("Search"),
                                 ),
                               S3OptionsFilter(
-                                "status_id",
-                                options = lambda: \
-                                          s3_get_filter_opts("dvr_response_status"),
-                                          cols = 3,
-                                          translate = True,
-                                          ),
+                                    "status_id",
+                                    options = lambda: \
+                                              s3_get_filter_opts("dvr_response_status"),
+                                    cols = 3,
+                                    translate = True,
+                                    ),
                               S3DateFilter("date", hidden=not is_report),
                               S3DateFilter("date_due", hidden=is_report),
-                              S3HierarchyFilter("response_type_id",
-                                                lookup = "dvr_response_type",
-                                                hidden = True,
-                                                ),
+                              S3OptionsFilter(
+                                    "response_theme_ids",
+                                    hidden = True,
+                                    options = lambda: \
+                                              s3_get_filter_opts("dvr_response_theme",
+                                                                 org_filter = True,
+                                                                 ),
+                                    ),
+                              #S3HierarchyFilter("response_type_id",
+                              #                  lookup = "dvr_response_type",
+                              #                  hidden = True,
+                              #                  ),
                               S3OptionsFilter("case_activity_id$person_id$person_details.nationality",
                                               label = T("Client Nationality"),
                                               hidden = True,
@@ -2289,6 +2304,16 @@ def config(settings):
             return result
 
         s3.prep = custom_prep
+
+        attr = dict(attr)
+        tabs = [(T("Basic Details"), None),
+                (T("Branches"), "branch"),
+                (T("Facilities"), "facility"),
+                (T("Staff & Volunteers"), "human_resource"),
+                #(T("Projects"), "project"),
+                (T("Counseling Themes"), "response_theme"),
+                ]
+        attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
 
         return attr
 

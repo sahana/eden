@@ -1777,10 +1777,38 @@
             // lazy-reload-pattern, i.e. we only reload data
             // if the filter or a pivot axis have actually changed.)
             if (filters) {
+
+                // Operators excluding other filters for the same field
+                var removeIncompatible = function(k) {
+
+                    var exclusive = ['contains', 'anyof', 'belongs', 'eq'],
+                        pattern,
+                        match,
+                        incompatible = [];
+
+                    exclusive.forEach(function(op) {
+                        pattern = new RegExp('__' + op + '$', 'g');
+                        if (k.match(pattern)) {
+                            match = pattern;
+                        } else {
+                            incompatible.push(op);
+                        }
+                    });
+
+                    if (match) {
+                        incompatible.forEach(function(op) {
+                            remove[k.replace(match, '__' + op)] = true;
+                        });
+                    }
+                };
+
                 for (i=0, len=filters.length; i < len; i++) {
                     q = filters[i];
                     k = q[0];
                     v = q[1];
+
+                    removeIncompatible(k);
+
                     if (v === null) {
                         if (!update[k]) {
                             remove[k] = true;
