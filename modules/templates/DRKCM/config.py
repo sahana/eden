@@ -308,7 +308,7 @@ def config(settings):
     settings.dvr.response_themes = True
     # Response themes are org-specific
     settings.dvr.response_themes_org_specific = True
-    # Use response types
+    # Do not use response types
     settings.dvr.response_types = False
     # Response types hierarchical
     settings.dvr.response_types_hierarchical = True
@@ -1373,8 +1373,7 @@ def config(settings):
                     "status_id",
                     "priority",
                     "sector_id",
-                    #"case_activity_need.need_id",
-                    "response_action.response_type_id",
+                    (T("Theme"), "response_action.response_theme_ids"),
                     )
             report_options = {
                 "rows": axes,
@@ -1552,7 +1551,6 @@ def config(settings):
                                                  label = T("Actions"),
                                                  fields = [
                                                      "response_theme_ids",
-                                                     #"response_type_id",
                                                      "date_due",
                                                      "comments",
                                                      "human_resource_id",
@@ -1940,14 +1938,13 @@ def config(settings):
                     "case_activity_id$person_id$person_details.nationality",
                     "case_activity_id$person_id$person_details.marital_status",
                     "case_activity_id$sector_id",
-                    #"case_activity_id$case_activity_need.need_id",
-                    "response_type_id",
+                    (T("Theme"), "response_theme_ids"),
                     )
             report_options = {
                 "rows": axes,
                 "cols": axes,
                 "fact": facts,
-                "defaults": {"rows": "response_type_id",
+                "defaults": {"rows": "response_theme_ids",
                              "cols": "case_activity_id$sector_id",
                              "fact": "count(id)",
                              "totals": True,
@@ -1964,7 +1961,6 @@ def config(settings):
             # Custom Filter Options
             from s3 import S3AgeFilter, \
                            S3DateFilter, \
-                           S3HierarchyFilter, \
                            S3OptionsFilter, \
                            S3TextFilter, \
                            s3_get_filter_opts
@@ -1995,10 +1991,6 @@ def config(settings):
                                                                  org_filter = True,
                                                                  ),
                                     ),
-                              #S3HierarchyFilter("response_type_id",
-                              #                  lookup = "dvr_response_type",
-                              #                  hidden = True,
-                              #                  ),
                               S3OptionsFilter("case_activity_id$person_id$person_details.nationality",
                                               label = T("Client Nationality"),
                                               hidden = True,
