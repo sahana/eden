@@ -155,21 +155,21 @@ class index(S3CustomController):
 
         #----------------------
         # Create request button
-        make_request_btn = A(T("Make a Request"),
+        upload_4W_activity_btn = A(T("Upload 4W Activity"),
                          _href = URL(c="req",
                                      f="req",
-                                     args="create",
+                                     args="import",
                                      ),
-                         _class = "action-btn button tiny",
+                         _class = "action-btn button small",
                          )
 
 #        system_roles = current.auth.get_system_roles()
-#        can_request = current.auth.s3_has_role("REQUESTER"): or (system_roles.ADMIN in current.session.s3.roles
+#        can_request = current.auth.s3_has_role("NEEDS_LOGGER"): or (system_roles.ADMIN in current.session.s3.roles
         #print (current.session.s3.roles)
 #        if can_request: 
-        output["make_request_btn"] = make_request_btn
+        output["upload_4W_activity_btn"] = upload_4W_activity_btn
 #        else:
-#            output["make_request_btn"] = ""
+#            output["upload_4W_activity_btn"] = ""
 
         # View title
         output["title"] = current.deployment_settings.get_system_name()
