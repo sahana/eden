@@ -471,6 +471,12 @@ class S3OptionsMenu(object):
                         M("Raw Database access", c="appadmin", f="index")
                     ),
                     M("Error Tickets", c="admin", f="errors"),
+                    M("Monitoring", c="setup", f="server")(
+                        M("Checks", f="monitor_check"),
+                        M("Servers", f="server"),
+                        M("Tasks", f="monitor_task"),
+                        M("Logs", f="monitor_run"),
+                    ),
                     M("Synchronization", c="sync", f="index")(
                         M("Settings", f="config", args=[1], m="update"),
                         M("Repositories", f="repository"),

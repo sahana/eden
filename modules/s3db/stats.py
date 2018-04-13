@@ -1261,6 +1261,8 @@ class S3StatsImpactModel(S3Model):
         # ---------------------------------------------------------------------
         # Impact
         #
+        # @ToDo: Add Time & Organisation
+        #
         tablename = "stats_impact"
         define_table(tablename,
                      # Instance

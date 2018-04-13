@@ -487,6 +487,35 @@ if has_module("setup"):
 
     tasks["setup_run_playbook"] = setup_run_playbook
 
+    # -------------------------------------------------------------------------
+    def setup_monitor_run_task(task_id, user_id=None):
+        """
+            Run a Monitoring Task
+        """
+        if user_id:
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.setup_monitor_run_task(task_id)
+        db.commit()
+        return result
+
+    tasks["setup_monitor_run_task"] = setup_monitor_run_task
+
+    # -------------------------------------------------------------------------
+    def setup_monitor_check_email_reply(run_id, user_id=None):
+        """
+            Check whether we have received a reply to an Email check
+        """
+        if user_id:
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.setup_monitor_check_email_reply(run_id)
+        db.commit()
+        return result
+
+    tasks["setup_monitor_check_email_reply"] = setup_monitor_check_email_reply
+
+
 # -----------------------------------------------------------------------------
 if has_module("stats"):
 
