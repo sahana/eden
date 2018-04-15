@@ -7261,10 +7261,8 @@ def hrm_human_resource_controller(extra_filter = None):
 
         if s3.rtl:
             # Ensure that + appears at the beginning of the number
-            # Load LazyComponent
-            pe_resource = s3db.resource("pr_pentity")
-            pe_resource.components["phone"]
-            f = s3db.pr_phone_contact.value
+            # - using table alias to only apply to filtered component
+            f = s3db.get_aliased(s3db.pr_contact, "pr_phone_contact").value
             f.represent = s3_phone_represent
             f.widget = S3PhoneWidget()
 
@@ -7878,10 +7876,8 @@ def hrm_person_controller(**attr):
 
         if s3.rtl:
             # Ensure that + appears at the beginning of the number
-            # Load LazyComponent
-            pe_resource = s3db.resource("pr_pentity")
-            pe_resource.components["phone"]
-            f = s3db.pr_phone_contact.value
+            # - using table alias to only apply to filtered component
+            f = s3db.get_aliased(s3db.pr_contact, "pr_phone_contact").value
             f.represent = s3_phone_represent
             f.widget = S3PhoneWidget()
 
