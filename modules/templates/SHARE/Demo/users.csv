@@ -1,0 +1,12 @@
+First Name,Last Name,Email,Password,Role,Organisation,Link
+UN,Activity-Logger,un_activity_logger@example.com,eden,ACTIVITY_LOGGER,United Nations Resident Coordinator Office,Staff
+HCT,Needs-Logger,hct_activity_logger@example.com,eden,ACTIVITY_LOGGER,Oxfam,Staff
+Other,Needs-Logger,other_activity_logger@example.com,eden,ACTIVITY_LOGGER,Sarvodaya Shramadana Society,Staff
+UN,Needs-Logger,un_neeeds_logger@example.com,eden,NEEDS_LOGGER,United Nations Resident Coordinator Office,Staff
+Government,Needs-Logger,gov_needs_logger@example.com,eden,NEEDS_LOGGER,Government of Sri Lanka,Staff
+Government,Needs-Approver,gov_needs_approver@example.com,eden,NEEDS_APPROVER,Government of Sri Lanka,Staff
+UN,Needs-Approver,un_needs_approver@example.com,eden,NEEDS_APPROVER,United Nations Resident Coordinator Office,Staff
+UN,Donor,un_donor@example.com,eden,SUPPLIER,United Nations Resident Coordinator Office,Staff
+Other,Donor,other_donor@example.com,eden,SUPPLIER,Oxfam,Staff
+UN Org,Administrator,un_org_admin@example.com,eden,ORG_ADMIN,Oxfam,Staff
+UN Information,Officer,un_rapporteur@example.com,eden,RAPPORTEUR,United Nations Resident Coordinator Office,Staff

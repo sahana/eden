@@ -1,0 +1,13 @@
+Catalog,Category Code,Category,Item Name,Item Code,Brand,Model,Year,Unit of Measure,Pack,Pack Quantity,Pack2,Pack2 Quantity,Pack3,Pack3 Quantity,Weight,Length,Width,Height,Volume,Distributed,Comments
+Equipment,Assets,Assets,Motor boat,,Honda,,2010,piece,,,,,,,100,5,1,1,,,
+Equipment,Assets,Assets,Lorry,,Tata,,2000,piece,,,,,,,1000,8,1.5,2,,,
+Aid,Consumables,Consumables,Milk,,,,,piece,,,,,,,,,,,,,
+Aid,Consumables,Consumables,Toiletry,,,,,piece,,,,,,,,,,,,,
+Aid,Consumables,Consumables,Rice,,,,,piece,,,,,,,,,,,,,
+Aid,Consumables,Consumables,Medicine,,,,,piece,,,,,,,,,,,,,
+Aid,Consumables,Consumables,Water,,,,,piece,,,,,,,,,,,,,
+Aid,Consumables,Consumables,Sugar,,,,,piece,,,,,,,,,,,,,
+Equipment,Assets,Assets,Water pump,,,,,piece,,,,,,,,,,,,,
+Equipment,Assets,Assets,Electricity Generator,,,,,piece,,,,,,,,,,,,,
+Equipment,Assets,Assets,Motor boat,,Honda,,2010,piece,,,,,,,100,5,1,1,,,
+Equipment,Assets,Assets,Lorry,,Volvo,,2000,piece,,,,,,,1000,8,1.5,2,,,

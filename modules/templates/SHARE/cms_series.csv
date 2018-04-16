@@ -1,0 +1,3 @@
+Name,Avatar,Location,Rich Text,Replies,Comments
+Sitreps,Y,Y,T,T,post situational reports
+News,Y,T,T,F,news feeds (e.g social media channels)
