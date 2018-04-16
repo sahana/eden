@@ -236,7 +236,7 @@ class S3SetupModel(S3Model):
                                        {"name": "production_server",
                                         "joinby": "deployment_id",
                                         "filterby": {
-                                            "type": 1,
+                                            "role": 1,
                                             },
                                         "multiple": False,
                                         },
