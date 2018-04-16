@@ -50,6 +50,7 @@ def index():
                                                          db_password = settings.database.get("password"),
                                                          )
             # @ToDo: Support multi-host deployments
+            # @ToDo: Read remote_user/private_key
             server_id = s3db.setup_server.insert(deployment_id = deployment_id,
                                                  )
             s3db.setup_monitor_server.insert(server_id = server_id)
@@ -119,7 +120,7 @@ def deployment():
                         itable.type.requires = IS_IN_SET(types)
 
             elif r.method == "create":
-                # Include Production URL/Sender in main form
+                # Include Production Instance & Server details in main form
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
                                             "production.sender",
@@ -128,9 +129,8 @@ def deployment():
                                             "template",
                                             "webserver_type",
                                             "db_type",
-                                            "remote_user",
-                                            # @ToDo: Include private_key in Form
-                                            #"server.private_key",
+                                            "production_server.remote_user",
+                                            "production_server.private_key",
                                             #"secret_key",
                                             #"access_key",
                                             )

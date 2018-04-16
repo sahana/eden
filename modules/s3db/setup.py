@@ -230,7 +230,17 @@ class S3SetupModel(S3Model):
                                           },
                                          ),
                        setup_monitor_task = "deployment_id",
-                       setup_server = "deployment_id",
+                       setup_server = (# All instances:
+                                       "deployment_id",
+                                       # Production instance:
+                                       {"name": "production_server",
+                                        "joinby": "deployment_id",
+                                        "filterby": {
+                                            "type": 1,
+                                            },
+                                        "multiple": False,
+                                        },
+                                       ),
                        setup_setting = "deployment_id",
                        )
 
@@ -581,14 +591,6 @@ class S3SetupModel(S3Model):
         chars = chars.replace("@", "")
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
-
-        if db(table.deleted == False).count() < 2:
-            # Configure localhost to have all tiers (localhost & all tiers are defaults)
-            s3db.setup_server.insert(deployment_id = deployment_id,
-                                     )
-
-        # Configure a Production instance (needs Public URL so has to be done Inline)
-        #instance_id = s3db.setup_instance.insert()
 
         current.session.information = current.T("Press 'Deploy' when you are ready")
 
