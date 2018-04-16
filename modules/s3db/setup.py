@@ -729,6 +729,7 @@ class S3SetupModel(S3Model):
             # All-in-one deployment
             server = servers.first()
             host_ip = server.host_ip
+            hosts = [host_ip]
             private_key = server.private_key
             playbook = [{"hosts": host_ip,
                          "connection": "local", # @ToDo: Don't assume this
@@ -767,6 +768,7 @@ class S3SetupModel(S3Model):
                     remote_user = server.remote_user
                 else:
                     webserver_ip = server.host_ip
+            hosts = [db_ip, webserver_ip]
             playbook = [{"hosts": db_ip,
                          "remote_user": remote_user,
                          "become_method": "sudo",
@@ -812,7 +814,7 @@ class S3SetupModel(S3Model):
             tags = [instance_type]
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         [host[1] for host in hosts],
+                                         hosts,
                                          tags,
                                          private_key,
                                          )
