@@ -878,6 +878,11 @@ def config(settings):
                                          hidden = True,
                                          comment = T("Search for multiple IDs (separated by blanks)"),
                                          ),
+                            S3TextFilter(["service_contact.reference"],
+                                         label = T("Ref.No."),
+                                         hidden = True,
+                                         comment = T("Search by service contact reference number"),
+                                         ),
                             ]
                         if multiple_orgs:
                             filter_widgets.insert(1,
