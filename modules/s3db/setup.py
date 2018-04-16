@@ -38,6 +38,7 @@ __all__ = ("S3SetupModel",
            "setup_monitor_run_task",
            "setup_monitor_check_email_reply",
            "setup_instance_settings_read",
+           #"setup_write_playbook",
            "setup_run_playbook",
            "setup_rheader",
            )
@@ -391,7 +392,6 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     # @ToDo: Add support for SSL Certificates
                      Field("url",
                            label = T("URL"),
                            requires = IS_URL(),
@@ -405,6 +405,28 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     #Field("ssl_cert", "upload",
+                     #      label = T("SSL Certificate"),
+                     #      length = current.MAX_FILENAME_LENGTH,
+                     #      requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                     #      uploadfolder = path_join(folder, "uploads"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("SSL Certificate"),
+                     #                                      T("If not using Let's Encrypt e.g. you wish to use an OV or EV certificate")
+                     #                                      )
+                     #                    ),
+                     #      ),
+                     #Field("ssl_key", "upload",
+                     #      label = T("SSL Key"),
+                     #      length = current.MAX_FILENAME_LENGTH,
+                     #      requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                     #      uploadfolder = path_join(folder, "uploads"),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("SSL Key"),
+                     #                                      T("If not using Let's Encrypt e.g. you wish to use an OV or EV certificate")
+                     #                                      )
+                     #                    ),
+                     #      ),
                      Field("sender",
                            label = T("Email Sender"),
                            requires = IS_EMPTY_OR(
@@ -641,24 +663,36 @@ class S3SetupModel(S3Model):
         db = current.db
         s3db = current.s3db
 
+        deployment_id = r.id
+
         # Get Instance details
+        # - we read all instances for Certbot configuration
         instance_id = r.component_id
         itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(#itable.deployment_id,
-                                                       itable.type,
-                                                       itable.url,
-                                                       itable.sender,
-                                                       itable.start,
-                                                       limitby = (0, 1)
-                                                       ).first()
+        query = (itable.deployment_id == deployment_id) & \
+                (itable.deleted == False)
+        instances = db(query).select(itable.id,
+                                     itable.type,
+                                     itable.url,
+                                     itable.sender,
+                                     itable.start,
+                                     )
+        sitenames = []
+        sappend = sitenames.append
+        for instance in instances:
+            url = instance.url
+            if "://" in url:
+                protocol, url = url.split("://", 1)
+            sappend(url)
+            if instance.id == instance_id:
+                sitename = url
+                sender = instance.sender
+                start = instance.start
+                instance_type = instance.type
 
-        sitename = instance.url
-        if "://" in sitename:
-            protocol, sitename = sitename.split("://", 1)
-        else:
-            protocol = "http"
-
-        deployment_id = r.id
+        # Default to SSL
+        # (plain http requests will still work as automatically redirected to https)
+        protocol = "https"
 
         # Get Server(s) details
         stable = s3db.setup_server
@@ -686,10 +720,8 @@ class S3SetupModel(S3Model):
         db_password = deployment.db_password
         web_server = WEB_SERVERS[deployment.webserver_type]
         db_type = DB_SERVERS[deployment.db_type]
-        instance_type = INSTANCE_TYPES[instance.type]
+        instance_type = INSTANCE_TYPES[instance_type]
         template = deployment.template
-        sender = instance.sender
-        start = instance.start
 
         if len(servers) == 1:
             # All-in-one deployment
@@ -702,6 +734,7 @@ class S3SetupModel(S3Model):
                          "become_method": "sudo",
                          "become_user": "root",
                          "vars": {"appname": appname,
+                                  "all_sites": ",".join(all_sites),
                                   "db_ip": host_ip,
                                   "db_type": db_type,
                                   "hostname": hostname,
@@ -748,6 +781,7 @@ class S3SetupModel(S3Model):
                          "become_method": "sudo",
                          "become_user": "root",
                          "vars": {"appname": appname,
+                                  "all_sites": ",".join(all_sites),
                                   "db_ip": db_ip,
                                   "db_type": db_type,
                                   "hostname": hostname,
@@ -1878,8 +1912,9 @@ def setup_instance_settings_read(instance_id, deployment_id):
 # =============================================================================
 def setup_instance_method(instance_id, method="start"):
     """
-        Start or Stop an Instance
-        - called by interactive method to start/stop
+        Run individual Ansible Roles ('methods')
+            e.g. Start or Stop an Instance
+            - called by interactive method to start/stop
     """
 
     # Read Data
