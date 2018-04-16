@@ -679,13 +679,13 @@ class S3SetupModel(S3Model):
                                      itable.sender,
                                      itable.start,
                                      )
-        sitenames = []
-        sappend = sitenames.append
+        all_sites = []
+        all_append = all_sites.append
         for instance in instances:
             url = instance.url
             if "://" in url:
                 protocol, url = url.split("://", 1)
-            sappend(url)
+            all_append(url)
             if str(instance.id) == instance_id:
                 sitename = url
                 sender = instance.sender
