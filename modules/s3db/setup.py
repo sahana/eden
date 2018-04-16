@@ -686,7 +686,7 @@ class S3SetupModel(S3Model):
             if "://" in url:
                 protocol, url = url.split("://", 1)
             sappend(url)
-            if instance.id == instance_id:
+            if str(instance.id) == instance_id:
                 sitename = url
                 sender = instance.sender
                 start = instance.start
