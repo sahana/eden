@@ -1431,6 +1431,7 @@ class DVRResponseModel(S3Model):
                   deduplicate = S3Duplicate(primary = ("name",),
                                             secondary = ("organisation_id",),
                                             ),
+                  ondelete_cascade = self.response_theme_ondelete_cascade,
                   )
 
         # CRUD strings
@@ -1795,6 +1796,43 @@ class DVRResponseModel(S3Model):
         if form_vars.get("is_default_closure"):
             db(table.id == record_id).update(is_closed = True)
             db(table.id != record_id).update(is_default_closure = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def response_theme_ondelete_cascade(row):
+        """
+            Explicit deletion cascade for response theme list:references
+            (which are not caught by standard cascade), action depending
+            on "ondelete" setting of response_theme_ids:
+                - RESTRICT  => block deletion cascade
+                - otherwise => clean up the list:reference
+
+            @param row: the dvr_response_theme Row to be deleted
+        """
+
+        db = current.db
+
+        theme_id = row.id
+
+        # Table with list:reference dvr_response_theme
+        atable = current.s3db.dvr_response_action
+        reference = atable.response_theme_ids
+
+        # Referencing rows
+        query = (reference.contains(theme_id)) & \
+                (atable.deleted == False)
+        if reference.ondelete == "RESTRICT":
+            referenced_by = db(query).select(atable.id, limitby=(0, 1)).first()
+            if referenced_by:
+                # Raise to stop deletion cascade
+                raise RuntimeError("Attempt to delete a theme that is referenced by another record")
+        else:
+            referenced_by = db(query).select(atable.id, reference)
+            for row in referenced_by:
+                # Clean up reference list
+                theme_ids = row[reference]
+                row.update_record(response_theme_ids = \
+                    [tid for tid in theme_ids if tid != theme_id])
 
     # -------------------------------------------------------------------------
     @staticmethod

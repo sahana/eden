@@ -718,6 +718,7 @@ class S3Resource(object):
                         callback(ondelete_cascade, row, tablename=tablename)
                     except:
                         # Custom RESTRICT or cascade failure: row not deletable
+                        deletable.discard(record_id)
                         continue
                     if record_id not in deletable:
                         # Check deletability again
