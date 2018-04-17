@@ -824,7 +824,7 @@ class S3SetupModel(S3Model):
                                                vars = task_vars,
                                                function_name = "setup_run_playbook",
                                                repeats = 1,
-                                               timeout = 4800,
+                                               timeout = 6000,
                                                #sync_output = 300
                                                )
 
@@ -976,7 +976,7 @@ class S3SetupModel(S3Model):
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
                                      repeats = 1,
-                                     timeout = 4800,
+                                     timeout = 6000,
                                      #sync_output = 300
                                      )
 
@@ -1979,7 +1979,7 @@ def setup_instance_method(instance_id, method="start"):
                                  vars = task_vars,
                                  function_name = "setup_run_playbook",
                                  repeats = 1,
-                                 timeout = 4800,
+                                 timeout = 6000,
                                  #sync_output = 300
                                  )
 
