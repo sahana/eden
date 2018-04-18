@@ -512,6 +512,7 @@
 'Asylum Process': 'Asylverfahren',
 'At/Visited Location (not virtual)': '/ In Augenschein genommener Ort (nicht virtuell)',
 'Attachments': 'Anhänge',
+'Attachment of': 'Anlage zu',
 'Attend to information sources as described in <instruction>': 'Sich um Informationsquellen kümmern wie im Abschnitt beschrieben',
 'Attribution': 'Eigenschaften',
 'Authentication Required': 'Anmeldung erforderlich',

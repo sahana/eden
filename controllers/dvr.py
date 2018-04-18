@@ -425,10 +425,13 @@ def document():
         if vtablename == "pr_person":
             if not has_permission("read", "pr_person", record_id):
                 r.unauthorised()
+            include_activity_docs = settings.get_dvr_case_include_activity_docs()
             query = auth.s3_accessible_query("read", ctable) & \
                     (ctable.person_id == record_id) & \
                     (ctable.deleted == False)
+
         elif vtablename == "dvr_case":
+            include_activity_docs = False
             query = auth.s3_accessible_query("read", ctable) & \
                     (ctable.id == record_id) & \
                     (ctable.deleted == False)
@@ -436,18 +439,64 @@ def document():
             # Unsupported
             return False
 
+        # Get the case doc_id
         case = db(query).select(ctable.doc_id,
                                 limitby = (0, 1),
                                 orderby = ~ctable.modified_on,
                                 ).first()
         if case:
-            doc_id = case.doc_id
-            field = r.table.doc_id
-            field.default = doc_id
-            r.resource.add_filter(FS("doc_id") == doc_id)
+            doc_ids = [case.doc_id]
         else:
             # No case found
             r.error(404, "Case not found")
+
+        # Include case activities
+        field = r.table.doc_id
+        if include_activity_docs:
+
+            # Look up relevant case activities
+            atable = s3db.dvr_case_activity
+            query = auth.s3_accessible_query("read", atable) & \
+                    (atable.person_id == record_id) & \
+                    (atable.deleted == False)
+            rows = db(query).select(atable.doc_id,
+                                    orderby = ~atable.created_on,
+                                    )
+
+            # Append the doc_ids
+            for row in rows:
+                doc_ids.append(row.doc_id)
+
+            # Make doc_id readable and visible in table
+            field.represent = s3db.dvr_DocEntityRepresent()
+            field.label = T("Attachment of")
+            field.readable = True
+            s3db.configure("doc_document",
+                           list_fields = ["id",
+                                          (T("Attachment of"), "doc_id"),
+                                          "name",
+                                          "file",
+                                          "date",
+                                          "comments",
+                                          ],
+                           )
+
+        # Apply filter and defaults
+        if len(doc_ids) == 1:
+            # Single doc_id => set default, hide field
+            doc_id = doc_ids[0]
+            field.default = doc_id
+            r.resource.add_filter(FS("doc_id") == doc_id)
+        else:
+            # Multiple doc_ids => default to case, make selectable
+            field.default = doc_ids[0]
+            field.readable = field.writable = True
+            field.requires = IS_ONE_OF(db, "doc_entity.doc_id",
+                                       field.represent,
+                                       filterby = "doc_id",
+                                       filter_opts = doc_ids,
+                                       )
+            r.resource.add_filter(FS("doc_id").belongs(doc_ids))
 
         return True
     s3.prep = prep

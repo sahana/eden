@@ -3164,6 +3164,13 @@ class S3Config(Storage):
         """
         return self.dvr.get("case_activity_needs_multiple", False)
 
+    def get_dvr_case_include_activity_docs(self):
+        """
+            Documents-tab of beneficiaries includes case
+            activity attachments
+        """
+        return self.dvr.get("case_include_activity_docs", False)
+
     def get_dvr_needs_use_service_type(self):
         """
             Use service type in needs

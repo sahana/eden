@@ -301,6 +301,8 @@ def config(settings):
     settings.dvr.case_activity_use_status = True
     # Case activities cover multiple needs
     settings.dvr.case_activity_needs_multiple = True
+    # Beneficiary documents-tab includes case activity attachments
+    settings.dvr.case_include_activity_docs = True
 
     # Manage individual response actions in case activities
     settings.dvr.manage_response_actions = True
