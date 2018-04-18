@@ -49,6 +49,7 @@ __all__ = ("DVRCaseModel",
            "DVRVulnerabilityModel",
            "dvr_ActivityRepresent",
            "dvr_CaseActivityRepresent",
+           "dvr_DocEntityRepresent",
            "dvr_AssignMethod",
            "dvr_case_default_status",
            "dvr_case_activity_default_status",
@@ -5892,6 +5893,203 @@ class dvr_CaseActivityRepresent(S3Represent):
                   )
 
         return A(v, _href = url)
+
+# =============================================================================
+class dvr_DocEntityRepresent(S3Represent):
+    """ Module context-specific representation of doc-entities """
+
+    def __init__(self,
+                 case_label=None,
+                 activity_label=None,
+                 use_sector=True,
+                 show_link=False,
+                 ):
+        """
+            Constructor
+
+            @param case_label: label for cases (default: "Case")
+            @param activity_label: label for case activities
+                                   (default: "Activity")
+            @param use_sector: use sector if available instead of
+                               activity label
+            @param show_link: show representation as clickable link
+        """
+
+        super(dvr_DocEntityRepresent, self).__init__(lookup = "doc_entity",
+                                                     show_link = show_link,
+                                                     )
+
+        T = current.T
+
+        if case_label:
+            self.case_label = case_label
+        else:
+            self.case_label = T("Case")
+
+        if activity_label:
+            self.activity_label = activity_label
+        else:
+            self.activity_label = T("Activity")
+
+        self.use_sector = use_sector
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+        ptable = s3db.pr_person
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        rows = db(query).select(table.doc_id,
+                                table.instance_type,
+                                limitby = (0, count),
+                                orderby = table.instance_type,
+                                )
+        self.queries += 1
+
+        # Sort by instance type
+        doc_ids = {}
+        for row in rows:
+            doc_id = row.doc_id
+            instance_type = row.instance_type
+            if instance_type not in doc_ids:
+                doc_ids[instance_type] = {doc_id: row}
+            else:
+                doc_ids[instance_type][doc_id] = row
+
+        sector_ids = set()
+        for instance_type in ("dvr_case", "dvr_case_activity"):
+
+            doc_entities = doc_ids.get(instance_type)
+            if not doc_entities:
+                continue
+
+            # The instance table
+            itable = s3db[instance_type]
+
+            # Look up person and instance data
+            query = itable.doc_id.belongs(doc_entities.keys())
+            left = ptable.on(ptable.id == itable.person_id)
+            fields = [itable.id,
+                      itable.doc_id,
+                      ptable.id,
+                      ptable.first_name,
+                      ptable.middle_name,
+                      ptable.last_name,
+                      ]
+            if instance_type == "dvr_case_activity":
+                fields.extend((itable.sector_id,
+                               itable.subject,
+                               ))
+            irows = db(query).select(left=left, *fields)
+            self.queries += 1
+
+            # Add the person+instance data to the entity rows
+            for irow in irows:
+                instance = irow[instance_type]
+                entity = doc_entities[instance.doc_id]
+
+                if hasattr(instance, "sector_id"):
+                    sector_ids.add(instance.sector_id)
+
+                entity[instance_type] = instance
+                entity.pr_person = irow.pr_person
+
+            # Bulk represent any sector ids
+            if sector_ids:
+                represent = itable.sector_id.represent
+                if represent and hasattr(represent, "bulk"):
+                    represent.bulk(list(sector_ids))
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        reprstr = self.default
+
+        instance_type = row.instance_type
+        if hasattr(row, "pr_person"):
+
+            if instance_type == "dvr_case":
+
+                person = row.pr_person
+                title = s3_str(s3_fullname(person))
+                label = self.case_label
+
+            elif instance_type == "dvr_case_activity":
+
+                activity = row.dvr_case_activity
+                title = s3_str(activity.subject)
+                label = self.activity_label
+
+                if self.use_sector:
+                    sector_id = activity.sector_id
+                    if sector_id:
+                        table = current.s3db.dvr_case_activity
+                        represent = table.sector_id.represent
+                        label = represent(activity.sector_id)
+
+            else:
+                title = None
+                label = None
+
+            if title:
+                reprstr = "%s (%s)" % (title, s3_str(label))
+
+        return reprstr
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (doc_entity.doc_id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        link = v
+
+        if row:
+            if row.instance_type == "dvr_case_activity":
+                try:
+                    person_id = row.pr_person.id
+                    case_activity_id = row.dvr_case_activity.id
+                except AttributeError:
+                    pass
+                else:
+                    url = URL(c = "dvr",
+                              f = "person",
+                              args = [person_id,
+                                      "case_activity",
+                                      case_activity_id,
+                                      ],
+                              extension="",
+                              )
+                    link = A(v, _href=url)
+
+        return link
 
 # =============================================================================
 class DVRManageAppointments(S3Method):
