@@ -369,6 +369,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_doc_document_controller(**attr):
 
+        s3db = current.s3db
+        s3 = current.response.s3
+
         current.deployment_settings.ui.export_formats = None
 
         if current.request.controller == "dvr":
@@ -377,11 +380,29 @@ def config(settings):
             attr["rheader"] = drk_dvr_rheader
 
             # Set contacts-method to retain the tab
-            s3db = current.s3db
             s3db.set_method("pr", "person",
                             method = "contacts",
                             action = s3db.pr_Contacts,
                             )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.controller == "dvr" and r.interactive:
+
+                table = r.table
+                field = table.doc_id
+                field.represent = s3db.dvr_DocEntityRepresent(show_link=True)
+
+            return result
+        s3.prep = custom_prep
 
         return attr
 
