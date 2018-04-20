@@ -570,6 +570,8 @@ def config(settings):
                                            ),
                        )
 
+        s3db.add_custom_callback("dvr_case", "onaccept", dvr_case_onaccept)
+
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
@@ -1295,10 +1297,7 @@ def config(settings):
         # Custom onaccept to update realm-entity of the
         # beneficiary and case activities of this case
         # (incl. their respective realm components)
-        s3db.add_custom_callback("dvr_case",
-                                 "onaccept",
-                                 dvr_case_onaccept,
-                                 )
+        s3db.add_custom_callback("dvr_case", "onaccept", dvr_case_onaccept)
 
         # Update the realm-entity when the case gets updated
         # (because the assigned organisation/branch can change)
@@ -1386,6 +1385,10 @@ def config(settings):
 
         auth = current.auth
         s3db = current.s3db
+
+        if r.method == "count_due_followups":
+            # Just counting due followups => skip customisation
+            return
 
         human_resource_id = auth.s3_logged_in_human_resource()
 
@@ -1542,6 +1545,33 @@ def config(settings):
             field.label = T("Assigned to")
             field.default = human_resource_id
             field.widget = field.comment = None
+
+            # If the user has no root org, then filter the themes
+            # selector by the root org of the case organisation
+            # (otherwise ADMINs see irrelevant themes in the list)
+            if not root_org and r.tablename == "pr_person" and r.record:
+
+                # Get the root_organisation of the case org
+                ctable = s3db.dvr_case
+                otable = s3db.org_organisation
+                left = otable.on(otable.id == ctable.organisation_id)
+                query = (ctable.person_id == r.record.id) & \
+                        (ctable.deleted == False)
+                row = current.db(query).select(otable.root_organisation,
+                                               left = left,
+                                               limitby = (0, 1),
+                                               orderby = ~ctable.modified_on,
+                                               ).first()
+
+                # Set filter for response_theme_ids.requires
+                if row:
+                    requires = rtable.response_theme_ids.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        requires = requires.other
+                    if hasattr(requires, "set_filter"):
+                        requires.set_filter(filterby = "organisation_id",
+                                            filter_opts = (row.root_organisation,),
+                                            )
 
             # Inline-updates
             utable = current.s3db.dvr_case_activity_update
@@ -1941,6 +1971,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
+        db = current.db
         s3db = current.s3db
 
         table = s3db.dvr_response_action
@@ -1953,6 +1984,15 @@ def config(settings):
                                                          )
 
         is_report = r.method == "report"
+
+        # Can the user see cases from more than one org?
+        realms = current.auth.permission.permitted_realms("dvr_case", "read")
+        if realms is None or len(realms) > 1:
+            multiple_orgs = True
+        else:
+            multiple_orgs = False
+
+        org_context = "case_activity_id$person_id$dvr_case.organisation_id"
 
         if is_report:
 
@@ -1968,6 +2008,10 @@ def config(settings):
                     "case_activity_id$sector_id",
                     (T("Theme"), "response_theme_ids"),
                     )
+            if multiple_orgs:
+                # Add case organisation as report axis
+                axes = axes + (org_context,)
+
             report_options = {
                 "rows": axes,
                 "cols": axes,
@@ -2032,6 +2076,27 @@ def config(settings):
                               #             hidden = True,
                               #             ),
                               ]
+
+            if r.interactive and multiple_orgs:
+                # Add case organisation filter
+                if realms:
+                    # Provide the realms as filter options
+                    otable = s3db.org_organisation
+                    orgs = db(otable.pe_id.belongs(realms)).select(otable.id)
+                    org_filter_opts = s3db.org_organisation_represent.bulk(
+                                            [org.id for org in orgs],
+                                            show_link = False,
+                                            )
+                    org_filter_opts.pop(None, None)
+                else:
+                    # Look up from records
+                    org_filter_opts = None
+                filter_widgets.insert(1,
+                                      S3OptionsFilter(org_context,
+                                                      options = org_filter_opts,
+                                                      ),
+                                      )
+
             s3db.configure("dvr_response_action",
                            filter_widgets = filter_widgets,
                            )
