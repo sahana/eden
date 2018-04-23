@@ -758,8 +758,7 @@
             if (labels == undefined) {
 
                 // Get the hierarchy labels from server
-                var url = S3.Ap.concat('/gis/hdata/' + id),
-                    n;
+                var url = S3.Ap.concat('/gis/hdata/' + id);
                 $.ajaxS3({
                     url: url,
                     dataType: 'script',
@@ -826,8 +825,7 @@
                 var throbber = $(selector + '_L' + level + '__throbber').removeClass('hide').show();
 
                 // Download Location Data
-                var url,
-                    n;
+                var url;
                 if (missing) {
                     url = S3.Ap.concat('/gis/ldata/' + parent + '/' + level);
                 } else {
