@@ -761,19 +761,18 @@
                 var url = S3.Ap.concat('/gis/hdata/' + id);
                 $.ajaxS3({
                     url: url,
-                    dataType: 'script',
-                    success: function( /* data */ ) {
+                    dataType: 'json',
+                    success: function(data) {
                         // Copy the elements across
                         labels = {};
                         try {
-                            for (var prop in n) {
-                                labels[prop] = n[prop];
+                            for (var prop in data) {
+                                labels[prop] = data[prop];
                             }
                             // Store in cache
                             hierarchyLabels[id] = labels;
-                            // Clear the memory
-                            n = null;
                         } catch(e) {}
+
                         dfd.resolve(labels);
                     },
                     error: function(request, status, error) {
@@ -834,15 +833,13 @@
                 $.ajaxS3({
                     //async: false,
                     url: url,
-                    dataType: 'script',
-                    success: function( /* data */ ) {
+                    dataType: 'json',
+                    success: function(data) {
 
                         // Copy the elements across
-                        for (var prop in n) {
-                            hierarchyLocations[prop] = n[prop];
+                        for (var prop in data) {
+                            hierarchyLocations[prop] = data[prop];
                         }
-                        // Clear the memory
-                        n = null;
 
                         throbber.hide();
                         if (multiselect) {
