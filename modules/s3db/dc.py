@@ -1401,7 +1401,7 @@ class dc_TargetReport(S3Method):
             gender = row.gender
             if gender == 2:
                 total_female += 1
-            if row.person_id in replied:
+            if row.id in replied:
                 total_replied += 1
                 if gender == 2:
                     replied_female += 1
