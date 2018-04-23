@@ -1532,8 +1532,9 @@ class dc_TargetReport(S3Method):
 
         contacts = TABLE()
         cappend = contacts.append
-        for contact in stats["contacts"]:
-            cappend(TR(TD(contact["repr_str"])))
+        _contacts = stats["contacts"]
+        for person_id in _contacts:
+            cappend(TR(TD(_contacts[person_id]["repr_str"])))
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
