@@ -31,6 +31,7 @@
 
 __all__ = ("DataCollectionTemplateModel",
            "DataCollectionModel",
+           #"dc_TargetReport",
            "dc_rheader",
            "dc_target_check",
            "dc_target_report",
@@ -1331,6 +1332,7 @@ class dc_TargetReport(S3Method):
         db = current.db
         s3db = current.s3db
 
+        target_id = r.id
         template_id = r.record.template_id
 
         # Questions
@@ -1361,19 +1363,52 @@ class dc_TargetReport(S3Method):
                                     limitby=(0, 1),
                                     ).first()
 
+        # Responses (for Stats)
+        rtable = s3db.dc_response
+        query = (rtable.target_id == target_id) & \
+                (rtable.deleted == False) & \
+                (rtable.person_id == ptable.id)
+        responses = db(query).select(ptable.id,
+                                     ptable.gender,
+                                     )
+
         # Answers
         atable = s3db.table(template.name)
         answer_fields = [atable[f] for f in fields]
-        rtable = s3db.dc_response
-        query = (rtable.target_id == r.id) & \
+        answer_fields.append(rtable.person_id) # For Stats & Contacts
+        query = (rtable.target_id == target_id) & \
                 (atable.response_id == rtable.id)
         answers = db(query).select(*answer_fields)
 
         # Build Data structure
-        # Collate Answers
-        for answer in answers:
+        # Collate Answers & collect people for Stats & Contacts
+        replied = []
+        rappend = replied.append
+        for row in answers:
+            rappend(row["dc_response.person_id"])
+            answer = row[atable]
             for fieldname in answer:
                 fields[fieldname].append(answer[fieldname])
+
+        # Stats
+        total = 0
+        total_female = 0
+        total_replied = 0
+        replied_female = 0
+        for row in responses:
+            total += 1
+            gender = row.gender
+            if gender == 2:
+                total_female += 1
+            if row.person_id in replied:
+                total_replied += 1
+                if gender == 2:
+                    replied_female += 1
+        stats = {"total": total,
+                 "total_female": total_female,
+                 "replied": total_replied,
+                 "replied_female": replied_female,
+                 }
 
         # List of Questions
         ID = "dc_question.id"
@@ -1394,7 +1429,7 @@ class dc_TargetReport(S3Method):
                 question.options = None
                 question.answers = answers
 
-        return questions
+        return questions, stats
 
     # -------------------------------------------------------------------------
     def html(self, r, title, **attr):
@@ -1412,11 +1447,13 @@ class dc_TargetReport(S3Method):
 
         #target_title = table.template_id.represent(r.record.template_id)
 
-        data = self._extract(r, **attr)
+        questions, stats = self._extract(r, **attr)
 
+        contacts = TABLE()
+        contacts = TABLE()
         table = TABLE()
         json_dumps = json.dumps
-        for question in data:
+        for question in questions:
             table.append(TR(TH(question.name)))
             if question.options:
                 # Graph
@@ -1438,7 +1475,10 @@ class dc_TargetReport(S3Method):
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
+                   H3("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"), ),
+                   H3("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"), ),
                    table,
+                   contacts,
                    )
 
         output = {"item": item,
@@ -1477,7 +1517,7 @@ class dc_TargetReport(S3Method):
         filename = "%s_%s.pdf" % (report_title, s3_str(target_title))
 
         # @ToDo
-        #data = self._extract(r, **attr)
+        #questions, stats = self._extract(r, **attr)
 
         # @ToDo
         header = DIV()

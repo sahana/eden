@@ -1850,59 +1850,60 @@ def config(settings):
             if callable(standard_prep):
                 result = standard_prep(r)
 
-            if r.interactive:
-                if not current.auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
-                    # Simplify Interface
-                    menu = current.menu
-                    menu.breadcrumbs = None
-                    menu.main = ""
-                    menu.options = None
-                    s3.crud_strings["dc_response"]["title_display"] = ""
-                    if r.component_name == "answer":
-                        # CRUD Strings
-                        tablename = r.component.tablename
-                        s3.crud_strings[tablename].msg_record_created = T("Thank you for taking this survey and helping us to increase the quality of our trainings.")
-                        current.s3db.configure(tablename,
-                                               create_onaccept = dc_answer_onaccept,
-                                               )
-                        # Store tablename for onaccept
-                        s3.dc_dtablename = tablename
-                    #elif r.method == "create":
-                    #    target_id = r.get_vars.get("target_id")
-                    #    if target_id:
-                    #        s3db = current.s3db
-                    #        table = s3db.dc_response
-                    #        table.target_id.default = target_id
-                    #        ttable = s3db.dc_target
-                    #        target = current.db(ttable.id == target_id).select(ttable.template_id,
-                    #                                                           limitby = (0, 1)
-                    #                                                           ).first()
-                    #        try:
-                    #            table.template_id.default = target.template_id
-                    #        except:
-                    #            # Template not found?
-                    #            pass
-                    #        # Auto-submit form
-                    #        script = '''$('form').submit()'''
-                    #        s3.jquery_ready.append(script)
-                    #    else:
-                    #        # Block create
-                    #        current.response.error = T("Survey not specified, please click on original link to take survey")
-                    #        current.s3db.configure("dc_response",
-                    #                               insertable = False,
-                    #                               )
-                else:
-                    # Filter out date is None (unfilled responses)
-                    from s3 import FS
-                    r.resource.add_filter(FS("date") != None)
-
-                    current.s3db.configure("dc_response",
-                                           insertable = False,
-                                           list_fields = [(T("Event"), "target_id$training_event__link.training_event_id"),
-                                                          "date",
-                                                          "person_id",
-                                                          ],
+            # Need POST too to set Date properly
+            #if r.interactive:
+            if not current.auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
+                # Simplify Interface
+                menu = current.menu
+                menu.breadcrumbs = None
+                menu.main = ""
+                menu.options = None
+                s3.crud_strings["dc_response"]["title_display"] = ""
+                if r.component_name == "answer":
+                    # CRUD Strings
+                    tablename = r.component.tablename
+                    s3.crud_strings[tablename].msg_record_created = T("Thank you for taking this survey and helping us to increase the quality of our trainings.")
+                    current.s3db.configure(tablename,
+                                           create_onaccept = dc_answer_onaccept,
                                            )
+                    # Store tablename for onaccept
+                    s3.dc_dtablename = tablename
+                #elif r.method == "create":
+                #    target_id = r.get_vars.get("target_id")
+                #    if target_id:
+                #        s3db = current.s3db
+                #        table = s3db.dc_response
+                #        table.target_id.default = target_id
+                #        ttable = s3db.dc_target
+                #        target = current.db(ttable.id == target_id).select(ttable.template_id,
+                #                                                           limitby = (0, 1)
+                #                                                           ).first()
+                #        try:
+                #            table.template_id.default = target.template_id
+                #        except:
+                #            # Template not found?
+                #            pass
+                #        # Auto-submit form
+                #        script = '''$('form').submit()'''
+                #        s3.jquery_ready.append(script)
+                #    else:
+                #        # Block create
+                #        current.response.error = T("Survey not specified, please click on original link to take survey")
+                #        current.s3db.configure("dc_response",
+                #                               insertable = False,
+                #                               )
+            elif r.interactive:
+                # Filter out date is None (unfilled responses)
+                from s3 import FS
+                r.resource.add_filter(FS("date") != None)
+
+                current.s3db.configure("dc_response",
+                                       insertable = False,
+                                       list_fields = [(T("Event"), "target_id$training_event__link.training_event_id"),
+                                                      "date",
+                                                      "person_id",
+                                                      ],
+                                       )
 
             return result
         s3.prep = custom_prep
@@ -1981,28 +1982,29 @@ def config(settings):
                 current.s3db.configure("dc_response",
                                        insertable = False,
                                        list_fields = ["person_id",
-                                                      "date",
+                                                      (T("Date Responded"), "date"),
                                                       ],
                                        )
 
             return result
         s3.prep = custom_prep
 
+        # MFP should NOT be able to see individual responses
         # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
+        #standard_postp = s3.postp
+        #def custom_postp(r, output):
+        #    # Call standard postp
+        #    if callable(standard_postp):
+        #        output = standard_postp(r, output)
 
-            if r.interactive and r.component_name == "response":
-                from gluon import URL
-                from s3 import S3CRUD
-                open_url = URL(f="respnse", args = ["[id]", "answer"])
-                S3CRUD.action_buttons(r, read_url=open_url, update_url=open_url)
+        #    if r.interactive and r.component_name == "response":
+        #        from gluon import URL
+        #        from s3 import S3CRUD
+        #        open_url = URL(f="respnse", args = ["[id]", "answer"])
+        #        S3CRUD.action_buttons(r, read_url=open_url, update_url=open_url)
 
-            return output
-        s3.postp = custom_postp
+        #    return output
+        #s3.postp = custom_postp
 
         attr["rheader"] = dc_rheader
 
