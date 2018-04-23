@@ -1471,7 +1471,8 @@ class dc_TargetReport(S3Method):
             elif not contact_["phone"] and contact.contact_method == "SMS":
                 contact_["phone"] = contact.value
 
-        for contact in contacts:
+        for person_id in contacts:
+            contact = contacts[person_id]
             str_repr = contact["name"]
             email = contact["email"]
             if email:
