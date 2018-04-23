@@ -5063,14 +5063,18 @@ class S3ProjectPlanningModel(S3Model):
                     indicator_data[key] = {"project_id": project_id,
                                            "indicator_id": indicator_id,
                                            "end_date": end_date,
-                                           "value": d.value,
-                                           "target_value": d.target_value,
+                                           "value": d.value or 0,
+                                           "target_value": d.target_value or 0,
                                            }
                 else:
                     # Add this data to Totals
                     i = indicator_data[key]
-                    i["value"] += d.value
-                    i["target_value"] += d.target_value
+                    value = d.value:
+                    if value:
+                        i["value"] += value
+                    target_value = d.target_value
+                    if target_value:
+                        i["target_value"] += target_value
 
             insert = table.insert
             for key in indicator_data:
