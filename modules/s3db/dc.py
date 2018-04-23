@@ -1475,8 +1475,8 @@ class dc_TargetReport(S3Method):
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
-                   H3("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"), ),
-                   H3("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"), ),
+                   H3("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"))),
+                   H3("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"))),
                    table,
                    contacts,
                    )
