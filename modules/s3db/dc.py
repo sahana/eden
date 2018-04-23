@@ -1365,6 +1365,7 @@ class dc_TargetReport(S3Method):
 
         # Responses (for Stats)
         rtable = s3db.dc_response
+        ptable = s3db.pr_person
         query = (rtable.target_id == target_id) & \
                 (rtable.deleted == False) & \
                 (rtable.person_id == ptable.id)

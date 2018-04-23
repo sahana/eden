@@ -1640,10 +1640,16 @@ def config(settings):
 
             elif tablename == "dc_response":
 
-                tabs = (#(T("Basic Details"), None, {"native": 1}),
-                        (T("Answers"), "answer"),
-                        #(T("Attachments"), "document"),
-                        )
+                auth = current.auth
+                if not auth.s3_has_role(ADMIN) and \
+                       auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
+                    # MFP shouldn't see the Individual Answers
+                    tabs = []
+                else:
+                    tabs = (#(T("Basic Details"), None, {"native": 1}),
+                            (T("Answers"), "answer"),
+                            #(T("Attachments"), "document"),
+                            )
 
                 from gluon import A, URL
 
