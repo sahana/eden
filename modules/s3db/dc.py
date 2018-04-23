@@ -1407,7 +1407,7 @@ class dc_TargetReport(S3Method):
                     replied_female += 1
         stats = {"total": total,
                  "total_female": total_female,
-                 "replied": total_replied,
+                 "total_replied": total_replied,
                  "replied_female": replied_female,
                  }
 
