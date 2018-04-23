@@ -6886,22 +6886,20 @@ class project_SummaryReport(S3Method):
 
             if status_from_activities:
                 for row in rows:
-                    goals[row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             outcomes = {},
-                             actual_progress = row.actual_progress_by_activities,
-                             planned_progress = row.planned_progress_by_activities,
-                             )
+                    goals[row.id] = {"code" : row.code,
+                                     "name" : row.name,
+                                     "outcomes" : {},
+                                     "actual_progress" : row.actual_progress_by_activities,
+                                     "planned_progress" : row.planned_progress_by_activities,
+                                     }
             else:
                 for row in rows:
-                    goals[row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             outcomes = {},
-                             current_status = row.current_status_by_indicators,
-                             overall_status = row.overall_status_by_indicators,
-                             )
+                    goals[row.id] = {"code" : row.code,
+                                     "name" : row.name,
+                                     "outcomes" : {},
+                                     "current_status" : row.current_status_by_indicators,
+                                     "overall_status" : row.overall_status_by_indicators,
+                                     }
 
             # Outcomes
             table = s3db.project_outcome
@@ -6926,22 +6924,20 @@ class project_SummaryReport(S3Method):
 
             if status_from_activities:
                 for row in rows:
-                    goals[row.goal_id]["outcomes"][row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             outputs = {},
-                             actual_progress = row.actual_progress_by_activities,
-                             planned_progress = row.planned_progress_by_activities,
-                             )
+                    goals[row.goal_id]["outcomes"][row.id] = {"code" : row.code,
+                                                              "name" : row.name,
+                                                              "outputs" : {},
+                                                              "actual_progress" : row.actual_progress_by_activities,
+                                                              "planned_progress" : row.planned_progress_by_activities,
+                                                              }
             else:
                 for row in rows:
-                    goals[row.goal_id]["outcomes"][row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             outputs = {},
-                             current_status = row.current_status_by_indicators,
-                             overall_status = row.overall_status_by_indicators,
-                             )
+                    goals[row.goal_id]["outcomes"][row.id] = {"code" : row.code,
+                                                              "name" : row.name,
+                                                              "outputs" : {},
+                                                              "current_status" : row.current_status_by_indicators,
+                                                              "overall_status" : row.overall_status_by_indicators,
+                                                              }
 
             # Outputs
             table = s3db.project_output
@@ -6967,22 +6963,20 @@ class project_SummaryReport(S3Method):
 
             if status_from_activities:
                 for row in rows:
-                    goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             indicators = {},
-                             actual_progress = row.actual_progress_by_activities,
-                             planned_progress = row.planned_progress_by_activities,
-                             )
+                    goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = {"code" : row.code,
+                                                                                         "name" : row.name,
+                                                                                         "indicators" : {},
+                                                                                         "actual_progress" : row.actual_progress_by_activities,
+                                                                                         "planned_progress" : row.planned_progress_by_activities,
+                                                                                         }
             else:
                 for row in rows:
-                    goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             indicators = {},
-                             current_status = row.current_status_by_indicators,
-                             overall_status = row.overall_status_by_indicators,
-                             )
+                    goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = {"code" : row.code,
+                                                                                         "name" : row.name,
+                                                                                         "indicators" : {},
+                                                                                         "current_status" : row.current_status_by_indicators,
+                                                                                         "overall_status" : row.overall_status_by_indicators,
+                                                                                         }
 
             # Indicators
             table = s3db.project_indicator
@@ -7013,25 +7007,23 @@ class project_SummaryReport(S3Method):
                     goal_id = row.goal_id
                     outcome_id = row.outcome_id
                     output_id = row.output_id
-                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             activities = {},
-                             actual_progress = row.actual_progress_by_activities,
-                             planned_progress = row.planned_progress_by_activities,
-                             )
+                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = {"code" : row.code,
+                                                                                                                "name" : row.name,
+                                                                                                                "activities" : {},
+                                                                                                                "actual_progress" : row.actual_progress_by_activities,
+                                                                                                                "planned_progress" : row.planned_progress_by_activities,
+                                                                                                                }
             else:
                 for row in rows:
                     indicator_id = row.id
                     goal_id = row.goal_id
                     outcome_id = row.outcome_id
                     output_id = row.output_id
-                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                        dict(code = row.code,
-                             name = row.name,
-                             current_status = row.current_status_by_indicators,
-                             overall_status = row.overall_status_by_indicators,
-                             )
+                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = {"code" : row.code,
+                                                                                                                "name" : row.name,
+                                                                                                                "current_status" : row.current_status_by_indicators,
+                                                                                                                "overall_status" : row.overall_status_by_indicators,
+                                                                                                                }
 
             if status_from_activities:
                 # Activities
@@ -7061,17 +7053,16 @@ class project_SummaryReport(S3Method):
                     outcome_id = row.outcome_id
                     output_id = row.output_id
                     indicator_id = row.indicator_id
-                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id]["activities"][activity_id] = \
-                        dict(name = name,
-                             actual_progress = row.actual_progress,
-                             planned_progress = row.planned_progress,
-                             )
+                    goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id]["activities"][activity_id] = {"name" : name,
+                                                                                                                                           "actual_progress" : row.actual_progress,
+                                                                                                                                           "planned_progress" : row.planned_progress,
+                                                                                                                                           }
 
             return project, goals
 
 
         # Filtered, so we need to recalculate dynamically
-        if current.deployment_settings.get_project_status_from_activities():
+        if status_from_activities:
             # Progress from Activities
             if start_date:
                 start_date = s3_decode_iso_datetime(start_date)
@@ -7092,6 +7083,12 @@ class project_SummaryReport(S3Method):
             outcomes = {}
             outputs = {}
             indicators = {}
+
+            if indicator_ids:
+                indicator_ids = indicator_ids.split(",")
+
+            if goal_ids:
+                goal_ids = goal_ids.split(",")
 
             # Read all the relevant Activities
             limitby = None
@@ -7494,10 +7491,9 @@ class project_SummaryReport(S3Method):
                                     )
             for row in rows:
                 goal_id = row.id
-                goal_name = row.name
                 if goal_id in goals:
                     goals[goal_id].update(code = row.code,
-                                          name = goal_name,
+                                          name = row.name,
                                           #actual_progress = actual_progress,
                                           #planned_progress = planned_progress,
                                           )
@@ -7505,7 +7501,7 @@ class project_SummaryReport(S3Method):
                     actual_progress = 0
                     planned_progress = 0
                     goals[goal_id] = {"outcomes": {},
-                                      "name": goal_name,
+                                      "name": row.name,
                                       "code": row.code,
                                       "actual_progress": actual_progress,
                                       "planned_progress": planned_progress,
@@ -7555,22 +7551,20 @@ class project_SummaryReport(S3Method):
 
         if status_from_activities:
             for row in rows:
-                goals[row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         outcomes = {},
-                         actual_progress = row.actual_progress_by_activities,
-                         planned_progress = row.planned_progress_by_activities,
-                         )
+                goals[row.id] = {"code" : row.code,
+                                 "name" : row.name,
+                                 "outcomes" : {},
+                                 "actual_progress" : row.actual_progress_by_activities,
+                                 "planned_progress" : row.planned_progress_by_activities,
+                                 }
         else:
             for row in rows:
-                goals[row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         outcomes = {},
-                         current_status = row.current_status_by_indicators,
-                         overall_status = row.overall_status_by_indicators,
-                         )
+                goals[row.id] = {"code" : row.code,
+                                 "name" : row.name,
+                                 "outcomes" : {},
+                                 "current_status" : row.current_status_by_indicators,
+                                 "overall_status" : row.overall_status_by_indicators,
+                                 }
 
         # Outcomes
         table = s3db.project_outcome
@@ -7601,22 +7595,20 @@ class project_SummaryReport(S3Method):
 
         if status_from_activities:
             for row in rows:
-                goals[row.goal_id]["outcomes"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         outputs = {},
-                         actual_progress = row.actual_progress_by_activities,
-                         planned_progress = row.planned_progress_by_activities,
-                         )
+                goals[row.goal_id]["outcomes"][row.id] = {"code" : row.code,
+                                                          "name" : row.name,
+                                                          "outputs" : {},
+                                                          "actual_progress" : row.actual_progress_by_activities,
+                                                          "planned_progress" : row.planned_progress_by_activities,
+                                                          }
         else:
             for row in rows:
-                goals[row.goal_id]["outcomes"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         outputs = {},
-                         current_status = row.current_status_by_indicators,
-                         overall_status = row.overall_status_by_indicators,
-                         )
+                goals[row.goal_id]["outcomes"][row.id] = {"code" : row.code,
+                                                          "name" : row.name,
+                                                          "outputs" : {},
+                                                          "current_status" : row.current_status_by_indicators,
+                                                          "overall_status" : row.overall_status_by_indicators,
+                                                          }
 
         # Outputs
         table = s3db.project_output
@@ -7648,22 +7640,20 @@ class project_SummaryReport(S3Method):
 
         if status_from_activities:
             for row in rows:
-                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         indicators = {},
-                         actual_progress = row.actual_progress_by_activities,
-                         planned_progress = row.planned_progress_by_activities,
-                         )
+                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = {"code" : row.code,
+                                                                                     "name" : row.name,
+                                                                                     "indicators" : {},
+                                                                                     "actual_progress" : row.actual_progress_by_activities,
+                                                                                     "planned_progress" : row.planned_progress_by_activities,
+                                                                                     }
         else:
             for row in rows:
-                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         indicators = {},
-                         current_status = row.current_status_by_indicators,
-                         overall_status = row.overall_status_by_indicators,
-                         )
+                goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = {"code" : row.code,
+                                                                                     "name" : row.name,
+                                                                                     "indicators" : {},
+                                                                                     "current_status" : row.current_status_by_indicators,
+                                                                                     "overall_status" : row.overall_status_by_indicators,
+                                                                                     }
 
         # Indicators
         limitby = None
@@ -7722,13 +7712,12 @@ class project_SummaryReport(S3Method):
                                                 outcome = outcome_id,
                                                 output = output_id,
                                                 )
-                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         #comments = NONE,
-                         actual_progress = row.actual_progress_by_activities,
-                         planned_progress = row.planned_progress_by_activities,
-                         )
+                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = {"code" : row.code,
+                                                                                                            "name" : row.name,
+                                                                                                            #"comments" : NONE,
+                                                                                                            "actual_progress" : row.actual_progress_by_activities,
+                                                                                                            "planned_progress" : row.planned_progress_by_activities,
+                                                                                                            }
         else:
             for row in rows:
                 indicator_id = row.id
@@ -7740,12 +7729,11 @@ class project_SummaryReport(S3Method):
                                                 outcome = outcome_id,
                                                 output = output_id,
                                                 )
-                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                    dict(code = row.code,
-                         name = row.name,
-                         current_status = row.current_status_by_indicators,
-                         overall_status = row.overall_status_by_indicators,
-                         )
+                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = {"code" : row.code,
+                                                                                                            "name" : row.name,
+                                                                                                            "current_status" : row.current_status_by_indicators,
+                                                                                                            "overall_status" : row.overall_status_by_indicators,
+                                                                                                            }
 
         if status_from_activities:
             # Activities
@@ -7808,11 +7796,10 @@ class project_SummaryReport(S3Method):
                                                 outcome = outcome_id,
                                                 output = output_id,
                                                 )
-                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
-                    dict(name = name,
-                         actual_progress = row.actual_progress_by_activities,
-                         planned_progress = row.planned_progress_by_activities,
-                         )
+                goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = {"name" : name,
+                                                                                                            "actual_progress" : row.actual_progress_by_activities,
+                                                                                                            "planned_progress" : row.planned_progress_by_activities,
+                                                                                                            }
 
         # Indicator Data
         #date = None
