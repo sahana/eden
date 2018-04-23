@@ -1531,11 +1531,11 @@ class dc_TargetReport(S3Method):
                     table.append(TR(TD(answer)))
 
         contacts = P()
+        cappend = contacts.append
         _contacts = stats["contacts"]
         for person_id in _contacts:
-            contacts += [_contacts[person_id]["repr_str"],
-                         BR(),
-                         ]
+            cappend(_contacts[person_id]["repr_str"])
+            cappend(BR())
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
