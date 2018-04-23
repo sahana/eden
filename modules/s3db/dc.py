@@ -1473,7 +1473,7 @@ class dc_TargetReport(S3Method):
 
         for person_id in contacts:
             contact = contacts[person_id]
-            str_repr = contact["name"]
+            repr_str = contact["name"]
             email = contact["email"]
             if email:
                 repr_str = "%s <%s>" % (repr_str,
@@ -1484,7 +1484,7 @@ class dc_TargetReport(S3Method):
                 repr_str = "%s %s" % (repr_str,
                                       s3_phone_represent(phone),
                                       )
-            contact["str_repr"] = str_repr
+            contact["repr_str"] = repr_str
 
         stats["contacts"] = contacts
 
@@ -1533,7 +1533,7 @@ class dc_TargetReport(S3Method):
         contacts = TABLE()
         cappend = contacts.append
         for contact in stats["contacts"]:
-            cappend(TR(TD(contact["str_repr"])))
+            cappend(TR(TD(contact["repr_str"])))
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
