@@ -1530,16 +1530,19 @@ class dc_TargetReport(S3Method):
                 for answer in question.answers:
                     table.append(TR(TD(answer)))
 
-        contacts = TABLE()
-        cappend = contacts.append
+        contacts = P()
         _contacts = stats["contacts"]
         for person_id in _contacts:
-            cappend(TR(TD(_contacts[person_id]["repr_str"])))
+            contacts += [_contacts[person_id]["repr_str"],
+                         BR(),
+                         ]
 
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
-                   H4("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"))),
-                   H4("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"))),
+                   P("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female")),
+                     BR(),
+                     "%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female")),
+                     ),
                    table,
                    contacts,
                    )
