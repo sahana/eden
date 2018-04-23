@@ -60,7 +60,7 @@ __all__ = (# PR Base Entities
            "pr_PersonEntityRepresent",
            "pr_PersonRepresent",
            "pr_person_phone_represent",
-           "pr_person_email_phone_represent",
+           #"pr_person_email_phone_represent",
            "pr_person_comment",
            "pr_image_library_represent",
            "pr_url_represent",
@@ -6639,6 +6639,7 @@ def pr_person_phone_represent(person_id, show_link=True):
 def pr_person_email_phone_represent(person_id, show_link=True):
     """
         Represent a Person with their email and phone number
+        - currently unused
 
         @param show_link: whether to make the output into a hyperlink
     """

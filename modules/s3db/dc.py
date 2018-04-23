@@ -1460,9 +1460,9 @@ class dc_TargetReport(S3Method):
             person = row.pr_person
             person_id = person.id
             if person_id not in contacts:
-                contacts[person_id] = {name: s3_fullname(person),
-                                       email: None,
-                                       phone: None,
+                contacts[person_id] = {"name": s3_fullname(person),
+                                       "email": None,
+                                       "phone": None,
                                        }
             contact_ = contacts[person_id]
             contact = row.pr_contact
