@@ -5069,7 +5069,7 @@ class S3ProjectPlanningModel(S3Model):
                 else:
                     # Add this data to Totals
                     i = indicator_data[key]
-                    value = d.value:
+                    value = d.value
                     if value:
                         i["value"] += value
                     target_value = d.target_value
