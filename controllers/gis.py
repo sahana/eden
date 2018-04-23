@@ -802,7 +802,7 @@ def ldata():
                                                 )
 
     script = '''n=%s\n''' % json.dumps(location_dict, separators=SEPARATORS)
-    response.headers["Content-Type"] = "application/json"
+    response.headers["Content-Type"] = "application/javascript"
     return script
 
 # -----------------------------------------------------------------------------
@@ -848,7 +848,7 @@ def hdata():
             hdict[int(l[1:])] = row[l]
 
     script = '''n=%s\n''' % json.dumps(hdict, separators=SEPARATORS)
-    response.headers["Content-Type"] = "application/json"
+    response.headers["Content-Type"] = "application/javascript"
     return script
 
 # -----------------------------------------------------------------------------
