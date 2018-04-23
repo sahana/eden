@@ -1385,11 +1385,20 @@ class dc_TargetReport(S3Method):
         # Collate Answers & collect people for Stats & Contacts
         replied = []
         rappend = replied.append
+        can_contact = []
+        cappend = can_contact.append
+
         for row in answers:
-            rappend(row["dc_response.person_id"])
+            person_id = row["dc_response.person_id"]
+            rappend(person_id)
             answer = row[atable]
             for fieldname in answer:
-                fields[fieldname].append(answer[fieldname])
+                value = answer[fieldname]
+                fields[fieldname].append(value)
+                if value == "yes":
+                    # Hardcoded to IFRC bkk_training_evaluation!
+                    # - the only Question with Yes/No answers!
+                    cappend(person_id)
 
         # Stats
         total = 0
@@ -1430,6 +1439,54 @@ class dc_TargetReport(S3Method):
                 question.options = None
                 question.answers = answers
 
+        # Contacts
+        ctable = s3db.pr_contact
+        query = (ptable.id.belongs(can_contact))
+        left = ctable.on((ctable.pe_id == ptable.pe_id) & \
+                         (ctable.contact_method.belongs(("EMAIL", "SMS"))) & \
+                         (ctable.deleted == False))
+        rows = db(query).select(ptable.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                ctable.contact_method,
+                                ctable.priority,
+                                ctable.value,
+                                left = left,
+                                orderby = ctable.priority,
+                                )
+        contacts = {}
+        for row in rows:
+            person = row.pr_person
+            person_id = person.id
+            if person_id not in contacts:
+                contacts[person_id] = {name: s3_fullname(person),
+                                       email: None,
+                                       phone: None,
+                                       }
+            contact_ = contacts[person_id]
+            contact = row.pr_contact
+            if not contact_.email and contact.contact_method == "EMAIL":
+                contact_.email = contact.value
+            elif not contact_.phone and contact.contact_method == "SMS":
+                contact_.phone = contact.value
+
+        for contact in contacts:
+            str_repr = contact["name"]
+            email = contact["email"]
+            if email:
+                repr_str = "%s <%s>" % (repr_str,
+                                        email,
+                                        )
+            phone = contact["phone"]
+            if phone:
+                repr_str = "%s %s" % (repr_str,
+                                      s3_phone_represent(phone),
+                                      )
+            contact["str_repr"] = str_repr
+
+        stats["contacts"] = contacts
+
         return questions, stats
 
     # -------------------------------------------------------------------------
@@ -1450,8 +1507,6 @@ class dc_TargetReport(S3Method):
 
         questions, stats = self._extract(r, **attr)
 
-        contacts = TABLE()
-        contacts = TABLE()
         table = TABLE()
         json_dumps = json.dumps
         for question in questions:
@@ -1474,10 +1529,15 @@ class dc_TargetReport(S3Method):
                 for answer in question.answers:
                     table.append(TR(TD(answer)))
 
+        contacts = TABLE()
+        cappend = contacts.append
+        for contact in stats["contacts"]:
+            cappend(TR(TD(contact["str_repr"])))
+
         item = DIV(H1(title),
                    H3("%s: %s" % (T("Up To Date"), date_represent(r.utcnow))),
-                   H3("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"))),
-                   H3("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"))),
+                   H4("%i %s (%i %s)" % (stats["total"], T("Participants"), stats["total_female"], T("Female"))),
+                   H4("%i %s (%i %s)" % (stats["total_replied"], T("Replied"), stats["replied_female"], T("Female"))),
                    table,
                    contacts,
                    )
