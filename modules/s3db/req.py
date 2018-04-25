@@ -1328,11 +1328,14 @@ $.filterOptionsS3({
 
         settings = current.deployment_settings
 
+        tabs = None
+
         if settings.get_org_site_inv_req_tabs():
 
             has_permission = current.auth.s3_has_permission
             if settings.has_module("req") and \
                has_permission("read", "req_req", c="req"):
+
                 T = current.T
 
                 # Requests tab
@@ -1350,10 +1353,7 @@ $.filterOptionsS3({
                 if settings.get_req_use_commit():
                     tabs.append((T("Commit"), "commit"))
 
-        else:
-            tabs = []
-
-        return tabs
+        return tabs if tabs else []
 
     # -------------------------------------------------------------------------
     @staticmethod
