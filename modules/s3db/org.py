@@ -4310,6 +4310,7 @@ class S3FacilityModel(S3Model):
         """
             Produce a static GeoJSON[P] feed of Facility data
             Designed to be run on a schedule to serve a high-volume website
+            - current.task.schedule_task("s3db_task", "org_facility_geojson", period=86400, repeats=0)
         """
 
         from shapely.geometry import Point
@@ -4334,7 +4335,7 @@ class S3FacilityModel(S3Model):
                  (ntable.site_id == stable.site_id)
         left = [ntable.on(lquery),
                 ltable.on(stable.site_id == ltable.site_id),
-                ttable.on(ttable.facility_type_id == ltable.facility_type_id),
+                ttable.on(ttable.id == ltable.facility_type_id),
                 ]
         facs = db(query).select(stable.id,
                                 stable.name,

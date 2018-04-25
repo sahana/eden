@@ -211,9 +211,10 @@ class S3Config(Storage):
         self.setup = Storage()
         self.supply = Storage()
         self.sync = Storage()
+        self.tasks = Storage()
+        self.transport = Storage()
         self.ui = Storage()
         self.vulnerability = Storage()
-        self.transport = Storage()
         self.xforms = Storage()
 
         # Lazy property
@@ -468,13 +469,6 @@ class S3Config(Storage):
         return module_name in self.modules
 
     # -------------------------------------------------------------------------
-    def is_cd_version(self):
-        """
-            Whether we're running from a non-writable CD
-        """
-        return self.base.get("cd_version", False)
-
-    # -------------------------------------------------------------------------
     def get_google_analytics_tracking_id(self):
         """
             Google Analytics Key
@@ -487,6 +481,22 @@ class S3Config(Storage):
             List of YouTube IDs for the /default/video page
         """
         return self.base.get("youtube_id", [])
+
+    # -------------------------------------------------------------------------
+    def is_cd_version(self):
+        """
+            Whether we're running from a non-writable CD
+        """
+        return self.base.get("cd_version", False)
+
+    # -------------------------------------------------------------------------
+    # Tasks
+    # -------------------------------------------------------------------------
+    def get_task(self, taskname):
+        """
+            Ability to define custom Tasks in the Template
+        """
+        return self.tasks.get(taskname)
 
     # -------------------------------------------------------------------------
     # Authentication settings

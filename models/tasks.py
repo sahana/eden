@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 # =============================================================================
-# Tasks to be callable async
+# Tasks to be callable async &/or on a Schedule
+# @ToDo: Rewrite a lot of these to use s3db_task or settings_task instead of
+#        having a lot of separate tasks defined here
 # =============================================================================
 
 has_module = settings.has_module
@@ -13,6 +15,38 @@ def dummy():
         - can be used to populate a table with a task_id
     """
     return
+
+# -----------------------------------------------------------------------------
+def s3db_task(function, user_id=None, **kwargs):
+    """
+        Generic Task
+        - can be used to call any s3db.function(**kwargs)
+        - saves having to create separate Tasks for many cases
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task & return the result
+    result = s3db[function](**kwargs)
+    db.commit()
+    return result
+
+# -----------------------------------------------------------------------------
+def settings_task(taskname, user_id=None, **kwargs):
+    """
+        Generic Task
+        - can be used to call any settings.tasks.taskname(**kwargs)
+        - saves having to create separate Tasks for many cases
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    task = settings.get_task(taskname)
+    if task:
+        # Run the Task & return the result
+        result = task(**kwargs)
+        db.commit()
+        return result
 
 # -----------------------------------------------------------------------------
 def maintenance(period = "daily"):
@@ -57,7 +91,7 @@ def maintenance(period = "daily"):
 # GIS: always-enabled
 # -----------------------------------------------------------------------------
 def gis_download_kml(record_id, filename, session_id_name, session_id,
-                     user_id = None):
+                     user_id=None):
     """
         Download a KML file
             - will normally be done Asynchronously if there is a worker alive
@@ -97,20 +131,6 @@ def gis_update_location_tree(feature, user_id=None):
 # -----------------------------------------------------------------------------
 # Org: always-enabled
 # -----------------------------------------------------------------------------
-def org_facility_geojson(user_id=None):
-    """
-        Export GeoJSON[P] Of Facility data
-
-        @param user_id: calling request's auth.user.id or None
-    """
-    if user_id:
-        # Authenticate
-        auth.s3_impersonate(user_id)
-
-    # Run the Task & return the result
-    s3db.org_facility_geojson()
-
-# -----------------------------------------------------------------------------
 def org_site_check(site_id, user_id=None):
     """ Check the Status for Sites """
 
@@ -126,10 +146,11 @@ def org_site_check(site_id, user_id=None):
 
 # -----------------------------------------------------------------------------
 tasks = {"dummy": dummy,
+         "s3db_task": s3db_task,
+         "settings_task": settings_task,
          "maintenance": maintenance,
          "gis_download_kml": gis_download_kml,
          "gis_update_location_tree": gis_update_location_tree,
-         "org_facility_geojson": org_facility_geojson,
          "org_site_check": org_site_check,
          }
 
@@ -154,47 +175,6 @@ if has_module("cap"):
                 sync.synchronize(row)
 
     tasks["cap_ftp_sync"] = cap_ftp_sync
-
-# -----------------------------------------------------------------------------
-if has_module("dc"):
-
-    # -------------------------------------------------------------------------
-    def dc_target_check(target_id, user_id=None):
-        """
-            Check whether Survey has been Approved/Rejected
-
-            @param target_id: Target record_id
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-
-        # Run the Task & return the result
-        result = s3db.dc_target_check(target_id)
-        db.commit()
-        return result
-
-    tasks["dc_target_check"] = dc_target_check
-
-    # -------------------------------------------------------------------------
-    def dc_target_report(target_id, user_id=None):
-        """
-            Notify that Survey Report is ready
-
-            @param target_id: Target record_id
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-
-        # Run the Task & return the result
-        result = s3db.dc_target_report(target_id)
-        #db.commit()
-        return result
-
-    tasks["dc_target_report"] = dc_target_report
 
 # -----------------------------------------------------------------------------
 if has_module("doc"):
@@ -285,28 +265,6 @@ if has_module("doc"):
         db.commit()
 
     tasks["document_delete_index"] = document_delete_index
-
-# -----------------------------------------------------------------------------
-if has_module("hrm"):
-
-    # -------------------------------------------------------------------------
-    def hrm_training_event_survey(training_event_id, user_id=None):
-        """
-            Notify Event Organiser that they should consider sending out a Survey
-
-            @param training_event_id: (Training) Event record_id
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-
-        # Run the Task & return the result
-        result = s3db.hrm_training_event_survey(training_event_id)
-        db.commit()
-        return result
-
-    tasks["hrm_training_event_survey"] = hrm_training_event_survey
 
 # -----------------------------------------------------------------------------
 if has_module("msg"):

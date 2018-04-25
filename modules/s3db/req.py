@@ -2387,11 +2387,12 @@ class RequestSummaryModel(S3Model):
                            widget = s3_richtext_widget,
                            represent = XML,
                            ),
-                     #s3_comments("needs",
-                     #            label=T("Needs"),
-                     #            comment=None,
-                     #            widget=S3PriorityListWidget(),
-                     #            ),
+                     # Field used by org_facility_geojson
+                     s3_comments("needs",
+                                 label = T("Needs"),
+                                 comment = None,
+                                 widget = S3PriorityListWidget(),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD strings
