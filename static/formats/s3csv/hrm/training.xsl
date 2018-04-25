@@ -35,6 +35,7 @@
          Trainee Organisation
          HR Type
          Department
+         Office Name
          Office L0
          Office L1
          Office L2
@@ -155,6 +156,7 @@
                          col[@field='Office L5'])"/>
     <xsl:key name="offices" match="row"
              use="concat(col[@field='Trainee Organisation'], '/',
+                         col[@field='Office Name'], '/',
                          col[@field='Office L0'], '/',
                          col[@field='Office L1'], '/',
                          col[@field='Office L2'], '/',
@@ -490,6 +492,7 @@
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('offices',
                                                         concat(col[@field='Trainee Organisation'], '/',
+                                                               col[@field='Office Name'], '/',
                                                                col[@field='Office L0'], '/',
                                                                col[@field='Office L1'], '/',
                                                                col[@field='Office L2'], '/',
@@ -747,9 +750,9 @@
                 <xsl:if test="$SiteName!=''">
                     <resource name="org_office">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$OfficeName"/>
+                            <xsl:value-of select="$SiteName"/>
                         </xsl:attribute>
-                        <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                        <data field="name"><xsl:value-of select="$SiteName"/></data>
                     </resource>
                 </xsl:if>
                 <resource name="hrm_training_event">
@@ -764,10 +767,10 @@
                         </xsl:attribute>
                     </reference>
                     <!-- Link to Site -->
-                    <xsl:if test="$OfficeName!=''">
+                    <xsl:if test="$SiteName!=''">
                         <reference field="site_id" resource="org_office">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="$OfficeName"/>
+                                <xsl:value-of select="$SiteName"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:if>
@@ -1259,6 +1262,7 @@
 
         <xsl:param name="type"/>
 
+        <xsl:variable name="ProvidedOfficeName" select="col[@field='Office Name']/text()"/>
         <xsl:variable name="L0" select="col[@field='Office L0']/text()"/>
         
         <xsl:variable name="resourcename">org_office</xsl:variable>
@@ -1273,7 +1277,7 @@
             </xsl:choose>
         </xsl:variable>-->
 
-        <xsl:if test="$L0!=''">
+        <xsl:if test="$L0!='' or $ProvidedOfficeName!=''">
             <!-- Create the Office -->
             <xsl:variable name="OrgName" select="col[@field='Trainee Organisation']/text()"/>
             <xsl:variable name="L1" select="col[@field='Office L1']/text()"/>
@@ -1284,6 +1288,9 @@
 
             <xsl:variable name="OfficeName">
                 <xsl:choose>
+                    <xsl:when test="$ProvidedOfficeName!=''">
+                        <xsl:value-of select="$ProvidedOfficeName"/>
+                    </xsl:when>
                     <xsl:when test="$L5!=''">
                         <xsl:value-of select="$L5"/>
                     </xsl:when>
@@ -1351,41 +1358,43 @@
                                 <xsl:value-of select="$OrgName"/>
                             </xsl:attribute>
                         </reference>
-                        <!-- Link to Location -->
-                        <reference field="location_id" resource="gis_location">
-                            <xsl:choose>
-                                <xsl:when test="$L5!=''">
-                                    <xsl:attribute name="tuid">
-                                        <xsl:value-of select="concat('L5/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4, '/', $L5)"/>
-                                    </xsl:attribute>
-                                </xsl:when>
-                                <xsl:when test="$L4!=''">
-                                    <xsl:attribute name="tuid">
-                                        <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
-                                    </xsl:attribute>
-                                </xsl:when>
-                                <xsl:when test="$L3!=''">
-                                    <xsl:attribute name="tuid">
-                                        <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
-                                    </xsl:attribute>
-                                </xsl:when>
-                                <xsl:when test="$L2!=''">
-                                    <xsl:attribute name="tuid">
-                                        <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
-                                    </xsl:attribute>
-                                </xsl:when>
-                                <xsl:when test="$L1!=''">
-                                    <xsl:attribute name="tuid">
-                                        <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
-                                    </xsl:attribute>
-                                </xsl:when>
-                                <xsl:otherwise>
-                                    <xsl:attribute name="uuid">
-                                        <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
-                                    </xsl:attribute>
-                                </xsl:otherwise>
-                            </xsl:choose>
-                        </reference>
+                        <xsl:if test="$L0!=''">
+                            <!-- Link to Location -->
+                            <reference field="location_id" resource="gis_location">
+                                <xsl:choose>
+                                    <xsl:when test="$L5!=''">
+                                        <xsl:attribute name="tuid">
+                                            <xsl:value-of select="concat('L5/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4, '/', $L5)"/>
+                                        </xsl:attribute>
+                                    </xsl:when>
+                                    <xsl:when test="$L4!=''">
+                                        <xsl:attribute name="tuid">
+                                            <xsl:value-of select="concat('L4/', $countrycode, '/', $L1, '/', $L2, '/', $L3, '/', $L4)"/>
+                                        </xsl:attribute>
+                                    </xsl:when>
+                                    <xsl:when test="$L3!=''">
+                                        <xsl:attribute name="tuid">
+                                            <xsl:value-of select="concat('L3/', $countrycode, '/', $L1, '/', $L2, '/', $L3)"/>
+                                        </xsl:attribute>
+                                    </xsl:when>
+                                    <xsl:when test="$L2!=''">
+                                        <xsl:attribute name="tuid">
+                                            <xsl:value-of select="concat('L2/', $countrycode, '/', $L1, '/', $L2)"/>
+                                        </xsl:attribute>
+                                    </xsl:when>
+                                    <xsl:when test="$L1!=''">
+                                        <xsl:attribute name="tuid">
+                                            <xsl:value-of select="concat('L1/', $countrycode, '/', $L1)"/>
+                                        </xsl:attribute>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:attribute name="uuid">
+                                            <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+                                        </xsl:attribute>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </reference>
+                        </xsl:if>
                     </resource>
                 </xsl:otherwise>
             </xsl:choose>

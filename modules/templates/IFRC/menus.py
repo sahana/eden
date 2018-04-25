@@ -622,11 +622,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if not has_role(ADMIN) and auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
             if has_role("EVENT_OFFICE_MANAGER"):
                 # Just their Dashboard
-                return M()(M("Training Events", c="hrm", f="training_event")())
+                return M()(M("Training Events", c="hrm", f="training_event", vars={"dashboard": 1})())
 
             return M()(
                         M("Training Events", c="hrm", f="training_event")(
                             M("Create", m="create"),
+                            M("Dashboard", vars={"dashboard": 1}),
                             M("Search Training Participants", f="training"),
                             M("Import Participant List", f="training", m="import"),
                         ),

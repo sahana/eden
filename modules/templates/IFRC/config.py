@@ -4903,13 +4903,13 @@ def config(settings):
         else:
             auth = current.auth
 
-            s3db.set_method("hrm", "training_event",
-                            method = "notify",
-                            action = hrm_training_event_notify)
+            set_method = s3db.set_method
+            set_method("hrm", "training_event",
+                       method = "notify",
+                       action = hrm_training_event_notify)
 
             if not auth.s3_has_role("ADMIN"):
-                OM = auth.s3_has_role("EVENT_OFFICE_MANAGER")
-                if OM or auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER")):
+                if auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
                     # Bangkok CCST
                     EVENTS = True
 
@@ -4957,7 +4957,7 @@ def config(settings):
 
             elif EVENTS:
                 if not r.component:
-                    if OM:
+                    if r.get_vars.get("dashboard"):
                         # Dashboard for Office Manager
                         #from dateutil.relativedelta import relativedelta
                         from s3 import S3DateTime, s3_auth_user_represent_name, s3_fieldmethod
