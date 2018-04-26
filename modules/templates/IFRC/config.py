@@ -1641,7 +1641,7 @@ def config(settings):
             elif tablename == "dc_response":
 
                 auth = current.auth
-                if not auth.s3_has_role(ADMIN) and \
+                if not auth.s3_has_role("ADMIN") and \
                        auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
                     # MFP shouldn't see the Individual Answers
                     tabs = []
