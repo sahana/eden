@@ -4634,7 +4634,7 @@ class S3BulkImporter(object):
             else:
                 task_vars[var] = all_vars[var]
 
-        current.s3task.schedule_task(task_name.split("\\")[-1],
+        current.s3task.schedule_task(task_name.split(os.path.sep)[-1], # Strip the path
                                      args = task_args,
                                      vars = task_vars,
                                      **kwargs
