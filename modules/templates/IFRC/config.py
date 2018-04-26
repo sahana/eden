@@ -1911,13 +1911,14 @@ def config(settings):
         #url = "%s%s" % (settings.get_base_public_url(),
         #                URL(c="dc", f="target", args=[target_id, "review"]),
         #                )
-        subject = T("Post-Event Survey hasn't been Approved/Rejected")
-        message = T("The post-Event Survey for %(event_name)s on %(date)s in %(location)s has not been Approved or Rejected") % \
+        subject_T = T("Post-Event Survey hasn't been Approved/Rejected")
+        message = "The post-Event Survey for %(event_name)s on %(date)s in %(location)s has not been Approved or Rejected" % \
                     {"date": "%(date)s", # Localise per-language
                      "event_name": event.name,
                      "location": "%(location)s", # Localise per-language
                      #"url": url,
                      }
+        message_T = T(message)
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
@@ -1926,12 +1927,11 @@ def config(settings):
         location_represent = s3db.gis_LocationRepresent()
         for language in languages:
             T.force(language)
-            subject = s3_str(subject)
+            subject = s3_str(subject_T)
             session_s3.language = language # for date_represent
-            message = s3_str(message % {"date": date_represent(event_date),
-                                        "location": location_represent(location_id),
-                                        },
-                             )
+            message = s3_str(message_T) % {"date": date_represent(event_date),
+                                           "location": location_represent(location_id),
+                                           },
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
@@ -2013,13 +2013,14 @@ def config(settings):
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="dc", f="target", args=[target_id, "results"]),
                         )
-        subject = T("Post-Event Survey Report is Ready")
-        message = T("The Report on the post-Event Survey for %(event_name)s on %(date)s in %(location)s is Ready: %(url)s") % \
+        subject_T = T("Post-Event Survey Report is Ready")
+        message = "The Report on the post-Event Survey for %(event_name)s on %(date)s in %(location)s is Ready: %(url)s" % \
                     {"date": "%(date)s", # Localise per-language
                      "event_name": event.name,
                      "location": "%(location)s", # Localise per-language
                      "url": url,
                      }
+        message_T = T(message)
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
@@ -2028,12 +2029,11 @@ def config(settings):
         location_represent = s3db.gis_LocationRepresent()
         for language in languages:
             T.force(language)
-            subject = s3_str(subject)
+            subject = s3_str(subject_T)
             session_s3.language = language # for date_represent
-            message = s3_str(message % {"date": date_represent(event_date),
-                                        "location": location_represent(location_id),
-                                        },
-                             )
+            message = s3_str(message_T) % {"date": date_represent(event_date),
+                                           "location": location_represent(location_id),
+                                           },
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
@@ -2659,24 +2659,24 @@ def config(settings):
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="dc", f="target", args=[target_id, "review"]),
                         )
-        subject = T("Consider sending a post-Event Survey")
-        message = T("It is now %(date)s since the event %(event_name)s in %(location)s so you should consider creating a survey by visiting this link: %(url)s") % \
+        subject_T = T("Consider sending a post-Event Survey")
+        message = "It is now %(date)s since the event %(event_name)s in %(location)s so you should consider creating a survey by visiting this link: %(url)s" % \
                 {"date": "%(date)s", # Localise per-language
                  "event_name": event.name,
                  "location": "%(location)s", # Localise per-language
                  "url": url,
                  }
+        message_T = T(message)
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
         for language in languages:
             T.force(language)
-            subject = s3_str(subject)
+            subject = s3_str(subject_T)
             humanized_date = event_date.humanize(locale=language.replace("-", "_"))
-            message = s3_str(message % {"date": humanized_date,
-                                        "location": s3db.gis_LocationRepresent(location_id),
-                                        },
-                             )
+            message = s3_str(message_T) % {"date": humanized_date,
+                                           "location": s3db.gis_LocationRepresent(location_id),
+                                           },
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
@@ -2728,15 +2728,16 @@ def config(settings):
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="hrm", f="training_event", vars={"dashboard": 1}),
                         )
-        subject = T("Check the Event Dashboard")
-        message = T("This is your monthly reminder to check the Event Dashboard by visiting this link: %(url)s") % {"url": url}
+        subject_T = T("Check the Event Dashboard")
+        message = "This is your monthly reminder to check the Event Dashboard by visiting this link: %(url)s" % {"url": url}
+        message_T = T(message)
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
         for language in languages:
             T.force(language)
-            subject = s3_str(subject)
-            message = s3_str(message)
+            subject = s3_str(subject_T)
+            message = s3_str(message_T)
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
