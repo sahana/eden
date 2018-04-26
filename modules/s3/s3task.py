@@ -387,7 +387,7 @@ class S3Task(object):
         # Add to DB for pickup by Scheduler task
         # @ToDo: Switch to API: self.scheduler.queue_task()
         task_id = current.db.scheduler_task.insert(application_name = "%s/default" % \
-                                                    current.request.application,
+                                                   current.request.application,
                                                    task_name = task,
                                                    function_name = function_name,
                                                    args = json.dumps(args),

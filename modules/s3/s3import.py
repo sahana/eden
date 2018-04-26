@@ -67,6 +67,7 @@ from s3rest import S3Method, S3Request
 from s3resource import S3Resource
 from s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
                     s3_has_foreign_key, s3_mark_required, s3_unicode
+from s3validators import IS_JSONS3
 
 # =============================================================================
 class S3Importer(S3Method):
@@ -4579,6 +4580,48 @@ class S3BulkImporter(object):
 
         code = getcfs(filename, filename, None)
         restricted(code, environment, layer=filename)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_task(task_name, args_json=None, vars_json=None):
+        """
+            Import a Scheduled Task
+        """
+
+        validator = IS_JSONS3()
+        if args_json:
+            task_args = validator(args_json)
+        else:
+            task_args = []
+        if vars_json:
+            all_vars = validator(vars_json)
+        else:
+            all_vars = {}
+        kwargs = {}
+        task_vars = {}
+        options = ("function_name",
+                   "start_time",
+                   "next_run_time",
+                   "stop_time",
+                   "repeats",
+                   "period", # seconds
+                   "timeout", # seconds
+                   "enabled", # None = Enabled
+                   "group_name",
+                   "ignore_duplicate",
+                   "sync_output",
+                   )
+        for var in all_vars:
+            if var in options:
+                kwargs[var] = all_vars[var]
+            else:
+                task_vars[var] = all_vars[var]
+
+        current.s3task.schedule_task(task_name,
+                                     args = task_args,
+                                     vars = task_vars,
+                                     **kwargs
+                                     )
 
     # -------------------------------------------------------------------------
     def import_xml(self,

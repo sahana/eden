@@ -2553,6 +2553,7 @@ def config(settings):
             else:
                 current.s3task.schedule_task(task_name,
                                              args = args,
+                                             vars = vars,
                                              start_time = start_time,
                                              #period = 300,  # seconds
                                              timeout = 300, # seconds
@@ -2622,7 +2623,7 @@ def config(settings):
         start_time = start_time.shift(months = 1)
         current.s3task.schedule_task("settings_task",
                                      args = ["dc_target_check"],
-                                     vars = {"target_id": target_id}
+                                     vars = {"target_id": target_id},
                                      start_time = start_time.datetime,
                                      #period = 300,  # seconds
                                      timeout = 300, # seconds
@@ -5593,6 +5594,7 @@ def config(settings):
         else:
             schedule_task(task_name,
                           args = args,
+                          vars = vars,
                           start_time = start_time,
                           #period = 300,  # seconds
                           timeout = 300, # seconds
@@ -5617,6 +5619,7 @@ def config(settings):
         else:
             schedule_task(task_name,
                           args = args,
+                          vars = vars,
                           start_time = start_time,
                           #period = 300,  # seconds
                           timeout = 300, # seconds

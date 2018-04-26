@@ -862,7 +862,7 @@ EVENT_MONITOR,Event Monitoring Focal Person (Global),,hrm,course,,,READ|CREATE|U
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,hrm,department,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,hrm,event_type,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,hrm,training,,,READ|CREATE|UPDATE|DELETE,,,,,
-EVENT_MONITOR,Event Monitoring Focal Person (Global),,org,organisation,,,READ|CREATE,,,,,Be able to check names for Import sheets and create new external orgs
+EVENT_MONITOR,Event Monitoring Focal Person (Global),,org,organisation,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,Be able to check names for Import sheets and create new external orgs
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,,,hrm_event_type,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,,,hrm_human_resource,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_MONITOR,Event Monitoring Focal Person (Global),,,,hrm_training,,READ|CREATE|UPDATE|DELETE,,,,,
@@ -883,7 +883,7 @@ EVENT_ORGANISER,Event Organiser (Global),,hrm,course,,,READ|CREATE|UPDATE|DELETE
 EVENT_ORGANISER,Event Organiser (Global),,hrm,event_type,,,READ,,,,,
 EVENT_ORGANISER,Event Organiser (Global),,hrm,department,,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_ORGANISER,Event Organiser (Global),,hrm,training,,,CREATE,READ|CREATE|UPDATE|DELETE,,,,
-EVENT_ORGANISER,Event Organiser (Global),,org,organisation,,,READ|CREATE,,,,,Be able to check names for Import sheetsand create new external orgs
+EVENT_ORGANISER,Event Organiser (Global),,org,organisation,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,Be able to check names for Import sheetsand create new external orgs
 EVENT_ORGANISER,Event Organiser (Global),,,,hrm_human_resource,,READ|CREATE|UPDATE|DELETE,,,,,
 EVENT_ORGANISER,Event Organiser (Global),,,,hrm_training,,CREATE,READ|CREATE|UPDATE|DELETE,,,,
 EVENT_ORGANISER,Event Organiser (Global),,,,org_organisation,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,Job Titles, Projects
