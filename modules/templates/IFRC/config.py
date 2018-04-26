@@ -1932,7 +1932,7 @@ def config(settings):
             session_s3.language = language # for date_represent
             message = s3_str(message_T) % {"date": date_represent(event_date),
                                            "location": location_represent(location_id),
-                                           },
+                                           }
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
@@ -2035,7 +2035,7 @@ def config(settings):
             session_s3.language = language # for date_represent
             message = s3_str(message_T) % {"date": date_represent(event_date),
                                            "location": location_represent(location_id),
-                                           },
+                                           }
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
@@ -2674,13 +2674,14 @@ def config(settings):
 
         # Send Localised Mail(s)
         send_email = current.msg.send_by_pe_id
+        location_represent = s3db.gis_LocationRepresent()
         for language in languages:
             T.force(language)
             subject = s3_str(subject_T)
             humanized_date = event_date.humanize(locale=language.replace("-", "_"))
             message = s3_str(message_T) % {"date": humanized_date,
-                                           "location": s3db.gis_LocationRepresent(location_id),
-                                           },
+                                           "location": location_represent(location_id),
+                                           }
             users = languages[language]
             for pe_id in users:
                 send_email(pe_id,
