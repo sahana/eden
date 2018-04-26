@@ -2592,6 +2592,7 @@ def config(settings):
                                                           ).first()
 
         event_date = event.end_date or event.start_date # Use end_date where-available, otherwise use start_date
+        event_date = arrow.get(event_date)
         location_id = event.location_id
         EO = event.created_by
 
