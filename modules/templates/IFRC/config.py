@@ -1896,6 +1896,7 @@ def config(settings):
                 (ltable.user_id == utable.id)
         users = db(query).select(ltable.pe_id,
                                  utable.language,
+                                 distinct = True,
                                  )
         for user in users:
             language = user["auth_user.language"]
@@ -1999,6 +2000,7 @@ def config(settings):
                 (ltable.user_id == utable.id)
         users = db(query).select(ltable.pe_id,
                                  utable.language,
+                                 distinct = True,
                                  )
         for user in users:
             language = user["auth_user.language"]
@@ -2308,6 +2310,7 @@ def config(settings):
                                    utable.id,
                                    utable.language,
                                    left = left,
+                                   distinct = True,
                                    )
 
         # Build localised mail for each language
@@ -2647,6 +2650,7 @@ def config(settings):
                  (ltable.user_id == utable.id))
         users = db(query).select(ltable.pe_id,
                                  utable.language,
+                                 distinct = True,
                                  )
         for user in users:
             language = user["auth_user.language"]
@@ -2716,6 +2720,7 @@ def config(settings):
                 (ltable.user_id == utable.id)
         users = db(query).select(ltable.pe_id,
                                  utable.language,
+                                 distinct = True,
                                  )
         for user in users:
             language = user["auth_user.language"]
