@@ -4484,13 +4484,18 @@ class S3BulkImporter(object):
         # Copy the current working directory to revert back to later
         cwd = os.getcwd()
 
+        # Shortcut
+        os_path = os.path
+        os_path_exists = os_path.exists
+        os_path_join = os_path.join
+
         # Create the working directory
-        TEMP = os.path.join(cwd, "temp")
-        if not os.path.exists(TEMP): # use web2py/temp/remote_csv as a cache
+        TEMP = os_path_join(cwd, "temp")
+        if not os_path_exists(TEMP): # use web2py/temp/remote_csv as a cache
             import tempfile
             TEMP = tempfile.gettempdir()
-        tempPath = os.path.join(TEMP, "remote_csv")
-        if not os.path.exists(tempPath):
+        tempPath = os_path_join(TEMP, "remote_csv")
+        if not os_path_exists(tempPath):
             try:
                 os.mkdir(tempPath)
             except OSError:
@@ -4500,7 +4505,7 @@ class S3BulkImporter(object):
         filename = url.split("/")[-1]
         if extension == "zip":
             filename = filename.replace(".zip", ".csv")
-        if os.path.exists(os.path.join(tempPath, filename)):
+        if os_path_exists(os_path_join(tempPath, filename)):
             current.log.warning("Using cached copy of %s" % filename)
         else:
             # Download if we have no cached copy
@@ -4545,8 +4550,8 @@ class S3BulkImporter(object):
             os.chdir(cwd)
 
         task = [1, prefix, resource,
-                os.path.join(tempPath, filename),
-                os.path.join(current.request.folder,
+                os_path_join(tempPath, filename),
+                os_path_join(current.request.folder,
                              "static",
                              "formats",
                              "s3csv",
@@ -4587,6 +4592,10 @@ class S3BulkImporter(object):
             Import a Scheduled Task
         """
 
+        # Store current value of Bulk
+        bulk = current.response.s3.bulk
+        # Set Bulk to true for this parse
+        current.response.s3.bulk = True
         validator = IS_JSONS3()
         if args_json:
             task_args, error = validator(args_json)
@@ -4602,6 +4611,9 @@ class S3BulkImporter(object):
                 return
         else:
             all_vars = {}
+        # Restore bulk setting
+        current.response.s3.bulk = bulk
+
         kwargs = {}
         task_vars = {}
         options = ("function_name",
@@ -4622,7 +4634,7 @@ class S3BulkImporter(object):
             else:
                 task_vars[var] = all_vars[var]
 
-        current.s3task.schedule_task(task_name,
+        current.s3task.schedule_task(task_name.split("\\")[-1],
                                      args = task_args,
                                      vars = task_vars,
                                      **kwargs
