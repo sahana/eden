@@ -4582,19 +4582,24 @@ class S3BulkImporter(object):
         restricted(code, environment, layer=filename)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def import_task(task_name, args_json=None, vars_json=None):
+    def import_task(self, task_name, args_json=None, vars_json=None):
         """
             Import a Scheduled Task
         """
 
         validator = IS_JSONS3()
         if args_json:
-            task_args = validator(args_json)
+            task_args, error = validator(args_json)
+            if error:
+                self.errorList.append(error)
+                return
         else:
             task_args = []
         if vars_json:
-            all_vars = validator(vars_json)
+            all_vars, error = validator(vars_json)
+            if error:
+                self.errorList.append(error)
+                return
         else:
             all_vars = {}
         kwargs = {}
