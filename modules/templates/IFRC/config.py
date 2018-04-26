@@ -2615,7 +2615,7 @@ def config(settings):
                                   )
         ltable.insert(training_event_id = training_event_id,
                       target_id = target_id,
-                      type = survey_type,
+                      survey_type = survey_type,
                       )
 
         # Create Task to check if Survey has been Approved/Rejected
