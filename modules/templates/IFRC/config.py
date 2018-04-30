@@ -286,6 +286,8 @@ def config(settings):
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
         ("ar", "Arabic"),
+        #("dv", "Divehi"), # Maldives
+        #("dz", "Dzongkha"), # Bhutan
         ("en-gb", "English"),
         ("es", "Spanish"),
         ("fr", "French"),

@@ -8275,7 +8275,7 @@ class LayerGoogle(Layer):
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                 else:
-                    # v3 API (3.0 gives us the latest frozen version, currently 3.29)
+                    # v3 API (3.0 gives us the latest frozen version, currently 3.30)
                     # Note that it does give a warning: "Google Maps API warning: RetiredVersion"
                     # https://developers.google.com/maps/documentation/javascript/versions
                     script = "//maps.google.com/maps/api/js?v=3.0&key=%s" % apikey

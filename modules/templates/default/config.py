@@ -134,6 +134,7 @@ def config(settings):
         ("ar", "Arabic"),
         ("bs", "Bosnian"),
         #("dv", "Divehi"), # Maldives
+        #("dz", "Dzongkha"), # Bhutan
         ("en", "English"),
         ("fr", "French"),
         ("de", "German"),
