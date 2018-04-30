@@ -727,9 +727,9 @@ def update_transferability(site_id=None):
     left = [mtable.on((mtable.person_id == ctable.person_id) & \
                       (mtable.group_id.belongs(group_ids)) & \
                       (mtable.deleted != True)),
-            gtable.on((ftable.person_id == ctable.person_id) & \
-                      (ftable.deleted != True) & \
-                      (gtable.id == ftable.group_id) & \
+            ftable.on((ftable.person_id == ctable.person_id) & \
+                      (ftable.deleted != True)),
+            gtable.on((gtable.id == ftable.group_id) & \
                       (gtable.group_type == 7)),
             ]
     query = (mtable.id == None) & (ctable.deleted != True)
