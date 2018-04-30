@@ -713,6 +713,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
              M("Themes", f="theme")(
                 M("Create", m="create"),
              ),
+             M("Period of Time", f="window")()
             )
 
         return menu

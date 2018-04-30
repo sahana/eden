@@ -4782,6 +4782,7 @@
 'People': 'Personas',
 'Percentage': 'Porcentaje',
 'Performance Rating': 'Calificación de rendimiento',
+'Period of Time': 'Período de Tiempo',
 'Permanent': 'Permanente',
 'Permanent Home Address': 'Domicilio de casa permanente',
 'Person 1': 'Persona 1',

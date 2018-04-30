@@ -3545,20 +3545,26 @@ Thank you"""
     settings.customise_supply_item_category_resource = customise_supply_item_category_resource
 
     # -------------------------------------------------------------------------
+    def customise_project_window_resource(r, tablename):
+
+        r.resource.configure(deletable = False,
+                             insertable = False,
+                             )
+
+    settings.customise_project_window_resource = customise_project_window_resource
+
+    # -------------------------------------------------------------------------
     def customise_project_activity_data_resource(r, tablename):
 
-        table = current.s3db.project_activity_data
-        #f = table.start_date
-        #f.readable = f.writable = True
-        #f.label = T("Start Date")
-        #table.end_date.label = T("End Date")
+        if current.auth.s3_has_roles(("monitoring_evaluation", "ORG_ADMIN")):
+            # Normal Access
+            return
 
+        # Project Manager
         if r.method == "update":
-            has_role = current.auth.s3_has_role
-            if has_role("monitoring_evaluation") or has_role("ORG_ADMIN"):
-                # Normal Access
-                return
-            # Project Manager
+
+            table = current.s3db.project_activity_data
+
             if r.tablename == "project_activity_data":
                 record_id = r.id
             else:
@@ -3568,7 +3574,6 @@ Thank you"""
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
-                # @ToDo: Remove 'Update' button from the read-only page
                 from gluon.http import redirect
                 redirect(r.url(method="read"))
             else:
@@ -3579,6 +3584,22 @@ Thank you"""
                 table.value.writable = True
                 # Or Amend the Comments
                 table.comments.writable = True
+        else:
+            s3db = current.s3db
+            table = s3db.project_window
+            record = current.db(table.deleted == False).select(table.start_date,
+                                                               table.end_date,
+                                                               limitby = (0, 1)
+                                                               ).first()
+            if record:
+                if record.start_date <= r.utcnow.date() <= record.end_date:
+                    # Inside the time window: Project Manager may update Actuals
+                    return
+            # Outside the time window: Project Manager cannot add the Actual value
+            s3db.project_activity_data.value.writable = False
+            s3db.configure("project_activity_data",
+                           updateable = False,
+                           )
 
     settings.customise_project_activity_data_resource = customise_project_activity_data_resource
 
@@ -3810,8 +3831,8 @@ Thank you"""
             s3db.budget_monitoring.currency.represent = currency_represent
             postprocess = project_project_postprocess
             list_fields = s3db.get_config("project_project", "list_fields")
-            list_fields += [(T("Monthly Status"), "current_status_by_indicators"),
-                            (T("Cumulative Status"), "overall_status_by_indicators"),
+            list_fields += [(T("Actual Progress"), "actual_progress_by_activities"),
+                            (T("Planned Progress"), "planned_progress_by_activities"),
                             ]
         else:
             objectives = "objectives"
