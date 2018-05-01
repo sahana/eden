@@ -6267,8 +6267,6 @@ def config(settings):
                         # Custom CRUD form
                         if r.interactive:
                             from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
-                            # Filter inline address for type "office address", also sets default
-                            OFFICE = {"field": "type", "options": 3}
                             crud_form = S3SQLCustomForm(
                                             "name",
                                             "acronym",
@@ -6280,7 +6278,10 @@ def config(settings):
                                             S3SQLInlineComponent("address",
                                                                  fields = [("", "location_id")],
                                                                  multiple = False,
-                                                                 filterby = (OFFICE,),
+                                                                 # Filter inline address for type "office address", also sets default
+                                                                 filterby = ({"field": "type",
+                                                                              "options": 3,
+                                                                              },),
                                                                  ),
                                             "phone",
                                             "website",
@@ -7545,8 +7546,8 @@ def config(settings):
                                                 "membership_paid",
                                                 "fee_exemption",
                                                 S3SQLInlineLink("programme",
-                                                                field="programme_id",
-                                                                label=PROGRAMMES,
+                                                                field = "programme_id",
+                                                                label = PROGRAMMES,
                                                                 ),
                                                 )
 

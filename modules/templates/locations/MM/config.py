@@ -17,7 +17,7 @@ def config(settings):
     settings.gis.countries.append("MM")
 
     # L10n (Localization) settings
-    settings.L10n.languages["my"] = "မြန်မာစာ"
+    settings.L10n.languages["my"] = "Burmese"
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "my"
     # Default timezone for users

@@ -941,10 +941,10 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         #M("Import", m="import", p="create"),
                     ),
-                    #M("Situation Reports", c="event", f="sitrep")(
-                    #    M("Create", m="create"),
-                    #    #M("Import", m="import", p="create"),
-                    #),
+                    M("Situation Reports", c="event", f="sitrep")(
+                        M("Create", m="create"),
+                        #M("Import", m="import", p="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------

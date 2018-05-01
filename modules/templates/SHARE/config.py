@@ -7,12 +7,7 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
-
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Settings for the SHARE Teamplate
     """
 
     T = current.T
@@ -40,7 +35,14 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
+    #settings.auth.registration_organisation_required = True
+    #settings.auth.registration_requests_site = True
+
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
+                                               "volunteer": T("Volunteer"),
+                                               #"member": T("Member")
+                                               }
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -58,69 +60,11 @@ def config(settings):
     #settings.gis.print_button = True
 
     # L10n settings
-    # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
-    # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    settings.L10n.languages = OrderedDict([
-    #    ("ar", "Arabic"),
-    #    ("bs", "Bosnian"),
-    #    #("dv", "Divehi"), # Maldives
-        ("en", "English"),
-    #    ("fr", "French"),
-    #    ("de", "German"),
-    #    ("el", "Greek"),
-    #    ("es", "Spanish"),
-    #    #("id", "Bahasa Indonesia"),
-    #    ("it", "Italian"),
-    #    ("ja", "Japanese"),
-    #    ("km", "Khmer"), # Cambodia
-    #    ("ko", "Korean"),
-    #    #("lo", "Lao"),
-    #    #("mg", "Malagasy"),
-    #    ("mn", "Mongolian"),
-    #    #("ms", "Malaysian"),
-    #    ("my", "Burmese"), # Myanmar
-    #    ("ne", "Nepali"),
-    #    ("prs", "Dari"), # Afghan Persian
-    #    ("ps", "Pashto"), # Afghanistan, Pakistan
-    #    ("pt", "Portuguese"),
-    #    ("pt-br", "Portuguese (Brazil)"),
-    #    ("ru", "Russian"),
-    #    ("tet", "Tetum"),
-        ("si", "Sinhala"), # Sri Lanka
-        ("ta", "Tamil"), # India, Sri Lanka
-    #    ("th", "Thai"),
-    #    ("tl", "Tagalog"), # Philippines
-    #    ("tr", "Turkish"),
-    #    ("ur", "Urdu"), # Pakistan
-    #    ("vi", "Vietnamese"),
-    #    ("zh-cn", "Chinese (Simplified)"), # Mainland China
-    #    ("zh-tw", "Chinese (Taiwan)"),
-    ])
-    # Default language for Language Toolbar (& GIS Locations in future)
-    #settings.L10n.default_language = "en"
-    # Uncomment to Hide the language toolbar
-    #settings.L10n.display_toolbar = False
-    # Default timezone for users
-    #settings.L10n.utc_offset = "+0100"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
     settings.L10n.thousands_separator = ","
-    # Uncomment this to Translate Layer Names
-    #settings.L10n.translate_gis_layer = True
-    # Uncomment this to Translate Location Names
-    #settings.L10n.translate_gis_location = True
-    # Uncomment this to Translate Organisation Names/Acronyms
-    #settings.L10n.translate_org_organisation = True
-    # Finance settings
-    settings.fin.currencies = {
-    #    "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
-        "USD" : "United States Dollars",
-        "LKR" : "Sri Lanka Rupees",
-    }
-    #settings.fin.currency_default = "USD"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -133,12 +77,19 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
-    settings.security.policy = 5 # Controller, Function & Table ACLs
+    settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
+
+    # -------------------------------------------------------------------------
+    # Events
+    settings.event.label = "Disaster"
 
     # -------------------------------------------------------------------------
     # Messaging
-    # Parser
-    settings.msg.parser = "SAFIRE"
+    settings.msg.parser = "SAMBRO" # for parse_tweet
+
+    # -------------------------------------------------------------------------
+    # Organisations
+    settings.org.sector = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -211,12 +162,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("vol", Storage(
-        #    name_nice = T("Volunteers"),
-        #    #description = "Human Resources Management",
-        #    restricted = True,
-        #    module_type = 2,
-        #)),
+        ("vol", Storage(
+            name_nice = T("Volunteers"),
+            #description = "Human Resources Management",
+            restricted = True,
+            module_type = 2,
+        )),
         ("cms", Storage(
           name_nice = "Content Management",
           #description = "Content Management System",
@@ -242,12 +193,12 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
-        #)),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
         ("asset", Storage(
             name_nice = "Assets",
             #description = "Recording and Assigning Assets",
@@ -267,12 +218,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("project", Storage(
-        #    name_nice = "Tasks",
-        #    #description = "Tracking of Projects, Activities and Tasks",
-        #    restricted = True,
-        #    module_type = 2
-        #)),
+        ("project", Storage(
+            name_nice = "Tasks",
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 2
+        )),
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -302,12 +253,12 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("stats", Storage(
-        #    name_nice = T("Statistics"),
-        #    #description = "Manages statistics",
-        #    restricted = True,
-        #    module_type = None,
-        #)),
+        ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
     ])
 
     # -------------------------------------------------------------------------
@@ -339,5 +290,58 @@ def config(settings):
                        )
 
     settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        current.s3db[tablename].comments.label = T("About")
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_sector_controller(**attr):
+
+        s3db = current.s3db
+        tablename = "org_sector"
+
+        # Just 1 set of sectors / sector leads nationally
+        # @ToDo: Deployment Setting
+        #f = s3db.org_sector.location_id
+        #f.readable = f.writable = False
+
+        # Custom Component for Sector Leads
+        s3db.add_components(tablename,
+                            org_sector_organisation = {"name": "sector_lead",
+                                                       "joinby": "sector_id",
+                                                       "filterby": {
+                                                           "lead": True,
+                                                           },
+                                                       },
+                            )
+                                              
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        crud_form = S3SQLCustomForm("name",
+                                    "abrv",
+                                    "comments",
+                                    S3SQLInlineComponent("sector_organisation",
+                                                         label = T("Lead Organization(s)"),
+                                                         fields = [("", "organisation_id"),],
+                                                         filterby = ({"field": "lead",
+                                                                      "options": True,
+                                                                      },),
+                                                         ),
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["name",
+                                      "abrv",
+                                      (T("Lead Organization(s)"), "sector_lead.organisation_id"),
+                                      ],
+                       )
+
+        return attr
+        
+    settings.customise_org_sector_controller = customise_org_sector_controller
 
 # END =========================================================================

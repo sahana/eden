@@ -27,11 +27,18 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("RequestModel",
+__all__ = ("RequestPriorityStatusModel",
+           "RequestModel",
            "RequestItemModel",
            "RequestSkillModel",
            "RequestRecurringModel",
-           "RequestSummaryModel",
+           "RequestNeedsModel",
+           "RequestNeedsImpactsModel",
+           "RequestNeedsItemsModel",
+           "RequestNeedsSkillsModel",
+           "RequestNeedsOrganisationModel",
+           "RequestNeedsSiteModel",
+           "RequestNeedsTagsModel",
            "RequestTagModel",
            "RequestTaskModel",
            "CommitModel",
@@ -58,6 +65,93 @@ REQ_STATUS_COMPLETE = 2
 REQ_STATUS_CANCEL   = 3
 
 # =============================================================================
+class RequestPriorityStatusModel(S3Model):
+    """
+        Model for Request Priority & Status
+    """
+
+    names = ("req_priority",
+             "req_priority_opts",
+             #"req_priority_represent",
+             "req_status",
+             "req_status_opts",
+             )
+
+    def model(self):
+
+        T = current.T
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Request Priority
+        #
+        req_priority_opts = {3: T("High"),
+                             2: T("Medium"),
+                             1: T("Low")
+                             }
+
+        req_priority = S3ReusableField("priority", "integer",
+                                       default = 2,
+                                       label = T("Priority"),
+                                       #@ToDo: Colour code the priority text - red, orange, green
+                                       represent = lambda opt: \
+                                           req_priority_opts.get(opt, UNKNOWN_OPT),
+                                       #represent = self.req_priority_represent,
+                                       requires = IS_EMPTY_OR(
+                                                       IS_IN_SET(req_priority_opts))
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Request Status
+        #
+        req_status_opts = {
+            REQ_STATUS_NONE:     SPAN(T("None"),
+                                      _class = "req_status_none",
+                                      ),
+            REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
+                                      _class = "req_status_partial",
+                                      ),
+            REQ_STATUS_COMPLETE: SPAN(T("Complete"),
+                                      _class = "req_status_complete",
+                                      ),
+            }
+
+        req_status = S3ReusableField("req_status", "integer",
+                                     label = T("Request Status"),
+                                     requires = IS_EMPTY_OR(
+                                                    IS_IN_SET(req_status_opts,
+                                                              zero = None)),
+                                     represent = lambda opt: \
+                                        req_status_opts.get(opt, UNKNOWN_OPT),
+                                     default = REQ_STATUS_NONE,
+                                     )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"req_priority": req_priority,
+                "req_priority_opts": req_priority_opts,
+                #"req_priority_represent": self.req_priority_represent,
+                "req_status": req_status,
+                "req_status_opts": req_status_opts,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_priority_represent(priority):
+        """
+            Represent request priority by a (color-coded) GIF image
+
+            @todo: make CSS-only
+        """
+
+        src = URL(c = "static",
+                  f = "img",
+                  args = ["priority", "priority_%d.gif" % (priority or 4)],
+                  )
+        return DIV(IMG(_src= src))
+
+# =============================================================================
 class RequestModel(S3Model):
     """
         Model for Requests
@@ -72,7 +166,6 @@ class RequestModel(S3Model):
              "req_prep",
              "req_ref_represent",
              "req_tabs",
-             "req_priority_opts",
              )
 
     def model(self):
@@ -159,33 +252,7 @@ class RequestModel(S3Model):
                                        )
 
         # ---------------------------------------------------------------------
-        # Request Status (reusable field)
-        #
-        req_status_opts = {
-            REQ_STATUS_NONE:     SPAN(T("None"),
-                                      _class = "req_status_none",
-                                      ),
-            REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
-                                      _class = "req_status_partial",
-                                      ),
-            REQ_STATUS_COMPLETE: SPAN(T("Complete"),
-                                      _class = "req_status_complete",
-                                      ),
-            }
-
-        req_status = S3ReusableField("req_status", "integer",
-                                     label = T("Request Status"),
-                                     requires = IS_EMPTY_OR(
-                                                    IS_IN_SET(req_status_opts,
-                                                              zero = None)),
-                                     represent = lambda opt: \
-                                        req_status_opts.get(opt, UNKNOWN_OPT),
-                                     default = REQ_STATUS_NONE,
-                                     writable = req_status_writable,
-                                     )
-
-        # ---------------------------------------------------------------------
-        # Request Reference (reusable field)
+        # Request Reference
         #
         req_ref = S3ReusableField("req_ref", "string",
                                   label = T("%(REQ)s Number") %
@@ -194,13 +261,8 @@ class RequestModel(S3Model):
                                   writable = False,
                                   )
 
-        # ---------------------------------------------------------------------
-        # Request Priority Options
-        #
-        req_priority_opts = {3: T("High"),
-                             2: T("Medium"),
-                             1: T("Low")
-                             }
+        req_status = self.req_status
+        req_status_opts = self.req_status_opts
 
         # ---------------------------------------------------------------------
         # Requests
@@ -229,16 +291,7 @@ class RequestModel(S3Model):
                                       #represent = "date",
                                       #widget = "date",
                                       ),
-                          Field("priority", "integer",
-                                default = 2,
-                                label = T("Priority"),
-                                #@ToDo: Colour code the priority text - red, orange, green
-                                represent = lambda opt: \
-                                    req_priority_opts.get(opt, UNKNOWN_OPT),
-                                #represent = self.req_priority_represent,
-                                requires = IS_EMPTY_OR(
-                                                IS_IN_SET(req_priority_opts))
-                                ),
+                          self.req_priority(),
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
                           super_link("site_id", "org_site",
@@ -364,6 +417,7 @@ class RequestModel(S3Model):
                                      ),
                           req_status("fulfil_status",
                                      label = T("Fulfil. Status"),
+                                     writable = req_status_writable,
                                      ),
                           Field("closed", "boolean",
                                 default = False,
@@ -628,12 +682,9 @@ class RequestModel(S3Model):
                 "req_hide_quantities": self.req_hide_quantities,
                 "req_inline_form": self.req_inline_form,
                 "req_prep": self.req_prep,
-                "req_priority_opts": req_priority_opts,
-                "req_priority_represent": self.req_priority_represent,
                 "req_req_id": req_id,
                 "req_req_ref": req_ref,
                 "req_ref_represent": self.req_ref_represent,
-                "req_status_opts": req_status_opts,
                 "req_tabs": self.req_tabs,
                 }
 
@@ -1284,21 +1335,6 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_priority_represent(priority):
-        """
-            Represent request priority by a (color-coded) GIF image
-
-            @todo: make CSS-only
-        """
-
-        src = URL(c = "static",
-                  f = "img",
-                  args = ["priority", "priority_%d.gif" % (priority or 4)],
-                  )
-        return DIV(IMG(_src= src))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def req_hide_quantities(table):
         """
             Hide per-status quantity fields in Request create-forms
@@ -1579,7 +1615,7 @@ class RequestItemModel(S3Model):
                      self.supply_item_pack_id(),
                      Field("quantity", "double", notnull=True,
                            label = T("Quantity"),
-                           represent=lambda v: \
+                           represent = lambda v: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                            requires = IS_FLOAT_AMOUNT(minimum=1.0),
                            ),
@@ -1950,8 +1986,6 @@ class RequestSkillModel(S3Model):
         use_commit = settings.get_req_use_commit()
         show_transit = settings.get_req_show_quantity_transit()
 
-        define_table = self.define_table
-
         # -----------------------------------------------------------------
         # Request Skills
         #
@@ -1963,58 +1997,58 @@ class RequestSkillModel(S3Model):
                                             none = T("No Skills Required"),
                                             )
 
-        define_table(tablename,
-                     self.req_req_id(empty = False),
-                     # Make this a Component
-                     #Field("task",
-                     #      readable=False,
-                     #      writable=False, # Populated from req_req 'Purpose'
-                     #      label = T("Task Details")),
-                     self.hrm_multi_skill_id(
-                          label = T("Required Skills"),
-                          comment = T("Leave blank to request an unskilled person"),
-                          represent = multi_skill_represent,
-                          ),
-                     # @ToDo: Add a minimum competency rating?
-                     Field("quantity", "integer", notnull=True,
-                           default = 1,
-                           requires = IS_INT_IN_RANGE(1, None),
-                           label = T("Number of People Required"),
-                           ),
-                     self.org_site_id(),
-                     Field("quantity_commit", "integer",
-                           label = T("Quantity Committed"),
-                           default = 0,
-                           requires = IS_INT_IN_RANGE(0, None),
-                           readable = use_commit,
-                           writable = use_commit and quantities_writable,
-                           ),
-                     Field("quantity_transit", "integer",
-                           label = T("Quantity in Transit"),
-                           #represent = lambda quantity_transit: \
-                           # req_quantity_represent(quantity_transit,
-                           #                        "transit"),
-                           default = 0,
-                           requires = IS_INT_IN_RANGE(0, None),
-                           readable = show_transit,
-                           writable = show_transit and quantities_writable,
-                           ),
-                     Field("quantity_fulfil", "integer",
-                           label = T("Quantity Fulfilled"),
-                           default = 0,
-                           requires = IS_INT_IN_RANGE(0, None),
-                           writable = quantities_writable,
-                           ),
-                     s3_comments(#label = T("Task Details"),
-                                 #comment = DIV(_class="tooltip",
-                                 #              _title="%s|%s" % (T("Task Details"),
-                                 #                                T("Include any special requirements such as equipment which they need to bring.")))
-                                 ),
-                     *s3_meta_fields(),
-                     on_define = lambda table: \
-                        [table.site_id.set_attributes(label = T("Requested From")),
-                         ]
-                     )
+        self.define_table(tablename,
+                          self.req_req_id(empty = False),
+                          # Make this a Component
+                          #Field("task",
+                          #      readable=False,
+                          #      writable=False, # Populated from req_req 'Purpose'
+                          #      label = T("Task Details")),
+                          self.hrm_multi_skill_id(
+                                label = T("Required Skills"),
+                                comment = T("Leave blank to request an unskilled person"),
+                                represent = multi_skill_represent,
+                                ),
+                          # @ToDo: Add a minimum competency rating?
+                          Field("quantity", "integer", notnull=True,
+                                default = 1,
+                                requires = IS_INT_IN_RANGE(1, None),
+                                label = T("Number of People Required"),
+                                ),
+                          self.org_site_id(),
+                          Field("quantity_commit", "integer",
+                                label = T("Quantity Committed"),
+                                default = 0,
+                                requires = IS_INT_IN_RANGE(0, None),
+                                readable = use_commit,
+                                writable = use_commit and quantities_writable,
+                                ),
+                          Field("quantity_transit", "integer",
+                                label = T("Quantity in Transit"),
+                                #represent = lambda quantity_transit: \
+                                # req_quantity_represent(quantity_transit,
+                                #                        "transit"),
+                                default = 0,
+                                requires = IS_INT_IN_RANGE(0, None),
+                                readable = show_transit,
+                                writable = show_transit and quantities_writable,
+                                ),
+                          Field("quantity_fulfil", "integer",
+                                label = T("Quantity Fulfilled"),
+                                default = 0,
+                                requires = IS_INT_IN_RANGE(0, None),
+                                writable = quantities_writable,
+                                ),
+                          s3_comments(#label = T("Task Details"),
+                                      #comment = DIV(_class="tooltip",
+                                      #              _title="%s|%s" % (T("Task Details"),
+                                      #                                T("Include any special requirements such as equipment which they need to bring.")))
+                                      ),
+                          *s3_meta_fields(),
+                          on_define = lambda table: \
+                            [table.site_id.set_attributes(label = T("Requested From")),
+                             ]
+                          )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2237,9 +2271,8 @@ class RequestRecurringModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_JOB = T("Create Job")
         s3.crud_strings[tablename] = Storage(
-            label_create = ADD_JOB,
+            label_create = T("Create Job"),
             title_display = T("Request Job"),
             title_list = T("Request Schedule"),
             title_update = T("Edit Job"),
@@ -2269,239 +2302,151 @@ class RequestRecurringModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestSummaryModel(S3Model):
+class RequestNeedsModel(S3Model):
     """
         Simple Requests Management System
+        - Starts as Simple free text Needs
+        - Extensible via Key-Value Tags
+        - Extensible with Items
+        - Extensible with Skills
+        Use cases:
+        - SHARE: local governments express needs to be met by NGOs (/Private Sector/Public in future)
         - Organisations can request Money or Time from remote volunteers
         - Sites can request Time from local volunteers or accept drop-off for Goods
-        - Projects...
+        - Projects can request x (tbc: MapPH usecase)
     """
 
-    names = ("req_organisation_needs",
-             "req_organisation_needs_id",
-             "req_site_needs",
-             "req_project_needs",
-             "req_demand",
+    names = ("req_need",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
-        configure = self.configure
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
-
-        # -----------------------------------------------------------------
-        # Summary of Needs for an Organisation
+        # ---------------------------------------------------------------------
+        # Needs
         #
-        tablename = "req_organisation_needs"
-        define_table(tablename,
-                     self.org_organisation_id(
-                         requires = self.org_organisation_requires(required=True),
-                         ),
-                     Field("money", "boolean",
-                           label = T("Soliciting Cash Donations?"),
-                           represent = s3_yes_no_represent,
-                           default = False,
-                           ),
-                     Field("money_details", "text",
-                           label = T("Details"),
-                           widget = s3_richtext_widget,
-                           ),
-                     Field("vol", "boolean",
-                           label = T("Opportunities to Volunteer Remotely?"),
-                           represent = s3_yes_no_represent,
-                           default = False,
-                           ),
-                     Field("vol_details", "text",
-                           label = T("Details"),
-                           widget = s3_richtext_widget,
-                           ),
-                     *s3_meta_fields())
+        tablename = "req_need"
+        self.define_table(tablename,
+                          self.gis_location_id(), # Can be hidden, e.g. if using Sites (can then sync this onaccept)
+                          s3_date(default = "now"),
+                          self.req_priority(),
+                          s3_comments(label = T("Summary of Needs")),
+                          self.req_status("status",
+                                          label = T("Fulfilment Status"),
+                                          ),
+                          *s3_meta_fields())
 
         # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Organization Needs"),
-            title_list = T("Organization Needs"),
-            title_display=T("Organization Needs"),
-            title_update=T("Edit Organization Needs"),
-            title_upload = T("Import Organization Needs"),
-            label_list_button = T("List Organization Needs"),
-            label_delete_button=T("Delete Organization Needs"),
-            msg_record_created=T("Organization Needs added"),
-            msg_record_modified=T("Organization Needs updated"),
-            msg_record_deleted=T("Organization Needs deleted"),
-            msg_list_empty = T("No Organization Needs currently registered"),
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Needs"),
+            title_list = T("Needs"),
+            title_display=T("Needs"),
+            title_update=T("Edit Needs"),
+            title_upload = T("Import Needs"),
+            label_list_button = T("List Needs"),
+            label_delete_button=T("Delete Needs"),
+            msg_record_created=T("Needs added"),
+            msg_record_modified=T("Needs updated"),
+            msg_record_deleted=T("Needs deleted"),
+            msg_list_empty = T("No Needs currently registered"),
             )
-
-        # Table configuration
-        configure(tablename,
-                  context = {"organisation": "organisation_id",
-                             },
-                  deduplicate = self.organisation_needs_deduplicate,
-                  )
 
         # Components
         self.add_components(tablename,
-                            req_organisation_needs_skill = "organisation_needs_id",
-                            req_organisation_needs_item = "organisation_needs_id",
+                            org_organisation = {"link": "req_need_site",
+                                                "joinby": "need_id",
+                                                "key": "organisation_id",
+                                                "multiple": False,
+                                                },
+                            org_site = {"link": "req_need_site",
+                                        "joinby": "need_id",
+                                        "key": "site_id",
+                                        "multiple": False,
+                                        },
+                            stats_impact = {"link": "req_need_impact",
+                                            "joinby": "need_id",
+                                            "key": "impact_id",
+                                            "key": "impact_id",
+                                            "actuate": "replace",
+                                            },
+                            req_need_item = "need_id",
+                            req_need_skill = "need_id",
+                            req_need_tag = {"name": "tag",
+                                            "joinby": "need_id",
+                                            },
                             )
 
-        # Reusable field (for component links)
-        organisation_needs_id = S3ReusableField("organisation_needs_id",
-                                    "reference %s" % tablename,
-                                    ondelete = "CASCADE",
-                                    requires = IS_ONE_OF(current.db,
-                                                         "req_organisation_needs.id",
-                                                         ),
-                                    )
-
-        # -----------------------------------------------------------------
-        # Summary of Needs for a site
-        #
-        tablename = "req_site_needs"
-        define_table(tablename,
-                     self.super_link("site_id", "org_site",
-                                     readable = True,
-                                     represent = self.org_site_represent,
-                                     label = T("Site"),
-                                     ),
-                     Field("vol", "boolean",
-                           label = T("Opportunities to Volunteer On-Site?"),
-                           represent = s3_yes_no_represent,
-                           default = False,
-                           ),
-                     Field("vol_details", "text",
-                           label = T("Details"),
-                           widget = s3_richtext_widget,
-                           represent = XML,
-                           ),
-                     Field("goods", "boolean",
-                           label = T("Drop-off Location for Goods?"),
-                           represent = s3_yes_no_represent,
-                           default = False,
-                           ),
-                     Field("goods_details", "text",
-                           label = T("Details"),
-                           widget = s3_richtext_widget,
-                           represent = XML,
-                           ),
-                     # Field used by org_facility_geojson
-                     s3_comments("needs",
-                                 label = T("Needs"),
-                                 comment = None,
-                                 widget = S3PriorityListWidget(),
-                                 ),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            title_display = T("Site Needs"),
-            title_list = T("Site Needs"),
-            title_update = T("Edit Site Needs"),
-            label_create = T("Add Site Needs"),
-            label_list_button = T("List Site Needs"),
-            label_delete_button = T("Delete Site Needs"),
-            msg_record_created = T("Site Needs added"),
-            msg_record_modified = T("Site Needs updated"),
-            msg_record_deleted = T("Site Needs deleted"))
-
-        configure(tablename,
-                  context = {"location": "site_id$location_id",
-                             "organisation": "site_id$organisation_id",
-                             "site": "site_id",
-                             },
-                  )
-
-        # -----------------------------------------------------------------
-        # Summary of Needs for a Project
-        #
-        tablename = "req_project_needs"
-        define_table(tablename,
-                     self.project_project_id(),
-                     Field("funding", "double",
-                           label = T("Funds needed"),
-                           represent = lambda v: \
-                                        IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_EMPTY_OR(IS_FLOAT_AMOUNT(minimum=0.0)),
-                           comment = T("The total amount of funding required for this project"),
-                           ),
-                     Field("funding_details", "text",
-                           label = T("Funding Details"),
-                           represent = lambda v: s3_text_represent(v, lines=8),
-                           comment = T("Describe what the funds will be used for"),
-                           ),
-                     Field("vol", "integer",
-                           label = T("Volunteers needed"),
-                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(minimum=0)),
-                           ),
-                     Field("vol_details", "text",
-                           label = T("Volunteers Details"),
-                           represent = lambda v: s3_text_represent(v, lines=8),
-                           comment = T("Describe the tasks helpers are needed for"),
-                           ),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            title_display = T("Project Needs"),
-            title_list = T("Project Needs"),
-            title_update = T("Edit Project Needs"),
-            label_create = T("Add Project Needs"),
-            label_list_button = T("List Project Needs"),
-            label_delete_button = T("Delete Project Needs"),
-            msg_record_created = T("Project Needs added"),
-            msg_record_modified = T("Project Needs updated"),
-            msg_record_deleted = T("Project Needs deleted"))
-
-        # -----------------------------------------------------------------
-        # Demand options (numeric keys so can be sorted by)
-        #
-        demand_options = {1: T("Low"),
-                          2: T("Moderate"),
-                          3: T("High"),
-                          4: T("Urgent"),
-                          }
-
-        demand = S3ReusableField("demand", "integer",
-                                 label = T("Demand"),
-                                 requires = IS_IN_SET(demand_options,
-                                                      zero=None,
-                                                      sort=True,
-                                                      ),
-                                 represent = S3Represent(options=demand_options)
-                                 )
+        
+        # @ToDo: Represent if we need to
+        represent = S3Represent(lookup=tablename)
+        need_id = S3ReusableField("need_id", "reference %s" % tablename,
+                                  label = T("Need"),
+                                  ondelete = "CASCADE",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "req_need.id",
+                                                          represent,
+                                                          orderby="req_need.date",
+                                                          sort=True,
+                                                          )),
+                                  sortby = "date",
+                                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"req_demand": demand,
-                "req_organisation_needs_id": organisation_needs_id,
+        return {"req_need_id": need_id,
                 }
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def organisation_needs_deduplicate(item):
-        """
-            Deduplication method for req_organisation_needs: replace
-            existing records rather than updating them
+# =============================================================================
+class RequestNeedsImpactsModel(S3Model):
+    """
+        Simple Requests Management System
+        - link to Impacts
 
-            @param item: the S3ImportItem
-        """
+        @ToDo: Auto-populate defaults for Items based on Impacts
+    """
 
-        data = item.data
+    names = ("req_need_impact",
+             )
 
-        organisation_id = data.get("organisation_id")
-        if organisation_id:
+    def model(self):
 
-            from s3 import FS
-            query = FS("organisation_id") == organisation_id
+        crud_strings = current.response.s3.crud_strings
 
-            resource = current.s3db.resource("req_organisation_needs",
-                                             filter = query,
-                                             )
-            resource.delete(cascade=True)
+        # ---------------------------------------------------------------------
+        # Needs <=> Supply Items
+        #
+        impact_id = self.stats_impact_id # Load normal model
+        CREATE = crud_strings["stats_impact"].label_create
+
+        tablename = "req_need_impact"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          impact_id(comment = S3PopupLink(c = "stats",
+                                                          f = "impact",
+                                                          label = CREATE,
+                                                          tooltip = None,
+                                                          vars = {"prefix": "req"},
+                                                          ),
+                                    empty = False,
+                                    ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "impact_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class RequestNeedsItemsModel(S3Model):
@@ -2510,37 +2455,47 @@ class RequestNeedsItemsModel(S3Model):
         - extended to support Items, but still not using normal Requests
     """
 
-    names = ("req_organisation_needs_item",
+    names = ("req_need_item",
              )
 
     def model(self):
 
-        crud_strings = current.response.s3.crud_strings
+        T = current.T
 
-        # -----------------------------------------------------------------
-        # Linktable Needs <=> Supply Items
+        # ---------------------------------------------------------------------
+        # Needs <=> Supply Items
         #
-        item_id = self.supply_item_id
-        CREATE_ITEM = crud_strings["supply_item"].label_create
+        item_id = self.supply_item_id # Load normal model
+        CREATE = current.response.s3.crud_strings["supply_item"].label_create
 
-        tablename = "req_organisation_needs_item"
+        tablename = "req_need_item"
         self.define_table(tablename,
-                          self.organisation_needs_id(empty = False),
+                          self.req_need_id(empty = False),
                           item_id(comment = S3PopupLink(c = "supply",
                                                         f = "item",
-                                                        label = CREATE_ITEM,
+                                                        label = CREATE,
                                                         tooltip = None,
                                                         vars = {"prefix": "req"},
                                                         ),
-                                  empty = None,
+                                  empty = False,
                                   widget = None,
                                   ),
-                          self.req_demand(),
+                          Field("quantity", "double",
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          self.req_priority(),
                           s3_comments(),
+                          self.req_status("status",
+                                          label = T("Fulfilment Status"),
+                                          ),
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                       deduplicate = S3Duplicate(primary=("need_id",
                                                           "item_id",
                                                           ),
                                                  ),
@@ -2558,36 +2513,46 @@ class RequestNeedsSkillsModel(S3Model):
         - extended to support Skills, but still not using normal Requests
     """
 
-    names = ("req_organisation_needs_skill",
+    names = ("req_need_skill",
              )
 
     def model(self):
 
-        crud_strings = current.response.s3.crud_strings
+        T = current.T
 
-        # -----------------------------------------------------------------
-        # Linktable Needs <=> Skills
+        # ---------------------------------------------------------------------
+        # Needs <=> Skills
         #
-        skill_id = self.hrm_skill_id
-        CREATE_SKILL = crud_strings["hrm_skill"].label_create
+        skill_id = self.hrm_skill_id # Load normal model
+        CREATE = current.response.s3.crud_strings["hrm_skill"].label_create
 
-        tablename = "req_organisation_needs_skill"
+        tablename = "req_need_skill"
         self.define_table(tablename,
-                          self.organisation_needs_id(empty = False),
+                          self.req_need_id(empty = False),
                           skill_id(comment = S3PopupLink(c = "hrm",
                                                          f = "skill",
-                                                         label = CREATE_SKILL,
+                                                         label = CREATE,
                                                          tooltip = None,
                                                          vars = {"prefix": "req"},
                                                          ),
-                                   empty = None
+                                   empty = False,
                                    ),
-                          self.req_demand(),
+                          Field("quantity", "double",
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          self.req_priority(),
                           s3_comments(),
+                          self.req_status("status",
+                                          label = T("Fulfilment Status"),
+                                          ),
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                       deduplicate = S3Duplicate(primary=("need_id",
                                                           "skill_id",
                                                           ),
                                                  ),
@@ -2596,6 +2561,144 @@ class RequestNeedsSkillsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
+        return {}
+
+# =============================================================================
+class RequestNeedsOrganisationModel(S3Model):
+    """
+        Simple Requests Management System
+        - link Needs to Organisations
+        - link exposed in Templates
+    """
+
+    names = ("req_need_organisation",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Organisations
+        #
+        organisation_id = self.org_organisation_id # Load normal model
+        CREATE = current.response.s3.crud_strings["org_organisation"].label_create
+
+        tablename = "req_need_organisation"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          organisation_id(comment = S3PopupLink(c = "org",
+                                                                f = "organisation",
+                                                                label = CREATE,
+                                                                tooltip = None,
+                                                                vars = {"prefix": "req"},
+                                                                ),
+                                          empty = False,
+                                          ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "organisation_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsSiteModel(S3Model):
+    """
+        Simple Requests Management System
+        - link Needs to Sites
+        - link exposed in Templates
+    """
+
+    names = ("req_need_site",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Sites
+        #
+        SITE = current.deployment_settings.get_org_site_label()
+
+        tablename = "req_need_site"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          # Component not instance
+                          self.super_link("site_id", "org_site",
+                                          label = SITE,
+                                          readable = True,
+                                          writable = True,
+                                          represent = self.org_site_represent,
+                                          ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "site_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsTagsModel(S3Model):
+    """
+        Needs Tags
+    """
+
+    names = ("req_need_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Need Tags
+        # - Key-Value extensions
+        # - can be used to add structured extensions, such as:
+        #   * Reference
+        #   * Cash Donations accepted (/ Details)
+        #   * Goods drop-off point (/ Details)
+        #   * Transport required (/ Details)
+        #   * Security needed (/ Details)
+        #   * Volunteering Opportunities (/ Details)
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "req_need_tag"
+        self.define_table(tablename,
+                          self.req_need_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("need_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
         return {}
 
 # =============================================================================
@@ -3756,190 +3859,215 @@ def req_req_drivers(row):
 # =============================================================================
 def req_rheader(r, check_page=False):
     """
-        Resource Header for Requests
+        Resource Header for Requests & Needs
 
         @todo: improve structure/readability
     """
 
-    if r.representation == "html":
-        if r.name == "req":
-            record = r.record
-            if record:
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
 
-                T = current.T
-                db = current.db
-                s3db = current.s3db
-                s3 = current.response.s3
-                settings = current.deployment_settings
+    record = r.record
+    if not record:
+        # RHeaders only used in single-record views
+        return None
 
-                use_commit = settings.get_req_use_commit()
-                is_template = record.is_template
+    resourcename = r.name
+    if resourcename == "req":
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+        settings = current.deployment_settings
 
-                rtype = record.type
-                if rtype == 1 and settings.has_module("inv"):
-                    items = True
-                    people = False
-                elif rtype == 3 and settings.has_module("hrm"):
-                    items = False
-                    people = True
-                else:
-                    items = False
-                    people = False
+        use_commit = settings.get_req_use_commit()
+        is_template = record.is_template
 
-                tabs = [(T("Edit Details"), None)]
-                if items:
-                    if settings.get_req_multiple_req_items():
-                        req_item_tab_label = T("Items")
-                    else:
-                        req_item_tab_label = T("Item")
-                    tabs.append((req_item_tab_label, "req_item"))
-                elif people:
-                    tabs.append((T("Skills"), "req_skill"))
-                tabs.append((T("Documents"), "document"))
-                if is_template:
-                    tabs.append((T("Schedule"), "job"))
-                else:
-                    # Hide these if no Items/Skills on one of these requests yet
-                    if items:
-                        user = current.auth.user
-                        site_id = user.site_id if user else None
-                        ritable = s3db.req_req_item
-                        probably_complete = db(ritable.req_id == record.id).select(
-                                                    ritable.id,
-                                                    limitby = (0, 1),
-                                                    )
-                    elif people:
-                        user = current.auth.user
-                        organisation_id = user.organisation_id if user else None
-                        rstable = s3db.req_req_skill
-                        probably_complete = db(rstable.req_id == record.id).select(
-                                                    rstable.id,
-                                                    limitby = (0, 1),
-                                                    )
-                    else:
-                        probably_complete = True
-                    if probably_complete:
-                        if use_commit:
-                            tabs.append((T("Commitments"), "commit"))
-                        if (items and site_id) or \
-                           (people and organisation_id and settings.get_req_commit_people()):
-                            tabs.append((T("Check"), "check"))
+        rtype = record.type
+        if rtype == 1 and settings.has_module("inv"):
+            items = True
+            people = False
+        elif rtype == 3 and settings.has_module("hrm"):
+            items = False
+            people = True
+        else:
+            items = False
+            people = False
 
-                if not check_page:
-                    rheader_tabs = s3_rheader_tabs(r, tabs)
-                else:
-                    rheader_tabs = DIV()
+        tabs = [(T("Edit Details"), None)]
+        if items:
+            if settings.get_req_multiple_req_items():
+                req_item_tab_label = T("Items")
+            else:
+                req_item_tab_label = T("Item")
+            tabs.append((req_item_tab_label, "req_item"))
+        elif people:
+            tabs.append((T("Skills"), "req_skill"))
+        tabs.append((T("Documents"), "document"))
+        if is_template:
+            tabs.append((T("Schedule"), "job"))
+        else:
+            # Hide these if no Items/Skills on one of these requests yet
+            if items:
+                user = current.auth.user
+                site_id = user.site_id if user else None
+                ritable = s3db.req_req_item
+                probably_complete = db(ritable.req_id == record.id).select(
+                                            ritable.id,
+                                            limitby = (0, 1),
+                                            )
+            elif people:
+                user = current.auth.user
+                organisation_id = user.organisation_id if user else None
+                rstable = s3db.req_req_skill
+                probably_complete = db(rstable.req_id == record.id).select(
+                                            rstable.id,
+                                            limitby = (0, 1),
+                                            )
+            else:
+                probably_complete = True
+            if probably_complete:
+                if use_commit:
+                    tabs.append((T("Commitments"), "commit"))
+                if (items and site_id) or \
+                   (people and organisation_id and settings.get_req_commit_people()):
+                    tabs.append((T("Check"), "check"))
 
-                if items and r.component and \
-                             r.component_name == "commit" and \
-                             r.component_id:
-                    prepare_btn = A(T("Prepare Shipment"),
-                                    _href = URL(f = "send_commit",
-                                                args = [r.component_id]
-                                                ),
-                                    _id = "send_commit",
-                                    _class = "action-btn"
-                                    )
-                    s3.rfooter = TAG[""](prepare_btn)
+        if not check_page:
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+        else:
+            rheader_tabs = DIV()
 
-                site_id = record.site_id
-                if site_id:
-                    stable = s3db.org_site
-                if settings.get_req_show_quantity_transit() and not is_template:
-                    transit_status = s3db.req_status_opts.get(record.transit_status,
-                                                              "")
-                    try:
-                        if site_id and \
-                           record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
-                           record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
-                            pass
-                            # @ToDo: Create this function!
-                            #site_record = db(stable.site_id == site_id).select(stable.uuid,
-                            #                                                   stable.instance_type,
-                            #                                                   limitby=(0, 1)).first()
-                            #instance_type = site_record.instance_type
-                            #table = s3db[instance_type]
-                            #query = (table.uuid == site_record.uuid)
-                            #instance_id = db(query).select(table.id,
-                            #                               limitby=(0, 1)).first().id
-                            #transit_status = SPAN(transit_status,
-                            #                      A(T("Incoming Shipments"),
-                            #                        _href = URL(c = instance_type.split("_")[0],
-                            #                                    f = "incoming",
-                            #                                    vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
-                            #                                    )
-                            #                        )
-                            #                      )
-                    except:
-                        pass
-                    transit_status = (TH("%s: " % T("Transit Status")),
-                                      transit_status)
-                else:
-                    transit_status = ("")
+        if items and r.component and \
+                     r.component_name == "commit" and \
+                     r.component_id:
+            prepare_btn = A(T("Prepare Shipment"),
+                            _href = URL(f = "send_commit",
+                                        args = [r.component_id]
+                                        ),
+                            _id = "send_commit",
+                            _class = "action-btn"
+                            )
+            s3.rfooter = TAG[""](prepare_btn)
 
-                table = r.table
+        site_id = record.site_id
+        if site_id:
+            stable = s3db.org_site
+        if settings.get_req_show_quantity_transit() and not is_template:
+            transit_status = s3db.req_status_opts.get(record.transit_status,
+                                                      "")
+            try:
+                if site_id and \
+                   record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
+                   record.fulfil_status in [None, REQ_STATUS_NONE, REQ_STATUS_PARTIAL]:
+                    pass
+                    # @ToDo: Create this function!
+                    #site_record = db(stable.site_id == site_id).select(stable.uuid,
+                    #                                                   stable.instance_type,
+                    #                                                   limitby=(0, 1)).first()
+                    #instance_type = site_record.instance_type
+                    #table = s3db[instance_type]
+                    #query = (table.uuid == site_record.uuid)
+                    #instance_id = db(query).select(table.id,
+                    #                               limitby=(0, 1)).first().id
+                    #transit_status = SPAN(transit_status,
+                    #                      A(T("Incoming Shipments"),
+                    #                        _href = URL(c = instance_type.split("_")[0],
+                    #                                    f = "incoming",
+                    #                                    vars = {"viewing" : "%s.%s" % (instance_type, instance_id)}
+                    #                                    )
+                    #                        )
+                    #                      )
+            except:
+                pass
+            transit_status = (TH("%s: " % T("Transit Status")),
+                              transit_status)
+        else:
+            transit_status = ("")
 
-                if settings.get_req_use_req_number() and not is_template:
-                    headerTR = TR(TH("%s: " % table.req_ref.label),
-                                  TD(table.req_ref.represent(record.req_ref, show_link=True))
-                                  )
-                else:
-                    headerTR = TR(TD(settings.get_req_form_name(),
-                                  _colspan=2, _class="pdf_title"),
-                                  )
-                if site_id:
-                    org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                                  limitby = (0, 1),
-                                                                  ).first().organisation_id
-                    logo = s3db.org_organisation_logo(org_id)
-                    if logo:
-                        headerTR.append(TD(logo, _colspan=2))
+        table = r.table
 
-                if is_template:
-                    commit_status = ("")
-                    fulfil_status = ("")
-                    row1 = ""
-                    row3 = ""
-                else:
-                    if use_commit:
-                        commit_status = (TH("%s: " % table.commit_status.label),
-                                         table.commit_status.represent(record.commit_status))
-                    else:
-                        commit_status = ("")
-                    fulfil_status = (TH("%s: " % table.fulfil_status.label),
-                                     table.fulfil_status.represent(record.fulfil_status))
-                    row1 = TR(TH("%s: " % table.date.label),
-                              table.date.represent(record.date),
-                              *commit_status
-                              )
-                    row3 = TR(TH("%s: " % table.date_required.label),
-                              table.date_required.represent(record.date_required),
-                              *fulfil_status
-                              )
+        if settings.get_req_use_req_number() and not is_template:
+            headerTR = TR(TH("%s: " % table.req_ref.label),
+                          TD(table.req_ref.represent(record.req_ref, show_link=True))
+                          )
+        else:
+            headerTR = TR(TD(settings.get_req_form_name(),
+                          _colspan=2, _class="pdf_title"),
+                          )
+        if site_id:
+            org_id = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                          limitby = (0, 1),
+                                                          ).first().organisation_id
+            logo = s3db.org_organisation_logo(org_id)
+            if logo:
+                headerTR.append(TD(logo, _colspan=2))
 
-                rData = TABLE(headerTR,
-                              row1,
-                              TR(TH("%s: " % table.site_id.label),
-                                 table.site_id.represent(site_id),
-                                 *transit_status
-                                 ),
-                              TR(TH("%s: " % table.requester_id.label),
-                                 table.requester_id.represent(record.requester_id),
-                                 ),
-                              row3,
-                              TR(TH("%s: " % table.purpose.label),
-                                 record.purpose
-                                 ),
-                              TR(TH("%s: " % table.comments.label),
-                                 TD(record.comments or "", _colspan=3)
-                                 ),
-                              )
+        if is_template:
+            commit_status = ("")
+            fulfil_status = ("")
+            row1 = ""
+            row3 = ""
+        else:
+            if use_commit:
+                commit_status = (TH("%s: " % table.commit_status.label),
+                                 table.commit_status.represent(record.commit_status))
+            else:
+                commit_status = ("")
+            fulfil_status = (TH("%s: " % table.fulfil_status.label),
+                             table.fulfil_status.represent(record.fulfil_status))
+            row1 = TR(TH("%s: " % table.date.label),
+                      table.date.represent(record.date),
+                      *commit_status
+                      )
+            row3 = TR(TH("%s: " % table.date_required.label),
+                      table.date_required.represent(record.date_required),
+                      *fulfil_status
+                      )
 
-                rheader = DIV(rData,
-                              rheader_tabs,
-                              )
-                return rheader
-    return None
+        rheader = DIV(TABLE(headerTR,
+                            row1,
+                            TR(TH("%s: " % table.site_id.label),
+                               table.site_id.represent(site_id),
+                               *transit_status
+                               ),
+                            TR(TH("%s: " % table.requester_id.label),
+                               table.requester_id.represent(record.requester_id),
+                               ),
+                            row3,
+                            TR(TH("%s: " % table.purpose.label),
+                               record.purpose
+                               ),
+                            TR(TH("%s: " % table.comments.label),
+                               TD(record.comments or "", _colspan=3)
+                               ),
+                            ),
+                      rheader_tabs,
+                      )
+
+    elif resourcename == "need":
+        T = current.T
+        tabs = [(T("Basic Details"), None),
+                (T("Impacts"), "impact"),
+                (T("Items"), "need_item"),
+                (T("Skills"), "need_skill"),
+                (T("Tags"), "tag"),
+                ]
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        location_id = r.table.location_id
+        rheader = DIV(TABLE(TR(TH("%s: " % location_id.label),
+                               location_id.represent(record.location_id),
+                               )),
+                      rheader_tabs)
+
+    else:
+        # Not defined, probably using wrong rheader
+        rheader = None
+
+    return rheader
 
 # =============================================================================
 def req_match(rheader=None):

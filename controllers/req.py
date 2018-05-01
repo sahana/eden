@@ -1113,12 +1113,6 @@ def req_skill():
     return s3_rest_controller("req", "req_skill")
 
 # =============================================================================
-def summary_option():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
 def skills_filter(req_id):
     """
         Limit commit skills to skills from the request
@@ -1889,69 +1883,18 @@ def fema():
     return req_item()
 
 # -----------------------------------------------------------------------------
-def organisation_needs():
+def need():
     """
-        RESTful CRUD Controller for Organisation Needs
-    """
-
-    def prep(r):
-        if r.interactive:
-            if r.method == "create":
-                # Filter from a Profile page?
-                # If so, then default the fields we know
-                organisation_id = get_vars.get("~.(organisation)", None)
-                if organisation_id:
-                    field = s3db.req_organisation_needs.organisation_id
-                    field.default = organisation_id
-                    field.readable = False
-                    field.writable = False
-            elif r.method == "update":
-                # Don't allow changing the org in an existing needs record.
-                field = s3db.req_organisation_needs.organisation_id
-                field.writable = False
-                field.comment = None
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def organisation_needs_skill():
-    """ RESTful controller for option lookups """
-
-    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def organisation_needs_item():
-    """ RESTful controller for option lookups """
-
-    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def site_needs():
-    """
-        RESTful CRUD Controller for Site Needs
+        RESTful CRUD Controller for Needs
     """
 
     def prep(r):
-        if r.interactive and r.method == "create":
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            site_id = get_vars.get("~.(site)", None)
-            if site_id:
-                field = s3db.req_site_needs.site_id
-                field.default = site_id
-                field.readable = False
-                field.writable = False
-
+        if r.component_name == "impact":
+            s3db.stats_impact.location_id.default = r.record.location_id
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = s3db.req_rheader)
 
 # -----------------------------------------------------------------------------
 def facility():

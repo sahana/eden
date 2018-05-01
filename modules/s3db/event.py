@@ -43,6 +43,7 @@ __all__ = ("S3EventModel",
            "S3EventTeamModel",
            "S3EventImpactModel",
            "S3EventMapModel",
+           "S3EventNeedModel",
            "S3EventOrganisationModel",
            "S3EventProjectModel",
            "S3EventRequestModel",
@@ -533,6 +534,12 @@ class S3EventModel(S3Model):
                                          "actuate": "hide",
                                          "autodelete": False,
                                          },
+                            req_need = {"link": "event_event_need",
+                                        "joinby": "event_id",
+                                        "key": "need_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
                             req_req = {"link": "event_request",
                                        "joinby": "event_id",
                                        "key": "req_id",
@@ -3159,7 +3166,7 @@ class S3EventImpactModel(S3Model):
             ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
-        # Event Impact
+        # Events <> Impacts
 
         tablename = "event_event_impact"
         self.define_table(tablename,
@@ -3233,6 +3240,59 @@ class S3EventMapModel(S3Model):
         return {}
 
 # =============================================================================
+class S3EventNeedModel(S3Model):
+    """
+        Link Events &/or Incidents with Needs
+    """
+
+    names = ("event_event_need",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
+        # ---------------------------------------------------------------------
+        # Events <> Impacts
+        #
+
+        tablename = "event_event_need"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = ondelete),
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          self.req_need_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_event_need"),
+                       )
+
+        # Not accessed directly
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Add Need"),
+        #    title_display = T("Need Details"),
+        #    title_list = T("Needs"),
+        #    title_update = T("Edit Need"),
+        #    label_list_button = T("List Needs"),
+        #    label_delete_button = T("Delete Need"),
+        #    msg_record_created = T("Need added"),
+        #    msg_record_modified = T("Need updated"),
+        #    msg_record_deleted = T("Need removed"),
+        #    msg_list_empty = T("No Needs currently registered in this Event"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class S3EventOrganisationModel(S3Model):
     """
         Link Organisations to Events &/or Incidents
@@ -3258,7 +3318,7 @@ class S3EventOrganisationModel(S3Model):
             ondelete = "SET NULL"
 
         # ---------------------------------------------------------------------
-        # Organisations linked to this Incident
+        # Organisations linked to this Incident / Event
         #
 
         tablename = "event_organisation"

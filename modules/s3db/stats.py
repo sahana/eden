@@ -1205,6 +1205,7 @@ def stats_demographic_data_controller():
 class S3StatsImpactModel(S3Model):
     """
         Used to record Impacts of Events &/or Incidents
+        - links to Needs (Requests module)
         - might link to Assessments module in future
     """
 
@@ -1261,7 +1262,7 @@ class S3StatsImpactModel(S3Model):
         # ---------------------------------------------------------------------
         # Impact
         #
-        # @ToDo: Add Time & Organisation
+        # @ToDo: Add Organisation?
         #
         tablename = "stats_impact"
         define_table(tablename,
@@ -1270,6 +1271,7 @@ class S3StatsImpactModel(S3Model):
                      # Instance (link to Photos/Reports)
                      super_link("doc_id", "doc_entity"),
                      self.gis_location_id(widget = S3LocationSelector(show_map=False)),
+                     s3_date(),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
@@ -1291,7 +1293,7 @@ class S3StatsImpactModel(S3Model):
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     self.stats_accuracy(default=3), # Default: Official Estimate
+                     self.stats_accuracy(default = 3), # Default: Official Estimate
                      s3_comments(),
                      *s3_meta_fields())
 
