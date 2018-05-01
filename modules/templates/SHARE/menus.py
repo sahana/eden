@@ -23,15 +23,12 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Commitments", c="req", f="commit"),
                 MM("Statistics", c="req", f="need", m="report"),
                 ),
-               #MM("Donors", c="req", f="commit")(
-               # MM("Supply items", c="supply", f="item", m="summary"),
-               # MM("Facilities", c="org", f="facility"),
-               # MM("Assets", c="asset", f="asset"),
-               # ),
-               #MM("Sitreps", c="cms", f="blog", m="1"),
-               #MM("Sitreps", c="cms", f="series", m="1/post"),
+               MM("4W", c="project", f="activity"),
                MM("Sitreps", c="event", f="sitrep"),
-               MM("Organizations", c="org", f="organisation"),
+               MM("Organizations", c="org", f="organisation")(
+                MM("Offices", c="org", f="office"),
+                MM("Facilities", c="org", f="facility"),
+               ),
                MM("more", link=False)(
                 MM("Documents", c="doc", f="document"),
                 MM("Events", c="event", f="event"),
@@ -48,7 +45,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def event():
-        """ EVENT / Event Module """
+        """ Events Module """
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
@@ -84,7 +81,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def org():
-        """ ORG / Organization Registry """
+        """ Organisation Registry """
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
@@ -121,8 +118,26 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project():
+        """ Project Module """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M()(
+                    M("Activities", c="project", f="activity")(
+                        M("Create", m="create"),
+                    ),
+                    M("Activity Types", c="project", f="activity_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                        #M("Import", m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def req():
-        """ REQ / Request Management """
+        """ Requests Management """
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
