@@ -6409,12 +6409,13 @@ def org_rheader(r, tabs=None):
                             )
 
         db = current.db
+        record_id = record.id
 
         if record.acronym:
             record_data.append(TR(TH("%s: " % table.acronym.label),
                                   record.acronym))
 
-        if record.root_organisation != record.id:
+        if record.root_organisation != record_id:
             btable = s3db.org_organisation_branch
             query = (btable.branch_id == record.id) & \
                     (btable.organisation_id == table.id)
@@ -6428,12 +6429,25 @@ def org_rheader(r, tabs=None):
                                       ))
 
         ltable = s3db.org_organisation_organisation_type
-        query = (ltable.organisation_id == table.id) & \
+        query = (ltable.organisation_id == record_id) & \
                 (ltable.deleted == False)
         rows = db(query).select(ltable.organisation_type_id)
         if rows:
-            record_data.append(TR(TH("%s: " % ltable.organisation_type_id.label),
-                                  ltable.organisation_type_id.represent([row.organisation_type_id for row in rows])))
+            record_data.append(TR(TH("%s: " % T("Type")),
+                                  ltable.organisation_type_id.represent.multiple([row.organisation_type_id for row in rows])))
+
+        if settings.get_org_sector():
+            ltable = s3db.org_sector_organisation
+            query = (ltable.organisation_id == record_id) & \
+                    (ltable.deleted == False)
+            rows = db(query).select(ltable.sector_id)
+            if rows:
+                if settings.get_ui_label_cluster():
+                    label = T("Clusters")
+                else:
+                    label = T("Sectors")
+                record_data.append(TR(TH("%s: " % label),
+                                      ltable.sector_id.represent.multiple([row.sector_id for row in rows])))
 
         if record.country:
             record_data.append(TR(TH("%s: " % table.country.label),
@@ -6442,15 +6456,6 @@ def org_rheader(r, tabs=None):
         if record.website:
             record_data.append(TR(TH("%s: " % table.website.label),
                                   A(record.website, _href=record.website)))
-
-        if settings.get_org_sector():
-            ltable = s3db.org_sector_organisation
-            query = (ltable.organisation_id == table.id) & \
-                    (ltable.deleted == False)
-            rows = db(query).select(ltable.sector_id)
-            if rows:
-                record_data.append(TR(TH("%s: " % ltable.sector_id.label),
-                                      ltable.sector_id.represent([row.sector_id for row in rows])))
 
         if logo:
             rheader.append(TABLE(TR(TD(logo),
