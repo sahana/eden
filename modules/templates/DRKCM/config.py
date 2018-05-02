@@ -34,11 +34,18 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
+
+    # Request Organisation during user registration
     settings.auth.registration_requests_organisation = True
+    # Suppress popup-link for creating organisations during user registration
+    settings.auth.registration_organisation_link_create = False
+
     settings.auth.registration_link_user_to = {"staff": T("Staff"),
                                                "volunteer": T("Volunteer"),
                                                }
-    #settings.auth.registration_link_user_to_default = "staff"
+    settings.auth.registration_link_user_to_default = "staff"
+
+    # Disable password-retrieval feature
     settings.auth.password_retrieval = False
 
     # Approval emails get sent to all admins

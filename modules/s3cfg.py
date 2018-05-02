@@ -663,6 +663,10 @@ class S3Config(Storage):
         " Make the selection of Organisation required during registration "
         return self.auth.get("registration_organisation_required", False)
 
+    def get_auth_registration_organisation_link_create(self):
+        """ Show a link to create new orgs in registration form """
+        return self.auth.get("registration_organisation_link_create", True)
+
     def get_auth_registration_organisation_hidden(self):
         " Hide the Organisation field in the registration form unless an email is entered which isn't whitelisted "
         return self.auth.get("registration_organisation_hidden", False)

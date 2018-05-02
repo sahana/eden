@@ -1788,48 +1788,59 @@ Thank you"""
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
-        if self.s3_has_role("ADMIN"):
+        is_admin = self.s3_has_role("ADMIN")
+        if is_admin:
             show_org = deployment_settings.get_auth_admin_sees_organisation()
         else:
             show_org = deployment_settings.get_auth_registration_requests_organisation()
+
         if show_org:
-            if pe_ids:
+            if pe_ids and not is_admin:
                 # Filter orgs to just those belonging to the Org Admin's Org
-                # & Descendants (or realms for which they are Org Admin)
+                # & Descendants (or realms for which they are Org Admin):
                 filterby = "pe_id"
                 filter_opts = pe_ids
+                # If the current user can only register users for certain orgs,
+                # then they must not leave this field empty:
+                org_required = True
             else:
                 filterby = None
                 filter_opts = None
+                org_required = deployment_settings.get_auth_registration_organisation_required()
+
             organisation_id = utable.organisation_id
             organisation_id.label = messages.label_organisation_id
             organisation_id.readable = organisation_id.writable = True
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
             org_represent = s3db.org_organisation_represent
             organisation_id.represent = org_represent
+
             requires = IS_ONE_OF(db, "org_organisation.id",
                                  org_represent,
-                                 filterby=filterby,
-                                 filter_opts=filter_opts,
-                                 orderby="org_organisation.name",
-                                 sort=True)
-            if deployment_settings.get_auth_registration_organisation_required():
+                                 filterby = filterby,
+                                 filter_opts = filter_opts,
+                                 orderby = "org_organisation.name",
+                                 sort = True,
+                                 )
+
+            if org_required:
                 organisation_id.requires = requires
             else:
                 organisation_id.requires = IS_EMPTY_OR(requires)
 
-            from s3layouts import S3PopupLink
-            org_crud_strings = s3db.crud_strings["org_organisation"]
-            organisation_id.comment = S3PopupLink(c = "org",
-                                                  f = "organisation",
-                                                  label = org_crud_strings.label_create,
-                                                  title = org_crud_strings.title_list,
-                                                  )
-            #from s3widgets import S3OrganisationAutocompleteWidget
-            #organisation_id.widget = S3OrganisationAutocompleteWidget()
-            #organisation_id.comment = DIV(_class="tooltip",
-            #                              _title="%s|%s" % (T("Organization"),
-            #                                                cmessages.AUTOCOMPLETE_HELP))
+            if deployment_settings.get_auth_registration_organisation_link_create():
+                from s3layouts import S3PopupLink
+                org_crud_strings = s3db.crud_strings["org_organisation"]
+                organisation_id.comment = S3PopupLink(c = "org",
+                                                      f = "organisation",
+                                                      label = org_crud_strings.label_create,
+                                                      title = org_crud_strings.title_list,
+                                                      )
+                #from s3widgets import S3OrganisationAutocompleteWidget
+                #organisation_id.widget = S3OrganisationAutocompleteWidget()
+                #organisation_id.comment = DIV(_class="tooltip",
+                #                              _title="%s|%s" % (T("Organization"),
+                #                                                cmessages.AUTOCOMPLETE_HELP))
             if multiselect_widget:
                 organisation_id.widget = S3MultiSelectWidget(multiple=False)
 

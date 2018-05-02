@@ -67,6 +67,8 @@ def config(settings):
     #settings.auth.registration_requests_organisation = True
     # Uncomment this to have the Organisation selection during registration be mandatory
     #settings.auth.registration_organisation_required = True
+    # Uncomment this to hide the Create-Organisation link in registration forms
+    #settings.auth.registration_organisation_link_create = False
     # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
     #settings.auth.registration_organisation_hidden = True
     # Uncomment this to default the Organisation during registration
