@@ -306,7 +306,51 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
-        current.s3db[tablename].comments.label = T("About")
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
+
+        s3db = current.s3db
+        s3db.org_organisation_tag.value.widget = s3_comments_widget
+
+        crud_form = S3SQLCustomForm("name",
+                                    "acronym",
+                                    S3SQLInlineLink(
+                                        "organisation_type",
+                                        field = "organisation_type_id",
+                                        # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
+                                        filter = False,
+                                        label = T("Type"),
+                                        multiple = False,
+                                        widget = "multiselect",
+                                    ),
+                                    S3SQLInlineLink("sector",
+                                       columns = 4,
+                                       label = T("Sectors"),
+                                       field = "sector_id",
+                                       ),
+                                    S3SQLInlineLink("service",
+                                       columns = 4,
+                                       label = T("Services"),
+                                       field = "service_id",
+                                       ),
+                                    "country",
+                                    "phone",
+                                    "website",
+                                    #"year",
+                                    "logo",
+                                    (T("About"), "comments"),
+                                    S3SQLInlineComponent("tag",
+                                       label = T("Vision"),
+                                       fields = [("", "value")],
+                                       filterby = {"field": "tag",
+                                                   "options": "vision",
+                                                   },
+                                       multiple = False,
+                                       ),
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 

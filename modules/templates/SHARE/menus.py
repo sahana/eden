@@ -33,6 +33,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Documents", c="doc", f="document"),
                 MM("Events", c="event", f="event"),
                 MM("Sectors", c="org", f="sector"),
+                MM("Services", c="org", f="service"),
                 ),
                ]
 

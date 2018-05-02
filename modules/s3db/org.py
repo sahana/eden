@@ -431,7 +431,7 @@ class S3OrganisationModel(S3Model):
                        S3SQLInlineLink(
                             "organisation_type",
                             field = "organisation_type_id",
-                            # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (crerate Org when registering)
+                            # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
                             filter = False,
                             label = T("Type"),
                             multiple = multiple_organisation_types,
