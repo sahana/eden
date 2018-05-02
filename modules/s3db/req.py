@@ -2368,7 +2368,6 @@ class RequestNeedsModel(S3Model):
                             stats_impact = {"link": "req_need_impact",
                                             "joinby": "need_id",
                                             "key": "impact_id",
-                                            "key": "impact_id",
                                             "actuate": "replace",
                                             },
                             req_need_item = "need_id",
@@ -2378,7 +2377,7 @@ class RequestNeedsModel(S3Model):
                                             },
                             )
 
-        
+
         # @ToDo: Represent if we need to
         represent = S3Represent(lookup=tablename)
         need_id = S3ReusableField("need_id", "reference %s" % tablename,

@@ -4144,6 +4144,12 @@ class S3Config(Storage):
                         current.session.s3.default_site_id = default_site
         return default_site
 
+    def get_org_country(self):
+        """
+            Whether to expose the "country" field of organisations
+        """
+        return self.org.get("country", True)
+
     def get_org_sector(self):
         """
             Whether to use an Organization Sector field

@@ -127,6 +127,8 @@ class S3OrganisationModel(S3Model):
         hierarchical_organisation_types = settings.get_org_organisation_types_hierarchical()
         multiple_organisation_types = settings.get_org_organisation_types_multiple()
 
+        use_country = settings.get_org_country()
+
         # ---------------------------------------------------------------------
         # Organisation Types
         #
@@ -376,6 +378,8 @@ class S3OrganisationModel(S3Model):
                                         lambda: gis.get_countries(key_type="code"),
                                         zero = messages.SELECT_LOCATION
                                         )),
+                           readable = use_country,
+                           writable = use_country,
                            ),
                      # Simple free-text contact field, can be enabled
                      # in templates as needed
@@ -438,7 +442,7 @@ class S3OrganisationModel(S3Model):
                             widget = type_widget,
                        ),
                        "region_id",
-                       "country",
+                       "country" if use_country else None,
                        "phone",
                        "website",
                        "year",
@@ -578,26 +582,35 @@ class S3OrganisationModel(S3Model):
                                        )
                        )
 
-        append(S3OptionsFilter("country",
-                               #label = T("Home Country"),
-                                ),
-               )
+        if use_country:
+            append(S3OptionsFilter("country",
+                                   #label = T("Home Country"),
+                                   ),
+                   )
 
         report_fields = ["organisation_organisation_type.organisation_type_id",
-                         "country",
                          ]
+        if use_country:
+            report_fields.append("country")
+
+        default_col = "organisation_organisation_type.organisation_type_id"
         if use_sector:
             report_fields.insert(1, "sector_organisation.sector_id")
             default_row = "sector_organisation.sector_id"
-        else:
+        elif use_country:
             default_row = "country"
+        else:
+            # Single column (switch axes)
+            default_row = default_col
+            default_col = None
+
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = [(T("Number of Organizations"), "count(id)"),
                                          (T("List of Organizations"), "list(name)"),
                                          ],
                                  defaults=Storage(rows = default_row,
-                                                  cols = "organisation_organisation_type.organisation_type_id",
+                                                  cols = default_col,
                                                   fact = "count(id)",
                                                   totals = True,
                                                   chart = "spectrum:cols",
@@ -6454,7 +6467,7 @@ def org_rheader(r, tabs=None):
                 record_data.append(TR(TH("%s: " % label),
                                       ltable.sector_id.represent.multiple([row.sector_id for row in rows])))
 
-        if record.country:
+        if settings.get_org_country() and record.country:
             record_data.append(TR(TH("%s: " % table.country.label),
                                   table.country.represent(record.country)))
 

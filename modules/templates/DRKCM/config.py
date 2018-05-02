@@ -283,6 +283,7 @@ def config(settings):
     settings.org.sector_rheader = False
     settings.org.branches = True
     settings.org.offices_tab = False
+    settings.org.country = False
 
     # -------------------------------------------------------------------------
     # Persons Module Settings
@@ -2400,14 +2401,7 @@ def config(settings):
         s3.prep = custom_prep
 
         attr = dict(attr)
-        tabs = [(T("Basic Details"), None),
-                (T("Branches"), "branch"),
-                (T("Facilities"), "facility"),
-                (T("Staff & Volunteers"), "human_resource"),
-                #(T("Projects"), "project"),
-                (T("Counseling Themes"), "response_theme"),
-                ]
-        attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
+        attr["rheader"] = drk_org_rheader
 
         return attr
 
@@ -2974,11 +2968,13 @@ def drk_org_rheader(r, tabs=None):
         # Resource headers only used in interactive views
         return None
 
-    from s3 import s3_rheader_resource, S3ResourceHeader
+    from s3 import s3_rheader_resource, s3_rheader_tabs, S3ResourceHeader
+
+    s3db = current.s3db
 
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
+        resource = s3db.resource(tablename, id=record.id)
     else:
         resource = r.resource
 
@@ -2988,7 +2984,63 @@ def drk_org_rheader(r, tabs=None):
     if record:
         T = current.T
 
-        if tablename == "org_facility":
+        if tablename == "org_organisation":
+
+            table = resource.table
+
+            # Custom tabs
+            tabs = [(T("Basic Details"), None),
+                    (T("Branches"), "branch"),
+                    (T("Facilities"), "facility"),
+                    (T("Staff & Volunteers"), "human_resource"),
+                    #(T("Projects"), "project"),
+                    (T("Counseling Themes"), "response_theme"),
+                    ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            # Custom header
+            from gluon import TABLE, TR, TH, TD
+            rheader = DIV()
+
+            # Name
+            record_data = TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                   ),
+                                )
+
+            # Parent Organisation
+            record_id = record.id
+            if record.root_organisation != record_id:
+                btable = s3db.org_organisation_branch
+                query = (btable.branch_id == record_id) & \
+                        (btable.organisation_id == table.id)
+                row = current.db(query).select(table.id,
+                                               table.name,
+                                               limitby = (0, 1),
+                                               ).first()
+                if row:
+                    record_data.append(TR(TH("%s: " % T("Branch of")),
+                                          A(row.name, _href=URL(args=[row.id, "read"])),
+                                          ))
+
+            # Website as link
+            if record.website:
+                record_data.append(TR(TH("%s: " % table.website.label),
+                                      A(record.website, _href=record.website)))
+
+            logo = s3db.org_organisation_logo(record)
+            if logo:
+                rheader.append(TABLE(TR(TD(logo),
+                                        TD(record_data),
+                                        )))
+            else:
+                rheader.append(record_data)
+
+            rheader.append(rheader_tabs)
+            return rheader
+
+        elif tablename == "org_facility":
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
