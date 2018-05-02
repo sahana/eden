@@ -6428,15 +6428,20 @@ def org_rheader(r, tabs=None):
                                       A(row.name, _href=URL(args=[row.id, "read"])),
                                       ))
 
-        ltable = s3db.org_organisation_organisation_type
-        query = (ltable.organisation_id == record_id) & \
-                (ltable.deleted == False)
-        rows = db(query).select(ltable.organisation_type_id)
-        if rows:
-            record_data.append(TR(TH("%s: " % T("Type")),
-                                  ltable.organisation_type_id.represent.multiple([row.organisation_type_id for row in rows])))
+        if settings.get_org_organisation_type_rheader():
+            ltable = s3db.org_organisation_organisation_type
+            query = (ltable.organisation_id == record_id) & \
+                    (ltable.deleted == False)
+            rows = db(query).select(ltable.organisation_type_id)
+            if rows:
+                if settings.get_org_organisation_types_multiple():
+                    label = T("Types")
+                else:
+                    label = T("Type")
+                record_data.append(TR(TH("%s: " % label),
+                                      ltable.organisation_type_id.represent.multiple([row.organisation_type_id for row in rows])))
 
-        if settings.get_org_sector():
+        if settings.get_org_sector_rheader():
             ltable = s3db.org_sector_organisation
             query = (ltable.organisation_id == record_id) & \
                     (ltable.deleted == False)

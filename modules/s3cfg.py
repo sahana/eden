@@ -4147,6 +4147,12 @@ class S3Config(Storage):
         """
         return self.org.get("sector", False)
 
+    def get_org_sector_rheader(self):
+        """
+            Whether Sectors should be visible in the rheader
+        """
+        return self.org.get("sector_rheader", self.get_org_sector())
+
     def get_org_branches(self):
         """
             Whether to support Organisation Branches or not
@@ -4184,6 +4190,12 @@ class S3Config(Storage):
             Whether Organisation Types are Multiple or not
         """
         return self.org.get("organisation_types_multiple", False)
+
+    def get_org_organisation_type_rheader(self):
+        """
+            Whether Organisation Types are visible in the rheader
+        """
+        return self.org.get("organisation_type_rheader", False)
 
     def get_org_facilities_tab(self):
         """

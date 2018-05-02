@@ -272,6 +272,8 @@ def config(settings):
     # Organisations Module Settings
     #
     settings.org.sector = True
+    # But hide it from the rheader
+    settings.org.sector_rheader = False
     settings.org.branches = True
     settings.org.offices_tab = False
 

@@ -90,6 +90,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Organisations
     settings.org.sector = True
+    # Show Organisation Types in the rheader
+    settings.org.organisation_type_rheader = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

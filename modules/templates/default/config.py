@@ -632,6 +632,8 @@ def config(settings):
     #settings.org.autocomplete = True
     # Enable the Organisation Sector field
     #settings.org.sector = True
+    # But hide it from the rheader
+    #settings.org.sector_rheader = False
     # Enable the use of Organisation Branches
     #settings.org.branches = True
     # Show branches as tree rather than as table
@@ -647,6 +649,8 @@ def config(settings):
     #settings.org.organisation_types_hierarchical = True
     # Make Organisation Types Multiple
     #settings.org.organisation_types_multiple = True
+    # Show Organisation Types in the rheader
+    #settings.org.organisation_type_rheader = True
     # Enable the use of Organisation Regions
     #settings.org.regions = True
     # Make Organisation Regions Hierarchical
