@@ -44,6 +44,16 @@ def config(settings):
                                                #"member": T("Member")
                                                }
 
+    def registration_organisation_default(default):
+        auth = current.auth
+        has_role = auth.s3_has_role
+        if has_role("ORG_ADMIN") and not has_role("ADMIN"):
+            return auth.user.organisation_id
+        else:
+            return default
+
+    settings.auth.registration_organisation_default = registration_organisation_default
+
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 

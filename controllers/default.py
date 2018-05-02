@@ -62,7 +62,7 @@ def register_validation(form):
         if not regex.match(home):
             form.errors.home = T("Invalid phone number")
 
-    org = settings.get_auth_registration_organisation_id_default()
+    org = settings.get_auth_registration_organisation_default()
     if org:
         # Add to default organisation
         form_vars.organisation_id = org

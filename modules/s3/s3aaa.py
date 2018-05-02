@@ -1811,7 +1811,7 @@ Thank you"""
             organisation_id = utable.organisation_id
             organisation_id.label = messages.label_organisation_id
             organisation_id.readable = organisation_id.writable = True
-            organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            organisation_id.default = deployment_settings.get_auth_registration_organisation_default()
             org_represent = s3db.org_organisation_represent
             organisation_id.represent = org_represent
 
