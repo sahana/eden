@@ -1106,7 +1106,7 @@ class S3ProjectActivityModel(S3Model):
                      self.gis_location_id(readable = not mode_task,
                                           writable = not mode_task,
                                           ),
-                     s3_date("date",
+                     s3_date(#"date", # default
                              label = T("Start Date"),
                              set_min = "#project_activity_end_date",
                              ),
@@ -1889,11 +1889,16 @@ class S3ProjectActivityOrganisationModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+
         project_activity_id = self.project_activity_id
+
+        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Activities <> Organisations - Link table
         #
+        project_organisation_roles = current.deployment_settings.get_project_organisation_roles()
+
         tablename = "project_activity_organisation"
         define_table(tablename,
                      project_activity_id(empty = False,
@@ -1903,6 +1908,15 @@ class S3ProjectActivityOrganisationModel(S3Model):
                      self.org_organisation_id(empty = False,
                                               ondelete = "CASCADE",
                                               ),
+                     Field("role", "integer",
+                           default = 1, # Lead
+                           label = T("Role"),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(project_organisation_roles)
+                                      ),
+                           represent = lambda opt: \
+                                        project_organisation_roles.get(opt,
+                                                                       NONE)),
                      *s3_meta_fields())
 
         # CRUD Strings

@@ -13,7 +13,9 @@
          Activity Type........;-sep list......List of Activity Types
          Sectors..............;-sep list......List of Activity Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
          Themes...............;-sep list......List of Activity Themes
-         Organisation.........comma-sep list..project_activity_organisation.organisation_id
+         Organisation.........comma-sep list..project_activity_organisation.organisation_id role=1 (default)
+         Partner..............comma-sep list..project_activity_organisation.organisation_id role=2
+         Donor................comma-sep list..project_activity_organisation.organisation_id role=3
          Organisation Group...string..........project_activity_group.group_id
          Country..............string..........Country code/name (L0)
          L1...................string..........L1 location name (e.g. State/Province)
@@ -110,6 +112,8 @@
         <xsl:variable name="Activity" select="col[@field='Activity']/text()"/>
         <xsl:variable name="ActivityType" select="col[@field='Activity Type']/text()"/>
         <xsl:variable name="Org" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="Partner" select="col[@field='Partner']/text()"/>
+        <xsl:variable name="Donor" select="col[@field='Donor']/text()"/>
         <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
         <xsl:variable name="Themes" select="col[@field='Themes']/text()"/>
@@ -157,6 +161,22 @@
                 <xsl:call-template name="splitList">
                     <xsl:with-param name="list">
                         <xsl:value-of select="$Org"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="arg">org_ref</xsl:with-param>
+                </xsl:call-template>
+
+                <!-- Link to Partners -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Partner"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="arg">org_ref</xsl:with-param>
+                </xsl:call-template>
+
+                <!-- Link to Donors -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Donor"/>
                     </xsl:with-param>
                     <xsl:with-param name="arg">org_ref</xsl:with-param>
                 </xsl:call-template>
@@ -256,6 +276,20 @@
             <xsl:with-param name="arg">org_res</xsl:with-param>
         </xsl:call-template>
 
+        <!-- Partners -->
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Partner"/></xsl:with-param>
+            <xsl:with-param name="arg">org_res</xsl:with-param>
+            <xsl:with-param name="org">2</xsl:with-param>
+        </xsl:call-template>
+
+        <!-- Donors -->
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Donor"/></xsl:with-param>
+            <xsl:with-param name="arg">org_res</xsl:with-param>
+            <xsl:with-param name="org">3</xsl:with-param>
+        </xsl:call-template>
+
         <!-- Sectors -->
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="$Sectors"/></xsl:with-param>
@@ -276,6 +310,7 @@
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
+        <xsl:param name="org"/>
 
         <xsl:choose>
             <!-- Activity Types -->
@@ -304,6 +339,9 @@
                             <xsl:value-of select="concat($OrgPrefix, $item)"/>
                         </xsl:attribute>
                     </reference>
+                    <xsl:if test="$org!=''">
+                        <data field="role"><xsl:value-of select="$org"/></data>
+                    </xsl:if>
                 </resource>
             </xsl:when>
             <xsl:when test="$arg='org_res'">

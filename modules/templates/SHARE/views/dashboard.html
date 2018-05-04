@@ -1,0 +1,19 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h1>{{=title}}</h1>
+<div class='large-3 columns'>
+ <fieldset>
+  <legend>
+   {{=T("Filter Options")}}
+   <button id='req-filter-form-show' class='toggle-text btn' type='button' style='display:inline-block'>{{=T("Show")}}</button>
+   <button id='req-filter-form-hide' class='toggle-text btn' type='button' style='display:none'>{{=T("Hide")}}</button>
+  </legend>
+  <div id='req-filter-form' style='display:none'>
+   {{=req_filter_form}}
+  </div>
+ </fieldset>{{=req_datalist}}
+</div>
+<div class='large-9 columns'>
+ {{=_map}}
+</div>
+{{include "dataLists.html"}}

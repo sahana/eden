@@ -104,6 +104,16 @@ def config(settings):
     settings.org.organisation_type_rheader = True
 
     # -------------------------------------------------------------------------
+    # Projects
+    settings.project.activity_sectors = True
+    # Links to Filtered Components for Donors & Partners
+    settings.project.organisation_roles = {
+        1: T("Agency"),
+        2: T("Implementing Partner"),
+        3: T("Donor"),
+    }
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -335,7 +345,6 @@ def config(settings):
                                     "country",
                                     "phone",
                                     "website",
-                                    #"year",
                                     "logo",
                                     (T("About"), "comments"),
                                     S3SQLInlineComponent("tag",
@@ -369,9 +378,8 @@ def config(settings):
         s3db.add_components(tablename,
                             org_sector_organisation = {"name": "sector_lead",
                                                        "joinby": "sector_id",
-                                                       "filterby": {
-                                                           "lead": True,
-                                                           },
+                                                       "filterby": {"lead": True,
+                                                                    },
                                                        },
                             )
                                               
@@ -399,5 +407,108 @@ def config(settings):
         return attr
         
     settings.customise_org_sector_controller = customise_org_sector_controller
+
+    # -------------------------------------------------------------------------
+    def customise_project_activity_controller(**attr):
+
+        s3db = current.s3db
+        tablename = "project_activity"
+
+        # Custom Components for Agency, Partners & Donors
+        s3db.add_components(tablename,
+                           org_organisation = (# Agency
+                                               {"name": "agency",
+                                                "link": "project_activity_organisation",
+                                                "joinby": "activity_id",
+                                                "key": "organisation_id",
+                                                "actuate": "hide",
+                                                "filterby": {"role": 1,
+                                                             },
+                                                },
+                                               # Partners
+                                               {"name": "partner",
+                                                "link": "project_activity_organisation",
+                                                "joinby": "activity_id",
+                                                "key": "organisation_id",
+                                                "actuate": "hide",
+                                                "filterby": {"role": 2,
+                                                             },
+                                                },
+                                               # Donors
+                                               {"name": "donor",
+                                                "link": "project_activity_organisation",
+                                                "joinby": "activity_id",
+                                                "key": "organisation_id",
+                                                "actuate": "hide",
+                                                "filterby": {"role": 3,
+                                                             },
+                                                },
+                                               )
+                            )
+                                              
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        crud_form = S3SQLCustomForm(S3SQLInlineComponent("activity_organisation",
+                                                         label = T("Agency"),
+                                                         fields = [("", "organisation_id"),],
+                                                         filterby = ({"field": "role",
+                                                                      "options": 1,
+                                                                      },),
+                                                         multiple = False,
+                                                         ),
+                                    S3SQLInlineComponent("activity_organisation",
+                                                         label = T("Implementing Partner"),
+                                                         fields = [("", "organisation_id"),],
+                                                         filterby = ({"field": "role",
+                                                                      "options": 2,
+                                                                      },),
+                                                         #multiple = False,
+                                                         ),
+                                    S3SQLInlineComponent("activity_organisation",
+                                                         label = T("Donor"),
+                                                         fields = [("", "organisation_id"),],
+                                                         filterby = ({"field": "role",
+                                                                      "options": 3,
+                                                                      },),
+                                                         #multiple = False,
+                                                         ),
+                                    "location_id",
+                                    S3SQLInlineComponent("sector_activity",
+                                                         label = T("Sector"),
+                                                         fields = [("", "sector_id"),],
+                                                         multiple = False,
+                                                         ),
+                                    (T("Relief Items/Activity"), "name"),
+                                    #(T("Modality)", ""),
+                                    #(T("Number of Items/Kits)", ""),
+                                    #(T("Number of Activities)", ""),
+                                    (T("Activity Date (Planned/Start Date)"), "date"),
+                                    (T("Activity Date (Completion Date)"), "end_date"),
+                                    #(T("People / Households"), ""),
+                                    #(T("Total Number People/Hh Targeted"), ""),
+                                    #(T("Total Number Of People/HH Reached"), ""),
+                                    (T("Activity Status"), "status_id"),
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = [(T("Agency"), "agency.organisation_id"),
+                                      (T("Implementing Partner"), "partner.organisation_id"),
+                                      (T("Donor"), "donor.organisation_id"),
+                                      (T("District"), "location_id$L1"),
+                                      (T("DS Division"), "location_id$L2"),
+                                      (T("GN Division"), "location_id$L3"),
+                                      (T("Sector"), "sector_activity.sector_id"),
+                                      (T("Relief Items/Activity"), "name"),
+                                      (T("Activity Date (Planned/Start Date)"), "date"),
+                                      (T("Activity Date (Completion Date)"), "end_date"),
+                                      (T("Activity Status"), "status_id"),
+                                      "comments",
+                                      ],
+                       )
+
+        return attr
+        
+    settings.customise_project_activity_controller = customise_project_activity_controller
 
 # END =========================================================================

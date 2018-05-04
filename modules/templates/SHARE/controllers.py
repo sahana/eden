@@ -10,22 +10,15 @@ THEME = "SHARE"
 
 # =============================================================================
 class index(S3CustomController):
-    """ Custom Home Page """
-    
-    # Contains:
-    # 1. custom edit homepage (c=cms, f=blog)
-    # 2. display map of needs
-    # 3. list a summary of needs
-    # 4. option to filter needs
+    """
+        Custom Home Page
+        - simple CMS with links to Dashboard, etc
+    """
 
     def __call__(self):
 
-        #---------------------------------
-        # initialize variables and objects
-        output = {}
         T = current.T
-        s3db = current.s3db
-        request = current.request
+        output = {}
 
         #------------------------------------------------------------
         # Allow editing of page content from browser using CMS module
@@ -71,6 +64,52 @@ class index(S3CustomController):
         else:
             custom_info = ""
         output["custom_info"] = custom_info
+
+        #----------------------
+        # Button to upload 4W data
+        upload_4W_activity_btn = A(T("Upload 4W Activity"),
+                         _href = URL(c="project",
+                                     f="activity",
+                                     args="import",
+                                     ),
+                         _class = "action-btn button small",
+                         )
+        output["upload_4W_activity_btn"] = upload_4W_activity_btn
+
+        #----------------------
+        # Button to access Dashboard
+        dashboard_btn = A(T("Dashboard"),
+                          _href = URL(c="default",
+                                      f="index",
+                                      args="dashboard",
+                                      ),
+                          _class = "action-btn button small",
+                          )
+        output["dashboard_btn"] = dashboard_btn
+
+        # View title
+        output["title"] = current.deployment_settings.get_system_name()
+
+        self._view(THEME, "index.html")
+
+        return output
+
+# =============================================================================
+class dashboard(S3CustomController):
+    """
+        Custom Dashboard
+        - recent Events
+        - set of Filters
+        - 2 Tabs: Activities & Needs
+            Each tab has DataList & Map
+    """
+
+    def __call__(self):
+
+        T = current.T
+        output = {}
+        s3db = current.s3db
+        request = current.request
 
         #------------------------
         # Map to display needs
@@ -132,16 +171,12 @@ class index(S3CustomController):
                                         )
 
         # ----------------------------
-        # filter requests summary list
+        # Filter Form
+        # - can we have a single form for both Activities & Needs?
+        #
         filter_widgets = [S3OptionsFilter("priority",
                                           label=T("Priority"),
                                           ),
-                          #S3OptionsFilter("req.type",
-                          #                label=T("Type"),
-                          #                ),
-                          #S3OptionsFilter("req.site_id",
-                          #                label=T("Site"),
-                          #                ),
                           S3DateFilter("date",
                                        label = T("Date"),
                                        hide_time=True,
@@ -154,32 +189,13 @@ class index(S3CustomController):
                                    )
         output["req_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
-        #----------------------
-        # Create request button
-        upload_4W_activity_btn = A(T("Upload 4W Activity"),
-                         _href = URL(c="project",
-                                     f="activity",
-                                     args="import",
-                                     ),
-                         _class = "action-btn button small",
-                         )
-
-#        system_roles = current.auth.get_system_roles()
-#        can_request = current.auth.s3_has_role("NEEDS_LOGGER"): or (system_roles.ADMIN in current.session.s3.roles
-        #print (current.session.s3.roles)
-#        if can_request: 
-        output["upload_4W_activity_btn"] = upload_4W_activity_btn
-#        else:
-#            output["upload_4W_activity_btn"] = ""
-
         # View title
         output["title"] = current.deployment_settings.get_system_name()
 
-        self._view(THEME, "index.html")
+        self._view(THEME, "dashboard.html")
 
-        s3 = current.response.s3
         # Custom JS
-        s3.scripts.append("/%s/static/themes/SHARE/js/homepage.js" % request.application)
+        current.response.s3.scripts.append("/%s/static/themes/SHARE/js/homepage.js" % request.application)
 
         return output
 

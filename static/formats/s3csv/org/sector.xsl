@@ -45,7 +45,16 @@
             <xsl:attribute name="name">
                 <xsl:value-of select="$resource"/>
             </xsl:attribute>
-            <data field="abrv"><xsl:value-of select="$SectorAbrv"/></data>
+            <data field="abrv">
+                <xsl:choose>
+                    <xsl:when test="$SectorAbrv!=''">
+                        <xsl:value-of select="$SectorAbrv"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$SectorName"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </data>
             <data field="name">
                 <xsl:choose>
                     <xsl:when test="$SectorName!=''">

@@ -2399,6 +2399,20 @@ class RequestNeedsModel(S3Model):
         return {"req_need_id": need_id,
                 }
 
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        dummy = S3ReusableField("dummy", "string",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"req_need_id": lambda **attr: dummy("need_id"),
+                }
+
 # =============================================================================
 class RequestNeedsImpactsModel(S3Model):
     """
