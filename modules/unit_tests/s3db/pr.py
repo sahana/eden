@@ -11,6 +11,8 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 
+from s3 import s3_phone_represent, s3_fullname
+
 from lxml import etree
 
 from unit_tests import run_suite
@@ -602,12 +604,179 @@ class ContactValidationTests(unittest.TestCase):
         self.assertEqual(row.value, "+46733847589")
 
 # =============================================================================
+class ContactRepresentationTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        current.auth.override = True
+
+        # Import two person records with contact info
+        # (Using non-ASCII characters in names to detect unicode errors)
+        xmlstr = """
+<s3xml>
+    <resource name="pr_person" uuid="REPRTEST1">
+        <data field="first_name">TestĈö1</data>
+        <data field="last_name">Represent</data>
+
+        <resource name="pr_contact">
+            <data field="contact_method">SMS</data>
+            <data field="priority">2</data>
+            <data field="value">+49-171-654321</data>
+        </resource>
+        <resource name="pr_contact">
+            <data field="contact_method">SMS</data>
+            <data field="priority">1</data>
+            <data field="value">+46-703-123456</data>
+        </resource>
+    </resource>
+    <resource name="pr_person" uuid="REPRTEST2">
+        <data field="first_name">TestĈö2</data>
+        <data field="last_name">Represent</data>
+
+        <resource name="pr_contact">
+            <data field="contact_method">EMAIL</data>
+            <data field="value">reprtest2@example.com</data>
+        </resource>
+        <resource name="pr_contact">
+            <data field="contact_method">SMS</data>
+            <data field="value">+46-705-567890</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = s3db.resource("pr_person")
+        result = resource.import_xml(xmltree, ignore_errors=True)
+
+    @classmethod
+    def tearDownClass(cls):
+
+        current.db.rollback()
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up IDs for test records
+        table = s3db.pr_person
+        query = table.uuid.belongs(("REPRTEST1", "REPRTEST2"))
+        rows = db(query).select(table.id,
+                                table.uuid,
+                                table.first_name,
+                                table.middle_name,
+                                table.last_name,
+                                limitby = (0, 2),
+                                )
+        person = {}
+        names = {}
+        for row in rows:
+            person[row.uuid] = row.id
+            names[row.id] = s3_fullname(row)
+        self.person = person
+        self.names = names
+
+    # -------------------------------------------------------------------------
+    def testBareRepresent(self):
+        """ Test Representation with out contact details """
+
+        assertEqual = self.assertEqual
+
+        s3db = current.s3db
+        represent = s3db.pr_PersonRepresentContact(show_email = False,
+                                                   show_phone = False,
+                                                   )
+
+        person_id = self.person["REPRTEST1"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, self.names[person_id])
+
+        person_id = self.person["REPRTEST2"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, self.names[person_id])
+
+    # -------------------------------------------------------------------------
+    def testPhoneRepresent(self):
+        """ Test Representation with Phone Number """
+
+        assertEqual = self.assertEqual
+
+        s3db = current.s3db
+
+        represent = s3db.pr_PersonRepresentContact(# defaults:
+                                                   #show_email = False,
+                                                   #show_phone = True,
+                                                   )
+
+        person_id = self.person["REPRTEST1"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s %s" % (self.names[person_id],
+                                        s3_phone_represent("+46703123456"),
+                                        ))
+
+        person_id = self.person["REPRTEST2"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s %s" % (self.names[person_id],
+                                        s3_phone_represent("+46705567890"),
+                                        ))
+
+    # -------------------------------------------------------------------------
+    def testEmailRepresent(self):
+        """ Test Representation with Email Address """
+
+        assertEqual = self.assertEqual
+
+        s3db = current.s3db
+        represent = s3db.pr_PersonRepresentContact(show_email = True,
+                                                   show_phone = False,
+                                                   )
+
+        person_id = self.person["REPRTEST1"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s" % self.names[person_id])
+
+        person_id = self.person["REPRTEST2"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s <reprtest2@example.com>" % self.names[person_id])
+
+    # -------------------------------------------------------------------------
+    def testEmailPhoneRepresent(self):
+        """ Test Representation with both Phone Number and Email Address"""
+
+        assertEqual = self.assertEqual
+
+        s3db = current.s3db
+        represent = s3db.pr_PersonRepresentContact(show_email = True,
+                                                   # default
+                                                   #show_phone = True,
+                                                   )
+
+        person_id = self.person["REPRTEST1"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s %s" % (self.names[person_id],
+                                        s3_phone_represent("+46703123456"),
+                                        ))
+
+        person_id = self.person["REPRTEST2"]
+        reprstr = represent(person_id, show_link=False)
+        assertEqual(reprstr, "%s <reprtest2@example.com> %s" % (self.names[person_id],
+                                                                s3_phone_represent("+46705567890"),
+                                                                ))
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         PRTests,
         PersonDeduplicateTests,
         ContactValidationTests,
+        ContactRepresentationTests,
     )
 
 # END ========================================================================

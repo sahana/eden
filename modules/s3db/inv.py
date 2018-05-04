@@ -1107,7 +1107,7 @@ class S3InventoryTrackingModel(S3Model):
                      person_id("recipient_id",
                                label = T("To Person"),
                                ondelete = "SET NULL",
-                               represent = self.pr_person_phone_represent,
+                               represent = self.pr_PersonRepresentContact(),
                                comment = self.pr_person_comment(child="recipient_id"),
                                ),
                      Field("transport_type",

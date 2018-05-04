@@ -59,8 +59,7 @@ __all__ = (# PR Base Entities
            "pr_RoleRepresent",
            "pr_PersonEntityRepresent",
            "pr_PersonRepresent",
-           "pr_person_phone_represent",
-           #"pr_person_email_phone_represent",
+           "pr_PersonRepresentContact",
            "pr_person_comment",
            "pr_image_library_represent",
            "pr_url_represent",
@@ -113,7 +112,7 @@ import os
 
 from urllib import urlencode
 
-from gluon import current, redirect, HTTP, URL, \
+from gluon import current, redirect, URL, \
                   A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
                   IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
                   IS_INT_IN_RANGE, IS_MATCH
@@ -6489,6 +6488,171 @@ class pr_PersonRepresent(S3Represent):
                                                  none)
 
 # =============================================================================
+class pr_PersonRepresentContact(pr_PersonRepresent):
+    """
+        Extended representation of person IDs to include phone number
+        and/or email address, using the highest-priority contact info
+        available (and permitted)
+    """
+
+    def __init__(self,
+                 labels=None,
+                 linkto=None,
+                 show_email=False,
+                 show_phone=True,
+                 access=None,
+                 show_link=True,
+                 ):
+        """
+            Constructor
+
+            @param labels: callable to render the name part
+                           (defaults to s3_fullname)
+            @param linkto: a URL (as string) to link representations to,
+                           with "[id]" as placeholder for the key
+                           (defaults see pr_PersonRepresent)
+
+            @param show_email: include email address in representation
+            @param show_phone: include phone number in representation
+
+            @param access: access level for contact details,
+                           None = ignore access level
+                           1 = show private only
+                           2 = show public only
+
+            @param show_link: render as HTML hyperlink
+        """
+
+        super(pr_PersonRepresentContact, self).__init__(
+                                                 lookup = "pr_person",
+                                                 labels = labels,
+                                                 linkto = linkto,
+                                                 show_link = show_link,
+                                                 )
+
+        self.show_email = show_email
+        self.show_phone = show_phone
+        self.access = access
+
+        self._email = {}
+        self._phone = {}
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        reprstr = super(pr_PersonRepresentContact, self).represent_row(row)
+
+        try:
+            pe_id = row.pe_id
+        except AttributeError:
+            pass
+        else:
+            if self.show_email:
+                email = self._email.get(pe_id)
+                if email:
+                    reprstr = "%s <%s>" % (reprstr, email)
+
+            if self.show_phone:
+                phone = self._phone.get(pe_id)
+                if phone:
+                    reprstr = "%s %s" % (reprstr, s3_phone_represent(phone))
+
+        return reprstr
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        # Lookup pe_ids and name fields
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        fields = ["id"]
+
+        rows = db(query).select(table.id,
+                                table.pe_id,
+                                table.first_name,
+                                table.middle_name,
+                                table.last_name,
+                                limitby = (0, count),
+                                )
+        self.queries += 1
+
+        lookup_phone = set()
+        lookup_email = set()
+        phone = self._phone
+        email = self._email
+        for row in rows:
+            pe_id = row.pe_id
+            if pe_id not in phone:
+                lookup_phone.add(pe_id)
+            if pe_id not in email:
+                lookup_email.add(pe_id)
+
+        ctable = s3db.pr_contact
+        base = current.auth.s3_accessible_query("read", ctable)
+        access = self.access
+        if lookup_phone:
+            join_on = base & \
+                      (ctable.pe_id == table.pe_id) & \
+                      (ctable.contact_method == "SMS") & \
+                      (ctable.deleted == False)
+            if access:
+                join_on &= (ctable.access == access)
+            left = ctable.on(join_on)
+            query = (table.pe_id.belongs(lookup_phone))
+            contacts = db(query).select(table.pe_id,
+                                        ctable.value,
+                                        left = left,
+                                        orderby = ctable.priority,
+                                        )
+            self.queries += 1
+            for contact in contacts:
+                pe_id = contact.pr_person.pe_id
+                if not phone.get(pe_id):
+                    phone[pe_id] = contact.pr_contact.value
+
+        if lookup_email:
+            join_on = base & \
+                      (ctable.pe_id == table.pe_id) & \
+                      (ctable.contact_method == "EMAIL") & \
+                      (ctable.deleted == False)
+            if access:
+                join_on &= (ctable.access == access)
+            left = ctable.on(join_on)
+            query = (table.pe_id.belongs(lookup_email))
+            contacts = db(query).select(table.pe_id,
+                                        ctable.value,
+                                        left = left,
+                                        orderby = ctable.priority,
+                                        )
+            self.queries += 1
+            for contact in contacts:
+                pe_id = contact.pr_person.pe_id
+                if not email.get(pe_id):
+                    email[pe_id] = contact.pr_contact.value
+
+        return rows
+
+# =============================================================================
 class pr_GroupRepresent(S3Represent):
     """ Representation of person groups """
 
@@ -6580,131 +6744,6 @@ class pr_GroupRepresent(S3Represent):
                 representation = "%s (%s)" % (representation, ", ".join(names))
 
         return representation
-
-# =============================================================================
-def pr_person_phone_represent(person_id, show_link=True):
-    """
-        Represent a Person with their phone number
-
-        @param show_link: whether to make the output into a hyperlink
-    """
-
-    if not person_id:
-        return current.messages["NONE"]
-
-    s3db = current.s3db
-    ptable = s3db.pr_person
-    ctable = s3db.pr_contact
-    query = (ptable.id == person_id)
-    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
-                     (ctable.contact_method == "SMS") & \
-                     (ctable.deleted == False))
-    row = current.db(query).select(ptable.first_name,
-                                   ptable.middle_name,
-                                   ptable.last_name,
-                                   ctable.value,
-                                   left = left,
-                                   limitby = (0, 1),
-                                   ).first()
-
-    try:
-        person = row.pr_person
-    except AttributeError:
-        return current.messages.UNKNOWN_OPT
-
-    repr_str = s3_fullname(person)
-    if row.pr_contact.value:
-        repr_str = "%s %s" % (repr_str,
-                              s3_phone_represent(row.pr_contact.value),
-                              )
-    if show_link:
-        request = current.request
-        group = request.get_vars.get("group", None)
-        c = request.controller
-        if group == "staff" or c == "hrm":
-            controller = "hrm"
-        elif group == "volunteer" or c == "vol":
-            controller = "vol"
-        else:
-            controller = "pr"
-        repr_str = A(repr_str,
-                     _href = URL(c = controller,
-                                 f = "person",
-                                 args = [person_id, "contact"],
-                                 ),
-                     )
-    return repr_str
-
-# =============================================================================
-def pr_person_email_phone_represent(person_id, show_link=True):
-    """
-        Represent a Person with their email and phone number
-        - currently unused
-
-        @param show_link: whether to make the output into a hyperlink
-    """
-
-    if not person_id:
-        return current.messages["NONE"]
-
-    s3db = current.s3db
-    ptable = s3db.pr_person
-    ctable = s3db.pr_contact
-    query = (ptable.id == person_id)
-    left = ctable.on((ctable.pe_id == ptable.pe_id) & \
-                     (ctable.contact_method.belongs(("EMAIL", "SMS"))) & \
-                     (ctable.deleted == False))
-    rows = current.db(query).select(ptable.first_name,
-                                    ptable.middle_name,
-                                    ptable.last_name,
-                                    ctable.contact_method,
-                                    ctable.priority,
-                                    ctable.value,
-                                    left = left,
-                                    orderby = ctable.priority,
-                                    )
-
-    try:
-        person = rows.first().pr_person
-    except AttributeError:
-        return current.messages.UNKNOWN_OPT
-
-    repr_str = s3_fullname(person)
-
-    phone = None
-    email = None
-    for row in rows:
-        contact = row.pr_contact
-        if not email and contact.contact_method == "EMAIL":
-            email = contact.value
-        elif not phone and contact.contact_method == "SMS":
-            phone = contact.value
-    if email:
-        repr_str = "%s <%s>" % (repr_str,
-                                email,
-                                )
-    if phone:
-        repr_str = "%s %s" % (repr_str,
-                              s3_phone_represent(phone),
-                              )
-
-    if show_link:
-        request = current.request
-        group = request.get_vars.get("group", None)
-        c = request.controller
-        if group == "staff" or c == "hrm":
-            controller = "hrm"
-        elif group == "volunteer" or c == "vol":
-            controller = "vol"
-        else:
-            controller = "pr"
-        repr_str = A(repr_str,
-                     _href = URL(c = controller,
-                                 f = "person",
-                                 args = [person_id, "contact"],
-                                 ),
-                     )
-    return repr_str
 
 # =============================================================================
 class pr_ContactRepresent(S3Represent):
