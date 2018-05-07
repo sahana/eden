@@ -845,6 +845,11 @@ def response_action():
 
         resource = r.resource
 
+        if not r.record:
+            # Filter out response actions of archived cases
+            query = (FS("case_activity_id$person_id$dvr_case.archived") == False)
+            resource.add_filter(query)
+
         mine = r.get_vars.get("mine")
         if mine == "a":
             # Filter for response actions assigned to logged-in user
