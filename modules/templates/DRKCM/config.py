@@ -2017,6 +2017,7 @@ def config(settings):
                     "case_activity_id$person_id$person_details.marital_status",
                     "case_activity_id$sector_id",
                     (T("Theme"), "response_theme_ids"),
+                    "human_resource_id",
                     )
             if multiple_orgs:
                 # Add case organisation as report axis
