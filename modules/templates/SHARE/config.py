@@ -104,6 +104,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Projects
+    # Don't use Beneficiaries
+    settings.project.activity_beneficiaries = False
     # Don't use Item Catalog for Distributions
     settings.project.activity_items = False
     settings.project.activity_sectors = True
@@ -415,6 +417,9 @@ def config(settings):
         s3db = current.s3db
         tablename = "project_activity"
 
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+        s3db.project_activity_tag.value.requires = IS_EMPTY_OR(IS_IN_SET(("Cash", "In-kind")))
+
         # Custom Components for Agency, Partners & Donors
         s3db.add_components(tablename,
                             project_activity_organisation = (# Agency
@@ -443,6 +448,7 @@ def config(settings):
                                               
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm(S3SQLInlineComponent("activity_organisation",
+                                                         name = "agency",
                                                          label = T("Agency"),
                                                          fields = [("", "organisation_id"),],
                                                          filterby = ({"field": "role",
@@ -451,6 +457,7 @@ def config(settings):
                                                          #multiple = False,
                                                          ),
                                     S3SQLInlineComponent("activity_organisation",
+                                                         name = "partner",
                                                          label = T("Implementing Partner"),
                                                          fields = [("", "organisation_id"),],
                                                          filterby = ({"field": "role",
@@ -459,6 +466,7 @@ def config(settings):
                                                          #multiple = False,
                                                          ),
                                     S3SQLInlineComponent("activity_organisation",
+                                                         name = "donor",
                                                          label = T("Donor"),
                                                          fields = [("", "organisation_id"),],
                                                          filterby = ({"field": "role",
@@ -473,13 +481,19 @@ def config(settings):
                                                          multiple = False,
                                                          ),
                                     (T("Relief Items/Activity"), "name"),
-                                    #(T("Modality)", ""),
-                                    #(T("Number of Items/Kits)", ""),
-                                    #(T("Number of Activities)", ""),
+                                    S3SQLInlineComponent("tag",
+                                       label = T("Modality"),
+                                       fields = [("", "value")],
+                                       filterby = {"field": "tag",
+                                                   "options": "modality",
+                                                   },
+                                       multiple = False,
+                                       ),
+                                    #(T("Number of Items/Kits/Activities)", ""),
                                     (T("Activity Date (Planned/Start Date)"), "date"),
                                     (T("Activity Date (Completion Date)"), "end_date"),
                                     #(T("People / Households"), ""),
-                                    #(T("Total Number People/Hh Targeted"), ""),
+                                    #(T("Total Number People/HH Targeted"), ""),
                                     #(T("Total Number Of People/HH Reached"), ""),
                                     (T("Activity Status"), "status_id"),
                                     "comments",
@@ -495,6 +509,7 @@ def config(settings):
                                       (T("GN Division"), "location_id$L3"),
                                       (T("Sector"), "sector_activity.sector_id"),
                                       (T("Relief Items/Activity"), "name"),
+                                      (T("Modality"), "tag.value"),
                                       (T("Activity Date (Planned/Start Date)"), "date"),
                                       (T("Activity Date (Completion Date)"), "end_date"),
                                       (T("Activity Status"), "status_id"),

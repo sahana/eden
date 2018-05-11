@@ -35,6 +35,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectActivityPersonModel",
            "S3ProjectActivityOrganisationModel",
            "S3ProjectActivitySectorModel",
+           "S3ProjectActivityTagModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectBeneficiaryModel",
            "S3ProjectCampaignModel",
@@ -1449,6 +1450,10 @@ class S3ProjectActivityModel(S3Model):
                                      },
                        # Format for InlineComponent/filter_widget
                        project_sector_activity = "activity_id",
+                       # Tags
+                       project_activity_tag = {"name": "tag",
+                                               "joinby": "activity_id",
+                                               },
                        # Tasks
                        project_task = {"link": "project_task_activity",
                                        "joinby": "activity_id",
@@ -1746,7 +1751,7 @@ class S3ProjectActivityTypeModel(S3Model):
                            )
 
         # ---------------------------------------------------------------------
-        # Activity Type - Sector Link Table
+        # Activity Type <> Sector Link Table
         #
         tablename = "project_activity_type_sector"
         define_table(tablename,
@@ -1760,7 +1765,7 @@ class S3ProjectActivityTypeModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Activity Type - Project Location Link Table
+        # Activity Type <> Project Location Link Table
         #
         tablename = "project_activity_type_location"
         define_table(tablename,
@@ -1773,7 +1778,7 @@ class S3ProjectActivityTypeModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Activity Type - Project Link Table
+        # Activity Type <> Project Link Table
         #
         tablename = "project_activity_type_project"
         define_table(tablename,
@@ -1992,6 +1997,49 @@ class S3ProjectActivitySectorModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("activity_id",
                                                             "sector_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3ProjectActivityTagModel(S3Model):
+    """
+        Activity Tags
+    """
+
+    names = ("project_activity_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Activity Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL, IATI
+        # - can be a Triple Store for Semantic Web support
+        # - can be used to add custom fields
+        #
+        tablename = "project_activity_tag"
+        self.define_table(tablename,
+                          self.project_activity_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "tag",
                                                             ),
                                                  ),
                        )
@@ -12819,7 +12867,7 @@ def project_rheader(r):
         tabs = [(T("Details"), None),
                 (T("Contact People"), "contact"),
                 ]
-        if settings.has_module("supply"):
+        if settings.get_project_activity_items():
             tabs.append((T("Distribution Items"), "distribution"))
         if settings.has_module("dvr"):
             tabs.append((T("Beneficiaries"), "person"))
