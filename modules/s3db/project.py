@@ -1261,8 +1261,7 @@ class S3ProjectActivityModel(S3Model):
                                 #represent = "%(name)s",
                                 ))
 
-        # @ToDo: deployment_setting
-        if settings.has_module("supply"):
+        if settings.get_project_activity_items():
             rappend("distribution.parameter_id")
             # This has the wrong perspective to be meaningful, use supply/distribution/report instead
             #fact_fields.insert(0,
@@ -1278,8 +1277,7 @@ class S3ProjectActivityModel(S3Model):
                                (T("Items"), "distribution.parameter_id"))
             list_index += 1
 
-        # @ToDo: deployment_setting
-        if settings.has_module("stats"):
+        if settings.get_project_activity_beneficiaries():
             rappend("beneficiary.parameter_id")
             # This has the wrong perspective to be meaningful, use project/beneficiary/report instead
             #fact_fields.insert(0,

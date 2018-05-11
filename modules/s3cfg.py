@@ -4600,6 +4600,24 @@ class S3Config(Storage):
         """
         return self.project.get("activities", False)
 
+    def get_project_activity_beneficiaries(self):
+        """
+            Use Beneficiaries in Activities
+        """
+        setting = self.project.get("activity_beneficiaries", None)
+        if setting is None:
+            setting = self.has_module("stats")
+        return setting
+
+    def get_project_activity_items(self):
+        """
+            Use Items in Activities
+        """
+        setting = self.project.get("activity_items", None)
+        if setting is None:
+            setting = self.has_module("supply")
+        return setting
+
     def get_project_activity_sectors(self):
         """
             Use Sectors in Activities

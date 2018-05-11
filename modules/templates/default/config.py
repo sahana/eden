@@ -945,6 +945,10 @@ def config(settings):
     #settings.project.activity_types = True
     # Uncomment this to filter dates in Activities
     #settings.project.activity_filter_year = True
+    # Uncomment this to not use Beneficiaries for Activities
+    #settings.project.get_project_activity_beneficiaries = False
+    # Uncomment this to not use Item Catalog for Distributions
+    #settings.project.activity_items = False
     # Uncomment this to use Codes for projects
     #settings.project.codes = True
     # Uncomment this to call project locations 'Communities'

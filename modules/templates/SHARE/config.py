@@ -104,6 +104,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Projects
+    # Don't use Item Catalog for Distributions
+    settings.project.activity_items = False
     settings.project.activity_sectors = True
     # Links to Filtered Components for Donors & Partners
     settings.project.organisation_roles = {
@@ -415,34 +417,28 @@ def config(settings):
 
         # Custom Components for Agency, Partners & Donors
         s3db.add_components(tablename,
-                           org_organisation = (# Agency
-                                               {"name": "agency",
-                                                "link": "project_activity_organisation",
-                                                "joinby": "activity_id",
-                                                "key": "organisation_id",
-                                                "actuate": "hide",
-                                                "filterby": {"role": 1,
-                                                             },
-                                                },
-                                               # Partners
-                                               {"name": "partner",
-                                                "link": "project_activity_organisation",
-                                                "joinby": "activity_id",
-                                                "key": "organisation_id",
-                                                "actuate": "hide",
-                                                "filterby": {"role": 2,
-                                                             },
-                                                },
-                                               # Donors
-                                               {"name": "donor",
-                                                "link": "project_activity_organisation",
-                                                "joinby": "activity_id",
-                                                "key": "organisation_id",
-                                                "actuate": "hide",
-                                                "filterby": {"role": 3,
-                                                             },
-                                                },
-                                               )
+                            project_activity_organisation = (# Agency
+                                                             {"name": "agency",
+                                                              "joinby": "activity_id",
+                                                              "filterby": {"role": 1,
+                                                                           },
+                                                              #"multiple": False,
+                                                              },
+                                                             # Partners
+                                                             {"name": "partner",
+                                                              "joinby": "activity_id",
+                                                              "filterby": {"role": 2,
+                                                                           },
+                                                              #"multiple": False,
+                                                              },
+                                                             # Donors
+                                                             {"name": "donor",
+                                                              "joinby": "activity_id",
+                                                              "filterby": {"role": 3,
+                                                                           },
+                                                              #"multiple": False,
+                                                              },
+                                                             )
                             )
                                               
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -452,7 +448,7 @@ def config(settings):
                                                          filterby = ({"field": "role",
                                                                       "options": 1,
                                                                       },),
-                                                         multiple = False,
+                                                         #multiple = False,
                                                          ),
                                     S3SQLInlineComponent("activity_organisation",
                                                          label = T("Implementing Partner"),
