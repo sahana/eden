@@ -14,6 +14,9 @@ def config(settings):
 
     #T = current.T
 
+    # PrePopulate data
+    settings.base.prepopulate += ("SHARE/LK", "SHARE/Demo")
+
     # Finance settings
     settings.fin.currencies = {
         #"EUR" : "Euros",

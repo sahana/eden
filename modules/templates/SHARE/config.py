@@ -22,8 +22,7 @@ def config(settings):
                                 )
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SHARE", "default/users", "SHARE/Demo")
+    settings.base.prepopulate += ("SHARE", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SHARE"

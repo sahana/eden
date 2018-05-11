@@ -2,15 +2,15 @@ Abrv,Name,SubsectorOf,Comments
 Shelter,Shelter & NFIs,,HCT sector
 Food Security,Food Security and Nutrition,,HCT sector
 Coordination,"Coordination, information management and needs assessments",,HCT sector
-,Health,,HCT sector
+Health,Health,,HCT sector
 WASH,Water and Sanitation,,HCT sector
-,Education,,HCT sector
-,Protection,,HCT sector
-,Child Protection,Protection,HCT sector
-,Gender,Protection,HCT sector
-,Animal Protection,Protection,
-,Early Recovery,,
+Education,Education,,HCT sector
+Protection,Protection,,HCT sector
+Child,Child Protection,Protection,HCT sector
+Gender,Gender,Protection,HCT sector
+Animal,Animal Protection,Protection,
+ER,Early Recovery,,
 SAR,Search and Rescue,,
-,Other,,Prompt to enter more details in comments
-,Logistics,,IASC Cluster
+Other,Other,,Prompt to enter more details in comments
+Logs,Logistics,,IASC Cluster
 ETC,Emergency Telecommunications,,IASC Cluster
