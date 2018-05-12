@@ -1418,6 +1418,8 @@ class S3ProjectActivityModel(S3Model):
                                     #"actuate": "hide",
                                     "actuate": "replace",
                                     },
+                       # Data
+                       project_activity_data = "activity_id",
                        # Distributions
                        supply_distribution = "activity_id",
                        # Events
@@ -4949,13 +4951,14 @@ class S3ProjectPlanningModel(S3Model):
         # Indicators <> Activities link table 2
         # - only used if status_from_activities is True
         #
+        activity_id = self.project_activity_id
         tablename = "project_indicator_activity_activity"
         define_table(tablename,
                      indicator_activity_id(ondelete = "CASCADE"),
-                     self.project_activity_id(empty = False,
-                                              # Default:
-                                              #ondelete = "CASCADE",
-                                              ),
+                     activity_id(empty = False,
+                                 # Default:
+                                 #ondelete = "CASCADE",
+                                 ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -4971,9 +4974,12 @@ class S3ProjectPlanningModel(S3Model):
                                              project_represent,
                                              )
                         ),
+                     # Used for SHARE
+                     activity_id(),
                      indicator_id(readable = False,
                                   writable = False,
                                   ),
+                     # Used as linktable for RMSAmericas HNRC for their UI
                      indicator_activity_id(),
                      # Populated Automatically
                      # Used for Timeplot &, in future, to ease changing the monitoring frequency
@@ -6597,6 +6603,11 @@ class S3ProjectPlanningModel(S3Model):
             current.log.error("Cannot find Project Activity Data record (no record for this ID), so cannot update start_date or statuses")
             return
 
+        if not indicator_activity_id:
+            # SHARE
+            return
+
+        # RMS HNRC
         # Populate the Indicator from the Activity
         atable = s3db.project_indicator_activity
         activity = db(atable.id == indicator_activity_id).select(atable.indicator_id,
@@ -6673,6 +6684,12 @@ class S3ProjectPlanningModel(S3Model):
         except:
             current.log.error("Cannot find Project Activity Data record (no record for this ID), so cannot update start_date or statuses")
             return
+
+        if not indicator_activity_id:
+            # SHARE
+            return
+
+        # RMS HNRC
         start_date = record.start_date
         end_date = record.end_date
 

@@ -896,7 +896,7 @@ class S3SQLCustomForm(S3SQLForm):
                     customise(r, tablename)
 
                 # Apply customised attributes to renamed fields
-                # => except label and widget, which can be overridden
+                # => except default, label, requires and widget, which can be overridden
                 #    in S3SQLField.resolve instead
                 renamed_fields = subtable_fields.get(alias)
                 if renamed_fields:
@@ -904,10 +904,10 @@ class S3SQLCustomForm(S3SQLForm):
                     for name, renamed_field in renamed_fields:
                         original_field = table[name]
                         for attr in ("comment",
-                                     "default",
+                                     #"default",
                                      "readable",
                                      "represent",
-                                     "requires",
+                                     #"requires",
                                      "update",
                                      "writable",
                                      ):
@@ -1556,9 +1556,11 @@ class S3SQLFormElement(object):
     @staticmethod
     def _rename_field(field, name,
                       comments=True,
-                      popup=None,
-                      skip_post_validation=False,
+                      default=DEFAULT,
                       label=DEFAULT,
+                      popup=None,
+                      requires=DEFAULT,
+                      skip_post_validation=False,
                       widget=DEFAULT):
         """
             Rename a field (actually: create a new Field instance with the
@@ -1569,15 +1571,27 @@ class S3SQLFormElement(object):
             @param comments: render comments - if set to False, only
                              navigation items with an inline() renderer
                              method will be rendered (unless popup is None)
+            @param default: override option for the original field default
+            @param label: override option for the original field label
             @param popup: only if comments=False, additional vars for comment
                           navigation items (e.g. AddResourceLink), None prevents
                           rendering of navigation items
+            @param requires: override option for the original field requires
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed
                                          dummy fields.
-            @param label: override option for the original field label
             @param widget: override option for the original field widget
         """
+
+        if default is DEFAULT:
+            default = field.default
+        if label is DEFAULT:
+            label = field.label
+        if requires is DEFAULT:
+            requires = field.requires
+        if widget is DEFAULT:
+            # Some widgets may need disabling during POST
+            widget = field.widget
 
         if not hasattr(field, "type"):
             # Virtual Field
@@ -1600,19 +1614,12 @@ class S3SQLFormElement(object):
             notnull = False
         elif skip_post_validation and \
              current.request.env.request_method == "POST":
-            requires = SKIP_POST_VALIDATION(field.requires)
+            requires = SKIP_POST_VALIDATION(requires)
             required = False
             notnull = False
         else:
-            requires = field.requires
             required = field.required
             notnull = field.notnull
-
-        if widget is DEFAULT:
-            # Some widgets may need disabling during POST
-            widget = field.widget
-        if label is DEFAULT:
-            label = field.label
 
         if not comments:
             if popup:
@@ -1642,14 +1649,14 @@ class S3SQLFormElement(object):
                   uploadfolder = field.uploadfolder,
                   autodelete = field.autodelete,
 
-                  widget = widget,
-                  label = label,
                   comment = comment,
+                  default = default,
+                  label = label,
+                  widget = widget,
 
                   writable = field.writable,
                   readable = field.readable,
 
-                  default = field.default,
                   update = field.update,
                   compute = field.compute,
 
@@ -1692,9 +1699,11 @@ class S3SQLField(S3SQLFormElement):
 
         tname = rfield.tname
 
-        options = self.options
-        label = options.get("label", DEFAULT)
-        widget = options.get("widget", DEFAULT)
+        options_get = self.options.get
+        default = options_get("default", DEFAULT)
+        label = options_get("label", DEFAULT)
+        requires = options_get("requires", DEFAULT)
+        widget = options_get("widget", DEFAULT)
 
         if resource._alias:
             tablename = resource._alias
@@ -1704,8 +1713,12 @@ class S3SQLField(S3SQLFormElement):
         if tname == tablename:
             # Field in the main table
 
+            if default is not DEFAULT:
+                field.default = default
             if label is not DEFAULT:
                 field.label = label
+            if requires is not DEFAULT:
+                field.requires = requires
             if widget is not DEFAULT:
                 field.widget = widget
 
@@ -1723,7 +1736,9 @@ class S3SQLField(S3SQLFormElement):
                     name = "sub_%s_%s" % (alias, rfield.fname)
                     renamed_field = self._rename_field(field,
                                                        name,
+                                                       default = default,
                                                        label = label,
+                                                       requires = requires,
                                                        widget = widget,
                                                        )
                     return alias, field.name, renamed_field
@@ -2420,7 +2435,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         pkey = table._id.name
 
         fields_opt = options.get("fields", None)
+        defaults = {}
         labels = {}
+        requires = {}
         widgets = {}
         if fields_opt:
             fields = []
@@ -2432,6 +2449,22 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     else:
                         label, f = f
                     labels[f] = label
+                elif isinstance(f, dict):
+                    f_get = f.get
+                    fname = f_get("name")
+                    default = f_get("default", DEFAULT)
+                    if default is not DEFAULT:
+                        defaults[fname] = default
+                    require = f_get("requires", DEFAULT)
+                    if require is not DEFAULT:
+                        requires[fname] = require
+                    label = f_get("label", DEFAULT)
+                    if label is not DEFAULT:
+                        labels[fname] = label
+                    widget = f_get("widget", DEFAULT)
+                    if widget is not DEFAULT:
+                        widgets[fname] = widget
+                    f = fname
                 if f in table.fields:
                     fields.append(f)
         else:
@@ -2508,6 +2541,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     }
                     for rfield in rfields if rfield.fname != pkey]
 
+        self.defaults = defaults
+        self.requires = requires
         self.widgets = widgets
 
         items = []
@@ -3234,6 +3269,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         data = {}
         formfields = []
         formname = self._formname()
+        defaults = self.defaults
+        requires = self.requires
         widgets = self.widgets
         for f in fields:
 
@@ -3249,8 +3286,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
-            # Custom label and widget
+            # Custom label, requires and widget
+            default = defaults.get(fname, DEFAULT)
             label = f.get("label", DEFAULT)
+            require = requires.get(fname, DEFAULT)
             widget = widgets.get(fname, DEFAULT)
 
             # Use S3UploadWidget for upload fields
@@ -3261,8 +3300,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
             formfield = self._rename_field(table[fname],
                                            idxname,
                                            comments = False,
+                                           default = default,
                                            label = label,
                                            popup = popup,
+                                           requires = require,
                                            skip_post_validation = True,
                                            widget = widget,
                                            )
@@ -3278,9 +3319,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     formfield.requires = SKIP_POST_VALIDATION(requires)
 
             # Get filterby-default
-            defaults = self._filterby_defaults()
-            if defaults and fname in defaults:
-                default = defaults[fname]["value"]
+            filterby_defaults = self._filterby_defaults()
+            if filterby_defaults and fname in filterby_defaults:
+                default = filterby_defaults[fname]["value"]
                 formfield.default = default
 
             # Add the data for this field (for existing rows)
