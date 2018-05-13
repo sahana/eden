@@ -907,7 +907,7 @@ class S3SQLCustomForm(S3SQLForm):
                                      #"default",
                                      "readable",
                                      "represent",
-                                     #"requires",
+                                     "requires",
                                      "update",
                                      "writable",
                                      ):
@@ -1559,7 +1559,6 @@ class S3SQLFormElement(object):
                       default=DEFAULT,
                       label=DEFAULT,
                       popup=None,
-                      requires=DEFAULT,
                       skip_post_validation=False,
                       widget=DEFAULT):
         """
@@ -1576,7 +1575,6 @@ class S3SQLFormElement(object):
             @param popup: only if comments=False, additional vars for comment
                           navigation items (e.g. AddResourceLink), None prevents
                           rendering of navigation items
-            @param requires: override option for the original field requires
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed
                                          dummy fields.
@@ -1587,8 +1585,6 @@ class S3SQLFormElement(object):
             default = field.default
         if label is DEFAULT:
             label = field.label
-        if requires is DEFAULT:
-            requires = field.requires
         if widget is DEFAULT:
             # Some widgets may need disabling during POST
             widget = field.widget
@@ -1614,10 +1610,11 @@ class S3SQLFormElement(object):
             notnull = False
         elif skip_post_validation and \
              current.request.env.request_method == "POST":
-            requires = SKIP_POST_VALIDATION(requires)
+            requires = SKIP_POST_VALIDATION(field.requires)
             required = False
             notnull = False
         else:
+            requires = field.requires
             required = field.required
             notnull = field.notnull
 
@@ -1702,7 +1699,6 @@ class S3SQLField(S3SQLFormElement):
         options_get = self.options.get
         default = options_get("default", DEFAULT)
         label = options_get("label", DEFAULT)
-        requires = options_get("requires", DEFAULT)
         widget = options_get("widget", DEFAULT)
 
         if resource._alias:
@@ -1717,8 +1713,6 @@ class S3SQLField(S3SQLFormElement):
                 field.default = default
             if label is not DEFAULT:
                 field.label = label
-            if requires is not DEFAULT:
-                field.requires = requires
             if widget is not DEFAULT:
                 field.widget = widget
 
@@ -1738,7 +1732,6 @@ class S3SQLField(S3SQLFormElement):
                                                        name,
                                                        default = default,
                                                        label = label,
-                                                       requires = requires,
                                                        widget = widget,
                                                        )
                     return alias, field.name, renamed_field
@@ -2437,7 +2430,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         fields_opt = options.get("fields", None)
         defaults = {}
         labels = {}
-        requires = {}
         widgets = {}
         if fields_opt:
             fields = []
@@ -2455,9 +2447,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     default = f_get("default", DEFAULT)
                     if default is not DEFAULT:
                         defaults[fname] = default
-                    require = f_get("requires", DEFAULT)
-                    if require is not DEFAULT:
-                        requires[fname] = require
                     label = f_get("label", DEFAULT)
                     if label is not DEFAULT:
                         labels[fname] = label
@@ -2542,7 +2531,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     for rfield in rfields if rfield.fname != pkey]
 
         self.defaults = defaults
-        self.requires = requires
         self.widgets = widgets
 
         items = []
@@ -3270,7 +3258,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         formfields = []
         formname = self._formname()
         defaults = self.defaults
-        requires = self.requires
         widgets = self.widgets
         for f in fields:
 
@@ -3286,10 +3273,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
-            # Custom label, requires and widget
+            # Custom label and widget
             default = defaults.get(fname, DEFAULT)
             label = f.get("label", DEFAULT)
-            require = requires.get(fname, DEFAULT)
             widget = widgets.get(fname, DEFAULT)
 
             # Use S3UploadWidget for upload fields
@@ -3303,7 +3289,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                            default = default,
                                            label = label,
                                            popup = popup,
-                                           requires = require,
                                            skip_post_validation = True,
                                            widget = widget,
                                            )

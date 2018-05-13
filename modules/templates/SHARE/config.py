@@ -412,16 +412,10 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
-    def customise_project_activity_controller(**attr):
+    def customise_project_activity_resource(r, tablename):
 
         s3db = current.s3db
         tablename = "project_activity"
-
-        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
-        modality_requires = IS_EMPTY_OR(IS_IN_SET(("Cash", "In-kind")))
-        # @ToDo: Not influencing widget
-        number_requires = IS_EMPTY_OR(IS_INT_IN_RANGE())
-        unit_requires = IS_EMPTY_OR(IS_IN_SET(("People", "Households")))
 
         # Custom Components for Agency, Partners & Donors; Modality & Number
         s3db.add_components(tablename,
@@ -464,6 +458,15 @@ def config(settings):
                                                     )
                             )
                                               
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
+        components_get = r.resource.components.get
+        modality = components_get("modality")
+        # @ToDo: Not working!
+        modality.table.value.requires = IS_EMPTY_OR(IS_IN_SET(("Cash", "In-kind")))
+        number = components_get("number")
+        number.table.value.requires = IS_EMPTY_OR(IS_INT_IN_RANGE())
+        s3db.project_activity_data.unit.requires = IS_EMPTY_OR(IS_IN_SET(("People", "Households")))
+
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineComponent("activity_organisation",
                                                          name = "agency",
@@ -511,11 +514,7 @@ def config(settings):
                                     S3SQLInlineComponent("tag",
                                                          name = "modality",
                                                          label = T("Modality"),
-                                                         fields = [{"name": "value",
-                                                                    "label": "",
-                                                                    "requires": modality_requires,
-                                                                    },
-                                                                   ],
+                                                         fields = [("", "value"),],
                                                          filterby = {"field": "tag",
                                                                      "options": "modality",
                                                                      },
@@ -524,11 +523,7 @@ def config(settings):
                                     S3SQLInlineComponent("tag",
                                                          name = "number",
                                                          label = T("Number of Items/Kits/Activities"),
-                                                         fields = [{"name": "value",
-                                                                    "label": "",
-                                                                    "requires": number_requires,
-                                                                    },
-                                                                   ],
+                                                         fields = [("", "value"),],
                                                          filterby = {"field": "tag",
                                                                      "options": "number",
                                                                      },
@@ -538,16 +533,9 @@ def config(settings):
                                     (T("Activity Date (Completion Date)"), "end_date"),
                                     S3SQLInlineComponent("activity_data",
                                                          label = "",
-                                                         fields = [{"name": "unit",
-                                                                    "label": T("People / Households"),
-                                                                    "requires": unit_requires,
-                                                                    },
-                                                                   {"name": "target_value",
-                                                                    "label": T("Total Number People/HH Targeted"),
-                                                                    },
-                                                                   {"name": "value",
-                                                                    "label": T("Total Number Of People/HH Reached"),
-                                                                    },
+                                                         fields = [(T("People / Households"), "unit"),
+                                                                   (T("Total Number People/HH Targeted"), "target_value"),
+                                                                   (T("Total Number Of People/HH Reache"), "value"),
                                                                    ],
                                                          multiple = False,
                                                          ),
@@ -576,9 +564,7 @@ def config(settings):
                                       "comments",
                                       ],
                        )
-
-        return attr
         
-    settings.customise_project_activity_controller = customise_project_activity_controller
+    settings.customise_project_activity_resource = customise_project_activity_resource
 
 # END =========================================================================
