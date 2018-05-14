@@ -2032,6 +2032,8 @@ def config(settings):
                              "fact": "count(id)",
                              "totals": True,
                              },
+                "precision": {"hours": 2, # higher precision is impractical
+                              },
                 }
             s3db.configure("dvr_response_action",
                            report_options = report_options,
