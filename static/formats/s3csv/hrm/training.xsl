@@ -617,7 +617,7 @@
                 </xsl:if>
                 <xsl:if test="$Programme!=''">
                     <!-- Link to Programme -->
-                    <resource name="hrm_programme_event">
+                    <resource name="hrm_event_programme">
                         <reference field="programme_id" resource="hrm_programme">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="$Programme"/>
