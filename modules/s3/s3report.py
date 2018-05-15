@@ -822,7 +822,8 @@ class S3ReportForm(object):
         # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
                                   widgets,
-                                  _id="%s-options" % widget_id)
+                                  _id="%s-options" % widget_id,
+                                  _class="report-options")
 
         return fieldset
 

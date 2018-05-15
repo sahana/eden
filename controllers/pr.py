@@ -346,8 +346,7 @@ def contact():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def contact_emergency():

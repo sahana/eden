@@ -427,28 +427,33 @@ select {
   min-height: 1.7rem;
 }
 
-/* Filter forms */
-/* line 236, ../scss/custom/_forms.scss */
+/* Filter Forms & Report Options */
+/* line 237, ../scss/custom/_forms.scss */
 .filter-form table tr,
-.filter-form .ui-multiselect {
+.filter-form .ui-multiselect,
+.report-options table tr,
+.report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 240, ../scss/custom/_forms.scss */
-.filter-form table.s3-groupedopts-widget {
+/* line 241, ../scss/custom/_forms.scss */
+.filter-form table.s3-groupedopts-widget,
+.report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 243, ../scss/custom/_forms.scss */
-.filter-form .inline-tooltip {
+/* line 244, ../scss/custom/_forms.scss */
+.filter-form .inline-tooltip,
+.report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 246, ../scss/custom/_forms.scss */
-.filter-form label.inline {
+/* line 247, ../scss/custom/_forms.scss */
+.filter-form label.inline,
+.report-options label.inline {
   line-height: normal;
   padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
-/* line 253, ../scss/custom/_forms.scss */
+/* line 254, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -456,13 +461,13 @@ select {
 }
 
 /* Help Popup */
-/* line 260, ../scss/custom/_forms.scss */
+/* line 261, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 264, ../scss/custom/_forms.scss */
+/* line 265, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -471,7 +476,7 @@ select {
   padding: 0;
   width: 60px;
 }
-/* line 272, ../scss/custom/_forms.scss */
+/* line 273, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
