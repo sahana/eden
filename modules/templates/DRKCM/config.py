@@ -2126,6 +2126,24 @@ def config(settings):
     settings.customise_dvr_response_action_controller = customise_dvr_response_action_controller
 
     # -------------------------------------------------------------------------
+    def customise_dvr_response_theme_resource(r, tablename):
+
+        current.response.s3.crud_strings["dvr_response_theme"] = Storage(
+            label_create = T("Create Counseling Theme"),
+            title_display = T("Counseling Theme Details"),
+            title_list = T("Counseling Themes"),
+            title_update = T("Edit Counseling Theme"),
+            label_list_button = T("List Counseling Themes"),
+            label_delete_button = T("Delete Counseling Theme"),
+            msg_record_created = T("Counseling Theme created"),
+            msg_record_modified = T("Counseling Theme updated"),
+            msg_record_deleted = T("Counseling Theme deleted"),
+            msg_list_empty = T("No Counseling Themes currently defined"),
+        )
+
+    settings.customise_dvr_response_theme_resource = customise_dvr_response_theme_resource
+
+    # -------------------------------------------------------------------------
     def customise_dvr_service_contact_resource(r, tablename):
 
         s3db = current.s3db
