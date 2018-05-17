@@ -9,7 +9,8 @@ def index():
     module_name = T("Synchronization")
 
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
 # -----------------------------------------------------------------------------
 def config():
@@ -162,17 +163,17 @@ def repository():
     def postp(r, output):
         if r.interactive and r.id:
             if r.component and r.component.alias == "job":
-                s3.actions = [dict(label=str(T("Reset")),
-                                   _class="action-btn",
-                                   url=URL(c="sync",
-                                           f="repository",
-                                           args=[str(r.id),
-                                                 "job",
-                                                 "[id]",
-                                                 "reset",
-                                                 ],
-                                           ),
-                                   )
+                s3.actions = [{"label": s3_str(T("Reset")),
+                               "url": URL(c = "sync",
+                                          f = "repository",
+                                          args = [str(r.id),
+                                                  "job",
+                                                  "[id]",
+                                                  "reset",
+                                                  ],
+                                          ),
+                               "_class": "action-btn",
+                               }
                               ]
         s3_action_buttons(r)
         return output
@@ -187,6 +188,50 @@ def repository():
 
     rheader = lambda r: s3db.sync_rheader(r, tabs=tabs)
     return s3_rest_controller("sync", "repository", rheader=rheader)
+
+# -----------------------------------------------------------------------------
+def dataset():
+    """ Public Data Sets: RESTful CRUD controller """
+
+    def prep(r):
+        # Filter to locally hosted data sets
+        r.resource.add_filter(FS("repository_id") == None)
+
+        if r.record and r.component_name == "task":
+
+            table = r.component.table
+
+            # Default sync mode PULL
+            field = table.mode
+            field.default = 1
+
+            # TODO adapt tooltips to context
+
+            # Reduced form
+            crud_form = s3base.S3SQLCustomForm(
+                            "resource_name",
+                            "components",
+                            s3base.S3SQLInlineComponent(
+                                "resource_filter",
+                                label = T("Filters"),
+                                fields = ["tablename",
+                                          "filter_string",
+                                          ],
+                                ),
+                            )
+
+            # Reduced list fields
+            list_fields = ["resource_name",
+                           ]
+
+            s3db.configure("sync_task",
+                           crud_form = crud_form,
+                           list_fields = list_fields,
+                           )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.sync_rheader)
 
 # -----------------------------------------------------------------------------
 def sync():
@@ -221,8 +266,7 @@ def sync():
                        )
 
         # Response
-        output = r(mixed=mixed)
-        return output
+        return r(mixed=mixed)
 
     raise HTTP(400, body=current.ERROR.BAD_REQUEST)
 
@@ -247,19 +291,28 @@ def log():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("sync", "log",
-                                subtitle=None,
-                                rheader=s3base.S3SyncLog.rheader,
-                                list_btn=list_btn,
-                                )
-    return output
+    return s3_rest_controller("sync", "log",
+                              subtitle=None,
+                              rheader=s3base.S3SyncLog.rheader,
+                              list_btn=list_btn,
+                              )
 
 # -----------------------------------------------------------------------------
 def task():
-    """ RESTful CRUD controller for options.s3json lookups """
+    """ Sync Tasks: RESTful CRUD controller """
 
-    # Pre-process
-    s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+    def prep(r):
+
+        # Only XML and S3JSON formats allowed
+        if r.representation not in ("s3json", "xml"):
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        # Limit to local public data sets
+        # (=do not expose repositories and corresponding credentials)
+        r.resource.add_filter(FS("repository_id") == None)
+
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 

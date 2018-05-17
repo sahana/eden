@@ -443,7 +443,10 @@ class S3OptionsMenu(object):
 
         ADMIN = current.session.s3.system_roles.ADMIN
         settings_messaging = self.settings_messaging()
-        translate = current.deployment_settings.has_module("translate")
+
+        settings = current.deployment_settings
+        translate = settings.has_module("translate")
+        is_data_repository = lambda i: settings.get_sync_data_repository()
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
@@ -480,6 +483,7 @@ class S3OptionsMenu(object):
                     M("Synchronization", c="sync", f="index")(
                         M("Settings", f="config", args=[1], m="update"),
                         M("Repositories", f="repository"),
+                        M("Public Data Sets", f="dataset", check=is_data_repository),
                         M("Log", f="log"),
                     ),
                     #M("Edit Application", a="admin", c="default", f="design",

@@ -121,6 +121,9 @@ def config(settings):
     #
     #settings.security.policy = 7 # Organisation-ACLs
 
+    # This deployment exposes public data sets
+    settings.sync.data_repository = True
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

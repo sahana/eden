@@ -2576,6 +2576,11 @@ class S3Config(Storage):
         """
         return self.sync.get("upload_filename", "$s $r")
 
+    def get_sync_data_repository(self):
+        """ This deployment is a public data repository """
+
+        return self.sync.get("data_repository", False)
+
     # =========================================================================
     # Modules
 

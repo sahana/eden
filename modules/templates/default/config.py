@@ -460,6 +460,11 @@ def config(settings):
     #settings.ui.menu_logo = URL(c="static", f="img", args=["S3menulogo.png"])
 
     # -------------------------------------------------------------------------
+    # Sync
+    # Uncomment if this deployment exposes public data sets
+    #settings.sync.data_repository = True
+
+    # -------------------------------------------------------------------------
     # Asset
     # Uncomment to have a specific asset type for Telephones
     #settings.asset.telephones = True
