@@ -18,12 +18,14 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu= [MM("Needs", c="req", f="need")(
+        menu= [MM("Needs", c="req", f="need")( # @ToDo m=summary ?
                 #MM("Approve", c="req", f="req"),
                 #MM("Commitments", c="req", f="commit"),
-                MM("Statistics", c="req", f="need", m="report"),
+                MM("Statistics", m="report"),
                 ),
-               MM("4W", c="project", f="activity"),
+               MM("4W", c="project", f="activity")( # @ToDo m=summary ?
+                MM("Statistics",  m="report"),
+                ),
                MM("Sitreps", c="event", f="sitrep"),
                MM("Organizations", c="org", f="organisation")(
                 MM("Offices", c="org", f="office"),
