@@ -154,7 +154,9 @@ class S3Report(S3Method):
                 get_vars["cols"] = prefix(cols) if cols else None
                 get_vars["fact"] = ",".join("%s(%s)" % (fact.method, fact.selector) for fact in facts)
 
-                pivottable = S3PivotTable(resource, rows, cols, facts)
+                pivottable = S3PivotTable(resource, rows, cols, facts,
+                                          precision = report_options.get("precision"),
+                                          )
         else:
             pivottable = None
 
@@ -398,7 +400,9 @@ class S3Report(S3Method):
             cols = None
             layer = get_vars.get("fact", defaults.get("fact", "count(id)"))
             facts = S3PivotTableFact.parse(layer)[:1]
-            pivottable = S3PivotTable(resource, rows, cols, facts)
+            pivottable = S3PivotTable(resource, rows, cols, facts,
+                                      precision = report_options.get("precision"),
+                                      )
 
             # Extract the Location Data
             #attr_fields = []
@@ -506,7 +510,9 @@ class S3Report(S3Method):
                 get_vars["fact"] = ",".join("%s(%s)" % (fact.method, fact.selector) for fact in facts)
 
                 if visible:
-                    pivottable = S3PivotTable(resource, rows, cols, facts)
+                    pivottable = S3PivotTable(resource, rows, cols, facts,
+                                              precision = report_options.get("precision"),
+                                              )
                 else:
                     pivottable = None
         else:
@@ -816,7 +822,8 @@ class S3ReportForm(object):
         # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
                                   widgets,
-                                  _id="%s-options" % widget_id)
+                                  _id="%s-options" % widget_id,
+                                  _class="report-options")
 
         return fieldset
 
@@ -1118,6 +1125,9 @@ class S3PivotTableFact(object):
     # -------------------------------------------------------------------------
     @property
     def layer(self):
+        """
+            @todo: docstring
+        """
 
         layer = self._layer
         if not layer:
@@ -1125,11 +1135,15 @@ class S3PivotTableFact(object):
         return layer
 
     # -------------------------------------------------------------------------
-    def compute(self, values, method=DEFAULT, totals=False):
+    def compute(self, values, method=DEFAULT, totals=False, precision=None):
         """
             Aggregate a list of values.
 
             @param values: iterable of values
+            @param method: the aggregation method
+            @param totals: this call is computing row/column/grand totals
+            @param precision: limit the precision of the computation to this
+                              number of decimals (@todo: consider a default of 6)
         """
 
         if values is None:
@@ -1153,19 +1167,19 @@ class S3PivotTableFact(object):
 
             if method == "min":
                 try:
-                    return min(values)
+                    result = min(values)
                 except (TypeError, ValueError):
                     return None
 
             elif method == "max":
                 try:
-                    return max(values)
+                    result = max(values)
                 except (TypeError, ValueError):
                     return None
 
             elif method == "sum":
                 try:
-                    return sum(values)
+                    result = sum(values)
                 except (TypeError, ValueError):
                     return None
 
@@ -1173,7 +1187,7 @@ class S3PivotTableFact(object):
                 try:
                     number = len(values)
                     if number:
-                        return sum(values) / float(number)
+                        result = sum(values) / float(number)
                     else:
                         return 0.0
                 except (TypeError, ValueError):
@@ -1184,9 +1198,14 @@ class S3PivotTableFact(object):
                 #if not values:
                     #return 0.0
                 #try:
-                    #return numpy.std(values)
+                    #result = numpy.std(values)
                 #except (TypeError, ValueError):
                     #return None
+
+            if type(result) is float and precision is not None:
+                return round(result, precision)
+            else:
+                return result
 
         return None
 
@@ -1364,7 +1383,7 @@ class S3PivotTableFact(object):
 class S3PivotTable(object):
     """ Class representing a pivot table of a resource """
 
-    def __init__(self, resource, rows, cols, facts, strict=True):
+    def __init__(self, resource, rows, cols, facts, strict=True, precision=None):
         """
             Constructor - extracts all unique records, generates a
             pivot table from them with the given dimensions and
@@ -1376,6 +1395,8 @@ class S3PivotTable(object):
             @param facts: list of S3PivotTableFacts to compute
             @param strict: filter out dimension values which don't match
                            the resource filter
+            @param precision: maximum precision of aggregate computations,
+                              a dict {selector:number_of_decimals}
         """
 
         # Initialize ----------------------------------------------------------
@@ -1392,6 +1413,8 @@ class S3PivotTable(object):
         self.rows = rows
         self.cols = cols
         self.facts = facts
+
+        self.precision = precision if isinstance(precision, dict) else {}
 
         # API variables -------------------------------------------------------
         #
@@ -2266,6 +2289,7 @@ class S3PivotTable(object):
         pkey = table._id.name
 
         layer = fact.layer
+        precision = self.precision.get(fact.selector)
 
         numcols = len(self.col)
         numrows = len(self.row)
@@ -2339,21 +2363,30 @@ class S3PivotTable(object):
                     all_values.extend(values)
 
                 # Aggregate values
-                value = fact.compute(values)
+                value = fact.compute(values, precision=precision)
                 cell[layer] = value
 
             # Compute row total
-            row[layer] = fact.compute(row_values, totals=True)
+            row[layer] = fact.compute(row_values,
+                                      totals = True,
+                                      precision = precision,
+                                      )
             del row[VALUES]
 
         # Compute column total
         for c in xrange(numcols):
             col = cols[c]
-            col[layer] = fact.compute(col[VALUES], totals=True)
+            col[layer] = fact.compute(col[VALUES],
+                                      totals = True,
+                                      precision = precision,
+                                      )
             del col[VALUES]
 
         # Compute overall total
-        self.totals[layer] = fact.compute(all_values, totals=True)
+        self.totals[layer] = fact.compute(all_values,
+                                          totals = True,
+                                          precision = precision,
+                                          )
         self.values[layer] = all_values
 
     # -------------------------------------------------------------------------
@@ -2395,12 +2428,18 @@ class S3PivotTable(object):
         if pkey not in dfields:
             dfields.append(pkey)
 
+        # Normalize fact selectors
         for fact in self.facts:
-            selector = fact.selector = prefix(fact.selector)
+            fact.selector = selector = prefix(fact.selector)
             if selector not in dfields:
                 dfields.append(selector)
-
         self.dfields = dfields
+
+        # Normalize precision selectors
+        precision = {}
+        for selector, decimals in self.precision.items():
+            precision[prefix(selector)] = decimals
+        self.precision = precision
 
         # rfields (resource-fields): dfields resolved into a ResourceFields map
         rfields = resource.resolve_selectors(dfields)[0]

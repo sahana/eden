@@ -230,8 +230,9 @@ select {
     min-height: 1.7rem;
 }
 
-/* Filter forms */
-.filter-form {
+/* Filter Forms & Report Options */
+.filter-form,
+.report-options {
     // MultiSelect/GroupedOpts widgets
     table tr,
     .ui-multiselect {
