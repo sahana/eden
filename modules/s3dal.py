@@ -46,12 +46,12 @@ except ImportError:
     try:
         from gluon import portalocker
         from gluon.dal import Field, SQLCustomType
-        from gluon.dal.objects import Expression, Query, Row, Rows, Table
+        from gluon.dal.objects import Expression, Query, Row, Rows, Table, VirtualCommand
     except ImportError:
         # even older web2py
         from gluon import portalocker
         from gluon.dal import Field, SQLCustomType
-        from gluon.dal import Expression, Query, Row, Rows, Table
+        from gluon.dal import Expression, Query, Row, Rows, Table, VirtualCommand
 
 from gluon import current
 
