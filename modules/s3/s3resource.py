@@ -5919,7 +5919,7 @@ class S3ResourceData(object):
                             for f, v in fields_lazy:
                                 try:
                                     row[f] = v.handler(v.f, row)
-                                except (AttributeError, KeyError):
+                                except (AttributeError, KeyError, TypeError):
                                     pass
             else:
                 # Joins for master query
