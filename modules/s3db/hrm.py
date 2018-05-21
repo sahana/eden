@@ -3678,13 +3678,13 @@ class S3HRSkillModel(S3Model):
         # Read the full record
         db = current.db
         table = db.hrm_certification
-        record = table(table.id == record_id).select(table.person_id,
-                                                     table.deleted,
-                                                     table.deleted_fk,
-                                                     table.training_id,
-                                                     table.number,
-                                                     limitby = (0, 1),
-                                                     ).first()
+        record = db(table.id == record_id).select(table.person_id,
+                                                  table.deleted,
+                                                  table.deleted_fk,
+                                                  table.training_id,
+                                                  table.number,
+                                                  limitby = (0, 1),
+                                                  ).first()
         try:
             if record.deleted:
                 deleted_fk = json.loads(record.deleted_fk)
