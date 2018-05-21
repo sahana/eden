@@ -58,7 +58,7 @@ from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3dal import Expression, Field, Row, Rows, Table, S3DAL
+from s3dal import Expression, Field, Row, Rows, Table, S3DAL, VirtualCommand
 from s3data import S3DataTable, S3DataList
 from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
@@ -5918,8 +5918,8 @@ class S3ResourceData(object):
                         for row in rows:
                             for f, v in fields_lazy:
                                 try:
-                                    row[f] = v.handler(v.f, row)
-                                except (AttributeError, KeyError, TypeError):
+                                    row[f] = (v.handler or VirtualCommand)(v.f, row)
+                                except (AttributeError, KeyError):
                                     pass
             else:
                 # Joins for master query

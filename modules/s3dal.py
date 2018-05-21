@@ -40,7 +40,7 @@ __all__ = ("Expression",
 try:
     from pydal import Field, SQLCustomType
     from pydal.contrib import portalocker
-    from pydal.objects import Expression, Query, Row, Rows, Table
+    from pydal.objects import Expression, Query, Row, Rows, Table, VirtualCommand
 except ImportError:
     # older web2py
     try:
