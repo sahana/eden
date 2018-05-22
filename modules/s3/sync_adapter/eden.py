@@ -187,14 +187,22 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                      of the youngest record sent
         """
 
-        _debug = current.log.debug
-        repository = self.repository
         xml = current.xml
-        config = repository.config
-        resource_name = task.resource_name
+        _debug = current.log.debug
 
-        _debug("S3Sync: pull %s from %s" % (resource_name,
-                                            repository.url))
+        repository = self.repository
+        config = repository.config
+
+        # Verify that the target resource exists
+        resource_name = task.resource_name
+        try:
+            resource = current.s3db.resource(resource_name)
+        except AttributeError:
+            # Target resource is not defined
+            _debug("Undefined resource %s - sync task ignored" % resource_name)
+            return (None, None)
+
+        _debug("S3Sync: pull %s from %s" % (resource_name, repository.url))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -208,7 +216,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Send sync filters to peer
         filters = current.sync.get_filters(task.id)
-        resource_name = task.resource_name
 
         from urllib import quote
         for tablename in filters:
@@ -228,6 +235,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             protocol = "http"
 
         # Create the request
+        # TODO Use self._http_opener() rather than installing handlers globally
         req = urllib2.Request(url=url)
         handlers = []
 
@@ -318,7 +326,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             action = "import"
 
             # Import the data
-            resource = current.s3db.resource(resource_name)
             if onconflict:
                 onconflict_callback = lambda item: onconflict(item,
                                                               repository,
@@ -398,7 +405,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   result=result,
                   message=message)
 
-        _debug("S3Sync: import %s: %s" % (result, message))
+        _debug("S3Sync: pull %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -475,6 +482,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 protocol = "http"
 
             # Generate the request
+            # TODO Use self._http_opener() rather than installing handlers globally
             req = urllib2.Request(url=url, data=data)
             req.add_header('Content-Type', "text/xml")
             handlers = []
@@ -512,7 +520,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             # Execute the request
             try:
-                f = urllib2.urlopen(req)
+                urllib2.urlopen(req)
             except urllib2.HTTPError, e:
                 result = log.FATAL
                 remote = True # Peer error
@@ -708,5 +716,58 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 "message": message,
                 "response": output,
                 }
+
+    # -------------------------------------------------------------------------
+    def _http_opener(self, url):
+        """
+            Configure a HTTP opener for sync operations
+
+            @param url: the target URL
+        """
+
+        repository = self.repository
+        config = repository.config
+
+        # Configure opener handlers
+        handlers = []
+
+        # Proxy handling
+        proxy = repository.proxy or config.proxy or None
+        if proxy:
+            # Figure out the protocol from the URL
+            url_split = url.split("://", 1)
+            if len(url_split) == 2:
+                protocol = url_split[0]
+            else:
+                protocol = "http"
+            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
+            handlers.append(proxy_handler)
+
+        # Authentication handling
+        username = repository.username
+        password = repository.password
+        if username and password:
+            # Add a 401 handler (in case Auth header is not accepted)
+            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passwd_manager.add_password(realm = None,
+                                        uri = url,
+                                        user = username,
+                                        passwd = password,
+                                        )
+            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
+            handlers.append(auth_handler)
+
+        # Create the opener
+        opener = urllib2.build_opener(*handlers)
+        if username and password:
+            # Send credentials unsolicitedly to force login - otherwise
+            # the request would be treated as anonymous if login is not
+            # required (i.e. no 401 triggered), but we want to login in
+            # any case:
+            import base64
+            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+            opener.addheaders = [("Authorization", "Basic %s" % base64string)]
+
+        return opener
 
 # End =========================================================================

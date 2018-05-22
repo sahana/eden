@@ -458,19 +458,25 @@ class S3Sync(S3Method):
                       mode = log.NONE,
                       action = "connect",
                       remote = False,
-                      result = self.log.FATAL,
+                      result = log.FATAL,
                       message = error,
                       )
             return False
 
+        # Should we update sync tasks from peer?
+        connector = S3SyncRepository(repository)
+        if hasattr(connector, "refresh"):
+            success = connector.refresh()
+
+        # Look up current sync tasks
         db = current.db
         s3db = current.s3db
         ttable = s3db.sync_task
         query = (ttable.repository_id == repository_id) & \
-                (ttable.deleted != True)
+                (ttable.deleted == False)
         tasks = db(query).select()
 
-        connector = S3SyncRepository(repository)
+        # Login at repository
         error = connector.login()
         if error:
             log.write(repository_id = repository_id,
@@ -488,6 +494,12 @@ class S3Sync(S3Method):
         s3 = current.response.s3
         s3.synchronise_uuids = connector.synchronise_uuids
 
+        # Delta for msince progress = 1 second after the mtime of
+        # the youngest item transmitted (without this, the youngest
+        # items would be re-transmitted until there is another update,
+        # because msince means greater-or-equal)
+        delta = datetime.timedelta(seconds=1)
+
         success = True
         for task in tasks:
 
@@ -503,7 +515,7 @@ class S3Sync(S3Method):
                                   (task.resource_name, error))
                 continue
             if mtime is not None:
-                task.update_record(last_pull=mtime)
+                task.update_record(last_pull=mtime+delta)
 
             # Push
             mtime = None
@@ -515,7 +527,7 @@ class S3Sync(S3Method):
                                   (task.resource_name, error))
                 continue
             if mtime is not None:
-                task.update_record(last_push=mtime)
+                task.update_record(last_push=mtime+delta)
 
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
 
@@ -847,6 +859,7 @@ class S3SyncRepository(object):
         # Processing Options
         self.synchronise_uuids = repository.synchronise_uuids
         self.keep_source = repository.keep_source
+        self.last_refresh = repository.last_refresh
 
         # Instantiate Adapter
         import sync_adapter
@@ -908,7 +921,8 @@ class S3SyncBaseAdapter(object):
         """
             Register this site at the peer repository
 
-            @return: True to indicate success, otherwise False
+            @return: True|False to indicate success|failure,
+                     or None if registration is not required
         """
 
         raise NotImplementedError
