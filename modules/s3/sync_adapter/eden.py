@@ -51,8 +51,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     """
 
     # -------------------------------------------------------------------------
-    # Methods to be implemented by subclasses:
-    # -------------------------------------------------------------------------
     def register(self):
         """
             Register this site at the peer repository
@@ -77,45 +75,18 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                       }
         data = json.dumps(parameters)
 
-        # Generate the request
-        headers = {"Content-Type": "application/json"}
-        req = urllib2.Request(url=url, headers=headers)
-        handlers = []
-
-        # Proxy handling
-        proxy = repository.proxy or config.proxy or None
-        if proxy:
-            proxy_handler = urllib2.ProxyHandler({"http": proxy})
-            handlers.append(proxy_handler)
-
-        # Authentication
-        username = repository.username
-        password = repository.password
-        if username and password:
-            import base64
-            base64string = base64.encodestring('%s:%s' %
-                                               (username, password))[:-1]
-            req.add_header("Authorization", "Basic %s" % base64string)
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm=None,
-                                        uri=url,
-                                        user=username,
-                                        passwd=password,
-                                        )
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
-
-        # Install all handlers
-        if handlers:
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
+        # Send registration request
+        opener = self._http_opener(url,
+                                   headers = [("Content-Type", "application/json"),
+                                              ],
+                                   )
 
         # Send the request
         log = repository.log
         success = True
         remote = False
         try:
-            f = urllib2.urlopen(req, data)
+            f = opener.open(url, data)
         except urllib2.HTTPError, e:
             # Remote error
             result = log.FATAL
@@ -127,13 +98,22 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 message = message_json.get("message", message)
             except:
                 pass
+
+        except urllib2.URLError, e:
+            # URL Error (network error)
+            result = log.ERROR
+            remote = True
+            message = "Peer repository unavailable (%s)" % e.reason
+
         except:
             # Local error
             result = log.FATAL
             message = sys.exc_info()[1]
             success = False
+
         else:
-            ruid = None
+            result = log.SUCCESS
+
             message = f.read()
             try:
                 message_json = json.loads(message)
@@ -141,8 +121,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 ruid = message_json.get("sender", None)
             except:
                 message = "Registration successful"
-            result = log.SUCCESS
+                ruid = None
+
             if ruid is not None:
+                # Update the peer repository UID
                 db = current.db
                 rtable = current.s3db.sync_repository
                 try:
@@ -151,13 +133,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     pass
 
         # Log the operation
-        log.write(repository_id=repository.id,
-                  transmission=log.OUT,
-                  mode=log.PUSH,
-                  action="request registration",
-                  remote=remote,
-                  result=result,
-                  message=message,
+        log.write(repository_id = repository.id,
+                  transmission = log.OUT,
+                  mode = log.PUSH,
+                  action = "request registration",
+                  remote = remote,
+                  result = result,
+                  message = message,
                   )
 
         return success
@@ -188,7 +170,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
-        _debug = current.log.debug
+        debug = current.log.debug
 
         repository = self.repository
         config = repository.config
@@ -199,10 +181,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             resource = current.s3db.resource(resource_name)
         except AttributeError:
             # Target resource is not defined
-            _debug("Undefined resource %s - sync task ignored" % resource_name)
+            debug("Undefined resource %s - sync task ignored" % resource_name)
             return (None, None)
 
-        _debug("S3Sync: pull %s from %s" % (resource_name, repository.url))
+        debug("S3Sync: pull %s from %s" % (resource_name, repository.url))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -214,10 +196,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             url += "&components=None"
         url += "&include_deleted=True"
 
-        # Send sync filters to peer
-        filters = current.sync.get_filters(task.id)
-
+        # Add sync filters to URL
         from urllib import quote
+        filters = current.sync.get_filters(task.id)
         for tablename in filters:
             prefix = "~" if not tablename or tablename == resource_name \
                             else tablename
@@ -225,49 +206,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
                 url += "&%s" % urlfilter
 
-        _debug("...pull from URL %s" % url)
-
-        # Figure out the protocol from the URL
-        url_split = url.split("://", 1)
-        if len(url_split) == 2:
-            protocol = url_split[0]
-        else:
-            protocol = "http"
-
-        # Create the request
-        # TODO Use self._http_opener() rather than installing handlers globally
-        req = urllib2.Request(url=url)
-        handlers = []
-
-        # Proxy handling
-        proxy = repository.proxy or config.proxy or None
-        if proxy:
-            _debug("S3Sync: pull, using proxy=%s" % proxy)
-            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
-            handlers.append(proxy_handler)
-
-        # Authentication handling
-        username = repository.username
-        password = repository.password
-        if username and password:
-            # Send auth data unsolicitedly (the only way with Eden instances):
-            import base64
-            base64string = base64.encodestring('%s:%s' %
-                                               (username, password))[:-1]
-            req.add_header("Authorization", "Basic %s" % base64string)
-            # Just in case the peer does not accept that, add a 401 handler:
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm=None,
-                                        uri=url,
-                                        user=username,
-                                        passwd=password)
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
-
-        # Install all handlers
-        if handlers:
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
+        debug("...pull from URL %s" % url)
 
         # Execute the request
         remote = False
@@ -275,9 +214,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         response = None
         output = None
 
+        opener = self._http_opener(url)
         log = repository.log
         try:
-            f = urllib2.urlopen(req)
+            f = opener.open(url)
+
         except urllib2.HTTPError, e:
             result = log.ERROR
             remote = True # Peer error
@@ -315,6 +256,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             result = log.FATAL
             message = sys.exc_info()[1]
             output = xml.json_message(False, 400, message)
+
         else:
             result = log.SUCCESS
             response = f
@@ -336,25 +278,27 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             if onconflict:
                 onconflict_callback = lambda item: onconflict(item,
                                                               repository,
-                                                              resource)
+                                                              resource,
+                                                              )
             else:
                 onconflict_callback = None
             count = 0
             try:
-                success = resource.import_xml(
-                                response,
-                                ignore_errors=True,
-                                strategy=strategy,
-                                update_policy=update_policy,
-                                conflict_policy=conflict_policy,
-                                last_sync=last_pull,
-                                onconflict=onconflict_callback,
-                                )
+                success = resource.import_xml(response,
+                                              ignore_errors = True,
+                                              strategy = strategy,
+                                              update_policy = update_policy,
+                                              conflict_policy = conflict_policy,
+                                              last_sync = last_pull,
+                                              onconflict = onconflict_callback,
+                                              )
                 count = resource.import_count
+
             except IOError, e:
                 result = log.FATAL
                 message = "%s" % e
                 output = xml.json_message(False, 400, message)
+
             except Exception, e:
                 # If we end up here, an uncaught error during import
                 # has occured which indicates a code defect! We log it
@@ -403,16 +347,17 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             message = "No data received from peer"
 
         # Log the operation
-        log.write(repository_id=repository.id,
-                  resource_name=task.resource_name,
-                  transmission=log.OUT,
-                  mode=log.PULL,
-                  action=action,
-                  remote=remote,
-                  result=result,
-                  message=message)
+        log.write(repository_id = repository.id,
+                  resource_name = task.resource_name,
+                  transmission = log.OUT,
+                  mode = log.PULL,
+                  action = action,
+                  remote = remote,
+                  result = result,
+                  message = message,
+                  )
 
-        _debug("S3Sync: pull %s: %s" % (result, message))
+        debug("S3Sync: pull %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -429,12 +374,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         xml = current.xml
-        _debug = current.log.debug
+        debug = current.log.debug
+
         repository = self.repository
         config = repository.config
-        resource_name = task.resource_name
 
-        _debug("S3SyncRepository.push(%s, %s)" % (repository.url, resource_name))
+        resource_name = task.resource_name
+        debug("S3SyncRepository.push(%s, %s)" % (repository.url, resource_name))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -453,9 +399,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             url += "&msince=%s" % s3_encode_iso_datetime(last_push)
         else:
             last_push = None
-        _debug("...push to URL %s" % url)
 
-        if task.components is False: # Allow None to remain the old default of 'Include Components'
+        debug("...push to URL %s" % url)
+
+        if task.components is False:
+            # Allow None to remain the old default of 'Include Components'
             components = []
         else:
             # Default
@@ -464,14 +412,16 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Define the resource
         resource = current.s3db.resource(resource_name,
                                          components = components,
-                                         include_deleted = True)
+                                         include_deleted = True,
+                                         )
 
         # Apply sync filters for this task
         filters = current.sync.get_filters(task.id)
 
         # Export the resource as S3XML
-        data = resource.export_xml(filters=filters,
-                                   msince=last_push)
+        data = resource.export_xml(filters = filters,
+                                   msince = last_push,
+                                   )
         count = resource.results or 0
         mtime = resource.muntil
 
@@ -480,54 +430,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         output = None
         log = repository.log
         if data and count:
-
-            # Find the protocol
-            url_split = url.split("://", 1)
-            if len(url_split) == 2:
-                protocol = url_split[0]
-            else:
-                protocol = "http"
-
-            # Generate the request
-            # TODO Use self._http_opener() rather than installing handlers globally
-            req = urllib2.Request(url=url, data=data)
-            req.add_header('Content-Type', "text/xml")
-            handlers = []
-
-            # Proxy handling
-            proxy = repository.proxy or config.proxy or None
-            if proxy:
-                _debug("using proxy=%s" % proxy)
-                proxy_handler = urllib2.ProxyHandler({protocol: proxy})
-                handlers.append(proxy_handler)
-
-            # Authentication
-            username = repository.username
-            password = repository.password
-            if username and password:
-                # send auth credentials unsolicitedly
-                import base64
-                base64string = base64.encodestring('%s:%s' %
-                                                   (username, password))[:-1]
-                req.add_header("Authorization", "Basic %s" % base64string)
-                # Just in case the peer does not accept that
-                # => add a 401 handler:
-                passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-                passwd_manager.add_password(realm=None,
-                                            uri=url,
-                                            user=username,
-                                            passwd=password)
-                auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-                handlers.append(auth_handler)
-
-            # Install all handlers
-            if handlers:
-                opener = urllib2.build_opener(*handlers)
-                urllib2.install_opener(opener)
-
             # Execute the request
+            opener = self._http_opener(url,
+                                       headers = [("Content-Type", "text/xml"),
+                                                  ],
+                                       )
             try:
-                urllib2.urlopen(req)
+                opener.open(url, data)
             except urllib2.HTTPError, e:
                 result = log.FATAL
                 remote = True # Peer error
@@ -541,6 +450,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 except:
                     pass
                 output = xml.json_message(False, code, message)
+            except urllib2.URLError, e:
+                # URL Error (network error)
+                result = log.ERROR
+                remote = True
+                message = "Peer repository unavailable (%s)" % e.reason
+                output = xml.json_message(False, 400, message)
             except:
                 result = log.FATAL
                 code = 400
@@ -549,24 +464,25 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             else:
                 result = log.SUCCESS
                 message = "data sent successfully (%s records)" % count
-
         else:
             # No data to send
             result = log.WARNING
             message = "No data to send"
 
         # Log the operation
-        log.write(repository_id=repository.id,
-                  resource_name=task.resource_name,
-                  transmission=log.OUT,
-                  mode=log.PUSH,
-                  action="send",
-                  remote=remote,
-                  result=result,
-                  message=message)
+        log.write(repository_id = repository.id,
+                  resource_name = task.resource_name,
+                  transmission = log.OUT,
+                  mode = log.PUSH,
+                  action = "send",
+                  remote = remote,
+                  result = result,
+                  message = message,
+                  )
 
         if output is not None:
             mtime = None
+
         return (output, mtime)
 
     # -------------------------------------------------------------------------
@@ -604,16 +520,19 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     }
 
         # Export the data as S3XML
-        output = resource.export_xml(start=start,
-                                     limit=limit,
-                                     filters=filters,
-                                     msince=msince,
-                                     pretty_print=pretty_print,
+        output = resource.export_xml(start = start,
+                                     limit = limit,
+                                     filters = filters,
+                                     msince = msince,
+                                     pretty_print = pretty_print,
                                      )
         count = resource.results
         msg = "Data sent to peer (%s records)" % count
 
-        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
+        # Update date/time of last incoming connection
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(
+                    last_connected = datetime.datetime.utcnow(),
+                    )
 
         # Set content type header
         headers = current.response.headers
@@ -663,21 +582,26 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         repository = self.repository
 
+        # @todo: - make this the default, allow peer to URL-override?
+        #        - have a repository setting to enforce strict validation?
         ignore_errors = True
+
         if onconflict:
             onconflict_callback = lambda item: onconflict(item,
                                                           repository,
-                                                          resource)
+                                                          resource,
+                                                          )
         else:
             onconflict_callback = None
 
-        output = resource.import_xml(source, format="xml",
-                                     ignore_errors=ignore_errors,
-                                     strategy=strategy,
-                                     update_policy=update_policy,
-                                     conflict_policy=conflict_policy,
-                                     last_sync=last_sync,
-                                     onconflict=onconflict_callback,
+        output = resource.import_xml(source,
+                                     format = "xml",
+                                     ignore_errors = ignore_errors,
+                                     strategy = strategy,
+                                     update_policy = update_policy,
+                                     conflict_policy = conflict_policy,
+                                     last_sync = last_sync,
+                                     onconflict = onconflict_callback,
                                      )
 
         log = self.log
@@ -691,6 +615,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             remote = True
             message = "%s" % resource.error
             for element in resource.error_tree.findall("resource"):
+
                 error_msg = element.get("error", "unknown error")
 
                 error_fields = element.findall("data[@error]")
@@ -705,6 +630,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                      field.get("value", field.text),
                                      error_msg)
                             message = "%s, %s" % (message, msg)
+
                 else:
                     msg = "(UID: %s) %s: %s" % \
                           (element.get("uuid", None),
@@ -716,7 +642,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             remote = False
             message = "Data received from peer"
 
-        current.db(current.s3db.sync_repository.id == self.repository.id).update(last_connected = datetime.datetime.utcnow())
+        # Update date/time of last incoming connection
+        current.db(current.s3db.sync_repository.id == self.repository.id).update(
+                    last_connected = datetime.datetime.utcnow(),
+                    )
 
         return {"status": result,
                 "remote": remote,
@@ -725,7 +654,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 }
 
     # -------------------------------------------------------------------------
-    def _http_opener(self, url):
+    def _http_opener(self, url, headers=None):
         """
             Configure a HTTP opener for sync operations
 
@@ -734,6 +663,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         repository = self.repository
         config = repository.config
+
+        # Configure opener headers
+        addheaders = []
+        if headers:
+            addheaders.extend(headers)
 
         # Configure opener handlers
         handlers = []
@@ -773,7 +707,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             # any case:
             import base64
             base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-            opener.addheaders = [("Authorization", "Basic %s" % base64string)]
+            addheaders.append(("Authorization", "Basic %s" % base64string))
+
+        if addheaders:
+            opener.addheaders = addheaders
 
         return opener
 

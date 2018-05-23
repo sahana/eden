@@ -722,6 +722,9 @@ class SyncTaskModel(S3Model):
 
         configure = self.configure
 
+        s3_datetime_represent = lambda dt: \
+                                S3DateTime.datetime_represent(dt, utc=True)
+
         # -------------------------------------------------------------------------
         # Task
         # -------------------------------------------------------------------------
@@ -844,11 +847,13 @@ class SyncTaskModel(S3Model):
                            label = T("Last pull on"),
                            readable = True,
                            writable = False,
+                           represent = s3_datetime_represent,
                            ),
                      Field("last_push", "datetime",
                            label = T("Last push on"),
                            readable = True,
                            writable = False,
+                           represent = s3_datetime_represent,
                            ),
                      Field("mode", "integer",
                            default = 3,
