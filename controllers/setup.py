@@ -220,7 +220,7 @@ def deployment():
                                 },
                                {"url": URL(c = module,
                                            f = "deployment",
-                                           [deployment_id, "instance", "[id]", "clean"],
+                                           args = [deployment_id, "instance", "[id]", "clean"],
                                            ),
                                 "_class": "action-btn",
                                 "label": s3_str(T("Clean")),
@@ -229,7 +229,7 @@ def deployment():
                                # @ToDo: Better handled not as an Action Button as this is a rarer, more elaborate workflow
                                #{"url": URL(c = module,
                                #            f = "deployment",
-                               #            [deployment_id, "instance", "[id]", "upgrade"],
+                               #            args = [deployment_id, "instance", "[id]", "upgrade"],
                                #            ),
                                # "_class": "action-btn",
                                # "label": s3_str(T("Upgrade")),
