@@ -338,7 +338,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             # ...or report success
             elif not message:
-                message = "Data imported successfully (%s records)" % count
+                if not count:
+                    message = "No data to import (already up-to-date)"
+                else:
+                    message = "Data imported successfully (%s records)" % count
 
         elif result == log.SUCCESS:
             # No data received from peer
