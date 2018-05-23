@@ -303,11 +303,18 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             except etree.XMLSyntaxError:
                 pass
             output = xml.json_message(False, code, message, tree=None)
+
+        except urllib2.URLError, e:
+            # URL Error (network error)
+            result = log.ERROR
+            remote = True
+            message = "Peer repository unavailable (%s)" % e.reason
+            output = xml.json_message(False, 400, message)
+
         except:
             result = log.FATAL
-            code = 400
             message = sys.exc_info()[1]
-            output = xml.json_message(False, code, message)
+            output = xml.json_message(False, 400, message)
         else:
             result = log.SUCCESS
             response = f

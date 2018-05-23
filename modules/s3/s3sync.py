@@ -691,10 +691,10 @@ class S3SyncLog(S3Method):
     TABLENAME = "sync_log"
 
     # Outcomes
-    SUCCESS = "success"
-    WARNING = "warning"
-    ERROR = "error"
-    FATAL = "fatal"
+    SUCCESS = "success"     # worked
+    WARNING = "warning"     # worked, but had issues
+    ERROR = "error"         # failed, but may work later
+    FATAL = "fatal"         # failed, will never work unless reconfigured
 
     # Transmissions
     IN = "incoming"

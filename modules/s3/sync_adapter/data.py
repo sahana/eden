@@ -71,7 +71,11 @@ class S3SyncAdapter(S3SyncEdenAdapter):
                      or None if registration is not required
         """
 
+        db = current.db
+        s3db = current.s3db
+
         repository = self.repository
+        log = repository.log
 
         base_url = repository.url
         if not base_url:
@@ -83,10 +87,6 @@ class S3SyncAdapter(S3SyncEdenAdapter):
 
         # Look up all data sets currently configured for this repository
         repository_id = repository.id
-
-        db = current.db
-        s3db = current.s3db
-
         table = s3db.sync_dataset
         query = (table.repository_id == repository_id) & \
                 (table.deleted == False)
@@ -96,34 +96,135 @@ class S3SyncAdapter(S3SyncEdenAdapter):
             # No data sets configured => no tasks to refresh
             return None
         else:
+            # Collect the data set codes
             codes = set(dataset.code for dataset in datasets)
 
-        # Construct the URL
+        # Construct the URLs
         from urllib import quote
-        url = "%s/sync/task.xml?~.dataset_id$code=%s" % \
-              (base_url, quote(",".join(codes)))
+        update_url = "%s/sync/task.xml?~.dataset_id$code=%s" % \
+                     (base_url, quote(",".join(codes)))
+        delete_url = "%s/sync/task.xml?include_deleted=True&~.deleted=True" % \
+                     base_url
+
+        updates = [{"url": update_url,
+                    "strategy": ("create", "update"),
+                    },
+                   ]
 
         # Look up last refresh date
         last_refresh = repository.last_refresh
         if last_refresh:
-            url = "%s&msince=%s" % (url, s3_encode_iso_datetime(last_refresh))
+            msince = s3_encode_iso_datetime(last_refresh)
+            updates.append({"url": delete_url,
+                            "strategy": ("delete",),
+                            })
+        else:
+            msince = None
 
         # Initialize log details
-        remote = False
-        result = None
-        message = None
+        success = False
+        count = 0
+        timestamp = None
 
         # Fetch the sync tasks for the configured data sets
+        for update in updates:
+
+            error = self._fetch(update, msince)
+
+            if error:
+                # Log the error, skip the update
+                log.write(repository_id = repository_id,
+                          transmission = log.OUT,
+                          mode = log.PULL,
+                          action = "refresh",
+                          remote = update.get("remote", False),
+                          result = update.get("result", log.ERROR),
+                          message = error,
+                          )
+                continue
+
+            if update.get("response"):
+                error = self._import(update)
+                if error:
+                    # Log the error
+                    log.write(repository_id = repository_id,
+                              transmission = log.OUT,
+                              mode = log.PULL,
+                              action = "refresh",
+                              remote = update.get("remote", False),
+                              result = update.get("result", log.ERROR),
+                              message = error,
+                              )
+                else:
+                    # Success - collect count/mtime
+                    success = True
+                    count += update.get("count", 0)
+                    mtime = update.get("mtime")
+                    if mtime and (not timestamp or timestamp < mtime):
+                        timestamp = mtime
+            else:
+                # Log no data received
+                log.write(repository_id = repository_id,
+                          transmission = log.OUT,
+                          mode = log.PULL,
+                          action = "refresh",
+                          remote = False,
+                          result = log.WARNING,
+                          message = "No data received",
+                          )
+        if success:
+            if count:
+                message = "Successfully updated %s tasks" % count
+            else:
+                message = "No new/updated tasks found"
+
+            log.write(repository_id = repository_id,
+                      transmission = log.OUT,
+                      mode = log.PULL,
+                      action = "refresh",
+                      remote = False,
+                      result = log.SUCCESS,
+                      message = message,
+                      )
+
+            if timestamp:
+                # Update last_refresh
+                delta = datetime.timedelta(seconds=1)
+                rtable = s3db.sync_repository
+                query = (rtable.id == repository_id)
+                db(query).update(last_refresh=timestamp+delta)
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def _fetch(self, update, msince):
+        """
+            Fetch sync task updates from the repository
+
+            @param update: the update dict containing:
+                           {"url": the url to fetch,
+                            }
+            @return: error message if there was an error, otherwise None
+        """
+
+        log = self.repository.log
+        error = None
+
+        # Get the URL, add msince if available
+        url = update["url"]
+        if msince:
+            url = "%s&msince=%s" % (url, msince)
+
+        # Fetch the data
         opener = self._http_opener(url)
-        response = None
-        log = repository.log
         try:
             f = opener.open(url)
         except urllib2.HTTPError, e:
-            # HTTP status
+            # HTTP status (remote error)
             result = log.ERROR
-            remote = True # Peer error
+            update["remote"] = True
 
+            # Get the error message
             message = e.read()
             try:
                 # Sahana-Eden would send a JSON message,
@@ -147,69 +248,81 @@ class S3SyncAdapter(S3SyncEdenAdapter):
                 pass
 
             # Prepend HTTP status code
-            message = "[%s] %s" % (e.code, message)
+            error = "[%s] %s" % (e.code, message)
+
+        except urllib2.URLError, e:
+            # URL Error (network error)
+            result = log.ERROR
+            update["remote"] = True
+            error = "Peer repository unavailable (%s)" % e.reason
 
         except:
-            # Other error
+            # Other error (local error)
             result = log.FATAL
-            message = sys.exc_info()[1]
+            error = sys.exc_info()[1]
+
         else:
-            response = f
+            # Success
+            result = log.SUCCESS
+            update["response"] = f
 
-        # Import the sync_tasks
-        if response:
-            resource = current.s3db.resource("sync_task")
+        update["result"] = result
+        return error
 
-            # Set default repository for newly imported tasks
+    # -------------------------------------------------------------------------
+    def _import(self, update):
+        """
+            Import sync task updates
+
+            @param update: the update dict containing:
+                           {"response": the response from _fetch,
+                            "strategy": the import strategy,
+                            }
+            @return: error message if there was an error, otherwise None
+        """
+
+
+        repository = self.repository
+        log = repository.log
+
+        resource = current.s3db.resource("sync_task")
+
+        # Set default repository for newly imported tasks
+        strategy = update.get("strategy")
+        if "create" in strategy:
             table = resource.table
-            field = table.repository_id
-            field.default = repository_id
+            table.repository_id.default = repository.id
 
-            count = 0
-            try:
-                resource.import_xml(response,
-                                    ignore_errors = True,
-                                    )
-                count = resource.import_count
-                mtime = resource.mtime
-            except IOError:
-                result = log.FATAL
-                message = "%s" % sys.exc_info()[1]
-            except:
-                result = log.FATAL
-                import traceback
-                message = "Uncaught Exception During Import: %s" % \
-                          traceback.format_exc()
-            else:
-                if resource.error:
-                    result = log.ERROR
-                    message = resource.error
-                else:
-                    if count == 0:
-                        message = "No new/updated tasks found"
-                    else:
-                        message = "Successfully refreshed %s tasks" % count
-                    # Update last_refresh timestamp of the repository
-                    if mtime:
-                        # Delta for msince progress
-                        delta = datetime.timedelta(seconds=1)
-                        rtable = s3db.sync_repository
-                        query = (rtable.id == repository_id)
-                        db(query).update(last_refresh=mtime+delta)
+        error = None
+        result = None
+
+        response = update["response"]
+        try:
+            resource.import_xml(response,
+                                ignore_errors = True,
+                                strategy = strategy,
+                                )
+        except IOError:
+            result = log.FATAL
+            error = "%s" % sys.exc_info()[1]
+
+        except:
+            result = log.FATAL
+            import traceback
+            error = "Uncaught Exception During Import: %s" % \
+                    traceback.format_exc()
+
         else:
-            result = log.WARNING
-            message = "No data received"
+            if resource.error:
+                result = log.ERROR
+                error = resource.error
+            else:
+                result = log.SUCCESS
+                update["count"] = resource.import_count
+                update["mtime"] = resource.mtime
 
-        # Log the operation
-        log.write(repository_id = repository_id,
-                  transmission = log.OUT,
-                  mode = log.PULL,
-                  action = "refresh",
-                  remote = remote,
-                  result = result,
-                  message = message,
-                  )
+        update["result"] = result
 
-        return True
+        return error
 
 # End =========================================================================
