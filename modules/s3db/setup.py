@@ -509,6 +509,12 @@ class S3SetupModel(S3Model):
                    action = self.setup_instance_stop,
                    )
 
+        set_method("setup", "deployment",
+                   component_name = "instance",
+                   method = "clean",
+                   action = self.setup_instance_clean,
+                   )
+
         represent = S3Represent(lookup=tablename, fields=["type"])
 
         instance_id = S3ReusableField("instance_id", "reference %s" % tablename,
@@ -880,6 +886,21 @@ class S3SetupModel(S3Model):
         setup_instance_method(r.component_id, "stop")
 
         current.session.confirmation = current.T("Instance Stopped")
+
+        redirect(URL(c="setup", f="deployment",
+                     args = [r.id, "instance"]),
+                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_instance_clean(r, **attr):
+        """
+            Custom interactive S3Method to Clean an Instance
+        """
+
+        setup_instance_method(r.component_id, "clean")
+
+        current.session.confirmation = current.T("Instance Cleaned")
 
         redirect(URL(c="setup", f="deployment",
                      args = [r.id, "instance"]),
@@ -1917,7 +1938,7 @@ def setup_instance_settings_read(instance_id, deployment_id):
 def setup_instance_method(instance_id, method="start"):
     """
         Run individual Ansible Roles ('methods')
-            e.g. Start or Stop an Instance
+            e.g. Start, Stop or Clean an Instance
             - called by interactive method to start/stop
     """
 
