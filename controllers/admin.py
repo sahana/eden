@@ -574,30 +574,6 @@ def errors():
     return dict(app=appname, tickets=tickets)
 
 # =============================================================================
-# Management scripts
-# =============================================================================
-@auth.s3_requires_membership(1)
-def clean():
-    """
-        Run an external script to clean this instance & reset to default values
-
-        visudo
-        web2py ALL=(ALL)NOPASSWD:/usr/local/bin/clean
-    """
-
-    from subprocess import check_call
-
-    instance = settings.get_instance_name()
-    try:
-        check_call(["sudo /usr/local/bin/clean %s" % instance], shell=True)
-    except:
-        import sys
-        error = sys.exc_info()[1]
-        status = current.xml.json_message(False, 400,
-                                          "Script cannot be run: %s" % error)
-        raise HTTP(400, body=status)
-
-# =============================================================================
 # Create portable app
 # =============================================================================
 @auth.s3_requires_membership(1)

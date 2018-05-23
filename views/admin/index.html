@@ -12,9 +12,6 @@
  <li><a href='{{=URL(c="sync")}}'><b>{{=T("Configure/Monitor Synchronization")}}</b></a>
  <li><a href='{{=URL(f="translate")}}'><b>{{=T("Translation")}}</b></a>
  <li><a href='{{=URL(c="appadmin")}}'><b>{{=T("View/Edit the Database directly")}}</b></a> - {{=T("Caution: doesn't respect the framework rules!")}}
- {{if settings.get_instance_name():}}
- <li><a href='{{=URL(f="clean")}}'><b>{{=T("Clean Instance")}}</b></a>
- {{else:}}{{pass}}
  <li><a href='{{=URL(f="errors")}}'><b>{{=T("View Error Tickets")}}</b></a>
  <li><a href='{{=URL(f="result")}}'><b>{{=T("View Test Result Reports")}}</b></a>
 </ul>
