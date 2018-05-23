@@ -900,7 +900,7 @@ class S3SetupModel(S3Model):
 
         setup_instance_method(r.component_id, "clean")
 
-        current.session.confirmation = current.T("Instance Cleaned")
+        current.session.confirmation = current.T("Instance Clean Started")
 
         redirect(URL(c="setup", f="deployment",
                      args = [r.id, "instance"]),
@@ -1966,7 +1966,8 @@ def setup_instance_method(instance_id, method="start"):
 
     # Get Deployment details
     dtable = s3db.setup_deployment
-    deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
+    deployment = db(dtable.id == deployment_id).select(dtable.db_type,
+                                                       dtable.webserver_type,
                                                        limitby=(0, 1)
                                                        ).first()
 
@@ -1978,7 +1979,8 @@ def setup_instance_method(instance_id, method="start"):
                  "remote_user": server.remote_user,
                  "become_method": "sudo",
                  "become_user": "root",
-                 "vars": {"web_server": WEB_SERVERS[deployment.webserver_type],
+                 "vars": {"db_type": DB_SERVERS[deployment.db_type],
+                          "web_server": WEB_SERVERS[deployment.webserver_type],
                           "type": INSTANCE_TYPES[instance.type],
                           },
                  "roles": [{ "role": "%s/%s" % (roles_path, method) },
