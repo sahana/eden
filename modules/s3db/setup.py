@@ -396,11 +396,6 @@ class S3SetupModel(S3Model):
                            label = T("Type"),
                            represent = S3Represent(options = INSTANCE_TYPES),
                            requires = IS_IN_SET(INSTANCE_TYPES),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Type"),
-                                                           T("Currently only Production is supported by this tool, although Demo/Test should be possible with a little work.")
-                                                           )
-                                         ),
                            ),
                      Field("url",
                            label = T("URL"),

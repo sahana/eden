@@ -871,11 +871,6 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Base settings
-    def get_instance_name(self):
-        """
-            Instance Name - for management scripts. e.g. prod or test
-        """
-        return self.base.get("instance_name", "")
     def get_system_name(self):
         """
             System Name - for the UI & Messaging
