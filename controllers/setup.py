@@ -181,9 +181,11 @@ def deployment():
                         (table.deleted == False)
                 rows = db(query).select(table.id,
                                         table.task_id,
+                                        table.type,
                                         )
                 restrict_d = [str(row.id) for row in rows if row.task_id is None]
                 restrict_s = [str(row.id) for row in rows if row.task_id is not None]
+                restrict_c = [str(row.id) for row in rows if row.type in (3, 4)]
                 s3.actions += [{"url": URL(c = module,
                                            f = "deployment",
                                            args = [deployment_id, "instance", "[id]", "deploy"],
@@ -216,17 +218,18 @@ def deployment():
                                 "label": s3_str(T("Stop")),
                                 "restrict": restrict_s,
                                 },
-                               #{"url": URL(c = module,
-                               #            f = "deployment",
-                               #            [deployment_id, "instance", "[id]", "clean"],
-                               #            ),
-                               # "_class": "action-btn",
-                               # "label": s3_str(T("Clean")),
-                               # },
+                               {"url": URL(c = module,
+                                           f = "deployment",
+                                           args = [deployment_id, "instance", "[id]", "clean"],
+                                           ),
+                                "_class": "action-btn",
+                                "label": s3_str(T("Clean")),
+                                "restrict": restrict_c,
+                                },
                                # @ToDo: Better handled not as an Action Button as this is a rarer, more elaborate workflow
                                #{"url": URL(c = module,
                                #            f = "deployment",
-                               #            [deployment_id, "instance", "[id]", "upgrade"],
+                               #            args = [deployment_id, "instance", "[id]", "upgrade"],
                                #            ),
                                # "_class": "action-btn",
                                # "label": s3_str(T("Upgrade")),

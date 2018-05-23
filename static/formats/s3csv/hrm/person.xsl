@@ -1138,6 +1138,12 @@
                 <xsl:when test="$Status='resigned'">
                     <data field="status">2</data>
                 </xsl:when>
+                <xsl:when test="$Status='terminated'">
+                    <data field="status">3</data>
+                </xsl:when>
+                <xsl:when test="$Status='died'">
+                    <data field="status">4</data>
+                </xsl:when>
                 <xsl:otherwise>
                     <!-- Leave XML blank to default to 'Active' -->
                 </xsl:otherwise>
