@@ -1265,9 +1265,15 @@ def sync_now(r, **attr):
             repository = r.record
             if not repository:
                 r.error(404, current.ERROR.BAD_RECORD)
-            form = FORM(TABLE(
-                        TR(TD(T("Click 'Start' to synchronize with this repository now:"))),
-                        TR(TD(INPUT(_type="submit", _value=T("Start"))))))
+            form = FORM(DIV(T("Click 'Start' to synchronize with this repository now:"),
+                            ),
+                        DIV(INPUT(_class = "tiny primary button",
+                                  _type = "submit",
+                                  _value = T("Start"),
+                                  ),
+                            ),
+                        _class="sync-now-form",
+                        )
             if form.accepts(r.post_vars, current.session):
                 task_id = s3task.async("sync_synchronize",
                                        args = [repository.id],
@@ -1278,6 +1284,7 @@ def sync_now(r, **attr):
                 if task_id is False:
                     response.error = T("Could not initiate manual synchronization.")
                 elif task_id is None:
+                    # No scheduler running, has run synchronously
                     response.flash = T("Manual synchronization completed.")
                 else:
                     sync.set_status(manual=True)

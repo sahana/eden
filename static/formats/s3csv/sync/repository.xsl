@@ -21,6 +21,8 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
+    <xsl:include href="../../xml/commons.xsl"/>
+
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
@@ -34,9 +36,12 @@
 
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
+
         <xsl:if test="$Name!='' and $Type!=''">
+
             <resource name="sync_repository">
 
+                <!-- Repository UUID -->
                 <xsl:variable name="UUID" select="col[@field='UUID']/text()"/>
                 <xsl:if test="$UUID!=''">
                     <xsl:attribute name="uuid">
@@ -44,6 +49,7 @@
                     </xsl:attribute>
                 </xsl:if>
 
+                <!-- Name and API type -->
                 <data field="name">
                     <xsl:value-of select="$Name"/>
                 </data>
@@ -51,6 +57,7 @@
                     <xsl:value-of select="$Type"/>
                 </data>
 
+                <!-- URL or File Path -->
                 <xsl:variable name="URL" select="col[@field='URL']/text()"/>
                 <xsl:variable name="Path" select="col[@field='Path']/text()"/>
                 <xsl:choose>
@@ -76,6 +83,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
 
+                <!-- Synchronize UUIDs? -->
                 <xsl:variable name="SynchroniseUUIDs" select="col[@field='Synchronize UUIDs']/text()"/>
                 <data field="synchronise_uuids">
                     <xsl:attribute name="value">
@@ -90,11 +98,40 @@
                     </xsl:attribute>
                 </data>
 
+                <!-- Data Sets -->
+                <xsl:variable name="Datasets" select="col[@field='Data Sets']/text()"/>
+                <xsl:if test="$Datasets!=''">
+                    <xsl:call-template name="splitList">
+                        <xsl:with-param name="list"><xsl:value-of select="$Datasets"/></xsl:with-param>
+                        <xsl:with-param name="arg">datasets</xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
+
             </resource>
         </xsl:if>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- SplitList callbacks -->
+    <xsl:template name="resource">
+        <xsl:param name="arg"/>
+        <xsl:param name="item"/>
+
+        <xsl:choose>
+
+            <!-- Data Sets -->
+            <xsl:when test="$arg='datasets'">
+                <resource name="sync_dataset">
+                    <data field="code">
+                        <xsl:value-of select="$item"/>
+                    </data>
+                </resource>
+            </xsl:when>
+
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- END ************************************************************** -->
 
 </xsl:stylesheet>
