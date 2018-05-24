@@ -2168,8 +2168,7 @@ def config(settings):
                                    S3SQLInlineComponent("task_forum",
                                                         name = "forum",
                                                         label = T("Share to Group"),
-                                                        fields = [("", "forum_id"),
-                                                                  ],
+                                                        fields = [("", "forum_id")],
                                                         filterby = filterby,
                                                         ))
 

@@ -91,6 +91,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Events
     settings.event.label = "Disaster"
+    # Uncomment to not use Incidents under Events
+    settings.event.incident = False
 
     # -------------------------------------------------------------------------
     # Messaging
@@ -319,45 +321,71 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
+        s3db = current.s3db
+        tablename = "org_organisation"
+
+        # Custom Components for Verified
+        s3db.add_components(tablename,
+                            org_organisation_tag = (# Request Number
+                                                    {"name": "req_number",
+                                                     "joinby": "need_id",
+                                                     "filterby": {"tag": "req_number",
+                                                                  },
+                                                     "multiple": False,
+                                                     },
+                                                    # Vision
+                                                    {"name": "vision",
+                                                     "joinby": "need_id",
+                                                     "filterby": {"tag": "vision",
+                                                                  },
+                                                     "multiple": False,
+                                                     },
+                                                    ),
+                            )
+
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
 
-        s3db = current.s3db
-        s3db.org_organisation_tag.value.widget = s3_comments_widget
+        # Individual settings for specific tag components
+        components_get = r.resource.components.get
+
+        vision = components_get("vision")
+        vision.table.value.widget = s3_comments_widget
 
         crud_form = S3SQLCustomForm("name",
                                     "acronym",
-                                    S3SQLInlineLink(
-                                        "organisation_type",
-                                        field = "organisation_type_id",
-                                        # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
-                                        filter = False,
-                                        label = T("Type"),
-                                        multiple = False,
-                                        widget = "multiselect",
-                                    ),
+                                    S3SQLInlineLink("organisation_type",
+                                                    field = "organisation_type_id",
+                                                    # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
+                                                    filter = False,
+                                                    label = T("Type"),
+                                                    multiple = False,
+                                                    widget = "multiselect",
+                                                    ),
                                     S3SQLInlineLink("sector",
-                                       columns = 4,
-                                       label = T("Sectors"),
-                                       field = "sector_id",
-                                       ),
+                                                    columns = 4,
+                                                    field = "sector_id",
+                                                    label = T("Sectors"),
+                                                    ),
                                     S3SQLInlineLink("service",
-                                       columns = 4,
-                                       label = T("Services"),
-                                       field = "service_id",
-                                       ),
+                                                    columns = 4,
+                                                    field = "service_id",
+                                                    label = T("Services"),
+                                                    ),
                                     "country",
                                     "phone",
                                     "website",
                                     "logo",
                                     (T("About"), "comments"),
-                                    S3SQLInlineComponent("tag",
-                                       label = T("Vision"),
-                                       fields = [("", "value")],
-                                       filterby = {"field": "tag",
-                                                   "options": "vision",
-                                                   },
-                                       multiple = False,
-                                       ),
+                                    S3SQLInlineComponent("vision",
+                                                         label = T("Vision"),
+                                                         fields = [("", "value")],
+                                                         multiple = False,
+                                                         ),
+                                    S3SQLInlineComponent("req_number",
+                                                         label = T("Request Number"),
+                                                         fields = [("", "value")],
+                                                         multiple = False,
+                                                         ),
                                     )
 
         s3db.configure(tablename,
@@ -459,6 +487,12 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
         components_get = r.resource.components.get
 
+        donor = components_get("donor")
+        donor.table.organisation_id.default = None
+
+        partner = components_get("partner")
+        partner.table.organisation_id.default = None
+
         modality = components_get("modality")
         modality.table.value.requires = IS_EMPTY_OR(IS_IN_SET(("Cash", "In-kind")))
 
@@ -467,8 +501,14 @@ def config(settings):
 
         s3db.project_activity_data.unit.requires = IS_EMPTY_OR(IS_IN_SET(("People", "Households")))
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent #, S3SQLInlineLink
-        crud_form = S3SQLCustomForm(S3SQLInlineComponent("agency",
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    label = T("Disaster"),
+                                                    multiple = False,
+                                                    required = True,
+                                                    ),
+                                    S3SQLInlineComponent("agency",
                                                          name = "agency",
                                                          label = T("Agency"),
                                                          fields = [("", "organisation_id"),],
@@ -480,31 +520,23 @@ def config(settings):
                                     #        link table as applied here) and linked components
                                     #        cannot currently be filtered by link table fields
                                     #        (=> should solve the latter rather than the former)
-                                    # @ToDo: Create Popups
+                                    # @ToDo: Fix Create Popups
                                     S3SQLInlineComponent("partner",
                                                          name = "partner",
                                                          label = T("Implementing Partner"),
-                                                         fields = [{"name": "organisation_id",
-                                                                    "label": "",
-                                                                    "default": None,
-                                                                    },
-                                                                   ],
+                                                         fields = [("", "organisation_id"),],
                                                          ),
                                     S3SQLInlineComponent("donor",
                                                          name = "donor",
                                                          label = T("Donor"),
-                                                         fields = [{"name": "organisation_id",
-                                                                    "label": "",
-                                                                    "default": None,
-                                                                    },
-                                                                   ],
+                                                         fields = [("", "organisation_id"),],
                                                          ),
                                     "location_id",
-                                    S3SQLInlineComponent("sector_activity",
-                                                         label = T("Sector"),
-                                                         fields = [("", "sector_id"),],
-                                                         multiple = False,
-                                                         ),
+                                    S3SQLInlineLink("sector",
+                                                    field = "sector_id",
+                                                    label = T("Sector"),
+                                                    multiple = False,
+                                                    ),
                                     (T("Relief Items/Activity"), "name"),
                                     S3SQLInlineComponent("modality",
                                                          name = "modality",
@@ -534,7 +566,8 @@ def config(settings):
 
         s3db.configure(tablename,
                        crud_form = crud_form,
-                       list_fields = [(T("Agency"), "agency.organisation_id"),
+                       list_fields = [(T("Disaster"), "event__link.event_id"),
+                                      (T("Agency"), "agency.organisation_id"),
                                       (T("Implementing Partner"), "partner.organisation_id"),
                                       (T("Donor"), "donor.organisation_id"),
                                       (T("District"), "location_id$L1"),
@@ -555,5 +588,84 @@ def config(settings):
                        )
 
     settings.customise_project_activity_resource = customise_project_activity_resource
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_resource(r, tablename):
+
+        s3db = current.s3db
+        tablename = "req_need"
+
+        # Custom Components for Verified
+        s3db.add_components(tablename,
+                            req_need_tag = (# Verified
+                                            {"name": "verified",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "verified",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            )
+                            )
+
+        # Individual settings for specific tag components
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+        components_get = r.resource.components.get
+
+        verified = components_get("verified")
+        f = verified.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET((True, False)))
+        auth = current.auth
+        if auth.s3_has_role("ADMIN"):
+            f.default = True
+        else:
+            user = auth.user
+            if user and user.organisation_id:
+                f.default = True
+            else:
+                f.default = False
+                f.writable = False
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    label = T("Disaster"),
+                                                    multiple = False,
+                                                    required = True,
+                                                    ),
+                                    "location_id",
+                                    "date",
+                                    "priority",
+                                    "summary",
+                                    S3SQLInlineComponent("verified",
+                                                         name = "verified",
+                                                         label = T("Verified"),
+                                                         fields = [("", "value"),],
+                                                         multiple = False,
+                                                         ),
+                                    "status",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = [(T("Disaster"), "event__link.event_id"),
+                                      # These levels/Labels are for SHARE/LK
+                                      (T("District"), "location_id$L2"),
+                                      (T("DS"), "location_id$L3"),
+                                      (T("GN"), "location_id$L4"),
+                                      "date",
+                                      "priority",
+                                      "summary",
+                                      S3SQLInlineLink("sector",
+                                                      field = "sector_id",
+                                                      label = T("Sector"),
+                                                      multiple = False,
+                                                      ),
+                                      "status",
+                                      (T("Verified"), "verified.value"),
+                                      ],
+                       )
+
+    settings.customise_req_need_resource = customise_req_need_resource
 
 # END =========================================================================

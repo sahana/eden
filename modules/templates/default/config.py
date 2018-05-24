@@ -575,6 +575,8 @@ def config(settings):
     # Events
     # Uncomment to use the term Disaster instead of Event
     #settings.event.label = "Disaster"
+    # Uncomment to not use Incidents under Events
+    #settings.event.incident = False
     # Uncomment to preserve linked Incidents when an Event is deleted
     # NB Changing this setting requires a DB migration
     #settings.event.cascade_delete_incidents = False

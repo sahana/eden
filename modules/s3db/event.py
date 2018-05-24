@@ -3916,6 +3916,11 @@ class S3EventShelterModel(S3Model):
 class S3EventSitRepModel(S3Model):
     """
         Situation Reports
+        - can be simple text/rich text
+        - can add documents/photos
+        - can add structured components such as Impacts / Staff Assignments
+        - can add Tags
+        - can add User-controlled Fields (Dynamic Tables)
         - can be compliant with EDXL SitRep 1.0:
         http://docs.oasis-open.org/emergency/edxl-sitrep/v1.0/cs02/edxl-sitrep-v1.0-cs02.html
         messageID 1..1 uuid
@@ -3949,6 +3954,7 @@ class S3EventSitRepModel(S3Model):
         settings = current.deployment_settings
         sitrep_dynamic = settings.get_event_sitrep_dynamic()
         sitrep_edxl = settings.get_event_sitrep_edxl()
+        use_incidents = settings.get_event_incident()
 
         # ---------------------------------------------------------------------
         # Situation Reports
@@ -3995,7 +4001,10 @@ class S3EventSitRepModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE",
+                                                 readable = use_incidents,
+                                                 writable = use_incidents,
+                                                 ),
                           #Field("phase", "integer",
                           #      label = T("Incident Lifecycle Phase"),
                           #      represent = S3Represent(options = phase_opts),
@@ -4089,14 +4098,18 @@ class S3EventSitRepModel(S3Model):
                           #            readable = sitrep_edxl,
                           #            writable = sitrep_edxl,
                           #            ),
-                          self.dc_template_id(
-                                readable = sitrep_dynamic,
-                                writable = sitrep_dynamic,
-                                ),
-                          s3_comments(
-                                #readable = not sitrep_edxl,
-                                #writable = not sitrep_edxl,
-                                ),
+                          self.dc_template_id(readable = sitrep_dynamic,
+                                              writable = sitrep_dynamic,
+                                              ),
+                          s3_comments("summary",
+                                      label = T("Summary"),
+                                      #readable = not sitrep_edxl,
+                                      #writable = not sitrep_edxl,
+                                      widget = s3_richtext_widget,
+                                      ),
+                          s3_comments(#readable = not sitrep_edxl,
+                                      #writable = not sitrep_edxl,
+                                      ),
                           *s3_meta_fields())
 
         # CRUD strings
@@ -4124,6 +4137,7 @@ class S3EventSitRepModel(S3Model):
                                         "organisation_id",
                                         "location_id",
                                         "date",
+                                        "summary",
                                         S3SQLInlineComponent(
                                             "document",
                                             name = "document",
@@ -4132,6 +4146,20 @@ class S3EventSitRepModel(S3Model):
                                         ),
                                         "comments",
                                         )
+
+        list_fields = ["date",
+                       "event_id",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
+                       "organisation_id",
+                       "number",
+                       "name",
+                       "summary",
+                       (T("Attachments"), "document.file"),
+                       ]
+        if use_incidents:
+            list_fields.insert(2, "incident_id")
 
         if sitrep_edxl:
             org_filter = None
@@ -4150,6 +4178,8 @@ class S3EventSitRepModel(S3Model):
                           S3LocationFilter(),
                           S3DateFilter("date"),
                           ]
+        if use_incidents:
+            filter_widgets.insert(1, S3OptionsFilter("incident_id"))
 
         self.configure(tablename,
                        crud_form = crud_form,
@@ -4157,18 +4187,7 @@ class S3EventSitRepModel(S3Model):
                        # - however they all have the same component name so add correct one in controller instead!
                        #dynamic_components = True,
                        filter_widgets = filter_widgets,
-                       list_fields = ["date",
-                                      "event_id",
-                                      "incident_id",
-                                      "location_id$L1",
-                                      "location_id$L2",
-                                      "location_id$L3",
-                                      "organisation_id",
-                                      "number",
-                                      "name",
-                                      (T("Attachments"), "document.file"),
-                                      "comments",
-                                      ],
+                       list_fields = list_fields,
                        orderby = "event_sitrep.date desc",
                        super_entity = "doc_entity",
                        )

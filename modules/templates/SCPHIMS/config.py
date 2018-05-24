@@ -809,8 +809,7 @@ def config(settings):
                        "person_details.disabled",
                        S3SQLInlineComponent(
                             "phone",
-                            fields = [("", "value"),
-                                      ],
+                            fields = [("", "value")],
                             #filterby = {"field": "contact_method",
                             #            "options": "SMS",
                             #            },
@@ -820,8 +819,7 @@ def config(settings):
                             ),
                        #S3SQLInlineComponent(
                        #     "email",
-                       #     fields = [("", "value"),
-                       #               ],
+                       #     fields = [("", "value")],
                        #     #filterby = {"field": "contact_method",
                        #     #            "options": "EMAIL",
                        #     #            },
@@ -832,8 +830,7 @@ def config(settings):
                        S3SQLInlineComponent(
                             "address",
                             label = T("Current Address"),
-                            fields = [("", "location_id"),
-                                      ],
+                            fields = [("", "location_id")],
                             filterby = {"field": "type",
                                         "options": "1",
                                         },
@@ -1380,8 +1377,7 @@ def config(settings):
                                     "start_date",
                                     S3SQLInlineComponent(
                                         "event_tag",
-                                        fields = [("", "value"),
-                                                  ],
+                                        fields = [("", "value")],
                                         filterby = {"field": "tag",
                                                     "options": "category",
                                                     },

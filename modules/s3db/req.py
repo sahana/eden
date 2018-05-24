@@ -33,12 +33,13 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestSkillModel",
            "RequestRecurringModel",
            "RequestNeedsModel",
-           "RequestNeedsImpactsModel",
+           "RequestNeedsImpactModel",
            "RequestNeedsItemsModel",
            "RequestNeedsSkillsModel",
            "RequestNeedsOrganisationModel",
+           "RequestNeedsSectorModel",
            "RequestNeedsSiteModel",
-           "RequestNeedsTagsModel",
+           "RequestNeedsTagModel",
            "RequestTagModel",
            "RequestTaskModel",
            "CommitModel",
@@ -2332,10 +2333,13 @@ class RequestNeedsModel(S3Model):
                           self.gis_location_id(), # Can be hidden, e.g. if using Sites (can then sync this onaccept)
                           s3_date(default = "now"),
                           self.req_priority(),
-                          s3_comments(label = T("Summary of Needs")),
+                          s3_comments("summary",
+                                      label = T("Summary of Needs"),
+                                      ),
                           self.req_status("status",
                                           label = T("Fulfilment Status"),
                                           ),
+                          s3_comments(),
                           *s3_meta_fields())
 
         # CRUD strings
@@ -2355,11 +2359,21 @@ class RequestNeedsModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            event_event = {"link": "event_event_need",
+                                            "joinby": "need_id",
+                                            "key": "event_id",
+                                            "multiple": False,
+                                            },
                             org_organisation = {"link": "req_need_site",
                                                 "joinby": "need_id",
                                                 "key": "organisation_id",
                                                 "multiple": False,
                                                 },
+                            org_sector = {"link": "req_need_sector",
+                                          "joinby": "need_id",
+                                          "key": "sector_id",
+                                          "multiple": False,
+                                          },
                             org_site = {"link": "req_need_site",
                                         "joinby": "need_id",
                                         "key": "site_id",
@@ -2414,7 +2428,7 @@ class RequestNeedsModel(S3Model):
                 }
 
 # =============================================================================
-class RequestNeedsImpactsModel(S3Model):
+class RequestNeedsImpactModel(S3Model):
     """
         Simple Requests Management System
         - link to Impacts
@@ -2430,7 +2444,7 @@ class RequestNeedsImpactsModel(S3Model):
         crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
-        # Needs <=> Supply Items
+        # Needs <=> Impacts
         #
         impact_id = self.stats_impact_id # Load normal model
         CREATE = crud_strings["stats_impact"].label_create
@@ -2622,6 +2636,41 @@ class RequestNeedsOrganisationModel(S3Model):
         return {}
 
 # =============================================================================
+class RequestNeedsSectorModel(S3Model):
+    """
+        Simple Requests Management System
+        - link Needs to Sectors
+        - link exposed in Templates
+    """
+
+    names = ("req_need_sector",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Sectors
+        #
+        tablename = "req_need_sector"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.org_sector_id(empty = False),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "sector_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class RequestNeedsSiteModel(S3Model):
     """
         Simple Requests Management System
@@ -2665,7 +2714,7 @@ class RequestNeedsSiteModel(S3Model):
         return {}
 
 # =============================================================================
-class RequestNeedsTagsModel(S3Model):
+class RequestNeedsTagModel(S3Model):
     """
         Needs Tags
     """

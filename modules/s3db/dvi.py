@@ -281,30 +281,30 @@ class S3DVIModel(S3Model):
                                      "% as wildcard."),
                         ),
             S3OptionsFilter("gender",
-                            options=self.pr_gender_opts),
+                            options = self.pr_gender_opts),
             S3OptionsFilter("age_group",
-                            options=self.pr_age_group_opts),
+                            options = self.pr_age_group_opts),
             S3OptionsFilter("identification.status",
-                            options=dvi_id_status_filteropts,
-                            none=True),
+                            options = dvi_id_status_filteropts,
+                            none = True),
         ]
 
         # Resource configuration
         configure(tablename,
-                  super_entity=("pr_pentity", "sit_trackable"),
-                  create_onaccept=self.body_onaccept,
-                  create_next=URL(f="body", args=["[id]", "checklist"]),
-                  filter_widgets=filter_widgets,
-                  list_fields=["id",
-                               "pe_label",
-                               "gender",
-                               "age_group",
-                               "incomplete",
-                               "date_of_recovery",
-                               "location_id"
-                               ],
-                  main="pe_label",
-                  extra="gender",
+                  super_entity = ("pr_pentity", "sit_trackable"),
+                  create_onaccept = self.body_onaccept,
+                  create_next = URL(f="body", args=["[id]", "checklist"]),
+                  filter_widgets = filter_widgets,
+                  list_fields = ["id",
+                                 "pe_label",
+                                 "gender",
+                                 "age_group",
+                                 "incomplete",
+                                 "date_of_recovery",
+                                 "location_id"
+                                 ],
+                  main = "pe_label",
+                  extra = "gender",
                  )
 
         # ---------------------------------------------------------------------

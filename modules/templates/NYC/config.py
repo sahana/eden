@@ -694,8 +694,7 @@ def config(settings):
                        S3SQLInlineComponent(
                             "organisation_location",
                             label = T("Areas Served"),
-                            fields = [("", "location_id"),
-                                      ],
+                            fields = [("", "location_id")],
                             ),
                        S3SQLInlineComponent(
                             "facility",
@@ -1303,8 +1302,7 @@ $.filterOptionsS3({
                                            "options": 2,
                                            }]
                         # Hide access-level
-                        contact_fields = [("", "value"),
-                                          ]
+                        contact_fields = [("", "value")]
 
                     # Custom CRUD form
                     crud_fields = ["first_name",
@@ -1325,8 +1323,8 @@ $.filterOptionsS3({
                                         #multiple = True,
                                         fields = contact_fields,
                                         filterby = [{"field": "contact_method",
-                                                        "options": "EMAIL",
-                                                        },
+                                                     "options": "EMAIL",
+                                                     },
                                                     ] + contact_filter,
                                         ),
                                    S3SQLInlineComponent(

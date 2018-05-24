@@ -1556,7 +1556,6 @@ class S3SQLFormElement(object):
     @staticmethod
     def _rename_field(field, name,
                       comments=True,
-                      default=DEFAULT,
                       label=DEFAULT,
                       popup=None,
                       skip_post_validation=False,
@@ -1570,7 +1569,6 @@ class S3SQLFormElement(object):
             @param comments: render comments - if set to False, only
                              navigation items with an inline() renderer
                              method will be rendered (unless popup is None)
-            @param default: override option for the original field default
             @param label: override option for the original field label
             @param popup: only if comments=False, additional vars for comment
                           navigation items (e.g. AddResourceLink), None prevents
@@ -1581,8 +1579,6 @@ class S3SQLFormElement(object):
             @param widget: override option for the original field widget
         """
 
-        if default is DEFAULT:
-            default = field.default
         if label is DEFAULT:
             label = field.label
         if widget is DEFAULT:
@@ -1647,9 +1643,10 @@ class S3SQLFormElement(object):
                   autodelete = field.autodelete,
 
                   comment = comment,
-                  default = default,
                   label = label,
                   widget = widget,
+
+                  default = field.default,
 
                   writable = field.writable,
                   readable = field.readable,
@@ -2428,32 +2425,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         pkey = table._id.name
 
         fields_opt = options.get("fields", None)
-        defaults = {}
         labels = {}
-        widgets = {}
         if fields_opt:
             fields = []
             for f in fields_opt:
                 if isinstance(f, tuple):
-                    if len(f) > 2:
-                        label, f, w = f
-                        widgets[f] = w
-                    else:
-                        label, f = f
+                    label, f = f
                     labels[f] = label
-                elif isinstance(f, dict):
-                    f_get = f.get
-                    fname = f_get("name")
-                    default = f_get("default", DEFAULT)
-                    if default is not DEFAULT:
-                        defaults[fname] = default
-                    label = f_get("label", DEFAULT)
-                    if label is not DEFAULT:
-                        labels[fname] = label
-                    widget = f_get("widget", DEFAULT)
-                    if widget is not DEFAULT:
-                        widgets[fname] = widget
-                    f = fname
                 if f in table.fields:
                     fields.append(f)
         else:
@@ -2529,9 +2507,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     "label": s3_str(rfield.label),
                     }
                     for rfield in rfields if rfield.fname != pkey]
-
-        self.defaults = defaults
-        self.widgets = widgets
 
         items = []
         has_permission = current.auth.s3_has_permission
@@ -3257,8 +3232,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         data = {}
         formfields = []
         formname = self._formname()
-        defaults = self.defaults
-        widgets = self.widgets
         for f in fields:
 
             # Construct a row-specific field name
@@ -3273,20 +3246,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
-            # Custom label and widget
-            default = defaults.get(fname, DEFAULT)
+            # Custom label
             label = f.get("label", DEFAULT)
-            widget = widgets.get(fname, DEFAULT)
 
             # Use S3UploadWidget for upload fields
-            if widget is DEFAULT and str(table[fname].type) == "upload":
+            if str(table[fname].type) == "upload":
                 widget = S3UploadWidget.widget
+            else:
+                widget = DEFAULT
 
             # Get a Field instance for SQLFORM.factory
             formfield = self._rename_field(table[fname],
                                            idxname,
                                            comments = False,
-                                           default = default,
                                            label = label,
                                            popup = popup,
                                            skip_post_validation = True,

@@ -6769,10 +6769,11 @@ class pr_ContactRepresent(S3Represent):
             @param: see super
         """
 
-        super(pr_ContactRepresent, self).__init__(lookup="pr_contact",
-                                                  fields=["contact_method",
-                                                          "value"],
-                                                  show_link=show_link,
+        super(pr_ContactRepresent, self).__init__(lookup = "pr_contact",
+                                                  fields = ["contact_method",
+                                                            "value",
+                                                            ],
+                                                  show_link = show_link,
                                                   )
 
     # -------------------------------------------------------------------------

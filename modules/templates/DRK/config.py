@@ -1454,8 +1454,7 @@ def config(settings):
                                     "dvr_case.destination_site_id",
                                     S3SQLInlineComponent(
                                             "eo_number",
-                                            fields = [("", "value"),
-                                                      ],
+                                            fields = [("", "value")],
                                             filterby = {"field": "tag",
                                                         "options": "EONUMBER",
                                                         },
@@ -1465,8 +1464,7 @@ def config(settings):
                                             ),
                                     S3SQLInlineComponent(
                                             "bamf",
-                                            fields = [("", "value"),
-                                                      ],
+                                            fields = [("", "value")],
                                             filterby = {"field": "tag",
                                                         "options": "BAMF",
                                                         },
@@ -1502,8 +1500,7 @@ def config(settings):
                                     "person_details.occupation",
                                     S3SQLInlineComponent(
                                             "contact",
-                                            fields = [("", "value"),
-                                                        ],
+                                            fields = [("", "value")],
                                             filterby = {"field": "contact_method",
                                                         "options": "SMS",
                                                         },
@@ -1543,8 +1540,7 @@ def config(settings):
                                     reg_unit_id,
                                     S3SQLInlineComponent(
                                             "contact",
-                                            fields = [("", "value"),
-                                                        ],
+                                            fields = [("", "value")],
                                             filterby = {"field": "contact_method",
                                                         "options": "SMS",
                                                         },

@@ -773,38 +773,38 @@ def person():
 
                     # Create forms use this
                     # (update forms are in gis/config())
-                    fields = ["name",
-                              "pe_default",
-                              "default_location_id",
-                              "zoom",
-                              "lat",
-                              "lon",
-                              #"projection_id",
-                              #"symbology_id",
-                              #"wmsbrowser_url",
-                              #"wmsbrowser_name",
-                              ]
+                    crud_fields = ["name",
+                                   "pe_default",
+                                   "default_location_id",
+                                   "zoom",
+                                   "lat",
+                                   "lon",
+                                   #"projection_id",
+                                   #"symbology_id",
+                                   #"wmsbrowser_url",
+                                   #"wmsbrowser_name",
+                                   ]
                     osm_table = s3db.gis_layer_openstreetmap
                     openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
                                                                           limitby=(0, 1))
                     if openstreetmap:
                         # OpenStreetMap config
                         s3db.add_components("gis_config",
-                                            auth_user_options={"joinby": "pe_id",
-                                                               "pkey": "pe_id",
-                                                               "multiple": False,
-                                                              },
+                                            auth_user_options = {"joinby": "pe_id",
+                                                                 "pkey": "pe_id",
+                                                                 "multiple": False,
+                                                                 },
                                            )
-                        fields += ["user_options.osm_oauth_consumer_key",
-                                   "user_options.osm_oauth_consumer_secret",
-                                   ]
-                    crud_form = s3base.S3SQLCustomForm(*fields)
+                        crud_fields += ["user_options.osm_oauth_consumer_key",
+                                        "user_options.osm_oauth_consumer_secret",
+                                        ]
+                    crud_form = s3base.S3SQLCustomForm(*crud_fields)
                     list_fields = ["name",
                                    "pe_default",
                                    ]
                     s3db.configure("gis_config",
-                                   crud_form=crud_form,
-                                   insertable=False,
+                                   crud_form = crud_form,
+                                   insertable = False,
                                    list_fields = list_fields,
                                    )
             else:
