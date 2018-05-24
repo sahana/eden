@@ -916,12 +916,15 @@ class S3OptionsMenu(object):
     def event():
         """ EVENT / Event Module """
 
-        if current.deployment_settings.get_event_label(): # == "Disaster"
+        settings = current.deployment_settings
+        if settings.get_event_label(): # == "Disaster"
             EVENTS = "Disasters"
             EVENT_TYPES = "Disaster Types"
         else:
             EVENTS = "Events"
             EVENT_TYPES = "Event Types"
+
+        incidents = lambda i: settings.get_event_incident()
 
         return M()(
                     #M("Scenarios", c="event", f="scenario")(
@@ -935,13 +938,16 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         #M("Import", m="import", p="create"),
                     ),
-                    M("Incidents", c="event", f="incident")(
+                    M("Incidents", c="event", f="incident",
+                      check=incidents)(
                         M("Create", m="create"),
                     ),
-                    M("Incident Reports", c="event", f="incident_report", m="summary")(
+                    M("Incident Reports", c="event", f="incident_report", m="summary",
+                      check=incidents)(
                         M("Create", m="create"),
                     ),
-                    M("Incident Types", c="event", f="incident_type")(
+                    M("Incident Types", c="event", f="incident_type",
+                      check=incidents)(
                         M("Create", m="create"),
                         #M("Import", m="import", p="create"),
                     ),

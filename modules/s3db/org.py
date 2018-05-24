@@ -430,7 +430,7 @@ class S3OrganisationModel(S3Model):
                      #Field("archived", "boolean", default=False),
                      *s3_meta_fields())
 
-        form_fields = ["name",
+        crud_fields = ["name",
                        "acronym",
                        S3SQLInlineLink(
                             "organisation_type",
@@ -452,7 +452,7 @@ class S3OrganisationModel(S3Model):
 
         use_sector = settings.get_org_sector()
         if use_sector:
-            form_fields.insert(3, S3SQLInlineLink("sector",
+            crud_fields.insert(3, S3SQLInlineLink("sector",
                                                   columns = 4,
                                                   label = T("Sectors"),
                                                   field = "sector_id",
@@ -461,11 +461,11 @@ class S3OrganisationModel(S3Model):
 
         if settings.get_org_summary():
             # Include Summary fields in form
-            position = form_fields.index("year")
-            form_fields.insert(position + 1, "summary.national_staff")
-            form_fields.insert(position + 2, "summary.international_staff")
+            position = crud_fields.index("year")
+            crud_fields.insert(position + 1, "summary.national_staff")
+            crud_fields.insert(position + 2, "summary.international_staff")
 
-        crud_form = S3SQLCustomForm(*form_fields)
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         # CRUD strings
         ADD_ORGANIZATION = T("Create Organization")
@@ -874,7 +874,7 @@ class S3OrganisationModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(org_organisation_type_id = organisation_type_id,
-                    org_organisation_crud_fields = form_fields,
+                    org_organisation_crud_fields = crud_fields,
                     org_organisation_id = organisation_id,
                     org_organisation_represent = org_organisation_represent,
                     org_region_id = region_id,
@@ -4737,7 +4737,7 @@ class S3OfficeModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        form_fields = ["name",
+        crud_fields = ["name",
                        "code",
                        "organisation_id",
                        "office_type_id",
@@ -4752,11 +4752,11 @@ class S3OfficeModel(S3Model):
         org_summary = settings.get_org_summary()
         if org_summary:
             # Include Summary fields in form
-            position = form_fields.index("email")
-            form_fields.insert(position+1, "summary.national_staff")
-            form_fields.insert(position+2, "summary.international_staff")
+            position = crud_fields.index("email")
+            crud_fields.insert(position + 1, "summary.national_staff")
+            crud_fields.insert(position + 2, "summary.international_staff")
 
-        crud_form = S3SQLCustomForm(*form_fields)
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         # CRUD strings
         crud_strings[tablename] = Storage(

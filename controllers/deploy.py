@@ -712,8 +712,7 @@ def email_inbox():
                                     "attachment",
                                     name = "document_id",
                                     label = T("Attachments"),
-                                    fields = ["document_id",
-                                              ],
+                                    fields = ["document_id"],
                                     ),
                                 )
 

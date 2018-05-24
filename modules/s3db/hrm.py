@@ -827,8 +827,7 @@ class S3HRModel(S3Model):
             if vol_experience in ("programme", "both"):
                 crud_fields.insert(posn, S3SQLInlineComponent("programme_hours",
                                                               label = "",
-                                                              fields = ["programme_id",
-                                                                        ],
+                                                              fields = ["programme_id"],
                                                               link = False,
                                                               multiple = False,
                                                               ))
@@ -864,8 +863,7 @@ class S3HRModel(S3Model):
             if vol_experience in ("programme", "both"):
                 crud_fields.insert(2, S3SQLInlineComponent("programme_hours",
                                                            label = "",
-                                                           fields = ["programme_id",
-                                                                     ],
+                                                           fields = ["programme_id"],
                                                            link = False,
                                                            multiple = False,
                                                            ))

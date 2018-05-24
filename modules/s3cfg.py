@@ -3253,6 +3253,12 @@ class S3Config(Storage):
         """
         return self.event.get("label", None)
 
+    def get_event_incident(self):
+        """
+            Whether Events have Incidents
+        """
+        return self.event.get("incident", True)
+
     def get_event_cascade_delete_incidents(self):
         """
             Whether deleting an Event cascades to deleting all Incidents or whether it sets NULL
@@ -3306,18 +3312,6 @@ class S3Config(Storage):
         """
         return self.event.get("dc_target_tab", True)
 
-    def get_event_impact_tab(self):
-        """
-            Whether to show the impact tab for events
-        """
-        return self.event.get("impact_tab", True)
-
-    def get_incident_impact_tab(self):
-        """
-            Whether to show the impact tab for incidents
-        """
-        return self.event.get("incident_impact_tab", False)
-
     def get_event_dispatch_tab(self):
         """
             Whether to show the dispatch tab for events
@@ -3327,6 +3321,12 @@ class S3Config(Storage):
         else:
             return False
 
+    def get_event_impact_tab(self):
+        """
+            Whether to show the impact tab for events
+        """
+        return self.event.get("impact_tab", True)
+
     def get_incident_dispatch_tab(self):
         """
             Whether to show the dispatch tab for incidents
@@ -3335,6 +3335,12 @@ class S3Config(Storage):
             return self.event.get("incident_dispatch_tab", True)
         else:
             return False
+
+    def get_incident_impact_tab(self):
+        """
+            Whether to show the impact tab for incidents
+        """
+        return self.event.get("incident_impact_tab", False)
 
     def get_incident_teams_tab(self):
         """

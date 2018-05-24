@@ -793,8 +793,7 @@ def config(settings):
                             S3SQLInlineComponent(
                                     "address",
                                     label = T("Current Address"),
-                                    fields = [("", "location_id"),
-                                              ],
+                                    fields = [("", "location_id")],
                                     filterby = {"field": "type",
                                                 "options": "1",
                                                 },
@@ -803,8 +802,7 @@ def config(settings):
                                     ),
                             S3SQLInlineComponent(
                                     "bamf",
-                                    fields = [("", "value"),
-                                              ],
+                                    fields = [("", "value")],
                                     filterby = {"field": "tag",
                                                 "options": "BAMF",
                                                 },
@@ -831,8 +829,7 @@ def config(settings):
                             "person_details.occupation",
                             S3SQLInlineComponent(
                                     "contact",
-                                    fields = [("", "value"),
-                                                ],
+                                    fields = [("", "value")],
                                     filterby = {"field": "contact_method",
                                                 "options": "SMS",
                                                 },
