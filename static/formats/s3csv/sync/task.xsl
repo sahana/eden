@@ -29,6 +29,8 @@
                                          (default NEWER)
 
     *********************************************************************** -->
+    <xsl:import href="common.xsl"/>
+
     <xsl:output method="xml"/>
 
     <!-- Index for repositories -->
@@ -178,24 +180,6 @@
                     </data>
                 </xsl:if>
 
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- Template for repositories -->
-    <xsl:template name="Repository">
-
-        <xsl:variable name="Name" select="col[@field='Repository']/text()"/>
-        <xsl:if test="$Name!=''">
-            <resource name="sync_repository">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('REPOSITORY:', $Name)"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="$Name"/>
-                </data>
             </resource>
         </xsl:if>
 
