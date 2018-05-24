@@ -289,6 +289,32 @@ def config(settings):
     ])
 
     # -------------------------------------------------------------------------
+    def customise_event_event_resource(r, tablename):
+
+        current.s3db.event_event.name.label = T("Disaster Title")
+
+    settings.customise_event_event_resource = customise_event_event_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_sitrep_resource(r, tablename):
+
+        from gluon.storage import Storage
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Situational Update"),
+            title_display = T("HCT Activity and Response Report"),
+            title_list = T("Situational Updates"),
+            title_update = T("Edit Situational Update"),
+            title_upload = T("Import Situational Updates"),
+            label_list_button = T("List Situational Updates"),
+            label_delete_button = T("Delete Situational Update"),
+            msg_record_created = T("Situational Update added"),
+            msg_record_modified = T("Situational Update updated"),
+            msg_record_deleted = T("Situational Update deleted"),
+            msg_list_empty = T("No Situational Updates currently registered"))
+
+    settings.customise_event_sitrep_resource = customise_event_sitrep_resource
+
+    # -------------------------------------------------------------------------
     def customise_msg_twitter_channel_resource(r, tablename):
 
         s3db = current.s3db
@@ -366,11 +392,11 @@ def config(settings):
                                                     field = "sector_id",
                                                     label = T("Sectors"),
                                                     ),
-                                    S3SQLInlineLink("service",
-                                                    columns = 4,
-                                                    field = "service_id",
-                                                    label = T("Services"),
-                                                    ),
+                                    #S3SQLInlineLink("service",
+                                    #                columns = 4,
+                                    #                field = "service_id",
+                                    #                label = T("Services"),
+                                    #                ),
                                     "country",
                                     "phone",
                                     "website",
@@ -442,7 +468,7 @@ def config(settings):
         s3db = current.s3db
         tablename = "project_activity"
 
-        # Custom Components for Agency, Partners & Donors; Modality & Number
+        # Custom Filtered Components
         s3db.add_components(tablename,
                             project_activity_organisation = (# Agency
                                                              {"name": "agency",
@@ -501,12 +527,12 @@ def config(settings):
 
         s3db.project_activity_data.unit.requires = IS_EMPTY_OR(IS_IN_SET(("People", "Households")))
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        from s3 import S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
                                                     field = "event_id",
                                                     label = T("Disaster"),
                                                     multiple = False,
-                                                    required = True,
+                                                    #required = True,
                                                     ),
                                     S3SQLInlineComponent("agency",
                                                          name = "agency",
@@ -534,6 +560,7 @@ def config(settings):
                                     "location_id",
                                     S3SQLInlineLink("sector",
                                                     field = "sector_id",
+                                                    filter = False,
                                                     label = T("Sector"),
                                                     multiple = False,
                                                     ),
@@ -564,8 +591,22 @@ def config(settings):
                                     "comments",
                                     )
 
+        filter_widgets = [S3OptionsFilter("event.event_type_id"),
+                          S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
+                          S3OptionsFilter("sector_activity.sector_id"),
+                          S3LocationFilter("location_id",
+                                           # These levels are for SHARE/LK
+                                           levels = ("L2", "L3", "L4"),
+                                           ),
+                          S3OptionsFilter("status_id",
+                                          cols = 4,
+                                          label = T("Status"),
+                                          ),
+                          ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       filter_widgets = filter_widgets,
                        list_fields = [(T("Disaster"), "event__link.event_id"),
                                       (T("Agency"), "agency.organisation_id"),
                                       (T("Implementing Partner"), "partner.organisation_id"),
@@ -595,7 +636,7 @@ def config(settings):
         s3db = current.s3db
         tablename = "req_need"
 
-        # Custom Components for Verified
+        # Custom Filtered Components
         s3db.add_components(tablename,
                             req_need_tag = (# Verified
                                             {"name": "verified",
@@ -625,16 +666,22 @@ def config(settings):
                 f.default = False
                 f.writable = False
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        from s3 import S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
                                                     field = "event_id",
                                                     label = T("Disaster"),
                                                     multiple = False,
-                                                    required = True,
+                                                    #required = True,
                                                     ),
                                     "location_id",
                                     "date",
                                     "priority",
+                                    S3SQLInlineLink("sector",
+                                                    field = "sector_id",
+                                                    filter = False,
+                                                    label = T("Sector"),
+                                                    multiple = False,
+                                                    ),
                                     "summary",
                                     S3SQLInlineComponent("verified",
                                                          name = "verified",
@@ -646,8 +693,26 @@ def config(settings):
                                     "comments",
                                     )
 
+        filter_widgets = [S3OptionsFilter("event.event_type_id"),
+                          S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
+                          S3OptionsFilter("sector__link.sector_id"),
+                          S3LocationFilter("location_id",
+                                           # These levels are for SHARE/LK
+                                           levels = ("L2", "L3", "L4"),
+                                           ),
+                          S3OptionsFilter("status",
+                                          cols = 3,
+                                          label = T("Status"),
+                                          ),
+                          S3OptionsFilter("verified.value",
+                                          cols = 2,
+                                          label = T("Verified"),
+                                          ),
+                          ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       filter_widgets = filter_widgets,
                        list_fields = [(T("Disaster"), "event__link.event_id"),
                                       # These levels/Labels are for SHARE/LK
                                       (T("District"), "location_id$L2"),
@@ -656,12 +721,8 @@ def config(settings):
                                       "date",
                                       "priority",
                                       "summary",
-                                      S3SQLInlineLink("sector",
-                                                      field = "sector_id",
-                                                      label = T("Sector"),
-                                                      multiple = False,
-                                                      ),
-                                      "status",
+                                      "sector__link.sector_id",
+                                      (T("Status"), "status"),
                                       (T("Verified"), "verified.value"),
                                       ],
                        )
