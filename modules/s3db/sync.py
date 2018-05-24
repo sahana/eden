@@ -176,6 +176,7 @@ class SyncRepositoryModel(S3Model):
         sync_repository_types = {
             "adashi": "ADASHI",
             "ccrm": "CiviCRM",
+            "data": "Sahana Eden Data Repository",
             "eden": "Sahana Eden",
             "filesync": "Local Filesystem",
             "ftp": "FTP",
@@ -210,7 +211,9 @@ class SyncRepositoryModel(S3Model):
                            default = "eden",
                            label = T("Repository Type"),
                            represent = S3Represent(options=sync_repository_types),
-                           requires = IS_IN_SET(sync_repository_types),
+                           requires = IS_IN_SET(sync_repository_types,
+                                                sort = True,
+                                                ),
                            ),
                      Field("backend",
                            default = "eden",
@@ -337,6 +340,12 @@ class SyncRepositoryModel(S3Model):
                                  label = T("Last Connected"),
                                  writable = False,
                                  ),
+                     # For data repositories
+                     s3_datetime("last_refresh",
+                                 label = T("Last Refresh"),
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      # System fields
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
@@ -368,10 +377,7 @@ class SyncRepositoryModel(S3Model):
                                       ],
                        onaccept = self.sync_repository_onaccept,
                        ondelete = self.sync_repository_ondelete,
-                       create_next = URL(c="sync",
-                                         f="repository",
-                                         args=["[id]", "task"],
-                                         ),
+                       create_next = self.sync_repository_create_next,
                        update_next = URL(c="sync",
                                          f="repository",
                                          args=["[id]"],
@@ -411,6 +417,7 @@ class SyncRepositoryModel(S3Model):
         self.add_components(tablename,
                             sync_task = "repository_id",
                             sync_log = "repository_id",
+                            sync_dataset = "repository_id",
                             # Scheduler Jobs
                             **{S3Task.TASK_TABLENAME: {"name": "job",
                                                        "joinby": "repository_id",
@@ -470,19 +477,28 @@ class SyncRepositoryModel(S3Model):
             return
 
         if repository_id:
+
             rtable = current.s3db.sync_repository
             query = (rtable.id == repository_id)
             repository = current.db(query).select(limitby=(0, 1)).first()
+
             if repository and repository.url:
+
                 from s3 import S3SyncRepository
                 connector = S3SyncRepository(repository)
                 success = connector.register()
-                if not success:
-                    current.response.warning = \
-                        current.T("Could not auto-register at the repository, please register manually.")
-                else:
+
+                if success is None:
+                    # No registration required
+                    return
+
+                elif success:
                     current.response.confirmation = \
                         current.T("Successfully registered at the repository.")
+
+                else:
+                    current.response.warning = \
+                        current.T("Could not auto-register at the repository, please register manually.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -522,6 +538,25 @@ class SyncRepositoryModel(S3Model):
         else:
             return current.T("never")
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def sync_repository_create_next(r):
+        """ API-type-dependent redirect after create """
+
+        create_next = "task"
+
+        record_id = r.resource.lastid
+        if record_id:
+            table = current.s3db.sync_repository
+            query = table.id == record_id
+            row = current.db(query).select(table.apitype,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row and row.apitype == "data":
+                create_next = "dataset"
+
+        return URL(c="sync", f="repository", args=["[id]", create_next])
+
 # =============================================================================
 class SyncDatasetModel(S3Model):
     """ Model representing a public data set """
@@ -550,10 +585,6 @@ class SyncDatasetModel(S3Model):
                      self.sync_repository_id(readable = False,
                                              writable = False,
                                              ),
-                     Field("name",
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
                      Field("code", unique=True, length=64,
                            label = T("Code"),
                            requires = [IS_NOT_EMPTY(),
@@ -562,6 +593,9 @@ class SyncDatasetModel(S3Model):
                                                      "%s.code" % tablename,
                                                      ),
                                        ],
+                           ),
+                     Field("name",
+                           label = T("Name"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -688,6 +722,9 @@ class SyncTaskModel(S3Model):
 
         configure = self.configure
 
+        s3_datetime_represent = lambda dt: \
+                                S3DateTime.datetime_represent(dt, utc=True)
+
         # -------------------------------------------------------------------------
         # Task
         # -------------------------------------------------------------------------
@@ -810,11 +847,13 @@ class SyncTaskModel(S3Model):
                            label = T("Last pull on"),
                            readable = True,
                            writable = False,
+                           represent = s3_datetime_represent,
                            ),
                      Field("last_push", "datetime",
                            label = T("Last push on"),
                            readable = True,
                            writable = False,
+                           represent = s3_datetime_represent,
                            ),
                      Field("mode", "integer",
                            default = 3,
@@ -1126,7 +1165,26 @@ def sync_rheader(r, tabs=None):
 
         if tablename == "sync_repository":
 
-            repository = record
+            if not tabs:
+                # Standard tabs
+                tabs = [(T("Configuration"), None),
+                        (T("Resources"), "task"),
+                        (T("Schedule"), "job"),
+                        (T("Log"), "log"),
+                        ]
+
+            if record.apitype == "data":
+                # Expose data set tab
+                tabs.insert(1, (T("Data Sets"), "dataset"))
+
+            if record.url or \
+               record.apitype == "filesync" and record.path:
+                # Expose manual sync method on tab
+                tabs.append((T("Manual Synchronization"), "now"))
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            # Link to purge the sync log for this repository
             if r.component and r.component_name=="log" and not r.component_id:
                 purge_log = A(T("Remove all log entries"),
                               _href = r.url(method="delete"),
@@ -1134,24 +1192,16 @@ def sync_rheader(r, tabs=None):
             else:
                 purge_log = ""
 
-            if repository:
-                if tabs is not None and \
-                   repository.url or \
-                   repository.apitype == "filesync" and repository.path:
-                    tabs.append((T("Manual Synchronization"), "now"))
-
-                rheader_tabs = s3_rheader_tabs(r, tabs)
-
-                rheader = DIV(TABLE(
-                    TR(TH("%s: " % T("Name")),
-                       repository.name,
-                       TH(""),
-                       purge_log),
-                    TR(TH("URL: "),
-                       repository.url,
-                       TH(""),
-                       ""),
-                    ), rheader_tabs)
+            rheader = DIV(TABLE(
+                TR(TH("%s: " % T("Name")),
+                   record.name,
+                   TH(""),
+                   purge_log),
+                TR(TH("URL: "),
+                   record.url,
+                   TH(""),
+                   ""),
+                ), rheader_tabs)
 
         elif tablename == "sync_dataset":
 
@@ -1220,9 +1270,15 @@ def sync_now(r, **attr):
             repository = r.record
             if not repository:
                 r.error(404, current.ERROR.BAD_RECORD)
-            form = FORM(TABLE(
-                        TR(TD(T("Click 'Start' to synchronize with this repository now:"))),
-                        TR(TD(INPUT(_type="submit", _value=T("Start"))))))
+            form = FORM(DIV(T("Click 'Start' to synchronize with this repository now:"),
+                            ),
+                        DIV(INPUT(_class = "tiny primary button",
+                                  _type = "submit",
+                                  _value = T("Start"),
+                                  ),
+                            ),
+                        _class="sync-now-form",
+                        )
             if form.accepts(r.post_vars, current.session):
                 task_id = s3task.async("sync_synchronize",
                                        args = [repository.id],
@@ -1233,6 +1289,7 @@ def sync_now(r, **attr):
                 if task_id is False:
                     response.error = T("Could not initiate manual synchronization.")
                 elif task_id is None:
+                    # No scheduler running, has run synchronously
                     response.flash = T("Manual synchronization completed.")
                 else:
                     sync.set_status(manual=True)

@@ -3050,19 +3050,28 @@ class S3ImportJob():
             cnames = Storage()
             cinfos = Storage()
             for alias in components:
+
                 component = components[alias]
+
+                ctable = component.table
+                if ctable._id != "id" and "instance_type" in ctable.fields:
+                    # Super-entities cannot be imported to directly => skip
+                    continue
+
+                # Determine the keys
                 pkey = component.pkey
                 if component.linktable:
                     ctable = component.linktable
                     fkey = component.lkey
                 else:
-                    ctable = component.table
                     fkey = component.fkey
+
                 ctablename = ctable._tablename
                 if ctablename in cnames:
                     cnames[ctablename].append(alias)
                 else:
                     cnames[ctablename] = [alias]
+
                 cinfos[(ctablename, alias)] = Storage(component = component,
                                                       ctable = ctable,
                                                       pkey = pkey,
