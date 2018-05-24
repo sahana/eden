@@ -1026,4 +1026,133 @@ class S3SyncBaseAdapter(object):
 
         raise NotImplementedError
 
+# =============================================================================
+class S3SyncDataArchive(object):
+    """
+        Simple abstraction layer for (compressed) data archives, currently
+        based on zipfile (Python standard library). Compression additionally
+        requires zlib to be installed (both for write and read).
+    """
+
+    def __init__(self, fileobj=None, compressed=True):
+        """
+            Create or open an archive
+
+            @param fileobj: the file object containing the archive,
+                            None to create a new archive
+            @param compress: enable (or suppress) compression of new
+                             archives
+        """
+
+        import zipfile
+
+        if compressed:
+            compression = zipfile.ZIP_DEFLATED
+        else:
+            compression = zipfile.ZIP_STORED
+
+        if fileobj is not None:
+            try:
+                archive = zipfile.ZipFile(fileobj, "r")
+            except RuntimeError:
+                current.log.warn("invalid ZIP archive: %s" % sys.exc_info()[1])
+                archive = None
+        else:
+            try:
+                from cStringIO import StringIO # Faster, where available
+            except ImportError:
+                from StringIO import StringIO
+            fileobj = StringIO()
+            try:
+                archive = zipfile.ZipFile(fileobj, "w", compression, True)
+            except RuntimeError:
+                # Zlib not available? => try falling back to STORED
+                compression = zipfile.ZIP_STORED
+                archive = zipfile.ZipFile(fileobj, "w", compression, True)
+                current.log.warn("zlib not available - cannot compress archive")
+
+        self.fileobj = fileobj
+        self.archive = archive
+
+    # -------------------------------------------------------------------------
+    def add(self, name, obj):
+        """
+            Add an object to the archive
+
+            @param name: the file name for the object inside the archive
+            @param obj: the object to add (string or file-like object)
+
+            @raises UserWarning: when adding a duplicate name (overwrites
+                                 the existing object in the archive)
+            @raises RuntimeError: if the archive is not writable, or
+                                  no valid object name has been provided
+            @raises TypeError: if the object is not a unicode, str or
+                               file-like object
+        """
+
+        # Make sure the object name is an utf-8 encoded str
+        if not name:
+            raise RuntimeError("name is required")
+        elif type(name) is not str:
+            name = s3_str(name)
+
+        # Make sure the archive is available
+        archive = self.archive
+        if not archive:
+            raise RuntimeError("cannot add to closed archive")
+
+        # Convert unicode objects to str
+        if type(obj) is unicode:
+            obj = obj.encode("utf-8")
+
+        # Write the object
+        if type(obj) is str:
+            archive.writestr(name, obj)
+
+        elif hasattr(obj, "read"):
+            obj.seek(0)
+            archive.writestr(name, obj.read())
+
+        else:
+            raise TypeError("invalid object type")
+
+    # -------------------------------------------------------------------------
+    def extract(self, name):
+        """
+            Extract an object from the archive by name
+
+            @param name: the object name
+
+            @return: the object as file-like object, or None if
+                     the object could not be found in the archive
+        """
+
+        if not self.archive:
+            raise RuntimeError("cannot extract from closed archive")
+
+        try:
+            return self.archive.open(name)
+        except KeyError:
+            # Object doesn't exist
+            return None
+
+    # -------------------------------------------------------------------------
+    def close(self):
+        """
+            Close the archive and return it as file-like object; no further
+            add/extract operations will be possible after closing.
+
+            @return: the file-like object containing the archive
+        """
+
+        if self.archive:
+            self.archive.close()
+            self.archive = None
+
+        fileobj = self.fileobj
+        if fileobj:
+            fileobj.seek(0)
+
+        return fileobj
+
 # End =========================================================================
