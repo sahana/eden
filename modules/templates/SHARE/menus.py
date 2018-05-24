@@ -124,16 +124,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def project():
         """ Project Module """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M()(
                     M("Activities", c="project", f="activity")(
                         M("Create", m="create"),
-                    ),
-                    M("Activity Types", c="project", f="activity_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                        #M("Import", m="import", p="create"),
                     ),
                 )
 
