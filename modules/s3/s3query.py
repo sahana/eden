@@ -2183,6 +2183,8 @@ class S3ResourceQuery(object):
 class S3URLQuery(object):
     """ URL Query Parser """
 
+    OPPATTERN = re.compile("__(?!link)[_a-z\!]+")
+
     # -------------------------------------------------------------------------
     @classmethod
     def parse(cls, resource, get_vars):
@@ -2307,8 +2309,8 @@ class S3URLQuery(object):
         return get_vars
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_expression(key):
+    @classmethod
+    def parse_expression(cls, key):
         """
             Parse a URL expression
 
@@ -2320,11 +2322,26 @@ class S3URLQuery(object):
             invert = True
         else:
             invert = False
+
         fs = key.rstrip("!")
         op = None
-        if "__" in fs:
-            fs, op = fs.split("__", 1)
-            op = op.strip("_")
+
+        # Find the operator
+        m = cls.OPPATTERN.search(fs)
+        if m:
+          op = m.group(0).strip("_")
+          fs = fs[:m.span(0)[0]]
+        else:
+          fs = fs.rstrip("_")
+
+        # Find the operator (alternative without regex, ugly + unflexible)
+        #idx = fs.rfind("__link")
+        #sub = fs if idx == -1 else fs[idx+6:]
+        #oidx = sub.find("__")
+        #if oidx != -1:
+        #   fs = fs[:oidx] if idx == -1 else fs[:idx+6] + sub[:oidx]
+        #   op = sub[oidx+2:].strip("_")
+
         if not op:
             op = "eq"
         if "|" in fs:
