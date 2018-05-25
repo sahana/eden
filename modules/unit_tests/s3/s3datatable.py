@@ -29,7 +29,6 @@ class S3DataTableTests(unittest.TestCase):
         resource = current.s3db.resource("org_office")
         list_fields = ["id",
                        "organisation_id$name",
-                       "organisation_id$address",
                        "name",
                        "office_type_id",
                        "location_id$L0",
@@ -61,32 +60,32 @@ class S3DataTableTests(unittest.TestCase):
 
         dt = S3DataTable(self.rfields, self.data,
                          orderby=table.name)
-        expected = [[3, "asc"]]
+        expected = [[2, "asc"]]
         actual = dt.orderby
         self.assertEqual(expected, actual)
 
         dt = S3DataTable(self.rfields, self.data,
                          orderby=~table.name)
-        expected = [[3, "desc"]]
+        expected = [[2, "desc"]]
         actual = dt.orderby
         self.assertEqual(expected, actual)
 
         dt = S3DataTable(self.rfields, self.data,
                          orderby=table.office_type_id | table.name)
-        expected = [[4, "asc"], [3, "asc"]]
+        expected = [[3, "asc"], [2, "asc"]]
         actual = dt.orderby
         self.assertEqual(expected, actual)
 
         dt = S3DataTable(self.rfields, self.data,
                          orderby=~table.office_type_id | table.name)
-        expected = [[4, "desc"], [3, "asc"]]
+        expected = [[3, "desc"], [2, "asc"]]
         actual = dt.orderby
         self.assertEqual(expected, actual)
 
         otable = current.s3db.org_organisation
         dt = S3DataTable(self.rfields, self.data,
                          orderby=otable.name | ~table.office_type_id | table.name)
-        expected = [[1, "asc"], [4, "desc"], [3, "asc"]]
+        expected = [[1, "asc"], [3, "desc"], [2, "asc"]]
         actual = dt.orderby
         self.assertEqual(expected, actual)
 
