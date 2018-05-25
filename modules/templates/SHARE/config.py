@@ -22,7 +22,7 @@ def config(settings):
                                 )
 
     # PrePopulate data
-    settings.base.prepopulate += ("SHARE", "default/users")
+    settings.base.prepopulate += ("SHARE",)
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SHARE"

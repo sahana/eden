@@ -1,7 +1,34 @@
 First Name,Last Name,Email,Password,Role,Organisation,Link
-Government,Needs-Logger,gov_needs_logger@example.com,eden,NEEDS_LOGGER,Government of Sri Lanka,Staff
-Sarvodaya,Needs-Logger,sarvodaya_activity_logger@example.com,eden,ACTIVITY_LOGGER,Sarvodaya Shramadana Society,Staff
-Oxfam,Administrator,oxfam_admin@example.com,eden,ORG_ADMIN,Oxfam International,Staff
-Oxfam,Needs-Logger,oxfam_activity_logger@example.com,eden,ACTIVITY_LOGGER,Oxfam International,Staff
-UN,Activity-Logger,un_activity_logger@example.com,eden,ACTIVITY_LOGGER,United Nations Resident Coordinator Office,Staff
-UN,Needs-Logger,un_neeeds_logger@example.com,eden,NEEDS_LOGGER,United Nations Resident Coordinator Office,Staff
+ACTED,Admin,acted@example.com,eden,ORG_ADMIN,Agency for Technical Cooperation and Development,Staff
+APAD,Admin,apadsl@example.com,eden,ORG_ADMIN,Asia Pacific Alliance for Disaster Managment,Staff
+CHA,Admin,cha@example.com,eden,ORG_ADMIN,Consortium of Humanitarian Agencies,Staff
+ChildFund,Admin,childfund@example.com,eden,ORG_ADMIN,ChildFund,Staff
+DPS,Admin,dps@example.com,eden,ORG_ADMIN,Development Partners Secretariat,Staff
+EU,Admin,eu@example.com,eden,ORG_ADMIN,European Union,Staff
+FAO,Admin,fao@example.com,eden,ORG_ADMIN,Food and Agriculture Organization,Staff
+HAI,Admin,hai@example.com,eden,ORG_ADMIN,Humanity and Inclusion,Staff
+HCI,Admin,hci@example.com,eden,ORG_ADMIN,High Commission of India,Staff
+ICRC,Admin,icrc@example.com,eden,ORG_ADMIN,International Committee of the Red Cross,Staff
+IFRC,Admin,ifrc@example.com,eden,ORG_ADMIN,International Federation of Red Cross and Red Crescent Societies,Staff
+IOM,Admin,iom@example.com,eden,ORG_ADMIN,International Organisation for Migration,Staff
+OCHA,Admin,ocha@example.com,eden,ORG_ADMIN,United Nations Office for the Coordination of Humanitarian Affairs- Regional Office Asia & Pacific,Staff
+Oxfam,Admin,oxfam@example.com,eden,ORG_ADMIN,Oxfam International,Staff
+Plan international,Admin,plan@example.com,eden,ORG_ADMIN,Plan International,Staff
+Sarvodaya,Admin,sarvodaya@example.com,eden,ORG_ADMIN,Sarvodaya Shramadana Society,Staff
+Save the children,Admin,save@example.com,eden,ORG_ADMIN,Save The Children,Staff
+Sevalanka,Admin,sev@example.com,eden,ORG_ADMIN,Sevalanka,Staff
+SLRC,Admin,slrc@example.com,eden,ORG_ADMIN,Sri Lanka Red Cross,Staff
+UNDP,Admin,undp@example.com,eden,ORG_ADMIN,United Nations Development Programme,Staff
+UNDSS,Admin,undss@example.com,eden,ORG_ADMIN,United Nations Department of Safety and Security,Staff
+UNFPA,Admin,unfpa@example.com,eden,ORG_ADMIN,United Nations Population Fund,Staff
+UN-Habitat,Admin,habitat@example.com,eden,ORG_ADMIN,United Nations Human Settlements Programme,Staff
+UNHRC,Admin,unhrc@example.com,eden,ORG_ADMIN,The United Nations Refugee Agency,Staff
+UNICEF,Admin,unicef@example.com,eden,ORG_ADMIN,United Nations Children Fund,Staff
+UNOPS,Admin,unops@example.com,eden,ORG_ADMIN,The United Nations Office for Project Services,Staff
+UNRCO,Admin,unrco@example.com,eden,ORG_ADMIN,United Nations Resident Coordinator Office,Staff
+UN Women,Admin,women@example.com,eden,ORG_ADMIN,The United Nations Entity for Gender Equality and the Empowerment of Women,Staff
+USAID,Admin,usaid@example.com,eden,ORG_ADMIN,United States Agency for International Development,Staff
+WFP,Admin,wfp@example.com,eden,ORG_ADMIN,World Food Programme,Staff
+WHO,Admin,who@example.com,eden,ORG_ADMIN,World Health Organization,Staff
+World Bank,Admin,worldbank@example.com,eden,ORG_ADMIN,World Bank Group,Staff
+World Vision,Admin,worldvision@example.com,eden,ORG_ADMIN,World Vision Lanka,Staff

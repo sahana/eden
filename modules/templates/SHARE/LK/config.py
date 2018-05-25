@@ -15,7 +15,8 @@ def config(settings):
     #T = current.T
 
     # PrePopulate data
-    settings.base.prepopulate += ("SHARE/LK", "SHARE/Demo")
+    settings.base.prepopulate += ("SHARE/LK",)
+    settings.base.prepopulate_demo += ("SHARE/Demo",)
 
     # Finance settings
     settings.fin.currencies = {
