@@ -354,14 +354,14 @@ def config(settings):
         s3db.add_components(tablename,
                             org_organisation_tag = (# Request Number
                                                     {"name": "req_number",
-                                                     "joinby": "need_id",
+                                                     "joinby": "organisation_id",
                                                      "filterby": {"tag": "req_number",
                                                                   },
                                                      "multiple": False,
                                                      },
                                                     # Vision
                                                     {"name": "vision",
-                                                     "joinby": "need_id",
+                                                     "joinby": "organisation_id",
                                                      "filterby": {"tag": "vision",
                                                                   },
                                                      "multiple": False,
