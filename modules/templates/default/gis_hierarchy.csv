@@ -15,6 +15,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BI,Province,Commune,Colline,Sous Colline,
 ,BN,District,Mukim,,
 ,BO,Department,Province,Municipality,Canton
+,BR,State,Municipality,District,,
 ,BT,District,Sub-District,,
 ,BZ,District,,,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
