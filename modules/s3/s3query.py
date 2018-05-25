@@ -1525,8 +1525,8 @@ class S3ResourceQuery(object):
                 rfield = 0
 
         query = query_bare(op, lfield, rfield)
-        if invert:
-            query = ~(query)
+        if invert and query is not None:
+            query = ~query
         return query
 
     # -------------------------------------------------------------------------
@@ -2183,7 +2183,7 @@ class S3ResourceQuery(object):
 class S3URLQuery(object):
     """ URL Query Parser """
 
-    OPPATTERN = re.compile("__(?!link)[_a-z\!]+")
+    FILTEROP = re.compile(r"__(?!link\.)([_a-z\!]+)$")
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2310,12 +2310,13 @@ class S3URLQuery(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def parse_expression(cls, key):
+    def parse_key(cls, key):
         """
-            Parse a URL expression
+            Parse a URL filter key
 
-            @param key: the key for the URL variable
-            @return: tuple (selectors, operator, invert)
+            @param key: the filter key
+
+            @return: tuple (selector, operator, invert)
         """
 
         if key[-1] == "!":
@@ -2327,27 +2328,36 @@ class S3URLQuery(object):
         op = None
 
         # Find the operator
-        m = cls.OPPATTERN.search(fs)
+        m = cls.FILTEROP.search(fs)
         if m:
-          op = m.group(0).strip("_")
-          fs = fs[:m.span(0)[0]]
+            op = m.group(0).strip("_")
+            fs = fs[:m.span(0)[0]]
         else:
-          fs = fs.rstrip("_")
-
-        # Find the operator (alternative without regex, ugly + unflexible)
-        #idx = fs.rfind("__link")
-        #sub = fs if idx == -1 else fs[idx+6:]
-        #oidx = sub.find("__")
-        #if oidx != -1:
-        #   fs = fs[:oidx] if idx == -1 else fs[:idx+6] + sub[:oidx]
-        #   op = sub[oidx+2:].strip("_")
-
+            fs = fs.rstrip("_")
         if not op:
             op = "eq"
+
+        return fs, op, invert
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse_expression(cls, key):
+        """
+            Parse a URL filter key, separating multiple field selectors
+            if the key specifies alternatives
+
+            @param key: the filter key
+
+            @return: tuple ([field selectors], operator, invert)
+        """
+
+        fs, op, invert = cls.parse_key(key)
+
         if "|" in fs:
             selectors = [s for s in fs.split("|") if s]
         else:
             selectors = [fs]
+
         return selectors, op, invert
 
     # -------------------------------------------------------------------------
