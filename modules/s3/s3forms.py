@@ -904,7 +904,7 @@ class S3SQLCustomForm(S3SQLForm):
                     for name, renamed_field in renamed_fields:
                         original_field = table[name]
                         for attr in ("comment",
-                                     #"default",
+                                     "default",
                                      "readable",
                                      "represent",
                                      "requires",
@@ -1694,7 +1694,6 @@ class S3SQLField(S3SQLFormElement):
         tname = rfield.tname
 
         options_get = self.options.get
-        default = options_get("default", DEFAULT)
         label = options_get("label", DEFAULT)
         widget = options_get("widget", DEFAULT)
 
@@ -1706,8 +1705,6 @@ class S3SQLField(S3SQLFormElement):
         if tname == tablename:
             # Field in the main table
 
-            if default is not DEFAULT:
-                field.default = default
             if label is not DEFAULT:
                 field.label = label
             if widget is not DEFAULT:
@@ -1727,7 +1724,6 @@ class S3SQLField(S3SQLFormElement):
                     name = "sub_%s_%s" % (alias, rfield.fname)
                     renamed_field = self._rename_field(field,
                                                        name,
-                                                       default = default,
                                                        label = label,
                                                        widget = widget,
                                                        )
