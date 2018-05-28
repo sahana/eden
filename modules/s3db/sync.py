@@ -562,6 +562,7 @@ class SyncDatasetModel(S3Model):
     """ Model representing a public data set """
 
     names = ("sync_dataset",
+             "sync_dataset_archive",
              "sync_dataset_id",
              )
 
@@ -597,11 +598,24 @@ class SyncDatasetModel(S3Model):
                      Field("name",
                            label = T("Name"),
                            ),
+                     Field("archive_url",
+                           label = T("Archive URL"),
+                           requires = IS_EMPTY_OR(IS_URL(mode="generic")),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (
+                                                T("Archive URL"),
+                                                T("URL to download an archive of the data set"),
+                                                ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # Components
         self.add_components(tablename,
+                            sync_dataset_archive = {"joinby": "dataset_id",
+                                                    "multiple": False,
+                                                    },
                             sync_task = "dataset_id",
                             )
 
@@ -629,6 +643,44 @@ class SyncDatasetModel(S3Model):
                                                   represent,
                                                   )),
                                      )
+
+        # ---------------------------------------------------------------------
+        # Data Set Archive
+        #
+        tablename = "sync_dataset_archive"
+        define_table(tablename,
+                     dataset_id(),
+                     s3_date(writable = False,
+                             ),
+                     Field("archive", "upload",
+                           writable = False,
+                           ),
+                     s3.scheduler_task_id(readable = False,
+                                          writable = False,
+                                          ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       insertable = False,
+                       editable = False,
+                       #deletable = False,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+           label_create = T("Create Archive"),
+           title_display = T("Archive Details"),
+           title_list = T("Archives"),
+           title_update = T("Edit Archive"),
+           label_list_button = T("List Archives"),
+           label_delete_button = T("Delete Archive"),
+           msg_record_created = T("Archive created"),
+           msg_record_modified = T("Archive updated"),
+           msg_record_deleted = T("Archive deleted"),
+           msg_list_empty = T("No Archives currently registered"),
+        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1208,6 +1260,7 @@ def sync_rheader(r, tabs=None):
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         (T("Resources"), "task"),
+                        (T("Archive"), "dataset_archive"),
                         ]
 
             rheader_fields = [["name"],

@@ -191,7 +191,7 @@ class S3CRUD(S3Method):
 
         representation = r.representation
 
-        output = dict()
+        output = {}
 
         native = r.method == "create"
 
@@ -202,14 +202,14 @@ class S3CRUD(S3Method):
             if native:
                 r.error(405, current.ERROR.METHOD_DISABLED)
             else:
-                return dict(form=None)
+                return {"form": None}
 
         authorised = self._permitted(method="create")
         if not authorised:
             if native:
                 r.unauthorised()
             else:
-                return dict(form=None)
+                return {"form": None}
 
         # Get callbacks
         onvalidation = _config("create_onvalidation") or \
@@ -464,7 +464,7 @@ class S3CRUD(S3Method):
                     infile = open(infile, "rb")
                 except IOError:
                     session.error = current.T("Cannot read from file: %(filename)s") % \
-                                                dict(filename=infile)
+                                                {"filename": infile}
                     redirect(r.url(method="", representation="html"))
             try:
                 self.import_csv(infile, table=table)
@@ -598,7 +598,7 @@ class S3CRUD(S3Method):
 
         representation = r.representation
 
-        output = dict()
+        output = {}
 
         _config = self._config
         editable = _config("editable", True)
@@ -608,16 +608,19 @@ class S3CRUD(S3Method):
 
         if r.interactive:
 
+            component = r.component
+
             # If this is a single-component and no record exists,
             # try to create one if the user is permitted
-            if not record_id and r.component and not r.component.multiple:
+            if not record_id and component and not component.multiple:
+                empty = True
                 authorised = self._permitted(method="create")
-                if authorised:
+                if authorised and _config("insertable", True):
                     # This should become Native
                     r.method = "create"
                     return self.create(r, **attr)
-                else:
-                    return self.select(r, **attr)
+            else:
+                empty = False
 
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
@@ -634,27 +637,38 @@ class S3CRUD(S3Method):
             crud_string = self.crud_string
             title = crud_string(r.tablename, "title_display")
             output["title"] = title
-            if r.component:
+            if component and not empty:
                 subtitle = crud_string(tablename, "title_display")
                 output["subtitle"] = subtitle
             output["title_list"] = crud_string(tablename, "title_list")
 
+            # Hide component key when on tab
+            if component and resource.link is None:
+                try:
+                    field = table[resource.fkey]
+                except (AttributeError, KeyError):
+                    pass
+                else:
+                    field.readable = field.writable = False
+
             # Item
             if record_id:
                 try:
-                    item = self.sqlform(request=request,
-                                        resource=resource,
-                                        record_id=record_id,
-                                        readonly=True,
-                                        subheadings=subheadings,
-                                        format=representation)
+                    item = self.sqlform(request = request,
+                                        resource = resource,
+                                        record_id = record_id,
+                                        readonly = True,
+                                        subheadings = subheadings,
+                                        format = representation,
+                                        )
                 except HTTP, e:
                     message = current.ERROR.BAD_RECORD \
                               if e.status == 404 else e.message
                     r.error(e.status, message)
             else:
                 item = DIV(crud_string(tablename, "msg_list_empty"),
-                           _class="empty")
+                           _class = "empty",
+                           )
 
             # View
             if representation == "html":
@@ -672,7 +686,7 @@ class S3CRUD(S3Method):
             # Buttons
             buttons = self.render_buttons(r,
                                           ["edit", "delete", "list", "summary"],
-                                          record_id=record_id,
+                                          record_id = record_id,
                                           **attr)
             if buttons:
                 output["buttons"] = buttons
@@ -818,7 +832,7 @@ class S3CRUD(S3Method):
 
         representation = r.representation
 
-        output = dict()
+        output = {}
 
         # Get table configuration
         _config = self._config
@@ -1001,7 +1015,7 @@ class S3CRUD(S3Method):
             @todo: update for link table components
         """
 
-        output = dict()
+        output = {}
 
         # Get table-specific parameters
         config = self._config
@@ -1748,7 +1762,7 @@ class S3CRUD(S3Method):
 
         representation = r.representation
 
-        output = dict()
+        output = {}
 
         # Get table-specific parameters
         _config = self._config
@@ -2590,7 +2604,7 @@ class S3CRUD(S3Method):
             if current.deployment_settings.get_ui_iframe_opens_full():
                 iframe_safe = lambda url: url
                 # This is processed client-side in s3.dataTables.js
-                target = dict(_target="_blank")
+                target = {"_target": "_blank"}
             else:
                 iframe_safe = lambda url: s3_set_extension(url, "iframe")
                 target = {}
@@ -2775,7 +2789,7 @@ class S3CRUD(S3Method):
             r.vars.update({resource.fkey: r.record[resource.pkey]})
         elif not record and r.component:
             item = xml.json_message(False, 400, "Invalid Request!")
-            return dict(item=item)
+            return {"item": item}
 
         # Check for update
         if record and xml.UID in table.fields:
@@ -2824,7 +2838,7 @@ class S3CRUD(S3Method):
                 item = xml.json_message(True, 201, "Created as %s?%s.id=%s" %
                         (str(r.url(method="",
                                    representation="html",
-                                   vars=dict(),
+                                   vars={},
                                   )
                             ),
                          r.name, result.id)
@@ -2837,7 +2851,7 @@ class S3CRUD(S3Method):
                             resource.error or xml.error,
                         tree=xml.tree2json(tree))
 
-        return dict(item=item)
+        return {"item": item}
 
 
     # -------------------------------------------------------------------------
@@ -2935,7 +2949,7 @@ class S3CRUD(S3Method):
                         form.errors.update(_form.errors)
                         return
                     # Update super-entity links
-                    s3db.update_super(table, dict(id=selected))
+                    s3db.update_super(table, {"id": selected})
                     # Update realm
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
@@ -2963,7 +2977,7 @@ class S3CRUD(S3Method):
                         form.request_vars[key] = str(selected)
                         form.vars[key] = selected
                         # Update super-entity links
-                        s3db.update_super(table, dict(id=selected))
+                        s3db.update_super(table, {"id": selected})
                         # Set record owner
                         auth = current.auth
                         auth.s3_set_record_owner(table, selected)
