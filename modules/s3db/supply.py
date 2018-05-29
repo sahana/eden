@@ -204,6 +204,17 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Catalogs currently registered"))
 
         # Reusable Field
+        catalog_multi = settings.get_supply_catalog_multi()
+        if catalog_multi:
+            comment = S3PopupLink(c = "supply",
+                                  f = "catalog",
+                                  label = ADD_CATALOG,
+                                  title = T("Catalog"),
+                                  tooltip = T("The list of Catalogs are maintained by the Administrators."),
+                                  )
+        else:
+            comment = None
+
         represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", "reference %s" % tablename,
             default = 1,
@@ -213,17 +224,14 @@ class S3SupplyModel(S3Model):
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "supply_catalog.id",
                                   represent,
-                                  sort=True,
+                                  sort = True,
                                   # Restrict to catalogs the user can update
-                                  updateable=True,
+                                  updateable = True,
                                   )),
             sortby = "name",
-            comment=S3PopupLink(c = "supply",
-                                f = "catalog",
-                                label = ADD_CATALOG,
-                                title = T("Catalog"),
-                                tooltip = T("The list of Catalogs are maintained by the Administrators."),
-                                ),
+            readable = catalog_multi,
+            writable = catalog_multi,
+            comment = comment,
             )
 
         # Components
@@ -1900,11 +1908,13 @@ class supply_ItemCategoryRepresent(S3Represent):
     """ Representation of Supply Item Categories """
 
     def __init__(self,
-                 translate=False,
-                 show_link=False,
-                 use_code=True,
-                 multiple=False):
+                 translate = False,
+                 show_link = False,
+                 use_code = True,
+                 multiple = False,
+                 ):
 
+        self.catalog_multi = catalog_multi = current.deployment_settings.get_supply_catalog_multi()
         self.use_code = use_code
 
         # Need a custom lookup to join with Parent/Catalog
@@ -1913,18 +1923,19 @@ class supply_ItemCategoryRepresent(S3Represent):
                   "supply_item_category.name",
                   # Always-included since used as fallback if no name
                   "supply_item_category.code",
-                  "supply_catalog.name",
                   "supply_parent_item_category.name",
                   "supply_grandparent_item_category.name",
                   "supply_grandparent_item_category.parent_item_category_id",
                   ]
+        if catalog_multi:
+            fields.append("supply_catalog.name")
 
         super(supply_ItemCategoryRepresent,
-              self).__init__(lookup="supply_item_category",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
+              self).__init__(lookup = "supply_item_category",
+                             fields = fields,
+                             show_link = show_link,
+                             translate = translate,
+                             multiple = multiple)
 
     # -------------------------------------------------------------------------
     def custom_lookup_rows(self, key, values, fields=None):
@@ -1939,14 +1950,15 @@ class supply_ItemCategoryRepresent(S3Represent):
 
         db = current.db
         table = current.s3db.supply_item_category
-        ctable = db.supply_catalog
         ptable = db.supply_item_category.with_alias("supply_parent_item_category")
         gtable = db.supply_item_category.with_alias("supply_grandparent_item_category")
 
-        left = [ctable.on(ctable.id == table.catalog_id),
-                ptable.on(ptable.id == table.parent_item_category_id),
+        left = [ptable.on(ptable.id == table.parent_item_category_id),
                 gtable.on(gtable.id == ptable.parent_item_category_id),
                 ]
+        if self.catalog_multi:
+            ctable = db.supply_catalog
+            left.append(ctable.on(ctable.id == table.catalog_id))
 
         qty = len(values)
         if qty == 1:
@@ -1974,7 +1986,7 @@ class supply_ItemCategoryRepresent(S3Represent):
 
         name = row["supply_item_category.name"]
         code = row["supply_item_category.code"]
-        catalog = row["supply_catalog.name"]
+        catalog = row.get("supply_catalog.name")
         parent = row["supply_parent_item_category.name"]
 
         if use_code:

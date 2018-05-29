@@ -5086,9 +5086,21 @@ class S3Config(Storage):
     # Supply
     #
     def get_supply_catalog_default(self):
-        return self.inv.get("catalog_default", "Default")
+        """
+            The name of the Default Item Catalog
+        """
+        return self.supply.get("catalog_default", "Default")
+
+    def get_supply_catalog_multi(self):
+        """
+            Whether to use Multiple Item Catalogs
+        """
+        return self.supply.get("catalog_multi", True)
 
     def get_supply_use_alt_name(self):
+        """
+            Whether to allow Alternative Items to be defined
+        """
         return self.supply.get("use_alt_name", True)
 
     # -------------------------------------------------------------------------

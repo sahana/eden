@@ -119,6 +119,11 @@ def config(settings):
     }
 
     # -------------------------------------------------------------------------
+    # Supply
+    # Disable the use of Multiple Item Catalogs
+    settings.supply.catalog_multi = False
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([

@@ -930,9 +930,12 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Supply
+    # Name of the Default Item Catalog. Do not edit after deployment
+    #settings.supply.catalog_default = "Default"
+    # Disable the use of Multiple Item Catalogs
+    #settings.supply.catalog_multi = False
+    # Disable the use of Alternative Items
     #settings.supply.use_alt_name = False
-    # Do not edit after deployment
-    #settings.supply.catalog_default = T("Default")
 
     # -------------------------------------------------------------------------
     # Projects
