@@ -576,6 +576,8 @@ class SyncDatasetModel(S3Model):
         define_table = self.define_table
         crud_strings = s3.crud_strings
 
+        folder = current.request.folder
+
         # ---------------------------------------------------------------------
         # Public Data Set (=a collection of sync_tasks)
         #
@@ -610,6 +612,12 @@ class SyncDatasetModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # REST Methods
+        self.set_method("sync", "dataset",
+                        method = "archive",
+                        action = sync_CreateArchive,
+                        )
 
         # Components
         self.add_components(tablename,
@@ -653,6 +661,12 @@ class SyncDatasetModel(S3Model):
                      s3_date(writable = False,
                              ),
                      Field("archive", "upload",
+                           autodelete = True,
+                           represent = self.archive_file_represent,
+                           uploadfolder = os.path.join(folder,
+                                                       "uploads",
+                                                       "datasets",
+                                                       ),
                            writable = False,
                            ),
                      s3.scheduler_task_id(readable = False,
@@ -687,6 +701,34 @@ class SyncDatasetModel(S3Model):
         #
         return {"sync_dataset_id": dataset_id,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def archive_file_represent(filename):
+        """
+            File representation
+
+            @param filename: the stored file name (field value)
+
+            @return: a link to download the file
+        """
+
+        if filename:
+            try:
+                # Check whether file exists and extract the original
+                # file name from the stored file name
+                origname = current.db.sync_dataset_archive.archive.retrieve(filename)[0]
+            except IOError:
+                return current.T("File not found")
+            else:
+                return A(origname,
+                         _href=URL(c = "default",
+                                   f = "download",
+                                   args = [filename],
+                                   ),
+                         )
+        else:
+            return current.messages["NONE"]
 
 # =============================================================================
 class SyncLogModel(S3Model):
@@ -1258,13 +1300,17 @@ def sync_rheader(r, tabs=None):
         elif tablename == "sync_dataset":
 
             if not tabs:
+
+
                 tabs = [(T("Basic Details"), None),
                         (T("Resources"), "task"),
                         (T("Archive"), "dataset_archive"),
                         ]
 
-            rheader_fields = [["name"],
-                              ["code"],
+            create_archive = lambda row, r=r: sync_CreateArchive.form(r, row)
+            rheader_fields = [["code"],
+                              ["name"],
+                              [(None, create_archive)],
                               ]
 
             rheader = S3ResourceHeader(rheader_fields, tabs)(
@@ -1362,5 +1408,74 @@ def sync_now(r, **attr):
 
     response.view = "update.html"
     return output
+
+# =============================================================================
+class sync_CreateArchive(S3Method):
+    """ Method to create an archive of a dataset """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST controller
+
+            @param r: the S3Request
+            @param attr: controller parameters
+
+            TODO perform archive creation async?
+        """
+
+        T = current.T
+
+        auth = current.auth
+        if not auth.s3_logged_in():
+            auth.permission.fail()
+
+        if r.http == "POST":
+
+            if r.id:
+
+                # TODO prevent CSRF
+
+                error = current.sync.create_archive(r.id)
+                if error:
+                    # Report error, go back to data set record
+                    current.response.error = error
+                    self.next = r.url(id = r.id,
+                                      method = "",
+                                      )
+                else:
+                    # Confirmation, move to archive-tab
+                    current.response.confirmation = T("Archive created/updated")
+                    self.next = r.url(id = r.id,
+                                      method = "",
+                                      component = "dataset_archive",
+                                      )
+            else:
+                r.error(400, T("No dataset specified by request"))
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def form(r, row):
+        """
+            Simple UI form to trigger POST to method
+
+            @param r: the S3Request embedding the form
+            @param row: the data set Row
+        """
+
+        # TODO adjust button label if archive already exists
+        # TODO hide if archive building is currently in progress (when async)
+
+        return FORM(BUTTON(current.T("Build Archive"),
+                           _class = "action-btn",
+                           ),
+                    _action=r.url(method = "archive",
+                                  component = "",
+                                  ),
+                    )
 
 # END =========================================================================

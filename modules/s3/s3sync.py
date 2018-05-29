@@ -608,6 +608,113 @@ class S3Sync(S3Method):
                 item.conflict = False
 
     # -------------------------------------------------------------------------
+    def create_archive(self, dataset_id, task_id=None):
+        """
+            Create an archive for a data set
+
+            @param dataset_id: the data set record ID
+            @param task_id: the scheduler task ID if the archive is
+                            created asynchronously
+
+            @return: error message if an error occured, otherwise None
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        T = current.T
+
+        # Get the data set
+        dtable = s3db.sync_dataset
+        query = (dtable.id == dataset_id) & \
+                (dtable.deleted == False)
+        dataset = db(query).select(dtable.code,
+                                   dtable.archive_url,
+                                   dtable.repository_id,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not dataset:
+            return T("Data Set not found")
+        elif dataset.repository_id:
+            return T("Cannot create archive from remote data set")
+        else:
+            code = dataset.code
+            if code:
+                filename = "%s.zip" % code
+            else:
+                filename = "dataset-%s.zip" % dataset_id
+
+        # Get all sync tasks for the data set
+        ttable = s3db.sync_task
+        query = (ttable.dataset_id == dataset_id) & \
+                (ttable.repository_id == None) & \
+                (ttable.mode == 1) & \
+                (ttable.deleted == False)
+        tasks = db(query).select(ttable.id,
+                                 ttable.uuid,
+                                 ttable.resource_name,
+                                 ttable.components,
+                                 )
+
+        if not tasks:
+            return T("No resources defined for dataset")
+
+        # Get the current archive record
+        atable = s3db.sync_dataset_archive
+        query = (atable.dataset_id == dataset_id) & \
+                (atable.deleted == False)
+        row = db(query).select(atable.id,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            archive_id = row.id
+            if task_id:
+                row.update_record(task_id=task_id)
+                db.commit()
+        else:
+            archive_id = atable.insert(dataset_id = dataset_id)
+        if not archive_id:
+            return T("Could not create or update archive")
+
+        # Create archive
+        archive = S3SyncDataArchive()
+
+        for task in tasks:
+
+            # Define the resource
+            components = [] if task.components is False else None
+            resource = current.s3db.resource(task.resource_name,
+                                             components = components,
+                                             )
+
+            # Get the sync filters for this task
+            filters = current.sync.get_filters(task.id)
+
+            # Export the resource as S3XML
+            data = resource.export_xml(filters = filters,
+                                       # TODO for testing only, remove:
+                                       pretty_print = True,
+                                       )
+
+            # Add to archive, using the UUID of the task as object name
+            archive.add("%s.xml" % task.uuid, data)
+
+        # Close the archive and get the output as file-like object
+        fileobj = archive.close()
+
+        # Store the fileobj in the archive-field
+        stored_filename = atable.archive.store(fileobj, filename)
+        db(atable.id == archive_id).update(date = datetime.datetime.utcnow(),
+                                           archive = stored_filename,
+                                           task_id = None,
+                                           )
+
+        # TODO update archive URL if it was local
+
+        # Return None to indicate success
+        return None
+
+    # -------------------------------------------------------------------------
     # Utility methods:
     # -------------------------------------------------------------------------
     @property

@@ -30,7 +30,7 @@
   padding: 8px 35px 8px 14px;
   position: relative;
   width: auto;
-  z-index: 999;
+  z-index: 98;
   border-radius: 4px;
 }
 
@@ -475,7 +475,7 @@ div.tabs span.tab_other a:hover {
 .sahana-logo {
   background: url(../../img/S3menu_logo.png) left top no-repeat;
   text-shadow: none;
-  padding: none;
+  padding: 0;
   margin-left: 5px;
   margin-top: 10px;
   width: 35px;
