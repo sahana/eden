@@ -39,7 +39,6 @@ __all__ = ("S3SQLCustomForm",
 
 import json
 
-from collections import OrderedDict
 from itertools import chain
 
 from gluon import *
@@ -48,8 +47,9 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
+from s3dal import original_tablename
 from s3query import FS
-from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_str, s3_validate
+from s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
 from s3widgets import S3Selector, S3UploadWidget
 
 # Compact JSON encoding
@@ -3237,7 +3237,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Parent and caller for add-popup
             if not readonly:
                 # Use unaliased name to avoid need to create additional controllers
-                parent = table._dalname.split("_", 1)[1]
+                parent = original_tablename(table).split("_", 1)[1]
                 caller = "sub_%s_%s" % (formname, idxname)
                 popup = Storage(parent=parent, caller=caller)
             else:
