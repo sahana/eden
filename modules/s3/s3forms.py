@@ -3236,7 +3236,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             # Parent and caller for add-popup
             if not readonly:
-                parent = table._tablename.split("_", 1)[1]
+                # Use unaliased name to avoid need to create additional controllers
+                parent = table._dalname.split("_", 1)[1]
                 caller = "sub_%s_%s" % (formname, idxname)
                 popup = Storage(parent=parent, caller=caller)
             else:
@@ -3626,8 +3627,8 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                       resource.name,
                       # Current request args/vars could be in a different
                       # resource context, so must override them here:
-                      args=[],
-                      get_vars={},
+                      args = [],
+                      get_vars = {},
                       )
         customise_resource = current.deployment_settings.customise_resource
         for tablename in (component.tablename, link.tablename):

@@ -751,7 +751,7 @@ def activity_organisation():
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(module, "activity_organisation")
 
 # -----------------------------------------------------------------------------
 def activity():
@@ -1473,7 +1473,15 @@ def human_resource_project():
         REST controller for options.s3json lookups
     """
 
-    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 
