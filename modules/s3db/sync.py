@@ -572,11 +572,12 @@ class SyncDatasetModel(S3Model):
 
         db = current.db
         s3 = current.response.s3
+        folder = current.request.folder
 
-        define_table = self.define_table
         crud_strings = s3.crud_strings
 
-        folder = current.request.folder
+        define_table = self.define_table
+        configure = self.configure
 
         # ---------------------------------------------------------------------
         # Public Data Set (=a collection of sync_tasks)
@@ -600,18 +601,33 @@ class SyncDatasetModel(S3Model):
                      Field("name",
                            label = T("Name"),
                            ),
+                     # A URL for peers to download the archive from:
+                     # - can be overridden manually to indicate external
+                     #   hosting of the archive (e.g. on GitHub)
+                     # - relative URLs must be inside the application,
+                     #   i.e. relative to http(s)://host/appname
                      Field("archive_url",
                            label = T("Archive URL"),
                            requires = IS_EMPTY_OR(IS_URL(mode="generic")),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (
                                                 T("Archive URL"),
-                                                T("URL to download an archive of the data set"),
+                                                T("URL to download an archive of the data set, or a URL path relative to the application if the archive is hosted locally"),
                                                 ),
                                          ),
                            ),
+                     Field("use_archive", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  onaccept = self.dataset_onaccept,
+                  )
 
         # REST Methods
         self.set_method("sync", "dataset",
@@ -676,11 +692,11 @@ class SyncDatasetModel(S3Model):
                      *s3_meta_fields())
 
         # Table Configuration
-        self.configure(tablename,
-                       insertable = False,
-                       editable = False,
-                       #deletable = False,
-                       )
+        configure(tablename,
+                  insertable = False,
+                  editable = False,
+                  ondelete = self.archive_ondelete,
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -701,6 +717,103 @@ class SyncDatasetModel(S3Model):
         #
         return {"sync_dataset_id": dataset_id,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dataset_onaccept(form):
+        """
+            Onaccept routine for datasets:
+            - toggle use_archive flag in locally hosted repositories
+            - remove archive URL for remote update setting use_archive=False
+        """
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+
+        table = current.s3db.sync_dataset
+        query = (table.id == record_id)
+        dataset = current.db(query).select(table.id,
+                                           table.use_archive,
+                                           table.archive_url,
+                                           limitby = (0, 1),
+                                           ).first()
+        if not dataset:
+            return
+
+        archive_url = dataset.archive_url
+        use_archive = dataset.use_archive
+
+        if not dataset.archive_url and use_archive:
+            # We cannot use an archive if no URL is available, so...
+            dataset.update_record(use_archive=False)
+        elif not use_archive:
+            if "archive_url" not in form.vars:
+                # Assume remote-update (None-URLs not transmitted)
+                dataset.update_record(archive_url = None)
+            elif "use_archive" not in form.vars and archive_url:
+                # Assume local update (user has added a URL manually)
+                dataset.update_record(use_archive = True)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def archive_ondelete(row):
+        """
+            Ondelete-routine for archives
+            - remove the archive file (field is not nulled automatically)
+            - remove archive URL in data set and set use_archive to False,
+              so that remote sites do no longer attempt to download it
+              (unless the archive is hosted externally)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the full row
+        table = s3db.sync_dataset_archive
+        query = (table.id == row.id)
+        row = db(query).select(table.id,
+                               table.archive,
+                               table.deleted_fk,
+                               limitby = (0, 1),
+                               ).first()
+
+        if not row:
+            return
+
+        # Extract the dataset_id
+        deleted_fk = row.deleted_fk
+        if deleted_fk:
+            try:
+                deleted_fk = json.loads(deleted_fk)
+            except:
+                dataset_id = None
+            else:
+                dataset_id = deleted_fk.get("dataset_id")
+
+        # Look up the dataset
+        if dataset_id:
+            dtable = s3db.sync_dataset
+            query = (dtable.id == dataset_id)
+            dataset = db(query).select(dtable.id,
+                                       dtable.archive_url,
+                                       limitby = (0, 1),
+                                       ).first()
+        else:
+            dataset = None
+
+        # Remove the archive_url if pointing to local file
+        if dataset:
+            archive_url = dataset.archive_url
+            if archive_url and archive_url.startswith("/default/download"):
+                # Remove it
+                dataset.update_record(use_archive = False,
+                                      archive_url = None,
+                                      )
+
+        # Delete the file
+        row.update_record(archive = None)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1421,7 +1534,7 @@ class sync_CreateArchive(S3Method):
             @param r: the S3Request
             @param attr: controller parameters
 
-            TODO perform archive creation async?
+            @todo: perform archive creation async?
         """
 
         T = current.T
@@ -1431,11 +1544,7 @@ class sync_CreateArchive(S3Method):
             auth.permission.fail()
 
         if r.http == "POST":
-
             if r.id:
-
-                # TODO prevent CSRF
-
                 error = current.sync.create_archive(r.id)
                 if error:
                     # Report error, go back to data set record
@@ -1461,21 +1570,44 @@ class sync_CreateArchive(S3Method):
     @staticmethod
     def form(r, row):
         """
-            Simple UI form to trigger POST to method
+            Simple UI form to trigger POST method
 
             @param r: the S3Request embedding the form
             @param row: the data set Row
+
+            @todo: if archive is currently being built (async),
+                   then hide the button (provide a message instead?)
         """
 
-        # TODO adjust button label if archive already exists
-        # TODO hide if archive building is currently in progress (when async)
+        try:
+            dataset_id = row.id
+        except AttributeError:
+            return ""
 
-        return FORM(BUTTON(current.T("Build Archive"),
-                           _class = "action-btn",
-                           ),
-                    _action=r.url(method = "archive",
-                                  component = "",
-                                  ),
+        try:
+            archive_url = row.archive_url
+        except AttributeError:
+            archive_url = None
+
+        if not archive_url:
+            table = current.s3db.sync_dataset_archive
+            query = (table.dataset_id == dataset_id) & \
+                    (table.deleted == False)
+            archive = current.db(query).select(table.id,
+                                               limitby = (0, 1),
+                                               ).first()
+        else:
+            archive = True
+
+        if archive:
+            label = current.T("Rebuild Archive")
+        else:
+            label = current.T("Create Archive")
+
+        return FORM(BUTTON(label, _class="action-btn"),
+                    _action = r.url(method = "archive",
+                                    component = "",
+                                    ),
                     )
 
 # END =========================================================================

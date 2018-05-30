@@ -31,6 +31,11 @@ import json
 import sys
 import datetime
 
+try:
+    from cStringIO import StringIO # Faster, where available
+except ImportError:
+    from StringIO import StringIO
+
 from gluon import current, URL, DIV
 from gluon.storage import Storage
 
@@ -536,6 +541,8 @@ class S3Sync(S3Method):
                             last_connected = datetime.datetime.utcnow(),
                             )
 
+        connector.close_archives()
+
         return success
 
     # -------------------------------------------------------------------------
@@ -624,11 +631,15 @@ class S3Sync(S3Method):
 
         T = current.T
 
+        # Standard download path for archives
+        DOWNLOAD = "/default/download"
+
         # Get the data set
         dtable = s3db.sync_dataset
         query = (dtable.id == dataset_id) & \
                 (dtable.deleted == False)
-        dataset = db(query).select(dtable.code,
+        dataset = db(query).select(dtable.id,
+                                   dtable.code,
                                    dtable.archive_url,
                                    dtable.repository_id,
                                    limitby = (0, 1),
@@ -692,8 +703,7 @@ class S3Sync(S3Method):
 
             # Export the resource as S3XML
             data = resource.export_xml(filters = filters,
-                                       # TODO for testing only, remove:
-                                       pretty_print = True,
+                                       #pretty_print = True,
                                        )
 
             # Add to archive, using the UUID of the task as object name
@@ -709,7 +719,14 @@ class S3Sync(S3Method):
                                            task_id = None,
                                            )
 
-        # TODO update archive URL if it was local
+        # Update archive URL if it is empty or a local path
+        # pointing to the standard download location
+        archive_url = dataset.archive_url
+        if not archive_url or archive_url.startswith(DOWNLOAD):
+            dataset.update_record(
+                use_archive = True,
+                archive_url = "%s/%s" % (DOWNLOAD, stored_filename),
+                )
 
         # Return None to indicate success
         return None
@@ -977,6 +994,7 @@ class S3SyncRepository(object):
             adapter = S3SyncBaseAdapter(self)
 
         self.adapter = adapter
+        self.archives = {}
 
     # -------------------------------------------------------------------------
     @property
@@ -1001,6 +1019,17 @@ class S3SyncRepository(object):
 
         return object.__getattribute__(self.adapter, name)
 
+    # -------------------------------------------------------------------------
+    def close_archives(self):
+        """
+            Close any open archives
+        """
+
+        for archive in self.archives.values():
+            if archive:
+                archive.close()
+        self.archives = {}
+
 # =============================================================================
 class S3SyncBaseAdapter(object):
     """
@@ -1020,6 +1049,8 @@ class S3SyncBaseAdapter(object):
 
         self.repository = repository
         self.log = repository.log
+
+        self.archives = {}
 
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses:
@@ -1082,7 +1113,9 @@ class S3SyncBaseAdapter(object):
              limit=None,
              msince=None,
              filters=None,
-             mixed=False):
+             mixed=False,
+             pretty_print=False,
+             ):
         """
             Respond to an incoming pull from the peer repository
 
@@ -1092,6 +1125,7 @@ class S3SyncBaseAdapter(object):
             @param msince: minimum modification date/time for records to send
             @param filters: URL filters for record extraction
             @param mixed: negotiate resource with peer (disregard resource)
+            @param pretty_print: make the output human-readable
 
             @return: a dict {status, remote, message, response}, with:
                         - status....the outcome of the operation
@@ -1159,16 +1193,16 @@ class S3SyncDataArchive(object):
             compression = zipfile.ZIP_STORED
 
         if fileobj is not None:
+            if not hasattr(fileobj, "seek"):
+                # Possibly a addinfourl instance from urlopen,
+                # => must copy to StringIO buffer for random access
+                fileobj = StringIO(fileobj.read())
             try:
                 archive = zipfile.ZipFile(fileobj, "r")
             except RuntimeError:
                 current.log.warn("invalid ZIP archive: %s" % sys.exc_info()[1])
                 archive = None
         else:
-            try:
-                from cStringIO import StringIO # Faster, where available
-            except ImportError:
-                from StringIO import StringIO
             fileobj = StringIO()
             try:
                 archive = zipfile.ZipFile(fileobj, "w", compression, True)
@@ -1217,7 +1251,8 @@ class S3SyncDataArchive(object):
             archive.writestr(name, obj)
 
         elif hasattr(obj, "read"):
-            obj.seek(0)
+            if hasattr(obj, "seek"):
+                obj.seek(0)
             archive.writestr(name, obj.read())
 
         else:
