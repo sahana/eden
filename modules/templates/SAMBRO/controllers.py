@@ -364,9 +364,8 @@ class subscriptions(S3CustomController):
             @param group_filters: pr_group filter widgets
         """
 
-        from gluon.http import redirect
-        from gluon.validators import IS_IN_SET
-        from s3.s3widgets import S3GroupedOptionsWidget, S3MultiSelectWidget
+        from gluon import redirect, IS_IN_SET
+        from s3 import S3GroupedOptionsWidget, S3MultiSelectWidget
         from s3layouts import S3PopupLink
         # Uses Default Eden formstyle
         from s3theme import formstyle_foundation_2col as formstyle

@@ -16,7 +16,8 @@ def index():
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
 # -----------------------------------------------------------------------------
 def basestation():
@@ -55,10 +56,11 @@ def message():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [dict(label=s3base.s3_str(T("Mark Sender")),
-                                _class="action-btn",
-                                url=URL(f="mark_sender",
-                                        args="[id]")),
+            s3.actions += [{"label": s3_str(T("Mark Sender")),
+                            "_class": "action-btn",
+                            "url": URL(f="mark_sender",
+                                       args="[id]"),
+                            },
                            ]
 
         return output
@@ -100,7 +102,7 @@ def mark_sender():
     else:
         args = "create"
 
-    url = URL(f="sender", args=args, vars=dict(sender=sender))
+    url = URL(f="sender", args=args, vars={"sender": sender})
     redirect(url)
 
 # =============================================================================
@@ -749,24 +751,24 @@ def email_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e,
-                                ),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d,
-                                ),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d,
-                                    )
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
         return output
     s3.postp = postp
@@ -813,21 +815,24 @@ def facebook_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             #if not s3task._is_alive():
             #    # No Scheduler Running
-            #    s3.actions += [dict(label=s3_str(T("Poll")),
-            #                        _class="action-btn",
-            #                        url = URL(args = ["[id]", "poll"]),
-            #                        restrict = restrict_d)
+            #    s3.actions += [{"label": s3_str(T("Poll")),
+            #                    "_class": "action-btn",
+            #                    "url": URL(args = ["[id]", "poll"]),
+            #                    "restrict": restrict_d),
+            #                    }
             #                   ]
         return output
     s3.postp = postp
@@ -891,21 +896,24 @@ def mcommons_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
         return output
     s3.postp = postp
@@ -959,21 +967,24 @@ def gcm_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             #if not s3task._is_alive():
                 # No Scheduler Running
-            #    s3.actions += [dict(label=s3_str(T("Poll")),
-            #                        _class="action-btn",
-            #                        url = URL(args = ["[id]", "poll"]),
-            #                        restrict = restrict_d)
+            #    s3.actions += [{"label": s3_str(T("Poll")),
+            #                    "_class": "action-btn",
+            #                    "url": URL(args = ["[id]", "poll"]),
+            #                    "restrict": restrict_d,
+            #                    },
             #                   ]
         return output
     s3.postp = postp
@@ -1039,21 +1050,24 @@ def rss_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Subscribe")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Unsubscribe")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Subscribe")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Unsubscribe")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
         return output
     s3.postp = postp
@@ -1112,21 +1126,24 @@ def twilio_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
         return output
     s3.postp = postp
@@ -1385,21 +1402,24 @@ def twitter_channel():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
 
             #if isinstance(output, dict):
@@ -1580,14 +1600,16 @@ def twitter_search():
 
             # @ToDo: Make these S3Methods rather than additional controllers
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Search")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "poll"]),
-                                        restrict = restrict_s),
-                           dict(label=s3_str(T("Analyze with KeyGraph")),
-                                _class="action-btn",
-                                url = URL(args=["[id]", "keygraph"]),
-                                          restrict = restrict_k),
+            s3.actions += [{"label": s3_str(T("Search")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "poll"]),
+                            "restrict": restrict_s,
+                            },
+                           {"label": s3_str(T("Analyze with KeyGraph")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "keygraph"]),
+                            "restrict": restrict_k,
+                            },
                            ]
 
             inject_search_after_save(output)
@@ -1802,21 +1824,24 @@ def parser():
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
             from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Parse")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "parse"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Parse")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "parse"]),
+                                "restrict": restrict_d,
+                                },
                                ]
 
         return output
@@ -1846,7 +1871,9 @@ def group():
     # Do not show system groups
     s3.filter = (table.system == False)
 
-    return s3_rest_controller(module, resourcename, rheader=s3db.pr_rheader)
+    return s3_rest_controller(module, resourcename,
+                              rheader = s3db.pr_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def group_membership():
@@ -1856,7 +1883,7 @@ def group_membership():
         pass
     else:
         redirect(URL(c="default", f="user", args="login",
-        vars={"_next":URL(c="msg", f="group_membership")}))
+        vars={"_next": URL(c="msg", f="group_membership")}))
 
     table = s3db.pr_group_membership
 
@@ -1877,7 +1904,7 @@ def contact():
         s3.filter = (table.pe_id == auth.user.pe_id)
     else:
         redirect(URL(c="default", f="user", args="login",
-            vars={"_next":URL(c="msg", f="contact")}))
+            vars={"_next": URL(c="msg", f="contact")}))
 
     # These fields will be populated automatically
     table.name.writable = table.name.readable = False
@@ -1892,7 +1919,7 @@ def contact():
             form.vars.pe_id = auth.user.pe_id
 
     s3db.configure(table._tablename,
-                   onvalidation=msg_contact_onvalidation)
+                   onvalidation = msg_contact_onvalidation)
 
     def prep(r):
         # Restrict update and delete access to contacts not owned by the user
@@ -1902,7 +1929,7 @@ def contact():
                 return True
             else:
                 session.error = T("Access denied")
-                return dict(bypass = True, output = redirect(URL(r=request)))
+                return {"bypass": True, "output": redirect(URL(r=request))}
         else:
             return True
     s3.prep = prep
@@ -1924,18 +1951,19 @@ def search():
     # JQuery UI Autocomplete uses 'term' instead of 'value'
     # (old JQuery Autocomplete uses 'q' instead of 'value')
     value = request.vars.term or request.vars.q
+    if not value:
+        return
+
+    # Call the search function
     type = get_vars.get("type", None)
-    if value:
-        # Call the search function
-        if type:
-            items = person_search(value, type)
-        else:
-            items = person_search(value)
-        # Encode in JSON
-        item = json.dumps(items)
-        response.headers["Content-Type"] = "application/json"
-        return item
-    return
+    if type:
+        items = person_search(value, type)
+    else:
+        items = person_search(value)
+    # Encode in JSON
+    item = json.dumps(items)
+    response.headers["Content-Type"] = "application/json"
+    return item
 
 # -----------------------------------------------------------------------------
 def recipient_represent(id, default_label=""):
@@ -2117,9 +2145,9 @@ def facebook_post():
         if channel_id and post:
             msg.post_to_facebook(post, channel_id)
 
-    output = dict(form = form,
-                  title = title,
-                  )
+    output = {"form": form,
+              "title": title,
+              }
     return output
 
 # =============================================================================
@@ -2198,9 +2226,9 @@ def twitter_post():
         if channel_id and post:
             msg.send_tweet(post)
 
-    output = dict(form = form,
-                  title = title,
-                  )
+    output = {"form": form,
+              "title": title,
+              }
     return output
 
 # =============================================================================

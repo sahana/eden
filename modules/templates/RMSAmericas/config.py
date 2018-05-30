@@ -3582,7 +3582,7 @@ Thank you"""
                                                               ).first()
             if record.value:
                 # Redirect to Read-only mode
-                from gluon.http import redirect
+                from gluon import redirect
                 redirect(r.url(method="read"))
             else:
                 # Cannot edit anything
@@ -4221,7 +4221,7 @@ Thank you"""
             if record.value:
                 # Redirect to Read-only mode
                 # @ToDo: Remove 'Update' button from the read-only page
-                from gluon.http import redirect
+                from gluon import redirect
                 redirect(r.url(method="read"))
             else:
                 # Cannot edit anything

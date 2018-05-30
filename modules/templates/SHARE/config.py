@@ -643,6 +643,44 @@ def config(settings):
     settings.customise_project_activity_resource = customise_project_activity_resource
 
     # -------------------------------------------------------------------------
+    def customise_project_activity_controller(**attr):
+
+        need_id = current.request.get_vars.get("need_id")
+        if need_id:
+            # Set defaults from Need
+            db = current.db
+            s3db = current.s3db
+            ntable = s3db.req_need
+            netable = s3db.event_event_need
+            nstable = s3db.req_need_sector
+            left = [netable.on(netable.need_id == ntable.id),
+                    nstable.on(nstable.need_id == ntable.id),
+                    ]
+            need = db(ntable.id == need_id).select(ntable.location_id,
+                                                   netable.event_id,
+                                                   nstable.sector_id,
+                                                   left = left,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            atable = s3db.project_activity
+            atable.location_id.default = need["req_need.location_id"]
+            event_id = need["event_event_need.event_id"]
+            if event_id:
+                aetable = s3db.event_activity
+                aetable.event_id.default = event_id
+            sector_id = need["req_need_sector.sector_id"]
+            if sector_id:
+                astable = s3db.project_sector_activity
+                astable.sector_id.default = sector_id
+            # @ToDo: Link to Need
+            #attable = s3db.project_activity_tag
+            # @ToDo: Update Need to show Partially Fulfilled?
+
+        return attr
+
+    settings.customise_project_activity_controller = customise_project_activity_controller
+
+    # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
         s3db = current.s3db
@@ -745,5 +783,51 @@ def config(settings):
                        )
 
     settings.customise_req_need_resource = customise_req_need_resource
+
+    # -------------------------------------------------------------------------
+    def req_need_commit(r, **attr):
+        """
+            Custom method to Commit to a Need by creating an Activity
+        """
+
+        from gluon import redirect, URL
+
+        redirect(URL(c="project", f="activity", args="create", vars={"need_id": r.id}))
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_controller(**attr):
+
+        # Custom commit method to create an Activity from a Need
+        current.s3db.set_method("req", "need",
+                                method = "commit",
+                                action = req_need_commit)
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and \
+               current.auth.s3_has_permission("create", "project_activity"):
+                from s3 import S3CRUD, s3_str
+                # Normal Action Buttons
+                S3CRUD.action_buttons(r)
+                # Custom Action Buttons
+                s3.actions += [{"label": s3_str(T("Commit")),
+                                "_class": "action-btn",
+                                "url": URL(args=["[id]", "commit"]),
+                                }
+                               ]
+
+            return output
+        s3.postp = postp
+
+        return attr
+
+    settings.customise_req_need_controller = customise_req_need_controller
 
 # END =========================================================================

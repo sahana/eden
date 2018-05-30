@@ -4,10 +4,9 @@ import json
 
 from os import path
 
-from gluon import current
+from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.http import redirect
 
 from s3 import FS, S3CustomController
 from s3theme import formstyle_foundation_inline
