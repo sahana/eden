@@ -42,7 +42,8 @@ except ImportError:
 from gluon import current
 
 from ..s3datetime import s3_encode_iso_datetime
-from ..s3sync import S3SyncBaseAdapter
+from ..s3sync import S3SyncBaseAdapter, S3SyncDataArchive
+from ..s3validators import JSONERRORS
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -95,9 +96,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             success = False
             try:
                 message_json = json.loads(message)
-                message = message_json.get("message", message)
-            except:
+            except JSONERRORS:
                 pass
+            else:
+                message = message_json.get("message", message)
 
         except urllib2.URLError, e:
             # URL Error (network error)
@@ -117,20 +119,18 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             message = f.read()
             try:
                 message_json = json.loads(message)
-                message = message_json.get("message", message)
-                ruid = message_json.get("sender", None)
-            except:
+            except JSONERRORS:
                 message = "Registration successful"
                 ruid = None
+            else:
+                message = message_json.get("message", message)
+                ruid = message_json.get("sender", None)
 
             if ruid is not None:
                 # Update the peer repository UID
                 db = current.db
                 rtable = current.s3db.sync_repository
-                try:
-                    db(rtable.id == repository.id).update(uuid=ruid)
-                except:
-                    pass
+                db(rtable.id == repository.id).update(uuid=ruid)
 
         # Log the operation
         log.write(repository_id = repository.id,
@@ -174,6 +174,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         repository = self.repository
         config = repository.config
+        log = repository.log
 
         # Verify that the target resource exists
         resource_name = task.resource_name
@@ -184,82 +185,108 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             debug("Undefined resource %s - sync task ignored" % resource_name)
             return (None, None)
 
-        debug("S3Sync: pull %s from %s" % (resource_name, repository.url))
-
-        # Construct the URL
-        url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
-              (repository.url, resource_name, config.uuid)
         last_pull = task.last_pull
-        if last_pull and task.update_policy not in ("THIS", "OTHER"):
-            url += "&msince=%s" % s3_encode_iso_datetime(last_pull)
-        if task.components is False: # Allow None to remain the old default of 'Include Components'
-            url += "&components=None"
-        url += "&include_deleted=True"
+        dataset_id = task.dataset_id
 
-        # Add sync filters to URL
-        from urllib import quote
-        filters = current.sync.get_filters(task.id)
-        for tablename in filters:
-            prefix = "~" if not tablename or tablename == resource_name \
-                            else tablename
-            for k, v in filters[tablename].items():
-                urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
-                url += "&%s" % urlfilter
-
-        debug("...pull from URL %s" % url)
-
-        # Execute the request
         remote = False
         action = "fetch"
-        response = None
         output = None
+        response = None
+        result = log.SUCCESS
 
-        opener = self._http_opener(url)
-        log = repository.log
-        try:
-            f = opener.open(url)
+        use_archived = False
 
-        except urllib2.HTTPError, e:
-            result = log.ERROR
-            remote = True # Peer error
-            code = e.code
-            message = e.read()
-            try:
-                # Sahana-Eden would send a JSON message,
-                # try to extract the actual error message:
-                message_json = json.loads(message)
-                message = message_json.get("message", message)
-            except:
-                pass
-            # Prefix as peer error and strip XML markup from the message
-            # @todo: better method to do this?
-            message = "<message>%s</message>" % message
-            try:
-                markup = etree.XML(message)
-                message = markup.xpath(".//text()")
-                if message:
-                    message = " ".join(message)
+        if not last_pull and dataset_id:
+
+            archive = self._get_archive(dataset_id)
+            if archive:
+                try:
+                    response = archive.extract("%s.xml" % task.uuid)
+                except RuntimeError:
+                    # Object exists in the archive but is not readable
+                    # for some reason => log it, proceed to regular pull
+                    # @todo: should this be logged in the sync log?
+                    current.log.error("S3Sync: %s" % sys.exc_info()[1])
                 else:
-                    message = ""
-            except etree.XMLSyntaxError:
-                pass
-            output = xml.json_message(False, code, message, tree=None)
+                    use_archived = True
 
-        except urllib2.URLError, e:
-            # URL Error (network error)
-            result = log.ERROR
-            remote = True
-            message = "Peer repository unavailable (%s)" % e.reason
-            output = xml.json_message(False, 400, message)
+        if response is None:
 
-        except:
-            result = log.FATAL
-            message = sys.exc_info()[1]
-            output = xml.json_message(False, 400, message)
+            debug("S3Sync: pull %s from %s" % (resource_name, repository.url))
 
-        else:
-            result = log.SUCCESS
-            response = f
+            # Construct the URL
+            url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
+                  (repository.url, resource_name, config.uuid)
+            if last_pull and task.update_policy not in ("THIS", "OTHER"):
+                url += "&msince=%s" % s3_encode_iso_datetime(last_pull)
+            if task.components is False: # Allow None to remain the old default of 'Include Components'
+                url += "&mcomponents=None"
+            url += "&include_deleted=True"
+
+            # Add sync filters to URL
+            from urllib import quote
+            filters = current.sync.get_filters(task.id)
+            for tablename in filters:
+                prefix = "~" if not tablename or tablename == resource_name \
+                                else tablename
+                for k, v in filters[tablename].items():
+                    urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
+                    url += "&%s" % urlfilter
+
+            debug("...pull from URL %s" % url)
+
+            # Execute the request
+            remote = False
+            action = "fetch"
+            response = None
+            output = None
+
+            opener = self._http_opener(url)
+            try:
+                f = opener.open(url)
+
+            except urllib2.HTTPError, e:
+                result = log.ERROR
+                remote = True # Peer error
+                code = e.code
+                message = e.read()
+                try:
+                    # Sahana-Eden would send a JSON message,
+                    # try to extract the actual error message:
+                    message_json = json.loads(message)
+                except JSONERRORS:
+                    pass
+                else:
+                    message = message_json.get("message", message)
+                # Prefix as peer error and strip XML markup from the message
+                # @todo: better method to do this?
+                message = "<message>%s</message>" % message
+                try:
+                    markup = etree.XML(message)
+                    message = markup.xpath(".//text()")
+                    if message:
+                        message = " ".join(message)
+                    else:
+                        message = ""
+                except etree.XMLSyntaxError:
+                    pass
+                output = xml.json_message(False, code, message, tree=None)
+
+            except urllib2.URLError, e:
+                # URL Error (network error)
+                result = log.ERROR
+                remote = True
+                message = "Peer repository unavailable (%s)" % e.reason
+                output = xml.json_message(False, 400, message)
+
+            except:
+                result = log.FATAL
+                message = sys.exc_info()[1]
+                output = xml.json_message(False, 400, message)
+
+            else:
+                result = log.SUCCESS
+                response = f
 
         # Process the response
         mtime = None
@@ -299,7 +326,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 message = "%s" % e
                 output = xml.json_message(False, 400, message)
 
-            except Exception, e:
+            except:
                 # If we end up here, an uncaught error during import
                 # has occured which indicates a code defect! We log it
                 # and continue here, however - in order to maintain a
@@ -341,7 +368,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 if not count:
                     message = "No data to import (already up-to-date)"
                 else:
-                    message = "Data imported successfully (%s records)" % count
+                    message = "Data imported successfully (%s records%%s)" % count
+                    if use_archived:
+                        message = message % ", from archive"
+                    else:
+                        message = message % ""
 
         elif result == log.SUCCESS:
             # No data received from peer
@@ -449,9 +480,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     # Sahana-Eden sends a JSON message,
                     # try to extract the actual error message:
                     message_json = json.loads(message)
-                    message = message_json.get("message", message)
-                except:
+                except JSONERRORS:
                     pass
+                else:
+                    message = message_json.get("message", message)
                 output = xml.json_message(False, code, message)
             except urllib2.URLError, e:
                 # URL Error (network error)
@@ -657,7 +689,192 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 }
 
     # -------------------------------------------------------------------------
-    def _http_opener(self, url, headers=None):
+    def _get_archive(self, dataset_id):
+        """
+            Get the archive for a data set (fetch it from remote if
+            necessary and available)
+
+            @param dataset_id: the data set ID
+
+            @return: S3SyncDataArchive for extraction
+        """
+
+        s3db = current.s3db
+        db = current.db
+
+        repository = self.repository
+
+        archives = repository.archives
+        if dataset_id in archives:
+            # Already downloaded
+            return archives[dataset_id]
+
+        # Get the data set
+        dtable = s3db.sync_dataset
+        query = (dtable.id == dataset_id) & \
+                (dtable.deleted == False)
+        dataset = db(query).select(dtable.id,
+                                   dtable.code,
+                                   dtable.use_archive,
+                                   dtable.archive_url,
+                                   limitby = (0, 1),
+                                   ).first()
+
+        if dataset:
+
+            # Get updated dataset information from peer
+            dataset = self._update_dataset(dataset)
+
+            archive_url = dataset.archive_url
+            if not archive_url or not dataset.use_archive:
+                # No archive for this data set available
+                archives[dataset_id] = None
+                return None
+
+            archive = None
+
+            # Get the archive URL
+            if archive_url[0] == "/":
+                # Path inside the repository application
+                repository_url = repository.url
+                if not repository_url:
+                    archives[dataset_id] = None
+                    return None
+                url = "%s/%s" % (repository_url.rstrip("/"),
+                                 archive_url.lstrip("/"),
+                                 )
+                auth = True
+            else:
+                # External URL
+                # => do not expose credentials to an external URL
+                url = archive_url
+                auth = False
+
+            # Fetch the archive
+            opener = self._http_opener(url, auth=auth)
+            error = None
+            local_error = False
+            try:
+                f = opener.open(url)
+            except urllib2.HTTPError, e:
+                # HTTP status (remote error)
+                message = e.read()
+                try:
+                    # Sahana-Eden would send a JSON message,
+                    # try to extract the actual error message:
+                    message_json = json.loads(message)
+                except JSONERRORS:
+                    pass
+                else:
+                    message = message_json.get("message", message)
+
+                # Strip XML markup from the message
+                message = "<message>%s</message>" % message
+                try:
+                    markup = etree.XML(message)
+                    message = markup.xpath(".//text()")
+                    if message:
+                        message = " ".join(message)
+                    else:
+                        message = ""
+                except etree.XMLSyntaxError:
+                    pass
+
+                # Prepend HTTP status code
+                error = "[%s] %s" % (e.code, message)
+
+            except urllib2.URLError, e:
+                # URL Error (network error)
+                error = "Peer repository unavailable (%s)" % e.reason
+
+            except:
+                # Other error (local error)
+                local_error = True
+                error = sys.exc_info()[1]
+
+            else:
+                # Try to open the archive
+                try:
+                    archive = S3SyncDataArchive(f)
+                except RuntimeError:
+                    local_error = True
+                    error = sys.exc_info()[1]
+
+            log = repository.log
+            if error:
+                log.write(repository_id = repository.id,
+                          transmission = log.OUT,
+                          mode = log.PULL,
+                          action = "fetch archive",
+                          remote = not local_error,
+                          result = log.ERROR,
+                          message = error,
+                          )
+                archive = None
+            else:
+                message = "Dataset %s archive downloaded successfully" % dataset.code
+                log.write(repository_id = repository.id,
+                          transmission = log.OUT,
+                          mode = log.PULL,
+                          action = "fetch archive",
+                          remote = False,
+                          result = log.SUCCESS,
+                          message = message,
+                          )
+
+            # Store archive for subsequent imports from the same data set
+            archives[dataset_id] = archive
+            return archive
+
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _update_dataset(self, dataset):
+        """
+            Update the data set from the repo, if possible
+
+            @param dataset: the sync_dataset Row
+        """
+
+        repository = self.repository
+
+        code = dataset.code
+        error_msg = "S3Sync: cannot update %s dataset from peer" % code
+
+        # Update the data set from remote
+        url = "%s/sync/dataset.xml?~.code=%s&mcomponents=None" % \
+              (repository.url, code)
+        opener = self._http_opener(url)
+        try:
+            dataset_info = opener.open(url)
+        except:
+            current.log.error()
+            return dataset
+
+        if dataset_info:
+            s3db = current.s3db
+            resource = s3db.resource("sync_dataset", id=dataset.id)
+            try:
+                resource.import_xml(dataset_info)
+            except IOError:
+                current.log.error(error_msg)
+                return dataset
+
+            # Reload to get the updated information
+            table = s3db.sync_dataset
+            query = (table.id == dataset.id)
+            dataset = current.db(query).select(table.id,
+                                               table.code,
+                                               table.use_archive,
+                                               table.archive_url,
+                                               limitby = (0, 1),
+                                               ).first()
+        return dataset
+
+
+    # -------------------------------------------------------------------------
+    def _http_opener(self, url, headers=None, auth=True):
         """
             Configure a HTTP opener for sync operations
 
@@ -688,22 +905,23 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             handlers.append(proxy_handler)
 
         # Authentication handling
-        username = repository.username
-        password = repository.password
-        if username and password:
-            # Add a 401 handler (in case Auth header is not accepted)
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm = None,
-                                        uri = url,
-                                        user = username,
-                                        passwd = password,
-                                        )
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
+        if auth:
+            username = repository.username
+            password = repository.password
+            if username and password:
+                # Add a 401 handler (in case Auth header is not accepted)
+                passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                passwd_manager.add_password(realm = None,
+                                            uri = url,
+                                            user = username,
+                                            passwd = password,
+                                            )
+                auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
+                handlers.append(auth_handler)
 
         # Create the opener
         opener = urllib2.build_opener(*handlers)
-        if username and password:
+        if auth and username and password:
             # Send credentials unsolicitedly to force login - otherwise
             # the request would be treated as anonymous if login is not
             # required (i.e. no 401 triggered), but we want to login in
