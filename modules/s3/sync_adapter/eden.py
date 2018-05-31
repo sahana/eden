@@ -230,8 +230,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 prefix = "~" if not tablename or tablename == resource_name \
                                 else tablename
                 for k, v in filters[tablename].items():
-                    urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
-                    url += "&%s" % urlfilter
+                    vlist = v if type(v) is list else [v]
+                    for value in vlist:
+                        urlfilter = "[%s]%s=%s" % (prefix, k, quote(value))
+                        url += "&%s" % urlfilter
 
             debug("...pull from URL %s" % url)
 
@@ -837,6 +839,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param dataset: the sync_dataset Row
         """
 
+        s3 = current.response.s3
+
         repository = self.repository
 
         code = dataset.code
@@ -853,13 +857,21 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             return dataset
 
         if dataset_info:
+
             s3db = current.s3db
             resource = s3db.resource("sync_dataset", id=dataset.id)
+
+            # Enable UUID synchronization
+            synchronise_uuids = s3.synchronise_uuids
+            s3.synchronise_uuids = True
+
             try:
                 resource.import_xml(dataset_info)
             except IOError:
                 current.log.error(error_msg)
                 return dataset
+
+            s3.synchronise_uuids = synchronise_uuids
 
             # Reload to get the updated information
             table = s3db.sync_dataset

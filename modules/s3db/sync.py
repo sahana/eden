@@ -580,6 +580,16 @@ class SyncDatasetModel(S3Model):
         configure = self.configure
 
         # ---------------------------------------------------------------------
+        # Common requirements for data set codes
+        #
+        code_requires = [IS_NOT_EMPTY(),
+                         IS_LENGTH(64),
+                         IS_MATCH(r"^[A-Za-z][A-Za-z0-9_\-\.]*$",
+                                  error_message = "Code must start with a letter, and only contain ASCII letters, digits, . (dot), _ (underscore), or - (dash).",
+                                  ),
+                         ]
+
+        # ---------------------------------------------------------------------
         # Public Data Set (=a collection of sync_tasks)
         #
         tablename = "sync_dataset"
@@ -589,14 +599,9 @@ class SyncDatasetModel(S3Model):
                      self.sync_repository_id(readable = False,
                                              writable = False,
                                              ),
-                     Field("code", unique=True, length=64,
+                     Field("code", length=64,
                            label = T("Code"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
-                                       IS_NOT_ONE_OF(db,
-                                                     "%s.code" % tablename,
-                                                     ),
-                                       ],
+                           requires = code_requires,
                            ),
                      Field("name",
                            label = T("Name"),
@@ -626,6 +631,9 @@ class SyncDatasetModel(S3Model):
 
         # Table configuration
         configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("code",),
+                                            secondary = ("repository_id",),
+                                            ),
                   onaccept = self.dataset_onaccept,
                   )
 
@@ -716,6 +724,7 @@ class SyncDatasetModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"sync_dataset_id": dataset_id,
+                "sync_dataset_code_requires": code_requires,
                 }
 
     # -------------------------------------------------------------------------

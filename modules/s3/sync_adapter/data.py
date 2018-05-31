@@ -99,14 +99,12 @@ class S3SyncAdapter(S3SyncEdenAdapter):
             # Collect the data set codes
             codes = set(dataset.code for dataset in datasets)
 
-        # Construct the URLs
+        # Determine the necessary updates
         from urllib import quote
-        update_url = "%s/sync/task.xml?~.dataset_id$code=%s" % \
-                     (base_url, quote(",".join(codes)))
-        delete_url = "%s/sync/task.xml?include_deleted=True&~.deleted=True" % \
-                     base_url
-
-        updates = [{"url": update_url,
+        current_tasks = "%s/sync/task.xml?~.dataset_id$code=%s" % \
+                        (base_url, quote(",".join(codes)))
+        updates = [{"tablename": "sync_task",
+                    "url": current_tasks,
                     "strategy": ("create", "update"),
                     },
                    ]
@@ -114,17 +112,35 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         # Look up last refresh date
         last_refresh = repository.last_refresh
         if last_refresh:
+            # Use msince
             msince = s3_encode_iso_datetime(last_refresh)
-            updates.append({"url": delete_url,
-                            "strategy": ("delete",),
-                            })
+
+            # Also fetch deleted tasks/filters
+            deleted = "?include_deleted=True&~.deleted=True"
+            deleted_tasks = "%s/sync/task.xml%s" % (base_url, deleted)
+            deleted_filters = "%s/sync/resource_filter.xml%s" % (base_url, deleted)
+            updates.extend([{"tablename": "sync_task",
+                             "url": deleted_tasks,
+                             "strategy": ("delete",),
+                             },
+                            {"tablename": "sync_resource_filter",
+                             "url": deleted_filters,
+                             "strategy": ("delete",),
+                             },
+                            ])
         else:
+            # No msince, just get all current tasks for the configured data sets
             msince = None
 
         # Initialize log details
         success = False
         count = 0
         timestamp = None
+
+        # Enable UUID synchronization
+        s3 = current.response.s3
+        synchronise_uuids = s3.synchronise_uuids
+        s3.synchronise_uuids = True
 
         # Fetch the sync tasks for the configured data sets
         for update in updates:
@@ -158,7 +174,8 @@ class S3SyncAdapter(S3SyncEdenAdapter):
                 else:
                     # Success - collect count/mtime
                     success = True
-                    count += update.get("count", 0)
+                    if update["tablename"] == "sync_task":
+                        count += update.get("count", 0)
                     mtime = update.get("mtime")
                     if mtime and (not timestamp or timestamp < mtime):
                         timestamp = mtime
@@ -172,6 +189,7 @@ class S3SyncAdapter(S3SyncEdenAdapter):
                           result = log.WARNING,
                           message = "No data received",
                           )
+
         if success:
             if count:
                 message = "Successfully updated %s tasks" % count
@@ -194,6 +212,7 @@ class S3SyncAdapter(S3SyncEdenAdapter):
                 query = (rtable.id == repository_id)
                 db(query).update(last_refresh=timestamp+delta)
 
+        s3.synchronise_uuids = synchronise_uuids
         return True
 
     # -------------------------------------------------------------------------
@@ -285,7 +304,7 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         repository = self.repository
         log = repository.log
 
-        resource = current.s3db.resource("sync_task")
+        resource = current.s3db.resource(update["tablename"])
 
         # Set default repository for newly imported tasks
         strategy = update.get("strategy")
