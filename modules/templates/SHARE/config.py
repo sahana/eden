@@ -360,7 +360,6 @@ def config(settings):
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
-        tablename = "org_organisation"
 
         # Custom Components for Verified
         s3db.add_components(tablename,
@@ -381,10 +380,10 @@ def config(settings):
                                                     ),
                             )
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
+        from s3 import S3Resource, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
 
         # Individual settings for specific tag components
-        components_get = r.resource.components.get
+        components_get = S3Resource(tablename).components.get
 
         vision = components_get("vision")
         vision.table.value.widget = s3_comments_widget
@@ -478,7 +477,6 @@ def config(settings):
     def customise_project_activity_resource(r, tablename):
 
         s3db = current.s3db
-        tablename = "project_activity"
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -521,9 +519,13 @@ def config(settings):
                                                     )
                             )
 
+        from s3 import S3LocationFilter, S3OptionsFilter, \
+                       S3Resource, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
         # Individual settings for specific tag components
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
-        components_get = r.resource.components.get
+        components_get = S3Resource(tablename).components.get
 
         donor = components_get("donor")
         donor.table.organisation_id.default = None
@@ -539,7 +541,6 @@ def config(settings):
 
         s3db.project_activity_data.unit.requires = IS_EMPTY_OR(IS_IN_SET(("People", "Households")))
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
                                                     field = "event_id",
                                                     label = T("Disaster"),
@@ -681,14 +682,74 @@ def config(settings):
     settings.customise_project_activity_controller = customise_project_activity_controller
 
     # -------------------------------------------------------------------------
+    def req_need_postprocess(form):
+
+        if form.record:
+            # Update form
+            return
+
+        need_id = form.vars.id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup Organisation
+        notable = s3db.req_need_organisation
+        org_link = db(notable.need_id == need_id).select(notable.organisation_id,
+                                                         limitby = (0, 1),
+                                                         ).first()
+        if not org_link:
+            return
+
+        organisation_id = org_link.organisation_id
+
+        # Lookup Request Number format
+        ottable = s3db.org_organisation_tag
+        query = (ottable.organisation_id == organisation_id) & \
+                (ottable.tag == "req_number")
+        tag = db(query).select(ottable.value,
+                               limitby = (0, 1),
+                               ).first()
+        if not tag:
+            return
+
+        # Lookup most recently-used value
+        nttable = s3db.req_need_tag
+        query = (nttable.tag == "req_number") & \
+                (nttable.need_id != need_id) & \
+                (nttable.need_id == notable.need_id) & \
+                (notable.organisation_id == organisation_id)
+
+        need = db(query).select(nttable.value,
+                                limitby = (0, 1),
+                                orderby = ~nttable.created_on,
+                                ).first()
+        if need:
+            new_number = int(need.value.split("-", 1)[1]) + 1
+            req_number = "%s-%s" % (tag.value, str(new_number).zfill(6))
+        else:
+            req_number = "%s-000001" % tag.value
+
+        nttable.insert(need_id = need_id,
+                       tag = "req_number",
+                       value = req_number,
+                       )
+
+    # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
         s3db = current.s3db
-        tablename = "req_need"
 
         # Custom Filtered Components
         s3db.add_components(tablename,
-                            req_need_tag = (# Verified
+                            req_need_tag = (# Req Number
+                                            {"name": "req_number",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "req_number",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Verified
                                             {"name": "verified",
                                              "joinby": "need_id",
                                              "filterby": {"tag": "verified",
@@ -698,9 +759,13 @@ def config(settings):
                                             )
                             )
 
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, \
+                       S3Resource, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
         # Individual settings for specific tag components
         from gluon import IS_EMPTY_OR, IS_IN_SET
-        components_get = r.resource.components.get
+        components_get = S3Resource(tablename).components.get
 
         verified = components_get("verified")
         f = verified.table.value
@@ -716,39 +781,62 @@ def config(settings):
                 f.default = False
                 f.writable = False
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
-                                                    field = "event_id",
-                                                    label = T("Disaster"),
-                                                    multiple = False,
-                                                    #required = True,
-                                                    ),
-                                    "location_id",
-                                    "date",
-                                    "priority",
-                                    S3SQLInlineLink("sector",
-                                                    field = "sector_id",
-                                                    filter = False,
-                                                    label = T("Sector"),
-                                                    multiple = False,
-                                                    ),
-                                    "summary",
-                                    S3SQLInlineComponent("need_item",
-                                                         fields = ["item_id", "quantity", "priority", "comments"],
-                                                         ),
-                                    S3SQLInlineComponent("verified",
-                                                         name = "verified",
-                                                         label = T("Verified"),
-                                                         fields = [("", "value"),],
-                                                         multiple = False,
-                                                         ),
-                                    "status",
-                                    "comments",
-                                    )
+        crud_fields = [S3SQLInlineLink("event",
+                                       field = "event_id",
+                                       label = T("Disaster"),
+                                       multiple = False,
+                                       #required = True,
+                                       ),
+                       S3SQLInlineLink("organisation",
+                                       field = "organisation_id",
+                                       filter = False,
+                                       label = T("Organization"),
+                                       multiple = False,
+                                       ),
+                       "location_id",
+                       "date",
+                       "priority",
+                       S3SQLInlineLink("sector",
+                                       field = "sector_id",
+                                       filter = False,
+                                       label = T("Sector"),
+                                       multiple = False,
+                                       ),
+                       "summary",
+                       S3SQLInlineComponent("need_item",
+                                            fields = ["item_id", "quantity", "priority", "comments"],
+                                            ),
+                       (T("Verified"), "verified.value"),
+                       "comments",
+                       ]
 
-        filter_widgets = [S3OptionsFilter("event.event_type_id"),
+        if r.id:
+            # Read or Update
+            req_number = components_get("verified")
+            req_number.table.value.writable = False
+            crud_fields.insert(2, (T("Request Number"), "req_number.value"))
+            crud_fields.insert(-2, "status")
+
+        crud_form = S3SQLCustomForm(*crud_fields,
+                                    postprocess = req_need_postprocess)
+
+        filter_widgets = [S3TextFilter(["req_number.value",
+                                        "need_item.item_id$name",
+                                        # These levels are for SHARE/LK
+                                        #"location_id$L1",
+                                        "location_id$L2",
+                                        "location_id$L3",
+                                        "location_id$L4",
+                                        "summary",
+                                        "comments",
+                                        ],
+                                       label = T("Search"),
+                                       comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
+                                       ),
+                          S3OptionsFilter("event.event_type_id"),
                           S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
                           S3OptionsFilter("sector__link.sector_id"),
+                          S3OptionsFilter("organisation__link.organisation_id"),
                           S3LocationFilter("location_id",
                                            # These levels are for SHARE/LK
                                            levels = ("L2", "L3", "L4"),
@@ -768,10 +856,12 @@ def config(settings):
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = [(T("Disaster"), "event__link.event_id"),
+                                      "organisation__link.organisation_id",
                                       # These levels/Labels are for SHARE/LK
                                       (T("District"), "location_id$L2"),
                                       (T("DS"), "location_id$L3"),
                                       (T("GN"), "location_id$L4"),
+                                      (T("Request Number"), "req_number.value"),
                                       "date",
                                       "priority",
                                       "sector__link.sector_id",

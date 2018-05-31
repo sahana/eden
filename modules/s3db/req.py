@@ -2364,7 +2364,7 @@ class RequestNeedsModel(S3Model):
                                             "key": "event_id",
                                             "multiple": False,
                                             },
-                            org_organisation = {"link": "req_need_site",
+                            org_organisation = {"link": "req_need_organisation",
                                                 "joinby": "need_id",
                                                 "key": "organisation_id",
                                                 "multiple": False,
