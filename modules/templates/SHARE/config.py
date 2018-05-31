@@ -380,10 +380,10 @@ def config(settings):
                                                     ),
                             )
 
-        from s3 import S3Resource, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, s3_comments_widget
 
         # Individual settings for specific tag components
-        components_get = S3Resource(tablename).components.get
+        components_get = s3db.resource(tablename).components.get
 
         vision = components_get("vision")
         vision.table.value.widget = s3_comments_widget
@@ -520,12 +520,11 @@ def config(settings):
                             )
 
         from s3 import S3LocationFilter, S3OptionsFilter, \
-                       S3Resource, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         # Individual settings for specific tag components
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
-        components_get = S3Resource(tablename).components.get
+        components_get = s3db.resource(tablename).components.get
 
         donor = components_get("donor")
         donor.table.organisation_id.default = None
@@ -760,12 +759,11 @@ def config(settings):
                             )
 
         from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, \
-                       S3Resource, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         # Individual settings for specific tag components
         from gluon import IS_EMPTY_OR, IS_IN_SET
-        components_get = S3Resource(tablename).components.get
+        components_get = s3db.resource(tablename).components.get
 
         verified = components_get("verified")
         f = verified.table.value
