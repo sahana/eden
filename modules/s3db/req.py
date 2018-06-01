@@ -33,6 +33,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestSkillModel",
            "RequestRecurringModel",
            "RequestNeedsModel",
+           "RequestNeedsActivityModel",
            "RequestNeedsImpactModel",
            "RequestNeedsItemsModel",
            "RequestNeedsSkillsModel",
@@ -2318,6 +2319,7 @@ class RequestNeedsModel(S3Model):
     """
 
     names = ("req_need",
+             "req_need_id",
              )
 
     def model(self):
@@ -2392,8 +2394,10 @@ class RequestNeedsModel(S3Model):
                             )
 
 
-        # @ToDo: Represent if we need to
-        represent = S3Represent(lookup=tablename)
+        # Represent currently only used in Activity form, may need adjusting if used elsewhere
+        represent = S3Represent(lookup = tablename,
+                                fields = ["summary"],
+                                show_link = True)
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
                                   label = T("Need"),
                                   ondelete = "CASCADE",
@@ -2428,10 +2432,45 @@ class RequestNeedsModel(S3Model):
                 }
 
 # =============================================================================
+class RequestNeedsActivityModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to Activities (Activity created to respond to Need)
+    """
+
+    names = ("req_need_activity",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Activities
+        #
+
+        tablename = "req_need_activity"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.project_activity_id(empty = False),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "activity_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class RequestNeedsImpactModel(S3Model):
     """
         Simple Requests Management System
-        - link to Impacts
+        - optional link to Impacts
 
         @ToDo: Auto-populate defaults for Items based on Impacts
     """
@@ -2479,7 +2518,7 @@ class RequestNeedsImpactModel(S3Model):
 class RequestNeedsItemsModel(S3Model):
     """
         Simple Requests Management System
-        - extended to support Items, but still not using normal Requests
+        - optional extension to support Items, but still not using normal Requests
     """
 
     names = ("req_need_item",
@@ -2537,7 +2576,7 @@ class RequestNeedsItemsModel(S3Model):
 class RequestNeedsSkillsModel(S3Model):
     """
         Simple Requests Management System
-        - extended to support Skills, but still not using normal Requests
+        - optional extension to support Skills, but still not using normal Requests
     """
 
     names = ("req_need_skill",
@@ -2594,8 +2633,8 @@ class RequestNeedsSkillsModel(S3Model):
 class RequestNeedsOrganisationModel(S3Model):
     """
         Simple Requests Management System
-        - link Needs to Organisations
-        - link exposed in Templates
+        - optional link to Organisations
+        - link exposed in Templates as-required
     """
 
     names = ("req_need_organisation",
@@ -2639,8 +2678,8 @@ class RequestNeedsOrganisationModel(S3Model):
 class RequestNeedsSectorModel(S3Model):
     """
         Simple Requests Management System
-        - link Needs to Sectors
-        - link exposed in Templates
+        - optional link to Sectors
+        - link exposed in Templates as-required
     """
 
     names = ("req_need_sector",
@@ -2674,8 +2713,8 @@ class RequestNeedsSectorModel(S3Model):
 class RequestNeedsSiteModel(S3Model):
     """
         Simple Requests Management System
-        - link Needs to Sites
-        - link exposed in Templates
+        - optional link to Sites
+        - link exposed in Templates as-required
     """
 
     names = ("req_need_site",

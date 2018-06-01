@@ -1359,7 +1359,6 @@ class S3ProjectActivityModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = project_activity_list_layout,
-                  #onaccept = self.project_activity_onaccept,
                   realm_entity = self.project_activity_realm_entity,
                   report_options = report_options,
                   super_entity = "doc_entity",
@@ -1472,6 +1471,12 @@ class S3ProjectActivityModel(S3Model):
                                         },
                        # Format for InlineComponent/filter_widget
                        project_theme_activity = "activity_id",
+                       # Needs
+                       req_need = {"link": "req_need_activity",
+                                   "joinby": "activity_id",
+                                   "key": "need_id",
+                                   "actuate": "hide",
+                                   },
                        )
 
         # ---------------------------------------------------------------------
