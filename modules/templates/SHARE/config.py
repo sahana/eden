@@ -979,6 +979,7 @@ def config(settings):
                     #s3.jquery_ready.append(
 #'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this need?"))
                 else:
+                    from gluon import URL
                     from s3 import S3CRUD, s3_str
                     # Normal Action Buttons
                     S3CRUD.action_buttons(r)
