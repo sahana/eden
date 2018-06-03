@@ -310,7 +310,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_sitrep_resource(r, tablename):
 
-        from gluon.storage import Storage
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Situational Update"),
             title_display = T("HCT Activity and Response Report"),
@@ -942,7 +941,7 @@ def config(settings):
             Custom method to Commit to a Need by creating an Activity
         """
 
-        from gluon import redirect, URL
+        from gluon import redirect
 
         redirect(URL(c="project", f="activity",
                      args = "create",
@@ -970,7 +969,7 @@ def config(settings):
                current.auth.s3_has_permission("create", "project_activity"):
                 if r.id:
                     # Custom RFooter
-                    from gluon import A, URL
+                    from gluon import A
                     s3.rfooter = A(T("Commit"),
                                    _href = URL(args=[r.id, "commit"]),
                                    _class = "action-btn",
@@ -979,7 +978,6 @@ def config(settings):
                     #s3.jquery_ready.append(
 #'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this need?"))
                 else:
-                    from gluon import URL
                     from s3 import S3CRUD, s3_str
                     # Normal Action Buttons
                     S3CRUD.action_buttons(r)
